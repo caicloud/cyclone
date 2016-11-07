@@ -1,6 +1,9 @@
 中文 | [English](README.md)
 # Cyclone
 
+[![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
+[![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
+
 Cyclone是一个打造容器工作流的云原生持续集成持续发布平台。
 
 Cyclone主要致力于将代码从本地开发环境用任意容器引擎封装搬运到测试或者生产环境运行。Cyclone包括一下特性：
