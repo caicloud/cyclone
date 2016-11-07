@@ -1,0 +1,86 @@
+{
+  "name": "swagger-ui",
+  "author": {
+    "name": "Tony Tam",
+    "email": "fehguy@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "Mohsen Azimi",
+      "email": "me@azimi.me"
+    }
+  ],
+  "description": "Swagger UI is a dependency-free collection of HTML, JavaScript, and CSS assets that dynamically generate beautiful documentation from a Swagger-compliant API",
+  "version": "2.1.4",
+  "homepage": "http://swagger.io",
+  "license": "Apache-2.0",
+  "main": "dist/swagger-ui.js",
+  "scripts": {
+    "build": "gulp",
+    "serve": "gulp serve",
+    "prejshint": "gulp",
+    "jshint": "jshint .",
+    "pretest": "npm run jshint",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swagger-api/swagger-ui.git"
+  },
+  "devDependencies": {
+    "chai": "^2.1.0",
+    "cors": "^2.5.3",
+    "docco": "^0.7.0",
+    "event-stream": "^3.2.2",
+    "express": "^4.12.0",
+    "gulp": "^3.8.11",
+    "gulp-clean": "^0.3.1",
+    "gulp-concat": "^2.5.2",
+    "gulp-connect": "^2.2.0",
+    "gulp-declare": "^0.3.0",
+    "gulp-handlebars": "^3.0.1",
+    "gulp-header": "^1.2.2",
+    "gulp-jshint": "^1.10.0",
+    "gulp-less": "^3.0.1",
+    "gulp-order": "^1.1.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-uglify": "^1.1.0",
+    "gulp-watch": "^4.1.1",
+    "gulp-wrap": "^0.11.0",
+    "http-server": "^0.8.0",
+    "jshint-stylish": "^1.0.1",
+    "less": "^2.4.0",
+    "mocha": "^2.1.0",
+    "selenium-webdriver": "^2.45.0",
+    "swagger-client": "2.1.10"
+  },
+  "gitHead": "5e5e33ace1214e453e2484b9e08220a3236c46a5",
+  "bugs": {
+    "url": "https://github.com/swagger-api/swagger-ui/issues"
+  },
+  "_id": "swagger-ui@2.1.4",
+  "_shasum": "2cdb2d5c719b522e9fa5bef863f662b8f7305afb",
+  "_from": "swagger-ui@*",
+  "_npmVersion": "2.14.3",
+  "_nodeVersion": "4.1.0",
+  "_npmUser": {
+    "name": "swagger-api",
+    "email": "apiteam@swagger.io"
+  },
+  "dist": {
+    "shasum": "2cdb2d5c719b522e9fa5bef863f662b8f7305afb",
+    "tarball": "http://registry.npmjs.org/swagger-ui/-/swagger-ui-2.1.4.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "fehguy",
+      "email": "fehguy@gmail.com"
+    },
+    {
+      "name": "swagger-api",
+      "email": "apiteam@swagger.io"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/swagger-ui/-/swagger-ui-2.1.4.tgz"
+}
