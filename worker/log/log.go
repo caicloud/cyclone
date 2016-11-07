@@ -1,0 +1,271 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package log
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/executil"
+	"github.com/caicloud/cyclone/pkg/log"
+	"golang.org/x/net/websocket"
+)
+
+const (
+	LogSpecialMark string = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+	LogReplaceMark string = "--->"
+)
+
+// StepEvent is information about step evnet name in creating versions
+type StepEvent string
+
+const (
+	CloneRepository StepEvent = "clone repository"
+	CreateTag       StepEvent = "create tag"
+	BuildImage      StepEvent = "Build image"
+	PushImage       StepEvent = "Push image"
+	Integration     StepEvent = "Integration"
+	PreBuild        StepEvent = "Pre Build"
+	PostBuild       StepEvent = "Post Build"
+	Deploy          StepEvent = "Deploy application"
+	ApplyResource   StepEvent = "Apply Resource"
+)
+
+// StepState is informatin aboout step evnet's state
+type StepState string
+
+const (
+	Start  StepState = "start"
+	Stop   StepState = "stop"
+	Finish StepState = "finish"
+)
+
+// InsertStepLog inserts the step information into the log file.
+func InsertStepLog(event *api.Event, stepevent StepEvent, state StepState, err error) {
+	var stepLog string
+	if nil == err {
+		stepLog = fmt.Sprintf("step: %s state: %s", stepevent, state)
+	} else {
+		stepLog = fmt.Sprintf("step: %s state: %s Error: %v", stepevent, state, err)
+	}
+
+	if state == Stop {
+		// set red background
+		fmt.Fprintf(event.Output, "\033[41;37m %s \033[0m\n", stepLog)
+	} else {
+		// set green background
+		fmt.Fprintf(event.Output, "\033[42;42m %s \033[0m\n", stepLog)
+	}
+}
+
+// RemoveLogFile is used to delete the log file.
+func RemoveLogFile(filepath string) error {
+	// File does or  does not exist.
+	_, err := os.Stat(filepath)
+	if err != nil && os.IsNotExist(err) {
+		return err
+	}
+
+	filename := path.Base(filepath)
+	dir := path.Dir(filepath)
+
+	args := []string{"-f", filename}
+	_, err = executil.RunInDir(dir, "rm", args...)
+
+	if err != nil {
+		return fmt.Errorf("Error when removing log file  %s", filename)
+	}
+	log.InfoWithFields("Successfully removed log file", log.Fields{"filename": filename})
+	return err
+}
+
+var (
+	ws                  *websocket.Conn
+	lockFileWatchSwitch sync.RWMutex
+	watchLogFileSwitch  map[string]bool
+)
+
+// DialLogServer dial and connect to the log server
+// e.g
+// origin "http://120.26.103.63/"
+// url "ws://120.26.103.63:8000/ws"
+func DialLogServer(url string) error {
+	addr := strings.Split(url, "/")[2]
+	origin := "http://" + addr + "/"
+	log.Infof("Dail to log server: url(%s), origin(%s)", url, origin)
+
+	var err error
+	ws, err = websocket.Dial(url, "", origin)
+	return err
+}
+
+// Disconnect dicconnect websocket from log server
+func Disconnect() {
+	ws.Close()
+}
+
+// HeatBeatPacket is the type for heart_beat packet.
+type HeatBeatPacket struct {
+	Action string `json:"action"`
+	Id     string `json:"id"`
+}
+
+// SendHeartBeat send heat beat packet to log server per 30 seconds.
+func SendHeartBeat() {
+	id := 0
+
+	for {
+		if nil == ws {
+			return
+		}
+
+		structData := &HeatBeatPacket{
+			Action: "heart_beat",
+			Id:     fmt.Sprintf("%s", id),
+		}
+		jsonData, _ := json.Marshal(structData)
+
+		if _, err := ws.Write(jsonData); err != nil {
+			log.Errorf("Send heart beat to server err: %v", err)
+		}
+
+		id++
+		time.Sleep(time.Second * 30)
+	}
+}
+
+// SetWatchLogFileSwitch set swicth of watch log file
+func SetWatchLogFileSwitch(filePath string, watchSwitch bool) {
+	lockFileWatchSwitch.Lock()
+	defer lockFileWatchSwitch.Unlock()
+	if nil == watchLogFileSwitch {
+		watchLogFileSwitch = make(map[string]bool)
+	}
+	watchLogFileSwitch[filePath] = watchSwitch
+}
+
+// GetWatchLogFileSwitch set swicth of watch log file
+func GetWatchLogFileSwitch(filePath string) bool {
+	lockFileWatchSwitch.RLock()
+	defer lockFileWatchSwitch.RUnlock()
+	bEnable, bFound := watchLogFileSwitch[filePath]
+	if bFound {
+		return bEnable
+	} else {
+		return false
+	}
+}
+
+// WatchLogFile watch the log and prouce one line to kafka topic per 200ms
+func WatchLogFile(filePath string, topic string) {
+	var logFile *os.File
+	var err error
+
+	SetWatchLogFileSwitch(filePath, true)
+	for {
+		if false == GetWatchLogFileSwitch(filePath) {
+			return
+		}
+
+		logFile, err = os.Open(filePath)
+		if nil != err {
+			log.Debugf("open log file haven't create: %v", err)
+			// wait for log file create
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	defer func() {
+		logFile.Close()
+	}()
+
+	buf := bufio.NewReader(logFile)
+	// read log file 30 lines for one time or read to the end
+	for {
+		if false == GetWatchLogFileSwitch(filePath) {
+			var lines = ""
+			for {
+				line, errRead := buf.ReadString('\n')
+				if errRead != nil {
+					if errRead == io.EOF {
+						break
+					}
+					log.Errorf("watch log file errs: %v", errRead)
+					return
+				}
+				line = strings.TrimSpace(line)
+				lines += (line + "\r\n")
+			}
+			if len(lines) != 0 {
+				pushLog(topic, lines)
+			}
+			return
+		}
+
+		var lines string
+		for i := 0; i < 30; i++ {
+			line, errRead := buf.ReadString('\n')
+			if errRead != nil {
+				if errRead == io.EOF {
+					break
+				}
+				log.Errorf("watch log file err: %v", errRead)
+				return
+			}
+			line = strings.TrimSpace(line)
+			lines += (line + "\r\n")
+		}
+		if len(lines) != 0 {
+			pushLog(topic, lines)
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+// PushLogPacket is the type for push_log packet.
+type PushLogPacket struct {
+	Action string `json:"action"`
+	Topic  string `json:"topic"`
+	Log    string `json:"log"`
+}
+
+// pushLog push log to log server
+func pushLog(topic string, slog string) {
+	if nil == ws {
+		return
+	}
+
+	structData := &PushLogPacket{
+		Action: "worker_push_log",
+		Topic:  topic,
+		Log:    slog,
+	}
+	jsonData, _ := json.Marshal(structData)
+
+	if _, err := ws.Write(jsonData); err != nil {
+		log.Errorf("Push log to server err: %v", err)
+	}
+}
