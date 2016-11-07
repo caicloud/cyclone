@@ -85,7 +85,7 @@ func createService(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// Need Jenkins accoring Jconfig.Address, so here should check if username
+	// Need Jenkins according Jconfig.Address, so here should check if username
 	// or password is empty.
 	if service.Jconfig.Address != "" {
 		if service.Jconfig.Username == "" || service.Jconfig.Password == "" {

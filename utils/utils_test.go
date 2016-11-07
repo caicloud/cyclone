@@ -48,8 +48,8 @@ func TestInvokeCheckDeployStateAPI(t *testing.T) {
 		Post("/InvokeCheckDeployStateAPI").
 		Reply(200).
 		JSON(map[string]int{
-		"code": codeDeployReady,
-	})
+			"code": codeDeployReady,
+		})
 
 	defer gock.Off()
 

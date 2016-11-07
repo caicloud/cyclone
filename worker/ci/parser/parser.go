@@ -22,7 +22,7 @@ import (
 )
 
 // Tree is the representation of a parsed build
-// configuraiton Yaml file.
+// configuration Yaml file.
 type Tree struct {
 	Root *ListNode
 	// Now deploy is independent with CI.

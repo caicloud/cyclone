@@ -17,7 +17,7 @@
 Each cube represent a container
 - The Api-Server component in Cyclone-Server provides the restful API service, if the task created by calling the API needs long time to handle, it will generate a pending event and write into etcd
 - The EventManger component load pending events from etcd, watch the change of events, and send new pending event to WorkerManager
-- WorkerManager call the docker API to run a Cyclone-Worker container, and send infomations to it via ENVs
-- Cyclone-Worker use event ID as a token to call API and get event infomations, then run containers to execute integretion, prebuild, build and post build steps, progress log push to Log-Server and save to kafka
+- WorkerManager call the docker API to run a Cyclone-Worker container, and send information to it via ENVs
+- Cyclone-Worker use event ID as a token to call API and get event information, then run containers to execute integretion, prebuild, build and post build steps, progress log push to Log-Server and save to kafka
 - Log-Server component pull log from kafka and push it to user
 - The date need to be persisted save into mongo

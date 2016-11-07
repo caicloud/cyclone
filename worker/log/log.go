@@ -143,7 +143,7 @@ func SendHeartBeat() {
 
 		structData := &HeatBeatPacket{
 			Action: "heart_beat",
-			Id:     fmt.Sprintf("%s", id),
+			Id:     fmt.Sprintf("%d", id),
 		}
 		jsonData, _ := json.Marshal(structData)
 

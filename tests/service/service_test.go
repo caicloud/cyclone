@@ -37,9 +37,6 @@ const (
 )
 
 var _ = Describe("Service", func() {
-	var (
-		dockerManager *docker.Manager
-	)
 
 	// Set up the serviceCM, versionCM and dockerManager.
 	BeforeSuite(func() {
@@ -68,7 +65,7 @@ var _ = Describe("Service", func() {
 		}
 
 		// Create docker manager.
-		dockerManager, err = docker.NewManager(
+		_, err = docker.NewManager(
 			endpoint, certPath, registry)
 		if err != nil {
 			log.Fatalf("Unable to connect to docker daemon: %v", err)
@@ -79,7 +76,7 @@ var _ = Describe("Service", func() {
 		Expect(IsAvailable()).To(Equal(true))
 	})
 
-	Context("with right infomation", func() {
+	Context("with right information", func() {
 		service := &api.Service{
 			Name:        DefaultServiceName,
 			Username:    ListUser,

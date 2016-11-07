@@ -92,7 +92,7 @@ func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 	if mapData, err = analysisMsg(rec); err != nil {
 		return err
 	}
-	if "reponse" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
+	if "response" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
 		log.Errorf("Receive unexcept data: %s", string(rec))
 		return fmt.Errorf("start watch log error")
 	}
@@ -130,7 +130,7 @@ func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 	if mapData, err = analysisMsg(rec); err != nil {
 		return err
 	}
-	if "reponse" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
+	if "response" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
 		return fmt.Errorf("stop watch log error")
 	}
 	return nil

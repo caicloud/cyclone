@@ -325,7 +325,7 @@ func updateContainerInClusterWithPlan(userID, imageName string, application api.
 }
 
 // ExecDeployCheck keeps call console-web API to check deploy status
-// of the version util timeout or error occured or success. It will write finalStatus to DB.
+// of the version util timeout or error occurred or success. It will write finalStatus to DB.
 func ExecDeployCheck(event *api.Event, tree *parser.Tree) {
 	// yaml deploy state check
 	DoYamlDeployCheck(event, tree)
