@@ -1,0 +1,53 @@
+postgres:
+    container_name: clair_postgres
+    image: index.caicloud.io/caicloud/postgres:9
+    environment:
+      POSTGRES_PASSWORD: password
+
+clair:
+    container_name: clair_clair
+    image: index.caicloud.io/caicloud/clair:v1.2.3
+    ports:
+        - "6060-6061:6060-6061"
+    links:
+        - postgres
+    volumes:
+        - /tmp:/tmp
+        - ./scripts/clair_config:/config
+    command: [-config, /config/config.yaml]
+
+mongo:
+    image: index.caicloud.io/caicloud/mongo:3.0.5
+    ports:
+        - "28017:27017"
+    command: mongod --smallfiles
+
+zookeeper:
+    image: index.caicloud.io/caicloud/zookeeper:v1
+    expose:
+        - "2181"
+
+kafka:
+    image: index.caicloud.io/caicloud/kafka:v1
+    hostname: kafka
+    links: 
+        - zookeeper:zk
+    environment:
+        - KAFKA_ADVERTISED_HOST_NAME=0.0.0.0
+        - KAFKA_ADVERTISED_PORT=9092
+    ports:
+        - "9092:9092"
+
+etcd-server:
+    image: index.caicloud.io/caicloud/circle-etcd:v2.2.1
+    volumes:
+        - /data/etcd:/data
+    ports:
+        - "2379:2379"
+        - "2380:2380"
+        - "4001:4001"
+        - "7001:7001"
+    environment:
+        - name=etcd-server
+        - advertise-client-urls=http://0.0.0.0:4001
+        - initial-advertise-peer-urls=http://0.0.0.0:7001
