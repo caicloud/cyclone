@@ -1,0 +1,94 @@
+postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: password
+
+clair:
+    image: quay.io/coreos/clair:v1.2.3
+    ports:
+        - "6060-6061:6060-6061"
+    expose:
+        - "6060-6061"
+    links:
+        - postgres
+    volumes:
+        - /tmp:/tmp
+        - ./scripts/clair_config:/config
+    command: [-config, /config/config.yaml]
+
+zookeeper:
+    image: wurstmeister/zookeeper
+    expose:
+        - "2181"
+
+kafka:
+    image: wurstmeister/kafka
+    hostname: kafkahost
+    links:
+        - zookeeper:zk
+    volumes:
+       - /data/kafka_log:/data/kafka_log
+    environment:
+        - KAFKA_ADVERTISED_HOST_NAME=kafkahost
+        - KAFKA_ADVERTISED_PORT=9092
+        - KAFKA_LOG_DIRS=/data/kafka_log
+    ports:
+        - "9092:9092"
+    expose:
+        - "9092"
+etcd:
+    image: quay.io/coreos/etcd:v2.2.1
+    volumes:
+        - /data:/data
+    ports:
+        - "2379:2379"
+        - "2380:2380"
+        - "4001:4001"
+        - "7001:7001"
+    environment:
+        - name=etcd-server
+        - advertise-client-urls=http://0.0.0.0:4001
+        - initial-advertise-peer-urls=http://0.0.0.0:7001
+
+mongo:
+    image: mongo:3.0.5
+    volumes:
+       - /data/db:/data/db
+    expose:
+       - "27017"
+    ports:
+       - "27017:27017"
+
+cyclone-server:
+    image: index.caicloud.io/caicloud/cyclone-server:latest
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    links:
+        - mongo
+        - kafka
+        - etcd
+        - clair
+    ports:
+        - "7099:7099"
+        - "8000:8000"
+    expose:
+        - "7099"
+    environment:
+        - MONGO_DB_IP=mongo:27017
+        - KAFKA_SERVER_IP=kafkahost:9092
+        - LOG_SERVER=wss://fornax-canary.caicloud.io:8001/ws
+        - WORK_REGISTRY_LOCATION=index.caicloud.io
+        - REGISTRY_USERNAME=caicloudfornax
+        - REGISTRY_PASSWORD=aY@Jndt6y~y12PPL
+        # Use for github oauth
+        - CLIENTID=3e1e20442996d5bb0a9a
+        - CLIENTIDSECRET=1ab63ac0e955a13dae5dd1329ed79344ebad51e1
+        - CONSOLE_WEB_ENDPOINT=https://console-canary.caicloud.io
+        - CLIENTID_GITLAB=e09eda3975aea1fda265fff0e53ea59f4604920c93dbe941736440666f33150d
+        - CLIENTIDSECRET_GITLAB=a4844c67585830488a11a8a0d7690b52517536a566ca647c25ef3db9158c2738
+        - SERVER_GITLAB=https://gitlab.com
+        - ETCD_SERVER_IP=http://etcd:2379
+        - CYCLONE_SERVER_HOST=https://fornax-canary.caicloud.io
+        - WORKER_IMAGE=index.caicloud.io/caicloud/cyclone-worker
+        - CLAIR_SERVER_IP=http://fornax-canary.caicloud.io:6060
+    command: /cyclone-server
