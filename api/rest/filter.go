@@ -24,14 +24,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/pkg/osutil"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
 )
 
 // DefaultAuthAddress is the default address of auth server.
-const DefaultAuthAddress = "https://auth-canary.caicloud.io"
+const DefaultAuthAddress = "https://default-auth-address"
 
 // checkUserAuth checks if the user is logined.
 func checkUserAuth(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {

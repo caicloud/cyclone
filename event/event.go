@@ -17,10 +17,10 @@ limitations under the License.
 package event
 
 import (
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/notify"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/notify"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 )
 
 const (

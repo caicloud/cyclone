@@ -19,7 +19,7 @@ package api
 import (
 	"time"
 
-	"github.com/caicloud/circle/pkg/filebuffer"
+	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"golang.org/x/oauth2"
 )
 
@@ -56,7 +56,7 @@ type Service struct {
 	Description string `bson:"description,omitempty" json:"description,omitempty"`
 	// Build script path. When this script path (or maybe change to just text string)
 	// is specified, we build image using BuildPath.
-	// TODO: It's better to change to PreBuildHook and PostBuildHook to let circle
+	// TODO: It's better to change to PreBuildHook and PostBuildHook to let Cyclone
 	// control building image; otherwise, user can use arbitrary image name.
 	BuildPath string `bson:"build_path,omitempty" json:"build_path,omitempty"`
 	// A list of success version IDs.
@@ -123,9 +123,9 @@ type JenkinsConfig struct {
 type NotifySetting string
 
 const (
-	// SendWhenFailed shows that circle sends the build log email when version creation failed.
+	// SendWhenFailed shows that Cyclone sends the build log email when version creation failed.
 	SendWhenFailed NotifySetting = "sendwhenfailed"
-	// SendWhenFinished shows that circle sends the build log email when version creation finished.
+	// SendWhenFinished shows that Cyclone sends the build log email when version creation finished.
 	SendWhenFinished NotifySetting = "sendwhenfinished"
 )
 
@@ -164,15 +164,15 @@ const (
 type RepositoryStatus string
 
 const (
-	// RepositoryAccepted shows that the repositry create request is accepted, and circle is preparing to clone it.
+	// RepositoryAccepted shows that the repositry create request is accepted, and Cyclone is preparing to clone it.
 	RepositoryAccepted RepositoryStatus = "accepted"
 	// RepositoryHealthy shows that the repository is healthy and ready to be used.
 	RepositoryHealthy RepositoryStatus = "healthy"
-	// RepositoryMissing shows that the repository is missing, meaning that circle is unable to verity its existance.
+	// RepositoryMissing shows that the repository is missing, meaning that Cyclone is unable to verity its existance.
 	RepositoryMissing RepositoryStatus = "missing"
 	// RepositoryUnknownVcs shows that the given vcs is not supported.
 	RepositoryUnknownVcs RepositoryStatus = "unknownvcs"
-	// RepositoryInternalError shows that the repositry creation has internal errors in circle.
+	// RepositoryInternalError shows that the repositry creation has internal errors in Cyclone.
 	RepositoryInternalError RepositoryStatus = "internalerror"
 )
 
@@ -184,7 +184,7 @@ type WebhookResponse struct {
 
 // ServiceRepository is all information about a repository hosting service codebase.
 type ServiceRepository struct {
-	// URL of the repository, e.g. https://github.com/caicloud/circle.
+	// URL of the repository, e.g. https://github.com/caicloud/Cyclone.
 	URL string `bson:"url,omitempty" json:"url,omitempty"`
 	// Version control tool used to host the service repository.
 	Vcs VersionControlSystem `bson:"vcs,omitempty" json:"vcs,omitempty"`
@@ -314,7 +314,7 @@ type Version struct {
 	// TODO: This is only used as a FYI. It's hard to manage composite application.
 	DependentVersionIDs []string `bson:"dependent_version_ids,omitempty" json:"dependent_version_ids,omitempty"`
 	// Tags is a list of version tags. A version can have multiple tags, including
-	// system tags and custom tags. System tags is added by circle and custom tags
+	// system tags and custom tags. System tags is added by Cyclone and custom tags
 	// are added by a user. A version can have multiple tags, e.g. latest version
 	// can also be live version. See below for a list of system tags.
 	// TODO: Make tag a map instead of version.
@@ -328,7 +328,7 @@ type Version struct {
 	// Time when the version is created.
 	CreateTime time.Time `bson:"create_time,omitempty" json:"create_time,omitempty"`
 	// Release version URL. This is used to find the release hosted on remote machine,
-	// e.g. https://github.com/caicloud/circle/releases/v1.0.
+	// e.g. https://github.com/caicloud/cyclone/releases/v1.0.
 	URL string `bson:"url,omitempty" json:"url,omitempty"`
 	// Version status is the version's status information.
 	Status VersionStatus `bson:"status,omitempty" json:"status,omitempty"`
@@ -461,7 +461,7 @@ const (
 )
 
 // AutoCreateTagFlag is the default tag postfix.
-const AutoCreateTagFlag = "_Circle"
+const AutoCreateTagFlag = "_Cyclone"
 
 // VersionLiveInfo contains information about how a version is deployed.
 type VersionLiveInfo struct {
@@ -802,8 +802,8 @@ type Event struct {
 	// Operation the event is about, like cloning repository event, building
 	// image event, etc.
 	Operation Operation `bson:"operation,omitempty" json:"operation,omitempty"`
-	// Almost all circle event deal with user, service, version - the core
-	// concept in circle; therefore, event carries these properties. Note
+	// Almost all Cyclone event deal with user, service, version - the core
+	// concept in Cyclone; therefore, event carries these properties. Note
 	// sender might not set all of them.
 	Service        Service        `bson:"service,omitempty" json:"service,omitempty"`
 	Version        Version        `bson:"version,omitempty" json:"version,omitempty"`

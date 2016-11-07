@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/caicloud/circle",
+	"ImportPath": "github.com/caicloud/cyclone",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v74",
 	"Packages": [

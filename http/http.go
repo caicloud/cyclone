@@ -14,26 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package event
+package http
 
 import (
-	"testing"
+	"html/template"
+	"net/http"
 
-	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
 )
 
-// TestToBuildContainerConfig tests the BuildContainerConfig function.
-func TestToBuildContainerConfig(t *testing.T) {
-	var cpu int64
-	var memory int64
-	var eventID api.EventID
+const (
+	LOG_HTML_TEMPLATE = "LOG_HTML_TEMPLATE"
+)
 
-	eventID = "unit-test-eventid"
-	cpu = 1
-	memory = 1024
+// Server is the type for log server.
+func Server() {
+	log.Info("http server start")
+	http.HandleFunc("/log", logHandler)
+}
 
-	option := toBuildContainerConfig(eventID, cpu, memory)
-	if option.HostConfig.Memory != 1024 || option.HostConfig.CPUShares != cpu {
-		t.Errorf("Expect memory equals to %d, cpu equals to %d", memory, cpu)
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	filePath := osutil.GetStringEnv(LOG_HTML_TEMPLATE, "/http/web/log.html")
+	t, err := template.ParseFiles(filePath)
+	if err != nil {
+		log.Error(err)
 	}
+	t.Execute(w, nil)
 }

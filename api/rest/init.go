@@ -19,9 +19,9 @@ package rest
 import (
 	"fmt"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/remote"
-	"github.com/caicloud/circle/resource"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/remote"
+	"github.com/caicloud/cyclone/resource"
 	"github.com/emicklei/go-restful"
 )
 
@@ -31,7 +31,7 @@ var (
 	resourceManager *resource.ResourceManager
 )
 
-// Initialize initializes rest endpoints and all circle managers. It register REST
+// Initialize initializes rest endpoints and all Cyclone managers. It register REST
 // APIs to restful.WebService, and creates a global remote manager.
 func Initialize(enableCaicloudAuth string) {
 

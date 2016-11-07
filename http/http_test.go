@@ -14,26 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package event
+package http
 
 import (
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
-
-	"github.com/caicloud/cyclone/api"
 )
 
-// TestToBuildContainerConfig tests the BuildContainerConfig function.
-func TestToBuildContainerConfig(t *testing.T) {
-	var cpu int64
-	var memory int64
-	var eventID api.EventID
+// TestLog tests the log service.
+func TestLog(t *testing.T) {
+	s := httptest.NewServer(http.HandlerFunc(logHandler))
+	defer s.Close()
 
-	eventID = "unit-test-eventid"
-	cpu = 1
-	memory = 1024
-
-	option := toBuildContainerConfig(eventID, cpu, memory)
-	if option.HostConfig.Memory != 1024 || option.HostConfig.CPUShares != cpu {
-		t.Errorf("Expect memory equals to %d, cpu equals to %d", memory, cpu)
+	if err := os.Setenv(LOG_HTML_TEMPLATE, "../http/web/log.html"); err != nil {
+		t.Error("Expected error to be nil")
 	}
+
+	res, err := http.Get(s.URL)
+	if err != nil {
+		t.Error("Expected get status 200")
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Error("Expected get body")
+	}
+	t.Log(body)
 }

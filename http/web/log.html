@@ -1,0 +1,118 @@
+<html> 
+	<head> 
+		<title>Log</title> 
+		<script type="text/JavaScript"> 
+			if (!window.WebSocket) { 
+				alert("WebSocket not supported by this browser!"); 
+			} 
+			var ws;
+            function getLog() { 
+				var logLabel = document.getElementById("logLabel"); 
+				logLabel.innerHTML = ""; 
+				var host = "wss://" + window.location.host + ":8001"
+				ws=new WebSocket(host); 
+
+				ws.onmessage = function(event) {
+					analysisMsg(event.data);
+				}; 
+
+				ws.onclose = function(event) { 
+					alert("log close");
+				}; 
+
+				ws.onopen = function(event) {
+					watchLog()
+					//send heart beat per 60 seconds
+					setInterval("heartInterval()", 30000);
+                }; 
+				
+                ws.onerror =function(event){
+                    //WebSocket Status:: Error was reported
+					alert("log error");
+                };
+            }
+			
+			function heartInterval() {
+				var uuid = getUUID();
+				var heartBeat = "{\"action\" : \"heart_beat\", \"id\" : \"" + uuid +"\"}";
+				ws.send(heartBeat); 
+			}
+			
+			function watchLog() {
+				var user = $_GET['user'];
+				var service = $_GET['service'];
+				var version = $_GET['version'];
+				if ((user == null) || (service == null) || (version == null)){
+					log("Error url!");
+					return;
+				}
+				log("[Watch log]\r\n\r\n");
+				var uuid = getUUID();
+				var watch = "{\"action\" : \"watch_log\", \"api\" : \"create_version\", \"user_id\" : \"" 
+							+ user + "\", \"service_id\" : \"" + service +  "\", \"version_id\" : \"" 
+							+ version + "\",\"operation\" : \"start\", \"id\" : \"" + uuid + "\"}";
+				ws.send(watch); 
+			}
+			
+			var log = function(s) {				
+				if (document.readyState !== "complete") {  
+					log.buffer.push(s);  
+				} else {
+					s = s.replace(/\r\n/g, "<br>");
+					var logLabel = document.getElementById("logLabel");
+					logLabel.innerHTML += s;
+					logLabel.scrollTop = logLabel.scrollHeight;
+				}  
+			}
+
+			function sendMsg(){
+				var msg=document.getElementById("messageId");
+				ws.send(msg.value); 
+			}
+			
+			function analysisMsg(msg) {
+				var obj = eval("("+msg+")");  
+				var action = obj["action"];
+				if (action == "push_log") {
+					log(obj["log"])
+				}
+			} 
+	
+			function getUUID() {
+				var s = [];
+				var hexDigits = "0123456789abcdef";
+				for (var i = 0; i < 36; i++) {
+					s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+				}
+				// bits 12-15 of the time_hi_and_version field to 0010
+				s[14] = "4";
+				// bits 6-7 of the clock_seq_hi_and_reserved to 01
+				s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+				s[8] = s[13] = s[18] = s[23] = "-";
+
+				var uuid = s.join("");
+				return uuid;
+			}
+			
+			var $_GET = (function(){
+				var url = window.document.location.href.toString();
+				var u = url.split("?");
+				if(typeof(u[1]) == "string"){
+					u = u[1].split("&");
+					var get = {};
+					for(var i in u){
+						var j = u[i].split("=");
+						get[j[0]] = j[1];
+					}
+					return get;
+				} else {
+					return null;
+				}
+			})();
+        </script> 
+    </head> 
+    <body onload="getLog();">
+		<div id="logLabel" readonly="true" rows="" cols="" ></div> 
+		<br/>
+    </body> 
+</html>

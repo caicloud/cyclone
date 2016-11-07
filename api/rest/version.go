@@ -21,17 +21,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/event"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
 )
 
 // createVersion creates a new version from service codebase master branch/trunk,
 // validates and saves it. The operation is asynchronous, meaning that when creating
 // a service, its service ID is returned and saved in database, but the version
-// related resources are not created yet. circle will do the following to actually
+// related resources are not created yet. Cyclone will do the following to actually
 // create the version:
 //  1. Runs user specified unittest/integration if any (or hook up with jenkins);
 //  2. Runs user specified script to build docker container or just run docker build;
@@ -63,7 +63,7 @@ func createVersion(request *restful.Request, response *restful.Response) {
 	}
 
 	userID := request.PathParameter("user_id")
-	log.InfoWithFields("circle receives creating version request", log.Fields{"user_id": userID, "version": version})
+	log.InfoWithFields("Cyclone receives creating version request", log.Fields{"user_id": userID, "version": version})
 
 	// Find the target service entity.
 	var createResponse api.VersionCreationResponse
