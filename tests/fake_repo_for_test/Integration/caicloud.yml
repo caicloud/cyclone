@@ -1,0 +1,18 @@
+integration:
+  services:
+    mongo:
+      image: localhost:5000/minimal-long-running-task:latest
+      command: mongod --smallfiles
+  image: localhost:5000/alice/test-basic-rest-version:v0.1.0
+  commands:
+    - ping -c 10 mongo
+
+pre_build:
+  image: localhost:5000/alice/test-basic-rest-version:v0.1.0
+  environment:
+    - STEP_NAME=prebuild
+  commands:
+    - cd /root
+    - echo $STEP_NAME > /root/newfile
+  outputs:
+    - /root/newfile

@@ -1,0 +1,11 @@
+---
+
+build:
+  context_dir: .
+
+deploy:
+  - application: e2e
+    cluster: 305bfcc7-9d55-4750-a322-1cc871a5b024
+    partition: e2e
+    containers:
+    - con-e2e
