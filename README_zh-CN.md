@@ -1,5 +1,6 @@
 中文 | [English](README.md)
 # Cyclone
+![logo](docs/logo.jpeg)
 
 Cyclone是一个打造容器工作流的云原生持续集成持续发布平台。
 
