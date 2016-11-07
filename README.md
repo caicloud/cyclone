@@ -124,4 +124,4 @@ deploy:
       - mongo-server
 ```
 
-Cirlce also supports deploy a few applications into clusters one by one. You need only write the info in "deploy" section, as the above do.
+Cyclone also supports deploy a few applications into clusters one by one. You need only write the info in "deploy" section, as the above do.
