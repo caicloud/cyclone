@@ -8,11 +8,11 @@
 
 ## 介绍
 
-这篇文档会对 circle 的使用进行简单的介绍。首先需要向 circle server 注册一个 worker 节点。随后可以通过 RESTful API 来与 circle server 进行交互，完成项目的持续集成与持续部署。
+这篇文档会对 Cyclone 的使用进行简单的介绍。首先需要向 Cyclone server 注册一个 worker 节点。随后可以通过 RESTful API 来与 Cyclone server 进行交互，完成项目的持续集成与持续部署。
 
 ## 节点注册
 
-Circle 是 Master/Slave 的架构，因此为了能够在 worker 节点上运行构建任务，需要先向 circle server 注册不少于一个的 worker 节点，worker 节点可以与 circle server 在同一台机器上。
+Cyclone 是 Master/Slave 的架构，因此为了能够在 worker 节点上运行构建任务，需要先向 Cyclone server 注册不少于一个的 worker 节点，worker 节点可以与 Cyclone server 在同一台机器上。
 
 ```shell
 # Create a worker node.
@@ -33,7 +33,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 ## 创建服务
 
-一个 service（服务）代表了一个被版本管理工具所管理的repo（代码库）。circle 对于每个项目而言，都需要通过一个POST请求来进行创建，在创建的过程中会进行仓库地址的校验等等。在创建成功后就可以进行对版本的构建。
+一个 service（服务）代表了一个被版本管理工具所管理的repo（代码库）。Cyclone 对于每个项目而言，都需要通过一个POST请求来进行创建，在创建的过程中会进行仓库地址的校验等等。在创建成功后就可以进行对版本的构建。
 
 ```shell
 # Create a service from a github repo.
@@ -50,7 +50,7 @@ curl -sS -X POST -H "Content-Type:application/json" -d '{
 
 ## 创建版本
 
-如果在你的代码的根目录中有 `caicloud.yml` 文件，那么 circle 会根据该配置文件来进行版本的创建。如果该文件不存在，circle 会按照默认的步骤来进行版本的构建与发布。
+如果在你的代码的根目录中有 `caicloud.yml` 文件，那么 Cyclone 会根据该配置文件来进行版本的创建。如果该文件不存在，Cyclone 会按照默认的步骤来进行版本的构建与发布。
 
 ```shell
 # Create a version manually.
@@ -64,7 +64,7 @@ curl -sS -X POST -H "Content-Type:application/json" -d '{
 
 为了能够执行镜像的构建，代码的根目录下必须有 `Dockerfile` 文件。在 Caicloud.yml 参考文档中我们将提供更多的自定义的功能，其中包括使用自定义名的文件作为 dockerfile 进行镜像创建。
 
-在得到 dockerfile 后，circle 会根据根目录下的 dockerfile 去进行镜像的构建，随后会将发布后的镜像发布到 registry 上。
+在得到 dockerfile 后，Cyclone 会根据根目录下的 dockerfile 去进行镜像的构建，随后会将发布后的镜像发布到 registry 上。
 
 ## 查看日志
 
@@ -84,7 +84,7 @@ Websocket 日志服务器默认在 8001 端口，通过建立 websocket 链接�
 }
 ```
 
-随后 circle 会发送日志包：
+随后 Cyclone 会发送日志包：
 
 ```
 {
@@ -98,7 +98,7 @@ Websocket 日志服务器默认在 8001 端口，通过建立 websocket 链接�
 }
 ```
 
-Circle 超过 120 秒收不到客户端的任何合法数据包，会主动断开链路，客户端如需维持链路需定时发送心跳：
+Cyclone 超过 120 秒收不到客户端的任何合法数据包，会主动断开链路，客户端如需维持链路需定时发送心跳：
 
 ```
 {
@@ -110,7 +110,7 @@ Circle 超过 120 秒收不到客户端的任何合法数据包，会主动断�
 在版本创建结束后，可以通过 HTTP GET 请求得到日志。
 
 ```shell
-# Get log from circle server.
+# Get log from Cyclone server.
 curl -v -sS ''$HOST_URL'/api/v0.1/'$USER_ID'/versions/'$VERSION_ID'/logs'
 ```
 

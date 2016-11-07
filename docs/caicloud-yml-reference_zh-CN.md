@@ -2,7 +2,7 @@
 
 ## Pre Build
 
-在执行构建前阶段时，circle 会根据定义的镜像和命令去执行，最后，与其他环节不同的是，构建前环节需要指定 `outputs` 字段，在构建结束后，被定义在 `outputs` 字段中的文件或目录会被拷贝出容器，供构建环节构建镜像时使用。
+在执行构建前阶段时，Cyclone 会根据定义的镜像和命令去执行，最后，与其他环节不同的是，构建前环节需要指定 `outputs` 字段，在构建结束后，被定义在 `outputs` 字段中的文件或目录会被拷贝出容器，供构建环节构建镜像时使用。
 
 ```yml
 pre_build:
@@ -29,11 +29,11 @@ build:
   dockerfile_name: Dockerfile_publish
 ```
 
-Circle会在 `<root_dir>/<context_dir>` 目录下，根据文件 `<root_dir>/<context_dir>/<dockerfile_name>` 来进行镜像的构建。如果镜像被成功构建，就会将其推送到镜像仓库中。
+Cyclone会在 `<root_dir>/<context_dir>` 目录下，根据文件 `<root_dir>/<context_dir>/<dockerfile_name>` 来进行镜像的构建。如果镜像被成功构建，就会将其推送到镜像仓库中。
 
 ## Integration
 
-Circle 在进行持续集成时，会使用Build阶段构建的镜像运行一个 docker 容器。与此同时，circle 支持在执行持续集成时同时运行多个 service。这些 service 是以独立容器的方式运行的，与持续集成容器之间可以进行直接地通信。比如，当持续集成需要进行数据库访问时，可以将数据库以 service 的方式启动，持续集成容器可以访问到该容器。
+Cyclone 在进行持续集成时，会使用Build阶段构建的镜像运行一个 docker 容器。与此同时，Cyclone 支持在执行持续集成时同时运行多个 service。这些 service 是以独立容器的方式运行的，与持续集成容器之间可以进行直接地通信。比如，当持续集成需要进行数据库访问时，可以将数据库以 service 的方式启动，持续集成容器可以访问到该容器。
 
 Service 容器和持续集成容器是在同一个docker network mode 下的，所以在持续集成容器中可以通过服务名和端口，就可以直接访问到服务容器。
 
@@ -57,7 +57,7 @@ integration:
 
 ## Post Build
 
-Circle 支持构建后阶段，构建后阶段会运行在一个单独的容器中，代码会被以 volume 的形式挂载在容器中。我们推荐你可以将需要用到的二进制等等都打包在镜像中，而把构建后需要执行的逻辑写在 `commands` 字段中。
+Cyclone 支持构建后阶段，构建后阶段会运行在一个单独的容器中，代码会被以 volume 的形式挂载在容器中。我们推荐你可以将需要用到的二进制等等都打包在镜像中，而把构建后需要执行的逻辑写在 `commands` 字段中。
 
 ```yml
 post_build:
@@ -70,7 +70,7 @@ post_build:
 ```
 
 ## Depoly
-Cirlce 可以把最新发布到镜像仓的镜像部署更新到指定的多个应用上。Circle 还可以将镜像部署到 [Caicloud Cubernetes](https://caicloud.io/products/cubernetes) 和 [Google Kubernetes](http://kubernetes.io/) 上。
+Cyclone 可以把最新发布到镜像仓的镜像部署更新到指定的多个应用上。Cyclone 还可以将镜像部署到 [Caicloud Cubernetes](https://caicloud.io/products/cubernetes) 和 [Google Kubernetes](http://kubernetes.io/) 上。
 
 #### Caicloud Cubernetes
 

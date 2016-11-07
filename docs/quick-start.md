@@ -8,11 +8,11 @@
 
 ## Overview
 
-In order to configure your build you must register a node to circle server, and include a caicloud.yml file in the root of your repository. This section provides a brief overview of the configuration file and build process.
+In order to configure your build you must register a node to Cyclone server, and include a caicloud.yml file in the root of your repository. This section provides a brief overview of the configuration file and build process.
 
 ## Node Registration
 
-Circle runs your builds in worker nodes. After circle server starts, at least one worker node should be registered.
+Cyclone runs your builds in worker nodes. After Cyclone server starts, at least one worker node should be registered.
 
 ```shell
 # Create a worker node.
@@ -33,7 +33,7 @@ The script above would creates a worker node at your local computer, then you co
 
 ## Setting up a service
 
-A service represents a VCS repository, You need to create a new service, Then circle would run your pre-defined tasks automatically.
+A service represents a VCS repository, You need to create a new service, Then Cyclone would run your pre-defined tasks automatically.
 
 ```shell
 # Create a service from a github repo.
@@ -48,11 +48,11 @@ curl -sS -X POST -H "Content-Type:application/json" -d '{
 }' ''$HOST_URL'/api/v0.1/'$USER_ID'/services'
 ```
 
-After you create the service, then circle would run your CI or CD tasks automatically, or you could trigger these tasks manually.
+After you create the service, then Cyclone would run your CI or CD tasks automatically, or you could trigger these tasks manually.
 
 ## Create a version
 
-If you include a `caicloud.yml` file in the repository's root directory, circle would create a version from the configuration file, otherwise circle would follow default processes to complete version creation.
+If you include a `caicloud.yml` file in the repository's root directory, Cyclone would create a version from the configuration file, otherwise Cyclone would follow default processes to complete version creation.
 
 ```shell
 # Create a version manually.
@@ -77,7 +77,7 @@ After the version is created successfully, you could get the log generated when 
 If version creation is running, you could get log by a websocket connection, And if version creation is over, you would get log by a HTTP GET request.
 
 ```shell
-# Get log from circle server.
+# Get log from Cyclone server.
 curl -v -sS ''$HOST_URL'/api/v0.1/'$USER_ID'/versions/'$VERSION_ID'/logs'
 
 ```
@@ -118,4 +118,4 @@ Pushed
 Clair analysis images got vulnerabilits: 0
 ```
 
-Circle would build and publish a new version of docker image to custom docker registry, if the version creation is completed successfully.
+Cyclone would build and publish a new version of docker image to custom docker registry, if the version creation is completed successfully.

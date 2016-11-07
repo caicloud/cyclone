@@ -23,7 +23,7 @@ pre_build:
 
 ## Build
 
-You must define context\_dir or dockerfile\_name to make circle run build step from the configuration file.
+You must define context\_dir or dockerfile\_name to make Cyclone run build step from the configuration file.
 
 ```yml
 build:
@@ -31,11 +31,11 @@ build:
   dockerfile_name: Dockerfile_publish
 ```
 
-Circle would build a docker image from `<root_dir>/<context_dir>/<dockerfile_name>`, and the working directory is `<context_dir>`. If the image is built successfully, circle would push it to the docker registry defined before running.
+Cyclone would build a docker image from `<root_dir>/<context_dir>/<dockerfile_name>`, and the working directory is `<context_dir>`. If the image is built successfully, Cyclone would push it to the docker registry defined before running.
 
 ## Integration
 
-Circle supports launching separate, ephemeral Docker containers as part of the integration process. This is useful, for example, if you require a database for running your tests.
+Cyclone supports launching separate, ephemeral Docker containers as part of the integration process. This is useful, for example, if you require a database for running your tests.
 
 The service conatienrs and integration container are in one network mode, so integration container could resolve the service names to the service containers. If you want to communicate with these containers, just use their names and the ports as endpoints.
 
@@ -59,7 +59,7 @@ integration:
 
 ## Post Build
 
-Circle supports post build hook to complete the build process. Post build hook would be run in a isolated container, the root directory is mounted into the container as a volume. We suggest users to add necessary binaries to image, and implement the post build logic in `commands` field.
+Cyclone supports post build hook to complete the build process. Post build hook would be run in a isolated container, the root directory is mounted into the container as a volume. We suggest users to add necessary binaries to image, and implement the post build logic in `commands` field.
 
 ```yml
 post_build:
@@ -73,7 +73,7 @@ post_build:
 
 ## Depoly
 
-Circle supports deploy the newest image for applications. It also support deploy the image to [Caicloud Cubernetes](https://caicloud.io/products/cubernetes) and [Google Kubernetes](http://kubernetes.io/).
+Cyclone supports deploy the newest image for applications. It also support deploy the image to [Caicloud Cubernetes](https://caicloud.io/products/cubernetes) and [Google Kubernetes](http://kubernetes.io/).
 
 #### Caicloud Cubernetes
 
