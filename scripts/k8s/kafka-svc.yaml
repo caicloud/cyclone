@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: kafka-server
+  name: kafka-server
+  namespace: cyclone
+spec:
+  ports:
+  - name: kafka-port
+    port: 9092
+    protocol: TCP
+    targetPort: 9092
+  selector:
+    name: kafka-server
+  sessionAffinity: None
+  type: ClusterIP
+  

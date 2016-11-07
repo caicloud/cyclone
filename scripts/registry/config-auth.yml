@@ -1,0 +1,31 @@
+server:
+  addr: ":3000"
+  certificate: "/etc/docker-auth/ssl/cert.pem"
+  key: "/etc/docker-auth/ssl/key.pem"
+
+token:
+  issuer: https://localhost:3000  # Must match issuer in the Registry config.
+  expiration: 900
+
+users:
+  # Password is specified as a BCrypt hash. Use htpasswd -B to generate.
+  "admin":
+    password: "$2y$05$JWLDa8LK2rjqA74bDfaeX.VWyib8eashlld.iT2oI5gyK/XDzHV66" # admin_password
+  "list":
+    password: "$2y$05$OYZxsh0m4D5Iq1YGsXt1kOkoWW.ZNK3c/L.WH7ZrHhfMGcldht.Im" # list_password
+  "alice":
+    password: "$2y$05$pWnd2GmcqC6esfrv4LHIWOHbapvtljzN0otKdNlXJRluw4p738Xcm" # alice_password
+  "bob":
+    password: "$2y$05$MXZKYVT0LFs.K/ZnCfa7muoi99zdDmbDhUDkRY3Pxl3t/jYrAhBWm" # bob_password
+
+acl:
+  - match: {account: "admin"}
+    actions: ["push", "pull"]
+    comment: "admin is allowed to pull and push everything."
+  - match: {account: "/.+/", name: "${account}/*"}
+    actions: ["push", "pull"]
+    comment: "All logged in users can push/pull all images that are in a namespace beginning with their name"
+  - match: {account: "/.*/", name: "*"}
+    actions: ["pull"]
+    comment: "All users can pull images under root directory."
+  # Access is denied by default.

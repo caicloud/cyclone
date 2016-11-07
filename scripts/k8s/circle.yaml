@@ -1,0 +1,77 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: cyclone-server
+  name: cyclone-server
+  namespace: cyclone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cyclone-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: cyclone-server
+    spec:
+      containers:
+      - command:
+        - /cyclone-server
+        env:
+        - name: MONGO_DB_IP
+          value: mongo-server:27017
+        - name: KAFKA_SERVER_IP
+          value: kafka-server:9092
+        - name: WORK_REGISTRY_LOCATION
+          value: cargo.caicloudprivatetest.com
+        - name: REGISTRY_USERNAME
+          value: caicloud
+        - name: REGISTRY_PASSWORD
+          value: caicloud2015ABC
+        - name: CLIENTID
+          value: d7d1851b08f456fd668e
+        - name: CLIENTIDSECRET
+          value: a0c301b13886475c1dd550b21cc31f1bc820664e
+        - name: CONSOLE_WEB_ENDPOINT
+          value: http://console.caicloudprivatetest.com:30000
+        - name: CLIENTID_GITLAB
+          value: 55df53729217e00df60e34207492ec9676c16ba3c6bdd47d6e0c026f2ed9f567
+        - name: CLIENTIDSECRET_GITLAB
+          value: a4fe95ced771da3808cef3b081423900ff6ac9e42823b6f2b2039f2f9144e8cd
+        - name: SERVER_GITLAB
+          value: https://gitlab.com
+        - name: ETCD_SERVER_IP
+          value: http://etcd-server:2379
+        - name: CYCLONE_SERVER_HOST
+          value: http://192.168.10.102:30010
+        - name: WORKER_IMAGE
+          value: index.caicloud.io/caicloud/cyclone-worker:latest
+        - name: LOG_SERVER
+          value: ws://192.168.10.102:30070/ws
+        - name: CLAIR_SERVER_IP
+          value: http://192.168.10.102:30060
+        image: index.caicloud.io/caicloud/cyclone-server:vlian
+        imagePullPolicy: IfNotPresent
+        name: cyclone
+        ports:
+        - containerPort: 7099
+          protocol: TCP
+        - containerPort: 8000
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        securityContext: {}
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      

@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: postgressvr
+  name: postgressvr
+  namespace: cyclone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: postgressvr
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: postgressvr
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_PASSWORD
+          value: password
+        image: index.caicloud.io/caicloud/postgres:9
+        imagePullPolicy: IfNotPresent
+        name: postgres
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+          name: postgres-port  
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        securityContext: {}
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      

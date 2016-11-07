@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: clairsvc
+  name: clairsvc
+  namespace: cyclone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: clairsvc
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: clairsvc
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: clairsecret
+      containers:
+      - args:
+          - "-config"
+          - "/config/config.yaml"
+        image: index.caicloud.io/caicloud/clair:v1.2.3
+        imagePullPolicy: IfNotPresent
+        name: clair
+        ports:
+        - containerPort: 6060
+          protocol: TCP
+        - containerPort: 6061
+          protocol: TCP  
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        securityContext: {}
+        terminationMessagePath: /dev/termination-log
+        volumeMounts:
+        - mountPath: /config
+          name: secret-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      
