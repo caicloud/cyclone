@@ -22,10 +22,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/etcd"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/remote"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/etcd"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/remote"
 	"golang.org/x/net/context"
 )
 

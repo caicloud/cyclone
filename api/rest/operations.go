@@ -19,11 +19,11 @@ package rest
 import (
 	"encoding/json"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/etcd"
-	"github.com/caicloud/circle/event"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/etcd"
+	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 )
 
 const (

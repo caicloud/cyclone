@@ -19,7 +19,7 @@ package etcd
 import (
 	"time"
 
-	"github.com/caicloud/circle/pkg/log"
+	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/coreos/etcd/client"
 	"golang.org/x/net/context"
 )

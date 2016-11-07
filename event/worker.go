@@ -23,16 +23,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/docker"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/pkg/osutil"
-	"github.com/caicloud/circle/resource"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/docker"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/resource"
+	"github.com/caicloud/cyclone/store"
 	docker_client "github.com/fsouza/go-dockerclient"
 )
 
-// Worker is the type for Circle Worker.
+// Worker is the type for Cyclone Worker.
 type Worker struct {
 	dockerHost  string
 	dm          *docker.Manager
@@ -40,9 +40,9 @@ type Worker struct {
 }
 
 const (
-	CIRCLE_SERVER_HOST = "CIRCLE_SERVER_HOST"
-	WORKER_IMAGE       = "WORKER_IMAGE"
-	WORK_DOCKER_HOST   = "WORK_DOCKER_HOST"
+	CYCLONE_SERVER_HOST = "CYCLONE_SERVER_HOST"
+	WORKER_IMAGE        = "WORKER_IMAGE"
+	WORK_DOCKER_HOST    = "WORK_DOCKER_HOST"
 
 	// worker env setting
 	WORKER_EVENTID = "WORKER_EVENTID"
@@ -246,8 +246,8 @@ func CheckWorkerTimeOut(e api.Event, w *Worker) {
 
 // toContainerConfig creates CreateContainerOptions from BuildNode.
 func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_client.CreateContainerOptions {
-	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "index.caicloud.io/caicloud/circle-worker")
-	serverHost := osutil.GetStringEnv(CIRCLE_SERVER_HOST, "http://127.0.0.1:7099")
+	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "index.caicloud.io/caicloud/cyclone-worker")
+	serverHost := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "http://127.0.0.1:7099")
 	registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
 	registryUsername := osutil.GetStringEnv(REGISTRY_USERNAME, "")
 	registryPassword := osutil.GetStringEnv(REGISTRY_PASSWORD, "")

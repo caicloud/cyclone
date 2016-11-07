@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
 )
 
@@ -46,7 +46,7 @@ import (
 //          git, fake (for testing)
 //     }
 //     "build_path": (string) Path of the file used to create service version. By default,
-//        circle will create service version using "docker build", assming there is a
+//        Cyclone will create service version using "docker build", assming there is a
 //        Dockerfile at top of the repository.
 //     ...
 //   }
@@ -98,7 +98,7 @@ func createService(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	log.InfoWithFields("circle receives creating service request",
+	log.InfoWithFields("Cyclone receives creating service request",
 		log.Fields{"user_id": userID, "service_name": service.Name})
 
 	// Create service in database (but not ready to be used yet).
@@ -287,7 +287,7 @@ func deleteService(request *restful.Request, response *restful.Response) {
 //          git, fake (for testing)
 //     }
 //     "build_path": (string) Path of the file used to create service version. By default,
-//        circle will create service version using "docker build", assming there is a
+//        Cyclone will create service version using "docker build", assming there is a
 //        Dockerfile at top of the repository.
 //   }
 //

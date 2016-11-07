@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/pkg/executil"
-	"github.com/caicloud/circle/pkg/log"
-	"github.com/caicloud/circle/store"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/executil"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
 	"github.com/satori/go.uuid"
 )

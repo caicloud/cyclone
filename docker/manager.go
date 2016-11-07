@@ -21,9 +21,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/caicloud/circle/api"
-	"github.com/caicloud/circle/pkg/log"
-	steplog "github.com/caicloud/circle/worker/log"
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/log"
+	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/docker/docker/builder/dockerfile/command"
 	docker_parse "github.com/docker/docker/builder/dockerfile/parser"
 	docker_client "github.com/fsouza/go-dockerclient"
