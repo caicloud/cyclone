@@ -1,0 +1,66 @@
+# 安装
+
+## 介绍
+
+这篇文档会对 circle 的安装进行简单的介绍。这里有两种方式，一种是使用Docker Compose，一种是使用kubectl。
+
+在此之前，你需要先编译生成circle-server和circle-worker镜像，操作命令如下：
+```
+	git clone https://github.com/caicloud/cirlce
+	cd circle
+	./scripts/build-image.sh
+	./scripts/build-worker-image.sh
+```
+
+- 使用docker compose方式，许哟docker-compose.yaml文件. 你可以去查看docker-compose.yaml文件去了解. 具体的操作指令如下，
+```
+	git clone https://github.com/caicloud/cirlce
+	cd circle
+	docker-compose -f  docker－compose.yaml up -d
+```
+这样Circle已经启动了。使用docker compose，Clair可能会在Postgres启动，这样会出现错误。如果出现这种错误，需要手动执行
+```docker start clair_clair```.
+
+- 使用kubectl方式，需要一些yaml文件. 你可以在cirlce/scripts/k8s目录下查看这些文件. 然后执行下面这些命令,
+```
+	git clone https://github.com/caicloud/cirlce
+	cd circle/scripts/k8s
+	kubectl create -f zookeeper.yaml
+	kubectl create -f zookeeper-svc.yaml
+	kubectl create -f kafka.yaml
+	kubectl create -f kafka-svc.yaml
+	kubectl create -f mongo.yaml
+	kubectl create -f mongo-svc.yaml
+	kubectl create -f etcd.yaml
+	kubectl create -f etcd-svc.yaml
+	kubectl create secret generic clairsecret --from-file=config.yaml
+	kubectl create -f postgres.yaml
+	kubectl create -f postgres-svc.yaml
+	kubectl create -f clair.yaml
+	kubectl create -f clair-svc.yaml
+	kubectl create -f circle.yaml
+	kubectl create -f circle-svc.yaml
+```
+这样Circle就启动了。
+
+## 其它
+
+环境变量解释：
+```
+	MONGO_DB_IP             mongo db的地址, 默认是localhost
+	KAFKA_SERVER_IP         kafka 服务的地址, 默认是127.0.0.1:9092
+	LOG_SERVER              日志服务的地址, 默认是127.0.0.1:8000
+	WORK_REGISTRY_LOCATION  镜像仓地址, 默认是index.caicloud.io
+	REGISTRY_USERNAME       镜像仓用户名, 默认是null
+	REGISTRY_PASSWORD       镜像仓用户密码, 默认是null
+	CLIENTID                用于github oauth授权的clienID, 默认是null
+	CLIENTIDSECRET          用于github oauth授权的secret, 默认是null
+	CONSOLE_WEB_ENDPOINT    caicloud网页访问地址, 默认是http://localhost:8000
+	CLIENTID_GITLAB         用于gitlab oauth授权的clienID, 默认是null
+	CLIENTIDSECRET_GITLAB   用于gitlab oauth授权的secret, 默认是null
+	SERVER_GITLAB           gitlab的服务器地址, 默认是https://gitlab.com
+	ETCD_SERVER_IP          etcd的服务器地址, 默认是127.0.0.1:2379
+	CIRCLE_SERVER_HOST      cirlce的访问地址, 默认是http://localhost:709
+	WORKER_IMAGE            worker容器的镜像名称，默认是index.caicloud.io/caicloud/circle-worker
+	CLAIR_SERVER_IP         clair的服务器地址, 默认是127.0.0.1:6060
+```
