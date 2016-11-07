@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: etcd-server
+  name: etcd-server
+  namespace: cyclone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: etcd-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: etcd-server
+    spec:
+      containers:
+      - image: index.caicloud.io/caicloud/circle-etcd:v3.0.13
+        imagePullPolicy: IfNotPresent
+        name: etcd
+        ports:
+        - containerPort: 2379
+          protocol: TCP
+        - containerPort: 2380
+          protocol: TCP
+        - containerPort: 4001
+          protocol: TCP
+        - containerPort: 7001
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        securityContext: {}
+        terminationMessagePath: /dev/termination-log
+        volumeMounts:
+           - mountPath: /data
+             name: data
+        command:
+           - /bin/sh
+           - -c
+           - /usr/local/bin/etcd
+             --listen-peer-urls=http://0.0.0.0:2380
+             --advertise-client-urls=http://0.0.0.0:2379
+             --listen-client-urls=http://0.0.0.0:2379
+             --data-dir=/data
+      volumes:
+         - name: data
+           nfs:
+             path: /cyclone-etcd
+             server: 10.254.0.110
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      
