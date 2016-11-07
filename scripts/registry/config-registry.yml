@@ -1,0 +1,28 @@
+version: 0.1
+log:
+  level: info
+  fields:
+    service: registry
+    environment: prod
+storage:
+  delete:
+    enabled: true
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /storage
+http:
+  addr: :5000
+  net: tcp
+  secret: OCmp8VQEVufB83qYQzkFYx/wfX+HFxcxNUpkieyenwc=
+auth:
+ token:
+   realm: https://localhost:3000/auth
+   service: http://localhost:5000
+   issuer: https://localhost:3000
+   rootcertbundle: /etc/docker/registry/ssl/cert.pem
+health:
+  storagedriver:
+    enabled: false
+    interval: 10s
+    threshold: 3
