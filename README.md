@@ -1,5 +1,6 @@
 English | [中文](README_zh-CN.md)
 # Cyclone
+![logo](docs/logo.jpeg)
 
 Cyclone is a cloud native CI/CD platform built for container workflow.
 
