@@ -37,7 +37,7 @@ Cyclone would build a docker image from `<root_dir>/<context_dir>/<dockerfile_na
 
 Cyclone supports launching separate, ephemeral Docker containers as part of the integration process. This is useful, for example, if you require a database for running your tests.
 
-The service conatienrs and integration container are in one network mode, so integration container could resolve the service names to the service containers. If you want to communicate with these containers, just use their names and the ports as endpoints.
+The service conatienrs and the integration container are in one network mode, so integration container could resolve the service names to the service containers. If you want to communicate with these containers, just use their names and the ports as endpoints.
 
 ```yml
 integration:
@@ -99,7 +99,7 @@ deploy:
 ```yml
 #deploy
 deploy:
-  - type: kubernetes 
+  - type: kubernetes
     host: <cluster host>
     token: <cluster access token>
     cluster: cluster1_id
@@ -108,7 +108,7 @@ deploy:
     containers:
       - container1
       - container2
-  - type: kubernetes 
+  - type: kubernetes
     host: <cluster host>
     token: <cluster access token>
     cluster: cluster2_id
