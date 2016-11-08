@@ -19,7 +19,6 @@ package gitlab
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -68,9 +67,14 @@ type Issue struct {
 		State     string     `json:"state"`
 		CreatedAt *time.Time `json:"created_at"`
 	} `json:"author"`
-	State     string     `json:"state"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	CreatedAt *time.Time `json:"created_at"`
+	State          string     `json:"state"`
+	UpdatedAt      *time.Time `json:"updated_at"`
+	CreatedAt      *time.Time `json:"created_at"`
+	Subscribed     bool       `json:"subscribed"`
+	UserNotesCount int        `json:"user_notes_count"`
+	Confidential   bool       `json:"confidential"`
+	DueDate        string     `json:"due_date"`
+	WebURL         string     `json:"web_url"`
 }
 
 func (i Issue) String() string {
@@ -206,8 +210,6 @@ func (s *IssuesService) CreateIssue(
 	if err != nil {
 		return nil, nil, err
 	}
-
-	log.Printf("req: %#+v\n", req.URL)
 
 	i := new(Issue)
 	resp, err := s.client.Do(req, i)

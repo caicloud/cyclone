@@ -366,6 +366,7 @@ func parse(despath string) ([]string, error) {
 	}
 
 	defer f.Close()
+
 	nodes, _ := docker_parse.Parse(f)
 	for _, node := range nodes.Children {
 		if node.Value == command.From {

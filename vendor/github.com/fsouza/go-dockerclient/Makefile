@@ -13,7 +13,9 @@ all: test
 
 lint:
 	@ go get -v github.com/golang/lint/golint
-	[ -z "$$(golint . | grep -v 'type name will be used as docker.DockerInfo' | tee /dev/stderr)" ]
+	@ export output="$$(golint . | grep -v 'type name will be used as docker.DockerInfo')"; \
+		[ -n "$${output}" ] && echo "$${output}" && export status=1; \
+		exit $${status:-0}
 
 vet:
 	go vet ./...
