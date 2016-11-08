@@ -1,4 +1,4 @@
-FROM index.caicloud.io/caicloud/docker:1.10.1-dind
+FROM docker:1.10.1-dind
 
 RUN apk update && apk add git && apk add subversion && \
     apk add ca-certificates && \
