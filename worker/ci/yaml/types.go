@@ -113,13 +113,13 @@ type DeployStep struct {
 // Application contains information that helps locating a application, and
 // deploying image to its containers.
 type Application struct {
-	ClusterType     string   `yaml:"type"` // kubernetes, caicloud_claas, mesos
-	ClusterHost     string   `yaml:"host"`
-	ClusterToken    string   `yaml:"token"`
-	ApplicationName string   `yaml:"application"`
-	ClusterName     string   `yaml:"cluster"`
-	PartitionName   string   `yaml:"partition"`
-	Containers      []string `yaml:"containers"`
+	ClusterType    string   `yaml:"type"` // kubernetes, caicloud_claas, mesos
+	ClusterHost    string   `yaml:"host"`
+	ClusterToken   string   `yaml:"token"`
+	ClusterName    string   `yaml:"cluster"`
+	NamespaceName  string   `yaml:"namespace"`
+	DeploymentName string   `yaml:"deployment"`
+	Containers     []string `yaml:"containers"`
 }
 
 // MapEqualSlice is the type for env map slice.

@@ -101,11 +101,11 @@ type DeployConfig struct {
 	ClusterName string `bson:"cluster_name,omitempty" json:"cluster_name,omitempty"`
 	// Cluster id
 	ClusterID string `bson:"cluster_id,omitempty" json:"cluster_id,omitempty"`
-	// partition name
-	Partition string `bson:"partition,omitempty" json:"partition,omitempty"`
-	// partition name
-	Application string `bson:"application,omitempty" json:"application,omitempty"`
-	// partition name
+	// namespace name
+	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty"`
+	// deployment name
+	Deployment string `bson:"deployment,omitempty" json:"deployment,omitempty"`
+	// container names
 	Containers []string `bson:"containers,omitempty" json:"containers,omitempty"`
 }
 
