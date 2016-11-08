@@ -37,7 +37,7 @@ pre_build:
 
 ### Build
 
-You could define the directory and dockerfile's name in build section. If you don't, Cyclone uses the root directory and `Dockerfile` by default. If the image is built successfully, Cyclone would push it to the docker registry.
+You could define the directory and dockerfile's name in build section. If you don't, Cyclone would use the root directory and `Dockerfile` by default. If the image is built successfully, Cyclone would push it to the docker registry.
 
 ```yml
 build:
@@ -47,7 +47,7 @@ build:
 
 ### Integration
 
-Cyclone use the image  which built durning the build step to run a container . Then Cyclone would run integration step defined in `caicloud.yml` as a docker container. If the integration is down, version creation fails.
+Cyclone use the image  which built during the build step to run a container . Then Cyclone would run integration step defined in `caicloud.yml` as a docker container. If the integration is failed, version creation fails.
 
 ```yml
 integration:
@@ -62,7 +62,7 @@ integration:
 
 ### Post Build
 
-Cyclone supports post build hook to complete the build process. In some cases, you could do some clean-ups or have some joint products to publish. So the post build hook could handle these cases by add a new step to build process, and is run after the build task is over.
+Cyclone supports post build hook to complete the build process. In some cases, you could do some clean-ups or have some joint products to publish. So the post build hook could handle these cases by adding a new step to build process, and is run after the build task is over.
 
 ```yml
 post_build:
@@ -90,16 +90,16 @@ deploy:
 
 ```yml
 deploy:
-  - type: kubernetes 
+  - type: kubernetes
     host: <cluster host>
     token: <cluster access token>
     cluster: <cluster name>
     namespace: <namespace name>
-	deployment: <deployment name>
+    deployment: <deployment name>
     containers:
       - mongo-server
 ```
 
-Cyclone also supports deploy a few applications into clusters one by one. You need only write the info in "deploy" section, as the above do.
+Cyclone also supports deploying a few applications into clusters one by one. You only need to write the info in "deploy" section, as the above do.
 
 See [caicloud.yml Reference](./caicloud-yml-reference.md) for more information.
