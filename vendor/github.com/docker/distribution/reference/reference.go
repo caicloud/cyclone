@@ -24,7 +24,6 @@ package reference
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/docker/distribution/digest"
 )
@@ -43,9 +42,6 @@ var (
 
 	// ErrDigestInvalidFormat represents an error while trying to parse a string as a tag.
 	ErrDigestInvalidFormat = errors.New("invalid digest format")
-
-	// ErrNameContainsUppercase is returned for invalid repository names that contain uppercase characters.
-	ErrNameContainsUppercase = errors.New("repository name must be lowercase")
 
 	// ErrNameEmpty is returned for empty, invalid repository names.
 	ErrNameEmpty = errors.New("repository name must have at least one component")
@@ -138,7 +134,7 @@ type Canonical interface {
 func SplitHostname(named Named) (string, string) {
 	name := named.Name()
 	match := anchoredNameRegexp.FindStringSubmatch(name)
-	if len(match) != 3 {
+	if match == nil || len(match) != 3 {
 		return "", name
 	}
 	return match[1], match[2]
@@ -153,9 +149,7 @@ func Parse(s string) (Reference, error) {
 		if s == "" {
 			return nil, ErrNameEmpty
 		}
-		if ReferenceRegexp.FindStringSubmatch(strings.ToLower(s)) != nil {
-			return nil, ErrNameContainsUppercase
-		}
+		// TODO(dmcgowan): Provide more specific and helpful error
 		return nil, ErrReferenceInvalidFormat
 	}
 

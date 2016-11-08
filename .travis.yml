@@ -1,0 +1,23 @@
+language: go
+
+go:
+  - 1.6
+  - 1.7
+
+go_import_path: github.com/caicloud/cyclone
+
+before_install:
+  - go get github.com/tools/godep
+  - go get github.com/mattn/goveralls
+
+install:
+  - godep go build .
+  - cd ./worker
+  - godep go build ./cyclone-worker.go
+  - cd - > /dev/null
+
+script:
+  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
+
+after_success:
+  - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile

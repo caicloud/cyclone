@@ -1,4 +1,4 @@
-// Copyright 2014 go-dockerclient authors. All rights reserved.
+// Copyright 2015 go-dockerclient authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"golang.org/x/net/context"
 )
 
 // Exec is the type representing a `docker exec` instance and containing the
@@ -25,14 +23,13 @@ type Exec struct {
 //
 // See https://goo.gl/1KSIb7 for more details
 type CreateExecOptions struct {
-	AttachStdin  bool            `json:"AttachStdin,omitempty" yaml:"AttachStdin,omitempty"`
-	AttachStdout bool            `json:"AttachStdout,omitempty" yaml:"AttachStdout,omitempty"`
-	AttachStderr bool            `json:"AttachStderr,omitempty" yaml:"AttachStderr,omitempty"`
-	Tty          bool            `json:"Tty,omitempty" yaml:"Tty,omitempty"`
-	Cmd          []string        `json:"Cmd,omitempty" yaml:"Cmd,omitempty"`
-	Container    string          `json:"Container,omitempty" yaml:"Container,omitempty"`
-	User         string          `json:"User,omitempty" yaml:"User,omitempty"`
-	Context      context.Context `json:"-"`
+	AttachStdin  bool     `json:"AttachStdin,omitempty" yaml:"AttachStdin,omitempty"`
+	AttachStdout bool     `json:"AttachStdout,omitempty" yaml:"AttachStdout,omitempty"`
+	AttachStderr bool     `json:"AttachStderr,omitempty" yaml:"AttachStderr,omitempty"`
+	Tty          bool     `json:"Tty,omitempty" yaml:"Tty,omitempty"`
+	Cmd          []string `json:"Cmd,omitempty" yaml:"Cmd,omitempty"`
+	Container    string   `json:"Container,omitempty" yaml:"Container,omitempty"`
+	User         string   `json:"User,omitempty" yaml:"User,omitempty"`
 }
 
 // CreateExec sets up an exec instance in a running container `id`, returning the exec
@@ -41,7 +38,7 @@ type CreateExecOptions struct {
 // See https://goo.gl/1KSIb7 for more details
 func (c *Client) CreateExec(opts CreateExecOptions) (*Exec, error) {
 	path := fmt.Sprintf("/containers/%s/exec", opts.Container)
-	resp, err := c.do("POST", path, doOptions{data: opts, context: opts.Context})
+	resp, err := c.do("POST", path, doOptions{data: opts})
 	if err != nil {
 		if e, ok := err.(*Error); ok && e.Status == http.StatusNotFound {
 			return nil, &NoSuchContainer{ID: opts.Container}
@@ -61,12 +58,13 @@ func (c *Client) CreateExec(opts CreateExecOptions) (*Exec, error) {
 //
 // See https://goo.gl/iQCnto for more details
 type StartExecOptions struct {
+	Detach bool `json:"Detach,omitempty" yaml:"Detach,omitempty"`
+
+	Tty bool `json:"Tty,omitempty" yaml:"Tty,omitempty"`
+
 	InputStream  io.Reader `qs:"-"`
 	OutputStream io.Writer `qs:"-"`
 	ErrorStream  io.Writer `qs:"-"`
-
-	Detach bool `json:"Detach,omitempty" yaml:"Detach,omitempty"`
-	Tty    bool `json:"Tty,omitempty" yaml:"Tty,omitempty"`
 
 	// Use raw terminal? Usually true when the container contains a TTY.
 	RawTerminal bool `qs:"-"`
@@ -77,8 +75,6 @@ type StartExecOptions struct {
 	// It must be an unbuffered channel. Using a buffered channel can lead
 	// to unexpected behavior.
 	Success chan struct{} `json:"-"`
-
-	Context context.Context `json:"-"`
 }
 
 // StartExec starts a previously set up exec instance id. If opts.Detach is
@@ -110,7 +106,7 @@ func (c *Client) StartExecNonBlocking(id string, opts StartExecOptions) (CloseWa
 	path := fmt.Sprintf("/exec/%s/start", id)
 
 	if opts.Detach {
-		resp, err := c.do("POST", path, doOptions{data: opts, context: opts.Context})
+		resp, err := c.do("POST", path, doOptions{data: opts})
 		if err != nil {
 			if e, ok := err.(*Error); ok && e.Status == http.StatusNotFound {
 				return nil, &NoSuchExec{ID: id}
@@ -153,8 +149,8 @@ func (c *Client) ResizeExecTTY(id string, height, width int) error {
 // ExecProcessConfig is a type describing the command associated to a Exec
 // instance. It's used in the ExecInspect type.
 type ExecProcessConfig struct {
-	User       string   `json:"user,omitempty" yaml:"user,omitempty"`
 	Privileged bool     `json:"privileged,omitempty" yaml:"privileged,omitempty"`
+	User       string   `json:"user,omitempty" yaml:"user,omitempty"`
 	Tty        bool     `json:"tty,omitempty" yaml:"tty,omitempty"`
 	EntryPoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
 	Arguments  []string `json:"arguments,omitempty" yaml:"arguments,omitempty"`
@@ -167,8 +163,8 @@ type ExecProcessConfig struct {
 // See https://goo.gl/gPtX9R for more details
 type ExecInspect struct {
 	ID            string            `json:"ID,omitempty" yaml:"ID,omitempty"`
-	ExitCode      int               `json:"ExitCode,omitempty" yaml:"ExitCode,omitempty"`
 	Running       bool              `json:"Running,omitempty" yaml:"Running,omitempty"`
+	ExitCode      int               `json:"ExitCode,omitempty" yaml:"ExitCode,omitempty"`
 	OpenStdin     bool              `json:"OpenStdin,omitempty" yaml:"OpenStdin,omitempty"`
 	OpenStderr    bool              `json:"OpenStderr,omitempty" yaml:"OpenStderr,omitempty"`
 	OpenStdout    bool              `json:"OpenStdout,omitempty" yaml:"OpenStdout,omitempty"`

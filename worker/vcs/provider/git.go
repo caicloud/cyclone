@@ -122,11 +122,10 @@ func (g *Git) NewTagFromLatest(repoPath string, event *api.Event) error {
 		client := gitlab.NewOAuthClient(nil, event.Data["Token"].(string))
 		client.SetBaseURL(gitlabServer + "/api/v3/")
 
-		_, _, err := client.Repositories.CreateTag(owner+"/"+name, tag)
+		_, _, err := client.Tags.CreateTag(owner+"/"+name, tag)
 		return err
 	}
 	return nil
-
 }
 
 // CheckoutTag implements VCS interface.

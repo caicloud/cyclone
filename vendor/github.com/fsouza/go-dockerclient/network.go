@@ -5,12 +5,11 @@
 package docker
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-
-	"golang.org/x/net/context"
 )
 
 // ErrNetworkAlreadyExists is the error returned by CreateNetwork when the
@@ -30,7 +29,6 @@ type Network struct {
 	Options    map[string]string
 	Internal   bool
 	EnableIPv6 bool `json:"EnableIPv6"`
-	Labels     map[string]string
 }
 
 // Endpoint contains network resources allocated and used for a container in a network
@@ -68,11 +66,11 @@ type NetworkFilterOpts map[string]map[string]bool
 //
 // See goo.gl/zd2mx4 for more details.
 func (c *Client) FilteredListNetworks(opts NetworkFilterOpts) ([]Network, error) {
-	params, err := json.Marshal(opts)
-	if err != nil {
+	params := bytes.NewBuffer(nil)
+	if err := json.NewEncoder(params).Encode(&opts); err != nil {
 		return nil, err
 	}
-	path := "/networks?filters=" + string(params)
+	path := "/networks?filters=" + params.String()
 	resp, err := c.do("GET", path, doOptions{})
 	if err != nil {
 		return nil, err
@@ -111,14 +109,13 @@ func (c *Client) NetworkInfo(id string) (*Network, error) {
 // See https://goo.gl/6GugX3 for more details.
 type CreateNetworkOptions struct {
 	Name           string                 `json:"Name" yaml:"Name"`
+	CheckDuplicate bool                   `json:"CheckDuplicate" yaml:"CheckDuplicate"`
 	Driver         string                 `json:"Driver" yaml:"Driver"`
 	IPAM           IPAMOptions            `json:"IPAM" yaml:"IPAM"`
 	Options        map[string]interface{} `json:"Options" yaml:"Options"`
-	Labels         map[string]string      `json:"Labels" yaml:"Labels"`
-	CheckDuplicate bool                   `json:"CheckDuplicate" yaml:"CheckDuplicate"`
+	Label          map[string]string      `json:"Labels" yaml:"Labels"`
 	Internal       bool                   `json:"Internal" yaml:"Internal"`
 	EnableIPv6     bool                   `json:"EnableIPv6" yaml:"EnableIPv6"`
-	Context        context.Context        `json:"-"`
 }
 
 // IPAMOptions controls IP Address Management when creating a network
@@ -148,8 +145,7 @@ func (c *Client) CreateNetwork(opts CreateNetworkOptions) (*Network, error) {
 		"POST",
 		"/networks/create",
 		doOptions{
-			data:    opts,
-			context: opts.Context,
+			data: opts,
 		},
 	)
 	if err != nil {
@@ -205,8 +201,6 @@ type NetworkConnectionOptions struct {
 
 	// Force is only applicable to the DisconnectNetwork call
 	Force bool
-
-	Context context.Context `json:"-"`
 }
 
 // EndpointConfig stores network endpoint details
@@ -241,10 +235,7 @@ type EndpointIPAMConfig struct {
 //
 // See https://goo.gl/6GugX3 for more details.
 func (c *Client) ConnectNetwork(id string, opts NetworkConnectionOptions) error {
-	resp, err := c.do("POST", "/networks/"+id+"/connect", doOptions{
-		data:    opts,
-		context: opts.Context,
-	})
+	resp, err := c.do("POST", "/networks/"+id+"/connect", doOptions{data: opts})
 	if err != nil {
 		if e, ok := err.(*Error); ok && e.Status == http.StatusNotFound {
 			return &NoSuchNetworkOrContainer{NetworkID: id, ContainerID: opts.Container}

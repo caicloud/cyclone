@@ -116,6 +116,7 @@ type Client struct {
 
 	// Services used for talking to different parts of the GitLab API.
 	Branches        *BranchesService
+	Builds          *BuildsService
 	Commits         *CommitsService
 	DeployKeys      *DeployKeysService
 	Groups          *GroupsService
@@ -133,6 +134,7 @@ type Client struct {
 	Session         *SessionService
 	Settings        *SettingsService
 	SystemHooks     *SystemHooksService
+	Tags            *TagsService
 	Users           *UsersService
 }
 
@@ -172,6 +174,7 @@ func newClient(httpClient *http.Client, tokenType tokenType, token string) *Clie
 	}
 
 	c.Branches = &BranchesService{client: c}
+	c.Builds = &BuildsService{client: c}
 	c.Commits = &CommitsService{client: c}
 	c.DeployKeys = &DeployKeysService{client: c}
 	c.Groups = &GroupsService{client: c}
@@ -189,6 +192,7 @@ func newClient(httpClient *http.Client, tokenType tokenType, token string) *Clie
 	c.Session = &SessionService{client: c}
 	c.Settings = &SettingsService{client: c}
 	c.SystemHooks = &SystemHooksService{client: c}
+	c.Tags = &TagsService{client: c}
 	c.Users = &UsersService{client: c}
 
 	return c
@@ -223,11 +227,14 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*http.Request
 	// Set the encoded opaque data
 	u.Opaque = c.baseURL.Path + path
 
-	q, err := query.Values(opt)
-	if err != nil {
-		return nil, err
+	if opt != nil {
+		q, err := query.Values(opt)
+		if err != nil {
+			return nil, err
+		}
+		u.RawQuery = q.Encode()
+
 	}
-	u.RawQuery = q.Encode()
 
 	req := &http.Request{
 		Method:     method,
