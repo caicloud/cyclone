@@ -77,18 +77,18 @@ type Result struct {
 
 // appVersionInfo defines which versions are used in an application.
 type appVersionInfo struct {
-	UserName        string                 `bson:"user_name,omitempty" json:"user_name,omitempty"`
-	UserID          string                 `bson:"uid,omitempty" json:"uid,omitempty"`
-	ServiceName     string                 `bson:"service_name,omitempty" json:"service_name,omitempty"`
-	ClusterID       string                 `bson:"cid,omitempty" json:"cid,omitempty"`
-	Partition       string                 `bson:"partition,omitempty" json:"partition,omitempty"`
-	ApplicationName string                 `bson:"application_name,omitempty" json:"application_name,omitempty"`
-	ContainerList   []containerVersionInfo `bson:"containerlist,omitempty" json:"containerlist,omitempty"`
-	DeployOk        bool                   `bson:"deploy_ok,omitempty" json:"deploy_ok,omitempty"`
-	ImageName       string                 `bson:"image_name,omitempty" json:"image_name,omitempty"`
-	ClusterType     string                 `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"` // kubernetes, caicloud_claas, mesos
-	ClusterHost     string                 `bson:"cluster_host,omitempty" json:"cluster_host,omitempty"`
-	ClusterToken    string                 `bson:"cluster_token,omitempty" json:"cluster_token,omitempty"`
+	UserName      string                 `bson:"user_name,omitempty" json:"user_name,omitempty"`
+	UserID        string                 `bson:"uid,omitempty" json:"uid,omitempty"`
+	ServiceName   string                 `bson:"service_name,omitempty" json:"service_name,omitempty"`
+	ClusterID     string                 `bson:"cid,omitempty" json:"cid,omitempty"`
+	Namespace     string                 `bson:"namespace,omitempty" json:"namespace,omitempty"`
+	Deployment    string                 `bson:"deployment,omitempty" json:"deployment,omitempty"`
+	ContainerList []containerVersionInfo `bson:"containerlist,omitempty" json:"containerlist,omitempty"`
+	DeployOk      bool                   `bson:"deploy_ok,omitempty" json:"deploy_ok,omitempty"`
+	ImageName     string                 `bson:"image_name,omitempty" json:"image_name,omitempty"`
+	ClusterType   string                 `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"` // kubernetes, caicloud_claas, mesos
+	ClusterHost   string                 `bson:"cluster_host,omitempty" json:"cluster_host,omitempty"`
+	ClusterToken  string                 `bson:"cluster_token,omitempty" json:"cluster_token,omitempty"`
 }
 
 // containerVersionInfo defines which versions are used in an container.
@@ -259,22 +259,21 @@ func Publish(event *api.Event, dmanager *docker.Manager) error {
 
 // updateContainerInClusterWithYaml func use to update container in cluster according the caicloud.yaml.
 func updateContainerInClusterWithYaml(userID, imageName string, application yaml.Application) error {
-	applicationName := application.ApplicationName
-	// ISSUE(tong): For now, we need cluster ID.
 	clusterName := application.ClusterName
-	partitionName := application.PartitionName
+	namespaceName := application.NamespaceName
+	deploymentName := application.DeploymentName
 	for _, containerName := range application.Containers {
 		log.InfoWithFields("Send post request to updateImage API for yaml deploy: ",
 			log.Fields{
 				"user id":     userID,
 				"cluster":     clusterName,
-				"partition":   partitionName,
-				"application": applicationName,
+				"partition":   namespaceName,
+				"application": deploymentName,
 				"container":   containerName,
 				"image":       imageName,
 			})
 		if application.ClusterType == KUBERNETES {
-			if err := InvokeUpdateImageK8sAPI(applicationName, partitionName, containerName, imageName,
+			if err := InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName, imageName,
 				application.ClusterHost, application.ClusterToken); err != nil {
 				log.ErrorWithFields("Failed to deploy with yaml information use k8s api", log.Fields{"err": err})
 				return err
@@ -282,7 +281,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 		} else {
 			consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
 			endpoint := consoleWebEndpoint + "/api/application/updateImage"
-			if err := InvokeUpdateImageAPI(userID, applicationName, clusterName, partitionName,
+			if err := InvokeUpdateImageAPI(userID, deploymentName, clusterName, namespaceName,
 				containerName, imageName, endpoint); err != nil {
 				log.ErrorWithFields("Failed to deploy with yaml information", log.Fields{"err": err})
 				return err
@@ -297,10 +296,9 @@ func updateContainerInClusterWithPlan(userID, imageName string, application api.
 	consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
 	endpoint := consoleWebEndpoint + "/api/application/updateImage"
 
-	applicationName := application.Application
-	// ISSUE(tong): For now, we need cluster ID.
 	clusterName := application.ClusterID
-	partitionName := application.Partition
+	namespaceName := application.Namespace
+	deploymentName := application.Deployment
 	for _, containerName := range application.Containers {
 		// Web may send the empty contianter name, so there need make some judgment
 		if containerName == "" {
@@ -310,12 +308,12 @@ func updateContainerInClusterWithPlan(userID, imageName string, application api.
 			log.Fields{
 				"user id":     userID,
 				"cluster":     clusterName,
-				"partition":   partitionName,
-				"application": applicationName,
+				"partition":   namespaceName,
+				"application": deploymentName,
 				"container":   containerName,
 				"image":       imageName,
 			})
-		if err := InvokeUpdateImageAPI(userID, applicationName, clusterName, partitionName,
+		if err := InvokeUpdateImageAPI(userID, deploymentName, clusterName, namespaceName,
 			containerName, imageName, endpoint); err != nil {
 			log.ErrorWithFields("Failed to deploy with plan information", log.Fields{"err": err})
 			return err
@@ -399,7 +397,7 @@ func checkOneDeployStatus(versionID string, checkChan chan Result, app appVersio
 		if err != nil {
 			// May Failed because of network problem, just print error
 			log.ErrorWithFields("Failed to call checkDeployAPI", log.Fields{
-				"applicationName": app.ApplicationName,
+				"applicationName": app.Deployment,
 				"err":             err,
 			})
 			return false, err
@@ -472,15 +470,15 @@ func parseAppVersionInfo(event *api.Event, a *yaml.Application) *appVersionInfo 
 		UserID:      event.Service.UserID,
 		ServiceName: event.Service.Name,
 		// Actually this is a cluster id now..
-		ClusterID:       a.ClusterName,
-		Partition:       a.PartitionName,
-		ApplicationName: a.ApplicationName,
-		ContainerList:   containerList,
-		DeployOk:        false,
-		ImageName:       imageName,
-		ClusterType:     a.ClusterType,
-		ClusterHost:     a.ClusterHost,
-		ClusterToken:    a.ClusterToken,
+		ClusterID:     a.ClusterName,
+		Namespace:     a.NamespaceName,
+		Deployment:    a.DeploymentName,
+		ContainerList: containerList,
+		DeployOk:      false,
+		ImageName:     imageName,
+		ClusterType:   a.ClusterType,
+		ClusterHost:   a.ClusterHost,
+		ClusterToken:  a.ClusterToken,
 	}
 }
 
@@ -508,12 +506,12 @@ func getAppVersionInfoFromPlan(event *api.Event, plan *api.DeployConfig) *appVer
 		UserID:      event.Service.UserID,
 		ServiceName: event.Service.Name,
 		// Actually this is a cluster id now..
-		ClusterID:       plan.ClusterID,
-		Partition:       plan.Partition,
-		ApplicationName: plan.Application,
-		ContainerList:   containerList,
-		DeployOk:        false,
-		ImageName:       imageName,
+		ClusterID:     plan.ClusterID,
+		Namespace:     plan.Namespace,
+		Deployment:    plan.Deployment,
+		ContainerList: containerList,
+		DeployOk:      false,
+		ImageName:     imageName,
 	}
 }
 
@@ -607,7 +605,7 @@ func InvokeCheckDeployStateAPI(app appVersionInfo, endpoint string) error {
 }
 
 // InvokeUpdateImageK8sAPI invokes k8s api to update the depolyment.
-func InvokeUpdateImageK8sAPI(applicationName, partitionName, containerName,
+func InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName,
 	imageName, host, token string) error {
 	k8sClient, err := NewClientWithToken(host, token)
 	if err != nil {
@@ -616,7 +614,7 @@ func InvokeUpdateImageK8sAPI(applicationName, partitionName, containerName,
 
 	// Get applciton depolyment
 	var deployment *k8s_ext_api.Deployment
-	if deployment, err = k8sClient.Deployments(partitionName).Get(applicationName); err != nil {
+	if deployment, err = k8sClient.Deployments(namespaceName).Get(deploymentName); err != nil {
 		return err
 	}
 
@@ -629,7 +627,7 @@ func InvokeUpdateImageK8sAPI(applicationName, partitionName, containerName,
 
 	// Update deployment. Skip updating deployment if name is empty.
 	if deployment.Name != "" {
-		if _, err := k8sClient.Deployments(partitionName).Update(deployment); err != nil {
+		if _, err := k8sClient.Deployments(namespaceName).Update(deployment); err != nil {
 			return err
 		}
 	}
@@ -646,7 +644,7 @@ func InvokeCheckDeployStateK8sAPI(app appVersionInfo) error {
 
 	// Get applciton depolyment
 	var deployment *k8s_ext_api.Deployment
-	if deployment, err = k8sClient.Deployments(app.Partition).Get(app.ApplicationName); err != nil {
+	if deployment, err = k8sClient.Deployments(app.Namespace).Get(app.Deployment); err != nil {
 		return err
 	}
 

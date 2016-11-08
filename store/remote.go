@@ -24,7 +24,7 @@ import (
 // NewTokenDocument creates a new document (record) in mongodb.
 func (d *DataStore) NewTokenDocument(token *api.VscToken) error {
 	col := d.s.DB(defaultDBName).C(remoteCollectionName)
-	_, err := col.Upsert(bson.M{"vsc": token.Vsc}, token)
+	_, err := col.Upsert(bson.M{"vsc": token.Vsc, "userid": token.UserID}, token)
 	return err
 }
 

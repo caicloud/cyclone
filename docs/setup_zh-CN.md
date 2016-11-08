@@ -1,5 +1,13 @@
 # 安装
 
+## 版本依赖
+
+```
+	golang：1.6+
+  	docker：建议使用 1.10.1
+  	kubernetes：1.2+
+```
+
 ## 介绍
 
 这篇文档会对 Cyclone 的安装进行简单的介绍。这里有两种方式，一种是使用Docker Compose，一种是使用kubectl。

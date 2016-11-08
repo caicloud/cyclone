@@ -1,8 +1,14 @@
 # Setup
 
+## Version Dependence
 
-## Setup Instructions
+```
+    golang：1.6+
+    docker：(Suggested)1.10.1
+    kubernetes：1.2+
+```
 
+## Setup Instruction
 
 There are two ways to set up Cyclone, either via Docker Compose or kubectl.
 
