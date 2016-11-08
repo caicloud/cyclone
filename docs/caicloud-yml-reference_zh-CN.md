@@ -77,15 +77,15 @@ Cyclone 可以把最新发布到镜像仓的镜像部署更新到指定的多个
 ```yml
 #deploy段
 deploy:
-  - application: redis-master
+  - deployment: redis-master
     cluster: cluster1_id
-    partition: partition1_id
+    namespace: namespace1_id
     containers:
       - container1
       - container2
-  - application: redis-slave
+  - deployment: redis-slave
     cluster: cluster2_id
-    partition: partition2_id
+    namespace: namespace2_id
     containers:
       - container1
       - container2
@@ -99,18 +99,18 @@ deploy:
   - type: kubernetes 
     host: <cluster host>
     token: <cluster access token>
-    application: redis-master
     cluster: cluster1_id
-    partition: partition1_id
+    namespace: namespace1_id
+    deployment: redis-master
     containers:
       - container1
       - container2
   - type: kubernetes 
     host: <cluster host>
     token: <cluster access token>
-    application: redis-slave
     cluster: cluster2_id
-    partition: partition2_id
+    namespace: namespace2_id
+    deployment: redis-slave
     containers:
       - container1
       - container2

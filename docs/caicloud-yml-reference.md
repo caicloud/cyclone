@@ -78,17 +78,17 @@ Cyclone supports deploy the newest image for applications. It also support deplo
 #### Caicloud Cubernetes
 
 ```yml
-#deploy段
+#deploy
 deploy:
-  - application: redis-master
+  - deployment: redis-master
     cluster: cluster1_id
-    partition: partition1_id
+    namespace: namespace1_id
     containers:
       - container1
       - container2
-  - application: redis-slave
+  - deployment: redis-slave
     cluster: cluster2_id
-    partition: partition2_id
+    namespace: namespace2_id
     containers:
       - container1
       - container2
@@ -97,23 +97,23 @@ deploy:
 #### Google Kubernetes
 
 ```yml
-#deploy段
+#deploy
 deploy:
   - type: kubernetes 
     host: <cluster host>
     token: <cluster access token>
-    application: redis-master
     cluster: cluster1_id
-    partition: partition1_id
+    namespace: namespace1_id
+    deployment: redis-master
     containers:
       - container1
       - container2
   - type: kubernetes 
     host: <cluster host>
     token: <cluster access token>
-    application: redis-slave
     cluster: cluster2_id
-    partition: partition2_id
+    namespace: namespace2_id
+    deployment: redis-slave
     containers:
       - container1
       - container2

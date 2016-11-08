@@ -1,2 +1,6 @@
 .DS_Store
 cyclone
+
+worker/cyclone-worker
+
+cyclone-server
