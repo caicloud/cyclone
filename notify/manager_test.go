@@ -43,7 +43,7 @@ func TestEmailSendLogic(t *testing.T) {
 		Status:           api.VersionHealthy,
 		YamlDeployStatus: api.DeploySuccess,
 		DeployPlansStatuses: []api.DeployPlanStatus{
-			api.DeployPlanStatus{
+			{
 				Status: api.DeployFailed,
 			},
 		},

@@ -19,7 +19,7 @@ package yaml
 
 import "gopkg.in/yaml.v2"
 
-// Parse parses a Yaml configuraiton file.
+// Parse parses a Yaml configuration file.
 func Parse(in []byte) (*Config, error) {
 	c := Config{}
 	e := yaml.Unmarshal(in, &c)

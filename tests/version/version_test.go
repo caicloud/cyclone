@@ -249,7 +249,6 @@ var _ = Describe("Version", func() {
 				Operation:   api.PublishOperation,
 			}
 
-			imageName = dockerManager.GetImageNameWithTag(AliceUser, DefaultServiceName, DefaultVersionName)
 			// Forcibly remove image.
 			dockerManager.RemoveImage(dockerManager.GetImageNameWithTag(AliceUser, DefaultServiceName, DefaultVersionName))
 

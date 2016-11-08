@@ -188,9 +188,9 @@ func TestProtocol(t *testing.T) {
 		t.Error("Packet push log frame err")
 	}
 
-	// Packet reponse frame.
+	// Packet response frame.
 	packet = PacketResponse(sResponse, sId, nErrorCode)
 	if string(packet) != `{"action":"response","response":"ok","id_ack":"id","error_code":0,"error_msg":"successful"}` {
-		t.Error("Packet reponse frame err")
+		t.Error("Packet response frame err")
 	}
 }

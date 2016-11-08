@@ -67,7 +67,7 @@ func (resm *ResourceManager) ApplyResource(event *api.Event) error {
 	defer ds.Close()
 	resource, err := ds.FindResourceByID(event.Service.UserID)
 	if err != nil {
-		// Come in, we think that it is the first time to create version accoring userid, so need add new document
+		// Come in, we think that it is the first time to create version according userid, so need add new document
 		resource.UserID = event.Service.UserID
 		if event.Version.BuildResource.CPU == 0 || event.Version.BuildResource.Memory == 0 {
 			event.Version.BuildResource.Memory = resm.memorycontainer

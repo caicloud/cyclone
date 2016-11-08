@@ -134,7 +134,7 @@ type VscToken struct {
 	// The user who owns the cluster.
 	UserID string `bson:"userid,omitempty" json:"user_id,omitempty"`
 
-	Vsc string `bson:"vsc,omitempty" json:"vsc,omitempty`
+	Vsc string `bson:"vsc,omitempty" json:"vsc,omitempty"`
 
 	Vsctoken oauth2.Token `bson:"vsctoken,omitempty" json:"vsctoken,omitempty"`
 }
@@ -168,7 +168,7 @@ const (
 	RepositoryAccepted RepositoryStatus = "accepted"
 	// RepositoryHealthy shows that the repository is healthy and ready to be used.
 	RepositoryHealthy RepositoryStatus = "healthy"
-	// RepositoryMissing shows that the repository is missing, meaning that Cyclone is unable to verity its existance.
+	// RepositoryMissing shows that the repository is missing, meaning that Cyclone is unable to verity its existence.
 	RepositoryMissing RepositoryStatus = "missing"
 	// RepositoryUnknownVcs shows that the given vcs is not supported.
 	RepositoryUnknownVcs RepositoryStatus = "unknownvcs"
@@ -810,7 +810,7 @@ type Event struct {
 	Project        Project        `bson:"project,omitempty" json:"project,omitempty"`
 	ProjectVersion ProjectVersion `bson:"project_version,omitempty" json:"project_version,omitempty"`
 
-	Output filebuffer.FileBuffer `bson:"output,omitempty" json:"ouput,omitempty"`
+	Output filebuffer.FileBuffer `bson:"output,omitempty" json:"output,omitempty"`
 	// Custom data passed to event operation handler.
 	Data       map[string]interface{} `bson:"data,omitempty" json:"data,omitempty"`
 	WorkerInfo WorkerInfo             `bson:"worker_info,omitempty" json:"worker_info,omitempty"`
@@ -895,7 +895,7 @@ type ResourceGetResponse struct {
 // worker node relate types
 //
 
-// WorkerNode is the infomation of worker node.
+// WorkerNode is the information of worker node.
 type WorkerNode struct {
 	// ID of the worker node.
 	NodeID string `bson:"_id,omitempty" json:"_id,omitempty"`

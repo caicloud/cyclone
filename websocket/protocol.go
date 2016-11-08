@@ -114,7 +114,7 @@ func PacketHeartBeat(sID string) []byte {
 	return jsonData
 }
 
-//PacketResponse packet the data frame of reponse
+//PacketResponse packet the data frame of response
 func PacketResponse(sResponse string, sIDAck string, nErrorCode int) []byte {
 	structData := &ResponsePacket{
 		Action:    "response",

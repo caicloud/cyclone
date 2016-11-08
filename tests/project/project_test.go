@@ -46,7 +46,6 @@ const (
 
 var _ = Describe("Service", func() {
 	var (
-		dockerManager    *docker.Manager
 		serviceA         *api.Service
 		serviceAResponse *api.ServiceCreationResponse
 		serviceB         *api.Service
@@ -76,7 +75,7 @@ var _ = Describe("Service", func() {
 
 		// Create docker manager.
 		var err error
-		dockerManager, err = docker.NewManager(
+		_, err = docker.NewManager(
 			endpoint, certPath, registry)
 		if err != nil {
 			log.Fatalf("Unable to connect to docker daemon: %v", err)
@@ -165,7 +164,7 @@ var _ = Describe("Service", func() {
 
 	})
 
-	Context("with right infomation", func() {
+	Context("with right information", func() {
 		project := &api.Project{
 			Name:        DefaultProjectName,
 			Description: "a project for test",
@@ -223,7 +222,7 @@ var _ = Describe("Service", func() {
 		})
 	})
 
-	Context("set project with wrong infomation.", func() {
+	Context("set project with wrong information.", func() {
 		project := &api.Project{
 			Name:        ProjectNameForSet,
 			Description: "a project for test",
