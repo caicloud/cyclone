@@ -1,5 +1,7 @@
 English | [中文](README_zh-CN.md)
 # Cyclone
+
+[![Join the chat at https://gitter.im/caicloud/cyclone](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![logo](docs/logo.jpeg)
 
 [![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
