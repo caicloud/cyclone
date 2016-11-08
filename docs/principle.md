@@ -1,23 +1,25 @@
 ## Workflow
 ![flow](flow.png)
-- Cyclone provides abundant [API](http://118.193.142.27:7099/apidocs/) for web applications.
-- After relating the code repository in VCS with the service of Cyclone via API, commiting and releasing to VCS will notify Cyclone-Server by webhook
-- Cyclone-Server will run a Cyclone-Worker container which base the tech of Docker-in-Docker, the container will checkout code from VCS, then execute steps according to configrations of caicloud.yml in the code repository as followed: 
-  - PreBuild: compile executable file in the specified system environment
-  - Build: copy the executable file to the specified system environment, packet the environment to a image and push the image to registry
-  - PostBuild：run a container to execute some shells or commads which aims to do some related operations after the images published
-  - Integretion: use the image built durning the build step to run a container , run the micro service containers which depend by CI, run the integretion testing
-  - Deploy: use the published image to run a application in to containers cluster Platform such as kubernetes
-- The process log can be pulled from Cyclone-Server via websocket
-- Cyclone-Server will send the result and log of CI & CD to user by email when the progress has finished
+- Cyclone provides abundant [APIs](http://118.193.142.27:7099/apidocs/) for web applications.
+- After registering the code repository in VCS with Cyclone via API, commiting and releasing to VCS will notify Cyclone-Server by webhook.
+- Cyclone-Server will run a Cyclone-Worker container which uses the “Docker in Docker” technique. The Cyclone-Worker container will checkout code from VCS, then execute steps according to the configrations of caicloud.yml in the code repository as follows:
+ - PreBuild: compile the source code from VCS and generate the executable file in the specified system environment
+ - Build: copy the executable file to the specified system environment, package the environment to a docker image and push the image to the specified docker registry
+ - Integration: run the newly built image as a container, and bring up its dependencies (as other containers specified in the configuration) to perform integration testing.
+ - PostBuild: run a container to execute some shells or commads which aim to do some related operations after the images is published in the registry
+ - Deploy: deploy the containerized application into a containerized platform like Kubernetes.
+- The logs durning the entire workflow can be pulled from Cyclone-Server via websocket
+- Cyclone-Server will send the results and the complete logs of CI & CD workflow to users by email when the progress has finished
+
 
 ## Architecture
 ![architecture](architecture.png)
 
+
 Each cube represent a container
-- The Api-Server component in Cyclone-Server provides the restful API service, if the task created by calling the API needs long time to handle, it will generate a pending event and write into etcd
-- The EventManger component load pending events from etcd, watch the change of events, and send new pending event to WorkerManager
-- WorkerManager call the docker API to run a Cyclone-Worker container, and send information to it via ENVs
-- Cyclone-Worker use event ID as a token to call API and get event information, then run containers to execute integretion, prebuild, build and post build steps, progress log push to Log-Server and save to kafka
-- Log-Server component pull log from kafka and push it to user
-- The date need to be persisted save into mongo
+- The API-Server component in Cyclone-Server provides the restful API service. If the task created by calling the API needs long time to handle, Cyclone will generate a pending event and write it into etcd
+- The EventManger component loads pending events from etcd, watches the changes of events, and sends new pending events to WorkerManager
+- WorkerManager calls the docker API to run a Cyclone-Worker container, and sends information to it via ENVs
+- Cyclone-Worker uses event ID as a token to call the API server and gets event information, and then runs containers to execute integretion, prebuild, build and post build steps. Meanwhile, the workflow logs are pushed to the Log-Server and saved to kafka. 
+- Log-Server component pulls logs from kafka and pushes the logs to users
+- The data which need to be persisted are saved into  into mongo. 
