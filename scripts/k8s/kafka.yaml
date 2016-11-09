@@ -30,7 +30,7 @@ spec:
           value: zookeeper-server:2181
         - name: KAFKA_LOG_DIRS
           value: /data
-        image: wurstmeister/kafka:0.10.1.0
+        image: cargo.caicloud.io/caicloud/kafka:0.10.1.0
         imagePullPolicy: IfNotPresent
         name: kafka
         ports:

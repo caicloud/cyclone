@@ -35,21 +35,22 @@ Then Cyclone is started. Docker compose will start Clair before Postgres which m
 ```
     git clone https://github.com/caicloud/cirlce
     cd cyclone/scripts/k8s
-    kubectl create -f zookeeper.yaml
-    kubectl create -f zookeeper-svc.yaml
-    kubectl create -f kafka.yaml
-    kubectl create -f kafka-svc.yaml
-    kubectl create -f mongo.yaml
-    kubectl create -f mongo-svc.yaml
-    kubectl create -f etcd.yaml
-    kubectl create -f etcd-svc.yaml
-    kubectl create secret generic clairsecret --from-file=config.yaml
-    kubectl create -f postgres.yaml
-    kubectl create -f postgres-svc.yaml
-    kubectl create -f clair.yaml
-    kubectl create -f clair-svc.yaml
-    kubectl create -f cyclone.yaml
-    kubectl create -f cyclone-svc.yaml
+    kubectl create namespace cyclone
+    kubectl --namespace=cyclone create -f zookeeper.yaml
+    kubectl --namespace=cyclone create -f zookeeper-svc.yaml
+    kubectl --namespace=cyclone create -f kafka.yaml
+    kubectl --namespace=cyclone create -f kafka-svc.yaml
+    kubectl --namespace=cyclone create -f mongo.yaml
+    kubectl --namespace=cyclone create -f mongo-svc.yaml
+    kubectl --namespace=cyclone create -f etcd.yaml
+    kubectl --namespace=cyclone create -f etcd-svc.yaml
+    kubectl --namespace=cyclone create secret generic clairsecret --from-file=config.yaml
+    kubectl --namespace=cyclone create -f postgres.yaml
+    kubectl --namespace=cyclone create -f postgres-svc.yaml
+    kubectl --namespace=cyclone create -f clair.yaml
+    kubectl --namespace=cyclone create -f clair-svc.yaml
+    kubectl --namespace=cyclone create -f cyclone.yaml
+    kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
 Then Cyclone is started.
 

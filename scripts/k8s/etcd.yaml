@@ -21,7 +21,7 @@ spec:
         name: etcd-server
     spec:
       containers:
-      - image: cargo.caicloud.io/caicloud/etcd:v2.2.1
+      - image: cargo.caicloud.io/caicloud/etcd:v3.0.13
         imagePullPolicy: IfNotPresent
         name: etcd
         ports:

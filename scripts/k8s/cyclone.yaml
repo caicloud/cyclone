@@ -52,7 +52,7 @@ spec:
           value: ws://192.168.10.102:30070/ws
         - name: CLAIR_SERVER_IP
           value: http://192.168.10.102:30060
-        image: cargo.caicloud.io/caicloud/cyclone-server:vlian
+        image: cargo.caicloud.io/caicloud/cyclone-server:latest
         imagePullPolicy: IfNotPresent
         name: cyclone
         ports:
