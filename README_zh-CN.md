@@ -31,3 +31,12 @@ Cyclone主要致力于将代码从本地开发环境用任意容器引擎封装�
 * [caicloud.yml简介](./docs/caicloud-yml-introduction_zh-CN.md)
 * [API手册](http://118.193.142.27:7099/apidocs/)
 * [原理](./docs/principle_zh-CN.md)
+
+## 展示图片
+- **依赖管理**
+
+![dependency](docs/dependency.png)
+
+- **安全扫描**
+
+![security](docs/security.png)
