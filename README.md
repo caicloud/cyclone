@@ -30,7 +30,7 @@ You could read the [quick start to start a tour of cyclone.](./docs/quick-start.
 
 ### Caicloud.yml Introduction
 
-When `caicloud.yml` is given, version creation would include what you defined in the configuration file. you could find the [introduction to caicldou.yml](./docs/caicloud-yml-introduction.md) in the documentation.
+When `caicloud.yml` is given, version creation would include what you defined in the configuration file. you could find the [introduction to caicloud.yml](./docs/caicloud-yml-introduction.md) in the documentation.
 
 ### Developer Guide
 
