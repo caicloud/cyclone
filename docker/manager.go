@@ -140,7 +140,7 @@ func (dm *Manager) BuildImage(event *api.Event) error {
 
 	contextDir := contextdir.(string)
 
-	// Use to pull index.caicloud.io/:username/:imagename:tag.
+	// Use to pull cargo.caicloud.io/:username/:imagename:tag.
 	// TODO: we will consider more cases
 	authOpt := docker_client.AuthConfiguration{
 		Username: dm.authConfig.Username,
@@ -289,7 +289,7 @@ func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
 
 	contextDir := contextdir.(string)
 
-	// Use to pull index.caicloud.io/:username/:imagename:tag.
+	// Use to pull cargo.caicloud.io/:username/:imagename:tag.
 	// TODO: we will consider more cases
 	authOpt := docker_client.AuthConfiguration{
 		Username: dm.authConfig.Username,

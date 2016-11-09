@@ -28,7 +28,7 @@ spec:
           value: "1"
         - name: ZOOKEEPER_MEMBER
           value: zookeeper-server
-        image: index.caicloud.io/caicloud/zookeeper-cluster:v3.4.6
+        image: cargo.caicloud.io/caicloud/zookeeper:3.4.6
         imagePullPolicy: IfNotPresent
         name: zookeeper
         ports:

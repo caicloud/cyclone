@@ -35,21 +35,22 @@ Then Cyclone is started. Docker compose will start Clair before Postgres which m
 ```
     git clone https://github.com/caicloud/cirlce
     cd cyclone/scripts/k8s
-    kubectl create -f zookeeper.yaml
-    kubectl create -f zookeeper-svc.yaml
-    kubectl create -f kafka.yaml
-    kubectl create -f kafka-svc.yaml
-    kubectl create -f mongo.yaml
-    kubectl create -f mongo-svc.yaml
-    kubectl create -f etcd.yaml
-    kubectl create -f etcd-svc.yaml
-    kubectl create secret generic clairsecret --from-file=config.yaml
-    kubectl create -f postgres.yaml
-    kubectl create -f postgres-svc.yaml
-    kubectl create -f clair.yaml
-    kubectl create -f clair-svc.yaml
-    kubectl create -f cyclone.yaml
-    kubectl create -f cyclone-svc.yaml
+    kubectl create namespace cyclone
+    kubectl --namespace=cyclone create -f zookeeper.yaml
+    kubectl --namespace=cyclone create -f zookeeper-svc.yaml
+    kubectl --namespace=cyclone create -f kafka.yaml
+    kubectl --namespace=cyclone create -f kafka-svc.yaml
+    kubectl --namespace=cyclone create -f mongo.yaml
+    kubectl --namespace=cyclone create -f mongo-svc.yaml
+    kubectl --namespace=cyclone create -f etcd.yaml
+    kubectl --namespace=cyclone create -f etcd-svc.yaml
+    kubectl --namespace=cyclone create secret generic clairsecret --from-file=config.yaml
+    kubectl --namespace=cyclone create -f postgres.yaml
+    kubectl --namespace=cyclone create -f postgres-svc.yaml
+    kubectl --namespace=cyclone create -f clair.yaml
+    kubectl --namespace=cyclone create -f clair-svc.yaml
+    kubectl --namespace=cyclone create -f cyclone.yaml
+    kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
 Then Cyclone is started.
 
@@ -61,7 +62,7 @@ Environment variables:
 - MONGO_DB_IP             The IP of mongodb, default is localhost
 - KAFKA_SERVER_IP         The address of kafka, defaults to 127.0.0.1:9092
 - LOG_SERVER              The address of log server, defaults to 127.0.0.1:8000
-- WORK_REGISTRY_LOCATION  The registry to push images, default is index.caicloud.io
+- WORK_REGISTRY_LOCATION  The registry to push images, default is cargo.caicloud.io
 - REGISTRY_USERNAME       The username in docker registry, default is null
 - REGISTRY_PASSWORD       The password in docker registry, default is null
 - CLIENTID                The client ID from Github for oauth, default is null
@@ -72,5 +73,5 @@ Environment variables:
 - SERVER_GITLAB           The address of gitlab, defaults to https://gitlab.com
 - ETCD_SERVER_IP          The address of etcd, defaults to 127.0.0.1:2379
 - CYCLONE_SERVER_HOST     The address where cyclone is running, defaults to http://localhost:709
-- WORKER_IMAGE            The image name for worker container, defaults to index.caicloud.io/caicloud/cyclone-worker
+- WORKER_IMAGE            The image name for worker container, defaults to cargo.caicloud.io/caicloud/cyclone-worker
 - CLAIR_SERVER_IP         The address of clair, defaults to 127.0.0.1:6060

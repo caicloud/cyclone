@@ -79,7 +79,7 @@ const (
 )
 
 const (
-	DefaultRegistry = "index.caicloud.io"
+	DefaultRegistry = "cargo.caicloud.io"
 
 	// Grace period waiting for mongodb to be running.
 	MongoGracePeriod = 30 * time.Second

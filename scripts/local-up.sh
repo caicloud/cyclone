@@ -51,10 +51,10 @@ ${CYCLONE_ROOT}/scripts/registry/start.sh
 # Export env variables for cyclone.
 export DOCKER_HOST=${DOCKER_HOST:-"unix:///var/run/docker.sock"}
 export ENABLE_CAICLOUD_AUTH=${ENABLE_CAICLOUD_AUTH:-"false"}
-export REGISTRY_LOCATION=${REGISTRY_LOCATION:-"index.caicloud.io"}
+export REGISTRY_LOCATION=${REGISTRY_LOCATION:-"cargo.caicloud.io"}
 export REGISTRY_USERNAME=${REGISTRY_USERNAME:-""}
 export REGISTRY_PASSWORD=${REGISTRY_PASSWORD:-""}
-export WORK_REGISTRY_LOCATION=${WORK_REGISTRY_LOCATION:-"index.caicloud.io"}
+export WORK_REGISTRY_LOCATION=${WORK_REGISTRY_LOCATION:-"cargo.caicloud.io"}
 export SUCCESSTEMPLATE=${SUCCESSTEMPLATE:-"./notify/provider/success.html"}
 export ERRORTEMPLATE=${ERRORTEMPLATE:-"./notify/provider/error.html"}
 
@@ -67,7 +67,7 @@ export CLAIR_SERVER_IP="127.0.0.1:6060"
 export ETCD_SERVER_IP="http://127.0.0.1:2379"
 export CYCLONE_SERVER_HOST="http://127.0.0.1:7099"
 export LOG_SERVER="ws://127.0.0.1:8000/ws"
-export WORKER_IMAGE="index.caicloud.io/caicloud/cyclone-worker"
+export WORKER_IMAGE="cargo.caicloud.io/caicloud/cyclone-worker"
 export CLIENTID=""
 export CLIENTIDSECRET=""
 export CLIENTID_GITLAB=0

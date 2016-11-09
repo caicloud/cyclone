@@ -28,7 +28,7 @@ spec:
       - args:
           - "-config"
           - "/config/config.yaml"
-        image: index.caicloud.io/caicloud/clair:v1.2.3
+        image: cargo.caicloud.io/caicloud/clair:v1.2.3
         imagePullPolicy: IfNotPresent
         name: clair
         ports:
