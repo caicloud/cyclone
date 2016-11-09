@@ -58,6 +58,7 @@ mongo:
        - "27017"
     ports:
        - "27017:27017"
+    command: mongod
 
 cyclone-server:
     image: cargo.caicloud.io/caicloud/cyclone-server:latest
