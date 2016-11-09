@@ -4,11 +4,11 @@ This section of the documentation contains a guide for users who want to contrib
 
 ## The process of developing the Cyclone project
 
-Now the Cyclone project is hosted on Github, so we follow the [github flow](https://guides.github.com/introduction/flow/), you could learn it in 5 minutes:)
+Now the Cyclone project is hosted on Github, so we follow the [github flow](https://guides.github.com/introduction/flow/), you could learn it within 5 minutes:)
 
 ## Setting up your dev environment
 
-We have writen some bash scripts to help you start contributing code or documentation to the Cyclone project.
+We have written some bash scripts to help you start contributing code or documentation to the Cyclone project.
 
 If you want to start a cyclone server for dev, you could run:
 
@@ -16,7 +16,7 @@ If you want to start a cyclone server for dev, you could run:
 ./scripts/local-up.sh
 ```
 
-The script would run all the dependencies in docker containers, compile and run cyclone server **locally**. This way is more hackable than run all services in containers.
+The script would run all the dependencies in docker containers, compile and run cyclone server **locally**. This way is more hackable than running all services in containers.
 
 Notice that if your docker daemon is running in a docker machine, maybe you need to do some additional work, such as port forwarding and so on.
 
@@ -39,7 +39,7 @@ We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API d
  - PostBuild: run a container to execute some shells or commads which aim to do some related operations after the images is published in the registry
  - Deploy: deploy the containerized application into a containerized platform like Kubernetes.
 - The logs durning the entire workflow can be pulled from Cyclone-Server via websocket
-- Cyclone-Server will send the results and the complete logs of CI & CD workflow to users by email when the progress has finished
+- Cyclone-Server will send the results and the complete logs of CI & CD workflow to users by email when the progress has been finished
 
 
 ### Architecture
