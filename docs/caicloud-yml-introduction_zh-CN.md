@@ -1,6 +1,6 @@
 # Caicloud.yml 简介
 
-当给定 `caicloud.yml` 作为配置文件后，Cyclone会根据配置文件来执行创建版本的过程。
+当给定 `caicloud.yml` 作为配置文件后，Cyclone 会根据配置文件来执行创建版本的过程。
 
 下面的代码是一个 `caicloud.yml` 的例子：
 
