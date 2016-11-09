@@ -26,9 +26,9 @@ const configStr = `
 integration:
   services: # run some micro services container which depend by the integration test
     mongo:
-      image: index.caicloud.io/caicloud/mongo:3.0.5
+      image: cargo.caicloud.io/caicloud/mongo:3.0.5
       command: mongod --smallfiles
-  image: index.caicloud.io/caicloud/golang:1.6 # run a golang container to compile executable files and do integration test
+  image: cargo.caicloud.io/caicloud/golang:1.6 # run a golang container to compile executable files and do integration test
   environment:
     - BUILD_DIR=/go/src/github.com/caicloud/ci-demo-go
   commands: 
@@ -40,7 +40,7 @@ integration:
     - echo "do some test" # do integration test
 
 pre_build:
-  image: index.caicloud.io/caicloud/golang:1.6 # run a container to compile publish executable files
+  image: cargo.caicloud.io/caicloud/golang:1.6 # run a container to compile publish executable files
   volumes:
     - .:/go/src/github.com/caicloud/ci-demo-go # mount source file to GOPATH
   commands: # compile

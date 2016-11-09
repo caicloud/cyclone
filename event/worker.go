@@ -70,7 +70,7 @@ var (
 
 // RegistryCompose that compose the info about the registry
 type RegistryCompose struct {
-	// Registry's address, ie. index.caicloud.io
+	// Registry's address, ie. cargo.caicloud.io
 	RegistryLocation string `json:"registrylocation,omitempty"`
 	// RegistryUsername used for operating the images
 	RegistryUsername string `json:"registryusername,omitempty"`
@@ -246,7 +246,7 @@ func CheckWorkerTimeOut(e api.Event, w *Worker) {
 
 // toContainerConfig creates CreateContainerOptions from BuildNode.
 func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_client.CreateContainerOptions {
-	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "index.caicloud.io/caicloud/cyclone-worker")
+	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "cargo.caicloud.io/caicloud/cyclone-worker")
 	serverHost := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "http://127.0.0.1:7099")
 	registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
 	registryUsername := osutil.GetStringEnv(REGISTRY_USERNAME, "")

@@ -46,7 +46,6 @@ var _ = Describe("Version", func() {
 		serviceResponse     *api.ServiceCreationResponse
 		service_svn         *api.Service
 		serviceResponse_svn *api.ServiceCreationResponse
-		imageName           string
 		ws                  *gwebsocket.Conn
 	)
 

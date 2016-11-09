@@ -107,7 +107,7 @@ Step 3 : CMD /echo.sh
 ---> 207a093246c2
 Removing intermediate container 35de934148fb
 Successfully built 207a093246c2
-The push refers to a repository [index.caicloud.io/<user>/toy-dockerfile]
+The push refers to a repository [cargo.caicloud.io/<user>/toy-dockerfile]
 Preparing
 Pushing [==================================================>]    512 B
 Pushing [==================================================>]    544 B

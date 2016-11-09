@@ -30,10 +30,6 @@ spec:
           value: kafka-server:9092
         - name: WORK_REGISTRY_LOCATION
           value: cargo.caicloudprivatetest.com
-        - name: REGISTRY_USERNAME
-          value: caicloud
-        - name: REGISTRY_PASSWORD
-          value: caicloud2015ABC
         - name: CLIENTID
           value: d7d1851b08f456fd668e
         - name: CLIENTIDSECRET
@@ -51,12 +47,12 @@ spec:
         - name: CYCLONE_SERVER_HOST
           value: http://192.168.10.102:30010
         - name: WORKER_IMAGE
-          value: index.caicloud.io/caicloud/cyclone-worker:latest
+          value: cargo.caicloud.io/caicloud/cyclone-worker:latest
         - name: LOG_SERVER
           value: ws://192.168.10.102:30070/ws
         - name: CLAIR_SERVER_IP
           value: http://192.168.10.102:30060
-        image: index.caicloud.io/caicloud/cyclone-server:vlian
+        image: cargo.caicloud.io/caicloud/cyclone-server:vlian
         imagePullPolicy: IfNotPresent
         name: cyclone
         ports:

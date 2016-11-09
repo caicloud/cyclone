@@ -13,6 +13,6 @@ RUN apk update && apk add ca-certificates && \
 COPY ./cyclone-server /cyclone-server
 COPY ./http/web /http/web
 COPY ./notify/provider /template
-COPY ./node_modules /root
+COPY ./node_modules /root/node_modules
 
 CMD ["/cyclone-server"]

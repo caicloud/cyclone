@@ -24,7 +24,7 @@ spec:
       - env:
         - name: POSTGRES_PASSWORD
           value: password
-        image: index.caicloud.io/caicloud/postgres:9
+        image: postgres:9
         imagePullPolicy: IfNotPresent
         name: postgres
         ports:

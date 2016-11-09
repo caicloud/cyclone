@@ -1,10 +1,10 @@
 postgres:
-    image: postgres:latest
+    image: postgres:9
     environment:
       POSTGRES_PASSWORD: password
 
 clair:
-    image: quay.io/coreos/clair:v1.2.3
+    image: cargo.caicloud.io/caicloud/clair:v1.2.3
     ports:
         - "6060-6061:6060-6061"
     expose:
@@ -17,12 +17,12 @@ clair:
     command: [-config, /config/config.yaml]
 
 zookeeper:
-    image: wurstmeister/zookeeper
+    image: wurstmeister/zookeeper:3.4.6
     expose:
         - "2181"
 
 kafka:
-    image: wurstmeister/kafka
+    image: wurstmeister/kafka:0.10.1.0
     hostname: kafkahost
     links:
         - zookeeper:zk
@@ -37,7 +37,7 @@ kafka:
     expose:
         - "9092"
 etcd:
-    image: quay.io/coreos/etcd:v2.2.1
+    image: cargo.caicloud.io/caicloud/etcd:v2.2.1
     volumes:
         - /data:/data
     ports:
@@ -60,7 +60,7 @@ mongo:
        - "27017:27017"
 
 cyclone-server:
-    image: index.caicloud.io/caicloud/cyclone-server:latest
+    image: cargo.caicloud.io/caicloud/cyclone-server:latest
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     links:
@@ -77,7 +77,7 @@ cyclone-server:
         - MONGO_DB_IP=mongo:27017
         - KAFKA_SERVER_IP=kafkahost:9092
         - LOG_SERVER=wss://fornax-canary.caicloud.io:8001/ws
-        - WORK_REGISTRY_LOCATION=index.caicloud.io
+        - WORK_REGISTRY_LOCATION=cargo.caicloud.io
         - REGISTRY_USERNAME=caicloudfornax
         - REGISTRY_PASSWORD=aY@Jndt6y~y12PPL
         # Use for github oauth
@@ -89,6 +89,6 @@ cyclone-server:
         - SERVER_GITLAB=https://gitlab.com
         - ETCD_SERVER_IP=http://etcd:2379
         - CYCLONE_SERVER_HOST=https://fornax-canary.caicloud.io
-        - WORKER_IMAGE=index.caicloud.io/caicloud/cyclone-worker
+        - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
         - CLAIR_SERVER_IP=http://fornax-canary.caicloud.io:6060
     command: /cyclone-server

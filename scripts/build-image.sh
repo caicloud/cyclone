@@ -71,7 +71,7 @@ docker run --rm \
        -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
 
 docker build -t caicloud/cyclone-server:${IMAGE_TAG} .
-docker tag -f caicloud/cyclone-server:${IMAGE_TAG} index.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
+docker tag -f caicloud/cyclone-server:${IMAGE_TAG} cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
 
 cd - > /dev/null
 
@@ -79,15 +79,14 @@ cd - > /dev/null
 if [[ "$PUSH_TO_REGISTRY" == "Y" ]]; then
   echo ""
   echo "+++++ Start pushing cyclone-server"
-  docker push index.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
+  docker push cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
 fi
 
 echo "Successfully built docker image caicloud/cyclone-server:${IMAGE_TAG}"
-echo "Successfully built docker image index.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}"
+echo "Successfully built docker image cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}"
 
 # A reminder for creating Github release.
 if [[ "$#" == "1" && $1 =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo -e "Finish building release ; if this is a formal release, please remember"
   echo -e "to create a release tag at Github at: https://github.com/caicloud/cyclone-server/releases"
 fi
-

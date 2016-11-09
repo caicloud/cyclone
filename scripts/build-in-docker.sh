@@ -17,14 +17,11 @@ docker run --rm \
            -w /go/src/github.com/caicloud/cyclone \
            -e GOOS=$1 \
            -e GOARCH=amd64 \
-           index.caicloud.io/caicloud/golang:1.6 go build -v .
+           cargo.caicloud.io/caicloud/golang:1.6 go build -v .
 
 docker run --rm \
-       -v $(pwd):/go/src/github.com/caicloud/cyclone \
-       -w /go/src/github.com/caicloud/cyclone/worker \
-       -e GOOS=$1 \
-       -e GOARCH=amd64 \
-       index.caicloud.io/caicloud/golang:1.6 \
-       go build -v cyclone-worker.go
+       -v `pwd`:/go/src/github.com/caicloud/cyclone \
+       -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor cargo.caicloud.io/caicloud/golang-gcc:1.6-alpine sh \
+       -c "cd /go/src/github.com/caicloud/cyclone/worker && go build cyclone-worker.go"
 
 cd - > /dev/null

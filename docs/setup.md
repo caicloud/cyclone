@@ -61,7 +61,7 @@ Environment variables:
 - MONGO_DB_IP             The IP of mongodb, default is localhost
 - KAFKA_SERVER_IP         The address of kafka, defaults to 127.0.0.1:9092
 - LOG_SERVER              The address of log server, defaults to 127.0.0.1:8000
-- WORK_REGISTRY_LOCATION  The registry to push images, default is index.caicloud.io
+- WORK_REGISTRY_LOCATION  The registry to push images, default is cargo.caicloud.io
 - REGISTRY_USERNAME       The username in docker registry, default is null
 - REGISTRY_PASSWORD       The password in docker registry, default is null
 - CLIENTID                The client ID from Github for oauth, default is null
@@ -72,5 +72,5 @@ Environment variables:
 - SERVER_GITLAB           The address of gitlab, defaults to https://gitlab.com
 - ETCD_SERVER_IP          The address of etcd, defaults to 127.0.0.1:2379
 - CYCLONE_SERVER_HOST     The address where cyclone is running, defaults to http://localhost:709
-- WORKER_IMAGE            The image name for worker container, defaults to index.caicloud.io/caicloud/cyclone-worker
+- WORKER_IMAGE            The image name for worker container, defaults to cargo.caicloud.io/caicloud/cyclone-worker
 - CLAIR_SERVER_IP         The address of clair, defaults to 127.0.0.1:6060

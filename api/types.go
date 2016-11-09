@@ -587,7 +587,7 @@ type ResourceCompose struct {
 
 // RegistryCompose that compose the info about the registry
 type RegistryCompose struct {
-	// Registry's address, ie. index.caicloud.io
+	// Registry's address, ie. cargo.caicloud.io
 	RegistryLocation string `json:"registrylocation,omitempty"`
 	// RegistryUsername used for operating the images
 	RegistryUsername string `json:"registryusername,omitempty"`

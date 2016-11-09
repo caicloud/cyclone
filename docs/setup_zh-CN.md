@@ -58,7 +58,7 @@
 	MONGO_DB_IP             mongo db的地址, 默认是localhost
 	KAFKA_SERVER_IP         kafka 服务的地址, 默认是127.0.0.1:9092
 	LOG_SERVER              日志服务的地址, 默认是127.0.0.1:8000
-	WORK_REGISTRY_LOCATION  镜像仓地址, 默认是index.caicloud.io
+	WORK_REGISTRY_LOCATION  镜像仓地址, 默认是cargo.caicloud.io
 	REGISTRY_USERNAME       镜像仓用户名, 默认是null
 	REGISTRY_PASSWORD       镜像仓用户密码, 默认是null
 	CLIENTID                用于github oauth授权的clienID, 默认是null
@@ -69,6 +69,6 @@
 	SERVER_GITLAB           gitlab的服务器地址, 默认是https://gitlab.com
 	ETCD_SERVER_IP          etcd的服务器地址, 默认是127.0.0.1:2379
 	CYCLONE_SERVER_HOST      cirlce的访问地址, 默认是http://localhost:709
-	WORKER_IMAGE            worker容器的镜像名称，默认是index.caicloud.io/caicloud/cyclone-worker
+	WORKER_IMAGE            worker容器的镜像名称，默认是cargo.caicloud.io/caicloud/cyclone-worker
 	CLAIR_SERVER_IP         clair的服务器地址, 默认是127.0.0.1:6060
 ```
