@@ -225,5 +225,4 @@ func createVersionPostHook(event *api.Event) {
 		return
 	}
 	notify.Notify(&event.Service, &event.Version, versionLog.Logs)
-	notify.Notify(&event.Service, &event.Version, versionLog.Logs)
 }
