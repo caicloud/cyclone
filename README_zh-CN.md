@@ -47,10 +47,14 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 
 ## 特性预览
 
-- **依赖管理**
+### 依赖管理
 
-![dependency](docs/dependency.png)
+<div align="center">
+	<img src="./docs/dependency.png" alt="依赖管理" width="500">
+</div>
 
-- **安全扫描**
+### 安全扫描
 
-![security](docs/security.png)
+<div align="center">
+	<img src="./docs/security.png" alt="安全扫描" width="500">
+</div>
