@@ -24,8 +24,6 @@ At first, you need to build Cyclone-server and Cyclone-worker docker images, by 
 
 - Using Docker Compose: Follow these instructions to bring up Cyclone with docker-compose (you can checkout the compose file for more details):
 ```
-    git clone https://github.com/caicloud/cyclone
-    cd cyclone
     docker-compose -f  docker-compose.yaml up -d
 ```
 Then Cyclone is started. Docker compose will start Clair before Postgres which may raise an error. If this error is raised, manually execute ```docker start clair_clair```.

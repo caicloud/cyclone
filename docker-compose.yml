@@ -77,19 +77,20 @@ cyclone-server:
     environment:
         - MONGO_DB_IP=mongo:27017
         - KAFKA_SERVER_IP=kafkahost:9092
-        - LOG_SERVER=wss://fornax-canary.caicloud.io:8001/ws
+        - LOG_SERVER=wss://127.0.0.1:8000/ws
+        - REGISTRY_LOCATION=cargo.caicloud.io
         - WORK_REGISTRY_LOCATION=cargo.caicloud.io
-        - REGISTRY_USERNAME=caicloudfornax
-        - REGISTRY_PASSWORD=aY@Jndt6y~y12PPL
+        - REGISTRY_USERNAME=user
+        - REGISTRY_PASSWORD=pwd
         # Use for github oauth
-        - CLIENTID=3e1e20442996d5bb0a9a
-        - CLIENTIDSECRET=1ab63ac0e955a13dae5dd1329ed79344ebad51e1
+        - CLIENTID=0
+        - CLIENTIDSECRET=0
         - CONSOLE_WEB_ENDPOINT=https://console-canary.caicloud.io
-        - CLIENTID_GITLAB=e09eda3975aea1fda265fff0e53ea59f4604920c93dbe941736440666f33150d
-        - CLIENTIDSECRET_GITLAB=a4844c67585830488a11a8a0d7690b52517536a566ca647c25ef3db9158c2738
+        - CLIENTID_GITLAB=0
+        - CLIENTIDSECRET_GITLAB=0
         - SERVER_GITLAB=https://gitlab.com
         - ETCD_SERVER_IP=http://etcd:2379
-        - CYCLONE_SERVER_HOST=https://fornax-canary.caicloud.io
+        - CYCLONE_SERVER_HOST=http://127.0.0.1:7099
         - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
-        - CLAIR_SERVER_IP=http://fornax-canary.caicloud.io:6060
+        - CLAIR_SERVER_IP=http://127.0.0.1:6060
     command: /cyclone-server
