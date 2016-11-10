@@ -47,10 +47,14 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 
 ## Preview Feature
 
-- **Dependency Management**
+### Dependency Management
 
-![dependency](docs/dependency.png)
+<div align="center">
+	<img src="./docs/dependency.png" alt="Dependency Management" width="500">
+</div>
 
-- **Security Scanning**
+### Security Scanning
 
-![security](docs/security.png)
+<div align="center">
+	<img src="./docs/security.png" alt="Security Scanning" width="500">
+</div>
