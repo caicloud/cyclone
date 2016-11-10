@@ -32,7 +32,7 @@ You could run unit test by typing:
 ./tests/run-unit-test.sh
 ```
 
-And Our travis CI jobs would also run these, so you could also check out the build log to get the test result in travis. In the future we would run these tests in cyclone.
+And Our travis CI jobs would also run these, so you could also check out the build log to get the test result in travis. In the future we would run these tests by cyclone.
 
 ### End-to-end Testing
 
@@ -44,7 +44,7 @@ You could run e2e test by typing:
 ./tests/run-e2e.sh
 ```
 
-In the future we would run these tests in cyclone.
+In the future we would run these tests by cyclone.
 
 ## API Documentation
 
