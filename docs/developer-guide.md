@@ -20,6 +20,32 @@ The script would run all the dependencies in docker containers, compile and run 
 
 Notice that if your docker daemon is running in a docker machine, maybe you need to do some additional work, such as port forwarding and so on.
 
+## Test your contribution
+
+We have unit test and e2e test cases, you could run these test cases to test your contribution.
+
+### Unit Testing
+
+You could run unit test by typing:
+
+```shell
+./tests/run-unit-test.sh
+```
+
+And Our travis CI jobs would also run these, so you could also check out the build log to get the test result in travis. In the future we would run these tests by cyclone.
+
+### End-to-end Testing
+
+Now cyclone's e2e test would start a local circle server and register local docker host as a worker to circle server. Then it would start a standalone process to run the e2e test cases by sending RESTful requests.
+
+You could run e2e test by typing:
+
+```shell
+./tests/run-e2e.sh
+```
+
+In the future we would run these tests by cyclone.
+
 ## API Documentation
 
 We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API documentation. If your work impacts cyclone API, you could check out API documentation at `http://<your cyclone server host>:7099/apidocs`, else you could check out [our online API documentation](http://118.193.142.27:7099/apidocs/).

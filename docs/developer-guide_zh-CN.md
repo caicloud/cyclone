@@ -18,6 +18,32 @@
 
 请注意，如果你的 docker daemon 是运行在一个 docker machine 中的，那么你可能需要做一些额外的工作，比如端口映射等等。
 
+## 测试 Cyclone
+
+我们有单元测试和端到端的测试用例，当你想为 Cyclone 贡献时可以使用它们来进行代码的测试。
+
+### 单元测试
+
+你可以通过：
+
+```shell
+./tests/run-unit-test.sh
+```
+
+来进行单元测试，与此同时目前我们的 Travis 也会进行这样的单元测试，因此你也可以在 Travis 的构建日志中查看测试结果。在之后我们会使用 Cyclone 来对 Cyclone 进行单元测试。
+
+### 端到端测试
+
+目前 Cyclone 的端到端测试会先启动一个 Cyclone server，然后在另外一个独立的进程中通过发送 RESTful 请求的方式对其进行测试，并验证结果。
+
+你可以通过：
+
+```shell
+./tests/run-e2e.sh
+```
+
+来进行端到端的测试，在之后我们会使用 Cyclone 来对 Cyclone 进行端到端的测试。
+
 ## API 文档
 
 我们使用 [swagger ui](https://github.com/swagger-api/swagger-ui) 来生成 API 文档，如果你的工作影响了 Cyclone 的 API，你可以在 `http://<your cyclone server host>:7099/apidocs` 查看最新的 API 文档，或者你可以通过我们的[在线文档](http://118.193.142.27:7099/apidocs/)来进行开发与贡献。

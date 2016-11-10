@@ -9,6 +9,7 @@ go_import_path: github.com/caicloud/cyclone
 before_install:
   - go get github.com/tools/godep
   - go get github.com/mattn/goveralls
+  - go get github.com/go-playground/overalls
 
 install:
   - godep go build .
@@ -17,7 +18,8 @@ install:
   - cd - > /dev/null
 
 script:
-  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
+  - ./tests/run-unit-test.sh
+  - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=vendor,tests,.git,scripts,node_modules,docs
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile

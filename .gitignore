@@ -17,3 +17,6 @@ cyclone-server
 
 # Config when used with VS Code
 .vscode/
+
+# Coverage file
+*.coverprofile

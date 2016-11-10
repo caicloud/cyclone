@@ -1,21 +1,30 @@
 中文 | [English](README.md)
-# Cyclone
-![logo](docs/logo.jpeg)
 
-[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
-[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
-[![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
+<h1 align="center">
+	<br>
+	<img width="400" src="docs/logo.jpeg" alt="cyclone">
+	<br>
+	<br>
+</h1>
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
+[![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
+[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
 [![Gitter](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-Cyclone是一个打造容器工作流的云原生持续集成持续发布平台。
+单元测试
+[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
+端到端测试
+![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 
-Cyclone主要致力于将代码从本地开发环境用任意容器引擎封装搬运到测试或者生产环境运行。Cyclone包括一下特性：
+Cyclone 是一个打造容器工作流的云原生持续集成持续发布平台。
+
+Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装搬运到测试或者生产环境运行。Cyclone 包括以下特性：
 
 - **容器原生**: 每次构建、集成、部署均在容器中运行，完全解决运行时环境不一致的问题。
 - **依赖关系**: 定义依赖规则或简单的组件关系，确保执行顺序依照既定策略。
-- **版本控制**: 基于版本控制构建，检索镜像／流水线历史就像查询版本管理接口一样简单。
-- **双向绑定**: 记录每次CI／CD操作用于回答类似问题：“各容器镜像部署在集群哪个角落？”
+- **版本控制**: 基于版本控制构建，检索镜像/流水线历史就像查询版本管理接口一样简单。
+- **双向绑定**: 记录每次 CI/CD 操作用于回答类似问题：“各容器镜像部署在集群哪个角落？”
 - **安全第一**: 安全是基本要素，有效阻拦不安全镜像进入生产环境。
 
 ## 相关文档
@@ -34,7 +43,7 @@ Cyclone主要致力于将代码从本地开发环境用任意容器引擎封装�
 
 ### 开发者指南
 
-欢迎为 Cyclone 提供更多特性，让它变得更好用，我们有一份[开发者指南](./docs/developer-guide_zh-CN.md) 可以帮助你了解如何向 Cyclone 项目贡献代码或者文档。
+欢迎为 Cyclone 提供更多特性，让它变得更好用，我们有一份[开发者指南](./docs/developer-guide_zh-CN.md)可以帮助你了解如何向 Cyclone 项目贡献代码或者文档。
 
 ## 特性预览
 
