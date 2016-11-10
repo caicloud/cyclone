@@ -1,7 +1,11 @@
 中文 | [English](README.md)
-# Cyclone
 
-![logo](docs/logo.jpeg)
+<h1 align="center">
+	<br>
+	<img width="400" src="docs/logo.jpeg" alt="cyclone">
+	<br>
+	<br>
+</h1>
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
 [![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
@@ -11,7 +15,6 @@
 单元测试
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
 [![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
-
 端到端测试
 ![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 
