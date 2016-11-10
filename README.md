@@ -14,7 +14,6 @@ English | [中文](README_zh-CN.md)
 
 Unit testing:
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
-[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
 End-to-end testing:
 ![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 

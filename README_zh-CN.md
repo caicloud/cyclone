@@ -14,7 +14,6 @@
 
 单元测试
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
-[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
 端到端测试
 ![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 
