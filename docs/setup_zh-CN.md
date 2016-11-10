@@ -22,8 +22,6 @@
 
 - 使用docker compose方式，许哟docker-compose.yaml文件. 你可以去查看docker-compose.yaml文件去了解. 具体的操作指令如下，
 ```
-	git clone https://github.com/caicloud/cyclone
-	cd cyclone
 	docker-compose -f  docker－compose.yaml up -d
 ```
 这样 Cyclone 已经启动了。使用docker compose，Clair可能会在Postgres启动，这样会出现错误。如果出现这种错误，需要手动执行

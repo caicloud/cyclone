@@ -8,8 +8,8 @@ import multiprocessing
 #host = 'http://127.0.0.1:7099/'
 #host = 'http://43.254.54.38:7099/'
 #host = 'http://118.193.143.243/'
-#host = 'http://120.26.103.107:7099/'
-host = 'https://fornax-canary.caicloud.io/'
+host = 'http://139.196.115.69:7099/'
+#host = 'https://fornax-canary.caicloud.io/'
 
 headers = {
     "Accept": "application/json",
@@ -65,7 +65,7 @@ def create_service(user_id, service_name):
             #"url": "/home/superxi/gopath/src/github.com/caicloud/console-web",
             "url": "https://github.com/superxi911/cpu-load.git", 
             "vcs": "git", 
-            "webhook": "github"
+            #"webhook": "github"
             #"url": "svn://118.193.185.187/svn-demo/trunk", 
             #"vcs": "svn",
             #"username": "superxi",
@@ -277,13 +277,13 @@ if __name__ == '__main__':
     #set_event('63e3a836-bdf9-4106-8c9a-a068b5e3a987', 'success', 'well done')
 	
     #create_service('superxi', 'test')
-    service_id = 'afbd7567-20a5-44f2-92cb-d4b5ab92622d'
+    service_id = 'f61a8986-5ddf-4d51-8eb3-a6cde8ed6260'
     #set_service('superxi', service_id)
     #get_service('superxi', '871e6da4-5a5d-4fd8-bb8e-166f817ff2c9')
-    #get_services('superxi')
+    get_services('superxi')
     #delete_service("superxi", service_id)
 
-    #create_version('superxi', service_id)
+    create_version('superxi', service_id)
     #get_versions('superxi', service_id)
     version_id = '9d148439-4c56-47e3-9712-23587e9b5c41'
     #cancel_build('superxi', version_id)
@@ -301,9 +301,9 @@ if __name__ == '__main__':
     #get_project_versions("superxi", "e22144ee-ba66-4424-a405-054ddd749830")
     #get_project_version("superxi", "5d0a9b99-d75f-4848-89eb-7ae5b88dc20d")
 	
-    #create_worker_node("test1", "tcp://120.26.131.116:4232")
+    #create_worker_node("test1", "unix:///var/run/docker.sock")
     #create_worker_node("test2", "tcp://120.26.103.107:2375")
     #get_worker_node("e43c0207-f8f3-4513-bcff-c991c50dee74")
     #delete_worker_node("8211f1fc-2c40-42c2-90e9-b8d16f2d6336")
-    get_worker_nodes()
+    #get_worker_nodes()
     pass
