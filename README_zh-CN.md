@@ -1,13 +1,19 @@
 中文 | [English](README.md)
 # Cyclone
+
 ![logo](docs/logo.jpeg)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
-[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
 [![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
-[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
 [![Gitter](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
+单元测试
+[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
+[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
+
+端到端测试
+![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 
 Cyclone是一个打造容器工作流的云原生持续集成持续发布平台。
 
@@ -35,7 +41,7 @@ Cyclone主要致力于将代码从本地开发环境用任意容器引擎封装�
 
 ### 开发者指南
 
-欢迎为 Cyclone 提供更多特性，让它变得更好用，我们有一份[开发者指南](./docs/developer-guide_zh-CN.md) 可以帮助你了解如何向 Cyclone 项目贡献代码或者文档。
+欢迎为 Cyclone 提供更多特性，让它变得更好用，我们有一份[开发者指南](./docs/developer-guide_zh-CN.md)可以帮助你了解如何向 Cyclone 项目贡献代码或者文档。
 
 ## 特性预览
 

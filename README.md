@@ -1,13 +1,19 @@
 English | [中文](README_zh-CN.md)
 # Cyclone
+
 ![logo](docs/logo.jpeg)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
-[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
 [![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
-[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
 [![Gitter](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
+Unit testing:
+[![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
+[![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
+
+End-to-end testing:
+![Build Status](https://img.shields.io/badge/e2e--test-comming%20soon-brightgreen.svg)
 
 Cyclone is a cloud native CI/CD platform built for container workflow.
 
