@@ -20,7 +20,7 @@
 	./scripts/build-worker-image.sh
 ```
 
-- 使用docker compose方式，许哟docker-compose.yaml文件. 你可以去查看docker-compose.yaml文件去了解. 具体的操作指令如下，
+- 使用docker compose方式，使用docker-compose.yaml文件. 你可以去查看docker-compose.yaml文件去了解. 具体的操作指令如下，
 ```
 	docker-compose -f  docker－compose.yaml up -d
 ```
