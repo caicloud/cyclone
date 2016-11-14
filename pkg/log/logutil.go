@@ -49,7 +49,7 @@ func Debug(args ...interface{}) {
 	if logger.Level >= logrus.DebugLevel {
 		entry := logger.WithFields(logrus.Fields{})
 		entry.Data["_file_"] = fileInfo(2)
-		entry.Debug(args)
+		entry.Debug(args...)
 	}
 }
 
@@ -58,7 +58,7 @@ func Debugf(format string, args ...interface{}) {
 	if logger.Level >= logrus.DebugLevel {
 		entry := logger.WithFields(logrus.Fields{})
 		entry.Data["_file_"] = fileInfo(2)
-		entry.Debug(format, args)
+		entry.Debugf(format, args...)
 	}
 }
 
