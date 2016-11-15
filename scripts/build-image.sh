@@ -10,6 +10,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
+
 ROOT=$(dirname "${BASH_SOURCE}")/..
 
 function usage {
@@ -24,7 +26,6 @@ function usage {
   echo -e "Environment variable:"
   echo -e " PUSH_TO_REGISTRY     \tPush images to caicloud registry or not, options: Y or N. Default value: ${PUSH_TO_REGISTRY}"
 }
-
 # -----------------------------------------------------------------------------
 # Parameters for building docker image, see usage.
 # -----------------------------------------------------------------------------
@@ -52,7 +53,7 @@ fi
 # Start Building containers
 # -----------------------------------------------------------------------------
 # Setup docker on Mac.
-if [[ `uname` == "Darwin" ]]; then
+if [[ "$(uname)" == "Darwin" ]]; then
   if [[ "$(which docker-machine)" != "" ]]; then
     eval "$(docker-machine env kube-dev)"
   elif [[ "$(which boot2docker)" != "" ]]; then
@@ -65,10 +66,17 @@ echo "+++++ Start building cyclone server"
 cd ${ROOT}
 
 # Build cyclone comtainer.
+# We need to disable selinux on selinux supported system to relove https://github.com/caicloud/cyclone/issues/53
+readonly platform=$(os::build::host_platform)
+if [[ $platform != *"darwin"* ]]; then
+  echo "disable the selinux"
+  disable-selinux
+fi
+
 docker run --rm \
-       -v `pwd`:/go/src/github.com/caicloud/cyclone \
-       -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor golang:1.6-alpine sh \
-       -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
+  -v `pwd`:/go/src/github.com/caicloud/cyclone \
+  -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor golang:1.6-alpine sh \
+  -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
 
 docker build -t caicloud/cyclone-server:${IMAGE_TAG} .
 docker tag -f caicloud/cyclone-server:${IMAGE_TAG} cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
