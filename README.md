@@ -64,6 +64,6 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 
 | Milestone | New feature                              |
 | --------- | ---------------------------------------- |
-| 2016 Q4   | k8s version, uses k8s-job to excute the CICD workflow |
+| 2016 Q4   | k8s version: uses k8s-job to excute the CICD workflow |
 | 2017 Q1   | web UI                                   |
-| Future    | user permission management, supports user plug-in |
+| Future    | user permission management <br>supports user plug-in |
