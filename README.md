@@ -58,3 +58,12 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 <div align="center">
 	<img src="./docs/security.png" alt="Security Scanning" width="500">
 </div>
+
+
+## Roadmap
+
+| Milestone | New feature                              |
+| --------- | ---------------------------------------- |
+| 2016 Q4   | k8s version: uses k8s-job to excute the CICD workflow |
+| 2017 Q1   | web UI                                   |
+| Future    | user permission management <br>supports user plug-in |
