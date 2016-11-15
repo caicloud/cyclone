@@ -77,7 +77,7 @@ func createSystemWorkerNode(request *restful.Request, response *restful.Response
 		return
 	}
 	if len(nodes) != 0 {
-		message := fmt.Sprintf("Docker host exist")
+		message := fmt.Sprintf("Docker host exists")
 		log.Error(message)
 		createResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
