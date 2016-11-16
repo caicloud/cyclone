@@ -620,14 +620,17 @@ func handleStreamResponse(resp *http.Response, streamOptions *streamOptions) err
 			return err
 		}
 		if m.Stream != "" {
-			fmt.Fprint(streamOptions.stdout, m.Stream)
+			fmt.Fprintf(streamOptions.stdout, "%s\n", m.Stream)
 		} else if m.Progress != "" {
-			fmt.Fprintf(streamOptions.stdout, "%s %s\r", m.Status, m.Progress)
+			fmt.Fprintf(streamOptions.stdout, "layer %s: %s %s\n", m.ID, m.Status, m.Progress)
 		} else if m.Error != "" {
 			return errors.New(m.Error)
-		}
-		if m.Status != "" {
-			fmt.Fprintln(streamOptions.stdout, m.Status)
+		} else {
+			if m.ID != "" {
+				fmt.Fprintf(streamOptions.stdout, "layer %s: %s\n", m.ID, m.Status)
+			} else {
+				fmt.Fprintf(streamOptions.stdout, "%s\n", m.Status)
+			}
 		}
 	}
 	return nil
@@ -862,6 +865,7 @@ type jsonMessage struct {
 	Progress string `json:"progress,omitempty"`
 	Error    string `json:"error,omitempty"`
 	Stream   string `json:"stream,omitempty"`
+	ID       string `json:"id,omitempty"`
 }
 
 func queryString(opts interface{}) string {

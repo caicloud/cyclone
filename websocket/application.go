@@ -174,15 +174,37 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 			}
 		}
 
-		byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
-			pWatchLog.ServiceId, pWatchLog.VersionId, string(msg.Value),
-			uuid.NewV4().String())
-		dpPacket := &DataPacket{
-			byrFrame:  byrLog,
-			nFrameLen: len(byrLog),
-			sSendTo:   wss.sSessionID,
+		str := string(msg.Value)
+
+		arrary := strings.Split(str, "\n")
+		for _, arr := range arrary {
+			if arr != "\r" && arr != "" {
+				if strings.HasPrefix(arr, "layer") {
+					tmpss := strings.Split(arr, ":")
+					tmps := strings.Split(tmpss[0], " ")
+					tmp := tmps[1]
+					byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
+						pWatchLog.ServiceId, pWatchLog.VersionId, arr[6:], tmp)
+					dpPacket := &DataPacket{
+						byrFrame:  byrLog,
+						nFrameLen: len(byrLog),
+						sSendTo:   wss.sSessionID,
+					}
+					wss.Send(dpPacket)
+				} else {
+					number := uuid.NewV4().String()
+					byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
+						pWatchLog.ServiceId, pWatchLog.VersionId, arr,
+						number)
+					dpPacket := &DataPacket{
+						byrFrame:  byrLog,
+						nFrameLen: len(byrLog),
+						sSendTo:   wss.sSessionID,
+					}
+					wss.Send(dpPacket)
+				}
+			}
 		}
-		wss.Send(dpPacket)
 		time.Sleep(time.Millisecond * 100)
 	}
 	log.Infof("stop push %s to %s", sTopic, wss.GetSessionID())

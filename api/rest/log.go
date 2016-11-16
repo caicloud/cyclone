@@ -46,7 +46,15 @@ func getVersionLog(request *restful.Request, response *restful.Response) {
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		getResponse.ErrorMessage = message
 	} else {
-		getResponse.Logs = result.Logs
+		arrary := strings.Split(result.Logs, "\n")
+		for _, arr := range arrary {
+			if arr != "\r" && arr != "" {
+				if strings.HasPrefix(arr, "layer") != true {
+					getResponse.Logs += arr
+					getResponse.Logs += "\n"
+				}
+			}
+		}
 	}
 
 	response.WriteEntity(getResponse)
