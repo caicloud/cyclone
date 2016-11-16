@@ -16,6 +16,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/log"

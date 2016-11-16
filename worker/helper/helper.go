@@ -26,7 +26,6 @@ import (
 	"os"
 	"time"
 
-	steplog "github.com/caicloud/circle/worker/log"
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/filebuffer"
@@ -40,6 +39,7 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/runner"
 	"github.com/caicloud/cyclone/worker/ci/yaml"
 	"github.com/caicloud/cyclone/worker/clair"
+	steplog "github.com/caicloud/cyclone/worker/log"
 	k8s_core_api "k8s.io/kubernetes/pkg/api"
 	k8s_ext_api "k8s.io/kubernetes/pkg/apis/extensions"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
