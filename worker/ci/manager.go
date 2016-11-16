@@ -139,13 +139,13 @@ func (cm *Manager) Parse(event *api.Event) (*parser.Tree, error) {
 	contextDir := contextdir.(string)
 	errYaml = ErrYamlNotExist
 	// Use the filename of config file if given.
-	/*if event.Service.YAMLConfigName != "" {
+	if event.Service.YAMLConfigName != "" {
 		directFilePath = fmt.Sprintf("%s/%s", contextDir, event.Service.YAMLConfigName)
 		// Set the err to ErrCustomYamlNotExist.
 		errYaml = ErrCustomYamlNotExist
-	} else {*/
-	directFilePath = fmt.Sprintf("%s/%s", contextDir, yamlName)
-	//}
+	} else {
+		directFilePath = fmt.Sprintf("%s/%s", contextDir, yamlName)
+	}
 	if osutil.IsFileExists(directFilePath) != true {
 		return nil, errYaml
 	}
