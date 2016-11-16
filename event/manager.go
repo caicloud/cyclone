@@ -26,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/etcd"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
+	"github.com/caicloud/cyclone/resource"
 	"golang.org/x/net/context"
 )
 
@@ -43,6 +44,8 @@ var (
 
 	// remote api manager
 	remoteManager *remote.Manager
+
+	resourceManager *resource.Manager
 )
 
 // Init init event manager
@@ -74,6 +77,7 @@ func Init(certPath string, registry api.RegistryCompose) {
 	go handlePendingEvents()
 
 	remoteManager = remote.NewManager()
+	resourceManager = resource.NewManager()
 }
 
 // watchEtcd watch unfinished events status change in etcd
@@ -233,16 +237,15 @@ func (el *List) loadListFromEtcd(etcd *etcd.Client) {
 		event, err := loadEventFromJSON(jsonEvent)
 		if err != nil {
 			log.Errorf("load event from etcd err: %v", err)
-			return
+			continue
 		}
 		log.Infof("load event to list: %s", event.EventID)
 		w, err := LoadWorker(&event)
-		if err != nil {
-			log.Errorf("load worker from event err: %v", err)
-			return
+		if event.Status == api.EventStatusPending {
+			el.addUnfinshedEvent(&event)
+		} else {
+			go CheckWorkerTimeOut(event, w)
 		}
-		go CheckWorkerTimeOut(event, w)
-		el.addUnfinshedEvent(&event)
 	}
 }
 
@@ -354,7 +357,7 @@ func handlePendingEvents() {
 		event := *pendingEvents.GetFront()
 		err := handleEvent(&event)
 		if err != nil {
-			if err == Err_Unable_Support {
+			if err == resource.Err_Unable_Support {
 				log.Info("Waiting for resource to be relaesed...")
 				time.Sleep(time.Second * 10)
 				continue

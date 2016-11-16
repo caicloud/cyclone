@@ -28,7 +28,7 @@ import (
 var (
 	// remoteManager is remote api manager.
 	remoteManager   *remote.Manager
-	resourceManager *resource.ResourceManager
+	resourceManager *resource.Manager
 )
 
 // Initialize initializes rest endpoints and all Cyclone managers. It register REST

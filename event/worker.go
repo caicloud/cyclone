@@ -27,7 +27,6 @@ import (
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
-	"github.com/caicloud/cyclone/resource"
 	"github.com/caicloud/cyclone/store"
 	docker_client "github.com/fsouza/go-dockerclient"
 )
@@ -63,9 +62,7 @@ const (
 )
 
 var (
-	Err_Worker_Busy    = errors.New("Get worker docker host busy")
-	Err_Unable_Support = errors.New("Unable to support the request resource")
-	resourceManager    = resource.NewManager()
+	Err_Worker_Busy = errors.New("Get worker docker host busy")
 )
 
 // RegistryCompose that compose the info about the registry

@@ -83,6 +83,8 @@ func handleEvent(event *api.Event) error {
 
 // postHookEvent is the event finished post hook.
 func postHookEvent(event *api.Event) {
+	mapOperation[event.Operation].PostHook(event)
+
 	w, err := LoadWorker(event)
 	if err != nil {
 		log.Errorf("load worker err: %v", err)
@@ -111,8 +113,6 @@ func postHookEvent(event *api.Event) {
 			log.Errorf("release worker node resource err: %v", err)
 		}
 	}
-
-	mapOperation[event.Operation].PostHook(event)
 }
 
 // createServiceHander is the create service handler.
@@ -123,7 +123,22 @@ func createServiceHandler(event *api.Event) error {
 		return err
 	}
 
-	return w.DoWork(event)
+	err = w.DoWork(event)
+	if err != nil {
+		return err
+	}
+
+	if event.Service.Repository.Webhook == api.GITHUB {
+		remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
+		if err != nil {
+			log.ErrorWithFields("Unable to get remote according coderepository", log.Fields{"user_id": event.Service.UserID})
+		} else {
+			if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
+				log.Errorf("Unable to post commit status to github: %v", err)
+			}
+		}
+	}
+	return nil
 }
 
 // createServicePostHook is the create service post hook.
