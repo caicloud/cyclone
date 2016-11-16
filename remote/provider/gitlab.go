@@ -87,7 +87,7 @@ func (g *GitLab) Authcallback(code, state string) (string, error) {
 
 	//caicloud web address,eg caicloud.io
 	uiPath := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://localhost:8000")
-	redirectURL := fmt.Sprintf("%s/cyclone/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
+	redirectURL := fmt.Sprintf("%s/circle/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
 
 	//sync to get token
 	go g.getToken(code, state)

@@ -251,7 +251,7 @@ func generateVersionFromPRData(payload api.WebhookGithub) (name string, descript
 
 	// Generate name.
 	if nil != pullRequest["number"] {
-		name = fmt.Sprintf("pr#%v_%s", pullRequest["number"], commitID)
+		name = fmt.Sprintf("pr_%v_%s", pullRequest["number"], commitID)
 	} else {
 		name = fmt.Sprintf("pr_%s", commitID)
 	}
@@ -649,7 +649,7 @@ func generateVersionFromGitlabPRData(payload api.WebhookGitlab) (name string, de
 
 	// generate name
 	if nil != attributes["id"] {
-		name = fmt.Sprintf("pr#%v_%s", attributes["id"], commitID)
+		name = fmt.Sprintf("pr_%v_%s", attributes["id"], commitID)
 	} else {
 		name = fmt.Sprintf("pr_%s", commitID)
 	}
