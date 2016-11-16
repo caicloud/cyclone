@@ -26,6 +26,7 @@ import (
 	"os"
 	"time"
 
+	steplog "github.com/caicloud/circle/worker/log"
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/filebuffer"
@@ -242,18 +243,23 @@ func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docke
 // Publish is an async handler for build and push the image to
 // private registry.
 func Publish(event *api.Event, dmanager *docker.Manager) error {
+	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
 	if err := dmanager.BuildImage(event); err != nil {
+		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
 		return err
 	}
+	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
 
+	steplog.InsertStepLog(event, steplog.PushImage, steplog.Start, nil)
 	if err := dmanager.PushImage(event); err != nil {
+		steplog.InsertStepLog(event, steplog.PushImage, steplog.Stop, err)
 		return err
 	}
 
 	if err := clair.Analysis(event, dmanager); err != nil {
 		log.ErrorWithFields("Unable to analysis by clair", log.Fields{"err": err})
 	}
-
+	steplog.InsertStepLog(event, steplog.PushImage, steplog.Finish, nil)
 	return nil
 }
 

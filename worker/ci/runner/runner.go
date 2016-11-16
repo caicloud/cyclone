@@ -205,7 +205,9 @@ func (b *Build) walk(node parser.Node) (err error) {
 
 // PublishImage publish image to registry.
 func (b *Build) PublishImage() (err error) {
+	steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Start, nil)
 	if err := b.dockerManager.PushImage(b.event); err != nil {
+		steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Stop, err)
 		return err
 	}
 
@@ -213,7 +215,7 @@ func (b *Build) PublishImage() (err error) {
 	b.status |= pushImageSuccess
 
 	clair.Analysis(b.event, b.dockerManager)
-
+	steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Finish, nil)
 	return nil
 }
 

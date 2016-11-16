@@ -160,7 +160,6 @@ func Analysis(event *api.Event, dmanager *docker.Manager) error {
 		return err
 	}
 	event.Version.SecurityCheck = true
-	fmt.Fprintf(event.Output, "Clair analysis images got vulnerabilits: %d\n", len(vulnerabilities))
 	for _, vulnerability := range vulnerabilities {
 		fmt.Fprintf(event.Output, "vulnerabilitie: %v\n", vulnerability)
 		if vulnerability.Severity == string(Medium) ||
