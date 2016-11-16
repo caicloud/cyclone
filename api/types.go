@@ -75,6 +75,8 @@ type Service struct {
 	LastVersionName string `bson:"last_versionname,omitempty" json:"last_versionname,omitempty"`
 	// Deploy plans
 	DeployPlans []DeployPlan `bson:"deploy_plans,omitempty" json:"deploy_plans,omitempty"`
+	// Repository information of the service.
+	YAMLConfigName string `bson:"yaml_config_name,omitempty" json:"yaml_config_name,omitempty"`
 }
 
 // DeployPlan is the type for deployment plan.

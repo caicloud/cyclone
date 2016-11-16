@@ -17,6 +17,7 @@ curl -sS -X POST -H "Content-Type:application/json" -d "{
    \"name\": \"test-service\",
    \"username\": \"${1}\",
    \"description\": \"This is a test-service\",
+   \"yaml_config_name\": \"caicloud.yml\",
    \"repository\": {
      \"url\": \"https://github.com/tutumcloud/hello-world\",
      \"vcs\": \"git\"
