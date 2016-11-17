@@ -1,6 +1,6 @@
 # Setup
 
-## Version Dependence
+## Prerequisites
 
 ```
 golang：1.6+
