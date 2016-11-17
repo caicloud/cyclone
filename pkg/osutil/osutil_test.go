@@ -25,15 +25,15 @@ import (
 func TestMustGet(t *testing.T) {
 	// test string
 	var str string
-	str_env := "cyclone_string_env"
+	strEnv := "cyclone_string_env"
 
-	str = GetStringEnv(str_env, "test")
+	str = GetStringEnv(strEnv, "test")
 	assert.Equal(t, str, "test")
 
-	os.Setenv(str_env, "STRING")
-	defer os.Unsetenv(str_env)
+	os.Setenv(strEnv, "STRING")
+	defer os.Unsetenv(strEnv)
 
-	str = GetStringEnv(str_env, "")
+	str = GetStringEnv(strEnv, "")
 	assert.Equal(t, str, "STRING")
 
 	// test int

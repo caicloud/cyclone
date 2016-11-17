@@ -17,35 +17,47 @@ limitations under the License.
 package websocket
 
 const (
-	Localhost           = "127.0.0.1"
-	WSServerPort        = 8000
+	// Localhost is the ip of localhost.
+	Localhost = "127.0.0.1"
+	// WSServerPort is the port of websocket server.
+	WSServerPort = 8000
+	// MaxConnectionNumber is the default maximum number of connections.
 	MaxConnectionNumber = 4096
-	IdleSessionTimeOut  = 120
-	IdleCheckInterval   = 30
+	// IdleSessionTimeOut is the default timeout for idle sessions.
+	IdleSessionTimeOut = 120
+	// IdleCheckInterval is the default interval for idle checks.
+	IdleCheckInterval = 30
 )
 
 //ServerConfig is the config of push-log websocket server
 type ServerConfig struct {
-	ServerIp            string `yml:"ServerIp"`
-	Port                int    `yml:"ServerPort"`
-	MaxConnectionNumber int    `yml:"MaxConnectionNumber"`
-	IdleSessionTimeOut  int64  `yml:"IdleSessionTimeOut"`
-	IdleCheckInterval   int    `yml:"IdleCheckInterval"`
-	ServerCertificate   string `yml:"ServerCertificate"`
-	ServerKey           string `yml:"ServerKey"`
+	// ServerIP is the IP of server.
+	ServerIP string `yml:"ServerIp"`
+	// Port is the port of server.
+	Port int `yml:"ServerPort"`
+	// MaxConnectionNumber is maximum number of connections.
+	MaxConnectionNumber int `yml:"MaxConnectionNumber"`
+	// IdleSessionTimeOut is the timeout for idle sessions.
+	IdleSessionTimeOut int64 `yml:"IdleSessionTimeOut"`
+	// IdleCheckInterval is the interval for idle checks.
+	IdleCheckInterval int `yml:"IdleCheckInterval"`
+	// ServerCertificate is the certificate of server.
+	ServerCertificate string `yml:"ServerCertificate"`
+	// ServerKey is the key of server.
+	ServerKey string `yml:"ServerKey"`
 }
 
-var m_scServer *ServerConfig
+var mScServer *ServerConfig
 
 //GetConfig get config of push-log websocket server
 func GetConfig() *ServerConfig {
-	return m_scServer
+	return mScServer
 }
 
 //LoadServerConfig load config of push-log websocket server
 func LoadServerConfig() error {
-	m_scServer = &ServerConfig{
-		ServerIp:            Localhost,
+	mScServer = &ServerConfig{
+		ServerIP:            Localhost,
 		Port:                WSServerPort,
 		MaxConnectionNumber: MaxConnectionNumber,
 		IdleSessionTimeOut:  IdleSessionTimeOut,

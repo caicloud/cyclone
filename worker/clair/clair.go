@@ -30,9 +30,11 @@ import (
 )
 
 const (
+	// CLAIR_SERVER_IP is the IP of clair server.
 	CLAIR_SERVER_IP = "CLAIR_SERVER_IP"
 )
 
+// Serverity is the type for level of checks.
 type Serverity string
 
 const (

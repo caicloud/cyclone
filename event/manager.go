@@ -156,7 +156,7 @@ func eventChangeHandler(event *api.Event, preEvent *api.Event) {
 	}
 }
 
-// SaveEventToEtcd
+// SaveEventToEtcd saves event in etcd.
 func SaveEventToEtcd(event *api.Event) error {
 	ec := etcd.GetClient()
 	bEvent, err := json.Marshal(event)
@@ -166,7 +166,7 @@ func SaveEventToEtcd(event *api.Event) error {
 	return ec.Set(Events_Unfinished+"/"+string(event.EventID), string(bEvent))
 }
 
-// SaveEventToEtcd
+// LoadEventFromEtcd loads event from etcd.
 func LoadEventFromEtcd(eventID api.EventID) (*api.Event, error) {
 	ec := etcd.GetClient()
 	sEvent, err := ec.Get(Events_Unfinished + "/" + string(eventID))
@@ -192,9 +192,8 @@ func IsEventFinished(event *api.Event) bool {
 		event.Status == api.EventStatusFail ||
 		event.Status == api.EventStatusCancel {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // eventList load unfinished events
@@ -290,15 +289,18 @@ func (el *List) GetEvent(eventID api.EventID) *api.Event {
 
 var pendingEvents Queue
 
+// Queue is the type for pending events.
 type Queue struct {
 	sync.RWMutex
 	queue *list.List
 }
 
+// Init initializes a queue.
 func (eq *Queue) Init() {
 	eq.queue = list.New()
 }
 
+// In enqueues a event.
 func (eq *Queue) In(event *api.Event) {
 	eq.Lock()
 	defer eq.Unlock()
@@ -306,6 +308,7 @@ func (eq *Queue) In(event *api.Event) {
 	eq.queue.PushBack(event)
 }
 
+// GetFront get the first event in the queue.
 func (eq *Queue) GetFront() *api.Event {
 	eq.RLock()
 	defer eq.RUnlock()
@@ -314,6 +317,7 @@ func (eq *Queue) GetFront() *api.Event {
 	return element.Value.(*api.Event)
 }
 
+// Out dequeues a event.
 func (eq *Queue) Out() {
 	eq.Lock()
 	defer eq.Unlock()
@@ -322,6 +326,7 @@ func (eq *Queue) Out() {
 	eq.queue.Remove(element)
 }
 
+// IsEmpty checks if the queue is empty.
 func (eq *Queue) IsEmpty() bool {
 	eq.RLock()
 	defer eq.RUnlock()
@@ -329,7 +334,7 @@ func (eq *Queue) IsEmpty() bool {
 	return eq.queue.Len() == 0
 }
 
-// initPendingQueue
+// initPendingQueue initializes the pending events queue.
 func initPendingQueue() {
 	pendingEvents.Init()
 
@@ -343,7 +348,7 @@ func initPendingQueue() {
 	}
 }
 
-// handlePendingEvents
+// handlePendingEvents polls event queues and handle events one by one.
 func handlePendingEvents() {
 	for {
 		if pendingEvents.IsEmpty() {

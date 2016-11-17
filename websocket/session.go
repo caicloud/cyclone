@@ -29,7 +29,7 @@ type ISession interface {
 	GetSessionID() string
 }
 
-var m_SessionList *SessionList
+var mSessionList *SessionList
 
 // SessionList is the type for session list.
 type SessionList struct {
@@ -39,10 +39,10 @@ type SessionList struct {
 
 //GetSessionList get web client session list
 func GetSessionList() *SessionList {
-	if m_SessionList == nil {
-		m_SessionList = newSessionList()
+	if mSessionList == nil {
+		mSessionList = newSessionList()
 	}
-	return m_SessionList
+	return mSessionList
 }
 
 //newSessionList create a new web client session list

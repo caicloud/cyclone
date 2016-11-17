@@ -267,14 +267,14 @@ func (s *Containerslice) Slice() []Container {
 	return s.parts
 }
 
+// IsPrebuildArray checks if there is a array of prebuild step.
 func IsPrebuildArray(prebuild PreBuild) bool {
 	if prebuild.Image == "" &&
 		prebuild.DockerfilePath == "" &&
 		prebuild.DockerfileName == "" {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // UnmarshalYAML implements the Unmarshaller interface.
@@ -383,14 +383,14 @@ func (i *IntegrationStep) Build() Build {
 	return i.build
 }
 
+// IsBuildArray checks if there is a build array.
 func IsBuildArray(build Build) bool {
 	if build.Image == "" &&
 		build.DockerfilePath == "" &&
 		build.DockerfileName == "" {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // UnmarshalYAML implements the Unmarshaller interface.
