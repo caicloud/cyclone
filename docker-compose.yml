@@ -58,7 +58,7 @@ mongo:
        - "27017"
     ports:
        - "27017:27017"
-    command: mongod
+    command: mongod --smallfiles
 
 cyclone-server:
     image: cargo.caicloud.io/caicloud/cyclone-server:latest
@@ -77,7 +77,7 @@ cyclone-server:
     environment:
         - MONGO_DB_IP=mongo:27017
         - KAFKA_SERVER_IP=kafkahost:9092
-        - LOG_SERVER=wss://127.0.0.1:8000/ws
+        - LOG_SERVER=ws://127.0.0.1:8000/ws
         - REGISTRY_LOCATION=cargo.caicloud.io
         - WORK_REGISTRY_LOCATION=cargo.caicloud.io
         - REGISTRY_USERNAME=user
