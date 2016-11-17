@@ -32,32 +32,44 @@ import (
 
 const (
 	// Defines the usernames and pwds in docker registry server.
-	// - AdminUser is used to run normal test cases, it has all access rights
-	//   to docker repositories.
-	// - ListUser is used solely for listing services.
-	// - Others are normal users, we use them to test different cases, e.g. build
-	//   from user1 should fail to push to user2.
-	AdminUser     = "admin"
-	AdminUID      = "adminUID"
+
+	// AdminUser is used to run normal test cases, it has all access rights
+	// to docker repositories.
+	AdminUser = "admin"
+	// AdminUID is the UID of AdminUser.
+	AdminUID = "adminUID"
+	// AdminPassword is the password of AdminUser.
 	AdminPassword = "admin_password"
 
-	ListUser     = "list"
-	ListUID      = "listUID"
+	// ListUser is used solely for listing services.
+	ListUser = "list"
+	// ListUID is the UID of ListUser.
+	ListUID = "listUID"
+	// ListPassword is the password of ListUser.
 	ListPassword = "list_password"
 
-	AliceUser     = "alice"
-	AliceUID      = "aliceUID"
+	// AliceUser is a normal user, we use it to test different cases, e.g. build
+	// from user1 should fail to push to user2.
+	AliceUser = "alice"
+	// AliceUID is the UID of AliceUser.
+	AliceUID = "aliceUID"
+	// AlicePassword is the password of AliceUser.
 	AlicePassword = "alice_password"
 
-	BobUser     = "bob"
-	BobUID      = "bobUID"
+	// BobUser is a normal user, we use it to test different cases, e.g. build
+	// from user1 should fail to push to user2.
+	BobUser = "bob"
+	// BobUID is the UID of BobUser.
+	BobUID = "bobUID"
+	// BobPassword is the password of BobUser.
 	BobPassword = "bob_password"
 
-	// Default registry address and docker host in e2e test.
+	// DefaultRegistryAddress is the default docker registry, it would start a local registry.
 	DefaultRegistryAddress = "localhost:5000"
-	DefaultDockerHost      = "unix:///var/run/docker.sock"
+	// DefaultDockerHost is the default docker host used in e2e test.
+	DefaultDockerHost = "unix:///var/run/docker.sock"
 
-	// Define the address to access caicloud auth. Right now, we've disabled
+	// DefaultAuthAddress is the default address to access caicloud auth. Right now, we've disabled
 	// caicloud auth in e2e test.
 	DefaultAuthAddress = "https://auth-canary.caicloud.io"
 
@@ -178,7 +190,7 @@ func RegisterResource() error {
 	}
 
 	if resp.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("%v", resp))
+		return fmt.Errorf("%v", resp)
 	}
 
 	log.Info("Register resource to mongo.")

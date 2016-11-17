@@ -140,7 +140,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 		ds.UpdateVersionDocument(event.Version.VersionID, setEvent.Event.Version)
 	}
 
-	eventJson, err := json.Marshal(event)
+	eventJSON, err := json.Marshal(event)
 	if err != nil {
 		message := "Unable to marshal event from etcd"
 		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
@@ -149,8 +149,8 @@ func setEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	log.Infof("set etcd: %s", string(eventJson))
-	err = etcdClient.Set(EventsUnfinished+eventID, string(eventJson))
+	log.Infof("set etcd: %s", string(eventJSON))
+	err = etcdClient.Set(EventsUnfinished+eventID, string(eventJSON))
 	if err != nil {
 		message := "Unable to set event to etcd"
 		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})

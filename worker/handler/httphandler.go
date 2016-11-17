@@ -27,19 +27,20 @@ import (
 	"github.com/caicloud/cyclone/api"
 )
 
-// HttpHandler identifies the type of a http handler
-type HttpHandler struct {
+// HTTPHandler identifies the type of a http handler
+type HTTPHandler struct {
 	BaseURL string
 }
 
-func NewHttpHandler(baseUrl string) *HttpHandler {
-	return &HttpHandler{
-		BaseURL: baseUrl,
+// NewHTTPHandler returns a new HTTP request handler.
+func NewHTTPHandler(baseURL string) *HTTPHandler {
+	return &HTTPHandler{
+		BaseURL: baseURL,
 	}
 }
 
 // GetEvent retrieves a event from event ID.
-func (ap *HttpHandler) GetEvent(eventID string, response *api.GetEventResponse) error {
+func (ap *HTTPHandler) GetEvent(eventID string, response *api.GetEventResponse) error {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/events/%s", ap.BaseURL, eventID), nil)
 	if err != nil {
 		return err
@@ -65,7 +66,7 @@ func (ap *HttpHandler) GetEvent(eventID string, response *api.GetEventResponse) 
 }
 
 // SetEvent set a event.
-func (ap *HttpHandler) SetEvent(eventID string, event *api.SetEvent, response *api.SetEventResponse) error {
+func (ap *HTTPHandler) SetEvent(eventID string, event *api.SetEvent, response *api.SetEventResponse) error {
 	buf, err := json.Marshal(event)
 	if err != nil {
 		return err

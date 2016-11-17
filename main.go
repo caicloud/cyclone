@@ -79,9 +79,11 @@ const (
 )
 
 const (
+	// DefaultRegistry is the default docker registry, if user don't have REGISTRY_LOCATION defined,
+	// cyclone would use DefaultRegistry instead.
 	DefaultRegistry = "cargo.caicloud.io"
 
-	// Grace period waiting for mongodb to be running.
+	// MongoGracePeriod is the grace period waiting for mongodb to be running.
 	MongoGracePeriod = 30 * time.Second
 
 	cyclonePort            = 7099
@@ -109,8 +111,8 @@ func main() {
 	go cyclonehttp.Server()
 
 	// init api
-	initApiServer()
-	initApiDoc()
+	initAPIServer()
+	initAPIDoc()
 	startAPIServer()
 }
 
@@ -128,8 +130,8 @@ func setLogLevel() {
 // setMaxProcesses set man process with the CPU number.
 func setMaxProcesses() {
 	//set max processes
-	nCpuNumber := runtime.NumCPU()
-	runtime.GOMAXPROCS(nCpuNumber)
+	nCPUNumber := runtime.NumCPU()
+	runtime.GOMAXPROCS(nCPUNumber)
 }
 
 // dailMongo dail mongo server by ENV.
@@ -153,8 +155,8 @@ func dailMongo(session *mgo.Session) {
 	store.Init(session)
 }
 
-// initApiServer init restful api server.
-func initApiServer() {
+// initAPIServer init restful api server.
+func initAPIServer() {
 	// Get docker deamon's endpoint and cert path.
 	//endpoint := osutil.MustGetStringEnv(DOCKER_HOST, "unix:///var/run/docker.sock")
 
@@ -166,18 +168,16 @@ func initApiServer() {
 
 }
 
-// initApiDoc init api doc server according to the input flag.
-func initApiDoc() {
+// initAPIDoc init api doc server according to the input flag.
+func initAPIDoc() {
 	if *apiDoc == true {
-		// You can install the Swagger Service which provides a nice Web UI on your REST API
-		// You need to download the Swagger HTML5 assets and change the FilePath location in the config below.
 		// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
 		config := swagger.Config{
-			WebServices:    restful.RegisteredWebServices(), // you control what services are visible
+			WebServices:    restful.RegisteredWebServices(), // you control what services are visible.
 			WebServicesUrl: fmt.Sprintf(cycloneAddressTemplate, cyclonePort),
 			ApiPath:        "/apidocs.json",
 
-			// Optionally, specify where the UI is located
+			// Optionally, specify where the UI is located.
 			SwaggerPath:     "/apidocs/",
 			SwaggerFilePath: "./node_modules/swagger-ui/dist",
 		}

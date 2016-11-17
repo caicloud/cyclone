@@ -79,7 +79,7 @@ func getEvent() (api.Event, error) {
 	serverHost := osutil.GetStringEnv(SERVER_HOST, "http://127.0.0.1:7099")
 
 	BaseURL := fmt.Sprintf("%s/api/%s", serverHost, api.APIVersion)
-	httpHandler := handler.NewHttpHandler(BaseURL)
+	httpHandler := handler.NewHTTPHandler(BaseURL)
 
 	var getResponse api.GetEventResponse
 	err := httpHandler.GetEvent(eventID, &getResponse)
@@ -309,7 +309,7 @@ func sendEvent(event api.Event) error {
 	serverHost := osutil.GetStringEnv(SERVER_HOST, "http://127.0.0.1:7099")
 
 	BaseURL := fmt.Sprintf("%s/api/%s", serverHost, api.APIVersion)
-	httpHandler := handler.NewHttpHandler(BaseURL)
+	httpHandler := handler.NewHTTPHandler(BaseURL)
 	result := &api.SetEvent{
 		Event: event,
 	}

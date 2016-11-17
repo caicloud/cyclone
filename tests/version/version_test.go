@@ -193,7 +193,7 @@ var _ = Describe("Version", func() {
 
 			// TODO: multi client GET the log.
 			It("should push the log", func() {
-				err := WatchLog(ws, ApiCreateVersion, AliceUID,
+				err := WatchLog(ws, APICreateVersion, AliceUID,
 					serviceResponse.ServiceID, versionResponse.VersionID)
 				Expect(err).To(BeNil())
 			})
@@ -232,7 +232,7 @@ var _ = Describe("Version", func() {
 
 		Context("with missing version id", func() {
 			It("should return: unfound log", func() {
-				err := WatchLog(ws, ApiCreateVersion, AliceUID,
+				err := WatchLog(ws, APICreateVersion, AliceUID,
 					serviceResponse.ServiceID, "-1")
 				Expect(err).To(Equal(ErrUnfoundLog))
 			})
@@ -312,7 +312,7 @@ var _ = Describe("Version", func() {
 		})
 
 		It("should not be able to keep the log due to different user ID.", func() {
-			err := WatchLog(ws, ApiCreateVersion, BobUID, serviceResponse.ServiceID,
+			err := WatchLog(ws, APICreateVersion, BobUID, serviceResponse.ServiceID,
 				versionResponse.VersionID)
 			Expect(err).To(Equal(ErrUnfoundLog))
 		})

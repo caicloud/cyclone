@@ -110,9 +110,8 @@ func (wss *WSSession) GetTopicEnable(sTopic string) bool {
 	bEnable, bFound := wss.mapTopicEnable[sTopic]
 	if bFound {
 		return bEnable
-	} else {
-		return false
 	}
+	return false
 }
 
 //ClearTopicEnable clear the map of tapic enable flags

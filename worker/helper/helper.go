@@ -45,6 +45,7 @@ import (
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
 )
 
+// Application is the type for k8s deployment.
 type Application struct {
 	Deployment       k8s_ext_api.Deployment            `json:"deployment,omitempty"`
 	Service          k8s_core_api.Service              `json:"service,omitempty"`
@@ -59,14 +60,17 @@ type Application struct {
 }
 
 const (
-	FileBufferSize          = 64 * 1024 * 1024
+	// FileBufferSize is the default size of file buffers.
+	FileBufferSize = 64 * 1024 * 1024
+	// KUBERNETES is the cluster type of kubernetes.
+	KUBERNETES = "kubernetes"
+
 	checkDeployStatusPeriod = 10 * time.Second
 	checkDeployTimeout      = 10 * time.Minute
-	KUBERNETES              = "kubernetes"
 )
 
 var (
-	codeDeployReady int = 1
+	codeDeployReady = 1
 )
 
 // Result is the type for result.
@@ -355,7 +359,7 @@ func DoYamlDeployCheck(event *api.Event, tree *parser.Tree) {
 	}
 }
 
-// DoYamlDeployCheck uses for plan deploy state check.
+// DoPlanDeployCheck uses for plan deploy state check.
 func DoPlanDeployCheck(event *api.Event) {
 	// Plan deploy check
 	appList := []appVersionInfo{}

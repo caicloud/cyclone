@@ -28,24 +28,35 @@ import (
 )
 
 var (
-	ErrUnfoundLog = fmt.Errorf("unfound log")
+	// ErrUnfoundLog is the error type for "log not found."
+	ErrUnfoundLog = fmt.Errorf("log not found")
 )
 
 const (
-	ApiCreateVersion  = "create-version"
-	LogServerOrigin   = "http://localhost/"
-	LogServerUrl      = "ws://localhost:8000/ws"
-	StartOperation    = "start"
-	StopOperation     = "stop"
-	TimeOutPushLog    = 5
-	TimeOutResponse   = 10
+	// APICreateVersion is the API for version creation.
+	APICreateVersion = "create-version"
+	// LogServerOrigin is the host of log server.
+	LogServerOrigin = "http://localhost/"
+	// LogServerURL is the URL of log server.
+	LogServerURL = "ws://localhost:8000/ws"
+	// StartOperation is the operation name for starting.
+	StartOperation = "start"
+	// StopOperation is the operation name for stoping.
+	StopOperation = "stop"
+	// TimeOutPushLog is the timeout for log pusing.
+	TimeOutPushLog = 5
+	// TimeOutResponse is the timeout for response.
+	TimeOutResponse = 10
+	// ReadMsgBufferSize is the default size of buffer for reading messages.
 	ReadMsgBufferSize = 32768
 )
 
+// DialLogServer dials LogServerURL for connection.
 func DialLogServer() (ws *gwebsocket.Conn, err error) {
-	return gwebsocket.Dial(LogServerUrl, "", LogServerOrigin)
+	return gwebsocket.Dial(LogServerURL, "", LogServerOrigin)
 }
 
+// SendMsgToLogServer sends messages to log server directly.
 func SendMsgToLogServer(ws *gwebsocket.Conn, msg []byte) error {
 	if _, err := ws.Write(msg); err != nil {
 		return err
@@ -53,6 +64,7 @@ func SendMsgToLogServer(ws *gwebsocket.Conn, msg []byte) error {
 	return nil
 }
 
+// ReadMsgFromLogServer reads messages from log server.
 func ReadMsgFromLogServer(ws *gwebsocket.Conn, timeout int) ([]byte, error) {
 	var msg = make([]byte, ReadMsgBufferSize)
 	var n int
@@ -73,6 +85,7 @@ func analysisMsg(msg []byte) (mapData map[string]interface{}, err error) {
 	return mapData, nil
 }
 
+// WatchLog begins to watch the log.
 func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 	serviceID string, versionID string) (err error) {
 	//start watch log
@@ -116,7 +129,7 @@ func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 		return ErrUnfoundLog
 	}
 
-	//stop watch log
+	// Stop watch log.
 	msg = websocket.PacketWatchLog(apiName, userID, serviceID,
 		versionID, StopOperation, uuid.NewV4().String())
 	if err = SendMsgToLogServer(ws, msg); err != nil {
@@ -136,6 +149,7 @@ func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 	return nil
 }
 
+// StopWatchLog stop watching log.
 func StopWatchLog(ws *gwebsocket.Conn, apiName string, userID string,
 	serviceID string, versionID string) {
 	msg := websocket.PacketWatchLog(apiName, userID, serviceID,
