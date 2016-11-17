@@ -62,7 +62,7 @@ const (
 )
 
 var (
-	Err_Worker_Busy = errors.New("Get worker docker host busy")
+	ErrWorkerBusy = errors.New("Get worker docker host busy")
 )
 
 // RegistryCompose that compose the info about the registry
@@ -134,7 +134,7 @@ func GetWorkerDockerHost(event *api.Event) (string, error) {
 	}
 	if len(workerNodes) == 0 {
 		log.Errorf("Get worker docker host busy")
-		return "", Err_Worker_Busy
+		return "", ErrWorkerBusy
 	}
 
 	err = resourceManager.ApplyResource(event)
@@ -185,7 +185,7 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 	event.WorkerInfo.DueTime = time.Now().Add(time.Duration(WORKER_TIMEOUT))
 	err = SaveEventToEtcd(event)
 	log.Infof("save event worker info: %s, %v", w.containerID, err)
-	go CheckWorkerTimeOut(*event, w)
+	go CheckWorkerTimeOut(*event)
 	return nil
 }
 
@@ -206,7 +206,7 @@ func (w *Worker) Fire() error {
 }
 
 // CheckWorkerTimeOut ensures that the events are not timed out.
-func CheckWorkerTimeOut(e api.Event, w *Worker) {
+func CheckWorkerTimeOut(e api.Event) {
 	var eventCopy api.Event
 	eventCopy = e
 	event := &eventCopy

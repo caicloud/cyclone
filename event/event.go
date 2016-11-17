@@ -123,22 +123,7 @@ func createServiceHandler(event *api.Event) error {
 		return err
 	}
 
-	err = w.DoWork(event)
-	if err != nil {
-		return err
-	}
-
-	if event.Service.Repository.Webhook == api.GITHUB {
-		remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
-		if err != nil {
-			log.ErrorWithFields("Unable to get remote according coderepository", log.Fields{"user_id": event.Service.UserID})
-		} else {
-			if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
-				log.Errorf("Unable to post commit status to github: %v", err)
-			}
-		}
-	}
-	return nil
+	return w.DoWork(event)
 }
 
 // createServicePostHook is the create service post hook.
@@ -174,7 +159,22 @@ func createVersionHandler(event *api.Event) error {
 		return err
 	}
 
-	return w.DoWork(event)
+	err = w.DoWork(event)
+	if err != nil {
+		return err
+	}
+
+	if event.Service.Repository.Webhook == api.GITHUB {
+		remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
+		if err != nil {
+			log.ErrorWithFields("Unable to get remote according coderepository", log.Fields{"user_id": event.Service.UserID})
+		} else {
+			if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
+				log.Errorf("Unable to post commit status to github: %v", err)
+			}
+		}
+	}
+	return nil
 }
 
 // createVersionPostHook is the create version post hook.

@@ -172,7 +172,7 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		output.Close()
 		event.Output = nil
 		worker_log.SetWatchLogFileSwitch(output.Name(), false)
-		// wait the send the log to kafka throuth cyclone server totally
+		// wait util the send the log to kafka throuth cyclone server totally.
 		for i := 0; i < WAIT_TIMES; i++ {
 			if isChanClosed(ch) {
 				break

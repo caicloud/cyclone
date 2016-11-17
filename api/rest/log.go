@@ -16,7 +16,6 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/log"
@@ -47,15 +46,7 @@ func getVersionLog(request *restful.Request, response *restful.Response) {
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		getResponse.ErrorMessage = message
 	} else {
-		arrary := strings.Split(result.Logs, "\n")
-		for _, arr := range arrary {
-			if arr != "\r" && arr != "" {
-				if strings.HasPrefix(arr, "layer") != true {
-					getResponse.Logs += arr
-					getResponse.Logs += "\n"
-				}
-			}
-		}
+		getResponse.Logs = result.Logs
 	}
 
 	response.WriteEntity(getResponse)

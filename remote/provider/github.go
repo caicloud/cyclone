@@ -86,7 +86,7 @@ func (g *GitHub) Authcallback(code, state string) (string, error) {
 
 	// Caicloud web address,eg caicloud.io
 	uiPath := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://localhost:8000")
-	redirectURL := fmt.Sprintf("%s/circle/add?type=github&code=%s&state=%s", uiPath, code, state)
+	redirectURL := fmt.Sprintf("%s/cyclone/add?type=github&code=%s&state=%s", uiPath, code, state)
 
 	// Sync to get token.
 	go g.getToken(code, state)

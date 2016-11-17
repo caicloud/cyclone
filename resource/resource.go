@@ -38,8 +38,8 @@ type Manager struct {
 }
 
 var (
-	Err_Unable_Support = errors.New("Unable to support the request resource")
-	resourceManager    *Manager
+	ErrUnableSupport = errors.New("Unable to support the request resource")
+	resourceManager  *Manager
 )
 
 // NewManager creates a new resource manager with default resource.
@@ -111,7 +111,7 @@ func (resm *Manager) ApplyResource(event *api.Event) error {
 		if resource.LeftResource.Memory < event.Version.BuildResource.Memory ||
 			resource.LeftResource.CPU < event.Version.BuildResource.CPU {
 			log.Infof("Unable to support the request resource %+v", event.Service.UserID)
-			return Err_Unable_Support
+			return ErrUnableSupport
 		}
 
 		resource.LeftResource.Memory = resource.LeftResource.Memory - event.Version.BuildResource.Memory

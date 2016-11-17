@@ -27,6 +27,10 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const (
+	DOCKER_IMAGE_LOG_FLAG = "layer"
+)
+
 //AnalysisMessage analysis message receive from the web client.
 func AnalysisMessage(dp *DataPacket) bool {
 	sReceiveFrom := dp.GetReceiveFrom()
@@ -175,11 +179,14 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 		}
 
 		str := string(msg.Value)
-
-		arrary := strings.Split(str, "\n")
-		for _, arr := range arrary {
+		array := strings.Split(str, "\n")
+		for _, arr := range array {
 			if arr != "\r" && arr != "" {
-				if strings.HasPrefix(arr, "layer") {
+				if isDockerImageOperationLog(arr) {
+					// In order to achieve overlapping the log according to the same layer id,
+					// so extracted the layer id from the log into the ID section
+					// in the websockect package, then the UI received the webpacket can overlap
+					// the log according to the ID.
 					tmpss := strings.Split(arr, ":")
 					tmps := strings.Split(tmpss[0], " ")
 					tmp := tmps[1]
@@ -208,4 +215,8 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 		time.Sleep(time.Millisecond * 100)
 	}
 	log.Infof("stop push %s to %s", sTopic, wss.GetSessionID())
+}
+
+func isDockerImageOperationLog(log string) bool {
+	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }

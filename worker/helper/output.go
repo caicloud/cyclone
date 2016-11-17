@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -18,7 +19,8 @@ import (
 
 const (
 	// SERVER_HOST is a Env variable name
-	SERVER_HOST = "SERVER_HOST"
+	SERVER_HOST           = "SERVER_HOST"
+	DOCKER_IMAGE_LOG_FLAG = "layer"
 )
 
 var (
@@ -29,13 +31,23 @@ var (
 
 // PushLogToCyclone would push the log to cyclone.
 func PushLogToCyclone(event *api.Event) error {
-	versionLog, err := getLogFromOutputFile(event)
+	versionLogRaw, err := getLogFromOutputFile(event)
 	if err != nil {
 		// No output file, just return directly.
 		if err == ErrNoOutput {
 			return nil
 		}
 		return err
+	}
+	versionLog := ""
+	array := strings.Split(versionLogRaw, "\n")
+	for _, arr := range array {
+		if arr != "\r" && arr != "" {
+			if isDockerImageOperationLog(arr) != true {
+				versionLog += arr
+				versionLog += "\n"
+			}
+		}
 	}
 	response := &api.VersionLogCreateResponse{}
 	logCreateRequest := api.VersionLog{
@@ -92,4 +104,8 @@ func getLogFromOutputFile(event *api.Event) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+func isDockerImageOperationLog(log string) bool {
+	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }

@@ -241,7 +241,10 @@ func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.Nod
 // start a container with the given CreateContainerOptions.
 func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.Container, error) {
 	log.InfoWithFields("About to inspect the image.", log.Fields{"image": cco.Config.Image})
-	result, _ := b.dockerManager.IsImagePresent(cco.Config.Image)
+	result, err := b.dockerManager.IsImagePresent(cco.Config.Image)
+	if err != nil {
+		return nil, err
+	}
 	if result == false {
 		log.InfoWithFields("About to pull the image.", log.Fields{"image": cco.Config.Image})
 		err := b.dockerManager.PullImage(cco.Config.Image)

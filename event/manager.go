@@ -240,11 +240,10 @@ func (el *List) loadListFromEtcd(etcd *etcd.Client) {
 			continue
 		}
 		log.Infof("load event to list: %s", event.EventID)
-		w, err := LoadWorker(&event)
 		if event.Status == api.EventStatusPending {
 			el.addUnfinshedEvent(&event)
 		} else {
-			go CheckWorkerTimeOut(event, w)
+			go CheckWorkerTimeOut(event)
 		}
 	}
 }
@@ -357,13 +356,13 @@ func handlePendingEvents() {
 		event := *pendingEvents.GetFront()
 		err := handleEvent(&event)
 		if err != nil {
-			if err == resource.Err_Unable_Support {
+			if err == resource.ErrUnableSupport {
 				log.Info("Waiting for resource to be relaesed...")
 				time.Sleep(time.Second * 10)
 				continue
 			}
 			// worker busy
-			if err == Err_Worker_Busy {
+			if err == ErrWorkerBusy {
 				log.Info("All system worker are busy, wait for 10 seconds")
 				time.Sleep(time.Second * 10)
 				continue
