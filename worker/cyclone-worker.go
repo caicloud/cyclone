@@ -45,6 +45,7 @@ const (
 	LOG_SERVER             = "LOG_SERVER"
 
 	WORKER_TIMEOUT = 7200 * time.Second
+	WAIT_TIMES     = 5
 )
 
 func main() {
@@ -160,8 +161,9 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		return
 	}
 
+	ch := make(chan interface{})
 	defer func() {
-		// Push log to cyclone.
+		// Push log file to cyclone.
 		if err := helper.PushLogToCyclone(event); err != nil {
 			event.Status = api.EventStatusFail
 			event.ErrorMessage = err.Error()
@@ -170,11 +172,18 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		output.Close()
 		event.Output = nil
 		worker_log.SetWatchLogFileSwitch(output.Name(), false)
+		// wait util the send the log to kafka throuth cyclone server totally.
+		for i := 0; i < WAIT_TIMES; i++ {
+			if isChanClosed(ch) {
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
 	}()
 
 	topicLog := websocket.CreateTopicName(string(event.Operation), event.Service.UserID,
 		event.Service.ServiceID, event.Version.VersionID)
-	go worker_log.WatchLogFile(output.Name(), topicLog)
+	go worker_log.WatchLogFile(output.Name(), topicLog, ch)
 
 	event.Output = output
 	event.Data["context-dir"] = vcsManager.GetCloneDir(&event.Service, &event.Version)
@@ -330,4 +339,14 @@ func sendEvent(event api.Event) error {
 		}
 	}
 	return err
+}
+
+func isChanClosed(ch chan interface{}) bool {
+	if len(ch) == 0 {
+		select {
+		case _, ok := <-ch:
+			return !ok
+		}
+	}
+	return false
 }

@@ -17,6 +17,7 @@ limitations under the License.
 package resource
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -26,7 +27,7 @@ import (
 	"github.com/caicloud/cyclone/store"
 )
 
-type ResourceManager struct {
+type Manager struct {
 	memoryuser      float64
 	memorycontainer float64
 	cpuuser         float64
@@ -37,18 +38,19 @@ type ResourceManager struct {
 }
 
 var (
-	resourceManager *ResourceManager
+	ErrUnableSupport = errors.New("Unable to support the request resource")
+	resourceManager  *Manager
 )
 
 // NewManager creates a new resource manager with default resource.
-func NewManager() *ResourceManager {
+func NewManager() *Manager {
 	if resourceManager == nil {
 		memoryuser := osutil.GetFloat64Env("MEMORYFORUSER", 4294967296.0) //4G
 		cpuuser := osutil.GetFloat64Env("CPUFORUSER", 4096.0)
 		memorycontainer := osutil.GetFloat64Env("MEMORYFORCONTAINER", 536870912.0) //512M
 		cpucontainer := osutil.GetFloat64Env("CPUFORCONTAINER", 512.0)
 
-		resourceManager = &ResourceManager{
+		resourceManager = &Manager{
 			memoryuser:      memoryuser,
 			memorycontainer: memorycontainer,
 			cpuuser:         cpuuser,
@@ -59,7 +61,7 @@ func NewManager() *ResourceManager {
 }
 
 // ApplyResource uses to apply resource for container.
-func (resm *ResourceManager) ApplyResource(event *api.Event) error {
+func (resm *Manager) ApplyResource(event *api.Event) error {
 	resm.lock.Lock()
 	defer resm.lock.Unlock()
 
@@ -83,7 +85,6 @@ func (resm *ResourceManager) ApplyResource(event *api.Event) error {
 		if resource.TotalResource.Memory < event.Version.BuildResource.Memory ||
 			resource.TotalResource.CPU < event.Version.BuildResource.CPU {
 			errResource := fmt.Errorf("the total resource < the request resource")
-			//steplog.InsertStepLog(event, steplog.ApplyResource, steplog.Stop, errResource)
 			log.Errorf("Unable to support the request resource %+v, because > the total resource", event.Service.UserID)
 			return errResource
 		}
@@ -103,16 +104,14 @@ func (resm *ResourceManager) ApplyResource(event *api.Event) error {
 		if resource.TotalResource.Memory < event.Version.BuildResource.Memory ||
 			resource.TotalResource.CPU < event.Version.BuildResource.CPU {
 			errResource := fmt.Errorf("the total resource < the request resource")
-			//steplog.InsertStepLog(event, steplog.ApplyResource, steplog.Stop, errResource)
 			log.Errorf("Unable to support the request resource %+v, because > the total resource", event.Service.UserID)
 			return errResource
 		}
 
 		if resource.LeftResource.Memory < event.Version.BuildResource.Memory ||
 			resource.LeftResource.CPU < event.Version.BuildResource.CPU {
-			errResource := fmt.Errorf("Unable to support the request resource")
 			log.Infof("Unable to support the request resource %+v", event.Service.UserID)
-			return errResource
+			return ErrUnableSupport
 		}
 
 		resource.LeftResource.Memory = resource.LeftResource.Memory - event.Version.BuildResource.Memory
@@ -129,7 +128,7 @@ func (resm *ResourceManager) ApplyResource(event *api.Event) error {
 }
 
 // ReleaseResource uses to add resource into db.
-func (resm *ResourceManager) ReleaseResource(event *api.Event) error {
+func (resm *Manager) ReleaseResource(event *api.Event) error {
 	ds := store.NewStore()
 	defer ds.Close()
 	resource, err := ds.FindResourceByID(event.Service.UserID)
@@ -148,21 +147,21 @@ func (resm *ResourceManager) ReleaseResource(event *api.Event) error {
 }
 
 // GetMemorycontainer func that get the default memory for container.
-func (resm *ResourceManager) GetMemorycontainer() float64 {
+func (resm *Manager) GetMemorycontainer() float64 {
 	return resm.memorycontainer
 }
 
 // GetCpucontainer func that get the default cpu for container.
-func (resm *ResourceManager) GetCpucontainer() float64 {
+func (resm *Manager) GetCpucontainer() float64 {
 	return resm.cpucontainer
 }
 
 // GetMemoryuser func that get the default memory for user.
-func (resm *ResourceManager) GetMemoryuser() float64 {
+func (resm *Manager) GetMemoryuser() float64 {
 	return resm.memoryuser
 }
 
 // GetCpuuser func that get the default cpu for user.
-func (resm *ResourceManager) GetCpuuser() float64 {
+func (resm *Manager) GetCpuuser() float64 {
 	return resm.cpuuser
 }

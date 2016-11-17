@@ -71,13 +71,7 @@ func InsertStepLog(event *api.Event, stepevent StepEvent, state StepState, err e
 		stepLog = fmt.Sprintf("step: %s state: %s Error: %v", stepevent, state, err)
 	}
 
-	if state == Stop {
-		// set red background
-		fmt.Fprintf(event.Output, "\033[41;37m %s \033[0m\n", stepLog)
-	} else {
-		// set green background
-		fmt.Fprintf(event.Output, "\033[42;42m %s \033[0m\n", stepLog)
-	}
+	fmt.Fprintf(event.Output, "%s\n", stepLog)
 }
 
 // RemoveLogFile is used to delete the log file.
@@ -179,13 +173,14 @@ func GetWatchLogFileSwitch(filePath string) bool {
 }
 
 // WatchLogFile watch the log and prouce one line to kafka topic per 200ms
-func WatchLogFile(filePath string, topic string) {
+func WatchLogFile(filePath string, topic string, ch chan interface{}) {
 	var logFile *os.File
 	var err error
 
 	SetWatchLogFileSwitch(filePath, true)
 	for {
 		if false == GetWatchLogFileSwitch(filePath) {
+			close(ch)
 			return
 		}
 
@@ -214,6 +209,7 @@ func WatchLogFile(filePath string, topic string) {
 						break
 					}
 					log.Errorf("watch log file errs: %v", errRead)
+					close(ch)
 					return
 				}
 				line = strings.TrimSpace(line)
@@ -222,6 +218,7 @@ func WatchLogFile(filePath string, topic string) {
 			if len(lines) != 0 {
 				pushLog(topic, lines)
 			}
+			close(ch)
 			return
 		}
 
@@ -233,6 +230,7 @@ func WatchLogFile(filePath string, topic string) {
 					break
 				}
 				log.Errorf("watch log file err: %v", errRead)
+				close(ch)
 				return
 			}
 			line = strings.TrimSpace(line)

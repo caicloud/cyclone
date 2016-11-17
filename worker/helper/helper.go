@@ -39,6 +39,7 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/runner"
 	"github.com/caicloud/cyclone/worker/ci/yaml"
 	"github.com/caicloud/cyclone/worker/clair"
+	steplog "github.com/caicloud/cyclone/worker/log"
 	k8s_core_api "k8s.io/kubernetes/pkg/api"
 	k8s_ext_api "k8s.io/kubernetes/pkg/apis/extensions"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -246,18 +247,23 @@ func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docke
 // Publish is an async handler for build and push the image to
 // private registry.
 func Publish(event *api.Event, dmanager *docker.Manager) error {
+	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
 	if err := dmanager.BuildImage(event); err != nil {
+		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
 		return err
 	}
+	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
 
+	steplog.InsertStepLog(event, steplog.PushImage, steplog.Start, nil)
 	if err := dmanager.PushImage(event); err != nil {
+		steplog.InsertStepLog(event, steplog.PushImage, steplog.Stop, err)
 		return err
 	}
 
 	if err := clair.Analysis(event, dmanager); err != nil {
 		log.ErrorWithFields("Unable to analysis by clair", log.Fields{"err": err})
 	}
-
+	steplog.InsertStepLog(event, steplog.PushImage, steplog.Finish, nil)
 	return nil
 }
 

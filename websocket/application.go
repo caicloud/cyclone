@@ -27,6 +27,10 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const (
+	DOCKER_IMAGE_LOG_FLAG = "layer"
+)
+
 //AnalysisMessage analysis message receive from the web client.
 func AnalysisMessage(dp *DataPacket) bool {
 	sReceiveFrom := dp.GetReceiveFrom()
@@ -174,16 +178,46 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 			}
 		}
 
-		byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
-			pWatchLog.ServiceId, pWatchLog.VersionId, string(msg.Value),
-			uuid.NewV4().String())
-		dpPacket := &DataPacket{
-			byrFrame:  byrLog,
-			nFrameLen: len(byrLog),
-			sSendTo:   wss.sSessionID,
+		str := string(msg.Value)
+		array := strings.Split(str, "\n")
+		for _, arr := range array {
+			if arr != "\r" && arr != "" {
+				if isDockerImageOperationLog(arr) {
+					// In order to achieve overlapping the log according to the same layer id,
+					// so extracted the layer id from the log into the ID section
+					// in the websockect package, then the UI received the webpacket can overlap
+					// the log according to the ID.
+					tmpss := strings.Split(arr, ":")
+					tmps := strings.Split(tmpss[0], " ")
+					tmp := tmps[1]
+					byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
+						pWatchLog.ServiceId, pWatchLog.VersionId, arr[6:], tmp)
+					dpPacket := &DataPacket{
+						byrFrame:  byrLog,
+						nFrameLen: len(byrLog),
+						sSendTo:   wss.sSessionID,
+					}
+					wss.Send(dpPacket)
+				} else {
+					number := uuid.NewV4().String()
+					byrLog := PacketPushLog(pWatchLog.Api, pWatchLog.UserId,
+						pWatchLog.ServiceId, pWatchLog.VersionId, arr,
+						number)
+					dpPacket := &DataPacket{
+						byrFrame:  byrLog,
+						nFrameLen: len(byrLog),
+						sSendTo:   wss.sSessionID,
+					}
+					wss.Send(dpPacket)
+				}
+			}
 		}
-		wss.Send(dpPacket)
 		time.Sleep(time.Millisecond * 100)
 	}
 	log.Infof("stop push %s to %s", sTopic, wss.GetSessionID())
+}
+
+// isDockerImageOperationLog check the log whether is the log of pulling or pushing docker image.
+func isDockerImageOperationLog(log string) bool {
+	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }
