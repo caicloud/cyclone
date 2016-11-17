@@ -106,7 +106,7 @@ func getLogFromOutputFile(event *api.Event) (string, error) {
 	return string(content), nil
 }
 
-// isDockerImageOperationLog func that check the log whether is docker image' operating log.
+// isDockerImageOperationLog check the log whether is the log of pulling or pushing docker image.
 func isDockerImageOperationLog(log string) bool {
 	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }
