@@ -217,6 +217,7 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 	log.Infof("stop push %s to %s", sTopic, wss.GetSessionID())
 }
 
+// isDockerImageOperationLog func that check the log whether is docker image' operating log.
 func isDockerImageOperationLog(log string) bool {
 	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }
