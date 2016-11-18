@@ -19,6 +19,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
@@ -28,7 +29,7 @@ import (
 	docker_client "github.com/fsouza/go-dockerclient"
 )
 
-const WORKER_NODE_DOCKER_VERSION = "1.10.1"
+const WORKER_NODE_DOCKER_MIN_VERSION = "1.10.0"
 
 // createSystemWorkerNode creates a system worker node.
 //
@@ -106,6 +107,45 @@ func createSystemWorkerNode(request *restful.Request, response *restful.Response
 	response.WriteHeaderAndEntity(http.StatusOK, createResponse)
 }
 
+//  convertVersionFromStringToInt convert the version from string to int.
+func convertVersionFromStringToInt(version string) (int, error) {
+	versions := strings.Split(version, ".")
+	main, err := strconv.Atoi(versions[0])
+	if err != nil {
+		return 0, err
+	}
+
+	middle, err := strconv.Atoi(versions[1])
+	if err != nil {
+		return 0, err
+	}
+
+	little, err := strconv.Atoi(versions[2])
+	if err != nil {
+		return 0, err
+	}
+
+	return main*10000 + middle*100 + little, nil
+}
+
+// checkDockerVersion check wether if the node docker version is above the WORKER_NODE_DOCKER_MIN_VERSION.
+func checkDockerVersion(nodeDockerVersion string) bool {
+	nodeDockerVersionNum, err := convertVersionFromStringToInt(nodeDockerVersion)
+	if err != nil {
+		log.Errorf("Node docker version format err: %s", nodeDockerVersion)
+		return false
+	}
+
+	log.Infof("Node docker version num is %d", nodeDockerVersionNum)
+
+	minDockerVersionNum, _ := convertVersionFromStringToInt(WORKER_NODE_DOCKER_MIN_VERSION)
+	if nodeDockerVersionNum < minDockerVersionNum {
+		return false
+	}
+
+	return true
+}
+
 // IsValidDockerHost checks if the docker host is valid.
 func IsValidDockerHost(dockerHost string) (bool, error) {
 	client, err := docker_client.NewClient(dockerHost)
@@ -127,7 +167,7 @@ func IsValidDockerHost(dockerHost string) (bool, error) {
 	for _, env := range *envs {
 		if strings.HasPrefix(env, "Version") {
 			log.Infof("The docker version of adding worker node is %s", strings.Split(env, "=")[1])
-			if strings.Split(env, "=")[1] == WORKER_NODE_DOCKER_VERSION {
+			if checkDockerVersion(strings.Split(env, "=")[1]) {
 				bVaildDockerVersion = true
 			}
 			break

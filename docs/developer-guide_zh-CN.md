@@ -59,7 +59,7 @@
 - Cyclone-Server启动一个基于Docker in Docker技术的Cyclone-Worker容器，在该容器中从代码库中拉取源码，按照源码中caicloud.yml配置文件，依次执行：
   - PreBuild：在指定编译环境中编译可执行文件
   - Build：将可执行文件拷到运行环境容器中，打成镜像发布到镜像仓库中
-  - Integretion：使用Build阶段构建的镜像启动一个容器，启动持续集成所依赖的微服务容器进行集成测试
+  - Integration：运行持续集成所依赖的微服务，启动一个容器执行集成测试，如果微服务镜像名配置为“BUILT_IAMGE”，则使用Build阶段新构建的镜像
   - PostBuild：启动一个容器执行一些脚本命令，实现镜像发布后的一些关联操作
   - Deploy：使用发布的镜像部署应用到kubernetes等容器集群Paas平台
 - 构建过程日志可以通过Websocket从Cyclone-Server拉取

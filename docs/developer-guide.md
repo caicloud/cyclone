@@ -61,7 +61,7 @@ We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API d
 - Cyclone-Server will run a Cyclone-Worker container which uses the “Docker in Docker” technique. The Cyclone-Worker container will checkout code from VCS, then execute steps according to the configrations of caicloud.yml in the code repository as follows:
  - PreBuild: compile the source code from VCS and generate the executable file in the specified system environment
  - Build: copy the executable file to the specified system environment, package the environment to a docker image and push the image to the specified docker registry
- - Integration: run the newly built image as a container, and bring up its dependencies (as other containers specified in the configuration) to perform integration testing.
+ - Integration: run a container and bring up its dependencies (as other containers specified in the configuration) to perform integration testing. If the image of service configurated as "BUILT_IMAGE", it will use the newly built image.**
  - PostBuild: run a container to execute some shells or commads which aim to do some related operations after the images is published in the registry
  - Deploy: deploy the containerized application into a containerized platform like Kubernetes.
 - The logs durning the entire workflow can be pulled from Cyclone-Server via websocket

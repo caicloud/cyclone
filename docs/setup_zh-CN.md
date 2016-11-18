@@ -4,7 +4,7 @@
 
 ```
 golang：1.6+
-docker：建议使用 1.10.1
+docker：建议使用 1.10.0+(已在1.10~1.11版本充分测试验证)
 kubernetes：1.2+
 ```
 
@@ -56,23 +56,22 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 
 ## 其它
 
-环境变量解释：
+环境变量表：
 
-```
-MONGO_DB_IP             mongo db的地址, 默认是localhost
-KAFKA_SERVER_IP         kafka 服务的地址, 默认是127.0.0.1:9092
-LOG_SERVER              日志服务的地址, 默认是127.0.0.1:8000
-WORK_REGISTRY_LOCATION  镜像仓地址, 默认是cargo.caicloud.io
-REGISTRY_USERNAME       镜像仓用户名, 默认是null
-REGISTRY_PASSWORD       镜像仓用户密码, 默认是null
-CLIENTID                用于github oauth授权的clienID, 默认是null
-CLIENTIDSECRET          用于github oauth授权的secret, 默认是null
-CONSOLE_WEB_ENDPOINT    caicloud网页访问地址, 默认是http://localhost:8000
-CLIENTID_GITLAB         用于gitlab oauth授权的clienID, 默认是null
-CLIENTIDSECRET_GITLAB   用于gitlab oauth授权的secret, 默认是null
-SERVER_GITLAB           gitlab的服务器地址, 默认是https://gitlab.com
-ETCD_SERVER_IP          etcd的服务器地址, 默认是127.0.0.1:2379
-CYCLONE_SERVER_HOST      cirlce的访问地址, 默认是http://localhost:709
-WORKER_IMAGE            worker容器的镜像名称，默认是cargo.caicloud.io/caicloud/cyclone-worker
-CLAIR_SERVER_IP         clair的服务器地址, 默认是127.0.0.1:6060
-```
+| 环境变量                   | 说明                                       |
+| ---------------------- | ---------------------------------------- |
+| MONGO_DB_IP            | mongo db的地址, 默认是localhost                |
+| KAFKA_SERVER_IP        | kafka服务的地址，默认是127.0.0.1:9092             |
+| WORK_REGISTRY_LOCATION | 镜像仓的地址，默认是cargo.caicloud.io.             |
+| REGISTRY_USERNAME      | 镜像仓用户名，默认是空                              |
+| REGISTRY_PASSWORD      | 镜像仓用户密码，默认是空                             |
+| CLIENTID               | 用于github oauth授权的clientID，默认是空           |
+| CLIENTIDSECRET         | 用于github oauth授权的secret，默认是空             |
+| CONSOLE_WEB_ENDPOINT   | 网页用户界面访问地址，默认是http://localhost:8000      |
+| CLIENTID_GITLAB        | 用于gitlab oauth授权的clientID，默认是空           |
+| CLIENTIDSECRET_GITLAB  | 用于gitlab oauth授权的secret，默认是空             |
+| SERVER_GITLAB          | gitlab的服务器地址，默认是https://gitlab.com       |
+| ETCD_SERVER_IP         | etcd的服务器地址，默认时127.0.0.1:2379             |
+| CYCLONE_SERVER_HOST    | Cyclone-Server的访问地址，默认是http://localhost:7099 |
+| WORKER_IMAGE           | Cyclone-Worker容器的镜像名，默认是cargo.caicloud.io/caicloud/cyclone-worker:latest |
+| CLAIR_SERVER_IP        | clair的服务器地址，默认是127.0.0.1:6060            |

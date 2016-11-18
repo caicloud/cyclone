@@ -38,6 +38,9 @@ import (
 const (
 	// BindTemplate is the template of binds.
 	BindTemplate = "%s:%s"
+
+	// Flag of running a container which use the built image as a service.
+	BuiltImage = "BUILT_IMAGE"
 )
 
 func getNameInNetwork(dn *parser.DockerNode, b *Build) string {
@@ -77,6 +80,21 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 	// Add the prefix to the name to solve the name conflict.
 	var name = getNameInNetwork(dn, b)
 	var alias = dn.Name
+
+	// If the image of service config to be "BUILT_IMAGE",
+	// Cyclone will use the image built during the "build" step to run a service container.
+	if dn.Image == BuiltImage {
+		imageName, ok := b.event.Data["image-name"]
+		tagName, ok2 := b.event.Data["tag-name"]
+
+		if !ok || !ok2 {
+			return nil, alias
+		}
+
+		log.InfoWithFields("About to run service container for integration. ",
+			log.Fields{"image": imageName, "tag": tagName})
+		dn.Image = fmt.Sprintf("%s:%s", imageName.(string), tagName.(string))
+	}
 
 	config := &docker_client.Config{
 		Image:      dn.Image,
@@ -135,24 +153,8 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 
 // toContainerConfig creates CreateContainerOptions from BuildNode.
 func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.NodeType) *docker_client.CreateContainerOptions {
-	var image string
-	// In integration step, use the image built in build step.
-	if nodetype == parser.NodeIntegration {
-		imageName, ok := b.event.Data["image-name"]
-		tagName, ok2 := b.event.Data["tag-name"]
-
-		if !ok || !ok2 {
-			return nil
-		}
-
-		log.InfoWithFields("About to integration docker image. ", log.Fields{"image": imageName, "tag": tagName})
-		image = fmt.Sprintf("%s:%s", imageName.(string), tagName.(string))
-	} else {
-		image = dn.Image
-	}
-
 	config := &docker_client.Config{
-		Image:      image,
+		Image:      dn.Image,
 		Env:        dn.Environment,
 		Cmd:        dn.Command,
 		Entrypoint: dn.Entrypoint,
