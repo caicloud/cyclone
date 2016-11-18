@@ -14,28 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pathutil
+// Package ci is an implementation of ci manager.
+package ci
 
 import (
-	"os"
 	"testing"
 )
 
-const (
-	illegalPath = "/var/cyclone/the-file-shouldn't-exist"
-	legalPath   = "/var"
-)
-
-// TestEnsureParentDir tests the EnsureParentDir func.
-func TestEnsureParentDirWithError(t *testing.T) {
-	if err := EnsureParentDir(illegalPath, os.ModePerm); err == nil {
-		t.Error("Expected error to occur but it was nil")
-	}
-}
-
-// TestEnsureParentDir tests the EnsureParentDir func.
-func TestEnsureParentDir(t *testing.T) {
-	if err := EnsureParentDir(legalPath, os.ModePerm); err != nil {
-		t.Error("Expected error to be nil")
+// TestFetchAndParseYaml tests fetchAndParseYaml with a wrong path.
+func TestFetchAndParseYaml(t *testing.T) {
+	_, err := fetchAndParseYaml("/mock-file-path.yml")
+	if err == nil {
+		t.Error("Expected error to occur but it is nil.")
 	}
 }

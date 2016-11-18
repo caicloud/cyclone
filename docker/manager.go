@@ -31,10 +31,10 @@ import (
 
 // Manager manages all docker operations, like build, push, etc.
 type Manager struct {
-	client     *docker_client.Client
-	registry   string
-	authConfig *AuthConfig
-	endPoint   string
+	Client     *docker_client.Client
+	Registry   string
+	AuthConfig *AuthConfig
+	EndPoint   string
 }
 
 // NewManager creates a new docker manager.
@@ -52,10 +52,10 @@ func NewManager(endpoint string, certPath string, registry api.RegistryCompose) 
 		}
 
 		return &Manager{
-			client:     client,
-			registry:   registry.RegistryLocation,
-			authConfig: authConfig,
-			endPoint:   endpoint,
+			Client:     client,
+			Registry:   registry.RegistryLocation,
+			AuthConfig: authConfig,
+			EndPoint:   endpoint,
 		}, nil
 	}
 
@@ -75,51 +75,26 @@ func NewManager(endpoint string, certPath string, registry api.RegistryCompose) 
 	}
 
 	return &Manager{
-		client:     client,
-		registry:   registry.RegistryLocation,
-		authConfig: authConfig,
-		endPoint:   endpoint,
+		Client:     client,
+		Registry:   registry.RegistryLocation,
+		AuthConfig: authConfig,
+		EndPoint:   endpoint,
 	}, nil
-}
-
-// GetDockerClient returns the docker client.
-func (dm *Manager) GetDockerClient() *docker_client.Client {
-	return dm.client
-}
-
-// GetDockerAuthConfig returns the docker auth config.
-func (dm *Manager) GetDockerAuthConfig() *AuthConfig {
-	return dm.authConfig
-}
-
-// GetDockerRegistry returns the docker registry.
-func (dm *Manager) GetDockerRegistry() string {
-	return dm.registry
-}
-
-// GetDockerEndPoint returns the docker endpoint.
-func (dm *Manager) GetDockerEndPoint() string {
-	return dm.endPoint
-}
-
-// GetAuthConfig gets the auth config of docker manager.
-func (dm *Manager) GetAuthConfig() *AuthConfig {
-	return dm.authConfig
 }
 
 // PullImage pulls an image by its name.
 func (dm *Manager) PullImage(imageName string) error {
 	opts := docker_client.PullImageOptions{
 		Repository: imageName,
-		Registry:   dm.registry,
+		Registry:   dm.Registry,
 	}
 
 	authOpt := docker_client.AuthConfiguration{
-		Username: dm.authConfig.Username,
-		Password: dm.authConfig.Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	}
 
-	err := dm.client.PullImage(opts, authOpt)
+	err := dm.Client.PullImage(opts, authOpt)
 	if err == nil {
 		log.InfoWithFields("Successfully pull docker image.", log.Fields{"image": imageName})
 	}
@@ -143,14 +118,14 @@ func (dm *Manager) BuildImage(event *api.Event) error {
 	// Use to pull cargo.caicloud.io/:username/:imagename:tag.
 	// TODO: we will consider more cases
 	authOpt := docker_client.AuthConfiguration{
-		Username: dm.authConfig.Username,
-		Password: dm.authConfig.Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	}
 
 	authOpts := docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
 	}
-	authOpts.Configs[dm.registry] = authOpt
+	authOpts.Configs[dm.Registry] = authOpt
 
 	opt := docker_client.BuildImageOptions{
 		Name:           imageName,
@@ -160,7 +135,7 @@ func (dm *Manager) BuildImage(event *api.Event) error {
 		Memswap:        -1,
 		OutputStream:   event.Output,
 	}
-	err := dm.client.BuildImage(opt)
+	err := dm.Client.BuildImage(opt)
 	if err == nil {
 		log.InfoWithFields("Successfully built docker image.", log.Fields{"image": imageName})
 	}
@@ -185,11 +160,11 @@ func (dm *Manager) PushImage(event *api.Event) error {
 	}
 
 	authOpt := docker_client.AuthConfiguration{
-		Username: dm.authConfig.Username,
-		Password: dm.authConfig.Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	}
 
-	err := dm.client.PushImage(opt, authOpt)
+	err := dm.Client.PushImage(opt, authOpt)
 	if err == nil {
 		log.InfoWithFields("Successfully pushed docker image.", log.Fields{"image": imageName})
 	}
@@ -214,7 +189,7 @@ func (dm *Manager) RunContainer(cco *docker_client.CreateContainerOptions) (stri
 	}
 
 	log.InfoWithFields("About to create the container.", log.Fields{"config": *cco})
-	client := dm.GetDockerClient()
+	client := dm.Client
 	container, err := client.CreateContainer(*cco)
 	if err != nil {
 		return "", err
@@ -234,12 +209,12 @@ func (dm *Manager) RunContainer(cco *docker_client.CreateContainerOptions) (stri
 
 // StopContainer stops a container by given ID.
 func (dm *Manager) StopContainer(ID string) error {
-	return dm.client.StopContainer(ID, 0)
+	return dm.Client.StopContainer(ID, 0)
 }
 
 // RemoveContainer removes a container by given ID.
 func (dm *Manager) RemoveContainer(ID string) error {
-	return dm.client.RemoveContainer(docker_client.RemoveContainerOptions{
+	return dm.Client.RemoveContainer(docker_client.RemoveContainerOptions{
 		ID:            ID,
 		RemoveVolumes: true,
 		Force:         true,
@@ -257,21 +232,21 @@ func (dm *Manager) StopAndRemoveContainer(ID string) error {
 // GetAuthOpts gets Auth options.
 func (dm *Manager) GetAuthOpts() (authOpts docker_client.AuthConfigurations) {
 	authOpt := docker_client.AuthConfiguration{
-		Username: dm.authConfig.Username,
-		Password: dm.authConfig.Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	}
 
 	authOpts = docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
 	}
-	authOpts.Configs[dm.registry] = authOpt
+	authOpts.Configs[dm.Registry] = authOpt
 
 	return authOpts
 }
 
 // RemoveNetwork removes a network by given ID.
 func (dm *Manager) RemoveNetwork(networkID string) error {
-	return dm.client.RemoveNetwork(networkID)
+	return dm.Client.RemoveNetwork(networkID)
 }
 
 // BuildImageSpecifyDockerfile builds docker image with params from event with
@@ -292,14 +267,14 @@ func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
 	// Use to pull cargo.caicloud.io/:username/:imagename:tag.
 	// TODO: we will consider more cases
 	authOpt := docker_client.AuthConfiguration{
-		Username: dm.authConfig.Username,
-		Password: dm.authConfig.Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	}
 
 	authOpts := docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
 	}
-	authOpts.Configs[dm.registry] = authOpt
+	authOpts.Configs[dm.Registry] = authOpt
 
 	if "" != dockerfilePath {
 		contextDir = contextDir + "/" + dockerfilePath
@@ -318,7 +293,7 @@ func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
 		Memswap:        -1,
 	}
 	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
-	err := dm.client.BuildImage(opt)
+	err := dm.Client.BuildImage(opt)
 	if err == nil {
 		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
 		log.InfoWithFields("Successfully built docker image.", log.Fields{"image": imageName})
@@ -351,7 +326,7 @@ func (dm *Manager) CleanUp(event *api.Event) error {
 
 // RemoveImage removes an image by its name or ID.
 func (dm *Manager) RemoveImage(name string) error {
-	return dm.client.RemoveImage(name)
+	return dm.Client.RemoveImage(name)
 }
 
 // parse parses the "FROM" in the repo's Dockerfile to check the images which the build images base on
@@ -386,7 +361,7 @@ func parse(despath string) ([]string, error) {
 
 // IsImagePresent checks if given image exists.
 func (dm *Manager) IsImagePresent(image string) (bool, error) {
-	_, err := dm.client.InspectImage(image)
+	_, err := dm.Client.InspectImage(image)
 	if err == nil {
 		return true, nil
 	}
@@ -398,10 +373,10 @@ func (dm *Manager) IsImagePresent(image string) (bool, error) {
 
 // GetImageNameWithTag gets the image name with tag from registry, username, service name and version name.
 func (dm *Manager) GetImageNameWithTag(username, serviceName, versionName string) string {
-	return fmt.Sprintf("%s/%s/%s:%s", dm.registry, strings.ToLower(username), strings.ToLower(serviceName), versionName)
+	return fmt.Sprintf("%s/%s/%s:%s", dm.Registry, strings.ToLower(username), strings.ToLower(serviceName), versionName)
 }
 
 // GetImageNameNoTag gets the image name without tag from registry, username, service name.
 func (dm *Manager) GetImageNameNoTag(username, serviceName string) string {
-	return fmt.Sprintf("%s/%s/%s", dm.registry, strings.ToLower(username), strings.ToLower(serviceName))
+	return fmt.Sprintf("%s/%s/%s", dm.Registry, strings.ToLower(username), strings.ToLower(serviceName))
 }

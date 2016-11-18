@@ -178,7 +178,7 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 
 	event.Output = output
 	event.Data["context-dir"] = vcsManager.GetCloneDir(&event.Service, &event.Version)
-	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.GetDockerRegistry(),
+	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
 		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
 	event.Data["tag-name"] = event.Version.Name
 

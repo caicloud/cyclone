@@ -14,9 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package parser
+package runner
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/caicloud/cyclone/docker"
+	"github.com/caicloud/cyclone/worker/ci/parser"
+	docker_client "github.com/fsouza/go-dockerclient"
+)
 
 const configStr = `
 integration:
@@ -71,21 +77,44 @@ deploy:
       - container2
 `
 
-// TestParser tests parse function.
-func TestParseString(t *testing.T) {
-	_, err := ParseString(configStr)
-	if err != nil {
-		t.Error("Expect error to be nil")
+// TestToBuildContainerConfig tests the BuildContainerConfig function.
+func TestToBuildContainerConfig(t *testing.T) {
+	dn := &parser.DockerNode{
+		NodeType:    parser.NodeBuild,
+		Environment: []string{"key=value"},
+	}
+
+	b := &Build{
+		contextDir: "/unit-test",
+		dockerManager: &docker.Manager{
+			EndPoint: "just-for-test",
+		},
+		network: &docker_client.Network{},
+	}
+
+	option := toBuildContainerConfig(dn, b, parser.NodeBuild)
+	if len(option.Config.Env) != 1 {
+		t.Errorf("Expected the length of config's env is 1 but got %d", len(option.Config.Env))
 	}
 }
 
-func TestNewTree(t *testing.T) {
-	_ = newTree()
-}
+// TestToBuildContainerConfig tests the BuildContainerConfig function.
+func TestToServiceContainerConfig(t *testing.T) {
+	dn := &parser.DockerNode{
+		NodeType:    parser.NodeBuild,
+		Environment: []string{"key=value"},
+	}
 
-func TestParse(t *testing.T) {
-	_, err := Parse([]byte(configStr))
-	if err != nil {
-		t.Error("Expect error to be nil")
+	b := &Build{
+		contextDir: "/unit-test",
+		dockerManager: &docker.Manager{
+			EndPoint: "just-for-test",
+		},
+		network: &docker_client.Network{},
+	}
+
+	option, _ := toServiceContainerConfig(dn, b)
+	if len(option.Config.Env) != 1 {
+		t.Errorf("Expected the length of config's env is 1 but got %d", len(option.Config.Env))
 	}
 }

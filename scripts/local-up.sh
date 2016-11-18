@@ -57,6 +57,7 @@ export REGISTRY_PASSWORD=${REGISTRY_PASSWORD:-""}
 export WORK_REGISTRY_LOCATION=${WORK_REGISTRY_LOCATION:-"cargo.caicloud.io"}
 export SUCCESSTEMPLATE=${SUCCESSTEMPLATE:-"./notify/provider/success.html"}
 export ERRORTEMPLATE=${ERRORTEMPLATE:-"./notify/provider/error.html"}
+export WORKER_NODE_DOCKER_VERSION=${WORKER_NODE_DOCKER_VERSION:-"1.10.1"}
 
 # Static configs.
 export REGISTRY_AUTH_LOG=${REGISTRY_AUTH_LOG}

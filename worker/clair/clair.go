@@ -100,8 +100,8 @@ func AnalysisImage(dockerManager *docker.Manager,
 	imageName string) ([]klar_clair.Vulnerability, error) {
 	var vulnerabilities []klar_clair.Vulnerability
 
-	image, err := klar_docker.NewImage(imageName, dockerManager.GetAuthConfig().Username,
-		dockerManager.GetAuthConfig().Password)
+	image, err := klar_docker.NewImage(imageName, dockerManager.AuthConfig.Username,
+		dockerManager.AuthConfig.Password)
 	if err != nil {
 		log.Errorf("new images err: %v", err)
 		return vulnerabilities, err
