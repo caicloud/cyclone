@@ -302,7 +302,7 @@ if __name__ == '__main__':
     #get_project_version("superxi", "5d0a9b99-d75f-4848-89eb-7ae5b88dc20d")
 	
     #create_worker_node("test1", "unix:///var/run/docker.sock")
-    #create_worker_node("test2", "120.26.103.107:2375")
+    #create_worker_node("test2", "tcp://120.26.103.107:2375")
     #get_worker_node("e43c0207-f8f3-4513-bcff-c991c50dee74")
     #delete_worker_node("8211f1fc-2c40-42c2-90e9-b8d16f2d6336")
     #get_worker_nodes()

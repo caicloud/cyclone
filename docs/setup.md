@@ -4,7 +4,7 @@
 
 ```
 golang：1.6+
-docker：(Suggested)1.10.1
+docker：(Suggested)1.10.0+(Has tested and verified with 1.10~1.11)
 kubernetes：1.2+
 ```
 
