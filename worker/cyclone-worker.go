@@ -153,14 +153,14 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		return
 	}
 
-	output, err := helper.CreateFileBuffer(event.EventID)
+	err = worker_log.CreateFileBuffer(event.EventID)
 	if err != nil {
 		event.Status = api.EventStatusFail
 		event.ErrorMessage = err.Error()
 		log.ErrorWithFields("Operation failed", log.Fields{"event": event})
 		return
 	}
-
+	output := worker_log.Output
 	ch := make(chan interface{})
 	defer func() {
 		// Push log file to cyclone.
@@ -170,7 +170,6 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
 		}
 		output.Close()
-		event.Output = nil
 		worker_log.SetWatchLogFileSwitch(output.Name(), false)
 		// wait util the send the log to kafka throuth cyclone server totally.
 		for i := 0; i < WAIT_TIMES; i++ {
@@ -185,7 +184,6 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		event.Service.ServiceID, event.Version.VersionID)
 	go worker_log.WatchLogFile(output.Name(), topicLog, ch)
 
-	event.Output = output
 	event.Data["context-dir"] = vcsManager.GetCloneDir(&event.Service, &event.Version)
 	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
 		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
@@ -299,7 +297,6 @@ func yamlBuild(event *api.Event, tree *parser.Tree, dockerManager *docker.Manage
 			return
 		}
 
-		event.Output = nil
 		err = sendEvent(*event)
 		if err != nil {
 			log.Errorf("set event result err: %v", err)

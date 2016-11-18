@@ -50,7 +50,7 @@ func GetStringEnv(name, def string) string {
 func GetIntEnv(name string, def int) int {
 	val, err := strconv.Atoi(os.Getenv(name))
 	if err != nil {
-		log.Infof("Env variant %s is not numeric, using default value: %s", name, def)
+		log.Infof("Env variant %s is not numeric, using default value: %v", name, def)
 		return def
 	}
 	log.Infof("Env variant %s found, using env value: %d", name, val)
@@ -62,7 +62,7 @@ func GetIntEnv(name string, def int) int {
 func GetFloat64Env(name string, def float64) float64 {
 	val, err := strconv.ParseFloat(os.Getenv(name), 64)
 	if err != nil {
-		log.Infof("Env variant %s is not numeric, using default value: %s", name, def)
+		log.Infof("Env variant %s is not numeric, using default value: %v", name, def)
 		return def
 	}
 	log.Infof("Env variant %s found, using env value: %f", name, val)

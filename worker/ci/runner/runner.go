@@ -29,6 +29,7 @@ import (
 	docker_client "github.com/fsouza/go-dockerclient"
 )
 
+// BuildStatus represent unsigned int
 type BuildStatus uint
 
 // Build is a typed representation of a build job.
@@ -126,7 +127,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			Encode(createContainerOptions, node)
 
 			// Run the docker container.
-			container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type())
+			container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type(), steplog.Output)
 			if err != nil {
 				return err
 			}
@@ -140,7 +141,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			log.Info("Build with Dockerfile path: ", node.DockerfilePath,
 				" ", node.DockerfileName)
 			if err := b.dockerManager.BuildImageSpecifyDockerfile(b.event,
-				node.DockerfilePath, node.DockerfileName); err != nil {
+				node.DockerfilePath, node.DockerfileName, steplog.Output); err != nil {
 				return err
 			}
 
@@ -150,7 +151,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			if "" != node.DockerfilePath || "" != node.DockerfileName {
 				log.Info("Pre_build with Dockerfile path: ", node.DockerfilePath,
 					" ", node.DockerfileName)
-				errDockerfile := preBuildByDockerfile(&b.event.Output, b.dockerManager,
+				errDockerfile := preBuildByDockerfile(steplog.Output, b.dockerManager,
 					b.event, node.DockerfilePath, node.DockerfileName, node.Outputs,
 					outPutPath)
 				if nil != errDockerfile {
@@ -163,7 +164,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 				Encode(createContainerOptions, node)
 
 				// Run the docker container.
-				container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type())
+				container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type(), steplog.Output)
 				if err != nil {
 					steplog.InsertStepLog(b.event, steplog.PreBuild, steplog.Stop, err)
 					return err
@@ -186,7 +187,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			Encode(createContainerOptions, node)
 
 			// Run the docker container.
-			container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type())
+			container, err := run(b, createContainerOptions, node.Outputs, outPutPath, node.Type(), steplog.Output)
 			if err != nil {
 				steplog.InsertStepLog(b.event, steplog.PostBuild, steplog.Stop, err)
 				return err
@@ -206,7 +207,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 // PublishImage publish image to registry.
 func (b *Build) PublishImage() (err error) {
 	steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Start, nil)
-	if err := b.dockerManager.PushImage(b.event); err != nil {
+	if err := b.dockerManager.PushImage(b.event, steplog.Output); err != nil {
 		steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Stop, err)
 		return err
 	}
@@ -235,18 +236,13 @@ func shouldSkip(flags parser.NodeType, nodeType parser.NodeType) bool {
 }
 
 func isLackOfCriticalConfig(node *parser.DockerNode) bool {
-	if parser.NodeBuild == node.Type() {
-		// build node didn't neet any critical config
-		return false
-	} else {
-		if 0 == len(node.Image) &&
-			0 == len(node.DockerfilePath) &&
-			0 == len(node.DockerfileName) {
-			return true
-		} else {
-			return false
-		}
+	// build node didn't neet any critical config
+	if parser.NodeBuild != node.Type() && 0 == len(node.Image) &&
+		0 == len(node.DockerfilePath) &&
+		0 == len(node.DockerfileName) {
+		return true
 	}
+	return false
 }
 
 // GetEvent returns the event.

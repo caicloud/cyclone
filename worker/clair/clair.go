@@ -163,7 +163,6 @@ func Analysis(event *api.Event, dmanager *docker.Manager) error {
 	}
 	event.Version.SecurityCheck = true
 	for _, vulnerability := range vulnerabilities {
-		fmt.Fprintf(event.Output, "vulnerabilitie: %v\n", vulnerability)
 		if vulnerability.Severity == string(Medium) ||
 			vulnerability.Severity == string(High) ||
 			vulnerability.Severity == string(Critical) ||

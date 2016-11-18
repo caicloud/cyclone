@@ -26,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
@@ -49,7 +50,7 @@ func (g *Git) CloneRepo(url, destPath string, event *api.Event) error {
 
 	output, err := executil.RunInDir(dir, "git", args...)
 	if event.Version.VersionID != "" {
-		fmt.Fprintf(event.Output, "%s", string(output))
+		fmt.Fprintf(steplog.Output, "%s", string(output))
 	}
 
 	if err != nil {
@@ -171,7 +172,7 @@ func (g *Git) CheckOutByCommitID(commitID string, repoPath string, event *api.Ev
 	args := []string{"-C", repoPath, "reset", "--hard", commitID}
 
 	output, err := executil.RunInDir(repoPath, "git", args...)
-	fmt.Fprintf(event.Output, "%s", string(output))
+	fmt.Fprintf(steplog.Output, "%s", string(output))
 
 	if err != nil {
 		log.ErrorWithFields("Error when checkout", log.Fields{"error": err})

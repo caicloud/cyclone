@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"github.com/caicloud/cyclone/pkg/log"
 	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/docker/docker/builder/dockerfile/command"
@@ -102,7 +103,7 @@ func (dm *Manager) PullImage(imageName string) error {
 }
 
 // BuildImage builds image from event.
-func (dm *Manager) BuildImage(event *api.Event) error {
+func (dm *Manager) BuildImage(event *api.Event, output filebuffer.FileBuffer) error {
 	imagename, ok := event.Data["image-name"]
 	tagname, ok2 := event.Data["tag-name"]
 	contextdir, ok3 := event.Data["context-dir"]
@@ -133,7 +134,7 @@ func (dm *Manager) BuildImage(event *api.Event) error {
 		AuthConfigs:    authOpts,
 		RmTmpContainer: true,
 		Memswap:        -1,
-		OutputStream:   event.Output,
+		OutputStream:   output,
 	}
 	err := dm.Client.BuildImage(opt)
 	if err == nil {
@@ -143,7 +144,7 @@ func (dm *Manager) BuildImage(event *api.Event) error {
 }
 
 // PushImage pushes docker image to registry. output will be sent to event status output.
-func (dm *Manager) PushImage(event *api.Event) error {
+func (dm *Manager) PushImage(event *api.Event, output filebuffer.FileBuffer) error {
 	imageName, ok := event.Data["image-name"]
 	tagName, ok2 := event.Data["tag-name"]
 
@@ -156,7 +157,7 @@ func (dm *Manager) PushImage(event *api.Event) error {
 	opt := docker_client.PushImageOptions{
 		Name:         imageName.(string),
 		Tag:          tagName.(string),
-		OutputStream: event.Output,
+		OutputStream: output,
 	}
 
 	authOpt := docker_client.AuthConfiguration{
@@ -252,7 +253,7 @@ func (dm *Manager) RemoveNetwork(networkID string) error {
 // BuildImageSpecifyDockerfile builds docker image with params from event with
 // specify Dockerfile. Build output will be sent to event status output.
 func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
-	dockerfilePath string, dockerfileName string) error {
+	dockerfilePath string, dockerfileName string, output filebuffer.FileBuffer) error {
 	imagename, ok := event.Data["image-name"]
 	tagname, ok2 := event.Data["tag-name"]
 	contextdir, ok3 := event.Data["context-dir"]
@@ -287,7 +288,7 @@ func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
 		Name:           imageName,
 		Dockerfile:     dockerfileName,
 		ContextDir:     contextDir,
-		OutputStream:   event.Output,
+		OutputStream:   output,
 		AuthConfigs:    authOpts,
 		RmTmpContainer: true,
 		Memswap:        -1,

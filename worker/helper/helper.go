@@ -23,15 +23,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
-	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
-	"github.com/caicloud/cyclone/pkg/pathutil"
 	"github.com/caicloud/cyclone/pkg/wait"
 	"github.com/caicloud/cyclone/utils"
 	"github.com/caicloud/cyclone/worker/ci"
@@ -61,8 +58,6 @@ type Application struct {
 }
 
 const (
-	// FileBufferSize is the default size of file buffers.
-	FileBufferSize = 64 * 1024 * 1024
 	// KUBERNETES is the cluster type of kubernetes.
 	KUBERNETES = "kubernetes"
 
@@ -100,21 +95,6 @@ type appVersionInfo struct {
 type containerVersionInfo struct {
 	ContainerName string `bson:"name,omitempty" json:"name,omitempty"`
 	VersionName   string `bson:"version,omitempty" json:"version,omitempty"`
-}
-
-// CreateFileBuffer func that create a file buffer for storage log
-func CreateFileBuffer(eventID api.EventID) (filebuffer.FileBuffer, error) {
-	var path string
-	path = fmt.Sprintf("/logs/%s", eventID)
-	err := pathutil.EnsureParentDir(path, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	file, err := osutil.OpenFile(path, os.O_APPEND, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	return filebuffer.NewFileBuffer(FileBufferSize, file), err
 }
 
 // ExecBuild exec the publish steps
@@ -248,14 +228,14 @@ func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docke
 // private registry.
 func Publish(event *api.Event, dmanager *docker.Manager) error {
 	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
-	if err := dmanager.BuildImage(event); err != nil {
+	if err := dmanager.BuildImage(event, steplog.Output); err != nil {
 		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
 		return err
 	}
 	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
 
 	steplog.InsertStepLog(event, steplog.PushImage, steplog.Start, nil)
-	if err := dmanager.PushImage(event); err != nil {
+	if err := dmanager.PushImage(event, steplog.Output); err != nil {
 		steplog.InsertStepLog(event, steplog.PushImage, steplog.Stop, err)
 		return err
 	}

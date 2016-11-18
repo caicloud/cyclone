@@ -23,6 +23,7 @@ import (
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/log"
+	steplog "github.com/caicloud/cyclone/worker/log"
 )
 
 // Svn is the type for svn provider.
@@ -42,7 +43,7 @@ func (s *Svn) CloneRepo(url, destPath string, event *api.Event) error {
 		url, destPath}
 	output, err := executil.RunInDir("./", "svn", args...)
 	if event.Version.VersionID != "" {
-		fmt.Fprintf(event.Output, "%q", string(output))
+		fmt.Fprintf(steplog.Output, "%q", string(output))
 	}
 
 	if err != nil {
@@ -106,7 +107,7 @@ func (s *Svn) CheckOutByCommitID(commitID string, repoPath string, event *api.Ev
 		"--password", event.Service.Repository.Password, "--non-interactive", "--trust-server-cert",
 		"--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
-	fmt.Fprintf(event.Output, "%q\n", string(output))
+	fmt.Fprintf(steplog.Output, "%q\n", string(output))
 
 	if err != nil {
 		log.ErrorWithFields("Error when svn check out by commitID", log.Fields{"error": err})
