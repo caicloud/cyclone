@@ -58,7 +58,7 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 
 环境变量表：
 
-|                        | 说明                                       |
+| 环境变量                   | 说明                                       |
 | ---------------------- | ---------------------------------------- |
 | MONGO_DB_IP            | mongo db的地址, 默认是localhost                |
 | KAFKA_SERVER_IP        | kafka服务的地址，默认是127.0.0.1:9092             |
