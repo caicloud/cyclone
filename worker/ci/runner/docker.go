@@ -82,7 +82,7 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 	var alias = dn.Name
 
 	// If the image of service config to be "BUILT_IMAGE",
-	// Cyclone will use the image built dunrning the "build" step to run a service container.
+	// Cyclone will use the image built during the "build" step to run a service container.
 	if dn.Image == BuiltImage {
 		imageName, ok := b.event.Data["image-name"]
 		tagName, ok2 := b.event.Data["tag-name"]
