@@ -20,7 +20,7 @@ import (
 	"errors"
 )
 
-// AuthConfig contains the username and password to access caicloud docker registry.
+// AuthConfig contains the username and password to access docker registry.
 type AuthConfig struct {
 	Username string
 	Password string
@@ -29,7 +29,7 @@ type AuthConfig struct {
 // NewAuthConfig returns a new AuthConfig or returns an error.
 func NewAuthConfig(username, password string) (*AuthConfig, error) {
 	if username == "" || password == "" {
-		return nil, errors.New("The username or password is not setted.")
+		return nil, errors.New("The username or password for docker registry is not set.")
 	}
 	return &AuthConfig{
 		Username: username,
