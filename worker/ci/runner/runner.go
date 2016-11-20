@@ -29,7 +29,7 @@ import (
 	docker_client "github.com/fsouza/go-dockerclient"
 )
 
-// BuildStatus represent unsigned int
+// BuildStatus represent the type for status of build.
 type BuildStatus uint
 
 // Build is a typed representation of a build job.
