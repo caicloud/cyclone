@@ -235,6 +235,7 @@ func shouldSkip(flags parser.NodeType, nodeType parser.NodeType) bool {
 	return flags != 0 && flags&nodeType == 0
 }
 
+// isLackOfCriticalConfig func checks whether there is lack of critical config.
 func isLackOfCriticalConfig(node *parser.DockerNode) bool {
 	// build node didn't neet any critical config
 	if parser.NodeBuild != node.Type() && 0 == len(node.Image) &&

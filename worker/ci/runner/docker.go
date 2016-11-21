@@ -39,7 +39,7 @@ const (
 	// BindTemplate is the template of binds.
 	BindTemplate = "%s:%s"
 
-	// Flag of running a container which use the built image as a service.
+	// BuiltImage is the flag of running a container which use the built image as a service.
 	BuiltImage = "BUILT_IMAGE"
 )
 

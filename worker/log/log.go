@@ -37,13 +37,16 @@ import (
 )
 
 const (
+	// LogSpecialMark represents special mark.
 	LogSpecialMark string = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+	// LogReplaceMark represents replace mark.
 	LogReplaceMark string = "--->"
 	// FileBufferSize is the default size of file buffers.
 	FileBufferSize = 64 * 1024 * 1024
 )
 
 var (
+	// Output is used to collect log informatin.
 	Output filebuffer.FileBuffer
 )
 
@@ -192,9 +195,9 @@ func GetWatchLogFileSwitch(filePath string) bool {
 	bEnable, bFound := watchLogFileSwitch[filePath]
 	if bFound {
 		return bEnable
-	} else {
-		return false
 	}
+	return false
+
 }
 
 // WatchLogFile watch the log and prouce one line to kafka topic per 200ms

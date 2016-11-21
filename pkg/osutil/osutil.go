@@ -33,7 +33,7 @@ func GetHomeDir() string {
 	return usr.HomeDir
 }
 
-// MustGetStringEnv get evironment value of 'name', and return provided
+// GetStringEnv get evironment value of 'name', and return provided
 // default value if not found.
 func GetStringEnv(name, def string) string {
 	val := os.Getenv(name)
@@ -45,24 +45,24 @@ func GetStringEnv(name, def string) string {
 	return val
 }
 
-// MustGetIntEnv get evironment value of 'name', and return provided
+// GetIntEnv get evironment value of 'name', and return provided
 // default value if not found.
 func GetIntEnv(name string, def int) int {
 	val, err := strconv.Atoi(os.Getenv(name))
 	if err != nil {
-		log.Infof("Env variant %s is not numeric, using default value: %v", name, def)
+		log.Infof("Env variant %s is not numeric, using default value: %d", name, def)
 		return def
 	}
 	log.Infof("Env variant %s found, using env value: %d", name, val)
 	return val
 }
 
-// MustGetIntEnv get evironment value of 'name', and return provided
+// GetFloat64Env get evironment value of 'name', and return provided
 // default value if not found.
 func GetFloat64Env(name string, def float64) float64 {
 	val, err := strconv.ParseFloat(os.Getenv(name), 64)
 	if err != nil {
-		log.Infof("Env variant %s is not numeric, using default value: %v", name, def)
+		log.Infof("Env variant %s is not numeric, using default value: %f", name, def)
 		return def
 	}
 	log.Infof("Env variant %s found, using env value: %f", name, val)
