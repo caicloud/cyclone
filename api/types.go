@@ -19,7 +19,6 @@ package api
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"golang.org/x/oauth2"
 )
 
@@ -811,8 +810,6 @@ type Event struct {
 	Version        Version        `bson:"version,omitempty" json:"version,omitempty"`
 	Project        Project        `bson:"project,omitempty" json:"project,omitempty"`
 	ProjectVersion ProjectVersion `bson:"project_version,omitempty" json:"project_version,omitempty"`
-
-	Output filebuffer.FileBuffer `bson:"output,omitempty" json:"output,omitempty"`
 	// Custom data passed to event operation handler.
 	Data       map[string]interface{} `bson:"data,omitempty" json:"data,omitempty"`
 	WorkerInfo WorkerInfo             `bson:"worker_info,omitempty" json:"worker_info,omitempty"`

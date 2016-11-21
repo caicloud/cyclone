@@ -29,13 +29,25 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/executil"
+	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/pkg/pathutil"
 	"golang.org/x/net/websocket"
 )
 
 const (
+	// LogSpecialMark represents special mark.
 	LogSpecialMark string = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+	// LogReplaceMark represents replace mark.
 	LogReplaceMark string = "--->"
+	// FileBufferSize is the default size of file buffers.
+	FileBufferSize = 64 * 1024 * 1024
+)
+
+var (
+	// Output is used to collect log informatin.
+	Output filebuffer.FileBuffer
 )
 
 // StepEvent is information about step evnet name in creating versions
@@ -71,7 +83,7 @@ func InsertStepLog(event *api.Event, stepevent StepEvent, state StepState, err e
 		stepLog = fmt.Sprintf("step: %s state: %s Error: %v", stepevent, state, err)
 	}
 
-	fmt.Fprintf(event.Output, "%s\n", stepLog)
+	fmt.Fprintf(Output, "%s\n", stepLog)
 }
 
 // RemoveLogFile is used to delete the log file.
@@ -93,6 +105,22 @@ func RemoveLogFile(filepath string) error {
 	}
 	log.InfoWithFields("Successfully removed log file", log.Fields{"filename": filename})
 	return err
+}
+
+// CreateFileBuffer func that create a file buffer for storage log
+func CreateFileBuffer(eventID api.EventID) error {
+	var path string
+	path = fmt.Sprintf("/logs/%s", eventID)
+	err := pathutil.EnsureParentDir(path, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	file, err := osutil.OpenFile(path, os.O_APPEND, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	Output = filebuffer.NewFileBuffer(FileBufferSize, file)
+	return nil
 }
 
 var (
@@ -167,9 +195,9 @@ func GetWatchLogFileSwitch(filePath string) bool {
 	bEnable, bFound := watchLogFileSwitch[filePath]
 	if bFound {
 		return bEnable
-	} else {
-		return false
 	}
+	return false
+
 }
 
 // WatchLogFile watch the log and prouce one line to kafka topic per 200ms

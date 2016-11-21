@@ -39,7 +39,7 @@ const (
 	// BindTemplate is the template of binds.
 	BindTemplate = "%s:%s"
 
-	// Flag of running a container which use the built image as a service.
+	// BuiltImage is the flag of running a container which use the built image as a service.
 	BuiltImage = "BUILT_IMAGE"
 )
 
@@ -280,7 +280,7 @@ func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.
 // involves: start the container, wait it to stop and record the log
 // into output.
 func run(b *Build, cco *docker_client.CreateContainerOptions,
-	outPutFiles []string, outPutPath string, nodetype parser.NodeType) (*docker_client.Container, error) {
+	outPutFiles []string, outPutPath string, nodetype parser.NodeType, output filebuffer.FileBuffer) (*docker_client.Container, error) {
 	// Fetches the container information.
 	client := b.dockerManager.Client
 	container, err := start(b, cco)
@@ -316,8 +316,8 @@ func run(b *Build, cco *docker_client.CreateContainerOptions,
 			Stdout:       true,
 			Stderr:       true,
 			Container:    container.ID,
-			OutputStream: b.event.Output,
-			ErrorStream:  b.event.Output,
+			OutputStream: output,
+			ErrorStream:  output,
 		}
 
 		// It's possible that the docker logs endpoint returns before the container
@@ -435,7 +435,7 @@ func CopyFromContainer(client *docker_client.Client,
 }
 
 // PreBuildByDockerfile prebuilds bin by Dockerfile.
-func preBuildByDockerfile(output *filebuffer.FileBuffer, dockerManager *docker.Manager, event *api.Event,
+func preBuildByDockerfile(output filebuffer.FileBuffer, dockerManager *docker.Manager, event *api.Event,
 	dockerfilePath string, dockerfileName string, outPutFiles []string, outPutPath string) error {
 	contextdir, ok := event.Data["context-dir"]
 	if !ok {
@@ -458,7 +458,7 @@ func preBuildByDockerfile(output *filebuffer.FileBuffer, dockerManager *docker.M
 		Name:           imageName,
 		Dockerfile:     dockerfileName,
 		ContextDir:     contextDir,
-		OutputStream:   event.Output,
+		OutputStream:   output,
 		RmTmpContainer: true,
 		AuthConfigs:    dockerManager.GetAuthOpts(),
 	}

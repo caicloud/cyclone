@@ -22,6 +22,7 @@ import (
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/utils"
 	"github.com/caicloud/cyclone/worker/ci/yaml"
+	"github.com/caicloud/cyclone/worker/log"
 )
 
 const (
@@ -33,7 +34,7 @@ const (
 // raise an error because cyclone is running in non-root mode.
 func TestCreateFileBuffer(t *testing.T) {
 	eventID := api.EventID("unit-test")
-	_, err := CreateFileBuffer(eventID)
+	err := log.CreateFileBuffer(eventID)
 	if err == nil {
 		t.Errorf("Expected error to be 'mkdir /logs: permission denied', but it is nil")
 	}

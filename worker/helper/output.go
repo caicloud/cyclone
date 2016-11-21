@@ -15,6 +15,7 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	step_log "github.com/caicloud/cyclone/worker/log"
 )
 
 const (
@@ -31,7 +32,7 @@ var (
 
 // PushLogToCyclone would push the log to cyclone.
 func PushLogToCyclone(event *api.Event) error {
-	versionLogRaw, err := getLogFromOutputFile(event)
+	versionLogRaw, err := getLogFromOutputFile()
 	if err != nil {
 		// No output file, just return directly.
 		if err == ErrNoOutput {
@@ -90,11 +91,11 @@ func PushLogToCyclone(event *api.Event) error {
 }
 
 // getLogFromOutputFile returns log in string format.
-func getLogFromOutputFile(event *api.Event) (string, error) {
-	if event.Output == nil {
+func getLogFromOutputFile() (string, error) {
+	if step_log.Output == nil {
 		return "", ErrNoOutput
 	}
-	logFile, err := os.Open(event.Output.Name())
+	logFile, err := os.Open(step_log.Output.Name())
 	if err != nil {
 		return "", err
 	}
