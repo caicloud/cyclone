@@ -103,7 +103,7 @@ func (cm *Manager) ExecBuild(r *runner.Build) error {
 	return nil
 }
 
-// ExecBuild executes publish image to registry.
+// ExecPublish executes publish image to registry.
 func (cm *Manager) ExecPublish(r *runner.Build) error {
 	log.Info("About to run publish event.")
 
@@ -147,12 +147,14 @@ func (cm *Manager) Parse(event *api.Event) (*parser.Tree, error) {
 		directFilePath = fmt.Sprintf("%s/%s", contextDir, yamlName)
 	}
 	if osutil.IsFileExists(directFilePath) != true {
+		fmt.Fprintf(steplog.Output, "Error: %v\n", errYaml)
 		return nil, errYaml
 	}
 
 	// Fetch and parse caicloud.yml from the repo.
 	tree, err := fetchAndParseYaml(directFilePath)
 	if err != nil {
+		fmt.Fprintf(steplog.Output, "Error: %v\n", err)
 		return nil, err
 	}
 	return tree, nil
