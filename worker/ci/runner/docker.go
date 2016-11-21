@@ -55,7 +55,7 @@ func createDockerNetwork(b *Build, name string) (*docker_client.Network, error) 
 		Driver: "bridge",
 	}
 
-	network, err := b.dockerManager.GetDockerClient().CreateNetwork(createNetworkOptions)
+	network, err := b.dockerManager.Client.CreateNetwork(createNetworkOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func connectDockerNetwork(b *Build, containerName string, alias string) error {
 			Aliases: []string{alias},
 		},
 	}
-	return b.dockerManager.GetDockerClient().ConnectNetwork(b.network.ID, networkConnectionOptions)
+	return b.dockerManager.Client.ConnectNetwork(b.network.ID, networkConnectionOptions)
 }
 
 // toServiceContainerConfig creates CreateContainerOptions from ServiceNode.
@@ -210,11 +210,11 @@ func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.Nod
 		config.WorkingDir = b.contextDir
 	}
 
-	// b.dockerManager.GetDockerEndPoint() would return unix://xxxx,
+	// b.dockerManager.EndPoint would return unix://xxxx,
 	// so get the substr of the endpoint.
 	// Trick: bind the docker sock file to container to support
 	// docker operation in the container.
-	enterpoint := []byte(b.dockerManager.GetDockerEndPoint())[7:]
+	enterpoint := []byte(b.dockerManager.EndPoint)[7:]
 	log.Infof("enterpoint is %s", string(enterpoint))
 	pathenterpoint := fmt.Sprintf("%s:%s", string(enterpoint), "/var/run/docker.sock")
 	hostConfig.Binds = append(hostConfig.Binds, pathenterpoint)
@@ -257,7 +257,7 @@ func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.
 	}
 
 	log.InfoWithFields("About to create the container.", log.Fields{"config": *cco})
-	client := b.dockerManager.GetDockerClient()
+	client := b.dockerManager.Client
 	container, err := client.CreateContainer(*cco)
 	if err != nil {
 		return nil, err
@@ -282,7 +282,7 @@ func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.
 func run(b *Build, cco *docker_client.CreateContainerOptions,
 	outPutFiles []string, outPutPath string, nodetype parser.NodeType) (*docker_client.Container, error) {
 	// Fetches the container information.
-	client := b.dockerManager.GetDockerClient()
+	client := b.dockerManager.Client
 	container, err := start(b, cco)
 	if err != nil {
 		return nil, err
@@ -375,7 +375,7 @@ func CopyOutPutFiles(dockerManager *docker.Manager, cid string,
 	os.Mkdir(outPutPath, 0755)
 	for _, output := range outputs {
 		log.Infof("copy file(%s) to %s\n", output, outPutPath)
-		err := CopyFromContainer(dockerManager.GetDockerClient(), cid, output, outPutPath)
+		err := CopyFromContainer(dockerManager.Client, cid, output, outPutPath)
 		if nil != err {
 			return err
 		}
@@ -463,7 +463,7 @@ func preBuildByDockerfile(output *filebuffer.FileBuffer, dockerManager *docker.M
 		AuthConfigs:    dockerManager.GetAuthOpts(),
 	}
 
-	client := dockerManager.GetDockerClient()
+	client := dockerManager.Client
 	err := client.BuildImage(opt)
 	if err != nil {
 		log.Errorf("prebuild build images err: %v", err)

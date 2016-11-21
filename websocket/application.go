@@ -57,7 +57,7 @@ func AnalysisMessage(dp *DataPacket) bool {
 func unmarshalRecover(sReceiveFrom string) {
 	err := recover()
 	if nil != err {
-		log.Error("packet data unmarshal recover: %s", err)
+		log.Errorf("packet data unmarshal recover: %v", err)
 		onCloseSession(sReceiveFrom)
 	}
 }

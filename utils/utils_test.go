@@ -16,8 +16,11 @@ limitations under the License.
 
 package utils
 
-import "gopkg.in/h2non/gock.v1"
-import "testing"
+import (
+	"testing"
+
+	"gopkg.in/h2non/gock.v1"
+)
 
 // TestInvokeUpdateImageAPI tests InvokeUpdateImageAPI function.
 func TestInvokeUpdateImageAPI(t *testing.T) {
@@ -48,8 +51,8 @@ func TestInvokeCheckDeployStateAPI(t *testing.T) {
 		Post("/InvokeCheckDeployStateAPI").
 		Reply(200).
 		JSON(map[string]int{
-			"code": codeDeployReady,
-		})
+		"code": codeDeployReady,
+	})
 
 	defer gock.Off()
 

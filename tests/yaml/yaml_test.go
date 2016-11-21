@@ -36,12 +36,13 @@ const (
 	DefaultServiceName            = "test-basic-rest-version"
 	DefaultVersionName            = "v0.1.0"
 	DefaultIntegrationVersionName = "v0.1.0-integration"
-	ServiceImage                  = "minimal-long-running-task:latest"
-	DefaultVCS                    = api.Git
-	DefaultServiceTestDeployName  = "test-deploy-service"
-	DefaultDeployVersionName      = "v0.1.0-deploy"
-	DefaultTestDeployRepo         = "https://github.com/gaocegege/circle-deploy"
-	DefaultTestIntegrationRepo    = "https://github.com/superxi911/circle-integration"
+	// ServiceImage is the image used to test yaml function.
+	ServiceImage                 = "minimal-long-running-task:latest"
+	DefaultVCS                   = api.Git
+	DefaultServiceTestDeployName = "test-deploy-service"
+	DefaultDeployVersionName     = "v0.1.0-deploy"
+	DefaultTestDeployRepo        = "https://github.com/gaocegege/circle-deploy"
+	DefaultTestIntegrationRepo   = "https://github.com/superxi911/circle-integration"
 )
 
 // TODO: Test whether the repo has been bound into the container in the integration step.
@@ -84,9 +85,9 @@ var _ = Describe("Yaml", func() {
 
 		// If e2e is running on jenkins, make some differences
 		if jenkins == "yes" || jenkins == "YES" {
-			log.Infof("Pusing %s to %s.", ServiceImage, dockerManager.GetDockerRegistry())
+			log.Infof("Pusing %s to %s.", ServiceImage, dockerManager.Registry)
 			if err = PushImageToLocalRegistry(dockerManager, ServiceImage); err != nil {
-				log.Fatalf("Unable to push %s to %s: %v", ServiceImage, dockerManager.GetDockerRegistry(), err)
+				log.Fatalf("Unable to push %s to %s: %v", ServiceImage, dockerManager.Registry, err)
 			}
 		}
 
@@ -151,7 +152,7 @@ var _ = Describe("Yaml", func() {
 				// So the integration test MUST be executed after the version test.
 				version := &api.Version{
 					Name:        DefaultVersionName,
-					Description: "A version just for Integration test",
+					Description: "A version just for integration test",
 					ServiceID:   serviceResponse.ServiceID,
 					Operation:   api.IntegrationOperation + api.PublishOperation,
 				}

@@ -47,13 +47,13 @@ func PushImageToLocalRegistry(dm *docker.Manager, image string) error {
 		return errors.New("Invalid image name.")
 	}
 	parts := strings.Split(image, ":")
-	return dm.GetDockerClient().PushImage(docker_client.PushImageOptions{
-		Name:     fmt.Sprintf("%s/%s", dm.GetDockerRegistry(), parts[0]),
+	return dm.Client.PushImage(docker_client.PushImageOptions{
+		Name:     fmt.Sprintf("%s/%s", dm.Registry, parts[0]),
 		Tag:      parts[1],
-		Registry: dm.GetDockerRegistry(),
+		Registry: dm.Registry,
 	}, docker_client.AuthConfiguration{
-		Username: dm.GetDockerAuthConfig().Username,
-		Password: dm.GetDockerAuthConfig().Password,
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
 	})
 }
 

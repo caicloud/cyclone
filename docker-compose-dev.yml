@@ -25,13 +25,13 @@ zookeeper:
 
 kafka:
     image: wurstmeister/kafka:0.10.1.0
-    hostname: kafkahost
+    hostname: kafka
     links:
         - zookeeper:zk
     volumes:
        - /data/kafka_log:/data/kafka_log
     environment:
-        - KAFKA_ADVERTISED_HOST_NAME=kafkahost
+        - KAFKA_ADVERTISED_HOST_NAME=0.0.0.0
         - KAFKA_ADVERTISED_PORT=9092
         - KAFKA_LOG_DIRS=/data/kafka_log
     ports:

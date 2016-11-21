@@ -1,17 +1,36 @@
 language: go
 
+# sudo: required
+
+# services:
+#   - docker
+
 go:
   - 1.6
   - 1.7
 
 go_import_path: github.com/caicloud/cyclone
 
-before_install:
+# env:  
+#   global:
+#     - DOCKER_COMPOSE_VERSION=1.7.0
+#     - WORKER_NODE_DOCKER_VERSION=1.12.0
+
+before_install:  
+  # - sudo rm -f /usr/local/bin/docker-compose
+  # - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  # - chmod +x docker-compose
+  # - sudo mv docker-compose /usr/local/bin
+  # install golang deps.
   - go get github.com/tools/godep
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
 
 install:
+  # verify docker.
+  # - docker version
+  # - docker-compose version
+  # - docker images
   - godep go build .
   - cd ./worker
   - godep go build ./cyclone-worker.go
@@ -19,7 +38,8 @@ install:
 
 script:
   - ./tests/run-unit-test.sh
-  - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=vendor,tests,.git,scripts,node_modules,docs
+  - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api
+  # - ./tests/run-e2e.sh
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile
