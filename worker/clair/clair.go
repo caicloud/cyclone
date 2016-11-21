@@ -125,7 +125,7 @@ func AnalysisImage(dockerManager *docker.Manager,
 }
 
 func compareSeverity(severity1 Serverity, severity2 Serverity) bool {
-	return SeverityWeight[severity1] < SeverityWeight[severity2]
+	return SeverityWeight[severity1] > SeverityWeight[severity2]
 }
 
 // Len realize function of interface sort
