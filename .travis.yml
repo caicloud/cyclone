@@ -1,6 +1,6 @@
 language: go
 
-# sudo: required
+sudo: required
 
 # services:
 #   - docker
@@ -25,6 +25,9 @@ before_install:
   - go get github.com/tools/godep
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
+  # create /logs/unit-test for unit test.
+  - sudo mkdir /logs
+  - sudo touch /logs/unit-test
 
 install:
   # verify docker.

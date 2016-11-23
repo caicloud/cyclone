@@ -14,20 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pathutil
+package log
 
 import (
-	"os"
 	"testing"
+
+	"github.com/caicloud/cyclone/api"
 )
 
-const (
-	legalPath = "/var"
-)
-
-// TestEnsureParentDir tests the EnsureParentDir func.
-func TestEnsureParentDir(t *testing.T) {
-	if err := EnsureParentDir(legalPath, os.ModePerm); err != nil {
-		t.Error("Expected error to be nil")
+// TestCreateFileBuffer tests CreateFileBuffer with mock EventID, it should
+// raise an error because cyclone is running in non-root mode.
+func TestCreateFileBuffer(t *testing.T) {
+	eventID := api.EventID("unit-test")
+	err := CreateFileBuffer(eventID)
+	if err != nil {
+		t.Errorf("Expected error to be nil, but it returns %v, maybe you should 'mkdir /logs; touch /logs/unit-test' first.", err)
 	}
 }

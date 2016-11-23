@@ -54,6 +54,6 @@ func TestPushToCyclone(t *testing.T) {
 	}
 
 	if err := PushLogToCyclone(event); err != nil {
-		t.Error("Expect error to be nil")
+		t.Errorf("Expect error %v to be nil", err)
 	}
 }

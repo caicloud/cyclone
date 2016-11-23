@@ -19,26 +19,14 @@ package helper
 import (
 	"testing"
 
-	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/utils"
 	"github.com/caicloud/cyclone/worker/ci/yaml"
-	"github.com/caicloud/cyclone/worker/log"
 )
 
 const (
 	mockUserID = "mock-user"
 	imageName  = "mock-image-name"
 )
-
-// TestCreateFileBuffer tests CreateFileBuffer with mock EventID, it should
-// raise an error because cyclone is running in non-root mode.
-func TestCreateFileBuffer(t *testing.T) {
-	eventID := api.EventID("unit-test")
-	err := log.CreateFileBuffer(eventID)
-	if err == nil {
-		t.Errorf("Expected error to be 'mkdir /logs: permission denied', but it is nil")
-	}
-}
 
 // TestUpdateContainerInClusterWithYaml tests updateContainerInClusterWithYaml function.
 func TestUpdateContainerInClusterWithYaml(t *testing.T) {
