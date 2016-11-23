@@ -7,6 +7,8 @@
 # Usage:
 #   ./osx-build-in-docker.sh [GOOS]
 
+set -e
+
 ROOT=$(dirname "${BASH_SOURCE}")/..
 GOOS=${1:-"darwin"}
 
