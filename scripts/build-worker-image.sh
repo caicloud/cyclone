@@ -2,8 +2,8 @@
 #
 # Copyright 2016 caicloud authors. All rights reserved.
 
-set -o errexit
-set -o nounset
+set -e
+set -u
 set -o pipefail
 
 CYCLONE_ROOT=$(dirname "${BASH_SOURCE}")/..

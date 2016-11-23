@@ -6,8 +6,8 @@
 #
 # By default, IMAGE_TAG is latest.
 
-set -o errexit
-set -o nounset
+set -e
+set -u
 set -o pipefail
 
 source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
@@ -79,7 +79,7 @@ docker run --rm \
   -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
 
 docker build -t caicloud/cyclone-server:${IMAGE_TAG} .
-docker tag -f caicloud/cyclone-server:${IMAGE_TAG} cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
+docker tag caicloud/cyclone-server:${IMAGE_TAG} cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
 
 cd - > /dev/null
 
