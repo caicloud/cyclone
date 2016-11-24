@@ -129,7 +129,11 @@ func createServiceHandler(event *api.Event) error {
 // createServicePostHook is the create service post hook.
 func createServicePostHook(event *api.Event) {
 	log.Infof("create service post hook")
-
+	if event.Status == api.EventStatusSuccess {
+		event.Service.Repository.Status = api.RepositoryHealthy
+	} else {
+		event.Service.Repository.Status = api.RepositoryMissing
+	}
 	ds := store.NewStore()
 	defer ds.Close()
 

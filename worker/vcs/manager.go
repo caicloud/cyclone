@@ -59,9 +59,21 @@ func insert(url, insertion string, index int) string {
 func getUrlwithToken(url, subvcs, token string) string {
 	switch subvcs {
 	case api.GITHUB:
+		if token == "" {
+			log.Warn("Sub VCS is GitHub, but the token is empty, maybe there is an error")
+			break
+		}
 		position := strings.Index(url, "github.com")
+		if position == -1 {
+			log.Warn("subvcs is github and the token is not empty, but the url dosen't contain 'github.com'")
+			break
+		}
 		url = insert(url, token+"@", position)
 	case api.GITLAB:
+		if token == "" {
+			log.Warn("Sub VCS is GitLab, but the token is empty, maybe there is an error")
+			break
+		}
 		if strings.HasPrefix(url, "http://") {
 			position := len("http://")
 			url = insert(url, "oauth2:"+token+"@", position)
@@ -207,9 +219,8 @@ func (vm *Manager) GetTagCommit(service *api.Service, version *api.Version) (str
 func (vm *Manager) GetCloneDir(service *api.Service, version *api.Version) string {
 	if version.VersionID == "" {
 		return fmt.Sprintf("/%s/%s", service.UserID, service.ServiceID)
-	} else {
-		return fmt.Sprintf("/%s/%s", service.UserID, version.VersionID)
 	}
+	return fmt.Sprintf("/%s/%s", service.UserID, version.VersionID)
 }
 
 // findVcsForService is a helper method which finds the VCS worker based on service spec.
