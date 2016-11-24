@@ -63,6 +63,7 @@ const (
 	PostBuild       StepEvent = "Post Build"
 	Deploy          StepEvent = "Deploy application"
 	ApplyResource   StepEvent = "Apply Resource"
+	ParseYaml       StepEvent = "Parse Yaml"
 )
 
 // StepState is informatin aboout step evnet's state

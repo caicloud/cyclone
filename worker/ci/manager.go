@@ -130,11 +130,13 @@ func (cm *Manager) ExecPostBuild(r *runner.Build) error {
 func (cm *Manager) Parse(event *api.Event) (*parser.Tree, error) {
 	var directFilePath string
 	var errYaml error
-
+	steplog.InsertStepLog(event, steplog.ParseYaml, steplog.Start, nil)
 	contextdir, ok := event.Data["context-dir"]
 	if !ok {
-		return nil, fmt.Errorf("Unable to retrieve name and context directory from Event %#+v: %t",
+		err := fmt.Errorf("Unable to retrieve name and context directory from Event %#+v: %t",
 			event, ok)
+		steplog.InsertStepLog(event, steplog.ParseYaml, steplog.Stop, err)
+		return nil, err
 	}
 	contextDir := contextdir.(string)
 	errYaml = ErrYamlNotExist
@@ -148,15 +150,17 @@ func (cm *Manager) Parse(event *api.Event) (*parser.Tree, error) {
 	}
 	if osutil.IsFileExists(directFilePath) != true {
 		fmt.Fprintf(steplog.Output, "Error: %v\n", errYaml)
+		steplog.InsertStepLog(event, steplog.ParseYaml, steplog.Stop, errYaml)
 		return nil, errYaml
 	}
 
 	// Fetch and parse caicloud.yml from the repo.
 	tree, err := fetchAndParseYaml(directFilePath)
 	if err != nil {
-		fmt.Fprintf(steplog.Output, "Error: %v\n", err)
+		steplog.InsertStepLog(event, steplog.ParseYaml, steplog.Stop, err)
 		return nil, err
 	}
+	steplog.InsertStepLog(event, steplog.ParseYaml, steplog.Finish, nil)
 	return tree, nil
 }
 
