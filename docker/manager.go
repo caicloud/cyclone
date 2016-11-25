@@ -245,11 +245,6 @@ func (dm *Manager) GetAuthOpts() (authOpts docker_client.AuthConfigurations) {
 	return authOpts
 }
 
-// RemoveNetwork removes a network by given ID.
-func (dm *Manager) RemoveNetwork(networkID string) error {
-	return dm.Client.RemoveNetwork(networkID)
-}
-
 // BuildImageSpecifyDockerfile builds docker image with params from event with
 // specify Dockerfile. Build output will be sent to event status output.
 func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
