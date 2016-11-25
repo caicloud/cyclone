@@ -39,7 +39,7 @@ func TestStartServer(t *testing.T) {
 			t.Errorf("Start websocket server error: %v.", err)
 		}
 	}()
-	time.Sleep(time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 }
 
 // dialTestServer dail to local websocket test server, return websocket handler or err.
