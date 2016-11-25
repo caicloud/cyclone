@@ -21,7 +21,6 @@ import (
 
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/worker/ci/parser"
-	docker_client "github.com/fsouza/go-dockerclient"
 )
 
 const configStr = `
@@ -89,7 +88,6 @@ func TestToBuildContainerConfig(t *testing.T) {
 		dockerManager: &docker.Manager{
 			EndPoint: "just-for-test",
 		},
-		network: &docker_client.Network{},
 	}
 
 	option := toBuildContainerConfig(dn, b, parser.NodeBuild)
@@ -110,10 +108,9 @@ func TestToServiceContainerConfig(t *testing.T) {
 		dockerManager: &docker.Manager{
 			EndPoint: "just-for-test",
 		},
-		network: &docker_client.Network{},
 	}
 
-	option, _ := toServiceContainerConfig(dn, b)
+	option := toServiceContainerConfig(dn, b)
 	if len(option.Config.Env) != 1 {
 		t.Errorf("Expected the length of config's env is 1 but got %d", len(option.Config.Env))
 	}
