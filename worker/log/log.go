@@ -46,11 +46,11 @@ const (
 )
 
 var (
-	// Output is used to collect log informatin.
+	// Output is used to collect log information.
 	Output filebuffer.FileBuffer
 )
 
-// StepEvent is information about step evnet name in creating versions
+// StepEvent is information about step event name in creating versions
 type StepEvent string
 
 const (
@@ -66,7 +66,7 @@ const (
 	ParseYaml       StepEvent = "Parse Yaml"
 )
 
-// StepState is informatin aboout step evnet's state
+// StepState is information about step event's state
 type StepState string
 
 const (
