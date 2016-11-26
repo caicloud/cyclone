@@ -62,7 +62,7 @@ func main() {
 		return
 	}
 
-	// Handle evnet
+	// Handle event
 	handleEvent(&event)
 
 	// Sent event for circe server
@@ -74,7 +74,7 @@ func main() {
 	return
 }
 
-// getEvnet used for getting event for circe server
+// getEvent used for getting event for circe server
 func getEvent() (api.Event, error) {
 	eventID := osutil.GetStringEnv(WORKER_EVENTID, "")
 	serverHost := osutil.GetStringEnv(SERVER_HOST, "http://127.0.0.1:7099")
