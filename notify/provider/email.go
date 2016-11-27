@@ -91,8 +91,8 @@ func NewEmailNotifier(SMTPServer string, SMTPPort int, SMTPUsername, SMTPPasswor
 
 // readContextFromConfigFile reads the HTML template from files.
 func readContextFromConfigFile() error {
-	SuccessFilename = osutil.GetStringEnv(SUCCESSTEMPLATE, "/template/success.html")
-	ErrorFilename = osutil.GetStringEnv(ERRORTEMPLATE, "/template/error.html")
+	SuccessFilename = osutil.GetStringEnv(SUCCESSTEMPLATE, "./success.html")
+	ErrorFilename = osutil.GetStringEnv(ERRORTEMPLATE, "./error.html")
 	context, err := ioutil.ReadFile(SuccessFilename)
 	if err != nil {
 		return err

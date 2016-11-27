@@ -35,7 +35,7 @@ func Server() {
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	filePath := osutil.GetStringEnv(LOG_HTML_TEMPLATE, "/http/web/log.html")
+	filePath := osutil.GetStringEnv(LOG_HTML_TEMPLATE, "./web/log.html")
 	t, err := template.ParseFiles(filePath)
 	if err != nil {
 		log.Error(err)

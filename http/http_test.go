@@ -29,7 +29,7 @@ func TestLog(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(logHandler))
 	defer s.Close()
 
-	if err := os.Setenv(LOG_HTML_TEMPLATE, "../http/web/log.html"); err != nil {
+	if err := os.Setenv(LOG_HTML_TEMPLATE, "./web/log.html"); err != nil {
 		t.Error("Expected error to be nil")
 	}
 
