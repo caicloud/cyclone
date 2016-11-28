@@ -32,8 +32,8 @@ import (
 //
 // PAYLOAD (api.Deploy):
 //   {
-//     "deploy_plans": (DeployPlan) deploy plan config
-//     "service_id": (string) service associated with the version
+//     "deploy_plan": (DeployPlan) deploy plan config
+//     "user_id": (string) user associated with the deploy
 //   }
 //
 // RESPONSE: (DeployCreationResponse)
@@ -51,13 +51,12 @@ func createDeploy(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	if len(deploy.DeployPlans) <= 0 {
+	if deploy.UserID == "" {
 		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, "Unable to use request body")
+		response.WriteErrorString(http.StatusBadRequest, "Unable to get useID from request body")
 		return
 	}
-
-	log.Info("fornax receives creating deploy request")
+	log.Info("receives creating deploy request")
 
 	var createResponse api.DeployCreationResponse
 	ds := store.NewStore()
@@ -73,25 +72,6 @@ func createDeploy(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	service, err := ds.FindServiceByID(deploy.ServiceID)
-	if err != nil {
-		message := fmt.Sprintf("Unable to find service %v", deploy.ServiceID)
-		log.ErrorWithFields(message, log.Fields{"deploy": deploy, "error": err})
-		createResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
-		return
-	}
-
-	service.DeployID = deployID
-	_, err = ds.UpsertServiceDocument(service)
-	if nil != err {
-		message := fmt.Sprintf("Set service %s err: %v", service.ServiceID, err)
-		log.ErrorWithFields(message, log.Fields{"deploy": deploy, "error": err})
-		createResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
-		return
-	}
-
 	// Return deploy creation response.
 	createResponse.DeployID = deployID
 	response.WriteHeaderAndEntity(http.StatusAccepted, createResponse)
@@ -99,11 +79,11 @@ func createDeploy(request *restful.Request, response *restful.Response) {
 
 // getDeploy finds a deploy from deploy ID and user ID.
 //
-// GET: /api/v0.1/:uid/deploy/:deploy_id
+// GET: /api/v0.1/:uid/deploys/:deploy_id
 //
 // RESPONSE: (DeployGetResponse)
 //  {
-//    "deploy": (object) api.Service object.
+//    "deploy": (object) api.Deploy object.
 //    "error_msg": (string) set IFF the request fails.
 //  }
 func getDeploy(request *restful.Request, response *restful.Response) {
@@ -127,18 +107,47 @@ func getDeploy(request *restful.Request, response *restful.Response) {
 	response.WriteEntity(getResponse)
 }
 
+// listDeploy finds deploys by user ID.
+//
+// GET: /api/v0.1/:uid/deploys
+//
+// RESPONSE: (DeployGetResponse)
+//  {
+//    "deploys": (object) api.Deploy object.
+//    "error_msg": (string) set IFF the request fails.
+//  }
+func listDeploy(request *restful.Request, response *restful.Response) {
+	userID := request.PathParameter("user_id")
+
+	var listResponse api.DeployListResponse
+	ds := store.NewStore()
+	defer ds.Close()
+
+	result, err := ds.FindDeployByUserID(userID)
+	if err != nil {
+		message := fmt.Sprintf("Unable to find deploy, err: %v", err)
+		log.ErrorWithFields(message, log.Fields{"user_id": userID})
+		listResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, listResponse)
+		return
+	}
+	listResponse.Deploys = result
+
+	response.WriteEntity(listResponse)
+}
+
 // setDeploy set a deploy, validates and saves it.
 //
-// PUT: /api/v0.1/:uid/deploy/:deploy_id
+// PUT: /api/v0.1/:uid/deploys/:deploy_id
 //
 // PAYLOAD (Deploy):
 //   {
-//        "deploy_plans": (DeployPlan) deploy plan config
+//        "deploy_plan": (DeployPlan) deploy plan config
 //   }
 //
 // RESPONSE: (DeploySetResponse)
 //  {
-//    "deploy_id": (string) set IFF setting is accepted.
+//    "result": (string) set IFF setting is accepted.
 //    "error_msg": (string) set IFF the request fails.
 //  }
 func setDeploy(request *restful.Request, response *restful.Response) {
@@ -148,11 +157,6 @@ func setDeploy(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusBadRequest, "Unable to parse request body")
-		return
-	}
-	if len(deploy.DeployPlans) <= 0 {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, "Unable to use request body")
 		return
 	}
 
@@ -173,30 +177,7 @@ func setDeploy(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	var deleteFlag = false
-	for _, deployPrePlan := range deployPre.DeployPlans {
-		if deployPrePlan.PlanName == deploy.DeployPlans[0].PlanName {
-			deleteFlag = true
-		}
-	}
-
-	log.Infof("gao %+v", deploy)
-	// delete element
-	if deleteFlag {
-		for _, deployPlan := range deploy.DeployPlans {
-			for index, deployPrePlan := range deployPre.DeployPlans {
-				if deployPrePlan.PlanName == deployPlan.PlanName {
-					deployPre.DeployPlans = append(deployPre.DeployPlans[:index], deployPre.DeployPlans[index+1:]...)
-					break
-				}
-			}
-		}
-	} else {
-		log.Info("gao jinqiao ")
-		deployPre.DeployPlans = append(deployPre.DeployPlans, deploy.DeployPlans...)
-	}
-	log.Infof("gao jianqiao %+v", deployPre.DeployPlans)
-
+	deployPre.DeployPlan = deploy.DeployPlan
 	_, err = ds.UpsertDeployDocument(deployPre)
 	if nil != err {
 		message := fmt.Sprintf("upsert deploy plan %v err: %v", deployPre, err)
@@ -207,6 +188,47 @@ func setDeploy(request *restful.Request, response *restful.Response) {
 	}
 
 	// Return deploy set response.
-	setResponse.DeployID = deployID
+	setResponse.Result = "success"
 	response.WriteHeaderAndEntity(http.StatusAccepted, setResponse)
+}
+
+// delDeploy delete a deploy, validates and saves it.
+//
+// DELETE: /api/v0.1/:uid/deploys/:deploy_id
+//
+// RESPONSE: (DeployDelResponse)
+//  {
+//    "result": (string) set IFF setting is accepted.
+//    "error_msg": (string) set IFF the request fails.
+//  }
+func delDeploy(request *restful.Request, response *restful.Response) {
+	var delResponse api.DeployDelResponse
+	userID := request.PathParameter("user_id")
+	deployID := request.PathParameter("deploy_id")
+
+	ds := store.NewStore()
+	defer ds.Close()
+
+	// Find the target deploy by deployID.
+	_, err := ds.FindDeployByID(deployID)
+	if nil != err {
+		message := fmt.Sprintf("Find deploy %s err: %v", deployID, err)
+		log.ErrorWithFields(message, log.Fields{"user_id": userID})
+		delResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, delResponse)
+		return
+	}
+
+	err = ds.DeleteDeployByID(deployID)
+	if nil != err {
+		message := fmt.Sprintf("delete deploy by %s err: %v", deployID, err)
+		log.ErrorWithFields(message, log.Fields{"user_id": userID})
+		delResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, delResponse)
+		return
+	}
+
+	// Return deploy delete response.
+	delResponse.Result = "success"
+	response.WriteHeaderAndEntity(http.StatusAccepted, delResponse)
 }
