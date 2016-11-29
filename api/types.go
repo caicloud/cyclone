@@ -478,6 +478,7 @@ type VersionLiveInfo struct {
 // if newer version is live in production for a long time.
 type KeepPoilcyRule string
 
+// The rules of policy
 const (
 	KeepPoilcyForever   KeepPoilcyRule = "forever"
 	KeepPoilcyTimeBound KeepPoilcyRule = "timebound"
@@ -959,14 +960,19 @@ type WorkerNodeDelResponse struct {
 	ErrorMessage string `json:"error_msg,omitempty"`
 }
 
+const (
+	// DeployOperationSuccess represents deploy operates successfully
+	DeployOperationSuccess string = "success"
+)
+
 // Deploy is the management unit in release system.
 type Deploy struct {
-	// The user who owns the cluster.
+	// The identifies of deploy.
 	DeployID string `bson:"_id,omitempty" json:"_id,omitempty"`
-	// Service ID uniquely identifies the service.
-	ServiceID string `bson:"service_id,omitempty" json:"service_id,omitempty"`
-	// Deploy plans
-	DeployPlans []DeployPlan `bson:"deploy_plans,omitempty" json:"deploy_plans,omitempty"`
+	// The user who owns the deploy.
+	UserID string `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	// Deploy plan
+	DeployPlan DeployPlan `bson:"deploy_plan,omitempty" json:"deploy_plan,omitempty"`
 }
 
 // DeployCreationResponse is the response type for deploy creation request
@@ -983,9 +989,23 @@ type DeployGetResponse struct {
 	ErrorMessage string `json:"error_msg,omitempty"`
 }
 
-// DeployCreationResponse is the response type for deploy set request
+// DeployListResponse is the response type for deploy list request.
+type DeployListResponse struct {
+	Deploys []Deploy `json:"deploys,omitempty"`
+	// Return the error message IFF not successful. This is used to provide user-facing errors.
+	ErrorMessage string `json:"error_msg,omitempty"`
+}
+
+// DeploySetResponse is the response type for deploy set request
 type DeploySetResponse struct {
-	DeployID string `json:"deploy_id,omitempty"`
+	Result string `json:"result,omitempty"`
+	// Return the error message IFF not successful. This is used to provide user-facing errors.
+	ErrorMessage string `json:"error_msg,omitempty"`
+}
+
+// DeployDelResponse is the response type for deploy delete request
+type DeployDelResponse struct {
+	Result string `json:"result,omitempty"`
 	// Return the error message IFF not successful. This is used to provide user-facing errors.
 	ErrorMessage string `json:"error_msg,omitempty"`
 }

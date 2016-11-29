@@ -45,3 +45,19 @@ func (d *DataStore) UpsertDeployDocument(deploy *api.Deploy) (string, error) {
 	_, err := col.Upsert(bson.M{"_id": deploy.DeployID}, deploy)
 	return deploy.DeployID, err
 }
+
+// FindDeployByUserID finds deploys entity by userID.
+func (d *DataStore) FindDeployByUserID(userID string) ([]api.Deploy, error) {
+	deploys := []api.Deploy{}
+	filter := bson.M{"user_id": userID}
+	col := d.s.DB(defaultDBName).C(deployCollectionName)
+	err := col.Find(filter).Iter().All(&deploys)
+	return deploys, err
+}
+
+// DeleteDeployByID removes deploy by deploy_id.
+func (d *DataStore) DeleteDeployByID(deployID string) error {
+	col := d.s.DB(defaultDBName).C(deployCollectionName)
+	err := col.Remove(bson.M{"_id": deployID})
+	return err
+}
