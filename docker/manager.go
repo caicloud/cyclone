@@ -89,6 +89,7 @@ func (dm *Manager) PullImage(imageName string) error {
 	repo, err := reference.Parse(imageName)
 	if err != nil {
 		log.Errorf("imagename parse error: %v", err)
+		return err
 	} else {
 		tagged, ok := repo.(reference.Tagged)
 		if !ok || tagged.Tag() == "" {
