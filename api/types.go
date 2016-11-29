@@ -478,6 +478,7 @@ type VersionLiveInfo struct {
 // if newer version is live in production for a long time.
 type KeepPoilcyRule string
 
+// The rules of policy
 const (
 	KeepPoilcyForever   KeepPoilcyRule = "forever"
 	KeepPoilcyTimeBound KeepPoilcyRule = "timebound"
@@ -958,6 +959,11 @@ type WorkerNodeDelResponse struct {
 	// Return the error message IFF not successful. This is used to provide user-facing errors.
 	ErrorMessage string `json:"error_msg,omitempty"`
 }
+
+const (
+	// DeployOperationSuccess represents deploy operates successfully
+	DeployOperationSuccess string = "success"
+)
 
 // Deploy is the management unit in release system.
 type Deploy struct {

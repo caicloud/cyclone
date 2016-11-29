@@ -177,6 +177,14 @@ func setDeploy(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	if deployPre.UserID != userID {
+		message := fmt.Sprintf("UserID is not match")
+		log.ErrorWithFields(message, log.Fields{"user_id": userID})
+		setResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
+		return
+	}
+
 	deployPre.DeployPlan = deploy.DeployPlan
 	_, err = ds.UpsertDeployDocument(deployPre)
 	if nil != err {
