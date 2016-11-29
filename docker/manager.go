@@ -90,11 +90,10 @@ func (dm *Manager) PullImage(imageName string) error {
 	if err != nil {
 		log.Errorf("imagename parse error: %v", err)
 		return err
-	} else {
-		tagged, ok := repo.(reference.Tagged)
-		if !ok || tagged.Tag() == "" {
-			imageName = fmt.Sprintf("%s:%s", imageName, "latest")
-		}
+	}
+	tagged, ok := repo.(reference.Tagged)
+	if !ok || tagged.Tag() == "" {
+		imageName = fmt.Sprintf("%s:%s", imageName, "latest")
 	}
 
 	opts := docker_client.PullImageOptions{
