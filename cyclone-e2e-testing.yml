@@ -1,0 +1,57 @@
+integration:
+  services:
+    mongo:
+      image: mongo:3.0.5
+      command: mongod --smallfiles
+    zookeeper:
+      image: wurstmeister/zookeeper:3.4.6
+    kafka:
+      image: wurstmeister/kafka:0.10.1.0
+      environment:
+        - KAFKA_ADVERTISED_HOST_NAME=kafka
+        - KAFKA_ADVERTISED_PORT=9092
+        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+    etcd:
+      image: cargo.caicloud.io/caicloud/etcd:v2.2.1
+      environment:
+        - advertise-client-urls=http://0.0.0.0:4001
+        - initial-advertise-peer-urls=http://0.0.0.0:7001
+    postgres:
+      image: postgres:9
+      environment:
+        POSTGRES_PASSWORD: password
+    clair:
+        image: cargo.caicloud.io/caicloud/clair:v1.2.3
+        volumes:
+          - ./scripts/clair_config:/config
+        command: [-config, /config/config.yaml]
+
+  image: golang:1.6
+  environment:
+    - GOPATH=/go
+    - DOCKER_HOST=unix:///var/run/docker.sock
+    # trick: use the index.caicloud.io as docker registry because 
+    # local registry's name resolution has some problems.
+    - REGISTRY_LOCATION=index.docker.io
+    - REGISTRY_USERNAME=mockuser
+    - REGISTRY_PASSWORD=mockpassword
+    - KAFKA_SERVER_IP=kafka:9092
+    - CLAIR_SERVER_IP=clair:6060
+    - MONGO_DB_IP=mongo:27017
+    - ETCD_SERVER_IP=http://etcd:2379
+    - WORK_REGISTRY_LOCATION=localhost:5000
+    - WORK_DOCKER_HOST=unix:///var/run/docker.sock
+    - DOCKER_HOST=unix:///var/run/docker.sock
+    - ENABLE_CAICLOUD_AUTH=false
+    - ERRORTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/error.html
+    - SUCCESSTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/success.html
+    - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
+    - WORKDIR=/go/src/github.com/caicloud/cyclone
+  commands: 
+    - mkdir -p $WORKDIR
+    - cp ./ -rf $WORKDIR
+    - cd $WORKDIR
+    - go build ./
+    - ./scripts/build-worker-image.sh
+    - ./cyclone &
+    - go test -v ./tests/service && godep go test -v ./tests/version && godep go test -v ./tests/yaml
