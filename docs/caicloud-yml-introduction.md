@@ -47,7 +47,7 @@ build:
 
 ### Integration
 
-Cyclone use the image  which built during the build step to run a container . Then Cyclone would run integration step defined in `caicloud.yml` as a docker container. If the integration is failed, version creation fails.
+Cyclone use the image  which built during the build step to run a container . Then Cyclone would run integration step defined in `caicloud.yml` as a docker container. If the integration is failed, version creation fails. Note that if the value in the environment section is a string, do not use double quotation marks.
 
 ```yml
 integration:
