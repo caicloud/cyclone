@@ -270,11 +270,11 @@ func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_clie
 	}
 
 	hostConfig := &docker_client.HostConfig{
-		Privileged:  true,
-		NetworkMode: "host",
-		AutoRemove:  true,
-		CPUShares:   cpu,
-		Memory:      memory,
+		Privileged: true,
+		//NetworkMode: "host",
+		AutoRemove: true,
+		CPUShares:  cpu,
+		Memory:     memory,
 	}
 
 	createContainerOptions := &docker_client.CreateContainerOptions{
