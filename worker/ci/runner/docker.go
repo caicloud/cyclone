@@ -48,7 +48,7 @@ func getNameInNetwork(dn *parser.DockerNode, b *Build) string {
 	return fmt.Sprintf("%s", dn.Name)
 }
 
-// generatePortBindins generate PortBindins from ports config of yaml file
+// generatePortBindins generate PortBindins from ports config of yaml file.
 func generatePortBindins(ports []string) map[docker_client.Port][]docker_client.PortBinding {
 	portBinds := make(map[docker_client.Port][]docker_client.PortBinding)
 	for _, port := range ports {

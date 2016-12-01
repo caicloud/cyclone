@@ -1,5 +1,5 @@
 integration:
-  image: golang:1.6
+  image: cargo.caicloud.io/caicloud/golang:1.6
   environment:
     - GOPATH=/go
     - WORKDIR=/go/src/github.com/caicloud/cyclone

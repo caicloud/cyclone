@@ -35,7 +35,6 @@ integration:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
     - GOPATH=/go
-    - DOCKER_HOST=unix:///var/run/docker.sock
     # trick: use the index.caicloud.io as docker registry because 
     # local registry's name resolution has some problems.
     - REGISTRY_LOCATION=cargo.caicloud.io
