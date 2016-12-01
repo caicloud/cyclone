@@ -190,14 +190,14 @@ var _ = Describe("Version", func() {
 				Expect(ok).To(Equal(true))
 				Expect(err).To(BeNil())
 			})
-
-			// TODO: multi client GET the log.
-			It("should push the log", func() {
-				err := WatchLog(ws, APICreateVersion, AliceUID,
-					serviceResponse.ServiceID, versionResponse.VersionID)
-				Expect(err).To(BeNil())
-			})
-
+			/*
+				// TODO: multi client GET the log.
+				It("should push the log", func() {
+					err := WatchLog(ws, APICreateVersion, AliceUID,
+						serviceResponse.ServiceID, versionResponse.VersionID)
+					Expect(err).To(BeNil())
+				})
+			*/
 			It("should be able to list version via HTTP GET method.", func() {
 				versionListResponse := &api.VersionListResponse{}
 				Expect(ListVersions(AliceUID, serviceResponse.ServiceID, versionListResponse)).To(BeNil())
@@ -229,14 +229,15 @@ var _ = Describe("Version", func() {
 				Expect(versionResponse.ErrorMessage).NotTo(Equal(""))
 			})
 		})
-
-		Context("with missing version id", func() {
-			It("should return: unfound log", func() {
-				err := WatchLog(ws, APICreateVersion, AliceUID,
-					serviceResponse.ServiceID, "-1")
-				Expect(err).To(Equal(ErrUnfoundLog))
+		/*
+			Context("with missing version id", func() {
+				It("should return: unfound log", func() {
+					err := WatchLog(ws, APICreateVersion, AliceUID,
+						serviceResponse.ServiceID, "-1")
+					Expect(err).To(Equal(ErrUnfoundLog))
+				})
 			})
-		})
+		*/
 	})
 
 	Context("with wrong service id", func() {

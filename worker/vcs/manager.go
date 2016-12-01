@@ -27,6 +27,11 @@ import (
 	"github.com/caicloud/cyclone/worker/vcs/provider"
 )
 
+const (
+	// The dir which the repo clone to.
+	CLONE_DIR = "/root/code"
+)
+
 // Manager manages all version control operations, like clone, cherry-pick.
 // Based on the operations, some are handled asychronously and some are not.
 // Asynchronous operations are time consuming and usually involve stream output
@@ -211,16 +216,9 @@ func (vm *Manager) GetTagCommit(service *api.Service, version *api.Version) (str
 	return commit, nil
 }
 
-// GetCloneDir returns the directory where a repository should be cloned to. It honors
-// flag 'cloneDir' which is primarily used for testing/debugging. We use the combination
-// of cloneDir, userID, serviceID, and versionID as repository path. As repositories come
-// and go, we don't have to have a persistent directory structure; therefore, if version
-// is not nil, use cloneDir/userID/versionID; otherwise, use cloneDir/userID/serviceID.
+// GetCloneDir returns the directory where a repository should be cloned to.
 func (vm *Manager) GetCloneDir(service *api.Service, version *api.Version) string {
-	if version.VersionID == "" {
-		return fmt.Sprintf("/%s/%s", service.UserID, service.ServiceID)
-	}
-	return fmt.Sprintf("/%s/%s", service.UserID, version.VersionID)
+	return CLONE_DIR
 }
 
 // findVcsForService is a helper method which finds the VCS worker based on service spec.

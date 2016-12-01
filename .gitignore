@@ -20,3 +20,5 @@ cyclone-server
 
 # Coverage file
 *.coverprofile
+
+worker/worker

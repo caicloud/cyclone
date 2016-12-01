@@ -48,9 +48,30 @@ func getNameInNetwork(dn *parser.DockerNode, b *Build) string {
 	return fmt.Sprintf("%s", dn.Name)
 }
 
+// generatePortBindins generate PortBindins from ports config of yaml file.
+func generatePortBindins(ports []string) map[docker_client.Port][]docker_client.PortBinding {
+	portBinds := make(map[docker_client.Port][]docker_client.PortBinding)
+	for _, port := range ports {
+		log.Infof("Port bind: %s", port)
+		portPair := strings.Split(port, ":")
+		if len(portPair) != 2 {
+			continue
+		}
+
+		var port docker_client.Port
+		bind := docker_client.PortBinding{
+			HostPort: portPair[0],
+		}
+		binds := []docker_client.PortBinding{bind}
+		port = docker_client.Port(fmt.Sprintf("%s/tcp", portPair[1]))
+		portBinds[port] = binds
+	}
+
+	return portBinds
+}
+
 // toServiceContainerConfig creates CreateContainerOptions from ServiceNode.
 func toServiceContainerConfig(dn *parser.DockerNode, b *Build) *docker_client.CreateContainerOptions {
-
 	name := getNameInNetwork(dn, b)
 
 	// If the image of service config to be "BUILT_IMAGE",
@@ -74,8 +95,11 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) *docker_client.Cr
 		Cmd:        dn.Command,
 		Entrypoint: dn.Entrypoint,
 	}
+
 	hostConfig := &docker_client.HostConfig{
 		Privileged:       dn.Privileged,
+		PortBindings:     generatePortBindins(dn.Ports),
+		Links:            dn.Links,
 		MemorySwappiness: -1,
 	}
 
@@ -131,8 +155,11 @@ func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.Nod
 		Cmd:        dn.Command,
 		Entrypoint: dn.Entrypoint,
 	}
+
 	hostConfig := &docker_client.HostConfig{
 		Privileged:       dn.Privileged,
+		PortBindings:     generatePortBindins(dn.Ports),
+		Links:            dn.Links,
 		MemorySwappiness: -1,
 	}
 
@@ -253,7 +280,6 @@ func run(b *Build, cco *docker_client.CreateContainerOptions,
 	if err != nil {
 		return nil, err
 	}
-
 	// Ensures the container is always stopped
 	// and ready to be removed.
 	defer func() {

@@ -1,0 +1,70 @@
+integration:
+  services:
+    mongo:
+      image: cargo.caicloud.io/caicloud/mongo:3.0.5
+      ports:
+        - "27017:27017"
+      command: mongod --smallfiles
+    zookeeper:
+      image: cargo.caicloud.io/caicloud/zookeeper:3.4.6
+      ports:
+        - "2181:2181"
+    kafka:
+      image: cargo.caicloud.io/caicloud/kafka:0.10.1.0
+      environment:
+        - KAFKA_ADVERTISED_HOST_NAME=kafka
+        - KAFKA_ADVERTISED_PORT=9092
+        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      links:
+        - zookeeper:zk
+      ports:
+        - "9092:9092"
+    etcd:
+      image: cargo.caicloud.io/caicloud/etcd:v2.2.1
+      environment:
+        - advertise-client-urls=http://0.0.0.0:4001
+        - initial-advertise-peer-urls=http://0.0.0.0:7001
+      ports:
+        - "2379:2379"
+        - "2380:2380"
+        - "4001:4001"
+        - "7001:7001"
+
+  image: cargo.caicloud.io/caicloud/golang:1.6-docker
+  volumes:
+    -  /var/run/docker.sock:/var/run/docker.sock
+  environment:
+    - GOPATH=/go
+    # trick: use the index.caicloud.io as docker registry because 
+    # local registry's name resolution has some problems.
+    - REGISTRY_LOCATION=cargo.caicloud.io
+    - REGISTRY_USERNAME=cyclone
+    - REGISTRY_PASSWORD=Cyclone123
+    - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
+    - KAFKA_SERVER_IP=kafka:9092
+    - CLAIR_SERVER_IP=clair:6060
+    - MONGO_DB_IP=mongo:27017
+    - ETCD_SERVER_IP=http://etcd:2379
+    - WORK_REGISTRY_LOCATION=cargo.caicloud.io
+    - WORK_DOCKER_HOST=unix:///var/run/docker.sock
+    - DOCKER_HOST=unix:///var/run/docker.sock
+    - ENABLE_CAICLOUD_AUTH=false
+    - ERRORTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/error.html
+    - SUCCESSTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/success.html
+    - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
+    - WORKDIR=/go/src/github.com/caicloud/cyclone
+  links:
+    - mongo
+    - kafka
+    - etcd
+  ports:
+    - "7099:7099"
+    - "8000:8000"
+  commands: 
+    - mkdir -p $WORKDIR
+    - cp ./ -rf $WORKDIR
+    - cd $WORKDIR
+    - go build ./
+    - ./scripts/build-worker-image-ci.sh
+    - ./cyclone &
+    - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml

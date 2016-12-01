@@ -41,7 +41,7 @@ const (
 	DefaultVCS                   = api.Git
 	DefaultServiceTestDeployName = "test-deploy-service"
 	DefaultDeployVersionName     = "v0.1.0-deploy"
-	DefaultTestDeployRepo        = "https://github.com/gaocegege/circle-deploy"
+	DefaultTestDeployRepo        = "https://github.com/superxi911/circle-deploy"
 	DefaultTestIntegrationRepo   = "https://github.com/superxi911/circle-integration"
 )
 
