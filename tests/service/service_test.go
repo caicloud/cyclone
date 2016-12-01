@@ -171,7 +171,7 @@ var _ = Describe("Service", func() {
 			err := wait.Poll(3*time.Second, 200*time.Second, func() (bool, error) {
 				serviceGetResponse := &api.ServiceGetResponse{}
 				err := GetService(AliceUID, serviceResponse.ServiceID, serviceGetResponse)
-				return serviceGetResponse.Service.Repository.Status == api.RepositoryMissing, err
+				return serviceGetResponse.Service.Repository.Status == api.RepositoryUnknownVcs, err
 			})
 			Expect(err).To(BeNil())
 		})

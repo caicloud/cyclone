@@ -221,3 +221,35 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 func isDockerImageOperationLog(log string) bool {
 	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }
+
+// StoreTopic store log from special topic into mongo.
+func StoreTopic(userID, serviceID, versionID string) (string, error) {
+	sTopic := CreateTopicName("create-version", userID, serviceID, versionID)
+
+	consumer, err := kafka.NewConsumer(sTopic)
+	if nil != err {
+		log.Error(err.Error())
+		return "", err
+	}
+
+	versionLog := ""
+	for {
+		msg, errConsume := consumer.Consume()
+		if nil != errConsume {
+			break
+		}
+
+		str := string(msg.Value)
+		array := strings.Split(str, "\n")
+		for _, arr := range array {
+			if arr != "\r" && arr != "" {
+				if isDockerImageOperationLog(arr) != true {
+					versionLog += arr
+					versionLog += "\n"
+				}
+			}
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	return versionLog, nil
+}
