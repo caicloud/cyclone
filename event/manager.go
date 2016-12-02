@@ -27,11 +27,12 @@ import (
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/resource"
+	"github.com/caicloud/cyclone/store"
 	"golang.org/x/net/context"
 )
 
 const (
-	// unfinished event dir path in etcd
+	// Events_Unfinished represents unfinished event dir path in etcd
 	Events_Unfinished = "/events/unfinished"
 )
 
@@ -391,6 +392,12 @@ func handlePendingEvents() {
 		// remove the event from queue which had run
 		pendingEvents.Out()
 		event.Status = api.EventStatusRunning
+		ds := store.NewStore()
+		defer ds.Close()
+		event.Version.Status = api.VersionRunning
+		if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
+			log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+		}
 		SaveEventToEtcd(&event)
 	}
 }

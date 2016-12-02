@@ -360,9 +360,9 @@ type Version struct {
 // BuildResource is config of resource for building image
 type BuildResource struct {
 	// The memory config
-	Memory float64 `bson:"memory,omitempty" json:"memory,omitempty"`
+	Memory float64 `bson:"memory" json:"memory"`
 	// The cpu config
-	CPU float64 `bson:"cpu,omitempty" json:"cpu,omitempty"`
+	CPU float64 `bson:"cpu" json:"cpu"`
 }
 
 // Security is the type for security check.
