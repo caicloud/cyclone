@@ -35,7 +35,7 @@ integration:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
     - GOPATH=/go
-    # trick: use the index.caicloud.io as docker registry because 
+    # trick: use the index.caicloud.io as docker registry because ,
     # local registry's name resolution has some problems.
     - REGISTRY_LOCATION=cargo.caicloud.io
     - REGISTRY_USERNAME=cyclone
