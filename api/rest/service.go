@@ -27,6 +27,14 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+const (
+	// successBadge is the badge showed when version creation is successfully.
+	successBadge = `<svg xmlns="http://www.w3.org/2000/svg" width="88" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="88" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h37v20H0z"/><path fill="#4c1" d="M37 0h51v20H37z"/><path fill="url(#b)" d="M0 0h88v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="18.5" y="15" fill="#010101" fill-opacity=".3">build</text><text x="18.5" y="14">build</text><text x="61.5" y="15" fill="#010101" fill-opacity=".3">passing</text><text x="61.5" y="14">passing</text></g></svg>`
+
+	// failureBadge is the badge showed when version creation is failed.
+	failureBadge = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="80" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h37v20H0z"/><path fill="#e05d44" d="M37 0h43v20H37z"/><path fill="url(#b)" d="M0 0h80v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="18.5" y="15" fill="#010101" fill-opacity=".3">build</text><text x="18.5" y="14">build</text><text x="57.5" y="15" fill="#010101" fill-opacity=".3">failing</text><text x="57.5" y="14">failing</text></g></svg>`
+)
+
 // createService creates a service, validates and saves it. The operation is asynchronous,
 // meaning that when creating a service, its service ID is returned and saved in database,
 // but the service related resources are not created yet. For example, the service's
@@ -378,4 +386,35 @@ func setService(request *restful.Request, response *restful.Response) {
 	// Return service creation response.
 	setResponse.ServiceID = serviceID
 	response.WriteHeaderAndEntity(http.StatusAccepted, setResponse)
+}
+
+// getServiceBadge gets the badge for given service.
+//
+// GET: /api/v0.1/:uid/services/:service_id/badge
+//
+// RESPONSE: svg
+func getServiceBadge(request *restful.Request, response *restful.Response) {
+	serviceID := request.PathParameter("service_id")
+	userID := request.PathParameter("user_id")
+
+	ds := store.NewStore()
+	defer ds.Close()
+
+	// Get the latest version creation.
+	version, err := ds.FindLatestVersionByServiceID(serviceID)
+	if err != nil {
+		message := fmt.Sprintf("Unable to find latest version by given service id %v", serviceID)
+		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
+		response.WriteHeaderAndEntity(http.StatusNotFound, message)
+		return
+	}
+
+	// Set response.
+	response.AddHeader("Content-Type", "image/svg+xml;charset=utf-8")
+	switch version.Status {
+	case api.VersionHealthy:
+		response.Write([]byte(successBadge))
+	case api.VersionFailed:
+		response.Write([]byte(failureBadge))
+	}
 }
