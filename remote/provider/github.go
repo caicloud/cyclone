@@ -397,8 +397,8 @@ func (g *GitHub) PostCommitStatus(service *api.Service, version *api.Version) er
 	status := &github.RepoStatus{
 		State:       github.String(state),
 		TargetURL:   github.String(urlLog),
-		Description: github.String(service.Name + " " + version.ErrorMessage),
-		Context:     github.String("Cyclone"),
+		Description: github.String(version.ErrorMessage),
+		Context:     github.String("Cyclone/" + service.Name),
 	}
 
 	_, _, err = client.Repositories.CreateStatus(owner, repo, version.Commit, status)
