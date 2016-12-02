@@ -319,7 +319,7 @@ var _ = Describe("Version", func() {
 		})
 	})
 
-	Context("should be deleted by HTTP DELETE method. ", func() {
+	Context("should be deleted by HTTP DELETE method.", func() {
 		It("should be able to delete versions and logs via HTTP DELETE method.", func() {
 			versionListResponse := &api.VersionListResponse{}
 			Expect(ListVersions(AliceUID, serviceResponse.ServiceID, versionListResponse)).To(BeNil())
