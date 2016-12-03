@@ -69,6 +69,15 @@ func (d *DataStore) FindVersionsByServiceID(serviceID string) ([]api.Version, er
 	return versions, err
 }
 
+// FindLatestVersionByServiceID finds the latest version entity by service ID.
+func (d *DataStore) FindLatestVersionByServiceID(serviceID string) (*api.Version, error) {
+	version := &api.Version{}
+	filter := bson.M{"service_id": serviceID}
+	col := d.s.DB(defaultDBName).C(versionCollectionName)
+	err := col.Find(filter).Sort("-create_time").Limit(1).One(version)
+	return version, err
+}
+
 // DeleteVersionByID removes version by versionID.
 func (d *DataStore) DeleteVersionByID(versionID string) error {
 	col := d.s.DB(defaultDBName).C(versionCollectionName)

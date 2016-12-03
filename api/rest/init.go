@@ -112,6 +112,13 @@ func registerServiceAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("service_id", "identifier of the service").DataType("string")).
 		Writes(api.ServiceGetResponse{}))
 
+	// Filter the unauthorized operation.
+	ws.Route(ws.GET("/{user_id}/services/{service_id}/badge").
+		To(getServiceBadge).
+		Doc("get the badge for given service").
+		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
+		Param(ws.PathParameter("service_id", "identifier of the service").DataType("string")))
+
 	ws.Route(ws.GET("/{user_id}/services").
 		To(listServices).
 		Doc("list all services of a given user").
