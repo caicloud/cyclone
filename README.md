@@ -7,10 +7,15 @@ English | [中文](README_zh-CN.md)
 	<br>
 </h1>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
-[![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
-[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
-[![Gitter](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone?style=flat-square)](https://goreportcard.com/report/github.com/caicloud/cyclone)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/caicloud/cyclone)
+[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat-square)](https://stackshare.io/gaocegege/cyclone)
+[![GitHub stars](https://img.shields.io/github/stars/caicloud/cyclone.svg?label=star&style=flat-square)](https://github.com/caicloud/cyclone/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/caicloud/cyclone.svg?label=fork&style=flat-square)]()
+[![GitHub contributors](https://img.shields.io/github/contributors/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/graphs/contributors)
+[![Issue Stats](https://img.shields.io/issuestats/i/github/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/issues)
+[![Issue Stats](https://img.shields.io/issuestats/p/github/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/pulls)
+[![Gitter](https://img.shields.io/gitter/room/caicloud/cyclone.svg?style=flat-square)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Unit testing:
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
@@ -59,11 +64,10 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 	<img src="./docs/security.png" alt="Security Scanning" width="500">
 </div>
 
-
 ## Roadmap
 
 | Milestone | New feature                              |
 | --------- | ---------------------------------------- |
-| 2016 Q4   | Kubernetes Support: uses k8s-job to excute the CICD workflow |
+| 2016 Q4   | Kubernetes Support: uses k8s-job to execute the CI/CD workflow |
 | 2017 Q1   | Web UI                                   |
 | Future    | User permission management <br>Supports user plugin |
