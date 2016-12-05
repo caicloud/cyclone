@@ -70,7 +70,7 @@ func getUrlwithToken(url, subvcs, token string) string {
 		}
 		position := strings.Index(url, "github.com")
 		if position == -1 {
-			log.Warn("subvcs is github and the token is not empty, but the url dosen't contain 'github.com'")
+			log.Warn("subvcs is github and the token is not empty, but the url doesn't contain 'github.com'")
 			break
 		}
 		url = insert(url, token+"@", position)
