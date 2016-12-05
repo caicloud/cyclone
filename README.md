@@ -65,8 +65,4 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 
 ## Roadmap
 
-| Milestone | New feature                              |
-| --------- | ---------------------------------------- |
-| 2016 Q4   | Kubernetes Support: uses k8s-job to execute the CI/CD workflow |
-| 2017 Q1   | Web UI                                   |
-| Future    | User permission management <br>Supports user plugin |
+Please watch the [Github milestones](https://github.com/caicloud/cyclone/milestones) for our future plans.
