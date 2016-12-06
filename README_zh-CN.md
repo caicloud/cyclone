@@ -63,6 +63,8 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 	<img src="./docs/security.png" alt="安全扫描" width="500">
 </div>
 
+更多特性详见[功能介绍](./docs/functions_zh-CN.md)。
+
 ## Roadmap
 
 请到 [Github milestones](https://github.com/caicloud/cyclone/milestones) 查阅我们今后的计划。
