@@ -63,6 +63,8 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 	<img src="./docs/security.png" alt="Security Scanning" width="500">
 </div>
 
+Please watch the [Fuctions Introduction](./docs/functions.md) for more features.
+
 ## Roadmap
 
 Please watch the [Github milestones](https://github.com/caicloud/cyclone/milestones) for our future plans.
