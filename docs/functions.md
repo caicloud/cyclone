@@ -2,7 +2,7 @@
 
 ## Relating with VCS tools
 
-Cyclone can relate with various common VCS tools, such as git, svn, etc. After OAuth, it can pull codes from repository and create webhook. Whenever the user commit, submit a pull request or release a version to the repository, the webhook will trigger the CI/CD workflow. 
+Cyclone has been integrated with a variety of VCS tools, such as git, svn, etc. After OAuth, it can pull codes from repository and create webhook. Whenever the user commit, submit a pull request or release a version to the repository, the webhook will trigger the CI/CD workflow. 
 
 - Creating a service relating with the VCS tools
 
@@ -18,9 +18,9 @@ Cyclone can relate with various common VCS tools, such as git, svn, etc. After O
 
 ## Continus integration and security scanning
 
-All of the processes in workflow are visible. "prebuild" compile the executable files. "build" build the published image. "integration" execute the integrated test. "publish" publish the image and scan the vulnerabilities. "post build" do some relating operations after image published. "deploy" use the published image deploy a application to Kubernetes or any other container cloud platform. Cyclone can send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences cause by environment. 
+All of the processes in workflow are visible. "prebuild" compiles the executable files. "build" builds the published image. "integration" executes the integrated test. "publish" publishes the image and scans the vulnerabilities. "post build" does some relating operations after image published. "deploy" uses the published image deploy a application to Kubernetes or any other container cloud platform. Cyclone can send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences cause by environment. 
 
-- Logs of the workflow
+- Log of the workflow
 
 <div align="center">
 	<img src="./logs.png" alt="logs" width="500">
@@ -32,7 +32,7 @@ All of the processes in workflow are visible. "prebuild" compile the executable 
 	<img src="./security.png" alt="security" width="500">
 </div>
 
-- Notifying via email 
+- Sending the build log via email 
 
 <div align="center">
 	<img src="./pagging.png" alt="pagging" width="500">
