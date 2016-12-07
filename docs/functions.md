@@ -2,7 +2,7 @@
 
 ## Relating with VCS tools
 
-Cyclone has been integrated with a variety of VCS tools, such as git, svn, etc. After OAuth, it can pull codes from repository and create webhook. Whenever the user commit, submit a pull request or release a version to the repository, the webhook will trigger the CI/CD workflow. 
+Cyclone has been integrated with a variety of VCS tools, such as git, svn, etc. After OAuth, it can pull codes from repository and create webhook. Whenever the user commits, submits a pull request or releases a version to the repository, the webhook will trigger the CI/CD workflow. 
 
 - Creating a service relating with the VCS tools
 
@@ -18,7 +18,7 @@ Cyclone has been integrated with a variety of VCS tools, such as git, svn, etc. 
 
 ## Continus integration and security scanning
 
-All of the processes in workflow are visible. "prebuild" compiles the executable files. "build" builds the published image. "integration" executes the integrated test. "publish" publishes the image and scans the vulnerabilities. "post build" does some relating operations after image published. "deploy" uses the published image deploy a application to Kubernetes or any other container cloud platform. Cyclone can send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences cause by environment. 
+All of the processes in workflow are visible. "prebuild" compiles the executable files. "build" builds the published image. "integration" executes the integrated test. "publish" publishes the image and scans the vulnerabilities. "post build" does some relating operations after image published. "deploy" uses the published image to deploy a application to Kubernetes or any other container cloud platform. Cyclone would send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences caused by environment. 
 
 - Log of the workflow
 
@@ -56,7 +56,7 @@ Cyclone separates the logic of scheduling and the building workflow. It also sup
 
 ## Union publishing and dependency management
 
-Cyclone can manage multi-component united builds. It use the graphical user interface to display and manage the dependency of the components. 
+Cyclone can manage multi-component united builds. It uses the graphical user interface to display and manage the dependency of the components. 
 
 <div align="center">
 	<img src="./dependency.png" alt="dependency" width="500">
