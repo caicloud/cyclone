@@ -126,6 +126,7 @@ func CreateFileBuffer(eventID api.EventID) error {
 
 var (
 	ws                  *websocket.Conn
+	logServer           string
 	lockFileWatchSwitch sync.RWMutex
 	watchLogFileSwitch  map[string]bool
 )
@@ -135,6 +136,7 @@ var (
 // origin "http://120.26.103.63/"
 // url "ws://120.26.103.63:8000/ws"
 func DialLogServer(url string) error {
+	logServer = url
 	addr := strings.Split(url, "/")[2]
 	origin := "http://" + addr + "/"
 	log.Infof("Dail to log server: url(%s), origin(%s)", url, origin)
@@ -147,6 +149,14 @@ func DialLogServer(url string) error {
 // Disconnect dicconnect websocket from log server
 func Disconnect() {
 	ws.Close()
+}
+
+// redial redail to log server
+func redial() {
+	log.Infof("Redail to log server !")
+	Disconnect()
+	DialLogServer(logServer)
+	time.Sleep(time.Second)
 }
 
 // HeatBeatPacket is the type for heart_beat packet.
@@ -172,6 +182,7 @@ func SendHeartBeat() {
 
 		if _, err := ws.Write(jsonData); err != nil {
 			log.Errorf("Send heart beat to server err: %v", err)
+			redial()
 		}
 
 		id++
@@ -294,5 +305,6 @@ func pushLog(topic string, slog string) {
 
 	if _, err := ws.Write(jsonData); err != nil {
 		log.Errorf("Push log to server err: %v", err)
+		redial()
 	}
 }
