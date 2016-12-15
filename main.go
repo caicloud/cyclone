@@ -41,8 +41,9 @@ import (
 
 // Here, we define all flags used in cyclone.
 var (
-	debug  = pflag.Bool("debug", false, "Debug mode, default to false")
-	apiDoc = pflag.Bool("show-api-doc", true, "show the api doc at http://<cyclone instance>/apidocs/#/api/v0.1")
+	debug          = pflag.Bool("debug", false, "Debug mode, default to false")
+	apiDoc         = pflag.Bool("show-api-doc", true, "show the api doc at http://<cyclone instance>/apidocs/#/api/v0.1")
+	workerProvider = pflag.String("worker-provider", "docker", "Provider of worker, docker or kubernetes")
 
 	consoleWebEndpoint string
 )
@@ -92,7 +93,7 @@ const (
 
 func main() {
 	log.Info("Cyclone server start")
-	pflag.Parse()
+	parseFlag()
 
 	// init system
 	setLogLevel()
@@ -114,6 +115,14 @@ func main() {
 	initAPIServer()
 	initAPIDoc()
 	startAPIServer()
+}
+
+// parseFlag parse the start up flag.
+func parseFlag() {
+	pflag.Parse()
+
+	event.WorkerProvider = *workerProvider
+	log.Info("worker provider is: ", *workerProvider)
 }
 
 // setLogLevel set the log level by input flag

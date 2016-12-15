@@ -38,8 +38,8 @@ kafka:
         - "9092"
 etcd:
     image: cargo.caicloud.io/caicloud/etcd:v2.2.1
-    volumes:
-        - /data:/data
+#    volumes:
+#        - /data:/data
     ports:
         - "2379:2379"
         - "2380:2380"
@@ -52,8 +52,8 @@ etcd:
 
 mongo:
     image: mongo:3.0.5
-    volumes:
-       - /data/db:/data/db
+#    volumes:
+#       - /data/db:/data/db
     expose:
        - "27017"
     ports:
@@ -93,4 +93,7 @@ cyclone-server:
         - CYCLONE_SERVER_HOST=http://127.0.0.1:7099
         - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
         - CLAIR_SERVER_IP=http://127.0.0.1:6060
-    command: /cyclone-server
+        # kubernetes worker provider config
+        - WORKER_KUBERNETES_HOST=https://circle-dev.caicloudprivatetest.com
+        - WORKER_KUBERNETES_TOKEN=66211d912520bc1fde1aef0717ebef0a59e47ec022bb81857b8550259c38e207c9e6220b151cec86dc200defd015001be0bb675e5eb04ecbf3bf01f97891386a
+    command: /cyclone-server --worker-provider=kubernetes
