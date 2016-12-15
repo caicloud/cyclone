@@ -3,7 +3,7 @@ FROM golang:1.6-alpine
 EXPOSE 7099  
 EXPOSE 8000
  
-RUN apk add --no-cache curl bash
+RUN apk add --no-cache curl bash gcc
 
 ENV DOCKER_BUCKET get.docker.com
 ENV DOCKER_VERSION 1.10.1

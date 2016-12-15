@@ -30,7 +30,7 @@ integration:
         - "4001:4001"
         - "7001:7001"
 
-  image: cargo.caicloud.io/caicloud/golang:1.6-docker
+  image: cargo.caicloud.io/caicloud/golang-gcc:1.6-docker
   volumes:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
