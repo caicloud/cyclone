@@ -5,20 +5,23 @@ integration:
       ports:
         - "27017:27017"
       command: mongod --smallfiles
+      
     zookeeper:
       image: cargo.caicloud.io/caicloud/zookeeper:3.4.6
       ports:
         - "2181:2181"
+        
     kafka:
       image: cargo.caicloud.io/caicloud/kafka:0.10.1.0
       environment:
-        - KAFKA_ADVERTISED_HOST_NAME=0.0.0.0
+        - KAFKA_ADVERTISED_HOST_NAME=kafka
         - KAFKA_ADVERTISED_PORT=9092
         - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       links:
-        - zookeeper:zk
+        - zookeeper:zookeeper
       ports:
         - "9092:9092"
+        
     etcd:
       image: cargo.caicloud.io/caicloud/etcd:v3.0.13
       ports:
