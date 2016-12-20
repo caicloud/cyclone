@@ -40,7 +40,7 @@ integration:
     - REGISTRY_USERNAME=cyclone
     - REGISTRY_PASSWORD=Cyclone123
     - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
-    - KAFKA_SERVER_IP=kafka:9092
+    - KAFKA_SERVER_IP=kafka:9090
     - CLAIR_SERVER_IP=clair:6060
     - MONGO_DB_IP=mongo:27017
     - ETCD_SERVER_IP=http://etcd:2379
