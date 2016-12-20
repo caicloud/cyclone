@@ -15,12 +15,12 @@ integration:
       image: cargo.caicloud.io/caicloud/kafka:0.10.1.0
       environment:
         - KAFKA_ADVERTISED_HOST_NAME=kafka
-        - KAFKA_ADVERTISED_PORT=9092
+        - KAFKA_ADVERTISED_PORT=9090
         - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       links:
         - zookeeper:zookeeper
       ports:
-        - "9092:9092"
+        - "9090:9090"
         
     etcd:
       image: cargo.caicloud.io/caicloud/etcd:v3.0.13
