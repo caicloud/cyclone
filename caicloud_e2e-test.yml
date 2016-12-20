@@ -61,5 +61,6 @@ integration:
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
     - go build ./
+    - ./scripts/build-worker-image-ci.sh
     - ./cyclone &
     - go test -v ./tests/service
