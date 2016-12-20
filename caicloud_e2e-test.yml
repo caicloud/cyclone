@@ -21,14 +21,10 @@ integration:
         - "9092:9092"
     etcd:
       image: cargo.caicloud.io/caicloud/etcd:v3.0.13
-      environment:
-        - listen-peer-urls=http://0.0.0.0:2380
-        - advertise-client-urls=http://0.0.0.0:2379
-        - listen-client-urls=http://0.0.0.0:2379
-        - data-dir=/mnt
       ports:
         - "2379:2379"
         - "2380:2380"
+      command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
 
   image: cargo.caicloud.io/caicloud/golang:1.6-docker
   volumes:
