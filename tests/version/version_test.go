@@ -165,7 +165,7 @@ var _ = Describe("Version", func() {
 			It("should be able to get version via HTTP GET method.", func() {
 				versionGetResponse := &api.VersionGetResponse{}
 				// Wait up to 120 seconds until docker image has been pushed.
-				err := wait.Poll(3*time.Second, 120*time.Second, func() (bool, error) {
+				err := wait.Poll(3*time.Second, 300*time.Second, func() (bool, error) {
 					err := GetVersion(AliceUID, versionResponse.VersionID, versionGetResponse)
 					return versionGetResponse.Version.Status != api.VersionPending && versionGetResponse.Version.Status != api.VersionRunning, err
 				})
