@@ -195,6 +195,7 @@ var _ = Describe("Version", func() {
 			It("should push the log", func() {
 				err := WatchLog(ws, APICreateVersion, AliceUID,
 					serviceResponse.ServiceID, versionResponse.VersionID)
+				time.Sleep(time.Second * 100000000)
 				Expect(err).To(BeNil())
 			})
 			
