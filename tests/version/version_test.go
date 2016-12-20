@@ -192,11 +192,11 @@ var _ = Describe("Version", func() {
 			})
 			
 			// TODO: multi client GET the log.
-			/*It("should push the log", func() {
+			It("should push the log", func() {
 				err := WatchLog(ws, APICreateVersion, AliceUID,
 					serviceResponse.ServiceID, versionResponse.VersionID)
 				Expect(err).To(BeNil())
-			})*/
+			})
 			
 			It("should be able to list version via HTTP GET method.", func() {
 				versionListResponse := &api.VersionListResponse{}
