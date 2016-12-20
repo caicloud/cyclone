@@ -20,15 +20,15 @@ integration:
       ports:
         - "9092:9092"
     etcd:
-      image: cargo.caicloud.io/caicloud/etcd:v2.2.1
+      image: cargo.caicloud.io/caicloud/etcd:v3.0.13
       environment:
-        - advertise-client-urls=http://0.0.0.0:4001
-        - initial-advertise-peer-urls=http://0.0.0.0:7001
+        - listen-peer-urls=http://0.0.0.0:2380
+        - advertise-client-urls=http://0.0.0.0:2379
+        - listen-client-urls=http://0.0.0.0:2379
+        - data-dir=/mnt
       ports:
         - "2379:2379"
         - "2380:2380"
-        - "4001:4001"
-        - "7001:7001"
 
   image: cargo.caicloud.io/caicloud/golang:1.6-docker
   volumes:
@@ -67,4 +67,4 @@ integration:
     - go build ./
     - ./scripts/build-worker-image-ci.sh
     - ./cyclone &
-    - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml
+    - go test -v ./tests/service
