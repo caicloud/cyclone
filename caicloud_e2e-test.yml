@@ -40,7 +40,7 @@ integration:
     - REGISTRY_USERNAME=cyclone
     - REGISTRY_PASSWORD=Cyclone123
     - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
-    - KAFKA_SERVER_IP=kafka:9092
+    - KAFKA_SERVER_IP=172.18.0.4:9092
     - WORK_REGISTRY_LOCATION=cargo.caicloud.io
     - WORK_DOCKER_HOST=unix:///var/run/docker.sock
     - DOCKER_HOST=unix:///var/run/docker.sock
