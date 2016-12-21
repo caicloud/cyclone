@@ -71,9 +71,9 @@ func (resm *Manager) ApplyResource(event *api.Event) error {
 	if err != nil {
 		// Come in, we think that it is the first time to create version according userid, so need add new document
 		resource.UserID = event.Service.UserID
-		if event.Version.BuildResource.CPU == 0 || event.Version.BuildResource.Memory == 0 {
-			event.Version.BuildResource.Memory = resm.memorycontainer
-			event.Version.BuildResource.CPU = resm.cpucontainer
+		if event.WorkerInfo.UsedResource.CPU == 0 || event.WorkerInfo.UsedResource.Memory == 0 {
+			event.WorkerInfo.UsedResource.Memory = resm.memorycontainer
+			event.WorkerInfo.UsedResource.CPU = resm.cpucontainer
 		}
 		resource.TotalResource.CPU = resm.cpuuser
 		resource.TotalResource.Memory = resm.memoryuser
@@ -82,40 +82,40 @@ func (resm *Manager) ApplyResource(event *api.Event) error {
 		resource.LeftResource.Memory = resource.TotalResource.Memory
 		resource.LeftResource.CPU = resource.TotalResource.CPU
 
-		if resource.TotalResource.Memory < event.Version.BuildResource.Memory ||
-			resource.TotalResource.CPU < event.Version.BuildResource.CPU {
+		if resource.TotalResource.Memory < event.WorkerInfo.UsedResource.Memory ||
+			resource.TotalResource.CPU < event.WorkerInfo.UsedResource.CPU {
 			errResource := fmt.Errorf("the total resource < the request resource")
 			log.Errorf("Unable to support the request resource %+v, because > the total resource", event.Service.UserID)
 			return errResource
 		}
 
-		resource.LeftResource.Memory = resource.LeftResource.Memory - event.Version.BuildResource.Memory
-		resource.LeftResource.CPU = resource.LeftResource.CPU - event.Version.BuildResource.CPU
+		resource.LeftResource.Memory = resource.LeftResource.Memory - event.WorkerInfo.UsedResource.Memory
+		resource.LeftResource.CPU = resource.LeftResource.CPU - event.WorkerInfo.UsedResource.CPU
 		if err := ds.NewResourceDocument(resource); err != nil {
 			log.Errorf("Unable to create new resource document %+v: %v", event.Service.UserID, err)
 			return err
 		}
 	} else {
-		if event.Version.BuildResource.CPU == 0 || event.Version.BuildResource.Memory == 0 {
-			event.Version.BuildResource.Memory = resource.PerResource.Memory
-			event.Version.BuildResource.CPU = resource.PerResource.CPU
+		if event.WorkerInfo.UsedResource.CPU == 0 || event.WorkerInfo.UsedResource.Memory == 0 {
+			event.WorkerInfo.UsedResource.Memory = resource.PerResource.Memory
+			event.WorkerInfo.UsedResource.CPU = resource.PerResource.CPU
 		}
 
-		if resource.TotalResource.Memory < event.Version.BuildResource.Memory ||
-			resource.TotalResource.CPU < event.Version.BuildResource.CPU {
+		if resource.TotalResource.Memory < event.WorkerInfo.UsedResource.Memory ||
+			resource.TotalResource.CPU < event.WorkerInfo.UsedResource.CPU {
 			errResource := fmt.Errorf("the total resource < the request resource")
 			log.Errorf("Unable to support the request resource %+v, because > the total resource", event.Service.UserID)
 			return errResource
 		}
 
-		if resource.LeftResource.Memory < event.Version.BuildResource.Memory ||
-			resource.LeftResource.CPU < event.Version.BuildResource.CPU {
+		if resource.LeftResource.Memory < event.WorkerInfo.UsedResource.Memory ||
+			resource.LeftResource.CPU < event.WorkerInfo.UsedResource.CPU {
 			log.Infof("Unable to support the request resource %+v", event.Service.UserID)
 			return ErrUnableSupport
 		}
 
-		resource.LeftResource.Memory = resource.LeftResource.Memory - event.Version.BuildResource.Memory
-		resource.LeftResource.CPU = resource.LeftResource.CPU - event.Version.BuildResource.CPU
+		resource.LeftResource.Memory = resource.LeftResource.Memory - event.WorkerInfo.UsedResource.Memory
+		resource.LeftResource.CPU = resource.LeftResource.CPU - event.WorkerInfo.UsedResource.CPU
 		if err = ds.UpdateResourceStatus(resource.UserID, resource.LeftResource.Memory, resource.LeftResource.CPU); err != nil {
 			log.Errorf("Unable to update resource status %+v: %v", event.Service.UserID, err)
 			return err
@@ -135,8 +135,8 @@ func (resm *Manager) ReleaseResource(event *api.Event) error {
 	if err != nil {
 		return err
 	}
-	resource.LeftResource.Memory = resource.LeftResource.Memory + event.Version.BuildResource.Memory
-	resource.LeftResource.CPU = resource.LeftResource.CPU + event.Version.BuildResource.CPU
+	resource.LeftResource.Memory = resource.LeftResource.Memory + event.WorkerInfo.UsedResource.Memory
+	resource.LeftResource.CPU = resource.LeftResource.CPU + event.WorkerInfo.UsedResource.CPU
 	if err = ds.UpdateResourceStatus(resource.UserID, resource.LeftResource.Memory, resource.LeftResource.CPU); err != nil {
 		log.ErrorWithFields("Unable to update resource status", log.Fields{"err": err, "usrid": event.Service.UserID})
 		return err

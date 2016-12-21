@@ -89,7 +89,7 @@ func createService(request *restful.Request, response *restful.Response) {
 		message := fmt.Sprintf("Name of service %s is existed", service.Name)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID})
 		createResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
+		response.WriteHeaderAndEntity(http.StatusConflict, createResponse)
 		return
 	}
 

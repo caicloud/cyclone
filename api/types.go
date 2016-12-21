@@ -379,7 +379,7 @@ type VersionLog struct {
 	// VerisonID points to the log.
 	VerisonID string `bson:"version_id,omitempty" json:"version_id,omitempty"`
 	// Logs defines the logs when the version is created.
-	Logs string `bson:"logs,omitempty" json:"logs,omitempty"`
+	Logs string `bson:"logs" json:"logs"`
 }
 
 // YamlDeployFlag is the type of version deployment flag.

@@ -27,7 +27,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/resource"
-	"github.com/caicloud/cyclone/store"
 	"golang.org/x/net/context"
 )
 
@@ -113,6 +112,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			}
 
 			if change.PrevNode == nil {
+				log.Info("watch unfinshed events whose prevnode value is nil\n")
 				eventCreateHandler(&event)
 			} else {
 				preEvent, preErr := loadEventFromJSON(change.PrevNode.Value)
@@ -239,10 +239,12 @@ func (el *List) loadListFromEtcd(etcd *etcd.Client) {
 			log.Errorf("load event from etcd err: %v", err)
 			continue
 		}
-		log.Infof("load event to list: %s", event.EventID)
+
 		if event.Status == api.EventStatusPending {
+			log.Infof("add event to list: %s", event.EventID)
 			el.addUnfinshedEvent(&event)
 		} else {
+			log.Infof("check time out for event: %s", event.EventID)
 			go CheckWorkerTimeOut(event)
 		}
 	}
@@ -391,13 +393,5 @@ func handlePendingEvents() {
 
 		// remove the event from queue which had run
 		pendingEvents.Out()
-		event.Status = api.EventStatusRunning
-		ds := store.NewStore()
-		defer ds.Close()
-		event.Version.Status = api.VersionRunning
-		if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
-			log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
-		}
-		SaveEventToEtcd(&event)
 	}
 }

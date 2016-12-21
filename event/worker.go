@@ -25,6 +25,7 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
+	"github.com/caicloud/cyclone/etcd"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
@@ -48,7 +49,8 @@ const (
 	SERVER_HOST    = "SERVER_HOST"
 
 	// worker time out
-	WORKER_TIMEOUT = 7200 * time.Second
+	WORKER_TIMEOUT       = 7200 * time.Second
+	WORKER_TIMEOUT_SHORT = 600 * time.Second
 
 	WORK_REGISTRY_LOCATION = "WORK_REGISTRY_LOCATION"
 	REGISTRY_USERNAME      = "REGISTRY_USERNAME"
@@ -165,8 +167,13 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 	if err != nil {
 		w.dm.StopContainer(w.containerID)
 		w.dm.RemoveContainer(w.containerID) // release resource of worker node
+
 		ds := store.NewStore()
 		defer ds.Close()
+
+		if err := resourceManager.ReleaseResource(event); err != nil {
+			log.Errorf("Unable to release resource %v", err)
+		}
 		nodes, errinfo := ds.FindWorkerNodesByDockerHost(event.WorkerInfo.DockerHost)
 		if errinfo != nil || len(nodes) != 1 {
 			log.Errorf("find worker node err: %v", errinfo)
@@ -184,6 +191,10 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 	event.WorkerInfo.DockerHost = w.dockerHost
 	event.WorkerInfo.ContainerID = w.containerID
 	event.WorkerInfo.DueTime = time.Now().Add(time.Duration(WORKER_TIMEOUT))
+	if event.Operation == CreateServiceOps {
+		event.WorkerInfo.DueTime = time.Now().Add(time.Duration(WORKER_TIMEOUT_SHORT))
+	}
+	event.Status = api.EventStatusRunning
 	err = SaveEventToEtcd(event)
 	log.Infof("save event worker info: %s, %v", w.containerID, err)
 	go CheckWorkerTimeOut(*event)
@@ -212,6 +223,13 @@ func CheckWorkerTimeOut(e api.Event) {
 	eventCopy = e
 	event := &eventCopy
 	if IsEventFinished(event) {
+		log.Infof("event has finished: %v", event)
+		postHookEvent(event)
+		etcdClient := etcd.GetClient()
+		err := etcdClient.Delete(Events_Unfinished + "/" + string(event.EventID))
+		if err != nil {
+			log.Errorf("delete finished event err: %v", err)
+		}
 		return
 	}
 

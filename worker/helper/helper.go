@@ -174,43 +174,57 @@ func ExecDeploy(event *api.Event, dmanager *docker.Manager,
 
 // DoYamlDeploy is a wrapper of deploy to do some extra work by yaml information.
 func DoYamlDeploy(r *runner.Build, tree *parser.Tree, event *api.Event, dmanager *docker.Manager) error {
+	steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Start, nil)
 	if event.Version.YamlDeploy == api.NotDeployWithYaml || len(tree.DeployConfig.Applications) == 0 {
-		log.Infof("Skip deploy due to deploy section not defined or yaml deploy not be choosed")
+		message := "Skip deploy due to deploy section not defined or yaml deploy not be choosed"
+		steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Stop, fmt.Errorf(message))
+		log.Infof(message)
 		return nil
 	}
 
 	if r.IsPushImageSuccess() == false {
-		return fmt.Errorf("Failed to deploy version due to build section undefined or push image failed.")
+		err := fmt.Errorf("Failed to deploy version due to build section undefined or push image failed.")
+		steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Stop, err)
+		return err
 	}
 
 	imagename, ok := event.Data["image-name"]
 	tagname, ok2 := event.Data["tag-name"]
 
 	if !ok || !ok2 {
-		return fmt.Errorf("Unable to retrieve image name")
+		err := fmt.Errorf("Unable to retrieve image name")
+		steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Stop, err)
+		return err
 	}
 	imageName := imagename.(string) + ":" + tagname.(string)
 
 	for _, application := range tree.DeployConfig.Applications {
 		if err := updateContainerInClusterWithYaml(event.Service.UserID, imageName, application); err != nil {
 			event.Version.YamlDeployStatus = api.DeployFailed
+			steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Stop, err)
 			return err
 		}
 	}
 	event.Version.YamlDeployStatus = api.DeployPending
+	steplog.InsertStepLog(event, steplog.DeployYaml, steplog.Finish, nil)
 	return nil
 }
 
 // DoPlansDeploy is a wrapper of deploy to do some extra work by Plans information.
 func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docker.Manager) error {
+	steplog.InsertStepLog(event, steplog.DeployPlan, steplog.Start, nil)
 	if bHasPublishSuccessful == false {
-		return fmt.Errorf("Failed to deploy version due to build section undefined or push image failed.")
+		err := fmt.Errorf("Failed to deploy version due to build section undefined or push image failed.")
+		steplog.InsertStepLog(event, steplog.DeployPlan, steplog.Stop, err)
+		return err
 	}
 	imagename, ok := event.Data["image-name"]
 	tagname, ok2 := event.Data["tag-name"]
 
 	if !ok || !ok2 {
-		return fmt.Errorf("Unable to retrieve image name")
+		err := fmt.Errorf("Unable to retrieve image name")
+		steplog.InsertStepLog(event, steplog.DeployPlan, steplog.Stop, err)
+		return err
 	}
 	imageName := imagename.(string) + ":" + tagname.(string)
 
@@ -221,6 +235,7 @@ func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docke
 		}
 		event.Version.DeployPlansStatuses[i].Status = api.DeployPending
 	}
+	steplog.InsertStepLog(event, steplog.DeployPlan, steplog.Finish, nil)
 	return nil
 }
 

@@ -53,6 +53,7 @@ var (
 // StepEvent is information about step event name in creating versions
 type StepEvent string
 
+// Events
 const (
 	CloneRepository StepEvent = "clone repository"
 	CreateTag       StepEvent = "create tag"
@@ -61,7 +62,8 @@ const (
 	Integration     StepEvent = "Integration"
 	PreBuild        StepEvent = "Pre Build"
 	PostBuild       StepEvent = "Post Build"
-	Deploy          StepEvent = "Deploy application"
+	DeployYaml      StepEvent = "Deploy yaml application"
+	DeployPlan      StepEvent = "Deploy plan application"
 	ApplyResource   StepEvent = "Apply Resource"
 	ParseYaml       StepEvent = "Parse Yaml"
 )
@@ -69,6 +71,7 @@ const (
 // StepState is information about step event's state
 type StepState string
 
+// Event state
 const (
 	Start  StepState = "start"
 	Stop   StepState = "stop"
