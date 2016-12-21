@@ -15,10 +15,6 @@ function disable_selinux() {
   fi
 }
 
-if command_exists lsb_release ; then
-    os="$(lsb_release -si)"
-fi
-
 # set default
 : ${os:=""}
 
