@@ -23,21 +23,21 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/testapi"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
 )
 
-func parseTimeOrDie(ts string) metav1.Time {
+func parseTimeOrDie(ts string) unversioned.Time {
 	t, err := time.Parse(time.RFC3339, ts)
 	if err != nil {
 		panic(err)
 	}
-	return metav1.Time{Time: t}
+	return unversioned.Time{Time: t}
 }
 
 var benchmarkPod api.Pod = api.Pod{
-	TypeMeta: metav1.TypeMeta{
+	TypeMeta: unversioned.TypeMeta{
 		Kind:       "Pod",
 		APIVersion: "v1",
 	},

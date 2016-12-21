@@ -19,7 +19,6 @@ package internalversion
 import (
 	api "k8s.io/kubernetes/pkg/api"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions"
-	v1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
 	watch "k8s.io/kubernetes/pkg/watch"
 )
@@ -36,7 +35,7 @@ type ThirdPartyResourceInterface interface {
 	Update(*extensions.ThirdPartyResource) (*extensions.ThirdPartyResource, error)
 	Delete(name string, options *api.DeleteOptions) error
 	DeleteCollection(options *api.DeleteOptions, listOptions api.ListOptions) error
-	Get(name string, options v1.GetOptions) (*extensions.ThirdPartyResource, error)
+	Get(name string) (*extensions.ThirdPartyResource, error)
 	List(opts api.ListOptions) (*extensions.ThirdPartyResourceList, error)
 	Watch(opts api.ListOptions) (watch.Interface, error)
 	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *extensions.ThirdPartyResource, err error)
@@ -99,12 +98,11 @@ func (c *thirdPartyResources) DeleteCollection(options *api.DeleteOptions, listO
 }
 
 // Get takes name of the thirdPartyResource, and returns the corresponding thirdPartyResource object, and an error if there is any.
-func (c *thirdPartyResources) Get(name string, options v1.GetOptions) (result *extensions.ThirdPartyResource, err error) {
+func (c *thirdPartyResources) Get(name string) (result *extensions.ThirdPartyResource, err error) {
 	result = &extensions.ThirdPartyResource{}
 	err = c.client.Get().
 		Resource("thirdpartyresources").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return

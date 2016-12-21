@@ -19,46 +19,46 @@ package qos
 import (
 	"testing"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/resource"
-	"k8s.io/kubernetes/pkg/api/v1"
 )
 
-func getResourceList(cpu, memory string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getResourceList(cpu, memory string) api.ResourceList {
+	res := api.ResourceList{}
 	if cpu != "" {
-		res[v1.ResourceCPU] = resource.MustParse(cpu)
+		res[api.ResourceCPU] = resource.MustParse(cpu)
 	}
 	if memory != "" {
-		res[v1.ResourceMemory] = resource.MustParse(memory)
+		res[api.ResourceMemory] = resource.MustParse(memory)
 	}
 	return res
 }
 
-func addResource(rName, value string, rl v1.ResourceList) v1.ResourceList {
-	rl[v1.ResourceName(rName)] = resource.MustParse(value)
+func addResource(rName, value string, rl api.ResourceList) api.ResourceList {
+	rl[api.ResourceName(rName)] = resource.MustParse(value)
 	return rl
 }
 
-func getResourceRequirements(requests, limits v1.ResourceList) v1.ResourceRequirements {
-	res := v1.ResourceRequirements{}
+func getResourceRequirements(requests, limits api.ResourceList) api.ResourceRequirements {
+	res := api.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
 	return res
 }
 
-func newContainer(name string, requests v1.ResourceList, limits v1.ResourceList) v1.Container {
-	return v1.Container{
+func newContainer(name string, requests api.ResourceList, limits api.ResourceList) api.Container {
+	return api.Container{
 		Name:      name,
 		Resources: getResourceRequirements(requests, limits),
 	}
 }
 
-func newPod(name string, containers []v1.Container) *v1.Pod {
-	return &v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+func newPod(name string, containers []api.Container) *api.Pod {
+	return &api.Pod{
+		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.PodSpec{
+		Spec: api.PodSpec{
 			Containers: containers,
 		},
 	}
@@ -66,103 +66,103 @@ func newPod(name string, containers []v1.Container) *v1.Pod {
 
 func TestGetPodQOS(t *testing.T) {
 	testCases := []struct {
-		pod      *v1.Pod
+		pod      *api.Pod
 		expected QOSClass
 	}{
 		{
-			pod: newPod("guaranteed", []v1.Container{
+			pod: newPod("guaranteed", []api.Container{
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
 			}),
 			expected: Guaranteed,
 		},
 		{
-			pod: newPod("guaranteed-with-gpu", []v1.Container{
+			pod: newPod("guaranteed-with-gpu", []api.Container{
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), addResource("nvidia-gpu", "2", getResourceList("100m", "100Mi"))),
 			}),
 			expected: Guaranteed,
 		},
 		{
-			pod: newPod("guaranteed-guaranteed", []v1.Container{
+			pod: newPod("guaranteed-guaranteed", []api.Container{
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
 			}),
 			expected: Guaranteed,
 		},
 		{
-			pod: newPod("guaranteed-guaranteed-with-gpu", []v1.Container{
+			pod: newPod("guaranteed-guaranteed-with-gpu", []api.Container{
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), addResource("nvidia-gpu", "2", getResourceList("100m", "100Mi"))),
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
 			}),
 			expected: Guaranteed,
 		},
 		{
-			pod: newPod("best-effort-best-effort", []v1.Container{
+			pod: newPod("best-effort-best-effort", []api.Container{
 				newContainer("best-effort", getResourceList("", ""), getResourceList("", "")),
 				newContainer("best-effort", getResourceList("", ""), getResourceList("", "")),
 			}),
 			expected: BestEffort,
 		},
 		{
-			pod: newPod("best-effort-best-effort-with-gpu", []v1.Container{
+			pod: newPod("best-effort-best-effort-with-gpu", []api.Container{
 				newContainer("best-effort", getResourceList("", ""), addResource("nvidia-gpu", "2", getResourceList("", ""))),
 				newContainer("best-effort", getResourceList("", ""), getResourceList("", "")),
 			}),
 			expected: BestEffort,
 		},
 		{
-			pod: newPod("best-effort-with-gpu", []v1.Container{
+			pod: newPod("best-effort-with-gpu", []api.Container{
 				newContainer("best-effort", getResourceList("", ""), addResource("nvidia-gpu", "2", getResourceList("", ""))),
 			}),
 			expected: BestEffort,
 		},
 		{
-			pod: newPod("best-effort-burstable", []v1.Container{
+			pod: newPod("best-effort-burstable", []api.Container{
 				newContainer("best-effort", getResourceList("", ""), addResource("nvidia-gpu", "2", getResourceList("", ""))),
 				newContainer("burstable", getResourceList("1", ""), getResourceList("2", "")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("best-effort-guaranteed", []v1.Container{
+			pod: newPod("best-effort-guaranteed", []api.Container{
 				newContainer("best-effort", getResourceList("", ""), addResource("nvidia-gpu", "2", getResourceList("", ""))),
 				newContainer("guaranteed", getResourceList("10m", "100Mi"), getResourceList("10m", "100Mi")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-cpu-guaranteed-memory", []v1.Container{
+			pod: newPod("burstable-cpu-guaranteed-memory", []api.Container{
 				newContainer("burstable", getResourceList("", "100Mi"), getResourceList("", "100Mi")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-no-limits", []v1.Container{
+			pod: newPod("burstable-no-limits", []api.Container{
 				newContainer("burstable", getResourceList("100m", "100Mi"), getResourceList("", "")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-guaranteed", []v1.Container{
+			pod: newPod("burstable-guaranteed", []api.Container{
 				newContainer("burstable", getResourceList("1", "100Mi"), getResourceList("2", "100Mi")),
 				newContainer("guaranteed", getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-unbounded-but-requests-match-limits", []v1.Container{
+			pod: newPod("burstable-unbounded-but-requests-match-limits", []api.Container{
 				newContainer("burstable", getResourceList("100m", "100Mi"), getResourceList("200m", "200Mi")),
 				newContainer("burstable-unbounded", getResourceList("100m", "100Mi"), getResourceList("", "")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-1", []v1.Container{
+			pod: newPod("burstable-1", []api.Container{
 				newContainer("burstable", getResourceList("10m", "100Mi"), getResourceList("100m", "200Mi")),
 			}),
 			expected: Burstable,
 		},
 		{
-			pod: newPod("burstable-2", []v1.Container{
+			pod: newPod("burstable-2", []api.Container{
 				newContainer("burstable", getResourceList("0", "0"), addResource("nvidia-gpu", "2", getResourceList("100m", "200Mi"))),
 			}),
 			expected: Burstable,

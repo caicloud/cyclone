@@ -18,7 +18,6 @@ package internalversion
 
 import (
 	api "k8s.io/kubernetes/pkg/api"
-	v1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
 	watch "k8s.io/kubernetes/pkg/watch"
 )
@@ -36,7 +35,7 @@ type NamespaceInterface interface {
 	UpdateStatus(*api.Namespace) (*api.Namespace, error)
 	Delete(name string, options *api.DeleteOptions) error
 	DeleteCollection(options *api.DeleteOptions, listOptions api.ListOptions) error
-	Get(name string, options v1.GetOptions) (*api.Namespace, error)
+	Get(name string) (*api.Namespace, error)
 	List(opts api.ListOptions) (*api.NamespaceList, error)
 	Watch(opts api.ListOptions) (watch.Interface, error)
 	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *api.Namespace, err error)
@@ -78,9 +77,6 @@ func (c *namespaces) Update(namespace *api.Namespace) (result *api.Namespace, er
 	return
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclientstatus=false comment above the type to avoid generating UpdateStatus().
-
 func (c *namespaces) UpdateStatus(namespace *api.Namespace) (result *api.Namespace, err error) {
 	result = &api.Namespace{}
 	err = c.client.Put().
@@ -114,12 +110,11 @@ func (c *namespaces) DeleteCollection(options *api.DeleteOptions, listOptions ap
 }
 
 // Get takes name of the namespace, and returns the corresponding namespace object, and an error if there is any.
-func (c *namespaces) Get(name string, options v1.GetOptions) (result *api.Namespace, err error) {
+func (c *namespaces) Get(name string) (result *api.Namespace, err error) {
 	result = &api.Namespace{}
 	err = c.client.Get().
 		Resource("namespaces").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return

@@ -19,15 +19,15 @@ package meta
 import (
 	"fmt"
 
-	"k8s.io/kubernetes/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 // AmbiguousResourceError is returned if the RESTMapper finds multiple matches for a resource
 type AmbiguousResourceError struct {
-	PartialResource schema.GroupVersionResource
+	PartialResource unversioned.GroupVersionResource
 
-	MatchingResources []schema.GroupVersionResource
-	MatchingKinds     []schema.GroupVersionKind
+	MatchingResources []unversioned.GroupVersionResource
+	MatchingKinds     []unversioned.GroupVersionKind
 }
 
 func (e *AmbiguousResourceError) Error() string {
@@ -44,10 +44,10 @@ func (e *AmbiguousResourceError) Error() string {
 
 // AmbiguousKindError is returned if the RESTMapper finds multiple matches for a kind
 type AmbiguousKindError struct {
-	PartialKind schema.GroupVersionKind
+	PartialKind unversioned.GroupVersionKind
 
-	MatchingResources []schema.GroupVersionResource
-	MatchingKinds     []schema.GroupVersionKind
+	MatchingResources []unversioned.GroupVersionResource
+	MatchingKinds     []unversioned.GroupVersionKind
 }
 
 func (e *AmbiguousKindError) Error() string {
@@ -76,7 +76,7 @@ func IsAmbiguousError(err error) bool {
 
 // NoResourceMatchError is returned if the RESTMapper can't find any match for a resource
 type NoResourceMatchError struct {
-	PartialResource schema.GroupVersionResource
+	PartialResource unversioned.GroupVersionResource
 }
 
 func (e *NoResourceMatchError) Error() string {
@@ -85,7 +85,7 @@ func (e *NoResourceMatchError) Error() string {
 
 // NoKindMatchError is returned if the RESTMapper can't find any match for a kind
 type NoKindMatchError struct {
-	PartialKind schema.GroupVersionKind
+	PartialKind unversioned.GroupVersionKind
 }
 
 func (e *NoKindMatchError) Error() string {

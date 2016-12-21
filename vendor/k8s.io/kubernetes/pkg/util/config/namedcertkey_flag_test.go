@@ -18,11 +18,10 @@ package config
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/spf13/pflag"
 )
 
 func TestNamedCertKeyArrayFlag(t *testing.T) {

@@ -26,12 +26,10 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/apis/meta/v1/unstructured"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/schema"
 	"k8s.io/kubernetes/pkg/runtime/serializer/streaming"
 	"k8s.io/kubernetes/pkg/watch"
 	"k8s.io/kubernetes/pkg/watch/versioned"
@@ -47,8 +45,8 @@ func getListJSON(version, kind string, items ...[]byte) []byte {
 	return []byte(json)
 }
 
-func getObject(version, kind, name string) *unstructured.Unstructured {
-	return &unstructured.Unstructured{
+func getObject(version, kind, name string) *runtime.Unstructured {
+	return &runtime.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": version,
 			"kind":       kind,
@@ -59,7 +57,7 @@ func getObject(version, kind, name string) *unstructured.Unstructured {
 	}
 }
 
-func getClientServer(gv *schema.GroupVersion, h func(http.ResponseWriter, *http.Request)) (*Client, *httptest.Server, error) {
+func getClientServer(gv *unversioned.GroupVersion, h func(http.ResponseWriter, *http.Request)) (*Client, *httptest.Server, error) {
 	srv := httptest.NewServer(http.HandlerFunc(h))
 	cl, err := NewClient(&restclient.Config{
 		Host:          srv.URL,
@@ -78,7 +76,7 @@ func TestList(t *testing.T) {
 		namespace string
 		path      string
 		resp      []byte
-		want      *unstructured.UnstructuredList
+		want      *runtime.UnstructuredList
 	}{
 		{
 			name: "normal_list",
@@ -86,12 +84,12 @@ func TestList(t *testing.T) {
 			resp: getListJSON("vTest", "rTestList",
 				getJSON("vTest", "rTest", "item1"),
 				getJSON("vTest", "rTest", "item2")),
-			want: &unstructured.UnstructuredList{
+			want: &runtime.UnstructuredList{
 				Object: map[string]interface{}{
 					"apiVersion": "vTest",
 					"kind":       "rTestList",
 				},
-				Items: []*unstructured.Unstructured{
+				Items: []*runtime.Unstructured{
 					getObject("vTest", "rTest", "item1"),
 					getObject("vTest", "rTest", "item2"),
 				},
@@ -104,12 +102,12 @@ func TestList(t *testing.T) {
 			resp: getListJSON("vTest", "rTestList",
 				getJSON("vTest", "rTest", "item1"),
 				getJSON("vTest", "rTest", "item2")),
-			want: &unstructured.UnstructuredList{
+			want: &runtime.UnstructuredList{
 				Object: map[string]interface{}{
 					"apiVersion": "vTest",
 					"kind":       "rTestList",
 				},
-				Items: []*unstructured.Unstructured{
+				Items: []*runtime.Unstructured{
 					getObject("vTest", "rTest", "item1"),
 					getObject("vTest", "rTest", "item2"),
 				},
@@ -117,8 +115,8 @@ func TestList(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "GET" {
 				t.Errorf("List(%q) got HTTP method %s. wanted GET", tc.name, r.Method)
@@ -155,7 +153,7 @@ func TestGet(t *testing.T) {
 		name      string
 		path      string
 		resp      []byte
-		want      *unstructured.Unstructured
+		want      *runtime.Unstructured
 	}{
 		{
 			name: "normal_get",
@@ -172,8 +170,8 @@ func TestGet(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "GET" {
 				t.Errorf("Get(%q) got HTTP method %s. wanted GET", tc.name, r.Method)
@@ -205,9 +203,9 @@ func TestGet(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	statusOK := &metav1.Status{
-		TypeMeta: metav1.TypeMeta{Kind: "Status"},
-		Status:   metav1.StatusSuccess,
+	statusOK := &unversioned.Status{
+		TypeMeta: unversioned.TypeMeta{Kind: "Status"},
+		Status:   unversioned.StatusSuccess,
 	}
 	tcs := []struct {
 		namespace string
@@ -225,8 +223,8 @@ func TestDelete(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "DELETE" {
 				t.Errorf("Delete(%q) got HTTP method %s. wanted DELETE", tc.name, r.Method)
@@ -237,7 +235,7 @@ func TestDelete(t *testing.T) {
 			}
 
 			w.Header().Set("Content-Type", runtime.ContentTypeJSON)
-			unstructured.UnstructuredJSONScheme.Encode(statusOK, w)
+			runtime.UnstructuredJSONScheme.Encode(statusOK, w)
 		})
 		if err != nil {
 			t.Errorf("unexpected error when creating client: %v", err)
@@ -254,9 +252,9 @@ func TestDelete(t *testing.T) {
 }
 
 func TestDeleteCollection(t *testing.T) {
-	statusOK := &metav1.Status{
-		TypeMeta: metav1.TypeMeta{Kind: "Status"},
-		Status:   metav1.StatusSuccess,
+	statusOK := &unversioned.Status{
+		TypeMeta: unversioned.TypeMeta{Kind: "Status"},
+		Status:   unversioned.StatusSuccess,
 	}
 	tcs := []struct {
 		namespace string
@@ -274,8 +272,8 @@ func TestDeleteCollection(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "DELETE" {
 				t.Errorf("DeleteCollection(%q) got HTTP method %s. wanted DELETE", tc.name, r.Method)
@@ -286,7 +284,7 @@ func TestDeleteCollection(t *testing.T) {
 			}
 
 			w.Header().Set("Content-Type", runtime.ContentTypeJSON)
-			unstructured.UnstructuredJSONScheme.Encode(statusOK, w)
+			runtime.UnstructuredJSONScheme.Encode(statusOK, w)
 		})
 		if err != nil {
 			t.Errorf("unexpected error when creating client: %v", err)
@@ -306,7 +304,7 @@ func TestCreate(t *testing.T) {
 	tcs := []struct {
 		name      string
 		namespace string
-		obj       *unstructured.Unstructured
+		obj       *runtime.Unstructured
 		path      string
 	}{
 		{
@@ -322,8 +320,8 @@ func TestCreate(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "POST" {
 				t.Errorf("Create(%q) got HTTP method %s. wanted POST", tc.name, r.Method)
@@ -365,7 +363,7 @@ func TestUpdate(t *testing.T) {
 	tcs := []struct {
 		name      string
 		namespace string
-		obj       *unstructured.Unstructured
+		obj       *runtime.Unstructured
 		path      string
 	}{
 		{
@@ -381,8 +379,8 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "PUT" {
 				t.Errorf("Update(%q) got HTTP method %s. wanted PUT", tc.name, r.Method)
@@ -448,8 +446,8 @@ func TestWatch(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "GET" {
 				t.Errorf("Watch(%q) got HTTP method %s. wanted GET", tc.name, r.Method)
@@ -490,7 +488,7 @@ func TestPatch(t *testing.T) {
 		name      string
 		namespace string
 		patch     []byte
-		want      *unstructured.Unstructured
+		want      *runtime.Unstructured
 		path      string
 	}{
 		{
@@ -508,8 +506,8 @@ func TestPatch(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		gv := &schema.GroupVersion{Group: "gtest", Version: "vtest"}
-		resource := &metav1.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
+		gv := &unversioned.GroupVersion{Group: "gtest", Version: "vtest"}
+		resource := &unversioned.APIResource{Name: "rtest", Namespaced: len(tc.namespace) != 0}
 		cl, srv, err := getClientServer(gv, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "PATCH" {
 				t.Errorf("Patch(%q) got HTTP method %s. wanted PATCH", tc.name, r.Method)

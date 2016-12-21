@@ -18,7 +18,7 @@ package authentication
 
 import (
 	"k8s.io/kubernetes/pkg/api"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 
 // TokenReview attempts to authenticate a token to a known user.
 type TokenReview struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// ObjectMeta fulfills the meta.ObjectMetaAccessor interface so that the stock
 	// REST handler paths work
 	api.ObjectMeta

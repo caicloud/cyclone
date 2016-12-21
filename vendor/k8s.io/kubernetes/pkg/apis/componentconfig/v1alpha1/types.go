@@ -16,13 +16,10 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	"k8s.io/kubernetes/pkg/api/v1"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-)
+import "k8s.io/kubernetes/pkg/api/unversioned"
 
 type KubeProxyConfiguration struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 
 	// bindAddress is the IP address for the proxy server to serve on (set to 0.0.0.0
 	// for all interfaces)
@@ -43,10 +40,10 @@ type KubeProxyConfiguration struct {
 	IPTablesMasqueradeBit *int32 `json:"iptablesMasqueradeBit"`
 	// iptablesSyncPeriod is the period that iptables rules are refreshed (e.g. '5s', '1m',
 	// '2h22m').  Must be greater than 0.
-	IPTablesSyncPeriod metav1.Duration `json:"iptablesSyncPeriodSeconds"`
+	IPTablesSyncPeriod unversioned.Duration `json:"iptablesSyncPeriodSeconds"`
 	// iptablesMinSyncPeriod is the minimum period that iptables rules are refreshed (e.g. '5s', '1m',
 	// '2h22m').
-	IPTablesMinSyncPeriod metav1.Duration `json:"iptablesMinSyncPeriodSeconds"`
+	IPTablesMinSyncPeriod unversioned.Duration `json:"iptablesMinSyncPeriodSeconds"`
 	// kubeconfigPath is the path to the kubeconfig file with authorization information (the
 	// master location is set by the master flag).
 	KubeconfigPath string `json:"kubeconfigPath"`
@@ -67,7 +64,7 @@ type KubeProxyConfiguration struct {
 	ResourceContainer string `json:"resourceContainer"`
 	// udpIdleTimeout is how long an idle UDP connection will be kept open (e.g. '250ms', '2s').
 	// Must be greater than 0. Only applicable for proxyMode=userspace.
-	UDPIdleTimeout metav1.Duration `json:"udpTimeoutMilliseconds"`
+	UDPIdleTimeout unversioned.Duration `json:"udpTimeoutMilliseconds"`
 	// conntrackMax is the maximum number of NAT connections to track (0 to
 	// leave as-is).  This takes precedence over conntrackMaxPerCore and conntrackMin.
 	ConntrackMax int32 `json:"conntrackMax"`
@@ -79,11 +76,11 @@ type KubeProxyConfiguration struct {
 	ConntrackMin int32 `json:"conntrackMin"`
 	// conntrackTCPEstablishedTimeout is how long an idle TCP connection
 	// will be kept open (e.g. '2s').  Must be greater than 0.
-	ConntrackTCPEstablishedTimeout metav1.Duration `json:"conntrackTCPEstablishedTimeout"`
+	ConntrackTCPEstablishedTimeout unversioned.Duration `json:"conntrackTCPEstablishedTimeout"`
 	// conntrackTCPCloseWaitTimeout is how long an idle conntrack entry
 	// in CLOSE_WAIT state will remain in the conntrack
 	// table. (e.g. '60s'). Must be greater than 0 to set.
-	ConntrackTCPCloseWaitTimeout metav1.Duration `json:"conntrackTCPCloseWaitTimeout"`
+	ConntrackTCPCloseWaitTimeout unversioned.Duration `json:"conntrackTCPCloseWaitTimeout"`
 }
 
 // Currently two modes of proxying are available: 'userspace' (older, stable) or 'iptables'
@@ -100,7 +97,7 @@ const (
 )
 
 type KubeSchedulerConfiguration struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 
 	// port is the port that the scheduler's http service runs on.
 	Port int `json:"port"`
@@ -112,8 +109,6 @@ type KubeSchedulerConfiguration struct {
 	PolicyConfigFile string `json:"policyConfigFile"`
 	// enableProfiling enables profiling via web interface.
 	EnableProfiling *bool `json:"enableProfiling"`
-	// enableContentionProfiling enables lock contention profiling, if enableProfiling is true.
-	EnableContentionProfiling bool `json:"enableContentionProfiling"`
 	// contentType is contentType of requests sent to apiserver.
 	ContentType string `json:"contentType"`
 	// kubeAPIQPS is the QPS to use while talking with kubernetes apiserver.
@@ -165,32 +160,32 @@ type LeaderElectionConfiguration struct {
 	// maximum duration that a leader can be stopped before it is replaced
 	// by another candidate. This is only applicable if leader election is
 	// enabled.
-	LeaseDuration metav1.Duration `json:"leaseDuration"`
+	LeaseDuration unversioned.Duration `json:"leaseDuration"`
 	// renewDeadline is the interval between attempts by the acting master to
 	// renew a leadership slot before it stops leading. This must be less
 	// than or equal to the lease duration. This is only applicable if leader
 	// election is enabled.
-	RenewDeadline metav1.Duration `json:"renewDeadline"`
+	RenewDeadline unversioned.Duration `json:"renewDeadline"`
 	// retryPeriod is the duration the clients should wait between attempting
 	// acquisition and renewal of a leadership. This is only applicable if
 	// leader election is enabled.
-	RetryPeriod metav1.Duration `json:"retryPeriod"`
+	RetryPeriod unversioned.Duration `json:"retryPeriod"`
 }
 
 type KubeletConfiguration struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 
 	// podManifestPath is the path to the directory containing pod manifests to
 	// run, or the path to a single manifest file
 	PodManifestPath string `json:"podManifestPath"`
 	// syncFrequency is the max period between synchronizing running
 	// containers and config
-	SyncFrequency metav1.Duration `json:"syncFrequency"`
+	SyncFrequency unversioned.Duration `json:"syncFrequency"`
 	// fileCheckFrequency is the duration between checking config files for
 	// new data
-	FileCheckFrequency metav1.Duration `json:"fileCheckFrequency"`
+	FileCheckFrequency unversioned.Duration `json:"fileCheckFrequency"`
 	// httpCheckFrequency is the duration between checking http for new data
-	HTTPCheckFrequency metav1.Duration `json:"httpCheckFrequency"`
+	HTTPCheckFrequency unversioned.Duration `json:"httpCheckFrequency"`
 	// manifestURL is the URL for accessing the container manifest
 	ManifestURL string `json:"manifestURL"`
 	// manifestURLHeader is the HTTP header to use when accessing the manifest
@@ -268,7 +263,7 @@ type KubeletConfiguration struct {
 	EnableDebuggingHandlers *bool `json:"enableDebuggingHandlers"`
 	// minimumGCAge is the minimum age for a finished container before it is
 	// garbage collected.
-	MinimumGCAge metav1.Duration `json:"minimumGCAge"`
+	MinimumGCAge unversioned.Duration `json:"minimumGCAge"`
 	// maxPerPodContainerCount is the maximum number of old instances to
 	// retain per container. Each container takes up some disk space.
 	MaxPerPodContainerCount int32 `json:"maxPerPodContainerCount"`
@@ -300,14 +295,14 @@ type KubeletConfiguration struct {
 	ClusterDNS string `json:"clusterDNS"`
 	// streamingConnectionIdleTimeout is the maximum time a streaming connection
 	// can be idle before the connection is automatically closed.
-	StreamingConnectionIdleTimeout metav1.Duration `json:"streamingConnectionIdleTimeout"`
+	StreamingConnectionIdleTimeout unversioned.Duration `json:"streamingConnectionIdleTimeout"`
 	// nodeStatusUpdateFrequency is the frequency that kubelet posts node
 	// status to master. Note: be cautious when changing the constant, it
 	// must work with nodeMonitorGracePeriod in nodecontroller.
-	NodeStatusUpdateFrequency metav1.Duration `json:"nodeStatusUpdateFrequency"`
+	NodeStatusUpdateFrequency unversioned.Duration `json:"nodeStatusUpdateFrequency"`
 	// imageMinimumGCAge is the minimum age for an unused image before it is
 	// garbage collected.
-	ImageMinimumGCAge metav1.Duration `json:"imageMinimumGCAge"`
+	ImageMinimumGCAge unversioned.Duration `json:"imageMinimumGCAge"`
 	// imageGCHighThresholdPercent is the percent of disk usage after which
 	// image garbage collection is always run. The percent is calculated as
 	// this field value out of 100.
@@ -321,7 +316,7 @@ type KubeletConfiguration struct {
 	// be rejected.
 	LowDiskSpaceThresholdMB int32 `json:"lowDiskSpaceThresholdMB"`
 	// How frequently to calculate and cache volume disk usage for all pods
-	VolumeStatsAggPeriod metav1.Duration `json:"volumeStatsAggPeriod"`
+	VolumeStatsAggPeriod unversioned.Duration `json:"volumeStatsAggPeriod"`
 	// networkPluginName is the name of the network plugin to be invoked for
 	// various events in kubelet/pod lifecycle
 	NetworkPluginName string `json:"networkPluginName"`
@@ -372,10 +367,7 @@ type KubeletConfiguration struct {
 	RemoteImageEndpoint string `json:"remoteImageEndpoint"`
 	// runtimeRequestTimeout is the timeout for all runtime requests except long running
 	// requests - pull, logs, exec and attach.
-	RuntimeRequestTimeout metav1.Duration `json:"runtimeRequestTimeout"`
-	// If no pulling progress is made before the deadline imagePullProgressDeadline,
-	// the image pulling will be cancelled. Defaults to 1m0s.
-	ImagePullProgressDeadline metav1.Duration `json:"imagePullProgressDeadline,omitempty"`
+	RuntimeRequestTimeout unversioned.Duration `json:"runtimeRequestTimeout"`
 	// rktPath is the  path of rkt binary. Leave empty to use the first rkt in
 	// $PATH.
 	RktPath string `json:"rktPath"`
@@ -433,12 +425,7 @@ type KubeletConfiguration struct {
 	ReconcileCIDR *bool `json:"reconcileCIDR"`
 	// registerSchedulable tells the kubelet to register the node as
 	// schedulable. Won't have any effect if register-node is false.
-	// DEPRECATED: use registerWithTaints instead
 	RegisterSchedulable *bool `json:"registerSchedulable"`
-	// registerWithTaints are an array of taints to add to a node object when
-	// the kubelet registers itself. This only takes effect when registerNode
-	// is true and upon the initial registration of the node.
-	RegisterWithTaints []v1.Taint `json:"registerWithTaints"`
 	// contentType is contentType of requests sent to apiserver.
 	ContentType string `json:"contentType"`
 	// kubeAPIQPS is the QPS to use while talking with kubernetes apiserver
@@ -453,7 +440,7 @@ type KubeletConfiguration struct {
 	SerializeImagePulls *bool `json:"serializeImagePulls"`
 	// outOfDiskTransitionFrequency is duration for which the kubelet has to
 	// wait before transitioning out of out-of-disk node condition status.
-	OutOfDiskTransitionFrequency metav1.Duration `json:"outOfDiskTransitionFrequency"`
+	OutOfDiskTransitionFrequency unversioned.Duration `json:"outOfDiskTransitionFrequency"`
 	// nodeIP is IP address of the node. If set, kubelet will use this IP
 	// address for the node.
 	NodeIP string `json:"nodeIP"`
@@ -470,7 +457,7 @@ type KubeletConfiguration struct {
 	// Comma-delimeted list of grace periods for each soft eviction signal.  For example, 'memory.available=30s'.
 	EvictionSoftGracePeriod string `json:"evictionSoftGracePeriod"`
 	// Duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
-	EvictionPressureTransitionPeriod metav1.Duration `json:"evictionPressureTransitionPeriod"`
+	EvictionPressureTransitionPeriod unversioned.Duration `json:"evictionPressureTransitionPeriod"`
 	// Maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
 	EvictionMaxPodGracePeriod int32 `json:"evictionMaxPodGracePeriod"`
 	// Comma-delimited list of minimum reclaims (e.g. imagefs.available=2Gi) that describes the minimum amount of resource the kubelet will reclaim when performing a pod eviction if that resource is under pressure.
@@ -547,9 +534,9 @@ type KubeletAuthorization struct {
 
 type KubeletWebhookAuthorization struct {
 	// cacheAuthorizedTTL is the duration to cache 'authorized' responses from the webhook authorizer.
-	CacheAuthorizedTTL metav1.Duration `json:"cacheAuthorizedTTL"`
+	CacheAuthorizedTTL unversioned.Duration `json:"cacheAuthorizedTTL"`
 	// cacheUnauthorizedTTL is the duration to cache 'unauthorized' responses from the webhook authorizer.
-	CacheUnauthorizedTTL metav1.Duration `json:"cacheUnauthorizedTTL"`
+	CacheUnauthorizedTTL unversioned.Duration `json:"cacheUnauthorizedTTL"`
 }
 
 type KubeletAuthentication struct {
@@ -572,7 +559,7 @@ type KubeletWebhookAuthentication struct {
 	// enabled allows bearer token authentication backed by the tokenreviews.authentication.k8s.io API
 	Enabled *bool `json:"enabled"`
 	// cacheTTL enables caching of authentication results
-	CacheTTL metav1.Duration `json:"cacheTTL"`
+	CacheTTL unversioned.Duration `json:"cacheTTL"`
 }
 
 type KubeletAnonymousAuthentication struct {

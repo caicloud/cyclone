@@ -23,127 +23,126 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/schema"
 	"k8s.io/kubernetes/pkg/util/validation/field"
 )
 
 func TestErrorNew(t *testing.T) {
 	err := NewAlreadyExists(api.Resource("tests"), "1")
 	if !IsAlreadyExists(err) {
-		t.Errorf("expected to be %s", metav1.StatusReasonAlreadyExists)
+		t.Errorf("expected to be %s", unversioned.StatusReasonAlreadyExists)
 	}
 	if IsConflict(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonConflict)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonConflict)
 	}
 	if IsNotFound(err) {
-		t.Errorf(fmt.Sprintf("expected to not be %s", metav1.StatusReasonNotFound))
+		t.Errorf(fmt.Sprintf("expected to not be %s", unversioned.StatusReasonNotFound))
 	}
 	if IsInvalid(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonInvalid)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonInvalid)
 	}
 	if IsBadRequest(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonBadRequest)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonBadRequest)
 	}
 	if IsForbidden(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonForbidden)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonForbidden)
 	}
 	if IsServerTimeout(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonServerTimeout)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonServerTimeout)
 	}
 	if IsMethodNotSupported(err) {
-		t.Errorf("expected to not be %s", metav1.StatusReasonMethodNotAllowed)
+		t.Errorf("expected to not be %s", unversioned.StatusReasonMethodNotAllowed)
 	}
 
 	if !IsConflict(NewConflict(api.Resource("tests"), "2", errors.New("message"))) {
 		t.Errorf("expected to be conflict")
 	}
 	if !IsNotFound(NewNotFound(api.Resource("tests"), "3")) {
-		t.Errorf("expected to be %s", metav1.StatusReasonNotFound)
+		t.Errorf("expected to be %s", unversioned.StatusReasonNotFound)
 	}
 	if !IsInvalid(NewInvalid(api.Kind("Test"), "2", nil)) {
-		t.Errorf("expected to be %s", metav1.StatusReasonInvalid)
+		t.Errorf("expected to be %s", unversioned.StatusReasonInvalid)
 	}
 	if !IsBadRequest(NewBadRequest("reason")) {
-		t.Errorf("expected to be %s", metav1.StatusReasonBadRequest)
+		t.Errorf("expected to be %s", unversioned.StatusReasonBadRequest)
 	}
 	if !IsForbidden(NewForbidden(api.Resource("tests"), "2", errors.New("reason"))) {
-		t.Errorf("expected to be %s", metav1.StatusReasonForbidden)
+		t.Errorf("expected to be %s", unversioned.StatusReasonForbidden)
 	}
 	if !IsUnauthorized(NewUnauthorized("reason")) {
-		t.Errorf("expected to be %s", metav1.StatusReasonUnauthorized)
+		t.Errorf("expected to be %s", unversioned.StatusReasonUnauthorized)
 	}
 	if !IsServerTimeout(NewServerTimeout(api.Resource("tests"), "reason", 0)) {
-		t.Errorf("expected to be %s", metav1.StatusReasonServerTimeout)
+		t.Errorf("expected to be %s", unversioned.StatusReasonServerTimeout)
 	}
 	if time, ok := SuggestsClientDelay(NewServerTimeout(api.Resource("tests"), "doing something", 10)); time != 10 || !ok {
-		t.Errorf("expected to be %s", metav1.StatusReasonServerTimeout)
+		t.Errorf("expected to be %s", unversioned.StatusReasonServerTimeout)
 	}
 	if time, ok := SuggestsClientDelay(NewTimeoutError("test reason", 10)); time != 10 || !ok {
-		t.Errorf("expected to be %s", metav1.StatusReasonTimeout)
+		t.Errorf("expected to be %s", unversioned.StatusReasonTimeout)
 	}
 	if !IsMethodNotSupported(NewMethodNotSupported(api.Resource("foos"), "delete")) {
-		t.Errorf("expected to be %s", metav1.StatusReasonMethodNotAllowed)
+		t.Errorf("expected to be %s", unversioned.StatusReasonMethodNotAllowed)
 	}
 }
 
 func TestNewInvalid(t *testing.T) {
 	testCases := []struct {
 		Err     *field.Error
-		Details *metav1.StatusDetails
+		Details *unversioned.StatusDetails
 	}{
 		{
 			field.Duplicate(field.NewPath("field[0].name"), "bar"),
-			&metav1.StatusDetails{
+			&unversioned.StatusDetails{
 				Kind: "Kind",
 				Name: "name",
-				Causes: []metav1.StatusCause{{
-					Type:  metav1.CauseTypeFieldValueDuplicate,
+				Causes: []unversioned.StatusCause{{
+					Type:  unversioned.CauseTypeFieldValueDuplicate,
 					Field: "field[0].name",
 				}},
 			},
 		},
 		{
 			field.Invalid(field.NewPath("field[0].name"), "bar", "detail"),
-			&metav1.StatusDetails{
+			&unversioned.StatusDetails{
 				Kind: "Kind",
 				Name: "name",
-				Causes: []metav1.StatusCause{{
-					Type:  metav1.CauseTypeFieldValueInvalid,
+				Causes: []unversioned.StatusCause{{
+					Type:  unversioned.CauseTypeFieldValueInvalid,
 					Field: "field[0].name",
 				}},
 			},
 		},
 		{
 			field.NotFound(field.NewPath("field[0].name"), "bar"),
-			&metav1.StatusDetails{
+			&unversioned.StatusDetails{
 				Kind: "Kind",
 				Name: "name",
-				Causes: []metav1.StatusCause{{
-					Type:  metav1.CauseTypeFieldValueNotFound,
+				Causes: []unversioned.StatusCause{{
+					Type:  unversioned.CauseTypeFieldValueNotFound,
 					Field: "field[0].name",
 				}},
 			},
 		},
 		{
 			field.NotSupported(field.NewPath("field[0].name"), "bar", nil),
-			&metav1.StatusDetails{
+			&unversioned.StatusDetails{
 				Kind: "Kind",
 				Name: "name",
-				Causes: []metav1.StatusCause{{
-					Type:  metav1.CauseTypeFieldValueNotSupported,
+				Causes: []unversioned.StatusCause{{
+					Type:  unversioned.CauseTypeFieldValueNotSupported,
 					Field: "field[0].name",
 				}},
 			},
 		},
 		{
 			field.Required(field.NewPath("field[0].name"), ""),
-			&metav1.StatusDetails{
+			&unversioned.StatusDetails{
 				Kind: "Kind",
 				Name: "name",
-				Causes: []metav1.StatusCause{{
-					Type:  metav1.CauseTypeFieldValueRequired,
+				Causes: []unversioned.StatusCause{{
+					Type:  unversioned.CauseTypeFieldValueRequired,
 					Field: "field[0].name",
 				}},
 			},
@@ -154,7 +153,7 @@ func TestNewInvalid(t *testing.T) {
 		expected.Causes[0].Message = vErr.ErrorBody()
 		err := NewInvalid(api.Kind("Kind"), "name", field.ErrorList{vErr})
 		status := err.ErrStatus
-		if status.Code != 422 || status.Reason != metav1.StatusReasonInvalid {
+		if status.Code != 422 || status.Reason != unversioned.StatusReasonInvalid {
 			t.Errorf("%d: unexpected status: %#v", i, status)
 		}
 		if !reflect.DeepEqual(expected, status.Details) {
@@ -164,21 +163,21 @@ func TestNewInvalid(t *testing.T) {
 }
 
 func Test_reasonForError(t *testing.T) {
-	if e, a := metav1.StatusReasonUnknown, reasonForError(nil); e != a {
+	if e, a := unversioned.StatusReasonUnknown, reasonForError(nil); e != a {
 		t.Errorf("unexpected reason type: %#v", a)
 	}
 }
 
 type TestType struct{}
 
-func (obj *TestType) GetObjectKind() schema.ObjectKind { return schema.EmptyObjectKind }
+func (obj *TestType) GetObjectKind() unversioned.ObjectKind { return unversioned.EmptyObjectKind }
 
 func TestFromObject(t *testing.T) {
 	table := []struct {
 		obj     runtime.Object
 		message string
 	}{
-		{&metav1.Status{Message: "foobar"}, "foobar"},
+		{&unversioned.Status{Message: "foobar"}, "foobar"},
 		{&TestType{}, "unexpected object: &{}"},
 	}
 

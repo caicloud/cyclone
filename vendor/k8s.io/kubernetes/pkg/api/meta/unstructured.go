@@ -17,15 +17,15 @@ limitations under the License.
 package meta
 
 import (
-	"k8s.io/kubernetes/pkg/apis/meta/v1/unstructured"
-	"k8s.io/kubernetes/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/runtime"
 )
 
 // InterfacesForUnstructured returns VersionInterfaces suitable for
-// dealing with unstructured.Unstructured objects.
-func InterfacesForUnstructured(schema.GroupVersion) (*VersionInterfaces, error) {
+// dealing with runtime.Unstructured objects.
+func InterfacesForUnstructured(unversioned.GroupVersion) (*VersionInterfaces, error) {
 	return &VersionInterfaces{
-		ObjectConvertor:  &unstructured.UnstructuredObjectConverter{},
+		ObjectConvertor:  &runtime.UnstructuredObjectConverter{},
 		MetadataAccessor: NewAccessor(),
 	}, nil
 }

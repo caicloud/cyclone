@@ -22,10 +22,9 @@ import (
 	"testing"
 
 	internal "k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/schema"
 )
 
 func TestResourceVersioner(t *testing.T) {
@@ -38,7 +37,7 @@ func TestResourceVersioner(t *testing.T) {
 		t.Errorf("unexpected version %v", version)
 	}
 
-	podList := internal.PodList{ListMeta: metav1.ListMeta{ResourceVersion: "10"}}
+	podList := internal.PodList{ListMeta: unversioned.ListMeta{ResourceVersion: "10"}}
 	version, err = accessor.ResourceVersion(&podList)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -77,7 +76,7 @@ func TestInterfacesFor(t *testing.T) {
 }
 
 func TestRESTMapper(t *testing.T) {
-	gv := schema.GroupVersion{Group: "", Version: "v1"}
+	gv := unversioned.GroupVersion{Group: "", Version: "v1"}
 	rcGVK := gv.WithKind("ReplicationController")
 	podTemplateGVK := gv.WithKind("PodTemplate")
 
@@ -120,7 +119,8 @@ func TestRESTMapper(t *testing.T) {
 
 func TestUnversioned(t *testing.T) {
 	for _, obj := range []runtime.Object{
-		&metav1.Status{},
+		&unversioned.Status{},
+		&unversioned.ExportOptions{},
 	} {
 		if unversioned, ok := internal.Scheme.IsUnversioned(obj); !unversioned || !ok {
 			t.Errorf("%v is expected to be unversioned", reflect.TypeOf(obj))

@@ -19,15 +19,14 @@ package dynamic
 import (
 	"testing"
 
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 func TestDiscoveryRESTMapper(t *testing.T) {
-	resources := []*metav1.APIResourceList{
+	resources := []*unversioned.APIResourceList{
 		{
 			GroupVersion: "test/beta1",
-			APIResources: []metav1.APIResource{
+			APIResources: []unversioned.APIResource{
 				{
 					Name:       "test_kinds",
 					Namespaced: true,
@@ -37,7 +36,7 @@ func TestDiscoveryRESTMapper(t *testing.T) {
 		},
 	}
 
-	gvk := schema.GroupVersionKind{
+	gvk := unversioned.GroupVersionKind{
 		Group:   "test",
 		Version: "beta1",
 		Kind:    "test_kind",
@@ -48,7 +47,7 @@ func TestDiscoveryRESTMapper(t *testing.T) {
 		t.Fatalf("unexpected error creating mapper: %s", err)
 	}
 
-	for _, res := range []schema.GroupVersionResource{
+	for _, res := range []unversioned.GroupVersionResource{
 		{
 			Group:    "test",
 			Version:  "beta1",

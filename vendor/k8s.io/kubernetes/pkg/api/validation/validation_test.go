@@ -26,9 +26,8 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/api/service"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	storageutil "k8s.io/kubernetes/pkg/apis/storage/util"
 	"k8s.io/kubernetes/pkg/capabilities"
 	"k8s.io/kubernetes/pkg/security/apparmor"
 	"k8s.io/kubernetes/pkg/util/intstr"
@@ -105,13 +104,13 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 	falseVar := false
 	testCases := []struct {
 		description          string
-		ownerReferences      []metav1.OwnerReference
+		ownerReferences      []api.OwnerReference
 		expectError          bool
 		expectedErrorMessage string
 	}{
 		{
 			description: "simple success - third party extension.",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "thirdpartyVersion",
 					Kind:       "thirdpartyKind",
@@ -124,7 +123,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple failures - event shouldn't be set as an owner",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "v1",
 					Kind:       "Event",
@@ -137,7 +136,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple controller ref success - one reference with Controller set",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "thirdpartyVersion",
 					Kind:       "thirdpartyKind",
@@ -171,7 +170,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple controller ref failure - two references with Controller set",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "thirdpartyVersion",
 					Kind:       "thirdpartyKind",
@@ -228,21 +227,21 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 func TestValidateObjectMetaUpdateIgnoresCreationTimestamp(t *testing.T) {
 	if errs := ValidateObjectMetaUpdate(
 		&api.ObjectMeta{Name: "test", ResourceVersion: "1"},
-		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: unversioned.NewTime(time.Unix(10, 0))},
 		field.NewPath("field"),
 	); len(errs) != 0 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
 	if errs := ValidateObjectMetaUpdate(
-		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: unversioned.NewTime(time.Unix(10, 0))},
 		&api.ObjectMeta{Name: "test", ResourceVersion: "1"},
 		field.NewPath("field"),
 	); len(errs) != 0 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
 	if errs := ValidateObjectMetaUpdate(
-		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
-		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(11, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: unversioned.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: unversioned.NewTime(time.Unix(11, 0))},
 		field.NewPath("field"),
 	); len(errs) != 0 {
 		t.Fatalf("unexpected errors: %v", errs)
@@ -256,18 +255,18 @@ func TestValidateFinalizersUpdate(t *testing.T) {
 		ExpectedErr string
 	}{
 		"invalid adding finalizers": {
-			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
-			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a", "y/b"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/a"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/a", "y/b"}},
 			ExpectedErr: "y/b",
 		},
 		"invalid changing finalizers": {
-			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
-			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/b"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/a"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/b"}},
 			ExpectedErr: "x/b",
 		},
 		"valid removing finalizers": {
-			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a", "y/b"}},
-			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/a", "y/b"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &unversioned.Time{}, Finalizers: []string{"x/a"}},
 			ExpectedErr: "",
 		},
 		"valid adding finalizers for objects not being deleted": {
@@ -289,8 +288,8 @@ func TestValidateFinalizersUpdate(t *testing.T) {
 }
 
 func TestValidateObjectMetaUpdatePreventsDeletionFieldMutation(t *testing.T) {
-	now := metav1.NewTime(time.Unix(1000, 0).UTC())
-	later := metav1.NewTime(time.Unix(2000, 0).UTC())
+	now := unversioned.NewTime(time.Unix(1000, 0).UTC())
+	later := unversioned.NewTime(time.Unix(2000, 0).UTC())
 	gracePeriodShort := int64(30)
 	gracePeriodLong := int64(40)
 
@@ -662,36 +661,6 @@ func testVolumeClaim(name string, namespace string, spec api.PersistentVolumeCla
 	}
 }
 
-func testVolumeClaimStorageClass(name string, namespace string, annval string, spec api.PersistentVolumeClaimSpec) *api.PersistentVolumeClaim {
-	annotations := map[string]string{
-		storageutil.StorageClassAnnotation: annval,
-	}
-
-	return &api.PersistentVolumeClaim{
-		ObjectMeta: api.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Annotations: annotations,
-		},
-		Spec: spec,
-	}
-}
-
-func testVolumeClaimAnnotation(name string, namespace string, ann string, annval string, spec api.PersistentVolumeClaimSpec) *api.PersistentVolumeClaim {
-	annotations := map[string]string{
-		ann: annval,
-	}
-
-	return &api.PersistentVolumeClaim{
-		ObjectMeta: api.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Annotations: annotations,
-		},
-		Spec: spec,
-	}
-}
-
 func TestValidatePersistentVolumeClaim(t *testing.T) {
 	scenarios := map[string]struct {
 		isExpectedFailure bool
@@ -700,8 +669,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 		"good-claim": {
 			isExpectedFailure: false,
 			claim: testVolumeClaim("foo", "ns", api.PersistentVolumeClaimSpec{
-				Selector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
+				Selector: &unversioned.LabelSelector{
+					MatchExpressions: []unversioned.LabelSelectorRequirement{
 						{
 							Key:      "key2",
 							Operator: "Exists",
@@ -722,8 +691,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 		"invalid-label-selector": {
 			isExpectedFailure: true,
 			claim: testVolumeClaim("foo", "ns", api.PersistentVolumeClaimSpec{
-				Selector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
+				Selector: &unversioned.LabelSelector{
+					MatchExpressions: []unversioned.LabelSelectorRequirement{
 						{
 							Key:      "key2",
 							Operator: "InvalidOp",
@@ -801,8 +770,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 		"negative-storage-request": {
 			isExpectedFailure: true,
 			claim: testVolumeClaim("foo", "ns", api.PersistentVolumeClaimSpec{
-				Selector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
+				Selector: &unversioned.LabelSelector{
+					MatchExpressions: []unversioned.LabelSelectorRequirement{
 						{
 							Key:      "key2",
 							Operator: "Exists",
@@ -837,26 +806,6 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 	validClaim := testVolumeClaim("foo", "ns", api.PersistentVolumeClaimSpec{
 		AccessModes: []api.PersistentVolumeAccessMode{
 			api.ReadWriteOnce,
-			api.ReadOnlyMany,
-		},
-		Resources: api.ResourceRequirements{
-			Requests: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
-			},
-		},
-	})
-	validClaimStorageClass := testVolumeClaimStorageClass("foo", "ns", "fast", api.PersistentVolumeClaimSpec{
-		AccessModes: []api.PersistentVolumeAccessMode{
-			api.ReadOnlyMany,
-		},
-		Resources: api.ResourceRequirements{
-			Requests: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
-			},
-		},
-	})
-	validClaimAnnotation := testVolumeClaimAnnotation("foo", "ns", "description", "foo-description", api.PersistentVolumeClaimSpec{
-		AccessModes: []api.PersistentVolumeAccessMode{
 			api.ReadOnlyMany,
 		},
 		Resources: api.ResourceRequirements{
@@ -900,40 +849,6 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 		},
 		VolumeName: "volume",
 	})
-	invalidUpdateClaimStorageClass := testVolumeClaimStorageClass("foo", "ns", "fast2", api.PersistentVolumeClaimSpec{
-		AccessModes: []api.PersistentVolumeAccessMode{
-			api.ReadOnlyMany,
-		},
-		Resources: api.ResourceRequirements{
-			Requests: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
-			},
-		},
-		VolumeName: "volume",
-	})
-	validUpdateClaimMutableAnnotation := testVolumeClaimAnnotation("foo", "ns", "description", "updated-or-added-foo-description", api.PersistentVolumeClaimSpec{
-		AccessModes: []api.PersistentVolumeAccessMode{
-			api.ReadOnlyMany,
-		},
-		Resources: api.ResourceRequirements{
-			Requests: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
-			},
-		},
-		VolumeName: "volume",
-	})
-	validAddClaimAnnotation := testVolumeClaimAnnotation("foo", "ns", "description", "updated-or-added-foo-description", api.PersistentVolumeClaimSpec{
-		AccessModes: []api.PersistentVolumeAccessMode{
-			api.ReadWriteOnce,
-			api.ReadOnlyMany,
-		},
-		Resources: api.ResourceRequirements{
-			Requests: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
-			},
-		},
-		VolumeName: "volume",
-	})
 	scenarios := map[string]struct {
 		isExpectedFailure bool
 		oldClaim          *api.PersistentVolumeClaim
@@ -958,21 +873,6 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			isExpectedFailure: true,
 			oldClaim:          validUpdateClaim,
 			newClaim:          invalidUpdateClaimAccessModes,
-		},
-		"invalid-update-change-storage-class-annotation-after-creation": {
-			isExpectedFailure: true,
-			oldClaim:          validClaimStorageClass,
-			newClaim:          invalidUpdateClaimStorageClass,
-		},
-		"valid-update-mutable-annotation": {
-			isExpectedFailure: false,
-			oldClaim:          validClaimAnnotation,
-			newClaim:          validUpdateClaimMutableAnnotation,
-		},
-		"valid-update-add-annotation": {
-			isExpectedFailure: false,
-			oldClaim:          validClaim,
-			newClaim:          validAddClaimAnnotation,
 		},
 	}
 
@@ -2545,14 +2445,6 @@ func TestValidateEnv(t *testing.T) {
 				},
 			}},
 			expectedError: "[0].valueFrom: Invalid value: \"\": may not be specified when `value` is not empty",
-		},
-		{
-			name: "valueFrom without a source",
-			envs: []api.EnvVar{{
-				Name:      "abc",
-				ValueFrom: &api.EnvVarSource{},
-			}},
-			expectedError: "[0].valueFrom: Invalid value: \"\": must specify one of: `fieldRef`, `resourceFieldRef`, `configMapKeyRef` or `secretKeyRef`",
 		},
 		{
 			name: "valueFrom.fieldRef and valueFrom.secretKeyRef specified",
@@ -4430,7 +4322,7 @@ func TestValidatePodUpdate(t *testing.T) {
 		activeDeadlineSecondsPositive = int64(30)
 		activeDeadlineSecondsLarger   = int64(31)
 
-		now    = metav1.Now()
+		now    = unversioned.Now()
 		grace  = int64(30)
 		grace2 = int64(31)
 	)
@@ -7762,7 +7654,7 @@ func TestValidateNamespaceFinalizeUpdate(t *testing.T) {
 }
 
 func TestValidateNamespaceStatusUpdate(t *testing.T) {
-	now := metav1.Now()
+	now := unversioned.Now()
 
 	tests := []struct {
 		oldNamespace api.Namespace
@@ -8509,7 +8401,7 @@ func fakeValidSecurityContext(priv bool) *api.SecurityContext {
 }
 
 func TestValidPodLogOptions(t *testing.T) {
-	now := metav1.Now()
+	now := unversioned.Now()
 	negative := int64(-1)
 	zero := int64(0)
 	positive := int64(1)
@@ -8788,7 +8680,7 @@ func newNodeNameEndpoint(nodeName string) *api.Endpoints {
 }
 
 func TestEndpointAddressNodeNameUpdateRestrictions(t *testing.T) {
-	oldEndpoint := newNodeNameEndpoint("kubernetes-node-setup-by-backend")
+	oldEndpoint := newNodeNameEndpoint("kubernetes-minion-setup-by-backend")
 	updatedEndpoint := newNodeNameEndpoint("kubernetes-changed-nodename")
 	// Check that NodeName cannot be changed during update (if already set)
 	errList := ValidateEndpoints(updatedEndpoint)

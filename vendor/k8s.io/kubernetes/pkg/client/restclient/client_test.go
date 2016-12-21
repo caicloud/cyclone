@@ -30,10 +30,9 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/testapi"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/schema"
 	"k8s.io/kubernetes/pkg/util/diff"
 	utiltesting "k8s.io/kubernetes/pkg/util/testing"
 )
@@ -43,7 +42,7 @@ type TestParam struct {
 	expectingError        bool
 	actualCreated         bool
 	expCreated            bool
-	expStatus             *metav1.Status
+	expStatus             *unversioned.Status
 	testBody              bool
 	testBodyErrorIsNotNil bool
 }
@@ -52,7 +51,7 @@ type TestParam struct {
 func TestSerializer(t *testing.T) {
 	contentConfig := ContentConfig{
 		ContentType:          "application/json",
-		GroupVersion:         &schema.GroupVersion{Group: "other", Version: runtime.APIVersionInternal},
+		GroupVersion:         &unversioned.GroupVersion{Group: "other", Version: runtime.APIVersionInternal},
 		NegotiatedSerializer: api.Codecs,
 	}
 
@@ -84,12 +83,12 @@ func TestDoRequestSuccess(t *testing.T) {
 }
 
 func TestDoRequestFailed(t *testing.T) {
-	status := &metav1.Status{
+	status := &unversioned.Status{
 		Code:    http.StatusNotFound,
-		Status:  metav1.StatusFailure,
-		Reason:  metav1.StatusReasonNotFound,
+		Status:  unversioned.StatusFailure,
+		Reason:  unversioned.StatusReasonNotFound,
 		Message: " \"\" not found",
-		Details: &metav1.StatusDetails{},
+		Details: &unversioned.StatusDetails{},
 	}
 	expectedBody, _ := runtime.Encode(testapi.Default.Codec(), status)
 	fakeHandler := utiltesting.FakeHandler{
@@ -119,14 +118,14 @@ func TestDoRequestFailed(t *testing.T) {
 }
 
 func TestDoRawRequestFailed(t *testing.T) {
-	status := &metav1.Status{
+	status := &unversioned.Status{
 		Code:    http.StatusNotFound,
-		Status:  metav1.StatusFailure,
-		Reason:  metav1.StatusReasonNotFound,
+		Status:  unversioned.StatusFailure,
+		Reason:  unversioned.StatusReasonNotFound,
 		Message: "the server could not find the requested resource",
-		Details: &metav1.StatusDetails{
-			Causes: []metav1.StatusCause{
-				{Type: metav1.CauseTypeUnexpectedServerResponse, Message: "unknown"},
+		Details: &unversioned.StatusDetails{
+			Causes: []unversioned.StatusCause{
+				{Type: unversioned.CauseTypeUnexpectedServerResponse, Message: "unknown"},
 			},
 		},
 	}
@@ -314,8 +313,8 @@ func TestCreateBackoffManager(t *testing.T) {
 
 }
 
-func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting.FakeHandler, *metav1.Status) {
-	status := &metav1.Status{Status: fmt.Sprintf("%s", metav1.StatusSuccess)}
+func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting.FakeHandler, *unversioned.Status) {
+	status := &unversioned.Status{Status: fmt.Sprintf("%s", unversioned.StatusSuccess)}
 	expectedBody, _ := runtime.Encode(testapi.Default.Codec(), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   statusCode,

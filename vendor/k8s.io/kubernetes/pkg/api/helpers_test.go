@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api/resource"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/labels"
 )
 
@@ -439,7 +438,7 @@ func TestGetAvoidPodsFromNode(t *testing.T) {
 				PreferAvoidPods: []PreferAvoidPodsEntry{
 					{
 						PodSignature: PodSignature{
-							PodController: &metav1.OwnerReference{
+							PodController: &OwnerReference{
 								APIVersion: "v1",
 								Kind:       "ReplicationController",
 								Name:       "foo",

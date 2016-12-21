@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/kubernetes/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
 	"k8s.io/kubernetes/pkg/util/sets"
 )
@@ -51,8 +51,8 @@ func (m MultiRESTMapper) ResourceSingularizer(resource string) (singular string,
 	return
 }
 
-func (m MultiRESTMapper) ResourcesFor(resource schema.GroupVersionResource) ([]schema.GroupVersionResource, error) {
-	allGVRs := []schema.GroupVersionResource{}
+func (m MultiRESTMapper) ResourcesFor(resource unversioned.GroupVersionResource) ([]unversioned.GroupVersionResource, error) {
+	allGVRs := []unversioned.GroupVersionResource{}
 	for _, t := range m {
 		gvrs, err := t.ResourcesFor(resource)
 		// ignore "no match" errors, but any other error percolates back up
@@ -86,8 +86,8 @@ func (m MultiRESTMapper) ResourcesFor(resource schema.GroupVersionResource) ([]s
 	return allGVRs, nil
 }
 
-func (m MultiRESTMapper) KindsFor(resource schema.GroupVersionResource) (gvk []schema.GroupVersionKind, err error) {
-	allGVKs := []schema.GroupVersionKind{}
+func (m MultiRESTMapper) KindsFor(resource unversioned.GroupVersionResource) (gvk []unversioned.GroupVersionKind, err error) {
+	allGVKs := []unversioned.GroupVersionKind{}
 	for _, t := range m {
 		gvks, err := t.KindsFor(resource)
 		// ignore "no match" errors, but any other error percolates back up
@@ -121,34 +121,34 @@ func (m MultiRESTMapper) KindsFor(resource schema.GroupVersionResource) (gvk []s
 	return allGVKs, nil
 }
 
-func (m MultiRESTMapper) ResourceFor(resource schema.GroupVersionResource) (schema.GroupVersionResource, error) {
+func (m MultiRESTMapper) ResourceFor(resource unversioned.GroupVersionResource) (unversioned.GroupVersionResource, error) {
 	resources, err := m.ResourcesFor(resource)
 	if err != nil {
-		return schema.GroupVersionResource{}, err
+		return unversioned.GroupVersionResource{}, err
 	}
 	if len(resources) == 1 {
 		return resources[0], nil
 	}
 
-	return schema.GroupVersionResource{}, &AmbiguousResourceError{PartialResource: resource, MatchingResources: resources}
+	return unversioned.GroupVersionResource{}, &AmbiguousResourceError{PartialResource: resource, MatchingResources: resources}
 }
 
-func (m MultiRESTMapper) KindFor(resource schema.GroupVersionResource) (schema.GroupVersionKind, error) {
+func (m MultiRESTMapper) KindFor(resource unversioned.GroupVersionResource) (unversioned.GroupVersionKind, error) {
 	kinds, err := m.KindsFor(resource)
 	if err != nil {
-		return schema.GroupVersionKind{}, err
+		return unversioned.GroupVersionKind{}, err
 	}
 	if len(kinds) == 1 {
 		return kinds[0], nil
 	}
 
-	return schema.GroupVersionKind{}, &AmbiguousResourceError{PartialResource: resource, MatchingKinds: kinds}
+	return unversioned.GroupVersionKind{}, &AmbiguousResourceError{PartialResource: resource, MatchingKinds: kinds}
 }
 
 // RESTMapping provides the REST mapping for the resource based on the
 // kind and version. This implementation supports multiple REST schemas and
 // return the first match.
-func (m MultiRESTMapper) RESTMapping(gk schema.GroupKind, versions ...string) (*RESTMapping, error) {
+func (m MultiRESTMapper) RESTMapping(gk unversioned.GroupKind, versions ...string) (*RESTMapping, error) {
 	allMappings := []*RESTMapping{}
 	errors := []error{}
 
@@ -171,7 +171,7 @@ func (m MultiRESTMapper) RESTMapping(gk schema.GroupKind, versions ...string) (*
 		return allMappings[0], nil
 	}
 	if len(allMappings) > 1 {
-		var kinds []schema.GroupVersionKind
+		var kinds []unversioned.GroupVersionKind
 		for _, m := range allMappings {
 			kinds = append(kinds, m.GroupVersionKind)
 		}
@@ -185,12 +185,12 @@ func (m MultiRESTMapper) RESTMapping(gk schema.GroupKind, versions ...string) (*
 
 // RESTMappings returns all possible RESTMappings for the provided group kind, or an error
 // if the type is not recognized.
-func (m MultiRESTMapper) RESTMappings(gk schema.GroupKind, versions ...string) ([]*RESTMapping, error) {
+func (m MultiRESTMapper) RESTMappings(gk unversioned.GroupKind) ([]*RESTMapping, error) {
 	var allMappings []*RESTMapping
 	var errors []error
 
 	for _, t := range m {
-		currMappings, err := t.RESTMappings(gk, versions...)
+		currMappings, err := t.RESTMappings(gk)
 		// ignore "no match" errors, but any other error percolates back up
 		if IsNoMatchError(err) {
 			continue

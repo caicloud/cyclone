@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 func TestPriorityRESTMapperResourceForErrorHandling(t *testing.T) {
@@ -30,18 +30,18 @@ func TestPriorityRESTMapperResourceForErrorHandling(t *testing.T) {
 		name string
 
 		delegate         RESTMapper
-		resourcePatterns []schema.GroupVersionResource
-		result           schema.GroupVersionResource
+		resourcePatterns []unversioned.GroupVersionResource
+		result           unversioned.GroupVersionResource
 		err              string
 	}{
 		{
 			name:     "single hit",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{{Resource: "single-hit"}}},
-			result:   schema.GroupVersionResource{Resource: "single-hit"},
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{{Resource: "single-hit"}}},
+			result:   unversioned.GroupVersionResource{Resource: "single-hit"},
 		},
 		{
 			name: "ambiguous match",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{
 				{Group: "one", Version: "a", Resource: "first"},
 				{Group: "two", Version: "b", Resource: "second"},
 			}},
@@ -49,57 +49,57 @@ func TestPriorityRESTMapperResourceForErrorHandling(t *testing.T) {
 		},
 		{
 			name: "group selection",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{
 				{Group: "one", Version: "a", Resource: "first"},
 				{Group: "two", Version: "b", Resource: "second"},
 			}},
-			resourcePatterns: []schema.GroupVersionResource{
+			resourcePatterns: []unversioned.GroupVersionResource{
 				{Group: "one", Version: AnyVersion, Resource: AnyResource},
 			},
-			result: schema.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
+			result: unversioned.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
 		},
 		{
 			name: "empty match continues",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{
 				{Group: "one", Version: "a", Resource: "first"},
 				{Group: "two", Version: "b", Resource: "second"},
 			}},
-			resourcePatterns: []schema.GroupVersionResource{
+			resourcePatterns: []unversioned.GroupVersionResource{
 				{Group: "fail", Version: AnyVersion, Resource: AnyResource},
 				{Group: "one", Version: AnyVersion, Resource: AnyResource},
 			},
-			result: schema.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
+			result: unversioned.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
 		},
 		{
 			name: "group followed by version selection",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{
 				{Group: "one", Version: "a", Resource: "first"},
 				{Group: "two", Version: "b", Resource: "second"},
 				{Group: "one", Version: "c", Resource: "third"},
 			}},
-			resourcePatterns: []schema.GroupVersionResource{
+			resourcePatterns: []unversioned.GroupVersionResource{
 				{Group: "one", Version: AnyVersion, Resource: AnyResource},
 				{Group: AnyGroup, Version: "a", Resource: AnyResource},
 			},
-			result: schema.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
+			result: unversioned.GroupVersionResource{Group: "one", Version: "a", Resource: "first"},
 		},
 		{
 			name: "resource selection",
-			delegate: fixedRESTMapper{resourcesFor: []schema.GroupVersionResource{
+			delegate: fixedRESTMapper{resourcesFor: []unversioned.GroupVersionResource{
 				{Group: "one", Version: "a", Resource: "first"},
 				{Group: "one", Version: "a", Resource: "second"},
 			}},
-			resourcePatterns: []schema.GroupVersionResource{
+			resourcePatterns: []unversioned.GroupVersionResource{
 				{Group: AnyGroup, Version: AnyVersion, Resource: "second"},
 			},
-			result: schema.GroupVersionResource{Group: "one", Version: "a", Resource: "second"},
+			result: unversioned.GroupVersionResource{Group: "one", Version: "a", Resource: "second"},
 		},
 	}
 
 	for _, tc := range tcs {
 		mapper := PriorityRESTMapper{Delegate: tc.delegate, ResourcePriority: tc.resourcePatterns}
 
-		actualResult, actualErr := mapper.ResourceFor(schema.GroupVersionResource{})
+		actualResult, actualErr := mapper.ResourceFor(unversioned.GroupVersionResource{})
 		if e, a := tc.result, actualResult; e != a {
 			t.Errorf("%s: expected %v, got %v", tc.name, e, a)
 		}
@@ -121,18 +121,18 @@ func TestPriorityRESTMapperKindForErrorHandling(t *testing.T) {
 		name string
 
 		delegate     RESTMapper
-		kindPatterns []schema.GroupVersionKind
-		result       schema.GroupVersionKind
+		kindPatterns []unversioned.GroupVersionKind
+		result       unversioned.GroupVersionKind
 		err          string
 	}{
 		{
 			name:     "single hit",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{{Kind: "single-hit"}}},
-			result:   schema.GroupVersionKind{Kind: "single-hit"},
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{{Kind: "single-hit"}}},
+			result:   unversioned.GroupVersionKind{Kind: "single-hit"},
 		},
 		{
 			name: "ambiguous match",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{
 				{Group: "one", Version: "a", Kind: "first"},
 				{Group: "two", Version: "b", Kind: "second"},
 			}},
@@ -140,57 +140,57 @@ func TestPriorityRESTMapperKindForErrorHandling(t *testing.T) {
 		},
 		{
 			name: "group selection",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{
 				{Group: "one", Version: "a", Kind: "first"},
 				{Group: "two", Version: "b", Kind: "second"},
 			}},
-			kindPatterns: []schema.GroupVersionKind{
+			kindPatterns: []unversioned.GroupVersionKind{
 				{Group: "one", Version: AnyVersion, Kind: AnyKind},
 			},
-			result: schema.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
+			result: unversioned.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
 		},
 		{
 			name: "empty match continues",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{
 				{Group: "one", Version: "a", Kind: "first"},
 				{Group: "two", Version: "b", Kind: "second"},
 			}},
-			kindPatterns: []schema.GroupVersionKind{
+			kindPatterns: []unversioned.GroupVersionKind{
 				{Group: "fail", Version: AnyVersion, Kind: AnyKind},
 				{Group: "one", Version: AnyVersion, Kind: AnyKind},
 			},
-			result: schema.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
+			result: unversioned.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
 		},
 		{
 			name: "group followed by version selection",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{
 				{Group: "one", Version: "a", Kind: "first"},
 				{Group: "two", Version: "b", Kind: "second"},
 				{Group: "one", Version: "c", Kind: "third"},
 			}},
-			kindPatterns: []schema.GroupVersionKind{
+			kindPatterns: []unversioned.GroupVersionKind{
 				{Group: "one", Version: AnyVersion, Kind: AnyKind},
 				{Group: AnyGroup, Version: "a", Kind: AnyKind},
 			},
-			result: schema.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
+			result: unversioned.GroupVersionKind{Group: "one", Version: "a", Kind: "first"},
 		},
 		{
 			name: "kind selection",
-			delegate: fixedRESTMapper{kindsFor: []schema.GroupVersionKind{
+			delegate: fixedRESTMapper{kindsFor: []unversioned.GroupVersionKind{
 				{Group: "one", Version: "a", Kind: "first"},
 				{Group: "one", Version: "a", Kind: "second"},
 			}},
-			kindPatterns: []schema.GroupVersionKind{
+			kindPatterns: []unversioned.GroupVersionKind{
 				{Group: AnyGroup, Version: AnyVersion, Kind: "second"},
 			},
-			result: schema.GroupVersionKind{Group: "one", Version: "a", Kind: "second"},
+			result: unversioned.GroupVersionKind{Group: "one", Version: "a", Kind: "second"},
 		},
 	}
 
 	for _, tc := range tcs {
 		mapper := PriorityRESTMapper{Delegate: tc.delegate, KindPriority: tc.kindPatterns}
 
-		actualResult, actualErr := mapper.KindFor(schema.GroupVersionResource{})
+		actualResult, actualErr := mapper.KindFor(unversioned.GroupVersionResource{})
 		if e, a := tc.result, actualResult; e != a {
 			t.Errorf("%s: expected %v, got %v", tc.name, e, a)
 		}
@@ -209,13 +209,13 @@ func TestPriorityRESTMapperKindForErrorHandling(t *testing.T) {
 
 func TestPriorityRESTMapperRESTMapping(t *testing.T) {
 	mapping1 := &RESTMapping{
-		GroupVersionKind: schema.GroupVersionKind{Kind: "Foo", Version: "v1alpha1"},
+		GroupVersionKind: unversioned.GroupVersionKind{Kind: "Foo", Version: "v1alpha1"},
 	}
 	mapping2 := &RESTMapping{
-		GroupVersionKind: schema.GroupVersionKind{Kind: "Foo", Version: "v1"},
+		GroupVersionKind: unversioned.GroupVersionKind{Kind: "Foo", Version: "v1"},
 	}
 	mapping3 := &RESTMapping{
-		GroupVersionKind: schema.GroupVersionKind{Group: "other", Kind: "Foo", Version: "v1"},
+		GroupVersionKind: unversioned.GroupVersionKind{Group: "other", Kind: "Foo", Version: "v1"},
 	}
 	allMappers := MultiRESTMapper{
 		fixedRESTMapper{mappings: []*RESTMapping{mapping1}},
@@ -226,26 +226,26 @@ func TestPriorityRESTMapperRESTMapping(t *testing.T) {
 		name string
 
 		mapper PriorityRESTMapper
-		input  schema.GroupKind
+		input  unversioned.GroupKind
 		result *RESTMapping
 		err    error
 	}{
 		{
 			name:   "empty",
 			mapper: PriorityRESTMapper{Delegate: MultiRESTMapper{}},
-			input:  schema.GroupKind{Kind: "Foo"},
-			err:    &NoKindMatchError{PartialKind: schema.GroupVersionKind{Kind: "Foo"}},
+			input:  unversioned.GroupKind{Kind: "Foo"},
+			err:    &NoKindMatchError{PartialKind: unversioned.GroupVersionKind{Kind: "Foo"}},
 		},
 		{
 			name:   "ignore not found",
-			mapper: PriorityRESTMapper{Delegate: MultiRESTMapper{fixedRESTMapper{err: &NoKindMatchError{PartialKind: schema.GroupVersionKind{Kind: "IGNORE_THIS"}}}}},
-			input:  schema.GroupKind{Kind: "Foo"},
-			err:    &NoKindMatchError{PartialKind: schema.GroupVersionKind{Kind: "Foo"}},
+			mapper: PriorityRESTMapper{Delegate: MultiRESTMapper{fixedRESTMapper{err: &NoKindMatchError{PartialKind: unversioned.GroupVersionKind{Kind: "IGNORE_THIS"}}}}},
+			input:  unversioned.GroupKind{Kind: "Foo"},
+			err:    &NoKindMatchError{PartialKind: unversioned.GroupVersionKind{Kind: "Foo"}},
 		},
 		{
 			name:   "accept first failure",
 			mapper: PriorityRESTMapper{Delegate: MultiRESTMapper{fixedRESTMapper{err: errors.New("fail on this")}, fixedRESTMapper{mappings: []*RESTMapping{mapping1}}}},
-			input:  schema.GroupKind{Kind: "Foo"},
+			input:  unversioned.GroupKind{Kind: "Foo"},
 			err:    errors.New("fail on this"),
 		},
 		{
@@ -253,10 +253,10 @@ func TestPriorityRESTMapperRESTMapping(t *testing.T) {
 			mapper: PriorityRESTMapper{
 				Delegate: allMappers,
 			},
-			input: schema.GroupKind{Kind: "Foo"},
+			input: unversioned.GroupKind{Kind: "Foo"},
 			err: &AmbiguousKindError{
-				PartialKind: schema.GroupVersionKind{Kind: "Foo"},
-				MatchingKinds: []schema.GroupVersionKind{
+				PartialKind: unversioned.GroupVersionKind{Kind: "Foo"},
+				MatchingKinds: []unversioned.GroupVersionKind{
 					{Kind: "Foo", Version: "v1alpha1"},
 					{Kind: "Foo", Version: "v1"},
 					{Group: "other", Kind: "Foo", Version: "v1"},
@@ -268,25 +268,25 @@ func TestPriorityRESTMapperRESTMapping(t *testing.T) {
 			mapper: PriorityRESTMapper{
 				Delegate: fixedRESTMapper{mappings: []*RESTMapping{mapping1}},
 			},
-			input:  schema.GroupKind{Kind: "Foo"},
+			input:  unversioned.GroupKind{Kind: "Foo"},
 			result: mapping1,
 		},
 		{
 			name: "return single priority",
 			mapper: PriorityRESTMapper{
 				Delegate:     allMappers,
-				KindPriority: []schema.GroupVersionKind{{Version: "v1", Kind: AnyKind}, {Version: "v1alpha1", Kind: AnyKind}},
+				KindPriority: []unversioned.GroupVersionKind{{Version: "v1", Kind: AnyKind}, {Version: "v1alpha1", Kind: AnyKind}},
 			},
-			input:  schema.GroupKind{Kind: "Foo"},
+			input:  unversioned.GroupKind{Kind: "Foo"},
 			result: mapping2,
 		},
 		{
 			name: "return out of group match",
 			mapper: PriorityRESTMapper{
 				Delegate:     allMappers,
-				KindPriority: []schema.GroupVersionKind{{Group: AnyGroup, Version: "v1", Kind: AnyKind}, {Group: "other", Version: AnyVersion, Kind: AnyKind}},
+				KindPriority: []unversioned.GroupVersionKind{{Group: AnyGroup, Version: "v1", Kind: AnyKind}, {Group: "other", Version: AnyVersion, Kind: AnyKind}},
 			},
-			input:  schema.GroupKind{Kind: "Foo"},
+			input:  unversioned.GroupKind{Kind: "Foo"},
 			result: mapping3,
 		},
 	}
@@ -305,42 +305,5 @@ func TestPriorityRESTMapperRESTMapping(t *testing.T) {
 		case tc.err.Error() != actualErr.Error():
 			t.Errorf("%s: expected %v, got %v", tc.name, tc.err, actualErr)
 		}
-	}
-}
-
-func TestPriorityRESTMapperRESTMappingHonorsUserVersion(t *testing.T) {
-	mappingV2alpha1 := &RESTMapping{
-		GroupVersionKind: schema.GroupVersionKind{Group: "Bar", Kind: "Foo", Version: "v2alpha1"},
-	}
-	mappingV1 := &RESTMapping{
-		GroupVersionKind: schema.GroupVersionKind{Group: "Bar", Kind: "Foo", Version: "v1"},
-	}
-
-	allMappers := MultiRESTMapper{
-		fixedRESTMapper{mappings: []*RESTMapping{mappingV2alpha1}},
-		fixedRESTMapper{mappings: []*RESTMapping{mappingV1}},
-	}
-
-	mapper := PriorityRESTMapper{
-		Delegate:     allMappers,
-		KindPriority: []schema.GroupVersionKind{{Group: "Bar", Version: "v2alpha1", Kind: AnyKind}, {Group: "Bar", Version: AnyVersion, Kind: AnyKind}},
-	}
-
-	outMapping1, err := mapper.RESTMapping(schema.GroupKind{Group: "Bar", Kind: "Foo"}, "v1")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-
-	if outMapping1 != mappingV1 {
-		t.Errorf("asked for version %v, expected mapping for %v, got mapping for %v", "v1", mappingV1.GroupVersionKind, outMapping1.GroupVersionKind)
-	}
-
-	outMapping2, err := mapper.RESTMapping(schema.GroupKind{Group: "Bar", Kind: "Foo"}, "v2alpha1")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-
-	if outMapping2 != mappingV2alpha1 {
-		t.Errorf("asked for version %v, expected mapping for %v, got mapping for %v", "v2alpha1", mappingV2alpha1.GroupVersionKind, outMapping2.GroupVersionKind)
 	}
 }

@@ -1,10 +1,12 @@
-hash: 4aafc101a26622509c93481300c75800eee820eac2d23b179f34b7d04f1ae294
-updated: 2016-12-21T12:03:18.357646094+08:00
+hash: 69cdab268588e29eb3b60200c810afac0a73fd3be829eb22863ccc053500340e
+updated: 2016-12-21T15:51:13.08969142+08:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: 70b2c90b260171e829f1ebd7c17f600c11858dbe
   subpackages:
   - winterm
+- name: github.com/blang/semver
+  version: 31b736133b98f26d5e078ec9eb591666edfd091f
 - name: github.com/buildkite/terminal
   version: cd166b814357bd410f518f02862ec012122bba02
 - name: github.com/coreos/etcd
@@ -29,7 +31,7 @@ imports:
   - httputil
   - timeutil
 - name: github.com/davecgh/go-spew
-  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/djherbis/buffer
@@ -79,9 +81,9 @@ imports:
   - sockets
   - tlsconfig
 - name: github.com/docker/go-units
-  version: e30f1e79f3cd72542f2026ceec18d3bd67ab859c
+  version: 0bbddae09c5a5419a8c6dcdd7ff90da3d450393b
 - name: github.com/emicklei/go-restful
-  version: 09691a3b6378b740595c1002f40c34dd5f218a22
+  version: 89ef8af493ab468a45a42bb0d89a06fccdd2fb22
   subpackages:
   - log
   - swagger
@@ -123,7 +125,7 @@ imports:
   subpackages:
   - query
 - name: github.com/google/gofuzz
-  version: 44d81051d367757e1c7c6a5a86423ece9afcf63c
+  version: bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5
 - name: github.com/hashicorp/go-cleanhttp
   version: ad28ea4487f05916463e2423a55166280e8254b5
 - name: github.com/jonboulle/clockwork
@@ -257,7 +259,7 @@ imports:
 - name: gopkg.in/yaml.v2
   version: bef53efd0c76e49e6de55ead051f886bea7e9420
 - name: k8s.io/kubernetes
-  version: 9eb82fadc48c7120e64df7be83bec4331099e29b
+  version: 58b7c16a52c03e4a849874602be42ee71afdcab1
   repo: https://github.com/kubernetes/kubernetes
   subpackages:
   - pkg/api
@@ -265,9 +267,12 @@ imports:
   - pkg/api/errors
   - pkg/api/install
   - pkg/api/meta
+  - pkg/api/meta/metatypes
   - pkg/api/pod
   - pkg/api/resource
   - pkg/api/service
+  - pkg/api/unversioned
+  - pkg/api/unversioned/validation
   - pkg/api/util
   - pkg/api/v1
   - pkg/api/validation
@@ -300,9 +305,6 @@ imports:
   - pkg/apis/extensions
   - pkg/apis/extensions/install
   - pkg/apis/extensions/v1beta1
-  - pkg/apis/meta/v1
-  - pkg/apis/meta/v1/unstructured
-  - pkg/apis/meta/v1/validation
   - pkg/apis/policy
   - pkg/apis/policy/install
   - pkg/apis/policy/v1beta1
@@ -311,7 +313,6 @@ imports:
   - pkg/apis/rbac/v1alpha1
   - pkg/apis/storage
   - pkg/apis/storage/install
-  - pkg/apis/storage/util
   - pkg/apis/storage/v1beta1
   - pkg/auth/user
   - pkg/capabilities
@@ -343,7 +344,6 @@ imports:
   - pkg/labels
   - pkg/master/ports
   - pkg/runtime
-  - pkg/runtime/schema
   - pkg/runtime/serializer
   - pkg/runtime/serializer/json
   - pkg/runtime/serializer/protobuf

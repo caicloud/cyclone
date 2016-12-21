@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api/testapi"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/util/sets"
 )
 
@@ -80,27 +80,27 @@ func TestListTypes(t *testing.T) {
 }
 
 type WithoutMetaDataList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta
+	unversioned.TypeMeta `json:",inline"`
+	unversioned.ListMeta
 	Items []interface{} `json:"items"`
 }
 
 type WithoutItemsList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	unversioned.TypeMeta `json:",inline"`
+	unversioned.ListMeta `json:"metadata,omitempty"`
 }
 
 type WrongItemsJSONTagList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []interface{} `json:"items,omitempty"`
+	unversioned.TypeMeta `json:",inline"`
+	unversioned.ListMeta `json:"metadata,omitempty"`
+	Items                []interface{} `json:"items,omitempty"`
 }
 
 // If a type has Items, its name should end with "List"
 type ListWithWrongName struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []interface{} `json:"items"`
+	unversioned.TypeMeta `json:",inline"`
+	unversioned.ListMeta `json:"metadata,omitempty"`
+	Items                []interface{} `json:"items"`
 }
 
 // TestValidateListType verifies the validateListType function reports error on

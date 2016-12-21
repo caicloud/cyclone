@@ -19,7 +19,6 @@ package internalversion
 import (
 	api "k8s.io/kubernetes/pkg/api"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions"
-	v1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
 	watch "k8s.io/kubernetes/pkg/watch"
 )
@@ -36,7 +35,7 @@ type NetworkPolicyInterface interface {
 	Update(*extensions.NetworkPolicy) (*extensions.NetworkPolicy, error)
 	Delete(name string, options *api.DeleteOptions) error
 	DeleteCollection(options *api.DeleteOptions, listOptions api.ListOptions) error
-	Get(name string, options v1.GetOptions) (*extensions.NetworkPolicy, error)
+	Get(name string) (*extensions.NetworkPolicy, error)
 	List(opts api.ListOptions) (*extensions.NetworkPolicyList, error)
 	Watch(opts api.ListOptions) (watch.Interface, error)
 	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *extensions.NetworkPolicy, err error)
@@ -105,13 +104,12 @@ func (c *networkPolicies) DeleteCollection(options *api.DeleteOptions, listOptio
 }
 
 // Get takes name of the networkPolicy, and returns the corresponding networkPolicy object, and an error if there is any.
-func (c *networkPolicies) Get(name string, options v1.GetOptions) (result *extensions.NetworkPolicy, err error) {
+func (c *networkPolicies) Get(name string) (result *extensions.NetworkPolicy, err error) {
 	result = &extensions.NetworkPolicy{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("networkpolicies").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return

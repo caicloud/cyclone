@@ -26,10 +26,12 @@ import (
 
 // IsListType returns true if the provided Object has a slice called Items
 func IsListType(obj runtime.Object) bool {
-	// if we're a runtime.Unstructured, check whether this is a list.
-	// TODO: refactor GetItemsPtr to use an interface that returns []runtime.Object
-	if unstructured, ok := obj.(runtime.Unstructured); ok {
-		return unstructured.IsList()
+	// if we're a runtime.Unstructured, check to see if we have an `items` key
+	// This is a list type for recognition, but other Items type methods will fail on it
+	// and give you errors.
+	if unstructured, ok := obj.(*runtime.Unstructured); ok {
+		_, ok := unstructured.Object["items"]
+		return ok
 	}
 
 	_, err := GetItemsPtr(obj)

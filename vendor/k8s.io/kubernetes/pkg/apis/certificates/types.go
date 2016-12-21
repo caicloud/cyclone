@@ -18,7 +18,7 @@ package certificates
 
 import (
 	"k8s.io/kubernetes/pkg/api"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 // +genclient=true
@@ -26,17 +26,17 @@ import (
 
 // Describes a certificate signing request
 type CertificateSigningRequest struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	api.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// The certificate request itself and any additional information.
 	// +optional
-	Spec CertificateSigningRequestSpec
+	Spec CertificateSigningRequestSpec `json:"spec,omitempty"`
 
 	// Derived information about the request.
 	// +optional
-	Status CertificateSigningRequestStatus
+	Status CertificateSigningRequestStatus `json:"status,omitempty"`
 }
 
 // This information is immutable after the request is created. Only the Request
@@ -44,26 +44,26 @@ type CertificateSigningRequest struct {
 // Kubernetes and cannot be modified by users.
 type CertificateSigningRequestSpec struct {
 	// Base64-encoded PKCS#10 CSR data
-	Request []byte
+	Request []byte `json:"request"`
 
 	// Information about the requesting user (if relevant)
 	// See user.Info interface for details
 	// +optional
-	Username string
+	Username string `json:"username,omitempty"`
 	// +optional
-	UID string
+	UID string `json:"uid,omitempty"`
 	// +optional
-	Groups []string
+	Groups []string `json:"groups,omitempty"`
 }
 
 type CertificateSigningRequestStatus struct {
 	// Conditions applied to the request, such as approval or denial.
 	// +optional
-	Conditions []CertificateSigningRequestCondition
+	Conditions []CertificateSigningRequestCondition `json:"conditions,omitempty"`
 
 	// If request was approved, the controller will place the issued certificate here.
 	// +optional
-	Certificate []byte
+	Certificate []byte `json:"certificate,omitempty"`
 }
 
 type RequestConditionType string
@@ -76,23 +76,23 @@ const (
 
 type CertificateSigningRequestCondition struct {
 	// request approval state, currently Approved or Denied.
-	Type RequestConditionType
+	Type RequestConditionType `json:"type"`
 	// brief reason for the request state
 	// +optional
-	Reason string
+	Reason string `json:"reason,omitempty"`
 	// human readable message with details about the request state
 	// +optional
-	Message string
+	Message string `json:"message,omitempty"`
 	// timestamp for the last update to this condition
 	// +optional
-	LastUpdateTime metav1.Time
+	LastUpdateTime unversioned.Time `json:"lastUpdateTime,omitempty"`
 }
 
 type CertificateSigningRequestList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	// +optional
-	Items []CertificateSigningRequest
+	Items []CertificateSigningRequest `json:"items,omitempty"`
 }

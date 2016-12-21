@@ -19,7 +19,7 @@ package types
 import (
 	"fmt"
 
-	"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 const ConfigSourceAnnotationKey = "kubernetes.io/config.source"
@@ -55,7 +55,7 @@ const (
 	// Updates from all sources
 	AllSource = "*"
 
-	NamespaceDefault = v1.NamespaceDefault
+	NamespaceDefault = api.NamespaceDefault
 )
 
 // PodUpdate defines an operation sent on the channel. You can add or remove single services by
@@ -68,7 +68,7 @@ const (
 // functionally similar, this helps our unit tests properly check that the correct PodUpdates
 // are generated.
 type PodUpdate struct {
-	Pods   []*v1.Pod
+	Pods   []*api.Pod
 	Op     PodOperation
 	Source string
 }
@@ -93,7 +93,7 @@ func GetValidatedSources(sources []string) ([]string, error) {
 }
 
 // GetPodSource returns the source of the pod based on the annotation.
-func GetPodSource(pod *v1.Pod) (string, error) {
+func GetPodSource(pod *api.Pod) (string, error) {
 	if pod.Annotations != nil {
 		if source, ok := pod.Annotations[ConfigSourceAnnotationKey]; ok {
 			return source, nil

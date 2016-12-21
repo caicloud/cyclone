@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/kubernetes/pkg/api"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -133,19 +133,19 @@ func TestValidateValidHost(t *testing.T) {
 	}
 
 	// Test multi-container pod.
-	pod := &v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+	pod := &api.Pod{
+		ObjectMeta: api.ObjectMeta{
 			Annotations: map[string]string{
 				ContainerAnnotationKeyPrefix + "init":  ProfileNamePrefix + "foo-container",
 				ContainerAnnotationKeyPrefix + "test1": ProfileRuntimeDefault,
 				ContainerAnnotationKeyPrefix + "test2": ProfileNamePrefix + "docker-default",
 			},
 		},
-		Spec: v1.PodSpec{
-			InitContainers: []v1.Container{
+		Spec: api.PodSpec{
+			InitContainers: []api.Container{
 				{Name: "init"},
 			},
-			Containers: []v1.Container{
+			Containers: []api.Container{
 				{Name: "test1"},
 				{Name: "test2"},
 				{Name: "no-profile"},
@@ -172,7 +172,7 @@ func TestParseProfileName(t *testing.T) {
 	}
 }
 
-func getPodWithProfile(profile string) *v1.Pod {
+func getPodWithProfile(profile string) *api.Pod {
 	annotations := map[string]string{
 		ContainerAnnotationKeyPrefix + "test": profile,
 	}
@@ -181,12 +181,12 @@ func getPodWithProfile(profile string) *v1.Pod {
 			"foo": "bar",
 		}
 	}
-	return &v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+	return &api.Pod{
+		ObjectMeta: api.ObjectMeta{
 			Annotations: annotations,
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
+		Spec: api.PodSpec{
+			Containers: []api.Container{
 				{
 					Name: "test",
 				},

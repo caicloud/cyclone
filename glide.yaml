@@ -48,7 +48,7 @@ import:
   - websocket
 - package: golang.org/x/sys
   repo: https://github.com/golang/sys.git
-  subpackages: 
+  subpackages:
   - windows
 - package: golang.org/x/oauth2
   repo: https://github.com/golang/oauth2.git
@@ -58,12 +58,12 @@ import:
   - bson
 - package: gopkg.in/yaml.v2
 - package: k8s.io/kubernetes
+  version: 1.5.0
   repo: https://github.com/kubernetes/kubernetes
   subpackages:
   - pkg/api
   - pkg/api/meta
   - pkg/apis/extensions
-  - pkg/apis/meta/v1/unstructured
   - pkg/client/clientset_generated/internalclientset
   - pkg/client/restclient
   - pkg/client/typed/discovery
@@ -76,4 +76,7 @@ testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
+- package: github.com/davecgh/go-spew
+  version: ^1.0.0
 - package: gopkg.in/h2non/gock.v1
+
