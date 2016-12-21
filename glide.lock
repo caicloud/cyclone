@@ -1,5 +1,5 @@
 hash: 4aafc101a26622509c93481300c75800eee820eac2d23b179f34b7d04f1ae294
-updated: 2016-12-15T12:04:13.375325682+08:00
+updated: 2016-12-21T12:03:18.357646094+08:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: 70b2c90b260171e829f1ebd7c17f600c11858dbe
@@ -43,7 +43,7 @@ imports:
   - digest
   - reference
 - name: github.com/docker/docker
-  version: 4d92237de1b34c8bf99e549db27b83fd087cd765
+  version: 88862e707affccf9c46347361689b2ffef39dc5c
   subpackages:
   - api/types
   - api/types/blkiodev
