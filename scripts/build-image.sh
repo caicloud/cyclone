@@ -53,33 +53,29 @@ fi
 # Start Building containers
 # -----------------------------------------------------------------------------
 # Setup docker on Mac.
-if [[ "$(uname)" == "Darwin" ]]; then
+if [[ "$OS" == "darwin" ]]; then
   if [[ "$(which docker-machine)" != "" ]]; then
     eval "$(docker-machine env kube-dev)"
   elif [[ "$(which boot2docker)" != "" ]]; then
     eval "$(boot2docker shellinit)"
   fi
+else
+  # Build cyclone comtainer.
+  # We need to disable selinux on selinux supported system to relove https://github.com/caicloud/cyclone/issues/53
+  echo "disable the selinux"
+  disable_selinux
 fi
 
 echo "+++++ Start building cyclone server"
 
 cd ${ROOT}
 
-# Build cyclone comtainer.
-# We need to disable selinux on selinux supported system to relove https://github.com/caicloud/cyclone/issues/53
-readonly platform=$(os::build::host_platform)
-if [[ $platform != *"darwin"* ]]; then
-  echo "disable the selinux"
-  disable-selinux
-fi
-
 docker run --rm \
   -v `pwd`:/go/src/github.com/caicloud/cyclone \
-  -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor golang:1.6-alpine sh \
+  -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor cargo.caicloud.io/caicloud/golang-gcc:1.6-alpine sh \
   -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
 
-docker build -t caicloud/cyclone-server:${IMAGE_TAG} .
-docker tag caicloud/cyclone-server:${IMAGE_TAG} cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
+docker build -t cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG} .
 
 cd - > /dev/null
 
