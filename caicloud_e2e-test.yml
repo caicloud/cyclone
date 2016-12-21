@@ -41,6 +41,8 @@ integration:
     - REGISTRY_PASSWORD=Cyclone123
     - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
     - KAFKA_SERVER_IP=172.18.0.4:9092
+    - MONGO_DB_IP=mongo:27017
+    - ETCD_SERVER_IP=http://etcd:2379
     - WORK_REGISTRY_LOCATION=cargo.caicloud.io
     - WORK_DOCKER_HOST=unix:///var/run/docker.sock
     - DOCKER_HOST=unix:///var/run/docker.sock
@@ -58,12 +60,12 @@ integration:
     - "7099:7099"
     - "8000:8000"
   commands: 
-    - export MONGO_DB_IP=$MONGO_PORT_27017_TCP_ADDR:27017
-    - export ETCD_SERVER_IP=http://$ETCD_PORT_2379_TCP_ADDR:2379
+  #  - export MONGO_DB_IP=$MONGO_PORT_27017_TCP_ADDR:27017
+  #  - export ETCD_SERVER_IP=http://$ETCD_PORT_2379_TCP_ADDR:2379
     - mkdir -p $WORKDIR
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
     - go build ./
-    - ./scripts/build-worker-image-ci.sh
+   # - ./scripts/build-worker-image-ci.sh
     - ./cyclone &
     - go test -v ./tests/service &&  go test -v ./tests/version
