@@ -1,4 +1,12 @@
-## 1.0.1 / 19-04-2016
+## 1.0.3 / 14-11-2016
+
+- feat(#13): adds `GetUnmatchedRequests()` and `HasUnmatchedRequests()` API functions.
+
+## 1.0.2 / 10-11-2016
+
+- fix(#11): adds `Compression()` method for output HTTP traffic body compression processing and matching.
+
+## 1.0.1 / 07-09-2016
 
 - fix(#9): missing URL query param matcher.
 
@@ -22,7 +30,7 @@
 
 ## 0.1.3 / 09-03-2016
 
-- feat(matcher): add content type matcher helper method supporting aliases. 
+- feat(matcher): add content type matcher helper method supporting aliases.
 - feat(interceptor): add function to restore HTTP client transport.
 - feat(matcher): add URL scheme matcher function.
 - fix(request): ignore base slash path.
@@ -32,11 +40,11 @@
 ## 0.1.2 / 04-03-2016
 
 - fix(matcher): body matchers no used by default.
-- feat(matcher): add matcher factories for multiple cases. 
+- feat(matcher): add matcher factories for multiple cases.
 
 ## 0.1.1 / 04-03-2016
 
-- fix(params): persist query params accordingly. 
+- fix(params): persist query params accordingly.
 
 ## 0.1.0 / 02-03-2016
 

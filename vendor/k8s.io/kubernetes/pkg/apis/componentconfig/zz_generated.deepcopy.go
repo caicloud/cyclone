@@ -21,6 +21,7 @@ limitations under the License.
 package componentconfig
 
 import (
+	api "k8s.io/kubernetes/pkg/api"
 	conversion "k8s.io/kubernetes/pkg/conversion"
 	runtime "k8s.io/kubernetes/pkg/runtime"
 	config "k8s.io/kubernetes/pkg/util/config"
@@ -75,6 +76,7 @@ func DeepCopy_componentconfig_KubeControllerManagerConfiguration(in interface{},
 		out.TypeMeta = in.TypeMeta
 		out.Port = in.Port
 		out.Address = in.Address
+		out.UseServiceAccountCredentials = in.UseServiceAccountCredentials
 		out.CloudProvider = in.CloudProvider
 		out.CloudConfigFile = in.CloudConfigFile
 		out.ConcurrentEndpointSyncs = in.ConcurrentEndpointSyncs
@@ -153,6 +155,7 @@ func DeepCopy_componentconfig_KubeProxyConfiguration(in interface{}, out interfa
 			out.IPTablesMasqueradeBit = nil
 		}
 		out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+		out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 		out.KubeconfigPath = in.KubeconfigPath
 		out.MasqueradeAll = in.MasqueradeAll
 		out.Master = in.Master
@@ -171,6 +174,7 @@ func DeepCopy_componentconfig_KubeProxyConfiguration(in interface{}, out interfa
 		out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
 		out.ConntrackMin = in.ConntrackMin
 		out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+		out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 		return nil
 	}
 }
@@ -185,6 +189,7 @@ func DeepCopy_componentconfig_KubeSchedulerConfiguration(in interface{}, out int
 		out.AlgorithmProvider = in.AlgorithmProvider
 		out.PolicyConfigFile = in.PolicyConfigFile
 		out.EnableProfiling = in.EnableProfiling
+		out.EnableContentionProfiling = in.EnableContentionProfiling
 		out.ContentType = in.ContentType
 		out.KubeAPIQPS = in.KubeAPIQPS
 		out.KubeAPIBurst = in.KubeAPIBurst
@@ -305,7 +310,7 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.CloudProvider = in.CloudProvider
 		out.CloudConfigFile = in.CloudConfigFile
 		out.KubeletCgroups = in.KubeletCgroups
-		out.CgroupsPerQOS = in.CgroupsPerQOS
+		out.ExperimentalCgroupsPerQOS = in.ExperimentalCgroupsPerQOS
 		out.CgroupDriver = in.CgroupDriver
 		out.RuntimeCgroups = in.RuntimeCgroups
 		out.SystemCgroups = in.SystemCgroups
@@ -314,9 +319,9 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.RemoteRuntimeEndpoint = in.RemoteRuntimeEndpoint
 		out.RemoteImageEndpoint = in.RemoteImageEndpoint
 		out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
+		out.ImagePullProgressDeadline = in.ImagePullProgressDeadline
 		out.RktPath = in.RktPath
 		out.ExperimentalMounterPath = in.ExperimentalMounterPath
-		out.ExperimentalMounterRootfsPath = in.ExperimentalMounterRootfsPath
 		out.RktAPIEndpoint = in.RktAPIEndpoint
 		out.RktStage1Image = in.RktStage1Image
 		out.LockFilePath = in.LockFilePath
@@ -333,6 +338,15 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.MaxOpenFiles = in.MaxOpenFiles
 		out.ReconcileCIDR = in.ReconcileCIDR
 		out.RegisterSchedulable = in.RegisterSchedulable
+		if in.RegisterWithTaints != nil {
+			in, out := &in.RegisterWithTaints, &out.RegisterWithTaints
+			*out = make([]api.Taint, len(*in))
+			for i := range *in {
+				(*out)[i] = (*in)[i]
+			}
+		} else {
+			out.RegisterWithTaints = nil
+		}
 		out.ContentType = in.ContentType
 		out.KubeAPIQPS = in.KubeAPIQPS
 		out.KubeAPIBurst = in.KubeAPIBurst
@@ -356,6 +370,7 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.EvictionPressureTransitionPeriod = in.EvictionPressureTransitionPeriod
 		out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
 		out.EvictionMinimumReclaim = in.EvictionMinimumReclaim
+		out.ExperimentalKernelMemcgNotification = in.ExperimentalKernelMemcgNotification
 		out.PodsPerCore = in.PodsPerCore
 		out.EnableControllerAttachDetach = in.EnableControllerAttachDetach
 		if in.SystemReserved != nil {
@@ -388,7 +403,9 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 			out.AllowedUnsafeSysctls = nil
 		}
 		out.FeatureGates = in.FeatureGates
-		out.ExperimentalRuntimeIntegrationType = in.ExperimentalRuntimeIntegrationType
+		out.EnableCRI = in.EnableCRI
+		out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+		out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 		return nil
 	}
 }

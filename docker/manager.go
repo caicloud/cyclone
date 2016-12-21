@@ -348,8 +348,11 @@ func parse(despath string) ([]string, error) {
 	}
 
 	defer f.Close()
-
-	nodes, _ := docker_parse.Parse(f)
+	d := docker_parse.Directive{
+		LookingForDirectives: true,
+	}
+	docker_parse.SetEscapeToken(docker_parse.DefaultEscapeToken, &d)
+	nodes, _ := docker_parse.Parse(f, &d)
 	for _, node := range nodes.Children {
 		if node.Value == command.From {
 			if node.Next != nil {

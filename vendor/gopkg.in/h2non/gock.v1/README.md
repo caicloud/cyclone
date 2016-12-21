@@ -1,6 +1,6 @@
-# gock [![Build Status](https://travis-ci.org/h2non/gock.png)](https://travis-ci.org/h2non/gock) [![GitHub release](https://img.shields.io/badge/version-1.0.0-orange.svg?style=flat)](https://github.com/h2non/gock/releases) [![GoDoc](https://godoc.org/github.com/h2non/gock?status.svg)](https://godoc.org/github.com/h2non/gock) [![Coverage Status](https://coveralls.io/repos/github/h2non/gock/badge.svg?branch=master)](https://coveralls.io/github/h2non/gock?branch=master) [![Go Report Card](https://img.shields.io/badge/go_report-A+-brightgreen.svg)](https://goreportcard.com/report/github.com/h2non/gock)
+# gock [![Build Status](https://travis-ci.org/h2non/gock.svg?branch=master)](https://travis-ci.org/h2non/gock) [![GitHub release](https://img.shields.io/badge/version-v1.0.x-orange.svg?style=flat)](https://github.com/h2non/gock/releases) [![GoDoc](https://godoc.org/github.com/h2non/gock?status.svg)](https://godoc.org/github.com/h2non/gock) [![Coverage Status](https://coveralls.io/repos/github/h2non/gock/badge.svg?branch=master)](https://coveralls.io/github/h2non/gock?branch=master) [![Go Report Card](https://img.shields.io/badge/go_report-A+-brightgreen.svg)](https://goreportcard.com/report/github.com/h2non/gock) [![license](https://img.shields.io/badge/license-MIT-blue.svg)]()
 
-Versatile HTTP mocking made easy in [Go](https://golang.org). 
+Versatile HTTP mocking made easy in [Go](https://golang.org).
 Heavily inspired by [nock](https://github.com/node-nock/nock).
 
 Take a look to the [examples](#examples) to get started.
@@ -51,18 +51,18 @@ func TestFoo(t *testing.T) {
 
   // Your test code starts here...
 }
-``` 
+```
 
 #### Race conditions
 
-If you're running concurrent code, be aware that your mocks are declared first to avoid unexpected 
+If you're running concurrent code, be aware that your mocks are declared first to avoid unexpected
 race conditions while configuring `gock` or intercepting custom HTTP clients.
 
 `gock` is not fully thread-safe, but sensible parts are. Any help making `gock` more reliable in this sense is highly appreciated.
 
 #### Define complex mocks first
 
-If you're mocking a bunch of mocks in the same test suite, it's recommended to define the more 
+If you're mocking a bunch of mocks in the same test suite, it's recommended to define the more
 concrete mocks first, and then the generic ones.
 
 This approach usually avoids matching unexpected generic mocks (e.g: specific header, body payload...) instead of the generic ones that performs less complex matches.
@@ -257,10 +257,10 @@ func main() {
 
 ## Hacking it!
 
-You can easily hack `gock` defining custom matcher functions with own matching rules. 
+You can easily hack `gock` defining custom matcher functions with own matching rules.
 
 See [add matcher functions](https://github.com/h2non/gock/blob/master/_examples/add_matchers/matchers.go) and [custom matching layer](https://github.com/h2non/gock/blob/master/_examples/custom_matcher/matcher.go) examples for further details.
 
-## License 
+## License
 
 MIT - Tomas Aparicio

@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1 "k8s.io/kubernetes/pkg/api/v1"
 	conversion "k8s.io/kubernetes/pkg/conversion"
 	runtime "k8s.io/kubernetes/pkg/runtime"
 	reflect "reflect"
@@ -65,6 +66,7 @@ func DeepCopy_v1alpha1_KubeProxyConfiguration(in interface{}, out interface{}, c
 			out.IPTablesMasqueradeBit = nil
 		}
 		out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+		out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 		out.KubeconfigPath = in.KubeconfigPath
 		out.MasqueradeAll = in.MasqueradeAll
 		out.Master = in.Master
@@ -83,6 +85,7 @@ func DeepCopy_v1alpha1_KubeProxyConfiguration(in interface{}, out interface{}, c
 		out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
 		out.ConntrackMin = in.ConntrackMin
 		out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+		out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 		return nil
 	}
 }
@@ -103,6 +106,7 @@ func DeepCopy_v1alpha1_KubeSchedulerConfiguration(in interface{}, out interface{
 		} else {
 			out.EnableProfiling = nil
 		}
+		out.EnableContentionProfiling = in.EnableContentionProfiling
 		out.ContentType = in.ContentType
 		out.KubeAPIQPS = in.KubeAPIQPS
 		out.KubeAPIBurst = in.KubeAPIBurst
@@ -300,21 +304,21 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.RuntimeCgroups = in.RuntimeCgroups
 		out.SystemCgroups = in.SystemCgroups
 		out.CgroupRoot = in.CgroupRoot
-		if in.CgroupsPerQOS != nil {
-			in, out := &in.CgroupsPerQOS, &out.CgroupsPerQOS
+		if in.ExperimentalCgroupsPerQOS != nil {
+			in, out := &in.ExperimentalCgroupsPerQOS, &out.ExperimentalCgroupsPerQOS
 			*out = new(bool)
 			**out = **in
 		} else {
-			out.CgroupsPerQOS = nil
+			out.ExperimentalCgroupsPerQOS = nil
 		}
 		out.CgroupDriver = in.CgroupDriver
 		out.ContainerRuntime = in.ContainerRuntime
 		out.RemoteRuntimeEndpoint = in.RemoteRuntimeEndpoint
 		out.RemoteImageEndpoint = in.RemoteImageEndpoint
 		out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
+		out.ImagePullProgressDeadline = in.ImagePullProgressDeadline
 		out.RktPath = in.RktPath
 		out.ExperimentalMounterPath = in.ExperimentalMounterPath
-		out.ExperimentalMounterRootfsPath = in.ExperimentalMounterRootfsPath
 		out.RktAPIEndpoint = in.RktAPIEndpoint
 		out.RktStage1Image = in.RktStage1Image
 		if in.LockFilePath != nil {
@@ -361,6 +365,15 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		} else {
 			out.RegisterSchedulable = nil
 		}
+		if in.RegisterWithTaints != nil {
+			in, out := &in.RegisterWithTaints, &out.RegisterWithTaints
+			*out = make([]v1.Taint, len(*in))
+			for i := range *in {
+				(*out)[i] = (*in)[i]
+			}
+		} else {
+			out.RegisterWithTaints = nil
+		}
 		out.ContentType = in.ContentType
 		if in.KubeAPIQPS != nil {
 			in, out := &in.KubeAPIQPS, &out.KubeAPIQPS
@@ -402,6 +415,13 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.EvictionPressureTransitionPeriod = in.EvictionPressureTransitionPeriod
 		out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
 		out.EvictionMinimumReclaim = in.EvictionMinimumReclaim
+		if in.ExperimentalKernelMemcgNotification != nil {
+			in, out := &in.ExperimentalKernelMemcgNotification, &out.ExperimentalKernelMemcgNotification
+			*out = new(bool)
+			**out = **in
+		} else {
+			out.ExperimentalKernelMemcgNotification = nil
+		}
 		out.PodsPerCore = in.PodsPerCore
 		if in.EnableControllerAttachDetach != nil {
 			in, out := &in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach
@@ -458,7 +478,9 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 			out.AllowedUnsafeSysctls = nil
 		}
 		out.FeatureGates = in.FeatureGates
-		out.ExperimentalRuntimeIntegrationType = in.ExperimentalRuntimeIntegrationType
+		out.EnableCRI = in.EnableCRI
+		out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+		out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 		return nil
 	}
 }
