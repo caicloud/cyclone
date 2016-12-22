@@ -59,7 +59,9 @@ integration:
     - mkdir -p $WORKDIR
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
-    - go build ./
-    - ./scripts/build-worker-image-ci.sh
+    # build server
+    - go build -v ./ 
+    # build woker image
+    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t cargo.caicloud.io/caicloud/cyclone-worker ./ && cd -
     - ./cyclone &
     - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml

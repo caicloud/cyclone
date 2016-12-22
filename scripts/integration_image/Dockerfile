@@ -23,5 +23,8 @@ RUN set -x \
 
 COPY docker-entrypoint.sh /usr/local/bin/
 
+EXPOSE 7099  
+EXPOSE 8000
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["sh"]
