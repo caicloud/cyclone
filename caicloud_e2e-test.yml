@@ -26,7 +26,7 @@ integration:
         - "2380:2380"
       command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
 
-  image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+  image: cargo.caicloud.io/circle/golang-docker:1.7-1.11
   volumes:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
