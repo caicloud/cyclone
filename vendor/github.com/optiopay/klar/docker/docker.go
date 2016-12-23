@@ -9,7 +9,13 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"regexp"
-	"strings"
+)
+
+const (
+	stateInitial = iota
+	stateName
+	statePort
+	stateTag
 )
 
 // Image represents Docker image
@@ -33,36 +39,64 @@ const dockerHub = "registry-1.docker.io"
 var client = &http.Client{}
 var tokenRe = regexp.MustCompile(`Bearer realm="(.*?)",service="(.*?)",scope="(.*?)"`)
 
-// NewImage parses image name which could be the ful name registry/name:tag
+// NewImage parses image name which could be the ful name registry:port/name:tag
 // or in any other shorter forms and creates docker image entity without
 // information about layers
 func NewImage(qname, user, password string) (*Image, error) {
 	registry := dockerHub
 	tag := "latest"
-	name := ""
-
-	regIndex := strings.Index(qname, "/")
-	if regIndex != -1 {
-		regCandidate := qname[:regIndex]
-		addrs, err := net.LookupHost(regCandidate)
-		if err != nil || len(addrs) == 0 {
-			regIndex = -1
-		} else {
-			registry = regCandidate
+	var name, port string
+	state := stateInitial
+	start := 0
+	for i, c := range qname {
+		if c == ':' || c == '/' || i == len(qname)-1 {
+			if i == len(qname)-1 {
+				// ignore a separator, include the last symbol
+				i += 1
+			}
+			part := qname[start:i]
+			start = i + 1
+			switch state {
+			case stateInitial:
+				addrs, err := net.LookupHost(part)
+				// not a hostname?
+				if err != nil || len(addrs) == 0 {
+					// it's an image name, if separator is /
+					// next part is also part of the name
+					// othrewise it's an offcial image
+					if c == '/' {
+						// we got just a part of name, till next time
+						start = 0
+						state = stateName
+					} else {
+						state = stateTag
+						name = fmt.Sprintf("library/%s", part)
+					}
+				} else {
+					// it's registry, let's check what's next =port of image name
+					registry = part
+					if c == ':' {
+						state = statePort
+					} else {
+						state = stateName
+					}
+				}
+			case stateTag:
+				tag = part
+			case statePort:
+				state = stateName
+				port = part
+			case stateName:
+				if c == ':' {
+					state = stateTag
+				}
+				name = part
+			}
 		}
 	}
 
-	tagIndex := strings.Index(qname, ":")
-	if tagIndex != -1 {
-		name = qname[regIndex+1 : tagIndex]
-		tag = qname[tagIndex+1 : len(qname)]
-	} else {
-		name = qname[regIndex+1 : len(qname)]
-	}
-
-	// is it official docker image?
-	if registry == dockerHub && strings.Index(qname, "/") == -1 {
-		name = fmt.Sprintf("library/%s", name)
+	if port != "" {
+		registry = fmt.Sprintf("%s:%s", registry, port)
 	}
 
 	registry = fmt.Sprintf("https://%s/v2", registry)

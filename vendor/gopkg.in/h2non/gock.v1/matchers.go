@@ -1,6 +1,8 @@
 package gock
 
 import (
+	"compress/gzip"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -28,6 +30,11 @@ var BodyTypeAliases = map[string]string{
 	"xml":  "application/xml",
 	"form": "multipart/form-data",
 	"url":  "application/x-www-form-urlencoded",
+}
+
+// CompressionSchemes stores the supported Content-Encoding types for decompression.
+var CompressionSchemes = []string{
+	"gzip",
 }
 
 // MatchMethod matches the HTTP method of the given request.
@@ -113,8 +120,26 @@ func MatchBody(req *http.Request, ereq *Request) (bool, error) {
 		return false, nil
 	}
 
+	// Can only match certain compression schemes
+	if !supportedCompressionScheme(req) {
+		return false, nil
+	}
+
+	// Create a reader for the body depending on compression type
+	bodyReader := req.Body
+	if ereq.CompressionScheme != "" {
+		if ereq.CompressionScheme != req.Header.Get("Content-Encoding") {
+			return false, nil
+		}
+		compressedBodyReader, err := compressionReader(req.Body, ereq.CompressionScheme)
+		if err != nil {
+			return false, err
+		}
+		bodyReader = compressedBodyReader
+	}
+
 	// Read the whole request body
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
 		return false, err
 	}
@@ -153,6 +178,20 @@ func supportedType(req *http.Request) bool {
 	return false
 }
 
+func supportedCompressionScheme(req *http.Request) bool {
+	encoding := req.Header.Get("Content-Encoding")
+	if encoding == "" {
+		return true
+	}
+
+	for _, kind := range CompressionSchemes {
+		if match, _ := regexp.MatchString(kind, encoding); match {
+			return true
+		}
+	}
+	return false
+}
+
 func castToString(buf []byte) string {
 	str := string(buf)
 	tail := len(str) - 1
@@ -160,4 +199,13 @@ func castToString(buf []byte) string {
 		str = str[:tail]
 	}
 	return str
+}
+
+func compressionReader(r io.ReadCloser, scheme string) (io.ReadCloser, error) {
+	switch scheme {
+	case "gzip":
+		return gzip.NewReader(r)
+	default:
+		return r, nil
+	}
 }

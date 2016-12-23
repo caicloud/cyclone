@@ -24,14 +24,14 @@ import (
 // TagsService handles communication with the tags related methods
 // of the GitLab API.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/tags.html
+// GitLab API docs: https://docs.gitlab.com/ce/api/tags.html
 type TagsService struct {
 	client *Client
 }
 
 // Tag represents a GitLab tag.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/tags.html
+// GitLab API docs: https://docs.gitlab.com/ce/api/tags.html
 type Tag struct {
 	Commit  *Commit `json:"commit"`
 	Name    string  `json:"name"`
@@ -68,10 +68,36 @@ func (s *TagsService) ListTags(pid interface{}) ([]*Tag, *Response, error) {
 	return t, resp, err
 }
 
+// Get a specific repository tag determined by its name. It returns 200 together
+// with the tag information if the tag exists. It returns 404 if the tag does not exist.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/tags.html#get-a-single-repository-tag
+func (s *TagsService) GetSingleTag(pid interface{}, tag string) (*Tag, *Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("projects/%s/repository/tags/%s", url.QueryEscape(project), tag)
+
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var t *Tag
+	resp, err := s.client.Do(req, &t)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return t, resp, err
+}
+
 // CreateTagOptions represents the available CreateTag() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/tags.html#create-a-new-tag
+// https://docs.gitlab.com/ce/api/tags.html#create-a-new-tag
 type CreateTagOptions struct {
 	TagName *string `url:"tag_name,omitempty" json:"tag_name,omitempty"`
 	Ref     *string `url:"ref,omitempty" json:"ref,omitempty"`
