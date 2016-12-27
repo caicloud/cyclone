@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"time"
 
 	"github.com/caicloud/cyclone/api"
@@ -39,6 +40,7 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/yaml"
 	"github.com/caicloud/cyclone/worker/clair"
 	steplog "github.com/caicloud/cyclone/worker/log"
+	"github.com/caicloud/cyclone/worker/vcs"
 	k8s_core_api "k8s.io/kubernetes/pkg/api"
 	k8s_ext_api "k8s.io/kubernetes/pkg/apis/extensions"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -617,17 +619,20 @@ func InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName,
 		// TODO create deployment only if deployment not found
 
 		// try to create deployment
-		template := deploymentName + ".yml"
+		template := path.Join(vcs.CLONE_DIR, deploymentName+".yml")
 		_, err := os.Stat(template)
 		if os.IsNotExist(err) {
-			return fmt.Errorf("Can not find deploymnet:%s in cluster and deploymnet template(.yml) is not provided either", deploymentName)
+			return fmt.Errorf("Can not find deploymnet(%s) in cluster and deploymnet template(%s) is not provided either", deploymentName, template)
 		}
+
+		log.Infof("found deployment template(%s)", template)
 
 		cfg := restclient.Config{
 			Host:        host,
 			BearerToken: token,
 		}
 		options := &resource.FilenameOptions{
+			Recursive: false,
 			Filenames: []string{
 				template,
 			},
@@ -638,7 +643,7 @@ func InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName,
 			return err
 		}
 		// wait for creating deployment
-		time.Sleep(2)
+		time.Sleep(2 * time.Second)
 		deployment, err = k8sClient.Deployments(namespaceName).Get(deploymentName)
 		if err != nil {
 			return err
