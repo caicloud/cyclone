@@ -43,7 +43,7 @@ integration:
     - ENABLE_CAICLOUD_AUTH=false
     - ERRORTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/error.html
     - SUCCESSTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/success.html
-    - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
+    - WORKER_IMAGE=cargo.caicloud.io/circle/cyclone-worker
     - WORKDIR=/go/src/github.com/caicloud/cyclone
     - GO15VENDOREXPERIMENT=1
     - LOG_SERVER=ws://172.18.0.1:8000/ws
@@ -63,6 +63,6 @@ integration:
     # build server
     - go build -v ./ 
     # build woker image
-    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t cargo.caicloud.io/caicloud/cyclone-worker ./ && cd -
+    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t $WORKER_IMAGE ./ && cd -
     - ./cyclone &
     - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml
