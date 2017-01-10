@@ -76,7 +76,7 @@ function run-local-up {
 
   # Build and run cyclone.
   cd ${CYCLONE_ROOT}
-  godep go build -race .
+  go build -race .
   ./scripts/build-worker-image.sh
   docker start clair_clair
   ./cyclone "$@" &
@@ -97,6 +97,6 @@ trap local-cleanup INT EXIT
 
 run-local-up
 
-godep go test -v ${CYCLONE_ROOT}/tests/service &&
-godep go test -v ${CYCLONE_ROOT}/tests/version &&
-godep go test -v ${CYCLONE_ROOT}/tests/yaml
+go test -v ${CYCLONE_ROOT}/tests/service &&
+go test -v ${CYCLONE_ROOT}/tests/version &&
+go test -v ${CYCLONE_ROOT}/tests/yaml

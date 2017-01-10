@@ -63,10 +63,8 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 	<img src="./docs/security.png" alt="安全扫描" width="500">
 </div>
 
+更多特性详见[功能介绍](./docs/functions_zh-CN.md)。
+
 ## Roadmap
 
-| 里程碑     | 新特性                      |
-| ------- | ------------------------ |
-| 2016年Q4 | k8s 支持：使用 k8s-job 执行 CI/CD 工作流 |
-| 2017年Q1 | web 操作界面                  |
-| 今后      | 用户管理权限 <br>支持用户插件            |
+请到 [Github milestones](https://github.com/caicloud/cyclone/milestones) 查阅我们今后的计划。

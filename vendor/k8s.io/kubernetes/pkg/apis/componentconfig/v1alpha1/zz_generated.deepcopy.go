@@ -65,6 +65,7 @@ func DeepCopy_v1alpha1_KubeProxyConfiguration(in interface{}, out interface{}, c
 			out.IPTablesMasqueradeBit = nil
 		}
 		out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+		out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 		out.KubeconfigPath = in.KubeconfigPath
 		out.MasqueradeAll = in.MasqueradeAll
 		out.Master = in.Master
@@ -83,6 +84,7 @@ func DeepCopy_v1alpha1_KubeProxyConfiguration(in interface{}, out interface{}, c
 		out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
 		out.ConntrackMin = in.ConntrackMin
 		out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+		out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 		return nil
 	}
 }
@@ -300,12 +302,12 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.RuntimeCgroups = in.RuntimeCgroups
 		out.SystemCgroups = in.SystemCgroups
 		out.CgroupRoot = in.CgroupRoot
-		if in.CgroupsPerQOS != nil {
-			in, out := &in.CgroupsPerQOS, &out.CgroupsPerQOS
+		if in.ExperimentalCgroupsPerQOS != nil {
+			in, out := &in.ExperimentalCgroupsPerQOS, &out.ExperimentalCgroupsPerQOS
 			*out = new(bool)
 			**out = **in
 		} else {
-			out.CgroupsPerQOS = nil
+			out.ExperimentalCgroupsPerQOS = nil
 		}
 		out.CgroupDriver = in.CgroupDriver
 		out.ContainerRuntime = in.ContainerRuntime
@@ -314,7 +316,6 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
 		out.RktPath = in.RktPath
 		out.ExperimentalMounterPath = in.ExperimentalMounterPath
-		out.ExperimentalMounterRootfsPath = in.ExperimentalMounterRootfsPath
 		out.RktAPIEndpoint = in.RktAPIEndpoint
 		out.RktStage1Image = in.RktStage1Image
 		if in.LockFilePath != nil {
@@ -402,6 +403,13 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.EvictionPressureTransitionPeriod = in.EvictionPressureTransitionPeriod
 		out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
 		out.EvictionMinimumReclaim = in.EvictionMinimumReclaim
+		if in.ExperimentalKernelMemcgNotification != nil {
+			in, out := &in.ExperimentalKernelMemcgNotification, &out.ExperimentalKernelMemcgNotification
+			*out = new(bool)
+			**out = **in
+		} else {
+			out.ExperimentalKernelMemcgNotification = nil
+		}
 		out.PodsPerCore = in.PodsPerCore
 		if in.EnableControllerAttachDetach != nil {
 			in, out := &in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach
@@ -458,7 +466,9 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 			out.AllowedUnsafeSysctls = nil
 		}
 		out.FeatureGates = in.FeatureGates
-		out.ExperimentalRuntimeIntegrationType = in.ExperimentalRuntimeIntegrationType
+		out.EnableCRI = in.EnableCRI
+		out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+		out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 		return nil
 	}
 }

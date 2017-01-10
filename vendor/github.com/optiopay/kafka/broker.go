@@ -137,6 +137,23 @@ type BrokerConf struct {
 	// Defaults to 500ms.
 	DialRetryWait time.Duration
 
+	// ReadTimeout is TCP read timeout
+	//
+	// Default is 30 seconds
+	ReadTimeout time.Duration
+
+	// RetryErrLimit limits the number of retry attempts when an error is
+	// encountered.
+	//
+	// Default is 10.
+	RetryErrLimit int
+
+	// RetryErrWait controls the wait duration between retries after failed
+	// fetch request.
+	//
+	// Default is 500ms.
+	RetryErrWait time.Duration
+
 	// DEPRECATED 2015-07-10 - use Logger instead
 	//
 	// TODO(husio) remove
@@ -163,6 +180,9 @@ func NewBrokerConf(clientID string) BrokerConf {
 		AllowTopicCreation: false,
 		LeaderRetryLimit:   10,
 		LeaderRetryWait:    500 * time.Millisecond,
+		RetryErrLimit:      10,
+		RetryErrWait:       time.Millisecond * 500,
+		ReadTimeout:        30 * time.Second,
 		Logger:             &nullLogger{},
 	}
 }
@@ -183,14 +203,14 @@ type Broker struct {
 //
 // The returned broker is not initially connected to any kafka node.
 func Dial(nodeAddresses []string, conf BrokerConf) (*Broker, error) {
+	if len(nodeAddresses) == 0 {
+		return nil, errors.New("no addresses provided")
+	}
+
 	broker := &Broker{
 		conf:          conf,
 		conns:         make(map[int32]*connection),
 		nodeAddresses: nodeAddresses,
-	}
-
-	if len(nodeAddresses) == 0 {
-		return nil, errors.New("no addresses provided")
 	}
 
 	for i := 0; i < conf.DialRetryLimit; i++ {
@@ -201,59 +221,22 @@ func Dial(nodeAddresses []string, conf BrokerConf) (*Broker, error) {
 			time.Sleep(conf.DialRetryWait)
 		}
 
-		ok := broker.dialRun(func(conn *connection, addr string) bool {
-			resp, err := conn.Metadata(&proto.MetadataReq{
-				ClientID: broker.conf.ClientID,
-				Topics:   nil,
-			})
-			if err != nil {
-				conf.Logger.Debug("cannot fetch metadata",
-					"address", addr,
-					"error", err)
-				return false
-			}
-			if len(resp.Brokers) == 0 {
-				conf.Logger.Debug("response with no broker data",
-					"address", addr)
-			} else {
-				broker.cacheMetadata(resp)
-			}
-			return true
-		})
-		if ok {
+		err := broker.refreshMetadata()
+
+		if err == nil {
 			return broker, nil
 		}
 	}
 	return nil, errors.New("cannot connect")
 }
 
-// dialRun creates a new connection and run f with that connection. If f returns
-// true, dialRun returns true. If f returns false, it is run again with a
-// connection to another node. dialRun returns false when all nodes have been
-// unsuccessfully tried.
-func (b *Broker) dialRun(f func(c *connection, addr string) bool) (ok bool) {
-	numAddresses := len(b.nodeAddresses)
-
-	// This iterates starting at a random location in the slice, to prevent
-	// hitting the first server repeatedly.
-	offset := rand.Intn(numAddresses)
-	for idx := 0; idx < numAddresses; idx++ {
-		addr := b.nodeAddresses[(idx+offset)%numAddresses]
-
-		conn, err := newTCPConnection(addr, b.conf.DialTimeout)
-		if err != nil {
-			b.conf.Logger.Debug("cannot connect",
-				"address", addr,
-				"error", err)
-			continue
-		}
-		ok := f(conn, addr)
-		_ = conn.Close()
-		if ok {
-			return true
-		}
+func (b *Broker) getInitialAddresses() []string {
+	dest := make([]string, len(b.nodeAddresses))
+	perm := rand.Perm(len(b.nodeAddresses))
+	for i, v := range perm {
+		dest[v] = b.nodeAddresses[i]
 	}
-	return false
+	return dest
 }
 
 // Close closes the broker and all active kafka nodes connections.
@@ -328,7 +311,7 @@ func (b *Broker) fetchMetadata(topics ...string) (*proto.MetadataResp, error) {
 		if _, ok := checkednodes[nodeID]; ok {
 			continue
 		}
-		conn, err := newTCPConnection(addr, b.conf.DialTimeout)
+		conn, err := newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
 		if err != nil {
 			b.conf.Logger.Debug("cannot connect",
 				"address", addr,
@@ -350,6 +333,27 @@ func (b *Broker) fetchMetadata(topics ...string) (*proto.MetadataResp, error) {
 			continue
 		}
 		return resp, nil
+	}
+
+	for _, addr := range b.getInitialAddresses() {
+		conn, err := newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
+		if err != nil {
+			b.conf.Logger.Debug("cannot connect to seed node",
+				"address", addr,
+				"error", err)
+			continue
+		}
+		resp, err := conn.Metadata(&proto.MetadataReq{
+			ClientID: b.conf.ClientID,
+			Topics:   topics,
+		})
+		_ = conn.Close()
+		if err == nil {
+			return resp, nil
+		}
+		b.conf.Logger.Debug("cannot fetch metadata",
+			"address", addr,
+			"error", err)
 	}
 
 	return nil, errors.New("cannot fetch metadata. No topics created?")
@@ -430,52 +434,6 @@ func (b *Broker) muLeaderConnection(topic string, partition int32) (conn *connec
 			b.mu.Lock()
 		}
 
-		// If there is no metadata it probably means no topic has been created
-		// yet. So create the topic if it is allowed.
-		if len(b.metadata.endpoints) == 0 && b.conf.AllowTopicCreation {
-			b.dialRun(func(conn *connection, addr string) bool {
-				// To create a topic we just need to request topic's metadata.
-				_, err = conn.Metadata(&proto.MetadataReq{
-					ClientID: b.conf.ClientID,
-					Topics:   []string{topic},
-				})
-				if err != nil {
-					b.conf.Logger.Info("failed to fetch metadata for new topic",
-						"addr", addr,
-						"topic", topic,
-						"error", err)
-					return false
-				}
-
-				// Once the topic has been created, Kafka needs some time to
-				// generate the correct metadata. So wait a little and retry a
-				// few times.
-				for i := 0; i < 5; i++ {
-					time.Sleep(50 * time.Millisecond)
-
-					resp, err := conn.Metadata(&proto.MetadataReq{
-						ClientID: b.conf.ClientID,
-					})
-					if err != nil {
-						b.conf.Logger.Info("failed to fetch metadata",
-							"addr", addr,
-							"error", err)
-						return false
-					}
-
-					// Check if the topic exists in the metadata. If it is ok,
-					// cache the metadata and exit the loop.
-					for _, t := range resp.Topics {
-						if t.Name == topic {
-							b.cacheMetadata(resp)
-							return true
-						}
-					}
-				}
-				return false
-			})
-		}
-
 		nodeID, ok := b.metadata.endpoints[tp]
 		if !ok {
 			err = b.refreshMetadata()
@@ -517,7 +475,7 @@ func (b *Broker) muLeaderConnection(topic string, partition int32) (conn *connec
 				delete(b.metadata.endpoints, tp)
 				continue
 			}
-			conn, err = newTCPConnection(addr, b.conf.DialTimeout)
+			conn, err = newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
 			if err != nil {
 				b.conf.Logger.Info("cannot get leader connection: cannot connect to node",
 					"address", addr,
@@ -568,7 +526,7 @@ func (b *Broker) muCoordinatorConnection(consumerGroup string) (conn *connection
 			}
 
 			addr := fmt.Sprintf("%s:%d", resp.CoordinatorHost, resp.CoordinatorPort)
-			conn, err := newTCPConnection(addr, b.conf.DialTimeout)
+			conn, err := newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
 			if err != nil {
 				b.conf.Logger.Debug("cannot connect to node",
 					"coordinatorID", resp.CoordinatorID,
@@ -594,7 +552,7 @@ func (b *Broker) muCoordinatorConnection(consumerGroup string) (conn *connection
 				// connection to node is cached so it was already checked
 				continue
 			}
-			conn, err := newTCPConnection(addr, b.conf.DialTimeout)
+			conn, err := newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
 			if err != nil {
 				b.conf.Logger.Debug("cannot connect to node",
 					"nodeID", nodeID,
@@ -625,7 +583,7 @@ func (b *Broker) muCoordinatorConnection(consumerGroup string) (conn *connection
 			}
 
 			addr := fmt.Sprintf("%s:%d", resp.CoordinatorHost, resp.CoordinatorPort)
-			conn, err = newTCPConnection(addr, b.conf.DialTimeout)
+			conn, err = newTCPConnection(addr, b.conf.DialTimeout, b.conf.ReadTimeout)
 			if err != nil {
 				b.conf.Logger.Debug("cannot connect to node",
 					"coordinatorID", resp.CoordinatorID,
@@ -669,69 +627,75 @@ func (b *Broker) muCloseDeadConnection(conn *connection) {
 // offset will return offset value for given partition. Use timems to specify
 // which offset value should be returned.
 func (b *Broker) offset(topic string, partition int32, timems int64) (offset int64, err error) {
-	conn, err := b.muLeaderConnection(topic, partition)
-	if err != nil {
-		return 0, err
-	}
-	resp, err := conn.Offset(&proto.OffsetReq{
-		ClientID:  b.conf.ClientID,
-		ReplicaID: -1, // any client
-		Topics: []proto.OffsetReqTopic{
-			{
-				Name: topic,
-				Partitions: []proto.OffsetReqPartition{
-					{
-						ID:         partition,
-						TimeMs:     timems,
-						MaxOffsets: 2,
+	for retry := 0; retry < b.conf.RetryErrLimit; retry++ {
+		if retry != 0 {
+			time.Sleep(b.conf.RetryErrWait)
+			err = b.refreshMetadata()
+			if err != nil {
+				continue
+			}
+		}
+		var conn *connection
+		conn, err = b.muLeaderConnection(topic, partition)
+		if err != nil {
+			return 0, err
+		}
+		var resp *proto.OffsetResp
+		resp, err = conn.Offset(&proto.OffsetReq{
+			ClientID:  b.conf.ClientID,
+			ReplicaID: -1, // any client
+			Topics: []proto.OffsetReqTopic{
+				{
+					Name: topic,
+					Partitions: []proto.OffsetReqPartition{
+						{
+							ID:         partition,
+							TimeMs:     timems,
+							MaxOffsets: 2,
+						},
 					},
 				},
 			},
-		},
-	})
-	if err != nil {
-		if _, ok := err.(*net.OpError); ok || err == io.EOF || err == syscall.EPIPE {
-			// Connection is broken, so should be closed, but the error is
-			// still valid and should be returned so that retry mechanism have
-			// chance to react.
-			b.conf.Logger.Debug("connection died while sending message",
-				"topic", topic,
-				"partition", partition,
-				"error", err)
-			b.muCloseDeadConnection(conn)
-		}
-		return 0, err
-	}
-	found := false
-	for _, t := range resp.Topics {
-		if t.Name != topic {
-			b.conf.Logger.Debug("unexpected topic information",
-				"expected", topic,
-				"got", t.Name)
+		})
+		if err != nil {
+			if _, ok := err.(*net.OpError); ok || err == io.EOF || err == syscall.EPIPE {
+				// Connection is broken, so should be closed, but the error is
+				// still valid and should be returned so that retry mechanism have
+				// chance to react.
+				b.conf.Logger.Debug("connection died while sending message",
+					"topic", topic,
+					"partition", partition,
+					"error", err)
+				b.muCloseDeadConnection(conn)
+			}
 			continue
 		}
-		for _, part := range t.Partitions {
-			if part.ID != partition {
-				b.conf.Logger.Debug("unexpected partition information",
-					"topic", t.Name,
-					"expected", partition,
-					"got", part.ID)
+		for _, t := range resp.Topics {
+			if t.Name != topic {
+				b.conf.Logger.Debug("unexpected topic information",
+					"expected", topic,
+					"got", t.Name)
 				continue
 			}
-			found = true
-			// happens when there are no messages
-			if len(part.Offsets) == 0 {
-				offset = 0
-			} else {
-				offset = part.Offsets[0]
+			for _, part := range t.Partitions {
+				if part.ID != partition {
+					b.conf.Logger.Debug("unexpected partition information",
+						"topic", t.Name,
+						"expected", partition,
+						"got", part.ID)
+					continue
+				}
+				if err = part.Err; err == nil {
+					if len(part.Offsets) == 0 {
+						return 0, nil
+					} else {
+						return part.Offsets[0], nil
+					}
+				}
 			}
-			err = part.Err
 		}
 	}
-	if !found {
-		return 0, errors.New("incomplete fetch response")
-	}
-	return offset, err
+	return 0, errors.New("incomplete fetch response")
 }
 
 // OffsetEarliest returns the oldest offset available on the given partition.
@@ -810,7 +774,6 @@ func (b *Broker) Producer(conf ProducerConf) Producer {
 // Upon a successful call, the message's Offset field is updated.
 func (p *producer) Produce(topic string, partition int32, messages ...*proto.Message) (offset int64, err error) {
 
-retryLoop:
 	for retry := 0; retry < p.conf.RetryLimit; retry++ {
 		if retry != 0 {
 			time.Sleep(p.conf.RetryWait)
@@ -820,7 +783,10 @@ retryLoop:
 
 		switch err {
 		case nil:
-			break retryLoop
+			for i, msg := range messages {
+				msg.Offset = int64(i) + offset
+			}
+			return offset, err
 		case io.EOF, syscall.EPIPE:
 			// p.produce call is closing connection when this error shows up,
 			// but it's also returning it so that retry loop can count this
@@ -838,14 +804,8 @@ retryLoop:
 			"error", err)
 	}
 
-	if err == nil {
-		// offset is the offset value of first published messages
-		for i, msg := range messages {
-			msg.Offset = int64(i) + offset
-		}
-	}
+	return 0, err
 
-	return offset, err
 }
 
 // produce send produce request to leader for given destination.

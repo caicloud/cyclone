@@ -12,7 +12,7 @@ integration:
     kafka:
       image: cargo.caicloud.io/caicloud/kafka:0.10.1.0
       environment:
-        - KAFKA_ADVERTISED_HOST_NAME=kafka
+        - KAFKA_ADVERTISED_HOST_NAME=172.18.0.4
         - KAFKA_ADVERTISED_PORT=9092
         - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       links:
@@ -20,17 +20,12 @@ integration:
       ports:
         - "9092:9092"
     etcd:
-      image: cargo.caicloud.io/caicloud/etcd:v2.2.1
-      environment:
-        - advertise-client-urls=http://0.0.0.0:4001
-        - initial-advertise-peer-urls=http://0.0.0.0:7001
+      image: cargo.caicloud.io/caicloud/etcd:v3.0.13
       ports:
         - "2379:2379"
         - "2380:2380"
-        - "4001:4001"
-        - "7001:7001"
-
-  image: cargo.caicloud.io/caicloud/golang:1.6-docker
+      command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
+  image: cargo.caicloud.io/circle/golang-docker:1.7-1.11
   volumes:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
@@ -41,10 +36,7 @@ integration:
     - REGISTRY_USERNAME=cyclone
     - REGISTRY_PASSWORD=Cyclone123
     - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
-    - KAFKA_SERVER_IP=kafka:9092
-    - CLAIR_SERVER_IP=clair:6060
-    - MONGO_DB_IP=mongo:27017
-    - ETCD_SERVER_IP=http://etcd:2379
+    - KAFKA_SERVER_IP=172.18.0.4:9092
     - WORK_REGISTRY_LOCATION=cargo.caicloud.io
     - WORK_DOCKER_HOST=unix:///var/run/docker.sock
     - DOCKER_HOST=unix:///var/run/docker.sock
@@ -53,6 +45,8 @@ integration:
     - SUCCESSTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/success.html
     - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
     - WORKDIR=/go/src/github.com/caicloud/cyclone
+    - GO15VENDOREXPERIMENT=1
+    - LOG_SERVER=ws://172.18.0.1:8000/ws
   links:
     - mongo
     - kafka
@@ -61,10 +55,14 @@ integration:
     - "7099:7099"
     - "8000:8000"
   commands: 
+    - export MONGO_DB_IP=$MONGO_PORT_27017_TCP_ADDR:27017
+    - export ETCD_SERVER_IP=http://$ETCD_PORT_2379_TCP_ADDR:2379
     - mkdir -p $WORKDIR
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
-    - go build ./
-    - ./scripts/build-worker-image-ci.sh
+    # build server
+    - go build -v ./ 
+    # build woker image
+    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t cargo.caicloud.io/caicloud/cyclone-worker ./ && cd -
     - ./cyclone &
     - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml

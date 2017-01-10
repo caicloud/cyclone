@@ -22,7 +22,6 @@ before_install:
   # - chmod +x docker-compose
   # - sudo mv docker-compose /usr/local/bin
   # install golang deps.
-  - go get github.com/tools/godep
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
   # create /logs/unit-test for unit test.
@@ -34,9 +33,9 @@ install:
   # - docker version
   # - docker-compose version
   # - docker images
-  - godep go build .
+  - go build .
   - cd ./worker
-  - godep go build ./cyclone-worker.go
+  - go build ./cyclone-worker.go
   - cd - > /dev/null
 
 script:
