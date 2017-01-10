@@ -76,7 +76,7 @@ post_build:
     - pwd
 ```
 
-## Depoly
+## Deploy
 Cyclone 可以把最新发布到镜像仓的镜像部署更新到指定的多个应用上。Cyclone 还可以将镜像部署到 [Caicloud Cubernetes](https://caicloud.io/products/cubernetes) 和 [Google Kubernetes](http://kubernetes.io/) 上。
 
 #### Caicloud Cubernetes
