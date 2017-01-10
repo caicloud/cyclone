@@ -93,6 +93,7 @@ function local-cleanup {
   ${CYCLONE_ROOT}/scripts/registry/stop.sh
   log "local-up cleanup now."
 }
+
 trap local-cleanup INT EXIT
 
 run-local-up
