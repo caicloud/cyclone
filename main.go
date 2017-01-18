@@ -193,7 +193,7 @@ func startAPIServer() {
 	log.Fatal(server.ListenAndServe())
 }
 
-// initLogServer init log server.
+// initLogServer init log server..
 func initLogServer() {
 	kafkaIP := osutil.GetStringEnv(KAFKA_SERVER_IP, "127.0.0.1:9092")
 	err := kafka.Dail([]string{kafkaIP})
