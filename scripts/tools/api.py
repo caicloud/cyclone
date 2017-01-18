@@ -145,7 +145,7 @@ def create_version(uid, service_id):
 
     name = random.randint(0, 100)
     _data = {
-        "name": "publishdeploy" + str(name),
+        "name": "test_" + str(name),
         "description": "v1",
         "service_id": service_id,
         #"operation": "publish"
