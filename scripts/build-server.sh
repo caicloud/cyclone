@@ -70,8 +70,8 @@ echo "+++++ Start building cyclone server"
 
 cd ${ROOT}
 
-IMAGE="cargo.caicloud.io/circle/cyclone-server"
-BUILD_IN="cargo.caicloud.io/circle/golang-docker:1.7-1.11"
+IMAGE="cargo.caicloud.io/caicloud/cyclone-server"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
 
 docker run --rm \
   -v $(pwd):/go/src/github.com/caicloud/cyclone \

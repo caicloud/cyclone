@@ -51,8 +51,8 @@ function run-local-up {
     echo "Unable to find docker"
     exit
   fi
-  docker pull cargo.caicloud.io/circle/e2e-test-long-running-task
-  docker tag cargo.caicloud.io/circle/e2e-test-long-running-task localhost:5000/minimal-long-running-task
+  docker pull cargo.caicloud.io/caicloud/e2e-test-long-running-task
+  docker tag cargo.caicloud.io/caicloud/e2e-test-long-running-task localhost:5000/minimal-long-running-task
   mkdir ${REGISTRY_DATA} ${REGISTRY_AUTH_LOG}
 
   log "Mongo, Kafka, and the registry are all running in a docker container, cyclone running in local."

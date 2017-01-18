@@ -8,9 +8,9 @@ set -o pipefail
 
 CYCLONE_ROOT=$(dirname "${BASH_SOURCE}")/..
 
-IMAGE="cargo.caicloud.io/circle/cyclone-worker"
+IMAGE="cargo.caicloud.io/caicloud/cyclone-worker"
 IMAGE_TEG=${1:-"latest"}
-BUILD_IN="cargo.caicloud.io/circle/golang-docker:1.7-1.11"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
 
 # Build and run cyclone.
 cd ${CYCLONE_ROOT}

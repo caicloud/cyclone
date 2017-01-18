@@ -65,8 +65,8 @@ def set_event(event_id, result, message):
 def create_service(user_id, service_name):
     _data = {
         "name": service_name,
-        "description": "circle",
-        "username": "circle",
+        "description": "caicloud",
+        "username": "caicloud",
         "repository": {
             #"url": "/home/superxi/gopath/src/github.com/caicloud/console-web",
             "url": "https://github.com/zoumo/go_test.git",
