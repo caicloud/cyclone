@@ -25,7 +25,7 @@ integration:
         - "2379:2379"
         - "2380:2380"
       command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
-  image: cargo.caicloud.io/circle/golang-docker:1.7-1.11
+  image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
   volumes:
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
@@ -63,6 +63,6 @@ integration:
     # build server
     - go build -v ./ 
     # build woker image
-    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t cargo.caicloud.io/caicloud/cyclone-worker ./ && cd -
+    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t $WORKER_IMAGE ./ && cd -
     - ./cyclone &
     - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml

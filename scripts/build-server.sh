@@ -70,12 +70,16 @@ echo "+++++ Start building cyclone server"
 
 cd ${ROOT}
 
-docker run --rm \
-  -v `pwd`:/go/src/github.com/caicloud/cyclone \
-  -e GOPATH=/go:/go/src/github.com/caicloud/cyclone/vendor cargo.caicloud.io/caicloud/golang-gcc:1.6-alpine sh \
-  -c "cd /go/src/github.com/caicloud/cyclone && go build -o cyclone-server"
+IMAGE="cargo.caicloud.io/caicloud/cyclone-server"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
 
-docker build -t cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG} .
+docker run --rm \
+  -v $(pwd):/go/src/github.com/caicloud/cyclone \
+  -e GOPATH=/go \
+  -w /go/src/github.com/caicloud/cyclone \
+  ${BUILD_IN} go build -o cyclone-server
+
+docker build -t ${IMAGE}:${IMAGE_TAG} .
 
 cd - > /dev/null
 
@@ -83,11 +87,11 @@ cd - > /dev/null
 if [[ "$PUSH_TO_REGISTRY" == "Y" ]]; then
   echo ""
   echo "+++++ Start pushing cyclone-server"
-  docker push cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}
+  docker push ${IMAGE}:${IMAGE_TAG}
 fi
 
 echo "Successfully built docker image caicloud/cyclone-server:${IMAGE_TAG}"
-echo "Successfully built docker image cargo.caicloud.io/caicloud/cyclone-server:${IMAGE_TAG}"
+echo "Successfully built docker image ${IMAGE}:${IMAGE_TAG}"
 
 # A reminder for creating Github release.
 if [[ "$#" == "1" && $1 =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
