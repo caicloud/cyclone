@@ -46,7 +46,7 @@
 
 ## API 文档
 
-我们使用 [swagger ui](https://github.com/swagger-api/swagger-ui) 来生成 API 文档，如果你的工作影响了 Cyclone 的 API，你可以在 `http://<your cyclone server host>:7099/apidocs` 查看最新的 API 文档，或者你可以通过我们的[在线文档](http://118.193.142.27:7099/apidocs/)来进行开发与贡献。
+我们使用 [swagger ui](https://github.com/swagger-api/swagger-ui) 来生成 API 文档，如果你的工作影响了 Cyclone 的 API，你可以在 `http://<your cyclone server host>:7099/apidocs` 查看最新的 API 文档，或者你可以通过我们的[在线文档](http://117.149.19.162:30010/apidocs/)来进行开发与贡献。
 
 ## Cyclone 架构以及工作流
 
