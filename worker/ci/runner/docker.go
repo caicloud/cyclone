@@ -43,43 +43,36 @@ const (
 	BuiltImage = "BUILT_IMAGE"
 )
 
+// getNameInNetwork gets the name of the container in network.
 func getNameInNetwork(dn *parser.DockerNode, b *Build) string {
 	return fmt.Sprintf("%s", dn.Name)
 }
 
-// createDockerNetwork creates a new docker network to allow the containers interact
-// with each other at the same time not to impact the host network.
-func createDockerNetwork(b *Build, name string) (*docker_client.Network, error) {
-	createNetworkOptions := docker_client.CreateNetworkOptions{
-		Name:   name,
-		Driver: "bridge",
+// generatePortBindins generate PortBindins from ports config of yaml file.
+func generatePortBindins(ports []string) map[docker_client.Port][]docker_client.PortBinding {
+	portBinds := make(map[docker_client.Port][]docker_client.PortBinding)
+	for _, port := range ports {
+		log.Infof("Port bind: %s", port)
+		portPair := strings.Split(port, ":")
+		if len(portPair) != 2 {
+			continue
+		}
+
+		var port docker_client.Port
+		bind := docker_client.PortBinding{
+			HostPort: portPair[0],
+		}
+		binds := []docker_client.PortBinding{bind}
+		port = docker_client.Port(fmt.Sprintf("%s/tcp", portPair[1]))
+		portBinds[port] = binds
 	}
 
-	network, err := b.dockerManager.Client.CreateNetwork(createNetworkOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	return network, nil
-}
-
-// connectDockerNetwork adds a container to a network or returns an error in case of
-// failure.
-func connectDockerNetwork(b *Build, containerName string, alias string) error {
-	networkConnectionOptions := docker_client.NetworkConnectionOptions{
-		Container: containerName,
-		EndpointConfig: &docker_client.EndpointConfig{
-			Aliases: []string{alias},
-		},
-	}
-	return b.dockerManager.Client.ConnectNetwork(b.network.ID, networkConnectionOptions)
+	return portBinds
 }
 
 // toServiceContainerConfig creates CreateContainerOptions from ServiceNode.
-func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.CreateContainerOptions, string) {
-	// Add the prefix to the name to solve the name conflict.
-	var name = getNameInNetwork(dn, b)
-	var alias = dn.Name
+func toServiceContainerConfig(dn *parser.DockerNode, b *Build) *docker_client.CreateContainerOptions {
+	name := getNameInNetwork(dn, b)
 
 	// If the image of service config to be "BUILT_IMAGE",
 	// Cyclone will use the image built during the "build" step to run a service container.
@@ -88,7 +81,7 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 		tagName, ok2 := b.event.Data["tag-name"]
 
 		if !ok || !ok2 {
-			return nil, alias
+			return nil
 		}
 
 		log.InfoWithFields("About to run service container for integration. ",
@@ -102,8 +95,11 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 		Cmd:        dn.Command,
 		Entrypoint: dn.Entrypoint,
 	}
+
 	hostConfig := &docker_client.HostConfig{
 		Privileged:       dn.Privileged,
+		PortBindings:     generatePortBindins(dn.Ports),
+		Links:            dn.Links,
 		MemorySwappiness: -1,
 	}
 
@@ -148,7 +144,7 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) (*docker_client.C
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-	return createContainerOptions, alias
+	return createContainerOptions
 }
 
 // toContainerConfig creates CreateContainerOptions from BuildNode.
@@ -159,15 +155,12 @@ func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.Nod
 		Cmd:        dn.Command,
 		Entrypoint: dn.Entrypoint,
 	}
+
 	hostConfig := &docker_client.HostConfig{
 		Privileged:       dn.Privileged,
+		PortBindings:     generatePortBindins(dn.Ports),
+		Links:            dn.Links,
 		MemorySwappiness: -1,
-	}
-
-	// only integration use special network
-	// this special network will be teared down when Integration finished.
-	if nodetype == parser.NodeIntegration {
-		hostConfig.NetworkMode = b.network.Name
 	}
 
 	if len(dn.Entrypoint) == 0 {
@@ -287,7 +280,6 @@ func run(b *Build, cco *docker_client.CreateContainerOptions,
 	if err != nil {
 		return nil, err
 	}
-
 	// Ensures the container is always stopped
 	// and ready to be removed.
 	defer func() {

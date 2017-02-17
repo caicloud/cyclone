@@ -45,22 +45,32 @@ func (e *Event) Payload() (payload interface{}) {
 		payload = &ForkEvent{}
 	case "GollumEvent":
 		payload = &GollumEvent{}
+	case "IntegrationInstallationEvent":
+		payload = &IntegrationInstallationEvent{}
+	case "IntegrationInstallationRepositoriesEvent":
+		payload = &IntegrationInstallationRepositoriesEvent{}
 	case "IssueActivityEvent":
 		payload = &IssueActivityEvent{}
 	case "IssueCommentEvent":
 		payload = &IssueCommentEvent{}
 	case "IssuesEvent":
 		payload = &IssuesEvent{}
+	case "LabelEvent":
+		payload = &LabelEvent{}
 	case "MemberEvent":
 		payload = &MemberEvent{}
 	case "MembershipEvent":
 		payload = &MembershipEvent{}
+	case "MilestoneEvent":
+		payload = &MilestoneEvent{}
 	case "PageBuildEvent":
 		payload = &PageBuildEvent{}
 	case "PublicEvent":
 		payload = &PublicEvent{}
 	case "PullRequestEvent":
 		payload = &PullRequestEvent{}
+	case "PullRequestReviewEvent":
+		payload = &PullRequestReviewEvent{}
 	case "PullRequestReviewCommentEvent":
 		payload = &PullRequestReviewCommentEvent{}
 	case "PushEvent":
@@ -132,7 +142,7 @@ func (s *ActivityService) ListRepositoryEvents(owner, repo string, opt *ListOpti
 // ListIssueEventsForRepository lists issue events for a repository.
 //
 // GitHub API docs: http://developer.github.com/v3/activity/events/#list-issue-events-for-a-repository
-func (s *ActivityService) ListIssueEventsForRepository(owner, repo string, opt *ListOptions) ([]*Event, *Response, error) {
+func (s *ActivityService) ListIssueEventsForRepository(owner, repo string, opt *ListOptions) ([]*IssueEvent, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/events", owner, repo)
 	u, err := addOptions(u, opt)
 	if err != nil {
@@ -144,7 +154,7 @@ func (s *ActivityService) ListIssueEventsForRepository(owner, repo string, opt *
 		return nil, nil, err
 	}
 
-	events := new([]*Event)
+	events := new([]*IssueEvent)
 	resp, err := s.client.Do(req, events)
 	if err != nil {
 		return nil, resp, err

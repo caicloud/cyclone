@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net"
 	"sync"
@@ -19,18 +18,19 @@ var ErrClosed = errors.New("closed")
 
 // Low level abstraction over connection to Kafka.
 type connection struct {
-	rw     io.ReadWriteCloser
+	rw     net.Conn
 	stop   chan struct{}
 	nextID chan int32
 	logger Logger
 
-	mu      sync.Mutex
-	respc   map[int32]chan []byte
-	stopErr error
+	mu          sync.Mutex
+	respc       map[int32]chan []byte
+	stopErr     error
+	readTimeout time.Duration
 }
 
 // newConnection returns new, initialized connection or error
-func newTCPConnection(address string, timeout time.Duration) (*connection, error) {
+func newTCPConnection(address string, timeout, readTimeout time.Duration) (*connection, error) {
 	dialer := net.Dialer{
 		Timeout:   timeout,
 		KeepAlive: 30 * time.Second,
@@ -40,11 +40,12 @@ func newTCPConnection(address string, timeout time.Duration) (*connection, error
 		return nil, err
 	}
 	c := &connection{
-		stop:   make(chan struct{}),
-		nextID: make(chan int32),
-		rw:     conn,
-		respc:  make(map[int32]chan []byte),
-		logger: &nullLogger{},
+		stop:        make(chan struct{}),
+		nextID:      make(chan int32),
+		rw:          conn,
+		respc:       make(map[int32]chan []byte),
+		logger:      &nullLogger{},
+		readTimeout: readTimeout,
 	}
 	go c.nextIDLoop()
 	go c.readRespLoop()
@@ -84,6 +85,13 @@ func (c *connection) readRespLoop() {
 
 	rd := bufio.NewReader(c.rw)
 	for {
+		if c.readTimeout > 0 {
+			err := c.rw.SetReadDeadline(time.Now().Add(c.readTimeout))
+			if err != nil {
+				c.logger.Error("msg", "SetReadDeadline failed",
+					"error", err)
+			}
+		}
 		correlationID, b, err := proto.ReadResp(rd)
 		if err != nil {
 			c.mu.Lock()

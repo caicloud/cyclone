@@ -23,10 +23,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"time"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
+	"github.com/caicloud/cyclone/pkg/kubefaker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/pkg/wait"
@@ -37,10 +40,12 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/yaml"
 	"github.com/caicloud/cyclone/worker/clair"
 	steplog "github.com/caicloud/cyclone/worker/log"
+	"github.com/caicloud/cyclone/worker/vcs"
 	k8s_core_api "k8s.io/kubernetes/pkg/api"
 	k8s_ext_api "k8s.io/kubernetes/pkg/apis/extensions"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
+	"k8s.io/kubernetes/pkg/kubectl/resource"
 )
 
 // Application is the type for k8s deployment.
@@ -263,6 +268,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 				"image":       imageName,
 			})
 		if application.ClusterType == KUBERNETES {
+
 			if err := InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName, imageName,
 				application.ClusterHost, application.ClusterToken); err != nil {
 				log.ErrorWithFields("Failed to deploy with yaml information use k8s api", log.Fields{"err": err})
@@ -602,10 +608,46 @@ func InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName,
 		return err
 	}
 
+	// skip
+	if deploymentName == "" {
+		return nil
+	}
+
 	// Get applciton depolyment
 	var deployment *k8s_ext_api.Deployment
 	if deployment, err = k8sClient.Deployments(namespaceName).Get(deploymentName); err != nil {
-		return err
+		// TODO create deployment only if deployment not found
+
+		// try to create deployment
+		template := path.Join(vcs.CLONE_DIR, deploymentName+".yml")
+		_, err := os.Stat(template)
+		if os.IsNotExist(err) {
+			return fmt.Errorf("Can not find deploymnet(%s) in cluster and deploymnet template(%s) is not provided either", deploymentName, template)
+		}
+
+		log.Infof("found deployment template(%s)", template)
+
+		cfg := restclient.Config{
+			Host:        host,
+			BearerToken: token,
+		}
+		options := &resource.FilenameOptions{
+			Recursive: false,
+			Filenames: []string{
+				template,
+			},
+		}
+		factory := kubefaker.NewFactory(namespaceName, true, cfg)
+		err = kubefaker.RunCreate(factory, options)
+		if err != nil {
+			return err
+		}
+		// wait for creating deployment
+		time.Sleep(2 * time.Second)
+		deployment, err = k8sClient.Deployments(namespaceName).Get(deploymentName)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Infof("deployment %+v", *deployment)
@@ -615,11 +657,9 @@ func InvokeUpdateImageK8sAPI(deploymentName, namespaceName, containerName,
 		}
 	}
 
-	// Update deployment. Skip updating deployment if name is empty.
-	if deployment.Name != "" {
-		if _, err := k8sClient.Deployments(namespaceName).Update(deployment); err != nil {
-			return err
-		}
+	// Update deployment
+	if _, err := k8sClient.Deployments(namespaceName).Update(deployment); err != nil {
+		return err
 	}
 
 	return nil

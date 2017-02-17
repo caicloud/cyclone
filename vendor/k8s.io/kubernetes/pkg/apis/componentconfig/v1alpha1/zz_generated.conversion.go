@@ -68,6 +68,7 @@ func autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyCon
 	out.HostnameOverride = in.HostnameOverride
 	out.IPTablesMasqueradeBit = (*int32)(unsafe.Pointer(in.IPTablesMasqueradeBit))
 	out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+	out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 	out.KubeconfigPath = in.KubeconfigPath
 	out.MasqueradeAll = in.MasqueradeAll
 	out.Master = in.Master
@@ -80,6 +81,7 @@ func autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyCon
 	out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
 	out.ConntrackMin = in.ConntrackMin
 	out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+	out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 	return nil
 }
 
@@ -95,6 +97,7 @@ func autoConvert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyCon
 	out.HostnameOverride = in.HostnameOverride
 	out.IPTablesMasqueradeBit = (*int32)(unsafe.Pointer(in.IPTablesMasqueradeBit))
 	out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+	out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 	out.KubeconfigPath = in.KubeconfigPath
 	out.MasqueradeAll = in.MasqueradeAll
 	out.Master = in.Master
@@ -107,6 +110,7 @@ func autoConvert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyCon
 	out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
 	out.ConntrackMin = in.ConntrackMin
 	out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+	out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 	return nil
 }
 
@@ -326,7 +330,7 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	out.RuntimeCgroups = in.RuntimeCgroups
 	out.SystemCgroups = in.SystemCgroups
 	out.CgroupRoot = in.CgroupRoot
-	if err := api.Convert_Pointer_bool_To_bool(&in.CgroupsPerQOS, &out.CgroupsPerQOS, s); err != nil {
+	if err := api.Convert_Pointer_bool_To_bool(&in.ExperimentalCgroupsPerQOS, &out.ExperimentalCgroupsPerQOS, s); err != nil {
 		return err
 	}
 	out.CgroupDriver = in.CgroupDriver
@@ -336,7 +340,6 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
 	out.RktPath = in.RktPath
 	out.ExperimentalMounterPath = in.ExperimentalMounterPath
-	out.ExperimentalMounterRootfsPath = in.ExperimentalMounterRootfsPath
 	out.RktAPIEndpoint = in.RktAPIEndpoint
 	out.RktStage1Image = in.RktStage1Image
 	if err := api.Convert_Pointer_string_To_string(&in.LockFilePath, &out.LockFilePath, s); err != nil {
@@ -384,6 +387,9 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	out.EvictionPressureTransitionPeriod = in.EvictionPressureTransitionPeriod
 	out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
 	out.EvictionMinimumReclaim = in.EvictionMinimumReclaim
+	if err := api.Convert_Pointer_bool_To_bool(&in.ExperimentalKernelMemcgNotification, &out.ExperimentalKernelMemcgNotification, s); err != nil {
+		return err
+	}
 	out.PodsPerCore = in.PodsPerCore
 	if err := api.Convert_Pointer_bool_To_bool(&in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach, s); err != nil {
 		return err
@@ -402,7 +408,9 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	}
 	out.AllowedUnsafeSysctls = *(*[]string)(unsafe.Pointer(&in.AllowedUnsafeSysctls))
 	out.FeatureGates = in.FeatureGates
-	out.ExperimentalRuntimeIntegrationType = in.ExperimentalRuntimeIntegrationType
+	out.EnableCRI = in.EnableCRI
+	out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+	out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 	return nil
 }
 
@@ -491,7 +499,7 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	out.CloudProvider = in.CloudProvider
 	out.CloudConfigFile = in.CloudConfigFile
 	out.KubeletCgroups = in.KubeletCgroups
-	if err := api.Convert_bool_To_Pointer_bool(&in.CgroupsPerQOS, &out.CgroupsPerQOS, s); err != nil {
+	if err := api.Convert_bool_To_Pointer_bool(&in.ExperimentalCgroupsPerQOS, &out.ExperimentalCgroupsPerQOS, s); err != nil {
 		return err
 	}
 	out.CgroupDriver = in.CgroupDriver
@@ -504,7 +512,6 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
 	out.RktPath = in.RktPath
 	out.ExperimentalMounterPath = in.ExperimentalMounterPath
-	out.ExperimentalMounterRootfsPath = in.ExperimentalMounterRootfsPath
 	out.RktAPIEndpoint = in.RktAPIEndpoint
 	out.RktStage1Image = in.RktStage1Image
 	if err := api.Convert_string_To_Pointer_string(&in.LockFilePath, &out.LockFilePath, s); err != nil {
@@ -552,6 +559,9 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	out.EvictionPressureTransitionPeriod = in.EvictionPressureTransitionPeriod
 	out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
 	out.EvictionMinimumReclaim = in.EvictionMinimumReclaim
+	if err := api.Convert_bool_To_Pointer_bool(&in.ExperimentalKernelMemcgNotification, &out.ExperimentalKernelMemcgNotification, s); err != nil {
+		return err
+	}
 	out.PodsPerCore = in.PodsPerCore
 	if err := api.Convert_bool_To_Pointer_bool(&in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach, s); err != nil {
 		return err
@@ -570,7 +580,9 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	}
 	out.AllowedUnsafeSysctls = *(*[]string)(unsafe.Pointer(&in.AllowedUnsafeSysctls))
 	out.FeatureGates = in.FeatureGates
-	out.ExperimentalRuntimeIntegrationType = in.ExperimentalRuntimeIntegrationType
+	out.EnableCRI = in.EnableCRI
+	out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+	out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 	return nil
 }
 

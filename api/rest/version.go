@@ -237,24 +237,17 @@ func cancelVersion(request *restful.Request, response *restful.Response) {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, cancelresponse)
 		return
 	}
-	w, err := event.LoadWorker(e)
-	if err != nil {
-		message := fmt.Sprintf("Unable to load worker by event")
+
+	if e.Status == api.EventStatusRunning {
+		e.Status = api.EventStatusCancel
+		event.SaveEventToEtcd(e)
+	} else {
+		message := fmt.Sprintf("the state of event is not running")
 		log.ErrorWithFields(message, log.Fields{"user_id": userID})
 		cancelresponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, cancelresponse)
 		return
 	}
-
-	err = w.Fire()
-	if err != nil {
-		message := fmt.Sprintf("Unable to cancel event")
-		log.ErrorWithFields(message, log.Fields{"user_id": userID})
-		cancelresponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, cancelresponse)
-		return
-	}
-
 	cancelresponse.Result = "success"
 	response.WriteEntity(cancelresponse)
 }

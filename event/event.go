@@ -21,6 +21,7 @@ import (
 	"github.com/caicloud/cyclone/notify"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
+	"github.com/caicloud/cyclone/websocket"
 )
 
 const (
@@ -113,6 +114,24 @@ func postHookEvent(event *api.Event) {
 			log.Errorf("release worker node resource err: %v", err)
 		}
 	}
+
+	// Include cancel manual or timeout
+	if event.Status == api.EventStatusCancel {
+		versionLog, err := websocket.StoreTopic(event.Service.UserID, event.Service.ServiceID, event.Version.VersionID)
+		if err == nil {
+			Log := api.VersionLog{
+				VerisonID: event.Version.VersionID,
+				Logs:      versionLog,
+			}
+
+			ds := store.NewStore()
+			defer ds.Close()
+			_, err = ds.NewVersionLogDocument(&Log)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}
 }
 
 // createServiceHander is the create service handler.
@@ -129,6 +148,13 @@ func createServiceHandler(event *api.Event) error {
 // createServicePostHook is the create service post hook.
 func createServicePostHook(event *api.Event) {
 	log.Infof("create service post hook")
+	if event.Service.Repository.Status == api.RepositoryAccepted {
+		if event.Status == api.EventStatusSuccess {
+			event.Service.Repository.Status = api.RepositoryHealthy
+		} else {
+			event.Service.Repository.Status = api.RepositoryMissing
+		}
+	}
 
 	ds := store.NewStore()
 	defer ds.Close()

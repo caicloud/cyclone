@@ -168,6 +168,8 @@ func CurrentGinkgoTestDescription() GinkgoTestDescription {
 //
 //You use the Time() function to time how long the passed in body function takes to run
 //You use the RecordValue() function to track arbitrary numerical measurements.
+//The RecordValueWithPrecision() function can be used alternatively to provide the unit
+//and resolution of the numeric measurement.
 //The optional info argument is passed to the test reporter and can be used to
 // provide the measurement data to a custom reporter with context.
 //
@@ -175,6 +177,7 @@ func CurrentGinkgoTestDescription() GinkgoTestDescription {
 type Benchmarker interface {
 	Time(name string, body func(), info ...interface{}) (elapsedTime time.Duration)
 	RecordValue(name string, value float64, info ...interface{})
+	RecordValueWithPrecision(name string, value float64, units string, precision int, info ...interface{})
 }
 
 //RunSpecs is the entry point for the Ginkgo test runner.
@@ -345,6 +348,28 @@ func PIt(text string, _ ...interface{}) bool {
 func XIt(text string, _ ...interface{}) bool {
 	globalSuite.PushItNode(text, func() {}, types.FlagTypePending, codelocation.New(1), 0)
 	return true
+}
+
+//Specify blocks are aliases for It blocks and allow for more natural wording in situations
+//which "It" does not fit into a natural sentence flow. All the same protocols apply for Specify blocks
+//which apply to It blocks.
+func Specify(text string, body interface{}, timeout ...float64) bool {
+	return It(text, body, timeout...)
+}
+
+//You can focus individual Specifys using FSpecify
+func FSpecify(text string, body interface{}, timeout ...float64) bool {
+	return FIt(text, body, timeout...)
+}
+
+//You can mark Specifys as pending using PSpecify
+func PSpecify(text string, is ...interface{}) bool {
+	return PIt(text, is...)
+}
+
+//You can mark Specifys as pending using XSpecify
+func XSpecify(text string, is ...interface{}) bool {
+	return XIt(text, is...)
 }
 
 //By allows you to better document large Its.

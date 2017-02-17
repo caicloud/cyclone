@@ -1,0 +1,10 @@
+integration:
+  image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+  environment:
+    - GOPATH=/go
+    - WORKDIR=/go/src/github.com/caicloud/cyclone
+  commands: 
+    - mkdir -p $WORKDIR
+    - cp ./ -rf $WORKDIR
+    - cd $WORKDIR
+    - ./tests/run-unit-test.sh

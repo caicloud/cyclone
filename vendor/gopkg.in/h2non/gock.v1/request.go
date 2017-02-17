@@ -38,6 +38,9 @@ type Request struct {
 	// Method stores the Request HTTP method to match.
 	Method string
 
+	// CompressionScheme stores the Request Compression scheme to match and use for decompression.
+	CompressionScheme string
+
 	// Header stores the HTTP header fields to match.
 	Header http.Header
 
@@ -135,6 +138,14 @@ func (r *Request) BodyString(body string) *Request {
 // File defines the body to match based on the given file path string.
 func (r *Request) File(path string) *Request {
 	r.BodyBuffer, r.Error = ioutil.ReadFile(path)
+	return r
+}
+
+// Compression defines the request compression scheme, and enables automatic body decompression.
+// Supports only the "gzip" scheme so far.
+func (r *Request) Compression(scheme string) *Request {
+	r.Header.Set("Content-Encoding", scheme)
+	r.CompressionScheme = scheme
 	return r
 }
 

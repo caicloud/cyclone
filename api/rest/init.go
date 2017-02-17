@@ -112,6 +112,13 @@ func registerServiceAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("service_id", "identifier of the service").DataType("string")).
 		Writes(api.ServiceGetResponse{}))
 
+	// Filter the unauthorized operation.
+	ws.Route(ws.GET("/{user_id}/services/{service_id}/badge").
+		To(getServiceBadge).
+		Doc("get the badge for given service").
+		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
+		Param(ws.PathParameter("service_id", "identifier of the service").DataType("string")))
+
 	ws.Route(ws.GET("/{user_id}/services").
 		To(listServices).
 		Doc("list all services of a given user").
@@ -316,7 +323,15 @@ func registerDeployAPIs(ws *restful.WebService) {
 		Doc("find a deploy by id for given user").
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Param(ws.PathParameter("deploy_id", "identifier of the deploy").DataType("string")).
-		Writes(api.Deploy{}))
+		Writes(api.DeployGetResponse{}))
+
+	// Filter the unauthorized operation.
+	ws.Route(ws.GET("/{user_id}/deploys").
+		To(listDeploy).
+		Doc("find deploys by id for given user").
+		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
+		Writes(api.DeployListResponse{}))
+
 	// Filter the unauthorized operation.
 	ws.Route(ws.PUT("/{user_id}/deploys/{deploy_id}").
 		To(setDeploy).
@@ -324,4 +339,12 @@ func registerDeployAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Param(ws.PathParameter("deploy_id", "identifier of the deploy").DataType("string")).
 		Writes(api.DeploySetResponse{}))
+
+	// Filter the unauthorized operation.
+	ws.Route(ws.DELETE("/{user_id}/deploys/{deploy_id}").
+		To(delDeploy).
+		Doc("delete a deploy by id for given user").
+		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
+		Param(ws.PathParameter("deploy_id", "identifier of the deploy").DataType("string")).
+		Writes(api.DeployDelResponse{}))
 }

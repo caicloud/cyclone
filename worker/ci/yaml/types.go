@@ -44,6 +44,8 @@ type Container struct {
 	Pull           bool          `yaml:"pull"`
 	Privileged     bool          `yaml:"privileged"`
 	Environment    MapEqualSlice `yaml:"environment"`
+	Ports          Ports         `yaml:"ports"`
+	Links          Links         `yaml:"links"`
 	Entrypoint     Command       `yaml:"entrypoint"`
 	Command        Command       `yaml:"command"`
 	ExtraHosts     []string      `yaml:"extra_hosts"`
@@ -132,6 +134,16 @@ type Command struct {
 	parts []string
 }
 
+// Ports is the type for port field in yml config.
+type Ports struct {
+	parts []string
+}
+
+// Links is the type for link field in yml config.
+type Links struct {
+	parts []string
+}
+
 // Stringorslice represents a string or an array of strings.
 // TODO use docker/docker/pkg/stringutils.StrSlice once 1.9.x is released.
 type Stringorslice struct {
@@ -167,6 +179,54 @@ func (s *Command) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Slice gets the parts of the Slice as a Slice of string.
 func (s *Command) Slice() []string {
+	return s.parts
+}
+
+// UnmarshalYAML implements the Unmarshaller interface.
+func (s *Ports) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var stringType string
+	err := unmarshal(&stringType)
+	if err == nil {
+		s.parts, err = shlex.Split(stringType)
+		return err
+	}
+
+	var sliceType []string
+	err = unmarshal(&sliceType)
+	if err == nil {
+		s.parts = sliceType
+		return nil
+	}
+
+	return err
+}
+
+// Slice gets the parts of the Slice as a Slice of string.
+func (s *Ports) Slice() []string {
+	return s.parts
+}
+
+// UnmarshalYAML implements the Unmarshaller interface.
+func (s *Links) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var stringType string
+	err := unmarshal(&stringType)
+	if err == nil {
+		s.parts, err = shlex.Split(stringType)
+		return err
+	}
+
+	var sliceType []string
+	err = unmarshal(&sliceType)
+	if err == nil {
+		s.parts = sliceType
+		return nil
+	}
+
+	return err
+}
+
+// Slice gets the parts of the Slice as a Slice of string.
+func (s *Links) Slice() []string {
 	return s.parts
 }
 

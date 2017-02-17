@@ -38,27 +38,32 @@ const (
 var (
 	// eventTypeMapping maps webhooks types to their corresponding go-github struct types.
 	eventTypeMapping = map[string]string{
-		"commit_comment":              "CommitCommentEvent",
-		"create":                      "CreateEvent",
-		"delete":                      "DeleteEvent",
-		"deployment":                  "DeploymentEvent",
-		"deployment_status":           "DeploymentStatusEvent",
-		"fork":                        "ForkEvent",
-		"gollum":                      "GollumEvent",
-		"issue_comment":               "IssueCommentEvent",
-		"issues":                      "IssuesEvent",
-		"member":                      "MemberEvent",
-		"membership":                  "MembershipEvent",
-		"page_build":                  "PageBuildEvent",
-		"public":                      "PublicEvent",
-		"pull_request_review_comment": "PullRequestReviewCommentEvent",
-		"pull_request":                "PullRequestEvent",
-		"push":                        "PushEvent",
-		"repository":                  "RepositoryEvent",
-		"release":                     "ReleaseEvent",
-		"status":                      "StatusEvent",
-		"team_add":                    "TeamAddEvent",
-		"watch":                       "WatchEvent",
+		"commit_comment":                        "CommitCommentEvent",
+		"create":                                "CreateEvent",
+		"delete":                                "DeleteEvent",
+		"deployment":                            "DeploymentEvent",
+		"deployment_status":                     "DeploymentStatusEvent",
+		"fork":                                  "ForkEvent",
+		"gollum":                                "GollumEvent",
+		"integration_installation":              "IntegrationInstallationEvent",
+		"integration_installation_repositories": "IntegrationInstallationRepositoriesEvent",
+		"issue_comment":                         "IssueCommentEvent",
+		"issues":                                "IssuesEvent",
+		"label":                                 "LabelEvent",
+		"member":                                "MemberEvent",
+		"membership":                            "MembershipEvent",
+		"milestone":                             "MilestoneEvent",
+		"page_build":                            "PageBuildEvent",
+		"public":                                "PublicEvent",
+		"pull_request_review":                   "PullRequestReviewEvent",
+		"pull_request_review_comment":           "PullRequestReviewCommentEvent",
+		"pull_request":                          "PullRequestEvent",
+		"push":                                  "PushEvent",
+		"repository":                            "RepositoryEvent",
+		"release":                               "ReleaseEvent",
+		"status":                                "StatusEvent",
+		"team_add":                              "TeamAddEvent",
+		"watch":                                 "WatchEvent",
 	}
 )
 
@@ -166,9 +171,9 @@ func WebHookType(r *http.Request) string {
 //       event, err := github.ParseWebHook(github.WebHookType(r), payload)
 //       if err != nil { ... }
 //       switch event := event.(type) {
-//       case CommitCommentEvent:
+//       case *github.CommitCommentEvent:
 //           processCommitCommentEvent(event)
-//       case CreateEvent:
+//       case *github.CreateEvent:
 //           processCreateEvent(event)
 //       ...
 //       }

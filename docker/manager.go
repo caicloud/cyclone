@@ -25,6 +25,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"github.com/caicloud/cyclone/pkg/log"
 	steplog "github.com/caicloud/cyclone/worker/log"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/builder/dockerfile/command"
 	docker_parse "github.com/docker/docker/builder/dockerfile/parser"
 	docker_client "github.com/fsouza/go-dockerclient"
@@ -85,6 +86,16 @@ func NewManager(endpoint string, certPath string, registry api.RegistryCompose) 
 
 // PullImage pulls an image by its name.
 func (dm *Manager) PullImage(imageName string) error {
+	repo, err := reference.Parse(imageName)
+	if err != nil {
+		log.Errorf("imagename parse error: %v", err)
+		return err
+	}
+	tagged, ok := repo.(reference.Tagged)
+	if !ok || tagged.Tag() == "" {
+		imageName = fmt.Sprintf("%s:%s", imageName, "latest")
+	}
+
 	opts := docker_client.PullImageOptions{
 		Repository: imageName,
 		Registry:   dm.Registry,
@@ -95,7 +106,7 @@ func (dm *Manager) PullImage(imageName string) error {
 		Password: dm.AuthConfig.Password,
 	}
 
-	err := dm.Client.PullImage(opts, authOpt)
+	err = dm.Client.PullImage(opts, authOpt)
 	if err == nil {
 		log.InfoWithFields("Successfully pull docker image.", log.Fields{"image": imageName})
 	}
@@ -245,11 +256,6 @@ func (dm *Manager) GetAuthOpts() (authOpts docker_client.AuthConfigurations) {
 	return authOpts
 }
 
-// RemoveNetwork removes a network by given ID.
-func (dm *Manager) RemoveNetwork(networkID string) error {
-	return dm.Client.RemoveNetwork(networkID)
-}
-
 // BuildImageSpecifyDockerfile builds docker image with params from event with
 // specify Dockerfile. Build output will be sent to event status output.
 func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
@@ -342,8 +348,11 @@ func parse(despath string) ([]string, error) {
 	}
 
 	defer f.Close()
-
-	nodes, _ := docker_parse.Parse(f)
+	d := docker_parse.Directive{
+		LookingForDirectives: true,
+	}
+	docker_parse.SetEscapeToken(docker_parse.DefaultEscapeToken, &d)
+	nodes, _ := docker_parse.Parse(f, &d)
 	for _, node := range nodes.Children {
 		if node.Value == command.From {
 			if node.Next != nil {

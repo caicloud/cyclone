@@ -22,16 +22,8 @@ import (
 )
 
 const (
-	illegalPath = "/var/cyclone/the-file-shouldn't-exist"
-	legalPath   = "/var"
+	legalPath = "/var"
 )
-
-// TestEnsureParentDir tests the EnsureParentDir func.
-func TestEnsureParentDirWithError(t *testing.T) {
-	if err := EnsureParentDir(illegalPath, os.ModePerm); err == nil {
-		t.Error("Expected error to occur but it was nil")
-	}
-}
 
 // TestEnsureParentDir tests the EnsureParentDir func.
 func TestEnsureParentDir(t *testing.T) {

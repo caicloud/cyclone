@@ -7,10 +7,14 @@
 	<br>
 </h1>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone)](https://goreportcard.com/report/github.com/caicloud/cyclone)
-[![GoDoc](https://godoc.org/github.com/caicloud/cyclone?status.svg)](https://godoc.org/github.com/caicloud/cyclone)
-[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/gaocegege/cyclone)
-[![Gitter](https://badges.gitter.im/caicloud/cyclone.svg)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone?style=flat-square)](https://goreportcard.com/report/github.com/caicloud/cyclone)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/caicloud/cyclone)
+[![Gitter](https://img.shields.io/gitter/room/caicloud/cyclone.svg?style=flat-square)](https://gitter.im/caicloud/cyclone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
+[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat-square)](https://stackshare.io/gaocegege/cyclone)
+[![GitHub contributors](https://img.shields.io/github/contributors/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/graphs/contributors)
+[![Issue Stats](https://img.shields.io/issuestats/i/github/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/issues)
+[![Issue Stats](https://img.shields.io/issuestats/p/github/caicloud/cyclone.svg?style=flat-square)](https://github.com/caicloud/cyclone/pulls)
 
 单元测试
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
@@ -59,10 +63,8 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 	<img src="./docs/security.png" alt="安全扫描" width="500">
 </div>
 
+更多特性详见[功能介绍](./docs/functions_zh-CN.md)。
+
 ## Roadmap
 
-| 里程碑     | 新特性                      |
-| ------- | ------------------------ |
-| 2016年Q4 | k8s 支持：使用 k8s-job 执行 CI/CD 工作流 |
-| 2017年Q1 | web 操作界面                  |
-| 今后      | 用户管理权限 <br>支持用户插件            |
+请到 [Github milestones](https://github.com/caicloud/cyclone/milestones) 查阅我们今后的计划。

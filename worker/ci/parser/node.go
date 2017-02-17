@@ -83,6 +83,8 @@ type DockerNode struct {
 	Pull           bool
 	Privileged     bool
 	Environment    []string
+	Ports          []string
+	Links          []string
 	Entrypoint     []string
 	Command        []string
 	Volumes        []string
@@ -115,6 +117,8 @@ func newDockerNode(typ NodeType, c yaml.Container) *DockerNode {
 		Pull:           c.Pull,
 		Privileged:     c.Privileged,
 		Environment:    c.Environment.Slice(),
+		Ports:          c.Ports.Slice(),
+		Links:          c.Links.Slice(),
 		Entrypoint:     c.Entrypoint.Slice(),
 		Command:        c.Command.Slice(),
 		Volumes:        c.Volumes,

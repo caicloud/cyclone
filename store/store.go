@@ -31,7 +31,7 @@ const (
 	daemonCollectionName         string = "DaemonCollection"
 	remoteCollectionName         string = "RemoteCollection"
 	workerNodeCollection         string = "WorkerNodeCollection"
-	deployCollectionName         string = "DeployCollectionName"
+	deployCollectionName         string = "DeployCollection"
 	ResourceCollectionName       string = "ResourceCollection"
 )
 

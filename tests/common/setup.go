@@ -58,14 +58,14 @@ const (
 
 	// BobUser is a normal user, we use it to test different cases, e.g. build
 	// from user1 should fail to push to user2.
-	BobUser = "bob"
+	BobUser = "bobo"
 	// BobUID is the UID of BobUser.
-	BobUID = "bobUID"
+	BobUID = "boboUID"
 	// BobPassword is the password of BobUser.
-	BobPassword = "bob_password"
+	BobPassword = "bobo_password"
 
 	// DefaultRegistryAddress is the default docker registry, it would start a local registry.
-	DefaultRegistryAddress = "localhost:5000"
+	DefaultRegistryAddress = "cargo.caicloud.io"
 	// DefaultDockerHost is the default docker host used in e2e test.
 	DefaultDockerHost = "unix:///var/run/docker.sock"
 

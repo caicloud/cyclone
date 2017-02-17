@@ -41,15 +41,48 @@ func TestReadConfig(t *testing.T) {
 	if err := readContextFromConfigFile(); err != nil {
 		t.Error("Expected error to be nil")
 	}
+
+	// Clean up test environment
+	if err := cleanupConfig(); err != nil {
+		t.Error("Expected error to be nil")
+	}
 }
 
 // TestSendEmailWithWrongConfig sends email with wrong config.
 func TestSendEmailWithWrongConfig(t *testing.T) {
-	smtpServer, err := NewEmailNotifier(mockSMTPServer, mockSMTPPort, mockSMTPUsername, mockSMTPPassword)
-	if err != nil {
+	// Set wrong config
+	if err := os.Setenv(SUCCESSTEMPLATE, "error_path/success.html"); err != nil {
 		t.Error("Expected error to be nil")
 	}
-	if err := smtpServer.Notify(&api.Service{}, &api.Version{}, ""); err == nil {
-		t.Error("Expected error to occur but it was nil")
+	if err := os.Setenv(ERRORTEMPLATE, "error_path/error.html"); err != nil {
+		t.Error("Expected error to be nil")
 	}
+
+	smtpServer, err := NewEmailNotifier(mockSMTPServer, mockSMTPPort, mockSMTPUsername, mockSMTPPassword)
+	if err == nil {
+		t.Error("Expected error to be not nil")
+	}
+
+	if smtpServer != nil {
+		if err := smtpServer.Notify(&api.Service{}, &api.Version{}, ""); err == nil {
+			t.Error("Expected error to occur but it was nil")
+		}
+	}
+
+	// Clean up test environment
+	if err := cleanupConfig(); err != nil {
+		t.Error("Expected error to be nil")
+	}
+}
+
+// cleanupConfig Cleans up environment variables of email config
+func cleanupConfig() error {
+	if err := os.Unsetenv(SUCCESSTEMPLATE); err != nil {
+		return err
+	}
+	if err := os.Unsetenv(ERRORTEMPLATE); err != nil {
+		return err
+	}
+
+	return nil
 }

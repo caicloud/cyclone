@@ -48,7 +48,7 @@ In the future we would run these tests by cyclone.
 
 ## API Documentation
 
-We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API documentation. If your work impacts cyclone API, you could check out API documentation at `http://<your cyclone server host>:7099/apidocs`, else you could check out [our online API documentation](http://118.193.142.27:7099/apidocs/).
+We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API documentation. If your work impacts cyclone API, you could check out API documentation at `http://<your cyclone server host>:7099/apidocs`, else you could check out [our online API documentation](http://117.149.19.162:30010/apidocs/).
 
 ## Architecture and workflow of the Cyclone project
 

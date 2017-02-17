@@ -26,7 +26,6 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/parser"
 	"github.com/caicloud/cyclone/worker/clair"
 	steplog "github.com/caicloud/cyclone/worker/log"
-	docker_client "github.com/fsouza/go-dockerclient"
 )
 
 // BuildStatus represents the type for status of build.
@@ -36,7 +35,6 @@ type BuildStatus uint
 type Build struct {
 	contextDir          string
 	event               *api.Event
-	network             *docker_client.Network
 	dockerManager       *docker.Manager
 	tree                *parser.Tree
 	flags               parser.NodeType
@@ -53,27 +51,19 @@ func Load(contextDir string, event *api.Event, dockerManager *docker.Manager, tr
 	return &Build{
 		contextDir:    contextDir,
 		event:         event,
-		network:       &docker_client.Network{},
 		dockerManager: dockerManager,
 		tree:          tree,
 	}
 }
 
-// Setup the networks and volumes
+// Setup environments.
 func (b *Build) Setup() error {
-	var err error
-	// Create a network with the name of EventID. Because the EventID is unique.
-	b.network, err = createDockerNetwork(b, fmt.Sprintf("%s", b.event.EventID))
-	if err != nil {
-		steplog.InsertStepLog(b.event, steplog.Integration, steplog.Stop, err)
-		return err
-	}
 	return nil
 }
 
-// Teardown the networks and volumes
+// Teardown tears down the build.
 func (b *Build) Teardown() error {
-	return b.dockerManager.RemoveNetwork(b.network.ID)
+	return nil
 }
 
 // RunNode walks through the tree, run the build job.
@@ -105,7 +95,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 		switch node.Type() {
 		case parser.NodeService:
 			// Record image name
-			createContainerOptions, alias := toServiceContainerConfig(node, b)
+			createContainerOptions := toServiceContainerConfig(node, b)
 
 			// Run the docker container.
 			container, err := start(b, createContainerOptions)
@@ -115,10 +105,6 @@ func (b *Build) walk(node parser.Node) (err error) {
 			// Set the container ID, to stop and remove the containers at
 			// post hook function.
 			b.ciServiceContainers = append(b.ciServiceContainers, container.ID)
-			err = connectDockerNetwork(b, getNameInNetwork(node, b), alias)
-			if err != nil {
-				return err
-			}
 
 		case parser.NodeIntegration:
 			// Record image name

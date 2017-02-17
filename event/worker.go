@@ -62,6 +62,7 @@ const (
 )
 
 var (
+	// ErrWorkerBusy represents a special error.
 	ErrWorkerBusy = errors.New("Get worker docker host busy")
 )
 
@@ -168,7 +169,7 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 		defer ds.Close()
 		nodes, errinfo := ds.FindWorkerNodesByDockerHost(event.WorkerInfo.DockerHost)
 		if errinfo != nil || len(nodes) != 1 {
-			log.Errorf("find worker node err: %v", err)
+			log.Errorf("find worker node err: %v", errinfo)
 		} else {
 			nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
 			nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
@@ -236,7 +237,7 @@ func CheckWorkerTimeOut(e api.Event) {
 
 	if !IsEventFinished(event) {
 		log.Infof("event time out: %v", event)
-		event.Status = api.EventStatusFail
+		event.Status = api.EventStatusCancel
 		SaveEventToEtcd(event)
 	}
 }
@@ -270,11 +271,10 @@ func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_clie
 	}
 
 	hostConfig := &docker_client.HostConfig{
-		Privileged:  true,
-		NetworkMode: "host",
-		AutoRemove:  true,
-		CPUShares:   cpu,
-		Memory:      memory,
+		Privileged: true,
+		AutoRemove: true,
+		CPUShares:  cpu,
+		Memory:     memory,
 	}
 
 	createContainerOptions := &docker_client.CreateContainerOptions{
