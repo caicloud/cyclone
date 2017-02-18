@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -37,7 +36,8 @@ func (d *DataStore) FindServiceByCondition(userID, servicename string) ([]api.Se
 // NewServiceDocument creates a new document (record) in mongodb. It returns service
 // id of the newly created service.
 func (d *DataStore) NewServiceDocument(service *api.Service) (string, error) {
-	service.ServiceID = uuid.NewV4().String()
+	// service.ServiceID = uuid.NewV4().String()
+	service.ServiceID = bson.NewObjectId().String()
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
 	_, err := col.Upsert(bson.M{"_id": service.ServiceID}, service)
 	return service.ServiceID, err

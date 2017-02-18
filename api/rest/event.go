@@ -22,6 +22,7 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
+	eventmanager "github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
@@ -50,7 +51,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 	}
 
 	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(EventsUnfinished + eventID)
+	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
 		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
@@ -104,7 +105,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	}
 
 	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(EventsUnfinished + eventID)
+	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
 		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
@@ -150,7 +151,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	}
 
 	log.Infof("set etcd: %s", string(eventJSON))
-	err = etcdClient.Set(EventsUnfinished+eventID, string(eventJSON))
+	err = etcdClient.Set(eventmanager.EventsUnfinished+eventID, string(eventJSON))
 	if err != nil {
 		message := "Unable to set event to etcd"
 		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})

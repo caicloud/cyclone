@@ -36,9 +36,9 @@ var (
 
 const (
 	// Actions about watcher.
-	Watch_Action_Create string = "create"
-	Watch_Action_Set    string = "set"
-	Watch_Action_Delete string = "delete"
+	WatchActionCreate string = "create"
+	WatchActionSet    string = "set"
+	WatchActionDelete string = "delete"
 )
 
 // Init initializes a client, connected to etcd server.

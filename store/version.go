@@ -18,7 +18,6 @@ package store
 
 import (
 	"github.com/caicloud/cyclone/api"
-	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -35,7 +34,7 @@ func (d *DataStore) FindVersionsByCondition(serviceID, versionname string) ([]ap
 // NewVersionDocument creates a new document (record) in mongodb. It returns version
 // id of the newly created version.
 func (d *DataStore) NewVersionDocument(version *api.Version) (string, error) {
-	version.VersionID = uuid.NewV4().String()
+	version.VersionID = bson.NewObjectId().String()
 	col := d.s.DB(defaultDBName).C(versionCollectionName)
 	_, err := col.Upsert(bson.M{"_id": version.VersionID}, version)
 	return version.VersionID, err

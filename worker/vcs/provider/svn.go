@@ -18,6 +18,7 @@ package provider
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
@@ -34,12 +35,37 @@ func NewSvn() *Svn {
 	return &Svn{}
 }
 
-// CloneRepo implements VCS interface.
-func (s *Svn) CloneRepo(url, destPath string, event *api.Event) error {
+// Ping check whether svn repo is valid
+func (g *Svn) Ping(url, destPath string, event *api.Event) error {
+
+	dir := path.Dir(destPath)
+	// git ls-remote url --heads HEAD
+	args := []string{"ls", url, "--depth", "empty",
+		"--username", event.Service.Repository.Username,
+		"--password", event.Service.Repository.Password,
+		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
+
+	output, err := executil.RunInDir(dir, "svn", args...)
+	if event.Version.VersionID != "" {
+		fmt.Fprintf(steplog.Output, "%s", string(output))
+	}
+	if err != nil {
+		log.ErrorWithFields("Error when check valid", log.Fields{"error": err})
+		return err
+	}
+
+	log.InfoWithFields("valid svn repository.", log.Fields{"url": url})
+	return nil
+}
+
+// Clone implements VCS interface.
+func (s *Svn) Clone(url, destPath string, event *api.Event) error {
 	log.InfoWithFields("About to svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
 
-	args := []string{"checkout", "--username", event.Service.Repository.Username, "--password",
-		event.Service.Repository.Password, "--non-interactive", "--trust-server-cert", "--no-auth-cache",
+	args := []string{"checkout",
+		"--username", event.Service.Repository.Username,
+		"--password", event.Service.Repository.Password,
+		"--non-interactive", "--trust-server-cert", "--no-auth-cache",
 		url, destPath}
 	output, err := executil.RunInDir("./", "svn", args...)
 	if event.Version.VersionID != "" {

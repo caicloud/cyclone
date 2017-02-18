@@ -127,7 +127,7 @@ func createVersion(request *restful.Request, response *restful.Response) {
 
 	// Start building the version asynchronously, and make sure event is successfully
 	// created before return.
-	err = sendCreateVersionEvent(service, &version)
+	err = event.SendCreateVersionEvent(service, &version)
 	if err != nil {
 		message := "Unable to create build version job"
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "service": service, "version": version, "error": err})

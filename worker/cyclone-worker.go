@@ -123,7 +123,8 @@ func handleEvent(event *api.Event) {
 
 // createService verify repo validity for creating service
 func createService(vcsManager *vcs.Manager, event *api.Event) {
-	err := vcsManager.CloneServiceRepository(event)
+	// err := vcsManager.CloneServiceRepository(event)
+	err := vcsManager.CheckRepoValid(event)
 	if err != nil {
 		event.Status = api.EventStatusFail
 		event.ErrorMessage = err.Error()

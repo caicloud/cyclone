@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
@@ -121,7 +122,7 @@ func createService(request *restful.Request, response *restful.Response) {
 
 	// Start creating the service asynchronously, and make sure event is
 	// successfully acked before return.
-	err = sendCreateServiceEvent(&service)
+	err = event.SendCreateServiceEvent(&service)
 
 	if err != nil {
 		message := "Unable to create new service job"

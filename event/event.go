@@ -17,11 +17,22 @@ limitations under the License.
 package event
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"golang.org/x/oauth2"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/notify"
 	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -38,6 +49,11 @@ const (
 
 	// CreateProjectVersionOps defines the operation to create a project version.
 	CreateProjectVersionOps api.Operation = "create-projectversion"
+
+	// PostStartPhase hooks phase
+	PostStartPhase = "postStart"
+	// PreStopPhase hooks phase
+	PreStopPhase = "preStop"
 )
 
 //type EventID string
@@ -175,15 +191,52 @@ func createServicePostHook(event *api.Event) {
 		}
 	}
 
+	autoPublishVersion(&event.Service)
+}
+
+func autoPublishVersion(service *api.Service) {
+	if service == nil {
+		return
+	}
+	if service.PublishNow {
+		ds := store.NewStore()
+		defer ds.Close()
+		version := api.Version{}
+		version.ServiceID = service.ServiceID
+		version.Name = bson.NewObjectId().String()
+		version.Description = "trigger by auto publish"
+		version.CreateTime = time.Now()
+		version.Status = api.VersionPending
+		version.URL = service.Repository.URL
+		version.SecurityCheck = false
+		version.Operation = "publish"
+		_, err := ds.NewVersionDocument(&version)
+		if err != nil {
+			message := "Unable to create version document in database"
+			log.ErrorWithFields(message, log.Fields{"error": err})
+			return
+		}
+
+		err = SendCreateVersionEvent(service, &version)
+		if err != nil {
+			message := "Unable to create build version job"
+			log.ErrorWithFields(message, log.Fields{"service": service, "version": version, "error": err})
+			return
+		}
+	}
 }
 
 // createVersionHandler is the create version handler.
 func createVersionHandler(event *api.Event) error {
 	log.Infof("create version handler")
+
 	w, err := NewWorker(event)
 	if err != nil {
 		return err
 	}
+
+	// trigger after get an valid worker
+	triggerHooks(event, PostStartPhase)
 
 	err = w.DoWork(event)
 	if err != nil {
@@ -266,4 +319,70 @@ func createVersionPostHook(event *api.Event) {
 		return
 	}
 	notify.Notify(&event.Service, &event.Version, versionLog.Logs)
+
+	// trigger after create end
+	triggerHooks(event, PreStopPhase)
+}
+
+func triggerHooks(event *api.Event, phase string) {
+
+	hooks := event.Service.Hooks
+
+	if hooks == nil {
+		return
+	}
+
+	for _, hook := range hooks {
+		if hook.Phase == phase {
+			log.InfoWithFields("trigger version hook", log.Fields{"phase": phase})
+			data := map[string]string{
+				"status":      "failed",
+				"serviceId":   event.Service.ServiceID,
+				"serviceName": event.Service.Name,
+				"versionId":   event.Version.VersionID,
+				"versionName": event.Version.Name,
+				"image":       "",
+			}
+			registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
+			if phase == PostStartPhase {
+				data["status"] = "building"
+			} else if event.Status == api.EventStatusSuccess {
+				data["status"] = "success"
+				// registry/username/service_name:version_name
+				data["image"] = fmt.Sprintf("%s/%s/%s:%s",
+					registryLocation,
+					strings.ToLower(event.Service.Username),
+					strings.ToLower(event.Service.Name),
+					event.Version.Name)
+			}
+			jsonStr, _ := json.Marshal(data)
+
+			client := getClientWithOauth2(hook.Token)
+			_, err := client.Post(hook.Callback, "application/json", bytes.NewBuffer(jsonStr))
+			if err != nil {
+				log.ErrorWithFields("error occur when callback", log.Fields{"url": hook.Callback, "err": err})
+				break
+			}
+
+		}
+	}
+}
+
+type tokenSource struct {
+	token *oauth2.Token
+}
+
+func (t *tokenSource) Token() (*oauth2.Token, error) {
+	return t.token, nil
+}
+
+func getClientWithOauth2(token *oauth2.Token) *http.Client {
+	var client *http.Client
+	if token != nil {
+		ts := &tokenSource{token}
+		client = oauth2.NewClient(oauth2.NoContext, ts)
+	} else {
+		client = &http.Client{}
+	}
+	return client
 }

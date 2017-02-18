@@ -40,8 +40,28 @@ func NewGit() *Git {
 	return &Git{}
 }
 
-// CloneRepo implements VCS interface.
-func (g *Git) CloneRepo(url, destPath string, event *api.Event) error {
+// Ping check whether git repo is valid
+func (g *Git) Ping(url, destPath string, event *api.Event) error {
+
+	dir := path.Dir(destPath)
+	// git ls-remote url --heads HEAD
+	args := []string{"ls-remote", url, "--heads", "HEAD"}
+
+	output, err := executil.RunInDir(dir, "git", args...)
+	if event.Version.VersionID != "" {
+		fmt.Fprintf(steplog.Output, "%s", string(output))
+	}
+	if err != nil {
+		log.ErrorWithFields("Error when clone", log.Fields{"error": err})
+		return err
+	}
+
+	log.InfoWithFields("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
+	return nil
+}
+
+// Clone implements VCS interface.
+func (g *Git) Clone(url, destPath string, event *api.Event) error {
 	log.InfoWithFields("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
 
 	base := path.Base(destPath)

@@ -16,12 +16,7 @@ limitations under the License.
 
 package vcs
 
-import (
-	"fmt"
-	"testing"
-
-	"github.com/caicloud/cyclone/api"
-)
+import "github.com/caicloud/cyclone/api"
 
 const (
 	subvcs = api.GITHUB
@@ -30,9 +25,9 @@ const (
 )
 
 // TestManager tests getUrlwithToken function.
-func TestManager(t *testing.T) {
-	expectedResult := fmt.Sprintf("%s@%s", token, URL)
-	if result := getUrlwithToken(URL, subvcs, token); result != expectedResult {
-		t.Errorf("Expect result %s equals to %s", result, expectedResult)
-	}
-}
+// func TestManager(t *testing.T) {
+// 	expectedResult := fmt.Sprintf("%s@%s", token, URL)
+// 	if result := getUrlwithToken(URL, subvcs, token); result != expectedResult {
+// 		t.Errorf("Expect result %s equals to %s", result, expectedResult)
+// 	}
+// }

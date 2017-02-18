@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
@@ -447,7 +448,7 @@ func webhookCreateVersion(serviceID string, version *api.Version) error {
 
 	// Start building the version asynchronously, and make sure event is successfully
 	// created before return.
-	err = sendCreateVersionEvent(service, version)
+	err = event.SendCreateVersionEvent(service, version)
 	if err != nil {
 		message := "Unable to create build version job"
 		log.ErrorWithFields(message, log.Fields{"user_id": service.UserID, "service": service, "version": version, "error": err})
