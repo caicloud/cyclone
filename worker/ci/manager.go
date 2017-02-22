@@ -39,7 +39,7 @@ var (
 	// List of errors about yaml.
 
 	// ErrYamlNotExist defines a error caused by no yaml found.
-	ErrYamlNotExist = errors.New("yaml not found")
+	ErrYamlNotExist = errors.New("yaml not found, using dockerfile")
 	// ErrCustomYamlNotExist defines a error caused by custom yaml not found.
 	ErrCustomYamlNotExist = errors.New("custom yaml not found")
 )

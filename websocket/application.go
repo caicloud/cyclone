@@ -223,9 +223,7 @@ func isDockerImageOperationLog(log string) bool {
 }
 
 // StoreTopic store log from special topic into mongo.
-func StoreTopic(userID, serviceID, versionID string) (string, error) {
-	sTopic := CreateTopicName("create-version", userID, serviceID, versionID)
-
+func StoreTopic(sTopic string) (string, error) {
 	consumer, err := kafka.NewConsumer(sTopic)
 	if nil != err {
 		log.Error(err.Error())

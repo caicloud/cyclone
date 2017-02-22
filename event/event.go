@@ -18,6 +18,7 @@ package event
 
 import (
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/notify"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
@@ -117,19 +118,18 @@ func postHookEvent(event *api.Event) {
 
 	// Include cancel manual or timeout
 	if event.Status == api.EventStatusCancel {
-		versionLog, err := websocket.StoreTopic(event.Service.UserID, event.Service.ServiceID, event.Version.VersionID)
-		if err == nil {
-			Log := api.VersionLog{
-				VerisonID: event.Version.VersionID,
-				Logs:      versionLog,
-			}
-
-			ds := store.NewStore()
-			defer ds.Close()
-			_, err = ds.NewVersionLogDocument(&Log)
-			if err != nil {
-				log.Error(err)
-			}
+		versionLog, err := websocket.StoreTopic(websocket.CreateTopicName(string(event.Operation), event.Service.UserID, event.Service.ServiceID, event.Version.VersionID))
+		if err != nil || versionLog == "" {
+			log.Error(err)
+			return
+		}
+		Log := api.VersionLog{
+			VerisonID: event.Version.VersionID,
+			Logs:      versionLog,
+		}
+		err = ds.UpdateVersionLogDocument(&Log)
+		if err != nil {
+			log.Error(err)
 		}
 	}
 }
@@ -190,6 +190,13 @@ func createVersionHandler(event *api.Event) error {
 		return err
 	}
 
+	ds := store.NewStore()
+	defer ds.Close()
+	event.Version.Status = api.VersionRunning
+	if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
+		log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+	}
+
 	if event.Service.Repository.Webhook == api.GITHUB {
 		remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
 		if err != nil {
@@ -224,6 +231,19 @@ func createVersionPostHook(event *api.Event) {
 
 	ds := store.NewStore()
 	defer ds.Close()
+
+	if event.Status == api.EventStatusCancel {
+		kafka.Produce(websocket.CreateTopicName(string(event.Operation), event.Service.UserID, event.Service.ServiceID, event.Version.VersionID), []byte("state: cancelled\r\n"))
+
+		Log := api.VersionLog{
+			VerisonID: event.Version.VersionID,
+			Logs:      "state: cancelled\r\n",
+		}
+		err := ds.UpdateVersionLogDocument(&Log)
+		if err != nil {
+			log.Error(err)
+		}
+	}
 
 	if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
 		log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
