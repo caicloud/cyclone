@@ -37,7 +37,7 @@ func (d *DataStore) FindServiceByCondition(userID, servicename string) ([]api.Se
 // id of the newly created service.
 func (d *DataStore) NewServiceDocument(service *api.Service) (string, error) {
 	// service.ServiceID = uuid.NewV4().String()
-	service.ServiceID = bson.NewObjectId().String()
+	service.ServiceID = bson.NewObjectId().Hex()
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
 	_, err := col.Upsert(bson.M{"_id": service.ServiceID}, service)
 	return service.ServiceID, err

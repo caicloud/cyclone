@@ -33,7 +33,7 @@ import (
 
 const (
 	// EventsUnfinished represents unfinished event dir path in etcd
-	EventsUnfinished = "/events/unfinished"
+	EventsUnfinished = "/events/unfinished/"
 )
 
 var (
@@ -154,7 +154,7 @@ func eventChangeHandler(event *api.Event, preEvent *api.Event) {
 	if !IsEventFinished(preEvent) && IsEventFinished(event) {
 		postHookEvent(event)
 		etcdClient := etcd.GetClient()
-		err := etcdClient.Delete(EventsUnfinished + "/" + string(event.EventID))
+		err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
 		if err != nil {
 			log.Errorf("delete finished event err: %v", err)
 		}
@@ -168,13 +168,13 @@ func SaveEventToEtcd(event *api.Event) error {
 	if nil != err {
 		return err
 	}
-	return ec.Set(EventsUnfinished+"/"+string(event.EventID), string(bEvent))
+	return ec.Set(EventsUnfinished+string(event.EventID), string(bEvent))
 }
 
 // LoadEventFromEtcd loads event from etcd.
 func LoadEventFromEtcd(eventID api.EventID) (*api.Event, error) {
 	ec := etcd.GetClient()
-	sEvent, err := ec.Get(EventsUnfinished + "/" + string(eventID))
+	sEvent, err := ec.Get(EventsUnfinished + string(eventID))
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +383,7 @@ func handlePendingEvents() {
 			log.ErrorWithFields("handle event err", log.Fields{"error": err, "event": event})
 			postHookEvent(&event)
 			etcdClient := etcd.GetClient()
-			err := etcdClient.Delete(EventsUnfinished + "/" + string(event.EventID))
+			err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
 			if err != nil {
 				log.Errorf("delete finished event err: %v", err)
 			}
