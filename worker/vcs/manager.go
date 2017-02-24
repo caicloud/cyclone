@@ -17,6 +17,7 @@ limitations under the License.
 package vcs
 
 import (
+	"encoding/base64"
 	"fmt"
 	neturl "net/url"
 	"strings"
@@ -62,7 +63,14 @@ func insert(url, insertion string, index int) string {
 	return string(result)
 }
 
-func queryEscape(username, pwd string) string {
+func queryEscape(username, pwdBase64 string) string {
+	var pwd string
+	pwdB, err := base64.StdEncoding.DecodeString(pwdBase64)
+	if err != nil {
+		pwd = pwdBase64
+	} else {
+		pwd = string(pwdB)
+	}
 	return neturl.QueryEscape(username) + ":" + neturl.QueryEscape(pwd)
 }
 
