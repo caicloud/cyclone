@@ -17,6 +17,7 @@ limitations under the License.
 package provider
 
 import (
+	"encoding/base64"
 	"fmt"
 	"path"
 	"strings"
@@ -36,13 +37,13 @@ func NewSvn() *Svn {
 }
 
 // Ping check whether svn repo is valid
-func (g *Svn) Ping(url, destPath string, event *api.Event) error {
+func (s *Svn) Ping(url, destPath string, event *api.Event) error {
 
 	dir := path.Dir(destPath)
 	// git ls-remote url --heads HEAD
 	args := []string{"ls", url, "--depth", "empty",
 		"--username", event.Service.Repository.Username,
-		"--password", event.Service.Repository.Password,
+		"--password", getPwdFromBase64(event.Service.Repository.Password),
 		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
 
 	output, err := executil.RunInDir(dir, "svn", args...)
@@ -64,7 +65,7 @@ func (s *Svn) Clone(url, destPath string, event *api.Event) error {
 
 	args := []string{"checkout",
 		"--username", event.Service.Repository.Username,
-		"--password", event.Service.Repository.Password,
+		"--password", getPwdFromBase64(event.Service.Repository.Password),
 		"--non-interactive", "--trust-server-cert", "--no-auth-cache",
 		url, destPath}
 	output, err := executil.RunInDir("./", "svn", args...)
@@ -91,7 +92,8 @@ func (s *Svn) NewTagFromLatest(repoPath string, event *api.Event) error {
 	tagURL := strings.Split(version.URL, "/trunk")[0] + "/tags/" + version.Name + "/"
 	log.Infof("trunk[%s] tag[%s]", version.URL, tagURL)
 	args := []string{"copy", version.URL, tagURL, "-m", "Cyclone auto tag " + version.Name,
-		"--username", service.Repository.Username, "--password", service.Repository.Password,
+		"--username", service.Repository.Username,
+		"--password", getPwdFromBase64(event.Service.Repository.Password),
 		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
 
 	output, err := executil.RunInDir(repoPath, "svn", args...)
@@ -129,9 +131,10 @@ func (s *Svn) GetTagCommit(repoPath string, tag string) (string, error) {
 
 // CheckOutByCommitID check out code in repo by special commit id.
 func (s *Svn) CheckOutByCommitID(commitID string, repoPath string, event *api.Event) error {
-	args := []string{"update", "-r", commitID, "--username", event.Service.Repository.Username,
-		"--password", event.Service.Repository.Password, "--non-interactive", "--trust-server-cert",
-		"--no-auth-cache"}
+	args := []string{"update", "-r", commitID,
+		"--username", event.Service.Repository.Username,
+		"--password", getPwdFromBase64(event.Service.Repository.Password),
+		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	fmt.Fprintf(steplog.Output, "%q\n", string(output))
 
@@ -144,9 +147,10 @@ func (s *Svn) CheckOutByCommitID(commitID string, repoPath string, event *api.Ev
 
 // IsCommitToSpecialURL gets if the commit is to a specific url.
 func (s *Svn) IsCommitToSpecialURL(commitID string, service *api.Service) (bool, string, error) {
-	args := []string{"log", service.Repository.URL, "-r", commitID, "--username", service.Repository.Username,
-		"--password", service.Repository.Password, "--non-interactive", "--trust-server-cert",
-		"--no-auth-cache"}
+	args := []string{"log", service.Repository.URL, "-r", commitID,
+		"--username", service.Repository.Username,
+		"--password", getPwdFromBase64(service.Repository.Password),
+		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
 	output, err := executil.RunInDir("./", "svn", args...)
 	log.Info(string(output))
 
@@ -157,4 +161,15 @@ func (s *Svn) IsCommitToSpecialURL(commitID string, service *api.Service) (bool,
 	}
 
 	return strings.Contains(string(output), "r"+commitID), string(output), nil
+}
+
+func getPwdFromBase64(pwdBase64 string) string {
+	var pwd string
+	pwdB, err := base64.StdEncoding.DecodeString(pwdBase64)
+	if err != nil {
+		pwd = pwdBase64
+	} else {
+		pwd = string(pwdB)
+	}
+	return pwd
 }
