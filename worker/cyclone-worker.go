@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -185,7 +186,8 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		event.Service.ServiceID, event.Version.VersionID)
 	go worker_log.WatchLogFile(output.Name(), topicLog, ch)
 
-	event.Data["context-dir"] = vcsManager.GetCloneDir(&event.Service, &event.Version)
+	destPath := vcsManager.GetCloneDir(&event.Service, &event.Version)
+	event.Data["context-dir"] = destPath
 	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
 		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
 	event.Data["tag-name"] = event.Version.Name
@@ -195,6 +197,52 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		event.ErrorMessage = err.Error()
 		log.ErrorWithFields("Operation failed", log.Fields{"event": event})
 		return
+	}
+
+	// Create dockerfile and caicloud.yml if need
+	if event.Service.Dockerfile != "" {
+		path := destPath + "/Dockerfile"
+
+		// clean file
+		os.RemoveAll(path)
+
+		dockerfile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0755)
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			log.Errorf("Unable to create new Dockerfile: %v\n", err)
+			return
+		}
+		_, err = dockerfile.WriteString(event.Service.Dockerfile)
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			log.Errorf("Unable to write content to Dockerfile: %v\n", err)
+			return
+		}
+		dockerfile.Close()
+	}
+	if event.Service.CaicloudYaml != "" {
+		path := destPath + "/" + ci.DefaultYamlFile
+
+		if event.Service.YAMLConfigName != "" {
+			path = destPath + "/" + event.Service.YAMLConfigName
+		}
+
+		// clean file
+		os.RemoveAll(path)
+
+		yamlfile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0755)
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			log.Errorf("Unable to create new yaml file: %v\n", err)
+			return
+		}
+		_, err = yamlfile.WriteString(event.Service.Dockerfile)
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			log.Errorf("Unable to write content to yaml file: %v\n", err)
+			return
+		}
+		yamlfile.Close()
 	}
 
 	// Get the execution tree from the caicloud.yml.

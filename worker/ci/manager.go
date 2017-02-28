@@ -32,7 +32,7 @@ import (
 
 const (
 	// yamlName defines the name of CI config file.
-	yamlName = "caicloud.yml"
+	DefaultYamlFile = "caicloud.yml"
 )
 
 var (
@@ -146,7 +146,7 @@ func (cm *Manager) Parse(event *api.Event) (*parser.Tree, error) {
 		// Set the err to ErrCustomYamlNotExist.
 		errYaml = ErrCustomYamlNotExist
 	} else {
-		directFilePath = fmt.Sprintf("%s/%s", contextDir, yamlName)
+		directFilePath = fmt.Sprintf("%s/%s", contextDir, DefaultYamlFile)
 	}
 	if osutil.IsFileExists(directFilePath) != true {
 		fmt.Fprintf(steplog.Output, "Error: %v\n", errYaml)
