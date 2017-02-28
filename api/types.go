@@ -76,6 +76,17 @@ type Service struct {
 	DeployPlans []DeployPlan `bson:"deploy_plans,omitempty" json:"deploy_plans,omitempty"`
 	// Repository information of the service.
 	YAMLConfigName string `bson:"yaml_config_name,omitempty" json:"yaml_config_name,omitempty"`
+
+	// for code to deployment
+	Hooks      []Hook `bson:"hooks,omitempty" json:"hooks,omitempty"`
+	PublishNow bool   `bson:"publishNow,omitempty" json:"publishNow,omitempty"`
+}
+
+// Hook is a callback hook
+type Hook struct {
+	Phase    string        `bson:"phase" json:"phase"`
+	Callback string        `bson:"callback" json:"callback"`
+	Token    *oauth2.Token `bson:"token,omitempty" json:"token,omitempty"`
 }
 
 // DeployPlan is the type for deployment plan.

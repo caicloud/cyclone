@@ -17,7 +17,9 @@ limitations under the License.
 package vcs
 
 import (
+	"encoding/base64"
 	"fmt"
+	neturl "net/url"
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
@@ -61,38 +63,59 @@ func insert(url, insertion string, index int) string {
 	return string(result)
 }
 
-func getUrlwithToken(url, subvcs, token string) string {
-	switch subvcs {
-	case api.GITHUB:
-		if token == "" {
-			log.Warn("Sub VCS is GitHub, but the token is empty, maybe there is an error")
-			break
-		}
-		position := strings.Index(url, "github.com")
-		if position == -1 {
-			log.Warn("subvcs is github and the token is not empty, but the url doesn't contain 'github.com'")
-			break
-		}
-		url = insert(url, token+"@", position)
-	case api.GITLAB:
-		if token == "" {
-			log.Warn("Sub VCS is GitLab, but the token is empty, maybe there is an error")
-			break
-		}
-		if strings.HasPrefix(url, "http://") {
-			position := len("http://")
-			url = insert(url, "oauth2:"+token+"@", position)
-		} else if strings.HasPrefix(url, "https://") {
-			position := len("https://")
-			url = insert(url, "oauth2:"+token+"@", position)
-		}
-	default:
+// queryEscape escapes the string so it can be safely placed
+// inside a URL query.
+func queryEscape(username, pwdBase64 string) string {
+	var pwd string
+	pwdB, err := base64.StdEncoding.DecodeString(pwdBase64)
+	if err != nil {
+		pwd = pwdBase64
+	} else {
+		pwd = string(pwdB)
 	}
+	return neturl.QueryEscape(username) + ":" + neturl.QueryEscape(pwd)
+}
+
+// getAuthURL rebuilds url with auth token or username and password
+// for private git repository
+func getAuthURL(event *api.Event) string {
+
+	url := event.Service.Repository.URL
+
+	var token string
+	if t, ok := event.Data["Token"]; ok {
+		token = t.(string)
+	}
+	username := event.Service.Repository.Username
+	pwd := event.Service.Repository.Password
+
+	// rebuild token
+	if token != "" {
+		if event.Service.Repository.SubVcs == api.GITLAB {
+			token = "oauth2:" + token
+		}
+	} else if username != "" && pwd != "" {
+		token = queryEscape(username, pwd)
+	}
+
+	// insert token
+	if token != "" && event.Service.Repository.Vcs == api.Git {
+		position := -1
+		if strings.HasPrefix(url, "http://") {
+			position = len("http://")
+		} else if strings.HasPrefix(url, "https://") {
+			position = len("https://")
+		}
+		if position > 0 {
+			url = insert(url, token+"@", position)
+		}
+	}
+
 	return url
 }
 
-// CloneServiceRepository clones a service's repo and records service status accordingly.
-func (vm *Manager) CloneServiceRepository(event *api.Event) error {
+// CheckRepoValid check whether the repo is a valid repo
+func (vm *Manager) CheckRepoValid(event *api.Event) error {
 	// Get the path to store cloned repository.
 	destPath := vm.GetCloneDir(&event.Service, &event.Version)
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
@@ -101,16 +124,17 @@ func (vm *Manager) CloneServiceRepository(event *api.Event) error {
 	}
 
 	// Find version control system worker and return if error occurs.
-	worker, err := vm.findVcsForService(&event.Service)
+	vcs, err := vm.findVcsForService(&event.Service)
 	if err != nil {
 		event.Service.Repository.Status = api.RepositoryUnknownVcs
 		return fmt.Errorf("Unable to write to event output for event: %v\n", err)
 	}
 
-	url := getUrlwithToken(event.Service.Repository.URL, event.Service.Repository.SubVcs, event.Data["Token"].(string))
-	if err := worker.CloneRepo(url, destPath, event); err != nil {
+	url := getAuthURL(event)
+	err = vcs.Ping(url, destPath, event)
+	if err != nil {
 		event.Service.Repository.Status = api.RepositoryMissing
-		return fmt.Errorf("Unable to clone repository for service: %v\n", err)
+		return fmt.Errorf("Unable to check repository for service: %v\n", err)
 	}
 
 	// Happy path - update status to healthy and return nil error. Database status
@@ -134,9 +158,9 @@ func (vm *Manager) CloneVersionRepository(event *api.Event) error {
 		return fmt.Errorf("Unable to write to event output for event: %v\n", err)
 	}
 
-	url := getUrlwithToken(event.Version.URL, event.Service.Repository.SubVcs, event.Data["Token"].(string))
+	url := getAuthURL(event)
 	steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Start, nil)
-	if err := worker.CloneRepo(url, destPath, event); err != nil {
+	if err := worker.Clone(url, destPath, event); err != nil {
 		steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
 		return fmt.Errorf("Unable to clone repository for version: %v\n", err)
 	}

@@ -22,13 +22,17 @@ import (
 
 // VCS is the interface of all operations needed for managing repository.
 type VCS interface {
-	// CloneRepo pulls repository from url into destination path. Code base lives
+
+	// Ping checks if the url is a valid repository, like ping cmd on linux
+	Ping(url, destPath string, event *api.Event) error
+
+	// Clone pulls repository from url into destination path. Code base lives
 	// directly under 'destPath', do not nest the code base. E.g.
-	//   CloneRepo("https://github.com/caicloud/cyclone", /tmp/xxx/yyy")
+	//   Clone("https://github.com/caicloud/cyclone", /tmp/xxx/yyy")
 	// should clone cyclone directly under /tmp/xxx/yyy, not /tmp/xxx/yyy/cyclone/
 	// You can always assume 'destPath' doesn't exist, but its parent direcotry
 	// exists.
-	CloneRepo(url, destPath string, event *api.Event) error
+	Clone(url, destPath string, event *api.Event) error
 
 	// TODO: Those methods are not used, clean them up when we have better design.
 

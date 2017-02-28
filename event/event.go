@@ -17,11 +17,22 @@ limitations under the License.
 package event
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"golang.org/x/oauth2"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/notify"
 	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -38,6 +49,11 @@ const (
 
 	// CreateProjectVersionOps defines the operation to create a project version.
 	CreateProjectVersionOps api.Operation = "create-projectversion"
+
+	// PostStartPhase hooks phase
+	PostStartPhase = "postStart"
+	// PreStopPhase hooks phase
+	PreStopPhase = "preStop"
 )
 
 //type EventID string
@@ -164,40 +180,71 @@ func createServicePostHook(event *api.Event) {
 		log.Errorf("Unable to update repository status in post hook for %+v: %v\n", event.Service, err)
 	}
 
-	remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
-	if err != nil {
-		log.ErrorWithFields("Unable to get remote according code repository", log.Fields{"user_id": event.Service.UserID})
-		return
-	}
-	if event.Service.Repository.Status == api.RepositoryHealthy {
+	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil &&
+		event.Service.Repository.Status == api.RepositoryHealthy {
 		if err := remote.CreateHook(&event.Service); err != nil {
 			log.ErrorWithFields("create hook failed", log.Fields{"user_id": event.Service.UserID, "error": err})
 		}
 	}
 
+	autoPublishVersion(&event.Service)
+}
+
+// autoPublishVersion create a new version with
+// publish opration automatically after service created successfully
+func autoPublishVersion(service *api.Service) {
+	if service == nil {
+		return
+	}
+	if service.PublishNow {
+		ds := store.NewStore()
+		defer ds.Close()
+		version := api.Version{}
+		version.ServiceID = service.ServiceID
+		version.Name = bson.NewObjectId().Hex()
+		version.Description = "trigger by auto publish"
+		version.CreateTime = time.Now()
+		version.Status = api.VersionPending
+		version.URL = service.Repository.URL
+		version.SecurityCheck = false
+		version.Operation = "publish"
+		_, err := ds.NewVersionDocument(&version)
+		if err != nil {
+			message := "Unable to create version document in database"
+			log.ErrorWithFields(message, log.Fields{"error": err})
+			return
+		}
+
+		err = SendCreateVersionEvent(service, &version)
+		if err != nil {
+			message := "Unable to create build version job"
+			log.ErrorWithFields(message, log.Fields{"service": service, "version": version, "error": err})
+			return
+		}
+	}
 }
 
 // createVersionHandler is the create version handler.
 func createVersionHandler(event *api.Event) error {
 	log.Infof("create version handler")
+
 	w, err := NewWorker(event)
 	if err != nil {
 		return err
 	}
+
+	// trigger after get an valid worker
+	triggerHooks(event, PostStartPhase)
 
 	err = w.DoWork(event)
 	if err != nil {
 		return err
 	}
 
-	if event.Service.Repository.Webhook == api.GITHUB {
-		remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
-		if err != nil {
-			log.ErrorWithFields("Unable to get remote according coderepository", log.Fields{"user_id": event.Service.UserID})
-		} else {
-			if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
-				log.Errorf("Unable to post commit status to github: %v", err)
-			}
+	webhook := event.Service.Repository.Webhook
+	if remote, err := remoteManager.FindRemote(webhook); webhook == api.GITHUB && err == nil {
+		if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
+			log.Errorf("Unable to post commit status to github: %v", err)
 		}
 	}
 	return nil
@@ -229,10 +276,7 @@ func createVersionPostHook(event *api.Event) {
 		log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
 	}
 
-	remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook)
-	if err != nil {
-		log.ErrorWithFields("Unable to get remote according coderepository", log.Fields{"user_id": event.Service.UserID})
-	} else {
+	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil {
 		if err := remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
 			log.Errorf("Unable to post commit status to %s: %v", event.Service.Repository.Webhook, err)
 		}
@@ -263,7 +307,65 @@ func createVersionPostHook(event *api.Event) {
 	versionLog, err := ds.FindVersionLogByVersionID(event.Version.VersionID)
 	if err != nil {
 		log.Warnf("Notify error, getting version failed: %v", err)
+	} else {
+		notify.Notify(&event.Service, &event.Version, versionLog.Logs)
+	}
+
+	// trigger after create end
+	triggerHooks(event, PreStopPhase)
+}
+
+// triggerHooks triggers webhooks for specific phase
+func triggerHooks(event *api.Event, phase string) {
+
+	hooks := event.Service.Hooks
+
+	if hooks == nil {
 		return
 	}
-	notify.Notify(&event.Service, &event.Version, versionLog.Logs)
+
+	for _, hook := range hooks {
+		if hook.Phase == phase {
+			log.InfoWithFields("trigger version hook", log.Fields{"phase": phase})
+			data := map[string]string{
+				"status":      "failed",
+				"serviceId":   event.Service.ServiceID,
+				"serviceName": event.Service.Name,
+				"versionId":   event.Version.VersionID,
+				"versionName": event.Version.Name,
+				"image":       "",
+			}
+			registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
+			if phase == PostStartPhase {
+				data["status"] = "building"
+			} else if event.Status == api.EventStatusSuccess {
+				data["status"] = "success"
+				// registry/username/service_name:version_name
+				data["image"] = fmt.Sprintf("%s/%s/%s:%s",
+					registryLocation,
+					strings.ToLower(event.Service.Username),
+					strings.ToLower(event.Service.Name),
+					event.Version.Name)
+			}
+			jsonStr, _ := json.Marshal(data)
+
+			client := getClientWithOauth2(hook.Token)
+			_, err := client.Post(hook.Callback, "application/json", bytes.NewBuffer(jsonStr))
+			if err != nil {
+				log.ErrorWithFields("error occur when callback", log.Fields{"url": hook.Callback, "err": err})
+				break
+			}
+
+		}
+	}
+}
+
+func getClientWithOauth2(token *oauth2.Token) *http.Client {
+	var client *http.Client
+	if token != nil {
+		client = oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	} else {
+		client = &http.Client{}
+	}
+	return client
 }

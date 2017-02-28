@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	// Events_Unfinished represents unfinished event dir path in etcd
-	Events_Unfinished = "/events/unfinished"
+	// EventsUnfinished represents unfinished event dir path in etcd
+	EventsUnfinished = "/events/unfinished/"
 )
 
 var (
@@ -63,8 +63,8 @@ func Init(certPath string, registry api.RegistryCompose) {
 
 	etcdClient := etcd.GetClient()
 
-	if !etcdClient.IsDirExist(Events_Unfinished) {
-		err := etcdClient.CreateDir(Events_Unfinished)
+	if !etcdClient.IsDirExist(EventsUnfinished) {
+		err := etcdClient.CreateDir(EventsUnfinished)
 		if err != nil {
 			log.Errorf("init event manager create events dir err: %v", err)
 			return
@@ -83,7 +83,7 @@ func Init(certPath string, registry api.RegistryCompose) {
 
 // watchEtcd watch unfinished events status change in etcd
 func watchEtcd(etcdClient *etcd.Client) {
-	watcherUnfinishedEvents, err := etcdClient.CreateWatcher(Events_Unfinished)
+	watcherUnfinishedEvents, err := etcdClient.CreateWatcher(EventsUnfinished)
 	if err != nil {
 		log.Fatalf("watch unfinshed events err: %v", err)
 	}
@@ -95,7 +95,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 		}
 
 		switch change.Action {
-		case etcd.Watch_Action_Create:
+		case etcd.WatchActionCreate:
 			log.Infof("watch unfinshed events create: %q\n", change.Node)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
@@ -104,7 +104,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			}
 			eventCreateHandler(&event)
 
-		case etcd.Watch_Action_Set:
+		case etcd.WatchActionSet:
 			log.Infof("watch unfinshed events set: %q\n", change.Node.Value)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
@@ -123,7 +123,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 				eventChangeHandler(&event, &preEvent)
 			}
 
-		case etcd.Watch_Action_Delete:
+		case etcd.WatchActionDelete:
 			log.Infof("watch finshed events delete: %q\n", change.PrevNode)
 			event, err := loadEventFromJSON(change.PrevNode.Value)
 			if err != nil {
@@ -154,7 +154,7 @@ func eventChangeHandler(event *api.Event, preEvent *api.Event) {
 	if !IsEventFinished(preEvent) && IsEventFinished(event) {
 		postHookEvent(event)
 		etcdClient := etcd.GetClient()
-		err := etcdClient.Delete(Events_Unfinished + "/" + string(event.EventID))
+		err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
 		if err != nil {
 			log.Errorf("delete finished event err: %v", err)
 		}
@@ -168,13 +168,13 @@ func SaveEventToEtcd(event *api.Event) error {
 	if nil != err {
 		return err
 	}
-	return ec.Set(Events_Unfinished+"/"+string(event.EventID), string(bEvent))
+	return ec.Set(EventsUnfinished+string(event.EventID), string(bEvent))
 }
 
 // LoadEventFromEtcd loads event from etcd.
 func LoadEventFromEtcd(eventID api.EventID) (*api.Event, error) {
 	ec := etcd.GetClient()
-	sEvent, err := ec.Get(Events_Unfinished + "/" + string(eventID))
+	sEvent, err := ec.Get(EventsUnfinished + string(eventID))
 	if err != nil {
 		return nil, err
 	}
@@ -201,6 +201,7 @@ func IsEventFinished(event *api.Event) bool {
 	return false
 }
 
+// Delete me
 // eventList load unfinished events
 var eventList *List
 
@@ -227,7 +228,7 @@ func newList() *List {
 
 // loadListFromEtcd load event list from etcd
 func (el *List) loadListFromEtcd(etcd *etcd.Client) {
-	jsonEvents, err := etcd.List(Events_Unfinished)
+	jsonEvents, err := etcd.List(EventsUnfinished)
 	if err != nil {
 		log.Errorf("load event list from etcd err: %v", err)
 		return
@@ -382,7 +383,7 @@ func handlePendingEvents() {
 			log.ErrorWithFields("handle event err", log.Fields{"error": err, "event": event})
 			postHookEvent(&event)
 			etcdClient := etcd.GetClient()
-			err := etcdClient.Delete(Events_Unfinished + "/" + string(event.EventID))
+			err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
 			if err != nil {
 				log.Errorf("delete finished event err: %v", err)
 			}

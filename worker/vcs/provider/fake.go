@@ -44,8 +44,12 @@ func NewFake(fakeRepoPath string) (*Fake, error) {
 	}, nil
 }
 
-// CloneRepo clones the repo to local file system.
-func (f *Fake) CloneRepo(url, destPath string, event *api.Event) error {
+func (f *Fake) Ping(url, destPath string, event *api.Event) error {
+	return nil
+}
+
+// Clone clones the repo to local file system.
+func (f *Fake) Clone(url, destPath string, event *api.Event) error {
 	log.InfoWithFields("About to clone fake repository.", log.Fields{"url": url, "destPath": destPath})
 
 	cmd := exec.Command("cp", "-r", f.fakeRepoPath, destPath)

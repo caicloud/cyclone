@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/log"
@@ -88,13 +90,17 @@ func createVersion(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	versions, err := ds.FindVersionsByCondition(version.ServiceID, version.Name)
-	if err == nil && len(versions) > 0 {
-		message := fmt.Sprintf("Name of version %s is existed", version.Name)
-		log.ErrorWithFields(message, log.Fields{"user_id": userID})
-		createResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
-		return
+	if version.Name == "" {
+		version.Name = bson.NewObjectId().Hex()
+	} else {
+		versions, err := ds.FindVersionsByCondition(version.ServiceID, version.Name)
+		if err == nil && len(versions) > 0 {
+			message := fmt.Sprintf("Name of version %s is existed", version.Name)
+			log.ErrorWithFields(message, log.Fields{"user_id": userID})
+			createResponse.ErrorMessage = message
+			response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
+			return
+		}
 	}
 
 	// Request looks good, now fill up initial version status.
@@ -127,7 +133,7 @@ func createVersion(request *restful.Request, response *restful.Response) {
 
 	// Start building the version asynchronously, and make sure event is successfully
 	// created before return.
-	err = sendCreateVersionEvent(service, &version)
+	err = event.SendCreateVersionEvent(service, &version)
 	if err != nil {
 		message := "Unable to create build version job"
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "service": service, "version": version, "error": err})

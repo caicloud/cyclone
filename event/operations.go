@@ -14,26 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rest
+package event
 
 import (
 	"encoding/json"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 )
 
-const (
-	// EventsUnfinished is the prefix for etcd.
-	EventsUnfinished = "/events/unfinished/"
-)
-
-// sendCreateServiceEvent is a helper method which sends a create service event
+// SendCreateServiceEvent is a helper method which sends a create service event
 // to etcd and wait for the event to be acked.
-func sendCreateServiceEvent(service *api.Service) error {
+func SendCreateServiceEvent(service *api.Service) error {
 	eventID := api.EventID(service.ServiceID)
 
 	ds := store.NewStore()
@@ -43,7 +37,7 @@ func sendCreateServiceEvent(service *api.Service) error {
 	event := api.Event{
 		EventID:   eventID,
 		Service:   *service,
-		Operation: event.CreateServiceOps,
+		Operation: CreateServiceOps,
 		Status:    api.EventStatusPending,
 		Data:      map[string]interface{}{"Token": tok.Vsctoken.AccessToken},
 	}
@@ -66,9 +60,9 @@ func sendCreateServiceEvent(service *api.Service) error {
 	return nil
 }
 
-// sendCreateVersionEvent is a helper method which sends a create version event
+// SendCreateVersionEvent is a helper method which sends a create version event
 // to etcd and wait for the event to be acked.
-func sendCreateVersionEvent(service *api.Service, version *api.Version) error {
+func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 	username := service.Username
 	serviceName := service.Name
 	versionName := version.Name
@@ -82,7 +76,7 @@ func sendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		EventID:   eventID,
 		Service:   *service,
 		Version:   *version,
-		Operation: event.CreateVersionOps,
+		Operation: CreateVersionOps,
 		Data: map[string]interface{}{
 			"service-name": serviceName,
 			"version-name": versionName,

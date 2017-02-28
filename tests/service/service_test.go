@@ -85,6 +85,7 @@ var _ = Describe("Service", func() {
 				URL: DefaultTestRepo,
 				Vcs: api.Git,
 			},
+			PublishNow: true,
 		}
 		serviceResponse := &api.ServiceCreationResponse{}
 
@@ -111,6 +112,19 @@ var _ = Describe("Service", func() {
 			Expect(len(serviceListResponse.Services)).To(Equal(1))
 			Expect(serviceListResponse.Services[0].Name).To(Equal(DefaultServiceName))
 			Expect(serviceListResponse.Services[0].Repository.Status).To(Equal(api.RepositoryHealthy))
+		})
+
+		It("should be able to list version via HTTP GET method.", func() {
+			// Wait up to 120 seconds until the version is successfully created.
+			err := wait.Poll(2*time.Second, 120*time.Second, func() (bool, error) {
+				versionListResponse := &api.VersionListResponse{}
+				err := ListVersions(ListUID, serviceResponse.ServiceID, versionListResponse)
+				if err == nil && len(versionListResponse.Versions) == 1 {
+					return versionListResponse.Versions[0].Status == api.VersionHealthy, err
+				}
+				return false, err
+			})
+			Expect(err).To(BeNil())
 		})
 	})
 
