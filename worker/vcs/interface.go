@@ -22,6 +22,8 @@ import (
 
 // VCS is the interface of all operations needed for managing repository.
 type VCS interface {
+
+	// Ping checks if the url is a valid repository, like ping cmd on linux
 	Ping(url, destPath string, event *api.Event) error
 
 	// Clone pulls repository from url into destination path. Code base lives

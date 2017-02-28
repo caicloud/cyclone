@@ -190,6 +190,8 @@ func createServicePostHook(event *api.Event) {
 	autoPublishVersion(&event.Service)
 }
 
+// autoPublishVersion create a new version with
+// publish opration automatically after service created successfully
 func autoPublishVersion(service *api.Service) {
 	if service == nil {
 		return
@@ -313,6 +315,7 @@ func createVersionPostHook(event *api.Event) {
 	triggerHooks(event, PreStopPhase)
 }
 
+// triggerHooks triggers webhooks for specific phase
 func triggerHooks(event *api.Event, phase string) {
 
 	hooks := event.Service.Hooks

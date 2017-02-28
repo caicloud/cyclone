@@ -63,6 +63,8 @@ func insert(url, insertion string, index int) string {
 	return string(result)
 }
 
+// queryEscape escapes the string so it can be safely placed
+// inside a URL query.
 func queryEscape(username, pwdBase64 string) string {
 	var pwd string
 	pwdB, err := base64.StdEncoding.DecodeString(pwdBase64)
@@ -74,6 +76,8 @@ func queryEscape(username, pwdBase64 string) string {
 	return neturl.QueryEscape(username) + ":" + neturl.QueryEscape(pwd)
 }
 
+// getAuthURL rebuilds url with auth token or username and password
+// for private git repository
 func getAuthURL(event *api.Event) string {
 
 	url := event.Service.Repository.URL
