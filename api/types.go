@@ -79,7 +79,7 @@ type Service struct {
 
 	// for code to deployment
 	Hooks      []Hook `bson:"hooks,omitempty" json:"hooks,omitempty"`
-	PublishNow bool   `bson:"publishNow,omitempty" json:"publishNow,omitempty`
+	PublishNow bool   `bson:"publishNow,omitempty" json:"publishNow,omitempty"`
 }
 
 // Hook is a callback hook
