@@ -375,6 +375,14 @@ func setService(request *restful.Request, response *restful.Response) {
 	// }
 
 	servicePre.DeployPlans = service.DeployPlans
+	if service.Dockerfile != "" {
+		servicePre.Dockerfile = service.Dockerfile
+	}
+
+	if service.CaicloudYaml != "" {
+		servicePre.CaicloudYaml = service.CaicloudYaml
+	}
+
 	_, err = ds.UpsertServiceDocument(servicePre)
 	if nil != err {
 		message := fmt.Sprintf("Set service %s err: %v", serviceID, err)
