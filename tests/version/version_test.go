@@ -85,7 +85,7 @@ var _ = Describe("Version", func() {
 				URL: DefaultTestRepo,
 				Vcs: api.Git,
 			},
-			Dockerfile: "FROM busybox\n\nCOPY ./echo.sh /echo.sh\nCMD [\"/echo.sh\"]",
+			Dockerfile: "FROM cargo.caicloud.io/caicloud/busybox\n\nCOPY ./echo.sh /echo.sh\nCMD [\"/echo.sh\"]",
 		}
 		serviceResponse = &api.ServiceCreationResponse{}
 		err = CreateService(AliceUID, service, serviceResponse)
