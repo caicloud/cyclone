@@ -1,4 +1,4 @@
-FROM  golang:1.6-alpine
+FROM  alpine
 
 EXPOSE 7099
 

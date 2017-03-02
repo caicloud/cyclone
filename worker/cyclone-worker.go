@@ -47,6 +47,8 @@ const (
 
 	WORKER_TIMEOUT = 7200 * time.Second
 	WAIT_TIMES     = 5
+
+	DefaultCaicloudYaml = "build:\n  dockerfile_name: Dockerfile"
 )
 
 func main() {
@@ -220,79 +222,82 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		}
 		dockerfile.Close()
 	}
-	if event.Service.CaicloudYaml != "" {
-		path := destPath + "/" + ci.DefaultYamlFile
 
-		if event.Service.YAMLConfigName != "" {
-			path = destPath + "/" + event.Service.YAMLConfigName
+	yamlFile := destPath + "/" + ci.DefaultYamlFile
+	if event.Service.YAMLConfigName != "" {
+		yamlFile = destPath + "/" + event.Service.YAMLConfigName
+	}
+
+	if event.Service.CaicloudYaml != "" || !osutil.IsFileExists(yamlFile) {
+		// clean file
+		os.RemoveAll(yamlFile)
+
+		yamlFileStr := DefaultCaicloudYaml
+		if event.Service.CaicloudYaml != "" {
+			yamlFileStr = event.Service.CaicloudYaml
 		}
 
-		// clean file
-		os.RemoveAll(path)
-
-		yamlfile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0755)
+		file, err := os.OpenFile(yamlFile, os.O_CREATE|os.O_RDWR, 0755)
 		if err != nil {
 			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
 			log.Errorf("Unable to create new yaml file: %v\n", err)
 			return
 		}
-		_, err = yamlfile.WriteString(event.Service.Dockerfile)
+		_, err = file.WriteString(yamlFileStr)
 		if err != nil {
 			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
 			log.Errorf("Unable to write content to yaml file: %v\n", err)
 			return
 		}
-		yamlfile.Close()
+		file.Close()
 	}
 
-	// Get the execution tree from the caicloud.yml.
-	tree, err := ciManager.Parse(event)
 	// If yaml file(default caicloud.yml or custom yaml file) exists and got an error, terminate.
 	// And If the user's custom yaml file doesn't exists, terminate. If there is no default yaml
 	// file, run build and push step from Dockerfile.
-	if err != nil {
-		if err != ci.ErrYamlNotExist {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
-			return
-		}
 
-		noYamlBuild(event, dockerManager)
+	// Get the execution tree from the caicloud.yml.
+	tree, err := ciManager.Parse(event)
+	if err != nil {
+		event.Status = api.EventStatusFail
+		event.ErrorMessage = err.Error()
+		log.ErrorWithFields("Operation failed", log.Fields{"event": event})
 		return
+
 	}
 
 	yamlBuild(event, tree, dockerManager, ciManager)
+
 }
 
-// noYamlBuild func uses for build without yaml file.
-func noYamlBuild(event *api.Event, dockerManager *docker.Manager) {
-	bHasPublishSuccessful := false
-	operation := string(event.Version.Operation)
-	if strings.Contains(operation, string(api.PublishOperation)) {
-		if err := helper.Publish(event, dockerManager); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
-			return
-		}
-		bHasPublishSuccessful = true
-	}
+// // noYamlBuild func uses for build without yaml file.
+// func noYamlBuild(event *api.Event, dockerManager *docker.Manager) {
+// 	bHasPublishSuccessful := false
+// 	operation := string(event.Version.Operation)
+// 	if strings.Contains(operation, string(api.PublishOperation)) {
+// 		if err := helper.Publish(event, dockerManager); err != nil {
+// 			event.Status = api.EventStatusFail
+// 			event.ErrorMessage = err.Error()
+// 			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
+// 			return
+// 		}
+// 		bHasPublishSuccessful = true
+// 	}
 
-	if strings.Contains(operation, string(api.DeployOperation)) {
-		// deploy by DeployPlans
-		if err := helper.DoPlansDeploy(bHasPublishSuccessful, event, dockerManager); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
-			return
-		}
+// 	if strings.Contains(operation, string(api.DeployOperation)) {
+// 		// deploy by DeployPlans
+// 		if err := helper.DoPlansDeploy(bHasPublishSuccessful, event, dockerManager); err != nil {
+// 			event.Status = api.EventStatusFail
+// 			event.ErrorMessage = err.Error()
+// 			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
+// 			return
+// 		}
 
-		// Deploy Check
-		helper.DoPlanDeployCheck(event)
-	}
-	event.Status = api.EventStatusSuccess
-}
+// 		// Deploy Check
+// 		helper.DoPlanDeployCheck(event)
+// 	}
+// 	event.Status = api.EventStatusSuccess
+// }
 
 // yamlBuild func uses for build with yaml file.
 func yamlBuild(event *api.Event, tree *parser.Tree, dockerManager *docker.Manager, ciManager *ci.Manager) {

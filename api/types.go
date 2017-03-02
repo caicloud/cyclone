@@ -81,8 +81,8 @@ type Service struct {
 	Hooks      []Hook `bson:"hooks,omitempty" json:"hooks,omitempty"`
 	PublishNow bool   `bson:"publishNow,omitempty" json:"publishNow,omitempty"`
 
-	Dockerfile   string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty`
-	CaicloudYaml string `bson:"caicloudYaml,omitempty" json:"caicloudYaml,omitempty`
+	Dockerfile   string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty"`
+	CaicloudYaml string `bson:"caicloudYaml,omitempty" json:"caicloudYaml,omitempty"`
 }
 
 // Hook is a callback hook
