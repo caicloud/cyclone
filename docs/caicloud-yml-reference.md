@@ -37,7 +37,7 @@ Cyclone would build a docker image from `<root_dir>/<context_dir>/<dockerfile_na
 
 Cyclone supports launching separate, ephemeral Docker containers as part of the integration process. This is useful, for example, if you require a database for running your tests.
 
-The service conatienrs and the integration container are in one network mode, so integration container could resolve the service names to the service containers. If you want to communicate with these containers, just use their names and the ports as endpoints. **If the image of service configurated as "BUILT_IMAGE", it will use the newly built image.**
+The service conatienrs and the integration container are in default bridge network mode, so integration container could resolve the service names to the service containers by adding links. If you want to communicate with these containers, [add links to thses service containers](https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/) and use their names and the ports as endpoints. **If the image of service configurated as "BUILT_IMAGE", it will use the newly built image.**
 
 ```yml
 integration:
@@ -58,6 +58,8 @@ integration:
         - cmd2
   environment:
     - key = value
+  links: 
+    - postgres
   commands:
     - ls
     - pwd

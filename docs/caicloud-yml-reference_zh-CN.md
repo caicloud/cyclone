@@ -33,9 +33,9 @@ Cyclone会在 `<root_dir>/<context_dir>` 目录下，根据文件 `<root_dir>/<c
 
 ## Integration
 
-Cyclone 在进行持续集成时，会使用Build阶段构建的镜像运行一个 docker 容器。与此同时，Cyclone 支持在执行持续集成时同时运行多个 service。这些 service 是以独立容器的方式运行的，与持续集成容器之间可以进行直接地通信。比如，当持续集成需要进行数据库访问时，可以将数据库以 service 的方式启动，持续集成容器可以访问到该容器。
+Cyclone 在进行持续集成时，会使用Build阶段构建的镜像运行一个 docker 容器。与此同时，Cyclone 支持在执行持续集成时同时运行多个 service。这些 service 是以独立容器的方式运行的，与持续集成容器之间可以以 links 的方式直接地通信。比如，当持续集成需要进行数据库访问时，可以将数据库以 service 的方式启动，持续集成容器通过添加 link 的方式访问该容器。
 
-Service 容器和持续集成容器是在同一个docker network mode 下的，所以在持续集成容器中可以通过服务名和端口，就可以直接访问到服务容器。**当service的镜像名配置为“BUILT_IMAGE”时，会使用Build阶段新构建的镜像。**
+Service 容器和持续集成容器是在 docker 默认的网络模式下的，所以在持续集成容器中，[通过 links 的方式]((https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/))，根据服务名和端口，就可以直接访问到服务容器。**当service的镜像名配置为“BUILT_IMAGE”时，会使用Build阶段新构建的镜像。**
 
 ```yml
 integration:
@@ -56,6 +56,8 @@ integration:
         - cmd2
   environment:
     - key = value
+  links: 
+    - postgres
   commands:
     - ls
     - pwd
