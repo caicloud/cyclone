@@ -18,7 +18,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -188,8 +187,8 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		event.Service.ServiceID, event.Version.VersionID)
 	go worker_log.WatchLogFile(output.Name(), topicLog, ch)
 
-	destPath := vcsManager.GetCloneDir(&event.Service, &event.Version)
-	event.Data["context-dir"] = destPath
+	destDir := vcsManager.GetCloneDir(&event.Service, &event.Version)
+	event.Data["context-dir"] = destDir
 	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
 		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
 	event.Data["tag-name"] = event.Version.Name
@@ -201,60 +200,8 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		return
 	}
 
-	// Create dockerfile and caicloud.yml if need
-	if event.Service.Dockerfile != "" {
-		path := destPath + "/Dockerfile"
-
-		// clean file
-		os.RemoveAll(path)
-
-		dockerfile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0755)
-		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
-			log.Errorf("Unable to create new Dockerfile: %v\n", err)
-			return
-		}
-		_, err = dockerfile.WriteString(event.Service.Dockerfile)
-		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
-			log.Errorf("Unable to write content to Dockerfile: %v\n", err)
-			return
-		}
-		dockerfile.Close()
-	}
-
-	yamlFile := destPath + "/" + ci.DefaultYamlFile
-	if event.Service.YAMLConfigName != "" {
-		yamlFile = destPath + "/" + event.Service.YAMLConfigName
-	}
-
-	if event.Service.CaicloudYaml != "" || !osutil.IsFileExists(yamlFile) {
-		// clean file
-		os.RemoveAll(yamlFile)
-
-		yamlFileStr := DefaultCaicloudYaml
-		if event.Service.CaicloudYaml != "" {
-			yamlFileStr = event.Service.CaicloudYaml
-		}
-
-		file, err := os.OpenFile(yamlFile, os.O_CREATE|os.O_RDWR, 0755)
-		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
-			log.Errorf("Unable to create new yaml file: %v\n", err)
-			return
-		}
-		_, err = file.WriteString(yamlFileStr)
-		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
-			log.Errorf("Unable to write content to yaml file: %v\n", err)
-			return
-		}
-		file.Close()
-	}
-
-	// If yaml file(default caicloud.yml or custom yaml file) exists and got an error, terminate.
-	// And If the user's custom yaml file doesn't exists, terminate. If there is no default yaml
-	// file, run build and push step from Dockerfile.
+	replaceDockerfile(event, destDir)
+	replaceCaicloudYaml(event, destDir)
 
 	// Get the execution tree from the caicloud.yml.
 	tree, err := ciManager.Parse(event)
@@ -265,39 +212,46 @@ func createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		return
 
 	}
-
 	yamlBuild(event, tree, dockerManager, ciManager)
-
 }
 
-// // noYamlBuild func uses for build without yaml file.
-// func noYamlBuild(event *api.Event, dockerManager *docker.Manager) {
-// 	bHasPublishSuccessful := false
-// 	operation := string(event.Version.Operation)
-// 	if strings.Contains(operation, string(api.PublishOperation)) {
-// 		if err := helper.Publish(event, dockerManager); err != nil {
-// 			event.Status = api.EventStatusFail
-// 			event.ErrorMessage = err.Error()
-// 			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
-// 			return
-// 		}
-// 		bHasPublishSuccessful = true
-// 	}
+// replaceDockerfile create new dockerfile to replace the dockerfile in repo
+func replaceDockerfile(event *api.Event, destDir string) {
 
-// 	if strings.Contains(operation, string(api.DeployOperation)) {
-// 		// deploy by DeployPlans
-// 		if err := helper.DoPlansDeploy(bHasPublishSuccessful, event, dockerManager); err != nil {
-// 			event.Status = api.EventStatusFail
-// 			event.ErrorMessage = err.Error()
-// 			log.ErrorWithFields("Operation failed", log.Fields{"event": event})
-// 			return
-// 		}
+	// Create dockerfile and caicloud.yml if need
+	if event.Service.Dockerfile != "" {
+		path := destDir + "/Dockerfile"
+		err := osutil.ReplaceFile(path, strings.NewReader(event.Service.Dockerfile))
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			return
+		}
+	}
+}
 
-// 		// Deploy Check
-// 		helper.DoPlanDeployCheck(event)
-// 	}
-// 	event.Status = api.EventStatusSuccess
-// }
+// replaceCaicloudYaml create new yaml to replace the yaml in repo
+// default yaml file is caicloud.yml
+// if you set your own yaml config name, cyclone will use it.
+// if there is no yaml found, cyclone will create a default yaml file with only build step.
+func replaceCaicloudYaml(event *api.Event, destDir string) {
+
+	yamlFile := destDir + "/" + ci.DefaultYamlFile
+	if event.Service.YAMLConfigName != "" {
+		yamlFile = destDir + "/" + event.Service.YAMLConfigName
+	}
+
+	if event.Service.CaicloudYaml != "" || !osutil.IsFileExists(yamlFile) {
+		content := DefaultCaicloudYaml
+		if event.Service.CaicloudYaml != "" {
+			content = event.Service.CaicloudYaml
+		}
+		err := osutil.ReplaceFile(yamlFile, strings.NewReader(content))
+		if err != nil {
+			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
+			return
+		}
+	}
+}
 
 // yamlBuild func uses for build with yaml file.
 func yamlBuild(event *api.Event, tree *parser.Tree, dockerManager *docker.Manager, ciManager *ci.Manager) {

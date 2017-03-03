@@ -18,6 +18,7 @@ package rest
 
 import (
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -36,6 +37,7 @@ var (
 	yamlfiles   = make(map[string]string)
 )
 
+// walkDockerfiles is a WalkFunc to deal with dockerfile templates
 func walkDockerfiles(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
@@ -62,6 +64,7 @@ func walkDockerfiles(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
+// walkYamlfiles is a WalkFunc to deal with yaml templates
 func walkYamlfiles(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
@@ -88,6 +91,7 @@ func walkYamlfiles(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
+// listYamlfiles list all yaml templates' name
 func listYamlfiles(request *restful.Request, response *restful.Response) {
 
 	keys := make([]string, len(yamlfiles))
@@ -103,12 +107,13 @@ func listYamlfiles(request *restful.Request, response *restful.Response) {
 	response.WriteAsJson(resp)
 }
 
+// getYamlfile get one yaml file content
 func getYamlfile(request *restful.Request, response *restful.Response) {
 	filename := request.PathParameter("yamlfile")
 
 	fileStr, ok := yamlfiles[filename]
 	if !ok {
-		response.WriteHeader(404)
+		response.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -120,6 +125,7 @@ func getYamlfile(request *restful.Request, response *restful.Response) {
 
 }
 
+// listDockerfiles list all dockerfile templates' name
 func listDockerfiles(request *restful.Request, response *restful.Response) {
 	keys := make([]string, len(dockerfiles))
 	i := 0
@@ -133,12 +139,13 @@ func listDockerfiles(request *restful.Request, response *restful.Response) {
 	response.WriteAsJson(resp)
 }
 
+// getDockerfile get one dockerfile content
 func getDockerfile(request *restful.Request, response *restful.Response) {
 	filename := request.PathParameter("dockerfile")
 
 	fileStr, ok := dockerfiles[filename]
 	if !ok {
-		response.WriteHeader(404)
+		response.WriteHeader(http.StatusNotFound)
 		return
 	}
 

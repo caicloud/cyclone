@@ -374,7 +374,7 @@ func registerTemplateAPIs(ws *restful.WebService) {
 
 	ws.Route(ws.GET("/templates/yamls/{yamlfile}").
 		To(getYamlfile).
-		Doc("get one yaml templates").
+		Doc("get one yaml template").
 		Param(ws.PathParameter("yamlfile", "yaml file name").DataType("string")))
 
 	ws.Route(ws.GET("/templates/dockerfiles").
@@ -383,7 +383,7 @@ func registerTemplateAPIs(ws *restful.WebService) {
 
 	ws.Route(ws.GET("/templates/dockerfiles/{dockerfile}").
 		To(getDockerfile).
-		Doc("get one docekrfile templates").
+		Doc("get one docekrfile template").
 		Param(ws.PathParameter("dockerfile", "dockerfile name").DataType("string")))
 
 }

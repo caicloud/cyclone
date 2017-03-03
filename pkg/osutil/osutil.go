@@ -17,6 +17,7 @@ limitations under the License.
 package osutil
 
 import (
+	"io"
 	"os"
 	"os/user"
 	"strconv"
@@ -91,4 +92,22 @@ func IsFileExists(fileName string) bool {
 		return false
 	}
 	return true
+}
+
+// ReplaceFile replace file with content in destPath
+func ReplaceFile(destPath string, content io.Reader) error {
+	// clean file
+	os.RemoveAll(destPath)
+
+	file, err := os.OpenFile(destPath, os.O_CREATE|os.O_RDWR, 0755)
+	if err != nil {
+		log.ErrorWithFields("Unable to create new file", log.Fields{"path": destPath, "err": err})
+		return err
+	}
+	_, err = io.Copy(file, content)
+	if err != nil {
+		log.ErrorWithFields("Unable to write content to file", log.Fields{"path": destPath, "err": err})
+		return err
+	}
+	return file.Close()
 }
