@@ -97,7 +97,11 @@ func IsFileExists(fileName string) bool {
 // ReplaceFile replace file with content in destPath
 func ReplaceFile(destPath string, content io.Reader) error {
 	// clean file
-	os.RemoveAll(destPath)
+	err := os.RemoveAll(destPath)
+	if err != nil {
+		log.ErrorWithFields("Unable to remove old file", log.Fields{"path": destPath, "err": err})
+		return err
+	}
 
 	file, err := os.OpenFile(destPath, os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
