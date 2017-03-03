@@ -1,0 +1,56 @@
+# compile the source code from VCS and generate the executable file in the specified system environment
+# pre_build:
+#   image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+#   environment:
+#     - WORKDIR=/go/src/github.com/caicloud/cyclone
+#   commands: 
+#     - cp ./ -rf $WORKDIR
+#     - cd $WORKDIR
+#     - go build -v ./
+
+# copy the executable file to the specified system environment, 
+# package the environment to a docker image and push the image to the specified docker registry
+build:
+  dockerfile_name: Dockerfile
+
+# run a container and bring up its dependencies (as other containers specified in the configuration) 
+# to perform integration testing. If the image of service configurated as "BUILT_IMAGE", 
+# it will use the newly built image.**
+# integration:
+#   services:
+#     mongo:
+#       image: cargo.caicloud.io/caicloud/mongo:3.0.5
+#       ports:
+#         - "27017:27017"
+#       command: mongod --smallfiles
+#     etcd:
+#       image: cargo.caicloud.io/caicloud/etcd:v3.0.13
+#       ports:
+#         - "2379:2379"
+#         - "2380:2380"
+#       command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
+#   image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+#   environment:
+#       - WORKDIR=/go/src/github.com/caicloud/cyclone
+#   volumes:
+#     -  /var/run/docker.sock:/var/run/docker.sock
+#   links:
+#     - mongo
+#     - etcd
+#   ports:
+#     - "7099:7099"
+#     - "8000:8000"
+#   commands: 
+#     - go build -v ./ 
+#     - ./cyclone &
+
+# deploy the containerized application into a containerized platform like Kubernetes.
+# deploy:
+#   type: kubernetes
+#   host: cluster-host
+#   token: cluster-token
+#   cluster: xxxxxxxxxxxxxx
+#   namespace: cyclone
+#   deployment: cyclone
+#   containers:
+#     - cycone-server

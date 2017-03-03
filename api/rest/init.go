@@ -18,8 +18,10 @@ package rest
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/resource"
 	"github.com/emicklei/go-restful"
@@ -58,6 +60,8 @@ func Initialize(enableCaicloudAuth string) {
 	registerResourceAPIs(ws)
 	registerWorkerNodeAPIs(ws)
 	registerDeployAPIs(ws)
+
+	registerTemplateAPIs(ws)
 
 	restful.Add(ws)
 
@@ -347,4 +351,39 @@ func registerDeployAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Param(ws.PathParameter("deploy_id", "identifier of the deploy").DataType("string")).
 		Writes(api.DeployDelResponse{}))
+}
+
+// registerWebhookAPIs registers webhook related endpoints.
+func registerTemplateAPIs(ws *restful.WebService) {
+
+	err := filepath.Walk(DockerfilePath, walkDockerfiles)
+
+	if err != nil {
+		log.WarnWithFields("error occur when walk dockerfile path, ", log.Fields{"path": DockerfilePath, "err": err})
+	}
+
+	err = filepath.Walk(YamlPath, walkYamlfiles)
+
+	if err != nil {
+		log.WarnWithFields("error occur when walk yamlfile path, ", log.Fields{"path": YamlPath, "err": err})
+	}
+
+	ws.Route(ws.GET("/templates/yamls").
+		To(listYamlfiles).
+		Doc("list all yaml templates"))
+
+	ws.Route(ws.GET("/templates/yamls/{yamlfile}").
+		To(getYamlfile).
+		Doc("get one yaml template").
+		Param(ws.PathParameter("yamlfile", "yaml file name").DataType("string")))
+
+	ws.Route(ws.GET("/templates/dockerfiles").
+		To(listDockerfiles).
+		Doc("list all docekrfile templates"))
+
+	ws.Route(ws.GET("/templates/dockerfiles/{dockerfile}").
+		To(getDockerfile).
+		Doc("get one docekrfile template").
+		Param(ws.PathParameter("dockerfile", "dockerfile name").DataType("string")))
+
 }

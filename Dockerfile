@@ -1,4 +1,4 @@
-FROM  golang:1.6-alpine
+FROM  alpine
 
 EXPOSE 7099
 
@@ -14,5 +14,6 @@ COPY ./cyclone-server /cyclone-server
 COPY ./http/web /http/web
 COPY ./notify/provider /template
 COPY ./node_modules /root/node_modules
+COPY ./api/templates /templates
 
 CMD ["/cyclone-server"]
