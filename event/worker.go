@@ -233,8 +233,8 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 		if errinfo != nil || len(nodes) != 1 {
 			log.Errorf("find worker node err: %v", errinfo)
 		} else {
-			nodes[0].LeftResource.Memory = event.WorkerInfo.UsedResource.Memory
-			nodes[0].LeftResource.CPU = event.WorkerInfo.UsedResource.CPU
+			nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
+			nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
 			_, err := ds.UpsertWorkerNodeDocument(&(nodes[0]))
 			if err != nil {
 				log.Errorf("release worker node resource err: %v", err)
