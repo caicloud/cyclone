@@ -25,10 +25,13 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/docker"
+	k8s_client "github.com/caicloud/cyclone/pkg/k8s"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
 	docker_client "github.com/fsouza/go-dockerclient"
+	k8s_api "k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/resource"
 )
 
 // Worker is the type for Cyclone Worker.
@@ -36,6 +39,15 @@ type Worker struct {
 	dockerHost  string
 	dm          *docker.Manager
 	containerID string
+	provider    string
+	k8sCompose  K8sCompose
+	podName     string
+}
+
+type K8sCompose struct {
+	host      string
+	token     string
+	namespace string
 }
 
 const (
@@ -44,8 +56,11 @@ const (
 	WORK_DOCKER_HOST    = "WORK_DOCKER_HOST"
 
 	// worker env setting
-	WORKER_EVENTID = "WORKER_EVENTID"
-	SERVER_HOST    = "SERVER_HOST"
+	WORKER_EVENTID     = "WORKER_EVENTID"
+	SERVER_HOST        = "SERVER_HOST"
+	WorkerK8SHost      = "WORKER_KUBERNETES_HOST"
+	WorkerK8SToken     = "WORKER_KUBERNETES_TOKEN"
+	WorkerK8SNamespace = "WORKER_KUBERNETES_NAMESPACE"
 
 	// worker time out
 	WORKER_TIMEOUT = 7200 * time.Second
@@ -55,15 +70,23 @@ const (
 	REGISTRY_PASSWORD      = "REGISTRY_PASSWORD"
 	CONSOLE_WEB_ENDPOINT   = "CONSOLE_WEB_ENDPOINT"
 	LOG_SERVER             = "LOG_SERVER"
+	DisableClair           = "DISABLE_CLAIR"
 	CLAIR_SERVER_IP        = "CLAIR_SERVER_IP"
 	SERVER_GITLAB          = "SERVER_GITLAB"
 	MEMORY_FOR_CONTAINER   = "MEMORY_FOR_CONTAINER"
 	CPU_FOR_CONTAINER      = "CPU_FOR_CONTAINER"
+
+	// Flags of worker provider
+	WorkerProviderDocker = "docker"
+	WorkerProviderK8S    = "kubernetes"
 )
 
 var (
 	// ErrWorkerBusy represents a special error.
 	ErrWorkerBusy = errors.New("Get worker docker host busy")
+
+	// Worker provider, docer or kubernetes
+	WorkerProvider = WorkerProviderDocker
 )
 
 // RegistryCompose that compose the info about the registry
@@ -78,23 +101,57 @@ type RegistryCompose struct {
 
 // NewWorker new a worker
 func NewWorker(event *api.Event) (*Worker, error) {
-	dockerHostWorker, err := GetWorkerDockerHost(event)
-	if err != nil {
-		return nil, err
+	if event.Operation == CreateVersionOps {
+		event.WorkerInfo.UsedResource = event.Version.BuildResource
+	} else {
+		event.WorkerInfo.UsedResource.Memory = osutil.GetFloat64Env(MEMORY_FOR_CONTAINER, 536870912.0) //512M
+		event.WorkerInfo.UsedResource.CPU = osutil.GetFloat64Env(CPU_FOR_CONTAINER, 512.0)
 	}
 
-	dockerManager, err := docker.NewManager(dockerHostWorker, "", registryWorker)
-	//dockerManager, err := docker.NewManager(dockerHostWorker, certPathWorker, registryWorker)
-	if err != nil {
-		return nil, err
-	}
-	w := &Worker{
-		dockerHost:  dockerHostWorker,
-		dm:          dockerManager,
-		containerID: event.WorkerInfo.ContainerID,
+	if WorkerProvider == WorkerProviderK8S {
+		host := osutil.GetStringEnv(WorkerK8SHost, "")
+		token := osutil.GetStringEnv(WorkerK8SToken, "")
+		namespace := osutil.GetStringEnv(WorkerK8SNamespace, "default")
+
+		w := &Worker{
+			provider: WorkerProviderK8S,
+			k8sCompose: K8sCompose{
+				host:      host,
+				token:     token,
+				namespace: namespace,
+			},
+		}
+
+		err := resourceManager.ApplyResource(event)
+		if err != nil {
+			log.Errorf("apply resource err %v", err)
+			return nil, err
+		}
+
+		return w, nil
+	} else if WorkerProvider == WorkerProviderDocker {
+		dockerHostWorker, err := GetWorkerDockerHost(event)
+		if err != nil {
+			return nil, err
+		}
+
+		dockerManager, err := docker.NewManager(dockerHostWorker, "", registryWorker)
+		//dockerManager, err := docker.NewManager(dockerHostWorker, certPathWorker, registryWorker)
+		if err != nil {
+			return nil, err
+		}
+		w := &Worker{
+			dockerHost:  dockerHostWorker,
+			dm:          dockerManager,
+			containerID: event.WorkerInfo.ContainerID,
+			provider:    WorkerProviderDocker,
+		}
+
+		return w, nil
 	}
 
-	return w, nil
+	return nil, fmt.Errorf("unknow worker provider")
+
 }
 
 // LoadWorker load worker from event
@@ -119,13 +176,6 @@ func LoadWorker(event *api.Event) (*Worker, error) {
 
 // GetWorkerDockerHost get woker docker host LB according to node resource
 func GetWorkerDockerHost(event *api.Event) (string, error) {
-	if event.Operation == CreateVersionOps {
-		event.WorkerInfo.UsedResource = event.Version.BuildResource
-	} else {
-		event.WorkerInfo.UsedResource.Memory = osutil.GetFloat64Env(MEMORY_FOR_CONTAINER, 536870912.0) //512M
-		event.WorkerInfo.UsedResource.CPU = osutil.GetFloat64Env(CPU_FOR_CONTAINER, 512.0)
-	}
-
 	ds := store.NewStore()
 	defer ds.Close()
 	workerNodes, err := ds.FindSystemWorkerNodeByResource(&(event.WorkerInfo.UsedResource))
@@ -159,6 +209,18 @@ func GetWorkerDockerHost(event *api.Event) (string, error) {
 
 // DoWork create a container start do work
 func (w *Worker) DoWork(event *api.Event) (err error) {
+	if w.provider == WorkerProviderK8S {
+		pod := toCreatePodConfig(event, int64(event.WorkerInfo.UsedResource.CPU),
+			int64(event.WorkerInfo.UsedResource.Memory))
+		podName, err := k8s_client.CreatePod(w.k8sCompose.host, w.k8sCompose.token, w.k8sCompose.namespace, pod)
+		if err != nil {
+			log.Errorf("Create worker pod err: %v.", err)
+		}
+		w.podName = podName
+
+		return nil
+	}
+
 	coo := toBuildContainerConfig(event.EventID, int64(event.WorkerInfo.UsedResource.CPU),
 		int64(event.WorkerInfo.UsedResource.Memory))
 	w.containerID, err = w.dm.RunContainer(coo)
@@ -171,8 +233,8 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 		if errinfo != nil || len(nodes) != 1 {
 			log.Errorf("find worker node err: %v", errinfo)
 		} else {
-			nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
-			nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
+			nodes[0].LeftResource.Memory = event.WorkerInfo.UsedResource.Memory
+			nodes[0].LeftResource.CPU = event.WorkerInfo.UsedResource.CPU
 			_, err := ds.UpsertWorkerNodeDocument(&(nodes[0]))
 			if err != nil {
 				log.Errorf("release worker node resource err: %v", err)
@@ -192,18 +254,27 @@ func (w *Worker) DoWork(event *api.Event) (err error) {
 
 // Fire fire a worker, stop and remove the worker container
 func (w *Worker) Fire() error {
-	// stop worker container
-	err := w.dm.StopContainer(w.containerID)
-	if err != nil {
-		log.Errorf("stop err: %v", err)
-	}
 
-	// remove worker container
-	err = w.dm.RemoveContainer(w.containerID)
-	if err != nil {
-		log.Errorf("remove err: %v", err)
+	switch w.provider {
+	case WorkerProviderDocker:
+
+		// stop worker container
+		err := w.dm.StopContainer(w.containerID)
+		if err != nil {
+			log.Errorf("stop err: %v", err)
+		}
+
+		// remove worker container
+		err = w.dm.RemoveContainer(w.containerID)
+		if err != nil {
+			log.Errorf("remove err: %v", err)
+		}
+		return err
+	case WorkerProviderK8S:
+		err := k8s_client.DeletePod(w.k8sCompose.host, w.k8sCompose.token, w.k8sCompose.namespace, w.podName, nil)
+		return err
 	}
-	return err
+	return nil
 }
 
 // CheckWorkerTimeOut ensures that the events are not timed out.
@@ -242,6 +313,80 @@ func CheckWorkerTimeOut(e api.Event) {
 	}
 }
 
+// toCreatePodConfig creates Pod from BuildNode.
+func toCreatePodConfig(event *api.Event, cpu, memory int64) *k8s_api.Pod {
+	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "cargo.caicloud.io/caicloud/cyclone-worker")
+	serverHost := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "http://127.0.0.1:7099")
+	registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
+	registryUsername := osutil.GetStringEnv(REGISTRY_USERNAME, "")
+	registryPassword := osutil.GetStringEnv(REGISTRY_PASSWORD, "")
+	consoleWebEndpoint := osutil.GetStringEnv(CONSOLE_WEB_ENDPOINT, "http://127.0.0.1:3000")
+	clairServerIP := osutil.GetStringEnv(CLAIR_SERVER_IP, "http://127.0.0.1:6060")
+	gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+	logServer := osutil.GetStringEnv(LOG_SERVER, "ws://127.0.0.1:8000/ws")
+
+	envEventID := k8s_api.EnvVar{Name: WORKER_EVENTID, Value: string(event.EventID)}
+	envServerHost := k8s_api.EnvVar{Name: SERVER_HOST, Value: serverHost}
+	envregistryLocation := k8s_api.EnvVar{Name: WORK_REGISTRY_LOCATION, Value: registryLocation}
+	envregistryUsername := k8s_api.EnvVar{Name: REGISTRY_USERNAME, Value: registryUsername}
+	envregistryPassword := k8s_api.EnvVar{Name: REGISTRY_PASSWORD, Value: registryPassword}
+	envconsoleWebEndpoint := k8s_api.EnvVar{Name: CONSOLE_WEB_ENDPOINT, Value: consoleWebEndpoint}
+	envDisableClair := k8s_api.EnvVar{Name: DisableClair, Value: osutil.GetStringEnv(DisableClair, "false")}
+	envclairServerIP := k8s_api.EnvVar{Name: CLAIR_SERVER_IP, Value: clairServerIP}
+	envgitlabServer := k8s_api.EnvVar{Name: SERVER_GITLAB, Value: gitlabServer}
+	envLogServer := k8s_api.EnvVar{Name: LOG_SERVER, Value: logServer}
+
+	limitResource := make(map[k8s_api.ResourceName]resource.Quantity)
+	limitResource[k8s_api.ResourceCPU] = *resource.NewMilliQuantity(int64(event.WorkerInfo.UsedResource.CPU),
+		resource.BinarySI)
+	limitResource[k8s_api.ResourceMemory] = *resource.NewQuantity(int64(event.WorkerInfo.UsedResource.Memory),
+		resource.BinarySI)
+
+	requestsResource := make(map[k8s_api.ResourceName]resource.Quantity)
+	requestsResource[k8s_api.ResourceCPU] = *resource.NewMilliQuantity(int64(event.WorkerInfo.UsedResource.CPU),
+		resource.BinarySI)
+	requestsResource[k8s_api.ResourceMemory] = *resource.NewQuantity(int64(event.WorkerInfo.UsedResource.Memory),
+		resource.BinarySI)
+
+	privileged := true
+
+	workerContainer := k8s_api.Container{
+		Name:  "cyclone-worker",
+		Image: workerImage,
+		Resources: k8s_api.ResourceRequirements{
+			Limits:   limitResource,
+			Requests: requestsResource,
+		},
+		Env: []k8s_api.EnvVar{
+			envEventID,
+			envServerHost,
+			envregistryLocation,
+			envregistryUsername,
+			envregistryPassword,
+			envconsoleWebEndpoint,
+			envclairServerIP,
+			envgitlabServer,
+			envLogServer,
+			envDisableClair,
+		},
+		SecurityContext: &k8s_api.SecurityContext{
+			Privileged: &privileged,
+		},
+	}
+	podContainers := []k8s_api.Container{workerContainer}
+
+	pod := &k8s_api.Pod{
+		ObjectMeta: k8s_api.ObjectMeta{
+			Name: string(event.EventID),
+		},
+		Spec: k8s_api.PodSpec{
+			Containers:    podContainers,
+			RestartPolicy: k8s_api.RestartPolicyNever,
+		},
+	}
+	return pod
+}
+
 // toContainerConfig creates CreateContainerOptions from BuildNode.
 func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_client.CreateContainerOptions {
 	workerImage := osutil.GetStringEnv(WORKER_IMAGE, "cargo.caicloud.io/caicloud/cyclone-worker")
@@ -260,14 +405,25 @@ func toBuildContainerConfig(eventID api.EventID, cpu, memory int64) *docker_clie
 	envregistryUsername := fmt.Sprintf("%s=%s", REGISTRY_USERNAME, registryUsername)
 	envregistryPassword := fmt.Sprintf("%s=%s", REGISTRY_PASSWORD, registryPassword)
 	envconsoleWebEndpoint := fmt.Sprintf("%s=%s", CONSOLE_WEB_ENDPOINT, consoleWebEndpoint)
+	envDisableClair := fmt.Sprintf("%s=%s", DisableClair, osutil.GetStringEnv(DisableClair, "false"))
 	envclairServerIP := fmt.Sprintf("%s=%s", CLAIR_SERVER_IP, clairServerIP)
 	envgitlabServer := fmt.Sprintf("%s=%s", SERVER_GITLAB, gitlabServer)
 	envLogServer := fmt.Sprintf("%s=%s", LOG_SERVER, logServer)
 
 	config := &docker_client.Config{
 		Image: workerImage,
-		Env: []string{envEventID, envServerHost, envregistryLocation, envregistryUsername, envregistryPassword,
-			envconsoleWebEndpoint, envclairServerIP, envgitlabServer, envLogServer},
+		Env: []string{
+			envEventID,
+			envServerHost,
+			envregistryLocation,
+			envregistryUsername,
+			envregistryPassword,
+			envconsoleWebEndpoint,
+			envclairServerIP,
+			envgitlabServer,
+			envLogServer,
+			envDisableClair,
+		},
 	}
 
 	hostConfig := &docker_client.HostConfig{
