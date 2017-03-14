@@ -103,9 +103,13 @@ type RegistryCompose struct {
 func NewWorker(event *api.Event) (*Worker, error) {
 	if event.Operation == CreateVersionOps {
 		event.WorkerInfo.UsedResource = event.Version.BuildResource
-	} else {
-		event.WorkerInfo.UsedResource.Memory = osutil.GetFloat64Env(MEMORY_FOR_CONTAINER, 536870912.0) //512M
+	}
+
+	if event.WorkerInfo.UsedResource.CPU == 0.0 {
 		event.WorkerInfo.UsedResource.CPU = osutil.GetFloat64Env(CPU_FOR_CONTAINER, 512.0)
+	}
+	if event.WorkerInfo.UsedResource.Memory == 0.0 {
+		event.WorkerInfo.UsedResource.Memory = osutil.GetFloat64Env(MEMORY_FOR_CONTAINER, 536870912.0) //512M
 	}
 
 	if WorkerProvider == WorkerProviderK8S {
