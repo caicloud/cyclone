@@ -116,18 +116,21 @@ func postHookEvent(event *api.Event) {
 	if err := resourceManager.ReleaseResource(event); err != nil {
 		log.Errorf("Unable to release resource %v", err)
 	}
-	// Release resources of worker node.
+
 	ds := store.NewStore()
 	defer ds.Close()
-	nodes, err := ds.FindWorkerNodesByDockerHost(event.WorkerInfo.DockerHost)
-	if err != nil || len(nodes) != 1 {
-		log.Errorf("find worker node err: %v", err)
-	} else {
-		nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
-		nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
-		_, err := ds.UpsertWorkerNodeDocument(&(nodes[0]))
-		if err != nil {
-			log.Errorf("release worker node resource err: %v", err)
+	// Release resources of worker node.
+	if w.provider == WorkerProviderDocker {
+		nodes, err := ds.FindWorkerNodesByDockerHost(event.WorkerInfo.DockerHost)
+		if err != nil || len(nodes) != 1 {
+			log.Errorf("find worker node err: %v", err)
+		} else {
+			nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
+			nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
+			_, err := ds.UpsertWorkerNodeDocument(&(nodes[0]))
+			if err != nil {
+				log.Errorf("release worker node resource err: %v", err)
+			}
 		}
 	}
 
@@ -139,9 +142,6 @@ func postHookEvent(event *api.Event) {
 				VerisonID: event.Version.VersionID,
 				Logs:      versionLog,
 			}
-
-			ds := store.NewStore()
-			defer ds.Close()
 			_, err = ds.NewVersionLogDocument(&Log)
 			if err != nil {
 				log.Error(err)

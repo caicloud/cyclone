@@ -70,6 +70,19 @@ func GetFloat64Env(name string, def float64) float64 {
 	return val
 }
 
+// GetBoolEnv get evironment value of 'name', and return provided
+// default value if not found.
+func GetBoolEnv(name string, def bool) bool {
+	val, err := strconv.ParseBool(os.Getenv(name))
+	if err != nil {
+		log.Infof("Env variant %s is not bool, using default value: %f", name, def)
+		return def
+	}
+	log.Infof("Env variant %s found, using env value: %f", name, val)
+	return val
+
+}
+
 // OpenFile opens file from 'name', and create one if not exist.
 func OpenFile(fileName string, flag int, perm os.FileMode) (*os.File, error) {
 	var file *os.File

@@ -96,7 +96,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 
 		switch change.Action {
 		case etcd.WatchActionCreate:
-			log.Infof("watch unfinshed events create: %q\n", change.Node)
+			log.Infof("watch unfinshed events create: %s\n", change.Node)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
 				log.Errorf("analysis create event err: %v", err)
@@ -105,7 +105,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			eventCreateHandler(&event)
 
 		case etcd.WatchActionSet:
-			log.Infof("watch unfinshed events set: %q\n", change.Node.Value)
+			log.Infof("watch unfinshed events set: %s\n", change.Node.Value)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
 				log.Errorf("analysis set event err: %v", err)
@@ -124,7 +124,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			}
 
 		case etcd.WatchActionDelete:
-			log.Infof("watch finshed events delete: %q\n", change.PrevNode)
+			log.Infof("watch finshed events delete: %s\n", change.PrevNode)
 			event, err := loadEventFromJSON(change.PrevNode.Value)
 			if err != nil {
 				log.Errorf("analysis delete event err: %v", err)

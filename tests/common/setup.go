@@ -167,8 +167,8 @@ func RegisterResource() error {
 		DockerHost:  osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
 		Type:        "system",
 		TotalResource: api.NodeResource{
-			Memory: 1024 * 1024 * 1024,
-			CPU:    1024,
+			Memory: 2 * 1024 * 1024 * 1024,
+			CPU:    2 * 1024,
 		},
 	}
 	buf, err := json.Marshal(&data)
