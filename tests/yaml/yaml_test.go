@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -33,7 +34,7 @@ import (
 )
 
 const (
-	DefaultServiceName            = "test-basic-rest-version"
+	DefaultServiceName            = "test-yaml-service"
 	DefaultVersionName            = "v0.1.0"
 	DefaultIntegrationVersionName = "v0.1.0-integration"
 	// ServiceImage is the image used to test yaml function.
@@ -66,9 +67,9 @@ var _ = Describe("Yaml", func() {
 		jenkins := osutil.GetStringEnv("JENKINS", "no")
 
 		// Get the username and password to access the docker registry.
-		registryLocation := osutil.GetStringEnv("REGISTRY_LOCATION", DefaultRegistryAddress)
-		registryUsername := osutil.GetStringEnv("REGISTRY_USERNAME", AdminUser)
-		registryPassword := osutil.GetStringEnv("REGISTRY_PASSWORD", AdminPassword)
+		registryLocation := osutil.GetStringEnv(cloud.RegistryLocation, DefaultRegistryAddress)
+		registryUsername := osutil.GetStringEnv(cloud.RegistryUsername, AdminUser)
+		registryPassword := osutil.GetStringEnv(cloud.RegistryPassword, AdminPassword)
 		registry := api.RegistryCompose{
 			RegistryLocation: registryLocation,
 			RegistryUsername: registryUsername,

@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
@@ -44,10 +45,10 @@ func NewGitLab() *GitLab {
 // there values come from gitlab or other by registering some information
 func (g *GitLab) getConf() (*oauth2.Config, error) {
 	//cyclonePath http request listen address
-	cyclonePath := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "http://127.0.0.1:7099")
-	clientID := osutil.GetStringEnv("CLIENTID_GITLAB", "")
-	clientSecret := osutil.GetStringEnv("CLIENTIDSECRET_GITLAB", "")
-	gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+	cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://127.0.0.1:7099")
+	clientID := osutil.GetStringEnv(cloud.GitlabClient, "")
+	clientSecret := osutil.GetStringEnv(cloud.GitlabSecret, "")
+	gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 	return &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -86,7 +87,7 @@ func (g *GitLab) Authcallback(code, state string) (string, error) {
 	}
 
 	//caicloud web address,eg caicloud.io
-	uiPath := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://localhost:8000")
+	uiPath := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://localhost:8000")
 	redirectURL := fmt.Sprintf("%s/cyclone/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
 
 	//sync to get token
@@ -162,7 +163,7 @@ func (g *GitLab) GetRepos(userID string) (repos []api.Repo, username string, ava
 		return repos, username, avatarURL, err
 	}
 
-	gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+	gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 	client := gitlab.NewOAuthClient(nil, tok.Vsctoken.AccessToken)
 	client.SetBaseURL(gitlabServer + "/api/v3/")
 
@@ -238,7 +239,7 @@ func (g *GitLab) CreateHook(service *api.Service) error {
 			return err
 		}
 
-		gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+		gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 		client := gitlab.NewOAuthClient(nil, tok.Vsctoken.AccessToken)
 		client.SetBaseURL(gitlabServer + "/api/v3/")
 
@@ -280,7 +281,7 @@ func (g *GitLab) DeleteHook(service *api.Service) error {
 			return err
 		}
 
-		gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+		gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 		client := gitlab.NewOAuthClient(nil, tok.Vsctoken.AccessToken)
 		client.SetBaseURL(gitlabServer + "/api/v3/")
 
@@ -331,7 +332,7 @@ func (g *GitLab) PostCommitStatus(service *api.Service, version *api.Version) er
 
 	// Post commit status.
 	owner, name := parseURL(service.Repository.URL)
-	urlHost := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "https://fornax-canary.caicloud.io")
+	urlHost := osutil.GetStringEnv(cloud.CycloneServer, "https://fornax-canary.caicloud.io")
 
 	var state string
 	if version.Status == api.VersionHealthy {
@@ -347,7 +348,7 @@ func (g *GitLab) PostCommitStatus(service *api.Service, version *api.Version) er
 		service.ServiceID, version.VersionID)
 	log.Infof("Log getting url: %s", urlLog)
 
-	gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+	gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 
 	cmd := fmt.Sprintf(`curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer %s' 
 						-d '{"state":"%s", "name":"%s","target_url":"%s","description":"%s"}'  

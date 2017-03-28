@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/kubefaker"
 	"github.com/caicloud/cyclone/pkg/log"
@@ -273,7 +274,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 				return err
 			}
 		} else {
-			consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+			consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 			endpoint := consoleWebEndpoint + "/api/application/updateImage"
 			if err := InvokeUpdateImageAPI(userID, deploymentName, clusterName, namespaceName,
 				containerName, imageName, endpoint); err != nil {
@@ -287,7 +288,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 
 // updateContainerInClusterWithPlan func use to update container in cluster according the plan setting.
 func updateContainerInClusterWithPlan(userID, imageName string, application api.DeployConfig) error {
-	consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+	consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 	endpoint := consoleWebEndpoint + "/api/application/updateImage"
 
 	clusterName := application.ClusterID
@@ -383,7 +384,7 @@ func checkOneDeployStatus(versionID string, checkChan chan Result, app appVersio
 		if app.ClusterType == "kubernetes" {
 			err = InvokeCheckDeployStateK8sAPI(app)
 		} else {
-			consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+			consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 			endpoint := consoleWebEndpoint + "/api/application/checkVersionDeployState"
 			err = InvokeCheckDeployStateAPI(app, endpoint)
 		}

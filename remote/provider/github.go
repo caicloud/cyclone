@@ -21,14 +21,13 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
-
-const CYCLONE_SERVER_HOST = "CYCLONE_SERVER_HOST"
 
 // GitHub is the type for Github remote provider.
 type GitHub struct {
@@ -44,9 +43,9 @@ func NewGitHub() *GitHub {
 // there values come from github or other by registering some information.
 func (g *GitHub) getConf() (*oauth2.Config, error) {
 	//cyclonePath http request listen address
-	cyclonePath := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "http://localhost:7099")
-	clientID := osutil.GetStringEnv("CLIENTID", "")
-	clientSecret := osutil.GetStringEnv("CLIENTIDSECRET", "")
+	cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://localhost:7099")
+	clientID := osutil.GetStringEnv(cloud.GithubClient, "")
+	clientSecret := osutil.GetStringEnv(cloud.GithubSecret, "")
 	return &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -85,7 +84,7 @@ func (g *GitHub) Authcallback(code, state string) (string, error) {
 	}
 
 	// Caicloud web address,eg caicloud.io
-	uiPath := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://localhost:8000")
+	uiPath := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://localhost:8000")
 	redirectURL := fmt.Sprintf("%s/cyclone/add?type=github&code=%s&state=%s", uiPath, code, state)
 
 	// Sync to get token.
@@ -379,7 +378,7 @@ func (g *GitHub) PostCommitStatus(service *api.Service, version *api.Version) er
 
 	// Post commit status.
 	owner, repo := parseURL(service.Repository.URL)
-	urlHost := osutil.GetStringEnv(CYCLONE_SERVER_HOST, "https://fornax-canary.caicloud.io")
+	urlHost := osutil.GetStringEnv(cloud.CycloneServer, "https://fornax-canary.caicloud.io")
 
 	var state string
 	if version.Status == api.VersionHealthy {

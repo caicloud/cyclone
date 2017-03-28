@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
 )
 
@@ -34,7 +35,7 @@ func parseURL(url string) (string, string) {
 
 // getHookURL is a helper to get the web hook url.
 func getHookURL(webhooktype, serviceID string) string {
-	cyclonePath := osutil.GetStringEnv("CYCLONE_SERVER_HOST", "http://127.0.0.1:7099")
+	cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://127.0.0.1:7099")
 	url := fmt.Sprintf("%s/api/%s/%s/webhook_%s", cyclonePath, api.APIVersion, serviceID, webhooktype)
 	return url
 }

@@ -19,8 +19,8 @@ package etcd
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/coreos/etcd/client"
+	"github.com/zoumo/logdog"
 	"golang.org/x/net/context"
 )
 
@@ -53,7 +53,7 @@ func Init(endpoints []string) {
 	var err error
 	c.client, err = client.New(cfg)
 	if err != nil {
-		log.Fatalf("connect to etcd err: %v", err)
+		logdog.Fatalf("connect to etcd err: %v", err)
 	}
 	ctx = context.Background()
 }
@@ -134,7 +134,7 @@ func (ec *Client) CreateWatcher(dir string) (client.Watcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("star watch %s after %d", dir, respGet.Index)
+	logdog.Infof("start to watch %s after %d", dir, respGet.Index)
 	w := kapi.Watcher(dir, &client.WatcherOptions{AfterIndex: respGet.Index,
 		Recursive: true})
 	return w, err

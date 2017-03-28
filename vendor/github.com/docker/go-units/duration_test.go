@@ -48,6 +48,7 @@ func TestHumanDuration(t *testing.T) {
 	year := 365 * day
 
 	assertEquals(t, "Less than a second", HumanDuration(450*time.Millisecond))
+	assertEquals(t, "1 second", HumanDuration(1*time.Second))
 	assertEquals(t, "47 seconds", HumanDuration(47*time.Second))
 	assertEquals(t, "About a minute", HumanDuration(1*time.Minute))
 	assertEquals(t, "3 minutes", HumanDuration(3*time.Minute))
@@ -71,6 +72,7 @@ func TestHumanDuration(t *testing.T) {
 	assertEquals(t, "4 weeks", HumanDuration(1*month))
 	assertEquals(t, "6 weeks", HumanDuration(1*month+2*week))
 	assertEquals(t, "8 weeks", HumanDuration(2*month))
+	assertEquals(t, "2 months", HumanDuration(2*month+2*week))
 	assertEquals(t, "3 months", HumanDuration(3*month+1*week))
 	assertEquals(t, "5 months", HumanDuration(5*month+2*week))
 	assertEquals(t, "13 months", HumanDuration(13*month))

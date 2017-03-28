@@ -1,0 +1,236 @@
+{
+   "schemaVersion": 1,
+   "name": "logstash",
+   "tag": "47c9e4e2e7",
+   "architecture": "amd64",
+   "fsLayers": [
+      {
+         "blobSum": "sha256:91ff2cb1f00531d3d5dee72dc52f110f3b3619a72734f9ffe6840fb29c1ae291"
+      },
+      {
+         "blobSum": "sha256:9a8bbc7da8edb872bd0d19a1a28ad91eb6205ce0ec6c12df1c71ec89b7c1e036"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:f0bf57e59d3b1b2226f639767b9f01d80ca1a34ce5f1e7da8d385eed028326dd"
+      },
+      {
+         "blobSum": "sha256:7bbf93791f2e7a1a772e0ae4b98aa7ccaf8b9dfbdf1135f3f6a0c2d1b9718698"
+      },
+      {
+         "blobSum": "sha256:8ba87433a7ec0234d568a85e4b5f95c3eab5fc539779e91d5751870072c8fc9b"
+      },
+      {
+         "blobSum": "sha256:6d1893831b9728217d271d4220e913e6160670c8b71cdd86b28a60770e7c4f92"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:2d353b3bb076b8311427324111969deb7a932b603e8c91e64de9ff5c05fcecbb"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:94032fc3961bc48ad7bcec31c9c1f6d1ee5a26f6830df776f16ab1855657ff9b"
+      },
+      {
+         "blobSum": "sha256:c48bc45ec8ef163c8442ee9a9ebec868a971d0575d2b74cdddf7965642beb91a"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:749801b75ce0f7f82fada0bc17187ab72e0b2e47fc2dc5d327b6c4733276effb"
+      },
+      {
+         "blobSum": "sha256:2b7b1af7c6d72bacff3d0b3c85db1305ea1de89638806f45640f589eee2b0d36"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:51c43aabfa0c74eba7b0be81d4df4c746d95a4867e69772468dfb8de4c961e76"
+      },
+      {
+         "blobSum": "sha256:25368b2a6df8456a71cb1029228df1a35bb4437fc8e2820585af8008554a2fa0"
+      },
+      {
+         "blobSum": "sha256:a17d585d8b66adf42eeb8e1b4f18c891b8e81f6af584233493638b3efe5fa460"
+      },
+      {
+         "blobSum": "sha256:d35e5f0a148b5551d0e9215821bcfaf76e5f6ab76ff17687cf201ce2beb6e2d0"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:7d811bfac6eb74d6fcfd0e32ebb445b68d0e606ed2b5183db848374b0b63b0ee"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:4cbd0b70645ad8e4638b0ae616594bd6c43e268b18430fa622e26386d4a8424e"
+      },
+      {
+         "blobSum": "sha256:be275827e8b7f9057582be291be9d0b1ea48379640585e97987ac337c495c0cd"
+      },
+      {
+         "blobSum": "sha256:ab30c63719b10dd434ddbe896879bd9b637fe4e16749a94d3dc827450dc2a437"
+      },
+      {
+         "blobSum": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4"
+      },
+      {
+         "blobSum": "sha256:5c90d4a2d1a8dfffd05ff2dd659923f0ca2d843b5e45d030e17abbcd06a11b5b"
+      }
+   ],
+   "history": [
+      {
+         "v1Compatibility": "{\"architecture\":\"amd64\",\"config\":{\"Hostname\":\"6250540837a8\",\"Domainname\":\"\",\"User\":\"\",\"AttachStdin\":false,\"AttachStdout\":false,\"AttachStderr\":false,\"Tty\":false,\"OpenStdin\":false,\"StdinOnce\":false,\"Env\":[\"PATH=/opt/logstash/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\"LANG=C.UTF-8\",\"JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre\",\"JAVA_VERSION=8u91\",\"JAVA_DEBIAN_VERSION=8u91-b14-1~bpo8+1\",\"CA_CERTIFICATES_JAVA_VERSION=20140324\",\"GOSU_VERSION=1.7\",\"LOGSTASH_MAJOR=2.3\",\"LOGSTASH_VERSION=1:2.3.2-1\",\"SINCEDB_DIR=/var/lib/logstash-journald\"],\"Cmd\":[\"logstash\",\"agent\"],\"ArgsEscaped\":true,\"Image\":\"sha256:7b585750b15b97971e3864f9e288928f2a5d634ee3a95087472e73f30af9617e\",\"Volumes\":{\"/var/lib/logstash-journald\":{}},\"WorkingDir\":\"/\",\"Entrypoint\":[\"/docker-entrypoint.sh\"],\"OnBuild\":[],\"Labels\":{}},\"container\":\"6ef1bf328f51ab71019e2ae1d0286e016ae7a925716ac63f969929532b46a511\",\"container_config\":{\"Hostname\":\"6250540837a8\",\"Domainname\":\"\",\"User\":\"\",\"AttachStdin\":false,\"AttachStdout\":false,\"AttachStderr\":false,\"Tty\":false,\"OpenStdin\":false,\"StdinOnce\":false,\"Env\":[\"PATH=/opt/logstash/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\"LANG=C.UTF-8\",\"JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre\",\"JAVA_VERSION=8u91\",\"JAVA_DEBIAN_VERSION=8u91-b14-1~bpo8+1\",\"CA_CERTIFICATES_JAVA_VERSION=20140324\",\"GOSU_VERSION=1.7\",\"LOGSTASH_MAJOR=2.3\",\"LOGSTASH_VERSION=1:2.3.2-1\",\"SINCEDB_DIR=/var/lib/logstash-journald\"],\"Cmd\":[\"/bin/sh\",\"-c\",\"#(nop) COPY file:f48e344346aa48828d5ff9685a9714ab12582d0a44e1851026af4affdba03498 in /logstash.conf\"],\"ArgsEscaped\":true,\"Image\":\"sha256:7b585750b15b97971e3864f9e288928f2a5d634ee3a95087472e73f30af9617e\",\"Volumes\":{\"/var/lib/logstash-journald\":{}},\"WorkingDir\":\"/\",\"Entrypoint\":[\"/docker-entrypoint.sh\"],\"OnBuild\":[],\"Labels\":{}},\"created\":\"2016-06-15T14:43:11.132290906Z\",\"docker_version\":\"1.10.1\",\"id\":\"79839e9413dce8768614a7f6c5749e76879d622eb9dc5154ce819b552d04cc97\",\"os\":\"linux\",\"parent\":\"38e91225342803699c86681a20cc6b02f10708d78c530c5fedcbfbc154c8b4ec\"}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"38e91225342803699c86681a20cc6b02f10708d78c530c5fedcbfbc154c8b4ec\",\"parent\":\"ff5cdb8a102ee7a466c480c4a97179630b717c3971e524f105514ceff8f11d5e\",\"created\":\"2016-06-15T14:43:10.910820269Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) COPY file:a37b862db93d2f896b23dff069e281b8ba8d92cdefdeb6487d182223c0f1fbb7 in ./\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"ff5cdb8a102ee7a466c480c4a97179630b717c3971e524f105514ceff8f11d5e\",\"parent\":\"62267b7b751d5c0bd39cbf0b6a022309339093e94c7ea4cbf0038c331c4756c7\",\"created\":\"2016-06-15T14:43:10.696031714Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) WORKDIR /\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"62267b7b751d5c0bd39cbf0b6a022309339093e94c7ea4cbf0038c331c4756c7\",\"parent\":\"0d002f23850df3d6e2539a7f5f995eadc53c273849681fe2bc2c2d14ef17790b\",\"created\":\"2016-06-15T14:43:10.532859882Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV SINCEDB_DIR=/var/lib/logstash-journald\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"0d002f23850df3d6e2539a7f5f995eadc53c273849681fe2bc2c2d14ef17790b\",\"parent\":\"fc7b1e64df03883d3e2ee7a994642748a47de62ee2a926d076c30f4798ada13d\",\"created\":\"2016-06-15T14:43:10.379499256Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) VOLUME [/var/lib/logstash-journald]\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"fc7b1e64df03883d3e2ee7a994642748a47de62ee2a926d076c30f4798ada13d\",\"parent\":\"e883fc5f870af556fb1b5437ede65124a41ab1ddda6e0909f055e6017bb7f1e6\",\"created\":\"2016-06-15T14:43:10.228844258Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c /opt/logstash/bin/logstash-plugin install ./logstash-input-journald.gem\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"e883fc5f870af556fb1b5437ede65124a41ab1ddda6e0909f055e6017bb7f1e6\",\"parent\":\"f748ee3a6228111d40c97488aa0da1ca43f4bc217e0116a7ad6c8fcd8bed897a\",\"created\":\"2016-06-15T14:42:53.445942297Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) COPY file:02986340cbcdd740a97019507d289495a171dfb9b070eed033c708703c645e07 in ./\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"f748ee3a6228111d40c97488aa0da1ca43f4bc217e0116a7ad6c8fcd8bed897a\",\"parent\":\"06163b852110557fc8b4b67c54e757425ede9e0ef609117c2299e5b2593954c6\",\"created\":\"2016-06-15T14:34:10.915375068Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) WORKDIR /plugins\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"06163b852110557fc8b4b67c54e757425ede9e0ef609117c2299e5b2593954c6\",\"parent\":\"1c750f428916656cf9f59953f58f5af6c9ea8fd5e428440cdcdcbf5f5ea1ced1\",\"created\":\"2016-06-15T14:34:10.564053788Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c apt-get update \\u0026\\u0026 apt-get install -y --no-install-recommends   git   \\u0026\\u0026 rm -rf /var/lib/apt/lists/*\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"1c750f428916656cf9f59953f58f5af6c9ea8fd5e428440cdcdcbf5f5ea1ced1\",\"parent\":\"d40c41f21ee90e91dc3067a6d731751d3f143538a2f9be5189733a9a2c4e6ff6\",\"created\":\"2016-06-10T16:51:40.205191531Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) CMD [\\\"logstash\\\" \\\"agent\\\"]\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"d40c41f21ee90e91dc3067a6d731751d3f143538a2f9be5189733a9a2c4e6ff6\",\"parent\":\"94bad5e456f74f14c5c52adf85e8e6f8489b5250830c790439c359b0871f3da8\",\"created\":\"2016-06-10T16:51:39.87367177Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENTRYPOINT \\u0026{[\\\"/docker-entrypoint.sh\\\"]}\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"94bad5e456f74f14c5c52adf85e8e6f8489b5250830c790439c359b0871f3da8\",\"parent\":\"b9d6dffa16dab5816f204c99701ebfb06860ea1268df3dd10739a2ad8ba9de85\",\"created\":\"2016-06-10T16:51:39.527582926Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) COPY file:e25e9bbce7bd2a5373b3d6a54afe70f3338f9e3fb5fc933284ea0d73eaa8985c in /\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"b9d6dffa16dab5816f204c99701ebfb06860ea1268df3dd10739a2ad8ba9de85\",\"parent\":\"514ec52cc5e5713f6c196240471f514f0fcbe2d3df5701b7fb1ab1f6a9f1fbf7\",\"created\":\"2016-06-10T16:51:38.983904595Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV PATH=/opt/logstash/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"514ec52cc5e5713f6c196240471f514f0fcbe2d3df5701b7fb1ab1f6a9f1fbf7\",\"parent\":\"c57aa57aafcf5374ff2c549ba680e7c36deda2d60c020ac3d088183edebd060d\",\"created\":\"2016-06-10T16:51:37.864206095Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c set -x \\t\\u0026\\u0026 apt-get update \\t\\u0026\\u0026 apt-get install -y --no-install-recommends logstash=$LOGSTASH_VERSION \\t\\u0026\\u0026 rm -rf /var/lib/apt/lists/*\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"c57aa57aafcf5374ff2c549ba680e7c36deda2d60c020ac3d088183edebd060d\",\"parent\":\"0c6b2c070661d60b18c01d183a3d4d60f9954cd6f68725c4eb352cb203a36e82\",\"created\":\"2016-06-10T16:50:02.117043873Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c echo \\\"deb http://packages.elastic.co/logstash/${LOGSTASH_MAJOR}/debian stable main\\\" \\u003e /etc/apt/sources.list.d/logstash.list\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"0c6b2c070661d60b18c01d183a3d4d60f9954cd6f68725c4eb352cb203a36e82\",\"parent\":\"6197d09575c391a0caa6afa42e21dbfa891657083f5d5d8cbe6a2f70acf47385\",\"created\":\"2016-06-10T16:50:00.729221411Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV LOGSTASH_VERSION=1:2.3.2-1\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"6197d09575c391a0caa6afa42e21dbfa891657083f5d5d8cbe6a2f70acf47385\",\"parent\":\"d3e414ac9f8726088c1ba0d453798bb5fa5679884864c829cfdf1d4ef0ba9a49\",\"created\":\"2016-06-10T16:50:00.362194504Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV LOGSTASH_MAJOR=2.3\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"d3e414ac9f8726088c1ba0d453798bb5fa5679884864c829cfdf1d4ef0ba9a49\",\"parent\":\"6909f3a12bc0ee418838eec1e11aadd2c528b3ba3a22d1a6e4998de552336d21\",\"created\":\"2016-06-10T16:41:33.723631489Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 46095ACC8548582C1A2699A9D27D666CD88E42B4\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"6909f3a12bc0ee418838eec1e11aadd2c528b3ba3a22d1a6e4998de552336d21\",\"parent\":\"a2b83fdf0f7593710ba73e5020d8284f1db932144e3be997bc5965b7c2038c83\",\"created\":\"2016-06-10T16:41:11.995735322Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c set -x \\t\\u0026\\u0026 wget -O /usr/local/bin/gosu \\\"https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)\\\" \\t\\u0026\\u0026 wget -O /usr/local/bin/gosu.asc \\\"https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc\\\" \\t\\u0026\\u0026 export GNUPGHOME=\\\"$(mktemp -d)\\\" \\t\\u0026\\u0026 gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \\t\\u0026\\u0026 gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \\t\\u0026\\u0026 rm -r \\\"$GNUPGHOME\\\" /usr/local/bin/gosu.asc \\t\\u0026\\u0026 chmod +x /usr/local/bin/gosu \\t\\u0026\\u0026 gosu nobody true\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"a2b83fdf0f7593710ba73e5020d8284f1db932144e3be997bc5965b7c2038c83\",\"parent\":\"6b6d4bba0327ffab45ab71cba6da6091557b6b92aaa0db9d8724726839958128\",\"created\":\"2016-06-10T16:41:06.394379703Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV GOSU_VERSION=1.7\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"6b6d4bba0327ffab45ab71cba6da6091557b6b92aaa0db9d8724726839958128\",\"parent\":\"309be2300cca379c7549b28f2dd2cd964b7cd1ce61774d647bfa76579de050ea\",\"created\":\"2016-06-10T16:41:05.907224996Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c mkdir -p /usr/local/lib \\t\\u0026\\u0026 ln -s /usr/lib/*/libzmq.so.3 /usr/local/lib/libzmq.so\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"309be2300cca379c7549b28f2dd2cd964b7cd1ce61774d647bfa76579de050ea\",\"parent\":\"ee1e094cb015295bfa011b3da1641b53a664c16c065e60d61f10c714e6117e13\",\"created\":\"2016-06-10T16:41:04.329564332Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c apt-get update \\u0026\\u0026 apt-get install -y --no-install-recommends \\t\\tlibzmq3 \\t\\u0026\\u0026 rm -rf /var/lib/apt/lists/*\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"ee1e094cb015295bfa011b3da1641b53a664c16c065e60d61f10c714e6117e13\",\"parent\":\"d6c508d97d2dfac218776ab25618b84bc60b58fb5808a3d63efceaf57e85232d\",\"created\":\"2016-06-09T22:13:54.418953372Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c /var/lib/dpkg/info/ca-certificates-java.postinst configure\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"d6c508d97d2dfac218776ab25618b84bc60b58fb5808a3d63efceaf57e85232d\",\"parent\":\"98b5a9a7d66952cb61c9c9f8d91a9a40032b46ddcb883d477be74efdcff5621f\",\"created\":\"2016-06-09T22:13:51.757024601Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c set -x \\t\\u0026\\u0026 apt-get update \\t\\u0026\\u0026 apt-get install -y \\t\\topenjdk-8-jre-headless=\\\"$JAVA_DEBIAN_VERSION\\\" \\t\\tca-certificates-java=\\\"$CA_CERTIFICATES_JAVA_VERSION\\\" \\t\\u0026\\u0026 rm -rf /var/lib/apt/lists/* \\t\\u0026\\u0026 [ \\\"$JAVA_HOME\\\" = \\\"$(docker-java-home)\\\" ]\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"98b5a9a7d66952cb61c9c9f8d91a9a40032b46ddcb883d477be74efdcff5621f\",\"parent\":\"e10dbef9456c0b0704089d37a805c6edfadf23a1dd1871d648938f9f1af19210\",\"created\":\"2016-06-09T22:12:28.820044587Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV CA_CERTIFICATES_JAVA_VERSION=20140324\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"e10dbef9456c0b0704089d37a805c6edfadf23a1dd1871d648938f9f1af19210\",\"parent\":\"37c7ce9465532d9ce6844ca7f67d42cf1ca11bcbe35161da5162eafe378341c1\",\"created\":\"2016-06-09T22:12:28.553700032Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV JAVA_DEBIAN_VERSION=8u91-b14-1~bpo8+1\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"37c7ce9465532d9ce6844ca7f67d42cf1ca11bcbe35161da5162eafe378341c1\",\"parent\":\"ca62de1a9a9d8cc3e6dc552cdeb24754c4e93ff8438eecc26fb81622ca72feee\",\"created\":\"2016-06-09T22:12:28.206228884Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV JAVA_VERSION=8u91\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"ca62de1a9a9d8cc3e6dc552cdeb24754c4e93ff8438eecc26fb81622ca72feee\",\"parent\":\"684667c40b3ad7530ca7aa3468e61b332d111a4f83eceb56123baf981c154e8c\",\"created\":\"2016-06-09T22:12:27.931375457Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"684667c40b3ad7530ca7aa3468e61b332d111a4f83eceb56123baf981c154e8c\",\"parent\":\"3a564934fba08eec8dd13898aa28255cd8a20ac03996932bc2e275bd7af907b7\",\"created\":\"2016-06-09T22:12:27.616810706Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c { \\t\\techo '#!/bin/sh'; \\t\\techo 'set -e'; \\t\\techo; \\t\\techo 'dirname \\\"$(dirname \\\"$(readlink -f \\\"$(which javac || which java)\\\")\\\")\\\"'; \\t} \\u003e /usr/local/bin/docker-java-home \\t\\u0026\\u0026 chmod +x /usr/local/bin/docker-java-home\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"3a564934fba08eec8dd13898aa28255cd8a20ac03996932bc2e275bd7af907b7\",\"parent\":\"2ba8849e075b4d1acf0ff8aacb0286af1e4d5e8243a7eb8caa452c4261fe4ded\",\"created\":\"2016-06-09T22:12:26.628765863Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ENV LANG=C.UTF-8\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"2ba8849e075b4d1acf0ff8aacb0286af1e4d5e8243a7eb8caa452c4261fe4ded\",\"parent\":\"35e170305690c5326ede2fb0d16695a3de51f978d93c1dba22be08ad75b036a2\",\"created\":\"2016-06-09T22:12:26.378311605Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c echo 'deb http://httpredir.debian.org/debian jessie-backports main' \\u003e /etc/apt/sources.list.d/jessie-backports.list\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"35e170305690c5326ede2fb0d16695a3de51f978d93c1dba22be08ad75b036a2\",\"parent\":\"4c76b3c135637de0018f575020919b06ce846cd8e77295eb6b5f10c378ca1332\",\"created\":\"2016-06-09T22:08:24.641520134Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c apt-get update \\u0026\\u0026 apt-get install -y --no-install-recommends \\t\\tbzip2 \\t\\tunzip \\t\\txz-utils \\t\\u0026\\u0026 rm -rf /var/lib/apt/lists/*\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"4c76b3c135637de0018f575020919b06ce846cd8e77295eb6b5f10c378ca1332\",\"parent\":\"435cb21051b6acf1c846fa0550c9a8de3dd529ead7064958ab4278a1f2bd3a36\",\"created\":\"2016-06-09T21:35:50.029803171Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c apt-get update \\u0026\\u0026 apt-get install -y --no-install-recommends \\t\\tca-certificates \\t\\tcurl \\t\\twget \\t\\u0026\\u0026 rm -rf /var/lib/apt/lists/*\"]}}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"435cb21051b6acf1c846fa0550c9a8de3dd529ead7064958ab4278a1f2bd3a36\",\"parent\":\"7d78525320442999cccbd4b15232adf41588ddca6ecb281f1d3a8bbf45862997\",\"created\":\"2016-06-09T21:28:43.776404816Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) CMD [\\\"/bin/bash\\\"]\"]},\"throwaway\":true}"
+      },
+      {
+         "v1Compatibility": "{\"id\":\"7d78525320442999cccbd4b15232adf41588ddca6ecb281f1d3a8bbf45862997\",\"created\":\"2016-06-09T21:28:42.397841831Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) ADD file:76679eeb94129df23c99013487d6b6bd779d2107bf07d194a524fdbb6a961530 in /\"]}}"
+      }
+   ],
+   "signatures": [
+      {
+         "header": {
+            "jwk": {
+               "crv": "P-256",
+               "kid": "IPED:6KG6:7IKV:4M7Z:STDL:COHD:VLXU:UVQU:FGRC:NVWA:BLN6:VLC5",
+               "kty": "EC",
+               "x": "ot_xcXX4C8k4HjJ7MTz8bpdKOKjfGlk635FgvLC2sS0",
+               "y": "PpbZtZAfOqQyZ-07O4-peqthlhy7SwNZQIu_z2trokI"
+            },
+            "alg": "ES256"
+         },
+         "signature": "l1zkKhZlr98VSGl0jutXGYQl6FrwaLhRC0tpFTLs_ufsIhgLXvq953rkwQoHUkIsYIJ-YXwMEqaVFHk5_xSL4Q",
+         "protected": "eyJmb3JtYXRMZW5ndGgiOjIwMzUwLCJmb3JtYXRUYWlsIjoiQ24wIiwidGltZSI6IjIwMTYtMDYtMTZUMTA6MTQ6NDdaIn0"
+      }
+   ]
+}

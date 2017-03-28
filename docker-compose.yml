@@ -1,20 +1,20 @@
-postgres:
-    image: postgres:9
-    environment:
-      POSTGRES_PASSWORD: password
+# postgres:
+#     image: postgres:9
+#     environment:
+#       POSTGRES_PASSWORD: password
 
-clair:
-    image: cargo.caicloud.io/caicloud/clair:v1.2.3
-    ports:
-        - "6060-6061:6060-6061"
-    expose:
-        - "6060-6061"
-    links:
-        - postgres
-    volumes:
-        - /tmp:/tmp
-        - ./scripts/clair_config:/config
-    command: [-config, /config/config.yaml]
+# clair:
+#     image: cargo.caicloud.io/caicloud/clair:v1.2.3
+#     ports:
+#         - "6060-6061:6060-6061"
+#     expose:
+#         - "6060-6061"
+#     links:
+#         - postgres
+#     volumes:
+#         - /tmp:/tmp
+#         - ./scripts/clair_config:/config
+#     command: [-config, /config/config.yaml]
 
 zookeeper:
     image: wurstmeister/zookeeper:3.4.6
@@ -27,7 +27,7 @@ kafka:
     links:
         - zookeeper:zk
     volumes:
-       - /data/kafka_log:/data/kafka_log
+       - ./local/data/kafka_log:/data/kafka_log
     environment:
         - KAFKA_ADVERTISED_HOST_NAME=kafkahost
         - KAFKA_ADVERTISED_PORT=9092
@@ -37,23 +37,20 @@ kafka:
     expose:
         - "9092"
 etcd:
-    image: cargo.caicloud.io/caicloud/etcd:v2.2.1
+    image: quay.io/coreos/etcd:v3.1.3
     volumes:
-        - /data:/data
+        - ./local/data/etcd:/data
     ports:
         - "2379:2379"
         - "2380:2380"
         - "4001:4001"
         - "7001:7001"
-    environment:
-        - name=etcd-server
-        - advertise-client-urls=http://0.0.0.0:4001
-        - initial-advertise-peer-urls=http://0.0.0.0:7001
+    command: etcd -name=etcd-server -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -data-dir=/data
 
 mongo:
     image: mongo:3.0.5
-    volumes:
-       - /data/db:/data/db
+    # volumes:
+    #    - ./local/data/db:/data/db
     expose:
        - "27017"
     ports:
@@ -62,35 +59,29 @@ mongo:
 
 cyclone-server:
     image: cargo.caicloud.io/caicloud/cyclone-server:latest
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+    # volumes:
+    #     - /var/run/docker.sock:/var/run/docker.sock
     links:
         - mongo
         - kafka
         - etcd
-        - clair
+        # - clair
     ports:
         - "7099:7099"
         - "8000:8000"
     expose:
         - "7099"
     environment:
-        - MONGO_DB_IP=mongo:27017
-        - KAFKA_SERVER_IP=kafkahost:9092
+        - DEBUG=true
+        - CYCLONE_SERVER=http://127.0.0.1:7099
+        - MONGODB_HOST=mongo:27017
+        - KAFKA_HOST=kafkahost:9092
+        - ETCD_HOST=http://etcd:2379
         - LOG_SERVER=ws://127.0.0.1:8000/ws
         - REGISTRY_LOCATION=cargo.caicloud.io
-        - WORK_REGISTRY_LOCATION=cargo.caicloud.io
         - REGISTRY_USERNAME=user
         - REGISTRY_PASSWORD=pwd
-        # Use for github oauth
-        - CLIENTID=0
-        - CLIENTIDSECRET=0
-        - CONSOLE_WEB_ENDPOINT=https://console-canary.caicloud.io
-        - CLIENTID_GITLAB=0
-        - CLIENTIDSECRET_GITLAB=0
-        - SERVER_GITLAB=https://gitlab.com
-        - ETCD_SERVER_IP=http://etcd:2379
-        - CYCLONE_SERVER_HOST=http://127.0.0.1:7099
-        - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
-        - CLAIR_SERVER_IP=http://127.0.0.1:6060
+        - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker:latest
+        - CLAIR_DISABLE=true
+        # - CLAIR_SERVER=http://127.0.0.1:6060
     command: /cyclone-server

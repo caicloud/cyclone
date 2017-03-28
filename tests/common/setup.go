@@ -25,9 +25,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	log "github.com/zoumo/logdog"
 )
 
 const (
@@ -158,42 +158,32 @@ func WaitComponents() {
 	log.Info("Cyclone started")
 }
 
-// RegisterResource register resources to mongo.
-func RegisterResource() error {
-	data := api.WorkerNode{
-		Name:        "test",
-		Description: "test",
-		IP:          "127.0.0.1",
-		DockerHost:  osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
-		Type:        "system",
-		TotalResource: api.NodeResource{
-			Memory: 2 * 1024 * 1024 * 1024,
-			CPU:    2 * 1024,
-		},
+// AddCloud register resources to mongo.
+func AddCloud() error {
+
+	data := cloud.Options{
+		Name: "test",
+		Kind: "docker",
+		Host: osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
 	}
+
 	buf, err := json.Marshal(&data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/system_worker_nodes", BaseURL), bytes.NewBuffer(buf))
+	url := fmt.Sprintf("%s/clouds", BaseURL)
+
+	resp, err := http.Post(url, "application/json;charset=utf-8", bytes.NewBuffer(buf))
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-type", "application/json;charset=utf-8")
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 201 {
 		return fmt.Errorf("%v", resp)
 	}
 
-	log.Info("Register resource to mongo.")
+	log.Info("Register cloud", log.Fields{"cloud": data})
 	return nil
 }
 

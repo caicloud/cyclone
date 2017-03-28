@@ -77,7 +77,7 @@ func createVersion(request *restful.Request, response *restful.Response) {
 		message := fmt.Sprintf("Unable to find service %v", version.ServiceID)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		createResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
+		response.WriteHeaderAndEntity(http.StatusBadRequest, createResponse)
 		return
 	}
 
@@ -98,7 +98,7 @@ func createVersion(request *restful.Request, response *restful.Response) {
 			message := fmt.Sprintf("Name of version %s is existed", version.Name)
 			log.ErrorWithFields(message, log.Fields{"user_id": userID})
 			createResponse.ErrorMessage = message
-			response.WriteHeaderAndEntity(http.StatusInternalServerError, createResponse)
+			response.WriteHeaderAndEntity(http.StatusBadRequest, createResponse)
 			return
 		}
 	}

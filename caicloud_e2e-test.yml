@@ -25,28 +25,29 @@ integration:
         - "2379:2379"
         - "2380:2380"
       command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
-  image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+  image: cargo.caicloud.io/caicloud/golang-docker:1.8-17.03
   volumes:
+    # auto mount code to container /root/code dir
     -  /var/run/docker.sock:/var/run/docker.sock
   environment:
     - GOPATH=/go
-    # trick: use the index.caicloud.io as docker registry because 
-    # local registry's name resolution has some problems.
+    - DEBUG=true
+    - CLAIR_DISABLE=true
     - REGISTRY_LOCATION=cargo.caicloud.io
-    - REGISTRY_USERNAME=cyclone
-    - REGISTRY_PASSWORD=Cyclone123
-    - CYCLONE_SERVER_HOST=http://172.18.0.1:7099
-    - KAFKA_SERVER_IP=172.18.0.4:9092
-    - WORK_REGISTRY_LOCATION=cargo.caicloud.io
-    - WORK_DOCKER_HOST=unix:///var/run/docker.sock
-    - DOCKER_HOST=unix:///var/run/docker.sock
-    - ENABLE_CAICLOUD_AUTH=false
+    - REGISTRY_USERNAME=caicloudadmin
+    - REGISTRY_PASSWORD=caicloudadmin
+    - KAFKA_HOST=kafka:9092
+    - ETCD_HOST=http://etcd:2379
+    - MONGODB_HOST=mongodb:27017
+    - CYCLONE_SERVER=http://172.18.0.1:7099
+    - LOG_SERVER=ws://172.18.0.1:8000/ws
     - ERRORTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/error.html
     - SUCCESSTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/success.html
-    - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker
+    - WORKER_IMAGE=cargo.caicloud.io/caicloud/cyclone-worker:latest
     - WORKDIR=/go/src/github.com/caicloud/cyclone
-    - GO15VENDOREXPERIMENT=1
-    - LOG_SERVER=ws://172.18.0.1:8000/ws
+    # in e2e docker version 1.11.2 api version 1.23
+    - DOCKER_HOST=unix:///var/run/docker.sock
+    - DOCKER_API_VERSION=1.23
   links:
     - mongo
     - kafka
@@ -54,15 +55,20 @@ integration:
   ports:
     - "7099:7099"
     - "8000:8000"
-  commands: 
-    - export MONGO_DB_IP=$MONGO_PORT_27017_TCP_ADDR:27017
-    - export ETCD_SERVER_IP=http://$ETCD_PORT_2379_TCP_ADDR:2379
+  commands: # just like shell script
+    - set -e
     - mkdir -p $WORKDIR
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
     # build server
-    - go build -v ./ 
+    - echo "==> building server ..."
+    - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
     # build woker image
-    - cd $WORKDIR/worker/ && go build -v cyclone-worker.go && docker build -t $WORKER_IMAGE ./ && cd -
-    - ./cyclone &
-    - go test -v ./tests/service && go test -v ./tests/version && go test -v ./tests/yaml
+    - echo "==> building worker ..."
+    - go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker
+    - docker -H ${DOCKER_HOST} build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+    - echo "==> start server"
+    - ./cyclone-server &
+    - go test -v ./tests/service 
+    - go test -v ./tests/version
+    - go test -v ./tests/yaml

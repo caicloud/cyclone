@@ -21,11 +21,13 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/pkg/wait"
 	. "github.com/caicloud/cyclone/tests/common"
+	"github.com/davecgh/go-spew/spew"
 	gwebsocket "golang.org/x/net/websocket"
 
 	. "github.com/onsi/ginkgo"
@@ -59,9 +61,9 @@ var _ = Describe("Version", func() {
 		certPath := osutil.GetStringEnv("DOCKER_CERT_PATH", "")
 
 		// Get the username and password to access the docker registry.
-		registryLocation := osutil.GetStringEnv("REGISTRY_LOCATION", DefaultRegistryAddress)
-		registryUsername := osutil.GetStringEnv("REGISTRY_USERNAME", AdminUser)
-		registryPassword := osutil.GetStringEnv("REGISTRY_PASSWORD", AdminPassword)
+		registryLocation := osutil.GetStringEnv(cloud.RegistryLocation, DefaultRegistryAddress)
+		registryUsername := osutil.GetStringEnv(cloud.RegistryUsername, AdminUser)
+		registryPassword := osutil.GetStringEnv(cloud.RegistryPassword, AdminPassword)
 		registry := api.RegistryCompose{
 			RegistryLocation: registryLocation,
 			RegistryUsername: registryUsername,
@@ -136,6 +138,7 @@ var _ = Describe("Version", func() {
 		ws, err = DialLogServer()
 		if err != nil {
 			log.Errorf("dail log server error: %v", err)
+			return
 		}
 	})
 
@@ -314,6 +317,7 @@ var _ = Describe("Version", func() {
 		})
 
 		It("should not be able to keep the log due to different user ID.", func() {
+			spew.Dump(ws, APICreateVersion, serviceResponse.ServiceID, versionResponse.VersionID)
 			err := WatchLog(ws, APICreateVersion, BobUID, serviceResponse.ServiceID,
 				versionResponse.VersionID)
 			Expect(err).To(Equal(ErrUnfoundLog))

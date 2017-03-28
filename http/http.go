@@ -20,25 +20,24 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/zoumo/logdog"
 )
 
-const (
-	LOG_HTML_TEMPLATE = "LOG_HTML_TEMPLATE"
+var (
+	logHTMLTemplate = "/http/web/log.html"
 )
 
 // Server is the type for log server.
 func Server() {
-	log.Info("http server start")
+	logdog.Info("http server start")
 	http.HandleFunc("/log", logHandler)
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	filePath := osutil.GetStringEnv(LOG_HTML_TEMPLATE, "/http/web/log.html")
-	t, err := template.ParseFiles(filePath)
+
+	t, err := template.ParseFiles(logHTMLTemplate)
 	if err != nil {
-		log.Error(err)
+		logdog.Error(err)
 	}
 	t.Execute(w, nil)
 }

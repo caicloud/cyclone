@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
 
@@ -29,10 +28,7 @@ func TestLog(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(logHandler))
 	defer s.Close()
 
-	if err := os.Setenv(LOG_HTML_TEMPLATE, "../http/web/log.html"); err != nil {
-		t.Error("Expected error to be nil")
-	}
-
+	logHTMLTemplate = "../http/web/log.html"
 	res, err := http.Get(s.URL)
 	if err != nil {
 		t.Error("Expected get status 200")

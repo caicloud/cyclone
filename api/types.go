@@ -19,6 +19,8 @@ package api
 import (
 	"time"
 
+	"github.com/caicloud/cyclone/cloud"
+
 	"golang.org/x/oauth2"
 )
 
@@ -833,6 +835,9 @@ type Event struct {
 	Status EventStatus `bson:"status,omitempty" json:"status,omitempty"`
 	// In case of error, ErrorMessage holds the messge for end user.
 	ErrorMessage string `bson:"error_msg,omitempty" json:"error_msg,omitempty"`
+
+	// NewWorkerInfo
+	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
 }
 
 // EventStatus contains the status of an event.
@@ -900,7 +905,7 @@ type ResourceSetResponse struct {
 
 // ResourceGetResponse is the response type for resource get request.
 type ResourceGetResponse struct {
-	Resource Resource `json:"resource,omitempty"`
+	Resource map[string]*cloud.Resource `json:"resource,omitempty"`
 	// Return the error message IFF not successful. This is used to provide user-facing errors.
 	ErrorMessage string `json:"error_msg,omitempty"`
 }

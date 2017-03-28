@@ -12,7 +12,26 @@ set -o pipefail
 
 source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
 
-ROOT=$(dirname "${BASH_SOURCE}")/..
+#获得该文件的位置
+echo "$0" | grep -q "$0"
+if [ $? -eq 0 ];
+then
+    cd "$(dirname ${BASH_SOURCE})"
+    CUR_FILE=$(pwd)/$(basename ${BASH_SOURCE})
+    CUR_DIR=$(dirname ${CUR_FILE})
+    cd - > /dev/null
+else
+    if [ ${0:0:1} = "/" ]; then
+        CUR_FILE=$0
+    else
+        CUR_FILE=$(pwd)/$0
+    fi
+    CUR_DIR=$(dirname ${CUR_FILE})
+fi
+
+#去掉路径中的相对路径，如a/..b/c
+CYCLONE_ROOT=$(dirname ${CUR_DIR})
+
 
 function usage {
   echo -e "Usage:"
@@ -68,18 +87,20 @@ fi
 
 echo "+++++ Start building cyclone server"
 
-cd ${ROOT}
+cd ${CYCLONE_ROOT}
 
 IMAGE="cargo.caicloud.io/caicloud/cyclone-server"
-BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"
+cyclone_src="/go/src/github.com/caicloud/cyclone"
+
 
 docker run --rm \
-  -v $(pwd):/go/src/github.com/caicloud/cyclone \
+  -v ${CYCLONE_ROOT}:${cyclone_src} \
   -e GOPATH=/go \
-  -w /go/src/github.com/caicloud/cyclone \
-  ${BUILD_IN} go build -o cyclone-server
+  -w ${cyclone_src} \
+  ${BUILD_IN} bash -c "go build -o cyclone-server github.com/caicloud/cyclone/cmd/server"
 
-docker build -t ${IMAGE}:${IMAGE_TAG} .
+docker build -t ${IMAGE}:${IMAGE_TAG} -f Dockerfile.server .
 
 cd - > /dev/null
 

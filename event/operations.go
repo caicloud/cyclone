@@ -21,7 +21,8 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
-	"github.com/caicloud/cyclone/pkg/log"
+	log "github.com/zoumo/logdog"
+
 	"github.com/caicloud/cyclone/store"
 )
 

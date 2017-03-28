@@ -20,7 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/log"
+	log "github.com/zoumo/logdog"
+
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/websocket"
 )
@@ -63,7 +64,7 @@ func (wss *WSSession) OnStart(sSessionID string) {
 //OnReceive handle something when the session receive message
 //analysis the message
 func (wss *WSSession) OnReceive(iData IDataPacket) bool {
-	log.Debugf("Session(%s) recv: %s", wss.sSessionID, string(iData.GetData()))
+	// log.Debugf("Session(%s) recv: %s", wss.sSessionID, string(iData.GetData()))
 	return AnalysisMessage(iData.(*DataPacket))
 }
 

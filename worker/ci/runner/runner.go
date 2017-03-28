@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -202,7 +203,7 @@ func (b *Build) PublishImage() (err error) {
 	// Now image is pushed to registry successfully.
 	b.status |= pushImageSuccess
 
-	disableClair := osutil.GetBoolEnv("DISABLE_CLAIR", false)
+	disableClair := osutil.GetBoolEnv(cloud.ClairDisable, false)
 	if !disableClair {
 		clair.Analysis(b.event, b.dockerManager)
 	}

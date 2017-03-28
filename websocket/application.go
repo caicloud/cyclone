@@ -23,7 +23,8 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/kafka"
-	"github.com/caicloud/cyclone/pkg/log"
+	log "github.com/zoumo/logdog"
+
 	"github.com/satori/go.uuid"
 )
 

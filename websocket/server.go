@@ -22,14 +22,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/zoumo/logdog"
+
 	"golang.org/x/net/websocket"
 )
 
 //StartServer start the websocket server
 func StartServer() (err error) {
 	scServerConfig := GetConfig()
-	log.Infof("Start Websocket Server at Port:%d", scServerConfig.Port)
+	logdog.Infof("Start Websocket Server at Port:%d", scServerConfig.Port)
 
 	hsServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", scServerConfig.Port),
@@ -43,7 +44,7 @@ func webMessageHandle(wsConn *websocket.Conn) {
 	wssSession, err := CreateWSSession(wsConn)
 	if err != nil {
 		wsConn.Close()
-		log.Error(err.Error())
+		logdog.Error(err.Error())
 		return
 	}
 	defer wssSession.OnClosed()
@@ -53,7 +54,7 @@ func webMessageHandle(wsConn *websocket.Conn) {
 		//timeout
 		err = wsConn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(nIdleCheckInterval)))
 		if err != nil {
-			log.Error(err.Error())
+			logdog.Error(err.Error())
 			return
 		}
 
@@ -70,7 +71,7 @@ func webMessageHandle(wsConn *websocket.Conn) {
 		//error and timeout handler
 		e, ok := err.(net.Error)
 		if !ok || !e.Timeout() {
-			log.Error(err.Error())
+			logdog.Error(err.Error())
 			return
 		} else {
 			if wssSession.SessionTimeoverCheck() {

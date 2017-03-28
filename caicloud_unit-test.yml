@@ -1,5 +1,5 @@
 integration:
-  image: cargo.caicloud.io/caicloud/golang-docker:1.7-1.11
+  image: cargo.caicloud.io/caicloud/golang-docker:1.8-17.03
   environment:
     - GOPATH=/go
     - WORKDIR=/go/src/github.com/caicloud/cyclone
@@ -7,4 +7,4 @@ integration:
     - mkdir -p $WORKDIR
     - cp ./ -rf $WORKDIR
     - cd $WORKDIR
-    - ./tests/run-unit-test.sh
+    - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')

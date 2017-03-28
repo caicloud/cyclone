@@ -23,12 +23,13 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/executil"
-	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
+	log "github.com/zoumo/logdog"
 	"golang.org/x/oauth2"
 )
 
@@ -47,22 +48,17 @@ func (g *Git) Ping(url, destPath string, event *api.Event) error {
 	// git ls-remote url --heads HEAD
 	args := []string{"ls-remote", url, "--heads", "HEAD"}
 
-	output, err := executil.RunInDir(dir, "git", args...)
-	if event.Version.VersionID != "" {
-		fmt.Fprintf(steplog.Output, "%s", string(output))
-	}
+	_, err := executil.RunInDir(dir, "git", args...)
 	if err != nil {
-		log.ErrorWithFields("Error when clone", log.Fields{"error": err})
+		log.Error("url is not a valid repo", log.Fields{"url": url, "error": err})
 		return err
 	}
-
-	log.InfoWithFields("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
 	return nil
 }
 
 // Clone implements VCS interface.
 func (g *Git) Clone(url, destPath string, event *api.Event) error {
-	log.InfoWithFields("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
+	log.Info("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
@@ -74,9 +70,9 @@ func (g *Git) Clone(url, destPath string, event *api.Event) error {
 	}
 
 	if err != nil {
-		log.ErrorWithFields("Error when clone", log.Fields{"error": err})
+		log.Error("Error when clone", log.Fields{"error": err})
 	} else {
-		log.InfoWithFields("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
+		log.Info("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
 	}
 	return err
 }
@@ -139,7 +135,7 @@ func (g *Git) NewTagFromLatest(repoPath string, event *api.Event) error {
 			Message: &(version.Description),
 		}
 
-		gitlabServer := osutil.GetStringEnv("SERVER_GITLAB", "https://gitlab.com")
+		gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
 		client := gitlab.NewOAuthClient(nil, event.Data["Token"].(string))
 		client.SetBaseURL(gitlabServer + "/api/v3/")
 
@@ -158,7 +154,7 @@ func (g *Git) CheckoutTag(repoPath string, tag string) error {
 	// local tree be dirty?
 	log.Debugf("Command output: %+v", string(output))
 	if err == nil {
-		log.InfoWithFields("Successfully checked out to git tag.", log.Fields{"repoPath": repoPath, "tag": tag})
+		log.Info("Successfully checked out to git tag.", log.Fields{"repoPath": repoPath, "tag": tag})
 	}
 	return err
 }
@@ -195,7 +191,7 @@ func (g *Git) CheckOutByCommitID(commitID string, repoPath string, event *api.Ev
 	fmt.Fprintf(steplog.Output, "%s", string(output))
 
 	if err != nil {
-		log.ErrorWithFields("Error when checkout", log.Fields{"error": err})
+		log.Error("Error when checkout", log.Fields{"error": err})
 	} else {
 		log.Info("Successfully checkout commit.")
 	}

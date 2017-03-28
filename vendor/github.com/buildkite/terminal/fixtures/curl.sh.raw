@@ -1,0 +1,4 @@
+[90m$[0m curl -o /tmp/file.txt https://example.com/file.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0100   170  100   170    0     0    105      0  0:00:01  0:00:01 --:--:--   105

@@ -60,18 +60,18 @@ Environment variables:
 
 | ENV                    | Description                              |
 | ---------------------- | ---------------------------------------- |
-| MONGO_DB_IP            | The IP of mongodb, default is localhost. |
-| KAFKA_SERVER_IP        | The address of kafka, default is 127.0.0.1:9092. |
-| WORK_REGISTRY_LOCATION | The registry to push images, default is cargo.caicloud.io. |
+| MONGODB_HOST            | The IP of mongodb, default is localhost. |
+| KAFKA_HOST        | The address of kafka, default is 127.0.0.1:9092. |
+| REGISTRY_LOCATION | The registry to push images, default is cargo.caicloud.io. |
 | REGISTRY_USERNAME      | The username in docker registry, default is null. |
 | REGISTRY_PASSWORD      | The password in docker registry, default is null. |
-| CLIENTID               | The client ID from Github for oauth, default is null. |
-| CLIENTIDSECRET         | The client secret from Github for oauth, default is null. |
+| GITHUB_CLIENT               | The client ID from Github for oauth, default is null. |
+| GITHUB_SECRET         | The client secret from Github for oauth, default is null. |
 | CONSOLE_WEB_ENDPOINT   | The address of caicloud access point, default is http://localhost:8000. |
-| CLIENTID_GITLAB        | The client ID from Gitlab for oauth, default is null. |
-| CLIENTIDSECRET_GITLAB  | The client secret from Gitlab for oauth, default is null. |
-| SERVER_GITLAB          | The address of gitlab, default is https://gitlab.com. |
-| ETCD_SERVER_IP         | The address of etcd, default is 127.0.0.1:2379. |
-| CYCLONE_SERVER_HOST    | The host of Cyclone-Server, default is http://localhost:7099. |
+| GITLAB_CLIENT        | The client ID from Gitlab for oauth, default is null. |
+| GITLAB_SECRET  | The client secret from Gitlab for oauth, default is null. |
+| GITLAB_URL          | The address of gitlab, default is https://gitlab.com. |
+| ETCD_HOST         | The address of etcd, default is 127.0.0.1:2379. |
+| CYCLONE_SERVER    | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE           | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
-| CLAIR_SERVER_IP        | The address of clair, default is 127.0.0.1:6060. |
+| CLAIR_SERVER        | The address of clair, default is 127.0.0.1:6060. |
