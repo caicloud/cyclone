@@ -3,6 +3,7 @@ package cloud
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -20,11 +21,22 @@ type K8SCloud struct {
 	bearerToken string
 	namespace   string
 	insecure    bool
+	inCluster   bool
 	client      *kubernetes.Clientset
 }
 
 // NewK8SCloud ...
 func NewK8SCloud(opts Options) (Cloud, error) {
+
+	if opts.K8SInCluster == true {
+		return NewK8SCloudInCluster(opts)
+	}
+
+	return newK8SCloud(opts)
+}
+
+// newK8SCloud returns a cloud object which uses the Options
+func newK8SCloud(opts Options) (Cloud, error) {
 
 	if opts.Name == "" {
 		return nil, errors.New("K8SCloud: Invalid cloud name")
@@ -48,7 +60,33 @@ func NewK8SCloud(opts Options) (Cloud, error) {
 		BearerToken: opts.K8SBearerToken,
 		Insecure:    opts.Insecure,
 	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	cloud.client = clientset
+	return cloud, nil
+}
 
+// NewK8SCloudInCluster returns a cloud object which uses the service account
+// kubernetes gives to pods
+func NewK8SCloudInCluster(opts Options) (Cloud, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	namespace, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/" + apiv1.ServiceAccountNamespaceKey)
+	if err != nil {
+		return nil, err
+	}
+
+	cloud := &K8SCloud{
+		name:        opts.Name,
+		host:        config.Host,
+		bearerToken: config.BearerToken,
+		namespace:   string(namespace),
+		insecure:    opts.Insecure,
+	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
@@ -205,6 +243,7 @@ func (cloud *K8SCloud) GetOptions() Options {
 		Insecure:       cloud.insecure,
 		K8SBearerToken: cloud.bearerToken,
 		K8SNamespace:   cloud.namespace,
+		K8SInCluster:   cloud.inCluster,
 	}
 }
 

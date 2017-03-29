@@ -52,6 +52,7 @@ type Options struct {
 	DockerCertPath string `json:"dockerCertPath,omitempty" bson:"dockerCertPath,omitempty"`
 
 	// k8s cloud
+	K8SInCluster   bool   `json:"k8sInCluster,omitempty" bson:"k8sInCluster,omitempty"`
 	K8SNamespace   string `json:"k8sNamespace,omitempty" bson:"k8sNamespace,omitempty"`
 	K8SBearerToken string `json:"k8sBearerToken,omitempty" bson:"k8sBearerToken,omitempty"`
 }

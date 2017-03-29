@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/etcd"
@@ -91,7 +93,34 @@ func initCloudController(wopts *cloud.WorkerOptions) {
 	}
 
 	CloudController.AddClouds(clouds...)
+
+	if len(CloudController.Clouds) == 0 {
+		addInClusterK8SCloud()
+	}
+
 	workerOptions = wopts
+}
+
+func addInClusterK8SCloud() {
+	ds := store.NewStore()
+	defer ds.Close()
+	_, err := rest.InClusterConfig()
+	if err == nil {
+		// in k8s cluster
+		opt := cloud.Options{
+			Kind:         cloud.KindK8SCloud,
+			Name:         "_inCluster",
+			K8SInCluster: true,
+		}
+		err := CloudController.AddClouds(opt)
+		if err != nil {
+			logdog.Warn("Can not add inCluster k8s cloud to database")
+		}
+		err = ds.InsertCloud(&opt)
+		if err != nil {
+			logdog.Warn("Can not add inCluster k8s cloud to database")
+		}
+	}
 }
 
 // watchEtcd watch unfinished events status change in etcd
