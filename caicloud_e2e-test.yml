@@ -38,7 +38,7 @@ integration:
     - REGISTRY_PASSWORD=caicloudadmin
     - KAFKA_HOST=kafka:9092
     - ETCD_HOST=http://etcd:2379
-    - MONGODB_HOST=mongodb:27017
+    - MONGODB_HOST=mongo:27017
     - CYCLONE_SERVER=http://172.18.0.1:7099
     - LOG_SERVER=ws://172.18.0.1:8000/ws
     - ERRORTEMPLATE=/go/src/github.com/caicloud/cyclone/notify/provider/error.html
