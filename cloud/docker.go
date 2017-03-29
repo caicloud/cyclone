@@ -24,7 +24,7 @@ import (
 const (
 	// APIVersion is the api version used by DockerCloud to
 	// communicate with docker daemon
-	APIVersion = "1.26"
+	APIVersion = "1.23"
 	// APIVersion = "1.23"
 )
 
