@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 
 	"gopkg.in/h2non/gock.v1"
 )
@@ -32,7 +33,7 @@ func TestPushToCyclone(t *testing.T) {
 	userID := "unit-test-uid"
 	versionID := "unit-test-vid"
 
-	if err := os.Setenv(SERVER_HOST, mockServer); err != nil {
+	if err := os.Setenv(cloud.CycloneServer, mockServer); err != nil {
 		t.Error("Expected error to be nil")
 	}
 
