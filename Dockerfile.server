@@ -1,7 +1,5 @@
 FROM  alpine
 
-EXPOSE 7099
-
 WORKDIR /root
 
 RUN apk update && apk add ca-certificates && \
@@ -15,5 +13,8 @@ COPY ./http/web /http/web
 COPY ./notify/provider /template
 COPY ./node_modules /root/node_modules
 COPY ./api/templates /templates
+
+EXPOSE 7099
+EXPOSE 8000
 
 CMD ["/cyclone-server"]
