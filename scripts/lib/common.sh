@@ -84,4 +84,4 @@ fi
 CYCLONE_ROOT=$(dirname $(dirname ${CUR_DIR}))
 export CYCLONE_ROOT
 
-echo "cyclone root path" ${CYCLONE_ROOT}
+echo "cyclone root path:" ${CYCLONE_ROOT}
