@@ -11,8 +11,7 @@ set -u
 set -o pipefail
 
 source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
-
-ROOT=$(dirname "${BASH_SOURCE}")/..
+cd ${CYCLONE_ROOT}
 
 function usage {
   echo -e "Usage:"
@@ -68,18 +67,18 @@ fi
 
 echo "+++++ Start building cyclone server"
 
-cd ${ROOT}
-
 IMAGE="cargo.caicloud.io/caicloud/cyclone-server"
-BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"
+cyclone_src="/go/src/github.com/caicloud/cyclone"
+
 
 docker run --rm \
-  -v $(pwd):/go/src/github.com/caicloud/cyclone \
+  -v ${CYCLONE_ROOT}:${cyclone_src} \
   -e GOPATH=/go \
-  -w /go/src/github.com/caicloud/cyclone \
-  ${BUILD_IN} go build -o cyclone-server
+  -w ${cyclone_src} \
+  ${BUILD_IN} bash -c "go build -o cyclone-server github.com/caicloud/cyclone/cmd/server"
 
-docker build -t ${IMAGE}:${IMAGE_TAG} .
+docker build -t ${IMAGE}:${IMAGE_TAG} -f Dockerfile.server .
 
 cd - > /dev/null
 

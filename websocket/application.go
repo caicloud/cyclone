@@ -23,7 +23,8 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/kafka"
-	"github.com/caicloud/cyclone/pkg/log"
+	log "github.com/zoumo/logdog"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -126,7 +127,7 @@ func workerPushLogHandler(sReceiveFrom string, jsonPacket []byte) {
 		panic(err)
 	}
 
-	log.Debugf("Worker log (%s): %s", workerPushLog.Topic, workerPushLog.Log)
+	// log.Debugf("Worker log (%s): %s", workerPushLog.Topic, workerPushLog.Log)
 	kafka.Produce(workerPushLog.Topic, []byte(workerPushLog.Log))
 }
 

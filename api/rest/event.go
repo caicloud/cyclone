@@ -23,9 +23,9 @@ import (
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
 	eventmanager "github.com/caicloud/cyclone/event"
-	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
+	log "github.com/zoumo/logdog"
 )
 
 // getEvent finds a event from EventID.
@@ -44,7 +44,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 
 	if !checkToken(token) {
 		message := "Invalid token"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID})
+		log.Error(message, log.Fields{"event_id": eventID})
 		getResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
 		return
@@ -54,7 +54,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		getResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
 		return
@@ -64,7 +64,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 	err = json.Unmarshal([]byte(sEvent), &event)
 	if err != nil {
 		message := "Unable to unmarshal event from etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		getResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
 		return
@@ -98,7 +98,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	eventID := request.PathParameter("event_id")
 	if !checkToken(token) {
 		message := "Invalid token"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
 		return
@@ -108,7 +108,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
 		return
@@ -118,7 +118,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	err = json.Unmarshal([]byte(sEvent), &event)
 	if err != nil {
 		message := "Unable to unmarshal event from etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
 		return
@@ -144,7 +144,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
 		message := "Unable to marshal event from etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
 		return
@@ -154,7 +154,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	err = etcdClient.Set(eventmanager.EventsUnfinished+eventID, string(eventJSON))
 	if err != nil {
 		message := "Unable to set event to etcd"
-		log.ErrorWithFields(message, log.Fields{"event_id": eventID, "error": err})
+		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
 		return

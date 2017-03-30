@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/kubefaker"
 	"github.com/caicloud/cyclone/pkg/log"
@@ -38,8 +39,6 @@ import (
 	"github.com/caicloud/cyclone/worker/ci/parser"
 	"github.com/caicloud/cyclone/worker/ci/runner"
 	"github.com/caicloud/cyclone/worker/ci/yaml"
-	"github.com/caicloud/cyclone/worker/clair"
-	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs"
 	k8s_core_api "k8s.io/kubernetes/pkg/api"
 	k8s_ext_api "k8s.io/kubernetes/pkg/apis/extensions"
@@ -231,26 +230,26 @@ func DoPlansDeploy(bHasPublishSuccessful bool, event *api.Event, dmanager *docke
 
 // Publish is an async handler for build and push the image to
 // private registry.
-func Publish(event *api.Event, dmanager *docker.Manager) error {
-	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
-	if err := dmanager.BuildImage(event, steplog.Output); err != nil {
-		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
-		return err
-	}
-	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
+// func Publish(event *api.Event, dmanager *docker.Manager) error {
+// 	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
+// 	if err := dmanager.BuildImage(event, steplog.Output); err != nil {
+// 		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
+// 		return err
+// 	}
+// 	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
 
-	steplog.InsertStepLog(event, steplog.PushImage, steplog.Start, nil)
-	if err := dmanager.PushImage(event, steplog.Output); err != nil {
-		steplog.InsertStepLog(event, steplog.PushImage, steplog.Stop, err)
-		return err
-	}
+// 	steplog.InsertStepLog(event, steplog.PushImage, steplog.Start, nil)
+// 	if err := dmanager.PushImage(event, steplog.Output); err != nil {
+// 		steplog.InsertStepLog(event, steplog.PushImage, steplog.Stop, err)
+// 		return err
+// 	}
 
-	if err := clair.Analysis(event, dmanager); err != nil {
-		log.ErrorWithFields("Unable to analysis by clair", log.Fields{"err": err})
-	}
-	steplog.InsertStepLog(event, steplog.PushImage, steplog.Finish, nil)
-	return nil
-}
+// 	if err := clair.Analysis(event, dmanager); err != nil {
+// 		log.ErrorWithFields("Unable to analysis by clair", log.Fields{"err": err})
+// 	}
+// 	steplog.InsertStepLog(event, steplog.PushImage, steplog.Finish, nil)
+// 	return nil
+// }
 
 // updateContainerInClusterWithYaml func use to update container in cluster according the caicloud.yaml.
 func updateContainerInClusterWithYaml(userID, imageName string, application yaml.Application) error {
@@ -275,7 +274,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 				return err
 			}
 		} else {
-			consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+			consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 			endpoint := consoleWebEndpoint + "/api/application/updateImage"
 			if err := InvokeUpdateImageAPI(userID, deploymentName, clusterName, namespaceName,
 				containerName, imageName, endpoint); err != nil {
@@ -289,7 +288,7 @@ func updateContainerInClusterWithYaml(userID, imageName string, application yaml
 
 // updateContainerInClusterWithPlan func use to update container in cluster according the plan setting.
 func updateContainerInClusterWithPlan(userID, imageName string, application api.DeployConfig) error {
-	consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+	consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 	endpoint := consoleWebEndpoint + "/api/application/updateImage"
 
 	clusterName := application.ClusterID
@@ -385,7 +384,7 @@ func checkOneDeployStatus(versionID string, checkChan chan Result, app appVersio
 		if app.ClusterType == "kubernetes" {
 			err = InvokeCheckDeployStateK8sAPI(app)
 		} else {
-			consoleWebEndpoint := osutil.GetStringEnv("CONSOLE_WEB_ENDPOINT", "http://127.0.0.1:3000")
+			consoleWebEndpoint := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://127.0.0.1:3000")
 			endpoint := consoleWebEndpoint + "/api/application/checkVersionDeployState"
 			err = InvokeCheckDeployStateAPI(app, endpoint)
 		}

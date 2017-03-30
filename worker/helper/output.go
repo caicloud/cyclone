@@ -28,13 +28,12 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	step_log "github.com/caicloud/cyclone/worker/log"
 )
 
 const (
-	// SERVER_HOST is a Env variable name
-	SERVER_HOST           = "SERVER_HOST"
 	DOCKER_IMAGE_LOG_FLAG = "layer"
 )
 
@@ -73,7 +72,7 @@ func PushLogToCyclone(event *api.Event) error {
 	if err != nil {
 		return err
 	}
-	cycloneServer := osutil.GetStringEnv(SERVER_HOST, "")
+	cycloneServer := osutil.GetStringEnv(cloud.CycloneServer, "")
 	if cycloneServer == "" {
 		return errors.New("No cyclone spicified.")
 	}

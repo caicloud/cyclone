@@ -1,8 +1,8 @@
 #!/bin/bash
 
-REGISTRY_DATA="/tmp/cyclone_registry"
-REGISTRY_STORAGE_DATA="/tmp/cyclone-registry_storage"
-REGISTRY_AUTH_LOG="/tmp/cyclone_auth_log"
+REGISTRY_DATA=${REGISTRY_DATA:-"/tmp/cyclone-registry"}
+REGISTRY_STORAGE_DATA=${REGISTRY_STORAGE_DATA:-"/tmp/cyclone-registry-storage"}
+REGISTRY_AUTH_LOG=${REGISTRY_AUTH_LOG:-"/tmp/cyclone-auth-log"}
 
 # Return 0 if container exists; return non-zero otherwise.
 function container-exist {

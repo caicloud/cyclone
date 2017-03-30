@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -59,9 +60,9 @@ var _ = Describe("Version", func() {
 		certPath := osutil.GetStringEnv("DOCKER_CERT_PATH", "")
 
 		// Get the username and password to access the docker registry.
-		registryLocation := osutil.GetStringEnv("REGISTRY_LOCATION", DefaultRegistryAddress)
-		registryUsername := osutil.GetStringEnv("REGISTRY_USERNAME", AdminUser)
-		registryPassword := osutil.GetStringEnv("REGISTRY_PASSWORD", AdminPassword)
+		registryLocation := osutil.GetStringEnv(cloud.RegistryLocation, DefaultRegistryAddress)
+		registryUsername := osutil.GetStringEnv(cloud.RegistryUsername, AdminUser)
+		registryPassword := osutil.GetStringEnv(cloud.RegistryPassword, AdminPassword)
 		registry := api.RegistryCompose{
 			RegistryLocation: registryLocation,
 			RegistryUsername: registryUsername,
@@ -136,6 +137,7 @@ var _ = Describe("Version", func() {
 		ws, err = DialLogServer()
 		if err != nil {
 			log.Errorf("dail log server error: %v", err)
+			return
 		}
 	})
 

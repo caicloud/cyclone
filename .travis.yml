@@ -6,8 +6,8 @@ sudo: required
 #   - docker
 
 go:
-  - 1.6
   - 1.7
+  - 1.8
 
 go_import_path: github.com/caicloud/cyclone
 
@@ -33,13 +33,11 @@ install:
   # - docker version
   # - docker-compose version
   # - docker images
-  - go build .
-  - cd ./worker
-  - go build ./cyclone-worker.go
-  - cd - > /dev/null
+  - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
+  - go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
 
 script:
-  - ./tests/run-unit-test.sh
+  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
   - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api
   # - ./tests/run-e2e.sh
 

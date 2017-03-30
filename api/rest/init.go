@@ -23,29 +23,24 @@ import (
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
-	"github.com/caicloud/cyclone/resource"
 	"github.com/emicklei/go-restful"
 )
 
 var (
 	// remoteManager is remote api manager.
-	remoteManager   *remote.Manager
-	resourceManager *resource.Manager
+	remoteManager *remote.Manager
+	// resourceManager *resource.Manager
 )
 
 // Initialize initializes rest endpoints and all Cyclone managers. It register REST
 // APIs to restful.WebService, and creates a global remote manager.
-func Initialize(enableCaicloudAuth string) {
+func Initialize() {
 
 	// Register all rest endpoints.
 	ws := &restful.WebService{}
 	ws.Path(fmt.Sprintf("/api/%s", api.APIVersion)).
 		Consumes(restful.MIME_JSON, "text/plain", "text/event-stream").
 		Produces(restful.MIME_JSON, "text/plain", "text/event-stream")
-
-	if enableCaicloudAuth == "true" {
-		ws.Filter(checkUserAuth)
-	}
 
 	// Register APIs to the web service.
 	registerWebhookAPIs(ws)
@@ -58,10 +53,10 @@ func Initialize(enableCaicloudAuth string) {
 	registerRemoteAPIs(ws)
 	registerVersionLogAPIs(ws)
 	registerResourceAPIs(ws)
-	registerWorkerNodeAPIs(ws)
 	registerDeployAPIs(ws)
 
 	registerTemplateAPIs(ws)
+	registerCloudsAPIs(ws)
 
 	restful.Add(ws)
 
@@ -78,7 +73,6 @@ func Initialize(enableCaicloudAuth string) {
 	restful.Filter(restful.OPTIONSFilter())
 
 	remoteManager = remote.NewManager()
-	resourceManager = resource.NewManager()
 }
 
 // GetManager gets a remote manager.
@@ -252,11 +246,11 @@ func registerWebhookAPIs(ws *restful.WebService) {
 // registerResourceAPIs registers resource related endpoints.
 func registerResourceAPIs(ws *restful.WebService) {
 	// Filter the unauthorized operation.
-	ws.Route(ws.PUT("/{user_id}/resources").
-		To(setResource).
-		Doc("set a resource by id for given user").
-		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
-		Writes(api.ResourceSetResponse{}))
+	// ws.Route(ws.PUT("/{user_id}/resources").
+	// 	To(setResource).
+	// 	Doc("set a resource by id for given user").
+	// 	Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
+	// 	Writes(api.ResourceSetResponse{}))
 
 	// Filter the unauthorized operation.
 	ws.Route(ws.GET("/{user_id}/resources").
@@ -264,32 +258,6 @@ func registerResourceAPIs(ws *restful.WebService) {
 		Doc("find a service by id for given user").
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Writes(api.ResourceGetResponse{}))
-}
-
-// registerWorkerNodeAPIs registers worker node related endpoints.
-func registerWorkerNodeAPIs(ws *restful.WebService) {
-	ws.Route(ws.POST("/system_worker_nodes").
-		To(createSystemWorkerNode).
-		Doc("add a system worker node").
-		Reads(api.WorkerNode{}).
-		Writes(api.WorkerNodeCreateResponse{}))
-
-	ws.Route(ws.GET("/system_worker_nodes/{node_id}").
-		To(getSystemWorkerNode).
-		Doc("find a system worker node by id for given user").
-		Param(ws.PathParameter("node_id", "identifier of the node").DataType("string")).
-		Writes(api.WorkerNodeGetResponse{}))
-
-	ws.Route(ws.GET("/system_worker_nodes").
-		To(listSystemWorkerNodes).
-		Doc("list all system worker nodes").
-		Writes([]api.WorkerNodesListResponse{}))
-
-	ws.Route(ws.DELETE("/system_worker_nodes/{node_id}").
-		To(deleteSystemWorkerNode).
-		Doc("delete a system worker node by id").
-		Param(ws.PathParameter("node_id", "identifier of the node").DataType("string")).
-		Writes(api.WorkerNodeDelResponse{}))
 }
 
 // registerVersionLogAPIs registers log related endpoints.
@@ -353,7 +321,7 @@ func registerDeployAPIs(ws *restful.WebService) {
 		Writes(api.DeployDelResponse{}))
 }
 
-// registerWebhookAPIs registers webhook related endpoints.
+// registerWebhookAPIs registers templates api
 func registerTemplateAPIs(ws *restful.WebService) {
 
 	err := filepath.Walk(DockerfilePath, walkDockerfiles)
@@ -385,5 +353,22 @@ func registerTemplateAPIs(ws *restful.WebService) {
 		To(getDockerfile).
 		Doc("get one docekrfile template").
 		Param(ws.PathParameter("dockerfile", "dockerfile name").DataType("string")))
+
+}
+
+// registerCloudsAPIs ...
+func registerCloudsAPIs(ws *restful.WebService) {
+	ws.Route(ws.GET("/clouds").
+		To(listCloud).
+		Doc("list all clouds"))
+
+	ws.Route(ws.POST("/clouds").
+		To(createCloud).
+		Doc("add a cloud to cyclone"))
+
+	ws.Route(ws.DELETE("/clouds/{cloudName}").
+		To(deleteCloud).
+		Doc("add a cloud to cyclone").
+		Param(ws.PathParameter("cloudName", "cloud name").DataType("string")))
 
 }

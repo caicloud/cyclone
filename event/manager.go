@@ -22,12 +22,15 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/etcd"
-	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/remote"
-	"github.com/caicloud/cyclone/resource"
 	"github.com/caicloud/cyclone/store"
+	"github.com/zoumo/logdog"
+	log "github.com/zoumo/logdog"
 	"golang.org/x/net/context"
 )
 
@@ -37,16 +40,12 @@ const (
 )
 
 var (
-	// cert path of worker
-	certPathWorker string
+	CloudController *cloud.Controller
 
-	// registry config of worker
-	registryWorker api.RegistryCompose
+	workerOptions *cloud.WorkerOptions
 
 	// remote api manager
 	remoteManager *remote.Manager
-
-	resourceManager *resource.Manager
 )
 
 // Init init event manager
@@ -55,9 +54,9 @@ var (
 // Step3: load unfinished events from etcd
 // Step4: create a unfinished events watcher
 // Step5: new a remote api manager
-func Init(certPath string, registry api.RegistryCompose) {
-	certPathWorker = certPath
-	registryWorker = registry
+func Init(wopts *cloud.WorkerOptions) {
+
+	initCloudController(wopts)
 
 	initOperationMap()
 
@@ -78,7 +77,50 @@ func Init(certPath string, registry api.RegistryCompose) {
 	go handlePendingEvents()
 
 	remoteManager = remote.NewManager()
-	resourceManager = resource.NewManager()
+}
+
+// FIXME, so ugly
+// load clouds from database
+func initCloudController(wopts *cloud.WorkerOptions) {
+	CloudController = cloud.NewController()
+	// load clouds from store
+	ds := store.NewStore()
+	defer ds.Close()
+	clouds, err := ds.FindAllClouds()
+	if err != nil {
+		logdog.Error("Can not find clouds from ds", logdog.Fields{"err": err})
+		return
+	}
+
+	CloudController.AddClouds(clouds...)
+
+	if len(CloudController.Clouds) == 0 {
+		addInClusterK8SCloud()
+	}
+
+	workerOptions = wopts
+}
+
+func addInClusterK8SCloud() {
+	ds := store.NewStore()
+	defer ds.Close()
+	_, err := rest.InClusterConfig()
+	if err == nil {
+		// in k8s cluster
+		opt := cloud.Options{
+			Kind:         cloud.KindK8SCloud,
+			Name:         "_inCluster",
+			K8SInCluster: true,
+		}
+		err := CloudController.AddClouds(opt)
+		if err != nil {
+			logdog.Warn("Can not add inCluster k8s cloud to database")
+		}
+		err = ds.InsertCloud(&opt)
+		if err != nil {
+			logdog.Warn("Can not add inCluster k8s cloud to database")
+		}
+	}
 }
 
 // watchEtcd watch unfinished events status change in etcd
@@ -96,7 +138,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 
 		switch change.Action {
 		case etcd.WatchActionCreate:
-			log.Infof("watch unfinshed events create: %q\n", change.Node)
+			log.Infof("watch unfinshed events create: %s\n", change.Node)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
 				log.Errorf("analysis create event err: %v", err)
@@ -105,7 +147,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			eventCreateHandler(&event)
 
 		case etcd.WatchActionSet:
-			log.Infof("watch unfinshed events set: %q\n", change.Node.Value)
+			log.Infof("watch unfinshed events set: %s\n", change.Node.Value)
 			event, err := loadEventFromJSON(change.Node.Value)
 			if err != nil {
 				log.Errorf("analysis set event err: %v", err)
@@ -124,7 +166,7 @@ func watchEtcd(etcdClient *etcd.Client) {
 			}
 
 		case etcd.WatchActionDelete:
-			log.Infof("watch finshed events delete: %q\n", change.PrevNode)
+			log.Infof("watch finshed events delete: %s\n", change.PrevNode)
 			event, err := loadEventFromJSON(change.PrevNode.Value)
 			if err != nil {
 				log.Errorf("analysis delete event err: %v", err)
@@ -244,7 +286,7 @@ func (el *List) loadListFromEtcd(etcd *etcd.Client) {
 		if event.Status == api.EventStatusPending {
 			el.addUnfinshedEvent(&event)
 		} else {
-			go CheckWorkerTimeOut(event)
+			go CheckWorkerTimeout(&event)
 		}
 	}
 }
@@ -363,13 +405,19 @@ func handlePendingEvents() {
 		event := *pendingEvents.GetFront()
 		err := handleEvent(&event)
 		if err != nil {
-			if err == resource.ErrUnableSupport {
-				log.Info("Waiting for resource to be relaesed...")
-				time.Sleep(time.Second * 10)
-				continue
-			}
+			// if err == resource.ErrUnableSupport {
+			// 	log.Info("Waiting for resource to be relaesed...")
+			// 	time.Sleep(time.Second * 10)
+			// 	continue
+			// }
 			// worker busy
-			if err == ErrWorkerBusy {
+			// if err == ErrWorkerBusy {
+			// 	log.Info("All system worker are busy, wait for 10 seconds")
+			// 	time.Sleep(time.Second * 10)
+			// 	continue
+			// }
+
+			if cloud.IsAllCloudsBusyErr(err) {
 				log.Info("All system worker are busy, wait for 10 seconds")
 				time.Sleep(time.Second * 10)
 				continue
@@ -380,7 +428,7 @@ func handlePendingEvents() {
 
 			event.Status = api.EventStatusFail
 			event.ErrorMessage = err.Error()
-			log.ErrorWithFields("handle event err", log.Fields{"error": err, "event": event})
+			log.Error("handle event err", log.Fields{"error": err, "event": event})
 			postHookEvent(&event)
 			etcdClient := etcd.GetClient()
 			err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
@@ -395,10 +443,44 @@ func handlePendingEvents() {
 		event.Status = api.EventStatusRunning
 		ds := store.NewStore()
 		defer ds.Close()
-		event.Version.Status = api.VersionRunning
-		if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
-			log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+		if event.Operation == "create-version" {
+			event.Version.Status = api.VersionRunning
+			if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
+				log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+			}
 		}
 		SaveEventToEtcd(&event)
+	}
+}
+
+// CheckWorkerTimeout ...
+func CheckWorkerTimeout(event *api.Event) {
+	if IsEventFinished(event) {
+		return
+	}
+	worker, err := CloudController.LoadWorker(event.Worker)
+	if err != nil {
+		log.Error("load worker error")
+		return
+	}
+
+	ok, left := worker.IsTimeout()
+	if ok {
+		event.Status = api.EventStatusFail
+		SaveEventToEtcd(event)
+		return
+	}
+
+	time.Sleep(left)
+
+	event, err = LoadEventFromEtcd(event.EventID)
+	if err != nil {
+		return
+	}
+
+	if !IsEventFinished(event) {
+		log.Infof("event time out: %v", event)
+		event.Status = api.EventStatusCancel
+		SaveEventToEtcd(event)
 	}
 }

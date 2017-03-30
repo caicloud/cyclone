@@ -473,6 +473,15 @@ var unmarshalTests = []struct {
 		}{1, inlineB{2, inlineC{3}}},
 	},
 
+	// Map inlining
+	{
+		"a: 1\nb: 2\nc: 3\n",
+		&struct {
+			A int
+			C map[string]int `yaml:",inline"`
+		}{1, map[string]int{"b": 2, "c": 3}},
+	},
+
 	// bug 1243827
 	{
 		"a: -b_c",
@@ -540,11 +549,46 @@ var unmarshalTests = []struct {
 		"a: 1.2.3.4\n",
 		map[string]net.IP{"a": net.IPv4(1, 2, 3, 4)},
 	},
+	{
+		"a: 2015-02-24T18:19:39Z\n",
+		map[string]time.Time{"a": time.Unix(1424801979, 0).In(time.UTC)},
+	},
 
 	// Encode empty lists as zero-length slices.
 	{
 		"a: []",
 		&struct{ A []int }{[]int{}},
+	},
+
+	// UTF-16-LE
+	{
+		"\xff\xfe\xf1\x00o\x00\xf1\x00o\x00:\x00 \x00v\x00e\x00r\x00y\x00 \x00y\x00e\x00s\x00\n\x00",
+		M{"ñoño": "very yes"},
+	},
+	// UTF-16-LE with surrogate.
+	{
+		"\xff\xfe\xf1\x00o\x00\xf1\x00o\x00:\x00 \x00v\x00e\x00r\x00y\x00 \x00y\x00e\x00s\x00 \x00=\xd8\xd4\xdf\n\x00",
+		M{"ñoño": "very yes 🟔"},
+	},
+
+	// UTF-16-BE
+	{
+		"\xfe\xff\x00\xf1\x00o\x00\xf1\x00o\x00:\x00 \x00v\x00e\x00r\x00y\x00 \x00y\x00e\x00s\x00\n",
+		M{"ñoño": "very yes"},
+	},
+	// UTF-16-BE with surrogate.
+	{
+		"\xfe\xff\x00\xf1\x00o\x00\xf1\x00o\x00:\x00 \x00v\x00e\x00r\x00y\x00 \x00y\x00e\x00s\x00 \xd8=\xdf\xd4\x00\n",
+		M{"ñoño": "very yes 🟔"},
+	},
+
+	// YAML Float regex shouldn't match this
+	{
+		"a: 123456e1\n",
+		M{"a": "123456e1"},
+	}, {
+		"a: 123456E1\n",
+		M{"a": "123456E1"},
 	},
 }
 
@@ -625,6 +669,7 @@ var unmarshalerTests = []struct {
 	{`_: BAR!`, "!!str", "BAR!"},
 	{`_: "BAR!"`, "!!str", "BAR!"},
 	{"_: !!foo 'BAR!'", "!!foo", "BAR!"},
+	{`_: ""`, "!!str", ""},
 }
 
 var unmarshalerResult = map[int]error{}

@@ -24,33 +24,33 @@ spec:
       - command:
         - /cyclone-server
         env:
-        - name: MONGO_DB_IP
+        - name: CYCLONE_SERVER
+          value: http://192.168.10.102:30010
+        - name: ETCD_HOST
+          value: http://etcd-server:2379
+        - name: MONGODB_HOST
           value: mongo-server:27017
-        - name: KAFKA_SERVER_IP
+        - name: KAFKA_HOST
           value: kafka-server:9092
-        - name: WORK_REGISTRY_LOCATION
+        - name: REGISTRY_LOCATION
           value: cargo.caicloudprivatetest.com
-        - name: CLIENTID
+        - name: GITHUB_CLIENT
           value: d7d1851b08f456fd668e
-        - name: CLIENTIDSECRET
+        - name: GITHUB_SECRET
           value: a0c301b13886475c1dd550b21cc31f1bc820664e
         - name: CONSOLE_WEB_ENDPOINT
           value: http://console.caicloudprivatetest.com:30000
-        - name: CLIENTID_GITLAB
-          value: 55df53729217e00df60e34207492ec9676c16ba3c6bdd47d6e0c026f2ed9f567
-        - name: CLIENTIDSECRET_GITLAB
-          value: a4fe95ced771da3808cef3b081423900ff6ac9e42823b6f2b2039f2f9144e8cd
-        - name: SERVER_GITLAB
+        - name: GITLAB_URL
           value: https://gitlab.com
-        - name: ETCD_SERVER_IP
-          value: http://etcd-server:2379
-        - name: CYCLONE_SERVER_HOST
-          value: http://192.168.10.102:30010
+        - name: GITLAB_CLIENT
+          value: 55df53729217e00df60e34207492ec9676c16ba3c6bdd47d6e0c026f2ed9f567
+        - name: GITLAB_SECRET
+          value: a4fe95ced771da3808cef3b081423900ff6ac9e42823b6f2b2039f2f9144e8cd
         - name: WORKER_IMAGE
           value: cargo.caicloud.io/caicloud/cyclone-worker:latest
         - name: LOG_SERVER
           value: ws://192.168.10.102:30070/ws
-        - name: CLAIR_SERVER_IP
+        - name: CLAIR_SERVER
           value: http://192.168.10.102:30060
         image: cargo.caicloud.io/caicloud/cyclone-server:latest
         imagePullPolicy: IfNotPresent

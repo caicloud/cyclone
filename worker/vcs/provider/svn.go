@@ -24,7 +24,8 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/executil"
-	"github.com/caicloud/cyclone/pkg/log"
+	log "github.com/zoumo/logdog"
+
 	steplog "github.com/caicloud/cyclone/worker/log"
 )
 
@@ -46,22 +47,20 @@ func (s *Svn) Ping(url, destPath string, event *api.Event) error {
 		"--password", getPwdFromBase64(event.Service.Repository.Password),
 		"--non-interactive", "--trust-server-cert", "--no-auth-cache"}
 
-	output, err := executil.RunInDir(dir, "svn", args...)
-	if event.Version.VersionID != "" {
-		fmt.Fprintf(steplog.Output, "%s", string(output))
-	}
+	_, err := executil.RunInDir(dir, "svn", args...)
+
 	if err != nil {
-		log.ErrorWithFields("Error when check valid", log.Fields{"error": err})
+		log.Error("url is not a valid repo", log.Fields{"url": url, "error": err})
 		return err
 	}
 
-	log.InfoWithFields("valid svn repository.", log.Fields{"url": url})
+	log.Info("valid svn repository.", log.Fields{"url": url})
 	return nil
 }
 
 // Clone implements VCS interface.
 func (s *Svn) Clone(url, destPath string, event *api.Event) error {
-	log.InfoWithFields("About to svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
+	log.Info("About to svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
 
 	args := []string{"checkout",
 		"--username", event.Service.Repository.Username,
@@ -74,9 +73,9 @@ func (s *Svn) Clone(url, destPath string, event *api.Event) error {
 	}
 
 	if err != nil {
-		log.ErrorWithFields("Error when clone", log.Fields{"error": err})
+		log.Error("Error when clone", log.Fields{"error": err})
 	} else {
-		log.InfoWithFields("Successfully svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
+		log.Info("Successfully svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
 	}
 	return err
 }
@@ -99,7 +98,7 @@ func (s *Svn) NewTagFromLatest(repoPath string, event *api.Event) error {
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	log.Infof("Command output: %+v", string(output))
 	if err == nil {
-		log.InfoWithFields("Successfully svn create tag.", log.Fields{"repoPath": repoPath, "version": version})
+		log.Info("Successfully svn create tag.", log.Fields{"repoPath": repoPath, "version": version})
 	}
 
 	return err
@@ -114,7 +113,7 @@ func (s *Svn) CheckoutTag(repoPath string, tag string) error {
 	// local tree be dirty?
 	log.Debugf("Command output: %+v", string(output))
 	if err == nil {
-		log.InfoWithFields("Successfully checked out to svn tag.", log.Fields{"repoPath": repoPath, "tag": tag})
+		log.Info("Successfully checked out to svn tag.", log.Fields{"repoPath": repoPath, "tag": tag})
 	}
 	return err
 }
@@ -124,7 +123,7 @@ func (s *Svn) GetTagCommit(repoPath string, tag string) (string, error) {
 	args := []string{tag}
 	output, err := executil.RunInDir(repoPath+"/tags", "ls", args...)
 	if err != nil {
-		log.InfoWithFields("failed checked out to svn tag.", log.Fields{"repoPath": repoPath, "tag": tag})
+		log.Info("failed checked out to svn tag.", log.Fields{"repoPath": repoPath, "tag": tag})
 	}
 	return strings.Trim(string(output), "\n"), err
 }
@@ -139,7 +138,7 @@ func (s *Svn) CheckOutByCommitID(commitID string, repoPath string, event *api.Ev
 	fmt.Fprintf(steplog.Output, "%q\n", string(output))
 
 	if err != nil {
-		log.ErrorWithFields("Error when svn check out by commitID", log.Fields{"error": err})
+		log.Error("Error when svn check out by commitID", log.Fields{"error": err})
 		return err
 	}
 	return nil
@@ -155,7 +154,7 @@ func (s *Svn) IsCommitToSpecialURL(commitID string, service *api.Service) (bool,
 	log.Info(string(output))
 
 	if err != nil {
-		log.ErrorWithFields("Error when call IsCommitToSpecialURL", log.Fields{"error": err})
+		log.Error("Error when call IsCommitToSpecialURL", log.Fields{"error": err})
 		return false, string(output), err
 
 	}

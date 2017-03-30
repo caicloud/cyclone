@@ -33,6 +33,7 @@ const (
 	workerNodeCollection         string = "WorkerNodeCollection"
 	deployCollectionName         string = "DeployCollection"
 	ResourceCollectionName       string = "ResourceCollection"
+	CloudsCollection             string = "clouds"
 )
 
 var (

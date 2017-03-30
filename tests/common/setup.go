@@ -25,9 +25,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	log "github.com/zoumo/logdog"
 )
 
 const (
@@ -158,42 +158,46 @@ func WaitComponents() {
 	log.Info("Cyclone started")
 }
 
-// RegisterResource register resources to mongo.
-func RegisterResource() error {
-	data := api.WorkerNode{
-		Name:        "test",
-		Description: "test",
-		IP:          "127.0.0.1",
-		DockerHost:  osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
-		Type:        "system",
-		TotalResource: api.NodeResource{
-			Memory: 1024 * 1024 * 1024,
-			CPU:    1024,
-		},
+// AddCloud register resources to mongo.
+func AddCloud() error {
+
+	cloudKind := osutil.GetStringEnv("CYCLONE_CLOUD_KIND", "docker")
+
+	var data cloud.Options
+
+	if cloudKind == "kubernetes" {
+		data = cloud.Options{
+			Name:           "test",
+			Kind:           "kubernetes",
+			Host:           "https://dev.caicloudprivatetest.com",
+			K8SBearerToken: "d9b04c43c25de5fc7287f7515bf4dc28015c0d43ec547d561c2ba2feea3ba79c1b77e501fdeb23bed14f74578a9675d42919ffb6e2f05490610f6c54b3a105b0",
+			K8SNamespace:   "cyclone",
+		}
+	} else {
+		data = cloud.Options{
+			Name: "test",
+			Kind: "docker",
+			Host: osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
+		}
 	}
+
 	buf, err := json.Marshal(&data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/system_worker_nodes", BaseURL), bytes.NewBuffer(buf))
+	url := fmt.Sprintf("%s/clouds", BaseURL)
+
+	resp, err := http.Post(url, "application/json;charset=utf-8", bytes.NewBuffer(buf))
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-type", "application/json;charset=utf-8")
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 201 {
 		return fmt.Errorf("%v", resp)
 	}
 
-	log.Info("Register resource to mongo.")
+	log.Info("Register cloud", log.Fields{"cloud": data})
 	return nil
 }
 

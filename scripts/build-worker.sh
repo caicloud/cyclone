@@ -6,21 +6,22 @@ set -e
 set -u
 set -o pipefail
 
-CYCLONE_ROOT=$(dirname "${BASH_SOURCE}")/..
+source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
+cd ${CYCLONE_ROOT}
+
 
 IMAGE="cargo.caicloud.io/caicloud/cyclone-worker"
 IMAGE_TEG=${1:-"latest"}
-BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.7-1.11"
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"
+cyclone_src="/go/src/github.com/caicloud/cyclone"
 
 # Build and run cyclone.
-cd ${CYCLONE_ROOT}
 docker run --rm \
-       -v $(pwd):/go/src/github.com/caicloud/cyclone \
+       -v ${CYCLONE_ROOT}:${cyclone_src} \
        -e GOPATH=/go \
-       -w "/go/src/github.com/caicloud/cyclone/worker" \
-       ${BUILD_IN} go build cyclone-worker.go
+       -w ${cyclone_src} \
+       ${BUILD_IN} bash -c "go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker"
 
-
-docker build -t ${IMAGE}:${IMAGE_TEG} ./worker
+docker build -t ${IMAGE}:${IMAGE_TEG} -f Dockerfile.worker .
 
 cd - > /dev/null

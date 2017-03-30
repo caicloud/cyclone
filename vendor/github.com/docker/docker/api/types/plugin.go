@@ -22,13 +22,12 @@ type Plugin struct {
 	// Required: true
 	Name string `json:"Name"`
 
+	// plugin remote reference used to push/pull the plugin
+	PluginReference string `json:"PluginReference,omitempty"`
+
 	// settings
 	// Required: true
 	Settings PluginSettings `json:"Settings"`
-
-	// tag
-	// Required: true
-	Tag string `json:"Tag"`
 }
 
 // PluginConfig The config of a plugin.
@@ -78,9 +77,12 @@ type PluginConfig struct {
 	// user
 	User PluginConfigUser `json:"User,omitempty"`
 
-	// workdir
+	// work dir
 	// Required: true
-	Workdir string `json:"Workdir"`
+	WorkDir string `json:"WorkDir"`
+
+	// rootfs
+	Rootfs *PluginConfigRootfs `json:"rootfs,omitempty"`
 }
 
 // PluginConfigArgs plugin config args
@@ -121,13 +123,13 @@ type PluginConfigInterface struct {
 // swagger:model PluginConfigLinux
 type PluginConfigLinux struct {
 
+	// allow all devices
+	// Required: true
+	AllowAllDevices bool `json:"AllowAllDevices"`
+
 	// capabilities
 	// Required: true
 	Capabilities []string `json:"Capabilities"`
-
-	// device creation
-	// Required: true
-	DeviceCreation bool `json:"DeviceCreation"`
 
 	// devices
 	// Required: true
@@ -141,6 +143,17 @@ type PluginConfigNetwork struct {
 	// type
 	// Required: true
 	Type string `json:"Type"`
+}
+
+// PluginConfigRootfs plugin config rootfs
+// swagger:model PluginConfigRootfs
+type PluginConfigRootfs struct {
+
+	// diff ids
+	DiffIds []string `json:"diff_ids"`
+
+	// type
+	Type string `json:"type,omitempty"`
 }
 
 // PluginConfigUser plugin config user

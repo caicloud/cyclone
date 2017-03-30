@@ -60,18 +60,18 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 
 | 环境变量                   | 说明                                       |
 | ---------------------- | ---------------------------------------- |
-| MONGO_DB_IP            | mongo db的地址, 默认是localhost                |
-| KAFKA_SERVER_IP        | kafka服务的地址，默认是127.0.0.1:9092             |
-| WORK_REGISTRY_LOCATION | 镜像仓的地址，默认是cargo.caicloud.io.             |
+| MONGODB_HOST            | mongo db的地址, 默认是localhost                |
+| KAFKA_HOST        | kafka服务的地址，默认是127.0.0.1:9092             |
+| REGISTRY_LOCATION | 镜像仓的地址，默认是cargo.caicloud.io.             |
 | REGISTRY_USERNAME      | 镜像仓用户名，默认是空                              |
 | REGISTRY_PASSWORD      | 镜像仓用户密码，默认是空                             |
-| CLIENTID               | 用于github oauth授权的clientID，默认是空           |
-| CLIENTIDSECRET         | 用于github oauth授权的secret，默认是空             |
+| GITHUB_CLIENT               | 用于github oauth授权的clientID，默认是空           |
+| GITHUB_SECRET         | 用于github oauth授权的secret，默认是空             |
 | CONSOLE_WEB_ENDPOINT   | 网页用户界面访问地址，默认是http://localhost:8000      |
-| CLIENTID_GITLAB        | 用于gitlab oauth授权的clientID，默认是空           |
-| CLIENTIDSECRET_GITLAB  | 用于gitlab oauth授权的secret，默认是空             |
-| SERVER_GITLAB          | gitlab的服务器地址，默认是https://gitlab.com       |
-| ETCD_SERVER_IP         | etcd的服务器地址，默认时127.0.0.1:2379             |
-| CYCLONE_SERVER_HOST    | Cyclone-Server的访问地址，默认是http://localhost:7099 |
+| GITLAB_CLIENT        | 用于gitlab oauth授权的clientID，默认是空           |
+| GITLAB_SECRET  | 用于gitlab oauth授权的secret，默认是空             |
+| GITLAB_URL          | gitlab的服务器地址，默认是https://gitlab.com       |
+| ETCD_HOST         | etcd的服务器地址，默认时127.0.0.1:2379             |
+| CYCLONE_SERVER    | Cyclone-Server的访问地址，默认是http://localhost:7099 |
 | WORKER_IMAGE           | Cyclone-Worker容器的镜像名，默认是cargo.caicloud.io/caicloud/cyclone-worker:latest |
-| CLAIR_SERVER_IP        | clair的服务器地址，默认是127.0.0.1:6060            |
+| CLAIR_SERVER        | clair的服务器地址，默认是127.0.0.1:6060            |

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -27,11 +28,6 @@ import (
 	klar_docker "github.com/optiopay/klar/docker"
 
 	"github.com/caicloud/cyclone/api"
-)
-
-const (
-	// CLAIR_SERVER_IP is the IP of clair server.
-	CLAIR_SERVER_IP = "CLAIR_SERVER_IP"
 )
 
 // Serverity is the type for level of checks.
@@ -115,8 +111,7 @@ func AnalysisImage(dockerManager *docker.Manager,
 		return vulnerabilities, err
 	}
 
-	clairServerAddr := osutil.GetStringEnv(CLAIR_SERVER_IP,
-		"http://localhost:6060")
+	clairServerAddr := osutil.GetStringEnv(cloud.ClairServer, "http://localhost:6060")
 	clairClient := klar_clair.NewClair(clairServerAddr)
 	vulnerabilities = clairClient.Analyse(image)
 	sort.Sort(VulnerabilityList(vulnerabilities))

@@ -24,14 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/notify"
 	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
+	"github.com/zoumo/logdog"
+	"golang.org/x/oauth2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -101,50 +101,31 @@ func handleEvent(event *api.Event) error {
 // postHookEvent is the event finished post hook.
 func postHookEvent(event *api.Event) {
 	mapOperation[event.Operation].PostHook(event)
-
-	w, err := LoadWorker(event)
+	w, err := CloudController.LoadWorker(event.Worker)
 	if err != nil {
-		log.Errorf("load worker err: %v", err)
+		logdog.Errorf("load worker err: %v", err)
 		return
 	}
-	err = w.Fire()
+	err = w.Terminate()
 	if err != nil {
-		log.Errorf("fire worker err: %v", err)
+		logdog.Errorf("Terminate worker err: %v", err)
 		return
-	}
-
-	if err := resourceManager.ReleaseResource(event); err != nil {
-		log.Errorf("Unable to release resource %v", err)
-	}
-	// Release resources of worker node.
-	ds := store.NewStore()
-	defer ds.Close()
-	nodes, err := ds.FindWorkerNodesByDockerHost(event.WorkerInfo.DockerHost)
-	if err != nil || len(nodes) != 1 {
-		log.Errorf("find worker node err: %v", err)
-	} else {
-		nodes[0].LeftResource.Memory += event.WorkerInfo.UsedResource.Memory
-		nodes[0].LeftResource.CPU += event.WorkerInfo.UsedResource.CPU
-		_, err := ds.UpsertWorkerNodeDocument(&(nodes[0]))
-		if err != nil {
-			log.Errorf("release worker node resource err: %v", err)
-		}
 	}
 
 	// Include cancel manual or timeout
 	if event.Status == api.EventStatusCancel {
+
 		versionLog, err := websocket.StoreTopic(event.Service.UserID, event.Service.ServiceID, event.Version.VersionID)
 		if err == nil {
 			Log := api.VersionLog{
 				VerisonID: event.Version.VersionID,
 				Logs:      versionLog,
 			}
-
 			ds := store.NewStore()
 			defer ds.Close()
 			_, err = ds.NewVersionLogDocument(&Log)
 			if err != nil {
-				log.Error(err)
+				logdog.Error(err)
 			}
 		}
 	}
@@ -152,18 +133,30 @@ func postHookEvent(event *api.Event) {
 
 // createServiceHander is the create service handler.
 func createServiceHandler(event *api.Event) error {
-	log.Infof("create service handler")
-	w, err := NewWorker(event)
+	logdog.Infof("create service handler")
+	opts := workerOptions.DeepCopy()
+	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
 	}
 
-	return w.DoWork(event)
+	err = worker.Do()
+	if err != nil {
+		logdog.Error("run worker err", logdog.Fields{"err": err})
+		return err
+	}
+
+	// set worker info to event
+	event.Worker = worker.GetWorkerInfo()
+	SaveEventToEtcd(event)
+	go CheckWorkerTimeout(event)
+
+	return nil
 }
 
 // createServicePostHook is the create service post hook.
 func createServicePostHook(event *api.Event) {
-	log.Infof("create service post hook")
+	logdog.Infof("create service post hook")
 	if event.Service.Repository.Status == api.RepositoryAccepted {
 		if event.Status == api.EventStatusSuccess {
 			event.Service.Repository.Status = api.RepositoryHealthy
@@ -177,13 +170,13 @@ func createServicePostHook(event *api.Event) {
 
 	if err := ds.UpdateRepositoryStatus(event.Service.ServiceID, event.Service.Repository.Status); err != nil {
 		event.Service.Repository.Status = api.RepositoryInternalError
-		log.Errorf("Unable to update repository status in post hook for %+v: %v\n", event.Service, err)
+		logdog.Errorf("Unable to update repository status in post hook for %+v: %v\n", event.Service, err)
 	}
 
 	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil &&
 		event.Service.Repository.Status == api.RepositoryHealthy {
 		if err := remote.CreateHook(&event.Service); err != nil {
-			log.ErrorWithFields("create hook failed", log.Fields{"user_id": event.Service.UserID, "error": err})
+			logdog.Error("create hook failed", logdog.Fields{"user_id": event.Service.UserID, "error": err})
 		}
 	}
 
@@ -211,14 +204,14 @@ func autoPublishVersion(service *api.Service) {
 		_, err := ds.NewVersionDocument(&version)
 		if err != nil {
 			message := "Unable to create version document in database"
-			log.ErrorWithFields(message, log.Fields{"error": err})
+			logdog.Error(message, logdog.Fields{"error": err})
 			return
 		}
 
 		err = SendCreateVersionEvent(service, &version)
 		if err != nil {
 			message := "Unable to create build version job"
-			log.ErrorWithFields(message, log.Fields{"service": service, "version": version, "error": err})
+			logdog.Error(message, logdog.Fields{"service": service, "version": version, "error": err})
 			return
 		}
 	}
@@ -226,9 +219,16 @@ func autoPublishVersion(service *api.Service) {
 
 // createVersionHandler is the create version handler.
 func createVersionHandler(event *api.Event) error {
-	log.Infof("create version handler")
+	logdog.Infof("create version handler")
 
-	w, err := NewWorker(event)
+	opts := workerOptions.DeepCopy()
+	opts.Quota = Resource2Quota(event.Version.BuildResource, opts.Quota)
+	worker, err := CloudController.Provision(string(event.EventID), opts)
+	if err != nil {
+		return err
+	}
+
+	err = worker.Do()
 	if err != nil {
 		return err
 	}
@@ -236,15 +236,15 @@ func createVersionHandler(event *api.Event) error {
 	// trigger after get an valid worker
 	triggerHooks(event, PostStartPhase)
 
-	err = w.DoWork(event)
-	if err != nil {
-		return err
-	}
+	// set worker info to event
+	event.Worker = worker.GetWorkerInfo()
+	SaveEventToEtcd(event)
+	go CheckWorkerTimeout(event)
 
 	webhook := event.Service.Repository.Webhook
 	if remote, err := remoteManager.FindRemote(webhook); webhook == api.GITHUB && err == nil {
 		if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
-			log.Errorf("Unable to post commit status to github: %v", err)
+			logdog.Errorf("Unable to post commit status to github: %v", err)
 		}
 	}
 	return nil
@@ -252,7 +252,7 @@ func createVersionHandler(event *api.Event) error {
 
 // createVersionPostHook is the create version post hook.
 func createVersionPostHook(event *api.Event) {
-	log.Infof("create version post hook")
+	logdog.Infof("create version post hook")
 	if event.Status == api.EventStatusSuccess {
 		event.Version.Status = api.VersionHealthy
 	} else if event.Status == api.EventStatusCancel {
@@ -273,29 +273,29 @@ func createVersionPostHook(event *api.Event) {
 	defer ds.Close()
 
 	if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
-		log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+		logdog.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
 	}
 
 	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil {
 		if err := remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
-			log.Errorf("Unable to post commit status to %s: %v", event.Service.Repository.Webhook, err)
+			logdog.Errorf("Unable to post commit status to %s: %v", event.Service.Repository.Webhook, err)
 		}
 	}
 
 	if DeployInProject == false {
 		if event.Version.Status == api.VersionHealthy {
 			if err := ds.AddNewVersion(event.Version.ServiceID, event.Version.VersionID); err != nil {
-				log.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
+				logdog.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
 			}
 		} else {
 			if err := ds.AddNewFailVersion(event.Version.ServiceID, event.Version.VersionID); err != nil {
-				log.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
+				logdog.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
 			}
 		}
 
 	}
 	if err := ds.UpdateServiceLastInfo(event.Version.ServiceID, event.Version.CreateTime, event.Version.Name); err != nil {
-		log.Errorf("Unable to update new version info in service %+v: %v", event.Version, err)
+		logdog.Errorf("Unable to update new version info in service %+v: %v", event.Version, err)
 	}
 
 	// Use for checking project's version deploy status.
@@ -306,7 +306,7 @@ func createVersionPostHook(event *api.Event) {
 	// TODO: poll version log, not query once.
 	versionLog, err := ds.FindVersionLogByVersionID(event.Version.VersionID)
 	if err != nil {
-		log.Warnf("Notify error, getting version failed: %v", err)
+		logdog.Warnf("Notify error, getting version failed: %v", err)
 	} else {
 		notify.Notify(&event.Service, &event.Version, versionLog.Logs)
 	}
@@ -326,7 +326,7 @@ func triggerHooks(event *api.Event, phase string) {
 
 	for _, hook := range hooks {
 		if hook.Phase == phase {
-			log.InfoWithFields("trigger version hook", log.Fields{"phase": phase})
+			logdog.Info("trigger version hook", log.Fields{"phase": phase})
 			data := map[string]string{
 				"status":      "failed",
 				"serviceId":   event.Service.ServiceID,
@@ -335,7 +335,7 @@ func triggerHooks(event *api.Event, phase string) {
 				"versionName": event.Version.Name,
 				"image":       "",
 			}
-			registryLocation := osutil.GetStringEnv(WORK_REGISTRY_LOCATION, "")
+			registryLocation := workerOptions.WorkerEnvs.RegistryLocation
 			if phase == PostStartPhase {
 				data["status"] = "building"
 			} else if event.Status == api.EventStatusSuccess {
@@ -352,7 +352,7 @@ func triggerHooks(event *api.Event, phase string) {
 			client := getClientWithOauth2(hook.Token)
 			_, err := client.Post(hook.Callback, "application/json", bytes.NewBuffer(jsonStr))
 			if err != nil {
-				log.ErrorWithFields("error occur when callback", log.Fields{"url": hook.Callback, "err": err})
+				logdog.Error("error occur when callback", logdog.Fields{"url": hook.Callback, "err": err})
 				break
 			}
 
@@ -368,4 +368,18 @@ func getClientWithOauth2(token *oauth2.Token) *http.Client {
 		client = &http.Client{}
 	}
 	return client
+}
+
+// Resource2Quota TODO: FIXME
+func Resource2Quota(resource api.BuildResource, def cloud.Quota) cloud.Quota {
+	if resource.CPU == 0.0 && resource.Memory == 0.0 {
+		return def
+	}
+
+	quota := cloud.Quota{
+		cloud.ResourceLimitsCPU:    cloud.MustParseCPU(resource.CPU / 1024),
+		cloud.ResourceLimitsMemory: cloud.MustParseMemory(resource.Memory),
+	}
+
+	return quota
 }
