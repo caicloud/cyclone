@@ -61,3 +61,27 @@ fi
 # export -f command_exists >/dev/null 2>&1
 
 export OS=$os
+
+
+# get this file path
+echo "$0" | grep -q "$0"
+if [ $? -eq 0 ];
+then
+    cd "$(dirname ${BASH_SOURCE})"
+    CUR_FILE=$(pwd)/$(basename ${BASH_SOURCE})
+    CUR_DIR=$(dirname ${CUR_FILE})
+    cd - > /dev/null
+else
+    if [ ${0:0:1} = "/" ]; then
+        CUR_FILE=$0
+    else
+        CUR_FILE=$(pwd)/$0
+    fi
+    CUR_DIR=$(dirname ${CUR_FILE})
+fi
+
+# eliminate relative path ，like a/..b/c
+CYCLONE_ROOT=$(dirname $(dirname ${CUR_DIR}))
+export CYCLONE_ROOT
+
+echo "cyclone root path" ${CYCLONE_ROOT}

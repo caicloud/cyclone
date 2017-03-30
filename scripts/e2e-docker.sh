@@ -7,26 +7,9 @@ set -e
 set -u
 set -o pipefail
 
-# get this file path
-echo "$0" | grep -q "$0"
-if [ $? -eq 0 ];
-then
-    cd "$(dirname ${BASH_SOURCE})"
-    CUR_FILE=$(pwd)/$(basename ${BASH_SOURCE})
-    CUR_DIR=$(dirname ${CUR_FILE})
-    cd - > /dev/null
-else
-    if [ ${0:0:1} = "/" ]; then
-        CUR_FILE=$0
-    else
-        CUR_FILE=$(pwd)/$0
-    fi
-    CUR_DIR=$(dirname ${CUR_FILE})
-fi
+source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
 
-# eliminate relative path ，like a/..b/c
-CYCLONE_ROOT=$(dirname ${CUR_DIR})
-source "${CYCLONE_ROOT}/scripts/lib/common.sh"
+cd ${CYCLONE_ROOT}
 
 
 # Clean up local run of cyclone.
@@ -141,9 +124,6 @@ function run_e2e {
     go test -v ./tests/yaml
 
 }
-
-
-cd ${CYCLONE_ROOT}
 
 trap cleanup SIGINT EXIT SIGQUIT
 

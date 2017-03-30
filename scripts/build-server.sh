@@ -11,27 +11,7 @@ set -u
 set -o pipefail
 
 source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
-
-#获得该文件的位置
-echo "$0" | grep -q "$0"
-if [ $? -eq 0 ];
-then
-    cd "$(dirname ${BASH_SOURCE})"
-    CUR_FILE=$(pwd)/$(basename ${BASH_SOURCE})
-    CUR_DIR=$(dirname ${CUR_FILE})
-    cd - > /dev/null
-else
-    if [ ${0:0:1} = "/" ]; then
-        CUR_FILE=$0
-    else
-        CUR_FILE=$(pwd)/$0
-    fi
-    CUR_DIR=$(dirname ${CUR_FILE})
-fi
-
-#去掉路径中的相对路径，如a/..b/c
-CYCLONE_ROOT=$(dirname ${CUR_DIR})
-
+cd ${CYCLONE_ROOT}
 
 function usage {
   echo -e "Usage:"
@@ -86,8 +66,6 @@ else
 fi
 
 echo "+++++ Start building cyclone server"
-
-cd ${CYCLONE_ROOT}
 
 IMAGE="cargo.caicloud.io/caicloud/cyclone-server"
 BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"

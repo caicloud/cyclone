@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-#获得该文件的位置
+# get this file path
 echo "$0" | grep -q "$0"
 if [ $? -eq 0 ];
 then
@@ -23,13 +23,13 @@ else
     CUR_DIR=$(dirname ${CUR_FILE})
 fi
 
-#去掉路径中的相对路径，如a/..b/c
+# eliminate relative path ，like a/..b/c
 CYCLONE_ROOT=$(dirname ${CUR_DIR})
 
-
-BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"
 cyclone_src="/go/src/github.com/caicloud/cyclone"
 
+BUILD_IN="cargo.caicloud.io/caicloud/golang-docker:1.8-17.03"
+echo "build in ${BUILD_IN}"
 docker run --rm \
   -v ${CYCLONE_ROOT}:${cyclone_src} \
   -e GOPATH=/go \

@@ -88,11 +88,3 @@ type Worker interface {
 	// Terminate terminates the worker and destroy it
 	Terminate() error
 }
-
-// // Event ...
-// type Event struct {
-// 	// ID ...
-// 	ID     string
-// 	Quota  Quota
-// 	Worker WorkerInfo
-// }
