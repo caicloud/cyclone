@@ -1,3 +1,19 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cloud
 
 import (
@@ -194,6 +210,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 					WorkingDir:      WorkingDir,
 					Resources:       wopts.Quota.ToK8SQuota(),
 					SecurityContext: &apiv1.SecurityContext{Privileged: &Privileged},
+					ImagePullPolicy: apiv1.PullAlways,
 				},
 			},
 		},
@@ -290,8 +307,13 @@ func (worker *K8SPodWorker) Do() error {
 	// wait until pod is running
 	err = wait.Poll(7*time.Second, 2*time.Minute, check)
 	if err != nil {
+		logdog.Error("K8SPodWorker: do worker error", logdog.Fields{"err": err})
 		return err
 	}
+
+	// add time
+	worker.createTime = time.Now()
+	worker.dueTime = worker.createTime.Add(time.Duration(WorkerTimeout))
 
 	worker.pod = pod
 
@@ -324,11 +346,31 @@ func (worker *K8SPodWorker) Terminate() error {
 	client := worker.Client().CoreV1().Pods(worker.namespace)
 	GracePeriodSeconds := int64(0)
 	logdog.Debug("worker terminating...", logdog.Fields{"cloud": worker.Name(), "kind": worker.Kind(), "podName": worker.pod.Name})
-	return client.Delete(
+
+	if Debug {
+		req := client.GetLogs(worker.pod.Name, &apiv1.PodLogOptions{})
+		readCloser, err := req.Stream()
+		if err != nil {
+			logdog.Error("Can not read log from pod", logdog.Fields{
+				"cloud":   worker.Name(),
+				"kind":    worker.Kind(),
+				"podName": worker.pod.Name,
+				"err":     err,
+			})
+		} else {
+			defer readCloser.Close()
+			content, _ := ioutil.ReadAll(readCloser)
+			logdog.Debug(string(content))
+		}
+	}
+
+	err := client.Delete(
 		worker.pod.Name,
 		&apiv1.DeleteOptions{
 			GracePeriodSeconds: &GracePeriodSeconds,
 		})
+
+	return err
 }
 
 func buildK8SEnv(id string, opts WorkerOptions) []apiv1.EnvVar {

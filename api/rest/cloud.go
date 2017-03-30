@@ -27,6 +27,27 @@ import (
 	"github.com/zoumo/logdog"
 )
 
+// createCloud add a cloud to cyclone,
+//
+// POST: /api/v0.1/clouds
+//
+// PAYLOAD (cloud.Options):
+//   {
+//     	"kind": (string) cloud type such as docker and kubernetes
+//     	"name": (string) cloud name
+//     	"host": (string) cloud host url
+//     	"insecure": (bool) Optional server should be accessed without verifying the TLS certificate. For testing only.
+//     	"dockerCertPath": (string) Optional docker cert path
+//  	"k8sInCluster": (bool) Optional. set true if cyclone runs in k8s cluster and
+//                             use the same cluster as cyclone cloud provider
+//		"k8sNamespace": (string) Optional k8s cloud namespace to use
+// 		"k8sBearerToken": (string) Optional k8s bearer token
+//   }
+//
+// RESPONSE: (cloud.Options)
+//  {
+//      just like payload
+//  }
 func createCloud(request *restful.Request, response *restful.Response) {
 	cloudOpt := cloud.Options{}
 	err := request.ReadEntity(&cloudOpt)
@@ -65,6 +86,26 @@ func createCloud(request *restful.Request, response *restful.Response) {
 	response.WriteHeaderAndJson(http.StatusCreated, opts, restful.MIME_JSON)
 }
 
+// listCloud get all clouds registed in cyclone
+//
+// GET: /api/v0.1/clouds
+//
+// RESPONSE (cloud.Options):
+//   [
+//   	{
+//     		"kind": (string) cloud type such as docker and kubernetes
+//     		"name": (string) cloud name
+//     		"host": (string) cloud host url
+//     		"insecure": (bool) Optional server should be accessed without verifying the TLS certificate. For testing only.
+//     		"dockerCertPath": (string) Optional docker cert path
+//  		"k8sInCluster": (bool) Optional. set true if cyclone runs in k8s cluster and
+//                       	      use the same cluster as cyclone cloud provider
+//			"k8sNamespace": (string) Optional k8s cloud namespace to use
+// 			"k8sBearerToken": (string) Optional k8s bearer token
+//   	},
+//      ...
+//   ]
+//
 func listCloud(request *restful.Request, response *restful.Response) {
 	resp := make(map[string]cloud.Options)
 	for name, cloud := range event.CloudController.Clouds {
@@ -73,6 +114,11 @@ func listCloud(request *restful.Request, response *restful.Response) {
 	response.WriteAsJson(resp)
 }
 
+// deleteCloud delete a cloud
+//
+// DELETE: /api/v0.1/clouds
+//
+// RESPONSE 204 NO CONTENT
 func deleteCloud(request *restful.Request, response *restful.Response) {
 	cloudName := request.PathParameter("cloudName")
 	event.CloudController.DeleteCloud(cloudName)

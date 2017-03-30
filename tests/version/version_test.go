@@ -27,7 +27,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/pkg/wait"
 	. "github.com/caicloud/cyclone/tests/common"
-	"github.com/davecgh/go-spew/spew"
 	gwebsocket "golang.org/x/net/websocket"
 
 	. "github.com/onsi/ginkgo"
@@ -317,7 +316,6 @@ var _ = Describe("Version", func() {
 		})
 
 		It("should not be able to keep the log due to different user ID.", func() {
-			spew.Dump(ws, APICreateVersion, serviceResponse.ServiceID, versionResponse.VersionID)
 			err := WatchLog(ws, APICreateVersion, BobUID, serviceResponse.ServiceID,
 				versionResponse.VersionID)
 			Expect(err).To(Equal(ErrUnfoundLog))

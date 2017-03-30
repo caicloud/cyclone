@@ -1,3 +1,19 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cloud
 
 import (
@@ -111,6 +127,9 @@ func (cc *Controller) Provision(id string, opts WorkerOptions) (Worker, error) {
 			cc.provisionErr.Add(cloud.Name(), err)
 			continue
 		}
+
+		logdog.Debug("Provision: success", logdog.Fields{"worker": worker.GetWorkerInfo()})
+
 		return worker, nil
 	}
 
@@ -129,18 +148,13 @@ func (cc *Controller) LoadWorker(info WorkerInfo) (Worker, error) {
 // Resources returns all clouds quotas
 func (cc *Controller) Resources() (map[string]*Resource, error) {
 	resources := make(map[string]*Resource)
-	// type namedRes struct {
-	// 	name string
-	// 	res  *cloud.Resource
-	// }
+
 	total := NewResource()
-	// waitGroup := new(sync.WaitGroup)
-	// resCh := make(chan *namedRes)
 	for name, cloud := range cc.Clouds {
 		// waitGroup.Add(1)
 		res, err := cloud.Resource()
 		if err != nil {
-			// may be some cloud is offline, ignore it
+			// maybe some clouds are offline, ignore them
 			logdog.Error("CloudCtroller: can not get resources from cloud", logdog.Fields{"cloud": cloud.Name(), "err": err})
 			continue
 		}
@@ -148,12 +162,6 @@ func (cc *Controller) Resources() (map[string]*Resource, error) {
 		resources[name] = res
 
 	}
-
-	// waitGroup.Wait()
-
-	// for _, res := range resources {
-	// total.Add(res)
-	// }
 
 	resources["_total"] = total
 	return resources, nil

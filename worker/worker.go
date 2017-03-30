@@ -65,8 +65,10 @@ func (worker *Worker) Run() error {
 		}
 		return err
 	}
+	logdog.Info("get event success", logdog.Fields{"event": event})
 
 	// Handle event
+	logdog.Info("handleEvent ...")
 	worker.handleEvent(&event)
 
 	// Sent event for cyclone server
@@ -75,6 +77,7 @@ func (worker *Worker) Run() error {
 		logdog.Errorf("set event result err: %v", err)
 		return err
 	}
+	logdog.Info("send event to server", logdog.Fields{"event": event})
 	return nil
 }
 
@@ -93,7 +96,6 @@ func (worker *Worker) getEvent() (api.Event, error) {
 	}
 
 	event := getResponse.Event
-	logdog.Infof("get event: %+v", event)
 
 	return event, nil
 }

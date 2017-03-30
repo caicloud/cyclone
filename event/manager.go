@@ -83,7 +83,7 @@ func Init(wopts *cloud.WorkerOptions) {
 // load clouds from database
 func initCloudController(wopts *cloud.WorkerOptions) {
 	CloudController = cloud.NewController()
-	// laod clouds from store
+	// load clouds from store
 	ds := store.NewStore()
 	defer ds.Close()
 	clouds, err := ds.FindAllClouds()

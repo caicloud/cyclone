@@ -142,6 +142,7 @@ func createServiceHandler(event *api.Event) error {
 
 	err = worker.Do()
 	if err != nil {
+		logdog.Error("run worker err", logdog.Fields{"err": err})
 		return err
 	}
 

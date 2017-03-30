@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-buildkite-agent meta-data set version $(make version)
-
-make dist
-
-buildkite-agent artifact upload "dist/*"

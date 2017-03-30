@@ -127,7 +127,7 @@ func workerPushLogHandler(sReceiveFrom string, jsonPacket []byte) {
 		panic(err)
 	}
 
-	log.Debugf("Worker log (%s): %s", workerPushLog.Topic, workerPushLog.Log)
+	// log.Debugf("Worker log (%s): %s", workerPushLog.Topic, workerPushLog.Log)
 	kafka.Produce(workerPushLog.Topic, []byte(workerPushLog.Log))
 }
 

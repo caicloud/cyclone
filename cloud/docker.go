@@ -1,3 +1,19 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cloud
 
 import (
@@ -354,7 +370,7 @@ func (worker *DockerWorker) Terminate() error {
 	logdog.Debug("worker terminating...", logdog.Fields{"cloud": worker.cloud.Name(), "kind": worker.cloud.Kind(), "containerID": worker.containerID})
 
 	if Debug {
-		body, err := worker.cloud.Client().ContainerLogs(
+		readCloser, err := worker.cloud.Client().ContainerLogs(
 			ctx,
 			worker.containerID,
 			types.ContainerLogsOptions{ShowStderr: true, ShowStdout: true},
@@ -366,14 +382,13 @@ func (worker *DockerWorker) Terminate() error {
 				"containerID": worker.containerID,
 				"err":         err,
 			})
-			goto DEBUG
+		} else {
+			defer readCloser.Close()
+			content, _ := ioutil.ReadAll(readCloser)
+			logdog.Debug(string(content))
 		}
-		defer body.Close()
-		content, _ := ioutil.ReadAll(body)
-		logdog.Debug(string(content))
 	}
 
-DEBUG:
 	err := worker.cloud.Client().ContainerRemove(
 		ctx,
 		worker.containerID,

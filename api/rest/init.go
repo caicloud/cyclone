@@ -53,7 +53,6 @@ func Initialize() {
 	registerRemoteAPIs(ws)
 	registerVersionLogAPIs(ws)
 	registerResourceAPIs(ws)
-	// registerWorkerNodeAPIs(ws)
 	registerDeployAPIs(ws)
 
 	registerTemplateAPIs(ws)
@@ -74,7 +73,6 @@ func Initialize() {
 	restful.Filter(restful.OPTIONSFilter())
 
 	remoteManager = remote.NewManager()
-	// resourceManager = resource.NewManager()
 }
 
 // GetManager gets a remote manager.
@@ -261,32 +259,6 @@ func registerResourceAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Writes(api.ResourceGetResponse{}))
 }
-
-// registerWorkerNodeAPIs registers worker node related endpoints.
-// func registerWorkerNodeAPIs(ws *restful.WebService) {
-// 	ws.Route(ws.POST("/system_worker_nodes").
-// 		To(createSystemWorkerNode).
-// 		Doc("add a system worker node").
-// 		Reads(api.WorkerNode{}).
-// 		Writes(api.WorkerNodeCreateResponse{}))
-
-// 	ws.Route(ws.GET("/system_worker_nodes/{node_id}").
-// 		To(getSystemWorkerNode).
-// 		Doc("find a system worker node by id for given user").
-// 		Param(ws.PathParameter("node_id", "identifier of the node").DataType("string")).
-// 		Writes(api.WorkerNodeGetResponse{}))
-
-// 	ws.Route(ws.GET("/system_worker_nodes").
-// 		To(listSystemWorkerNodes).
-// 		Doc("list all system worker nodes").
-// 		Writes([]api.WorkerNodesListResponse{}))
-
-// 	ws.Route(ws.DELETE("/system_worker_nodes/{node_id}").
-// 		To(deleteSystemWorkerNode).
-// 		Doc("delete a system worker node by id").
-// 		Param(ws.PathParameter("node_id", "identifier of the node").DataType("string")).
-// 		Writes(api.WorkerNodeDelResponse{}))
-// }
 
 // registerVersionLogAPIs registers log related endpoints.
 func registerVersionLogAPIs(ws *restful.WebService) {

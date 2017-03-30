@@ -17,6 +17,8 @@ limitations under the License.
 package rest
 
 import (
+	"net/http"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/event"
 	"github.com/emicklei/go-restful"
@@ -29,7 +31,7 @@ import (
 //
 // RESPONSE: (ResourceGetResponse)
 //  {
-//    "resource": (object) api.Resource object.
+//    "resource": (object) map[string]*cloud.Resource.
 //    "error_msg": (string) set IFF the request fails.
 //  }
 func getResource(request *restful.Request, response *restful.Response) {
@@ -39,6 +41,8 @@ func getResource(request *restful.Request, response *restful.Response) {
 	res, err := event.CloudController.Resources()
 	if err != nil {
 		logdog.Error("Unable to find resource", logdog.Fields{"error": err})
+		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+		return
 	}
 	getResponse.Resource = res
 	response.WriteEntity(getResponse)

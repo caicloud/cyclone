@@ -161,10 +161,24 @@ func WaitComponents() {
 // AddCloud register resources to mongo.
 func AddCloud() error {
 
-	data := cloud.Options{
-		Name: "test",
-		Kind: "docker",
-		Host: osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
+	cloudKind := osutil.GetStringEnv("CYCLONE_CLOUD_KIND", "docker")
+
+	var data cloud.Options
+
+	if cloudKind == "kubernetes" {
+		data = cloud.Options{
+			Name:           "test",
+			Kind:           "kubernetes",
+			Host:           "https://dev.caicloudprivatetest.com",
+			K8SBearerToken: "d9b04c43c25de5fc7287f7515bf4dc28015c0d43ec547d561c2ba2feea3ba79c1b77e501fdeb23bed14f74578a9675d42919ffb6e2f05490610f6c54b3a105b0",
+			K8SNamespace:   "cyclone",
+		}
+	} else {
+		data = cloud.Options{
+			Name: "test",
+			Kind: "docker",
+			Host: osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
+		}
 	}
 
 	buf, err := json.Marshal(&data)

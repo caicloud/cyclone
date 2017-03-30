@@ -43,7 +43,7 @@ func SendCreateServiceEvent(service *api.Service) error {
 		Data:      map[string]interface{}{"Token": tok.Vsctoken.AccessToken},
 	}
 
-	log.Infof("send create service event: %v", event)
+	// log.Infof("send create service event: %v", event)
 
 	etcdClient := etcd.GetClient()
 	jsEvent, err := json.Marshal(&event)
@@ -87,7 +87,7 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		Status: api.EventStatusPending,
 	}
 
-	log.Infof("send create version event: %v", event)
+	// log.Infof("send create version event: %v", event)
 
 	etcdClient := etcd.GetClient()
 	jsEvent, err := json.Marshal(&event)
