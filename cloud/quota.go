@@ -250,8 +250,8 @@ func (q Quota) SetDefault() {
 
 // Resource describes cloud resource include limit and used quota
 type Resource struct {
-	Limit Quota
-	Used  Quota
+	Limit Quota `json:"limit,omitempty" bson:"limit,omitempty"`
+	Used  Quota `json:"used,omitempty" bson:"used,omitempty"`
 }
 
 // NewResource returns a new Resource

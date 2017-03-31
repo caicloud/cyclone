@@ -122,5 +122,10 @@ func listCloud(request *restful.Request, response *restful.Response) {
 func deleteCloud(request *restful.Request, response *restful.Response) {
 	cloudName := request.PathParameter("cloudName")
 	event.CloudController.DeleteCloud(cloudName)
+
+	ds := store.NewStore()
+	defer ds.Close()
+	ds.DeleteCloudByName(cloudName)
+
 	response.WriteHeader(http.StatusNoContent)
 }
