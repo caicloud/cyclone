@@ -80,7 +80,7 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			EnvVar:      ETCDHost,
 			Destination: &opts.ETCDHost,
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			Name:        "show-api-doc",
 			Usage:       "show the api doc at http://<cyclone instance>/apidocs/#/api/v0.1",
 			Destination: &opts.ShowAPIDoc,
