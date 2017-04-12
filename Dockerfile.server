@@ -17,4 +17,4 @@ COPY ./api/templates /templates
 EXPOSE 7099
 EXPOSE 8000
 
-CMD ["/cyclone-server"]
+ENTRYPOINT ["/cyclone-server"]
