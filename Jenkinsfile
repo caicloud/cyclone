@@ -48,15 +48,27 @@ podTemplate(
         ),     
         containerTemplate(
             name: 'golang',
-            // Jenkins Slave 作业执行环境， 此处为一个 Docker in Docker 环境，用于跑作业
-            image: 'cargo.caicloud.io/caicloud/golang:1.7',
+            image: 'cargo.caicloud.io/caicloud/golang-docker:1.8-17.03',
             ttyEnabled: true,
             command: "",
             args: "",
-            resourceRequestCpu: '500m',
-            resourceLimitCpu: '1000m',
-            resourceRequestMemory: '2000Mi',
-            resourceLimitMemory: '2000Mi',
+            envVars: [
+                containerEnvVar(key: "DEBUG", value: "true"),
+                containerEnvVar(key: "CLAIR_DISABLE", value: "true"),
+                containerEnvVar(key: "MONGODB_HOST", value: "127.0.0.1:27017"),
+                containerEnvVar(key: "KAFKA_HOST", value: "127.0.0.1:9092"),
+                containerEnvVar(key: "ETCD_HOST", value: "http://127.0.0.1:2379"),
+                containerEnvVar(key: "CYCLONE_SERVER", value: "http://127.0.0.1:7099"),
+                containerEnvVar(key: "LOG_SERVER", value: "http://127.0.0.1:8000"),
+                containerEnvVar(key: "REGISTRY_LOCATION", value: "cargo.caicloud.io"),
+                containerEnvVar(key: "REGISTRY_USERNAME", value: "caicloudadmin"),
+                containerEnvVar(key: "REGISTRY_PASSWORD", value: "caicloudadmin"),
+                containerEnvVar(key: "WORKER_IMAGE", value: "cargo.caicloud.io/caicloud/cyclone-worker:latest"),
+            ],
+            resourceRequestCpu: '800m',
+            resourceLimitCpu: '1200m',
+            resourceRequestMemory: '1000Mi',
+            resourceLimitMemory: '1500Mi',
         ),
         containerTemplate(
             name: 'mongo',
@@ -79,7 +91,20 @@ podTemplate(
             resourceLimitCpu: '500m',
             resourceRequestMemory: '300Mi',
             resourceLimitMemory: '500Mi',
-        )
+        ),
+        containerTemplate(
+            name: 'dind', 
+            // Jenkins Slave 作业执行环境， 此处为一个 Docker in Docker 环境，用于跑作业
+            image: 'cargo.caicloud.io/caicloud/docker:1.11-dind', 
+            ttyEnabled: true, 
+            command: "", 
+            args: "",
+            privileged: true,
+            resourceRequestCpu: '500m',
+            resourceLimitCpu: '1000m',
+            resourceRequestMemory: '500Mi',
+            resourceLimitMemory: '1000Mi',
+        ),
     ]
 ) {
     node("cyclone") {
@@ -88,7 +113,26 @@ podTemplate(
         }
 
         stage("Run e2e test") {
-            sh("echo e2e")
+            container("golang") {
+                sh """
+                    set -e
+                    ln -s $(pwd) /go/src/github.com/caicloud/cyclone
+                    echo "buiding server"
+                    go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
+
+                    echo "buiding worker"
+                    go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
+                    docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+
+                    echo "start server"
+                    ./cyclone-server &
+
+                    echo "testing ..."
+                    go test -v ./tests/service 
+                    go test -v ./tests/version 
+                    go test -v ./tests/yaml
+                """
+            }
         }
     }
 }
