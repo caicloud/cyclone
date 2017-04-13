@@ -118,8 +118,8 @@ podTemplate(
 
                     # get host ip
                     HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
-                    export CYCLONE_SERVER=${HOST_IP}:7099
-                    export LOG_SERVER=${HOST_IP}:8000
+                    export CYCLONE_SERVER=http://${HOST_IP}:7099
+                    export LOG_SERVER=ws://${HOST_IP}:8000/ws
                     
                     mkdir -p /go/src/github.com/caicloud
                     ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
