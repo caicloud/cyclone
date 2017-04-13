@@ -114,7 +114,7 @@ podTemplate(
 
         stage("Run e2e test") {
             container("golang") {
-                sh """
+                sh('''
                     set -e
                     ln -s $(pwd) /go/src/github.com/caicloud/cyclone
                     echo "buiding server"
@@ -131,7 +131,7 @@ podTemplate(
                     go test -v ./tests/service 
                     go test -v ./tests/version 
                     go test -v ./tests/yaml
-                """
+                ''')
             }
         }
     }
