@@ -120,6 +120,7 @@ podTemplate(
                     set -e
                     mkdir -p /go/src/github.com/caicloud
                     ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
+                    cd /go/src/github.com/caicloud/cyclone
                     echo "buiding server"
                     go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
 
@@ -128,7 +129,7 @@ podTemplate(
                     docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
 
                     echo "start server"
-                    ./cyclone-server &
+                    ./cyclone-server --cloud-auto-discovery=false &
 
                     echo "testing ..."
                     go test -v ./tests/service 

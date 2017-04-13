@@ -119,7 +119,7 @@ func (s *APIServer) InitStore() error {
 // FIXME
 func (s *APIServer) initEventManager() error {
 	etcd.Init([]string{s.Config.ETCDHost})
-	event.Init(s.WorkerOptions)
+	event.Init(s.WorkerOptions, s.Config.CloudAutoDiscovery)
 
 	return nil
 }
