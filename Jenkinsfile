@@ -58,8 +58,6 @@ podTemplate(
                 containerEnvVar(key: "MONGODB_HOST", value: "127.0.0.1:27017"),
                 containerEnvVar(key: "KAFKA_HOST", value: "127.0.0.1:9092"),
                 containerEnvVar(key: "ETCD_HOST", value: "http://127.0.0.1:2379"),
-                containerEnvVar(key: "CYCLONE_SERVER", value: "http://127.0.0.1:7099"),
-                containerEnvVar(key: "LOG_SERVER", value: "http://127.0.0.1:8000"),
                 containerEnvVar(key: "REGISTRY_LOCATION", value: "cargo.caicloud.io"),
                 containerEnvVar(key: "REGISTRY_USERNAME", value: "caicloudadmin"),
                 containerEnvVar(key: "REGISTRY_PASSWORD", value: "caicloudadmin"),
@@ -113,11 +111,16 @@ podTemplate(
         stage("Checkout") {
             checkout scm
         }
-
         stage("Run e2e test") {
             container("golang") {
                 sh('''
                     set -e
+
+                    # get host ip
+                    HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
+                    export CYCLONE_SERVER=${HOST_IP}:7099
+                    export LOG_SERVER=${HOST_IP}:8000
+                    
                     mkdir -p /go/src/github.com/caicloud
                     ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
                     cd /go/src/github.com/caicloud/cyclone
