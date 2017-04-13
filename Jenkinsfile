@@ -28,7 +28,7 @@ podTemplate(
             envVars: [
                 containerEnvVar(key: "KAFKA_ADVERTISED_HOST_NAME", value: "0.0.0.0"),
                 containerEnvVar(key: "KAFKA_ADVERTISED_PORT", value: "9092"),
-            ]
+            ],
             resourceRequestCpu: '300m',
             resourceLimitCpu: '500m',
             resourceRequestMemory: '300Mi',
