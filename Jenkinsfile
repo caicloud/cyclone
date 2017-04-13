@@ -67,10 +67,10 @@ podTemplate(
                 containerEnvVar(key: "DOCKER_HOST", value: "tcp://127.0.0.1:2375"),
                 containerEnvVar(key: "DOCKER_API_VERSION", value: "1.23"),
             ],
-            resourceRequestCpu: '800m',
-            resourceLimitCpu: '1200m',
+            resourceRequestCpu: '1000m',
+            resourceLimitCpu: '2000m',
             resourceRequestMemory: '1000Mi',
-            resourceLimitMemory: '1500Mi',
+            resourceLimitMemory: '2000Mi',
         ),
         containerTemplate(
             name: 'mongo',
