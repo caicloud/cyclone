@@ -25,10 +25,6 @@ podTemplate(
             ttyEnabled: true,
             command: "",
             args: "",
-            envVars: [
-                containerEnvVar(key: "KAFKA_ADVERTISED_HOST_NAME", value: "0.0.0.0"),
-                containerEnvVar(key: "KAFKA_ADVERTISED_PORT", value: "9092"),
-            ],
             resourceRequestCpu: '300m',
             resourceLimitCpu: '500m',
             resourceRequestMemory: '300Mi',
@@ -40,6 +36,11 @@ podTemplate(
             ttyEnabled: true,
             command: "",
             args: "",
+            envVars: [
+                containerEnvVar(key: "KAFKA_ADVERTISED_HOST_NAME", value: "0.0.0.0"),
+                containerEnvVar(key: "KAFKA_ADVERTISED_PORT", value: "9092"),
+                containerEnvVar(key: "KAFKA_ZOOKEEPER_CONNECT", value: "localhost:2181"),
+            ],
             resourceRequestCpu: '300m',
             resourceLimitCpu: '500m',
             resourceRequestMemory: '300Mi',
