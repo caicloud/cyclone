@@ -116,7 +116,7 @@ podTemplate(
             container("golang") {
                 sh('''
                     set -e
-                    mkdir /go/src/github.com/caicloud
+                    mkdir -p /go/src/github.com/caicloud
                     ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
                     echo "buiding server"
                     go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
