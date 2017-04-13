@@ -65,6 +65,7 @@ podTemplate(
                 containerEnvVar(key: "REGISTRY_PASSWORD", value: "caicloudadmin"),
                 containerEnvVar(key: "WORKER_IMAGE", value: "cargo.caicloud.io/caicloud/cyclone-worker:latest"),
                 containerEnvVar(key: "DOCKER_HOST", value: "tcp://127.0.0.1:2375"),
+                containerEnvVar(key: "DOCKER_API_VERSION", value: "1.23"),
             ],
             resourceRequestCpu: '800m',
             resourceLimitCpu: '1200m',
