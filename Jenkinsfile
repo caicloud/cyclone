@@ -6,7 +6,7 @@ podTemplate(
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
     label: 'cyclone',
     annotations: [
-        podAnnotation(key:'pod.beta.kubernetes.io/init-containers', value: '
+        podAnnotation(key: 'pod.beta.kubernetes.io/init-containers', value: '''
             [
                 {
                     "name": "zk",
@@ -19,7 +19,7 @@ podTemplate(
                     }
                 }
             ]
-        ')
+        ''')
     ],
     containers: [
         // Kubernetes Pod 的配置, 这个 Pod 包含两个容器
