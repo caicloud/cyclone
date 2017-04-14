@@ -62,7 +62,7 @@ var _ = Describe("Version", func() {
 			log.Fatal("clean up err", log.Fields{"err": err})
 		}
 
-		err = AddCloud()
+		err = UpsertCloud()
 		if err != nil {
 			log.Fatal("Unable to register cloud", log.Fields{"err": err})
 			return

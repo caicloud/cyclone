@@ -161,8 +161,8 @@ func WaitComponents() {
 	log.Info("Cyclone started")
 }
 
-// AddCloud register resources to mongo.
-func AddCloud() error {
+// UpsertCloud register resources to mongo.
+func UpsertCloud() error {
 
 	cloudKind := osutil.GetStringEnv("CYCLONE_CLOUD_KIND", "docker")
 
@@ -189,14 +189,19 @@ func AddCloud() error {
 		return err
 	}
 
-	url := fmt.Sprintf("%s/clouds", BaseURL)
+	url := fmt.Sprintf("%s/clouds/%s", BaseURL, data.Name)
 
-	resp, err := http.Post(url, "application/json;charset=utf-8", bytes.NewBuffer(buf))
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(buf))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json;charset=utf-8")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != 201 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%v", resp)
 	}
 
