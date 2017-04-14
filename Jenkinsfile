@@ -14,7 +14,7 @@ podTemplate(
                     "resources": {
                         "limits" : {
                             "cpu": "500m",
-                            "memory": "500Mi",
+                            "memory": "500Mi"
                         }
                     }
                 }
