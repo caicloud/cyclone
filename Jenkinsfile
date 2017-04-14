@@ -125,10 +125,10 @@ podTemplate(
                     ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
                     cd /go/src/github.com/caicloud/cyclone
                     echo "buiding server"
-                    go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
+                    go build -i -v -o cyclone-server github.com/caicloud/cyclone/cmd/server
 
                     echo "buiding worker"
-                    go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
+                    go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
                     docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
 
                     echo "start server"
