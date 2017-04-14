@@ -115,6 +115,9 @@ function run_e2e {
     CYCLONE_PID=$!
 
     echo "testing ..."
+    # go test compile
+    go test -i ./tests/...
+    
     go test -v ./tests/service 
     go test -v ./tests/version 
     go test -v ./tests/yaml

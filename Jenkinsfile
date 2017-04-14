@@ -135,6 +135,9 @@ podTemplate(
                     ./cyclone-server --cloud-auto-discovery=false &
 
                     echo "testing ..."
+                    # go test compile
+                    go test -i ./tests/...
+                    # go test
                     go test -v ./tests/service 
                     go test -v ./tests/version 
                     go test -v ./tests/yaml
