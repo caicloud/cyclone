@@ -5,22 +5,6 @@ podTemplate(
     name: 'cyclone',
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
     label: 'cyclone',
-    annotations: [
-        podAnnotation(key: 'pod.beta.kubernetes.io/init-containers', value: '''
-            [
-                {
-                    "name": "zk",
-                    "image": "cargo.caicloud.io/caicloud/zookeeper:3.4.6",
-                    "resources": {
-                        "limits" : {
-                            "cpu": "500m",
-                            "memory": "500Mi"
-                        }
-                    }
-                }
-            ]
-        ''')
-    ],
     containers: [
         // Kubernetes Pod 的配置, 这个 Pod 包含两个容器
         containerTemplate(
@@ -35,6 +19,17 @@ podTemplate(
             resourceRequestMemory: '300Mi',
             resourceLimitMemory: '500Mi',
         ),
+         containerTemplate(
+            name: 'zk',
+            image: 'cargo.caicloud.io/caicloud/zookeeper:3.4.6',
+            ttyEnabled: true,
+            command: "",
+            args: "",
+            resourceRequestCpu: '300m',
+            resourceLimitCpu: '500m',
+            resourceRequestMemory: '300Mi',
+            resourceLimitMemory: '500Mi',
+         ),
          containerTemplate(
             name: 'kafka',
             image: 'cargo.caicloud.io/caicloud/kafka:0.10.1.0',
