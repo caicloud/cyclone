@@ -52,8 +52,21 @@ var _ = Describe("Version", func() {
 
 	// Set up the serviceCM, versionCM and dockerManager and create a service.
 	BeforeSuite(func() {
+		var err error
+
 		// Wait cyclone to start.
 		WaitComponents()
+
+		err = Cleanup()
+		if err != nil {
+			log.Fatal("clean up err", log.Fields{"err": err})
+		}
+
+		err = AddCloud()
+		if err != nil {
+			log.Fatal("Unable to register cloud", log.Fields{"err": err})
+			return
+		}
 
 		// Get docker host and cert path.
 		endpoint := osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost)
@@ -70,7 +83,6 @@ var _ = Describe("Version", func() {
 		}
 
 		// Create docker manager.
-		var err error
 		dockerManager, err = docker.NewManager(
 			endpoint, certPath, registry)
 		if err != nil {

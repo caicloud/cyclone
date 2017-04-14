@@ -5,6 +5,7 @@ podTemplate(
     name: 'cyclone',
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
     label: 'cyclone',
+    idleMinutes: 60,
     containers: [
         // Kubernetes Pod 的配置, 这个 Pod 包含两个容器
         containerTemplate(

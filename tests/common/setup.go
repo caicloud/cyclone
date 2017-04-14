@@ -25,6 +25,9 @@ import (
 	"net/http"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
+
+	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	log "github.com/zoumo/logdog"
@@ -208,4 +211,23 @@ func IsAvailable() bool {
 		return true
 	}
 	return false
+}
+
+// Cleanup database
+func Cleanup() error {
+	// init mongodb
+	var err error
+	mongoHost := osutil.GetStringEnv(server.MongoDBHost, "127.0.0.1:27017")
+	dbSession, err := mgo.Dial(mongoHost)
+	if err != nil {
+		log.Errorf("Unable connect to mongodb addr %s", mongoHost)
+		return err
+	}
+
+	log.Debugf("connect to mongodb addr: %s", mongoHost)
+	dbSession.SetMode(mgo.Strong, true)
+
+	err = dbSession.DB("cyclone").DropDatabase()
+
+	return err
 }
