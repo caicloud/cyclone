@@ -116,6 +116,10 @@ podTemplate(
             container('golang') {
                 sh('''
                     set -e
+                    cyclone_pid=$(ps -ef | grep cyclone-server | grep -v "grep" | awk '{print $1}')
+                    if [[ -n "${cyclone_pid}" ]]; then
+                        kill -9 ${cyclone_pid}
+                    fi
 
                     # get host ip
                     HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
