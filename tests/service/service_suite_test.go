@@ -18,14 +18,12 @@ package service
 
 import (
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 
 	"testing"
 )
 
 func TestService(t *testing.T) {
-	config.DefaultReporterConfig.NoColor = true
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Service Suite")
 }

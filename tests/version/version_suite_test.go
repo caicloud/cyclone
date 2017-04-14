@@ -18,14 +18,12 @@ package version
 
 import (
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 
 	"testing"
 )
 
 func TestVersion(t *testing.T) {
-	config.DefaultReporterConfig.NoColor = true
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Version Suite")
 }

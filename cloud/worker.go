@@ -67,7 +67,7 @@ const (
 
 const (
 	// WorkerTimeout ...
-	WorkerTimeout = 7200 * time.Second
+	WorkerTimeout = 2 * time.Hour
 )
 
 // -----------------------------------------------------------------------

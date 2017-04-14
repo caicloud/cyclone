@@ -27,6 +27,11 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+var (
+	// ForceColor forces formatter use color output
+	ForceColor = false
+)
+
 // Formatter is an interface which can convert a LogRecord to string
 type Formatter interface {
 	Format(*LogRecord) (string, error)
@@ -191,7 +196,7 @@ func (tf *TextFormatter) parse() {
 
 func (tf *TextFormatter) getColor(record *LogRecord) (string, string) {
 	color, endColor := "", ""
-	if isColorTerminal && tf.EnableColors {
+	if ForceColor || (isColorTerminal && tf.EnableColors) {
 		color, endColor = colorHash(record.Level)
 	}
 	return color, endColor

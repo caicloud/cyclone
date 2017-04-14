@@ -32,7 +32,7 @@ const (
 	KafkaHost = "KAFKA_HOST"
 	// ETCDHost ...
 	ETCDHost = "ETCD_HOST"
-	// CloudAutoDiscovery
+	// CloudAutoDiscovery ...
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
 )
 
@@ -47,6 +47,7 @@ type APIServerOptions struct {
 	ShowAPIDoc          bool
 	Debug               bool
 	CloudAutoDiscovery  bool
+	LogForceColor       bool
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -99,6 +100,11 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "auto discovery cloud by k8s serviceAccount, default to true",
 			EnvVar:      CloudAutoDiscovery,
 			Destination: &opts.CloudAutoDiscovery,
+		},
+		cli.BoolFlag{
+			Name:        "log-force-color",
+			Usage:       "force log use color output",
+			Destination: &opts.LogForceColor,
 		},
 	}
 
