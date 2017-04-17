@@ -120,9 +120,9 @@ podTemplate(
                 stage("Complie") {
                     sh('''
                         set -e 
-                        mkdir -p ${WORKDIR}
-                        ln -sf $(pwd) 
+                        mkdir -p ${WORKDIR} && ln -sf $(pwd) ${WORKDIR}
                         cd ${WORKDIR}
+
                         echo "buiding server"
                         go build -i -v -o cyclone-server github.com/caicloud/cyclone/cmd/server
 
@@ -137,6 +137,7 @@ podTemplate(
                 stage('Run e2e test') {
                     sh('''
                         set -e
+                        cd ${WORKDIR}
                         # get host ip
                         HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
                         export CYCLONE_SERVER=http://${HOST_IP}:7099
