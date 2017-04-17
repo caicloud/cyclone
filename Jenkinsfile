@@ -41,6 +41,7 @@ podTemplate(
                 containerEnvVar(key: 'KAFKA_ADVERTISED_HOST_NAME', value: '0.0.0.0'),
                 containerEnvVar(key: 'KAFKA_ADVERTISED_PORT', value: '9092'),
                 containerEnvVar(key: 'KAFKA_ZOOKEEPER_CONNECT', value: 'localhost:2181'),
+                containerEnvVar(key: 'KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS', value: '60000'),
             ],
             resourceRequestCpu: '300m',
             resourceLimitCpu: '500m',
