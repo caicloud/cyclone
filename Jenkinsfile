@@ -120,7 +120,7 @@ podTemplate(
                 stage("Complie") {
                     sh('''
                         set -e 
-                        mkdir -p ${WORKDIR} && ln -sf $(pwd) ${WORKDIR}
+                        mkdir -p $(dirname ${WORKDIR}) && ln -sf $(pwd) ${WORKDIR}
                         cd ${WORKDIR}
 
                         echo "buiding server"
