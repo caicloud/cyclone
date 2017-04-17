@@ -128,7 +128,7 @@ func (cc *Controller) Provision(id string, opts WorkerOptions) (Worker, error) {
 			continue
 		}
 
-		logdog.Debug("Provision: success", logdog.Fields{"worker": worker.GetWorkerInfo()})
+		logdog.Debug("Provision: success", logdog.Fields{"cloud": cloud.Name(), "cloudKind": cloud.Kind()})
 
 		return worker, nil
 	}

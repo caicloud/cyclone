@@ -130,10 +130,8 @@ podTemplate(
 
                         echo "buiding worker"
                         go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
-                        # docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+                        docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
                     ''')
-
-                    docker.build(worker_image, "-f Dockerfile.worker .")
                 }
 
                 stage('Run e2e test') {
