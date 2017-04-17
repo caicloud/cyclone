@@ -64,7 +64,7 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
                 containerEnvVar(key: 'WORKER_IMAGE', value: 'cargo.caicloud.io/caicloud/cyclone-worker:latest'),
-                containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
+                // containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23'),
             ],
             resourceRequestCpu: '1000m',
@@ -107,6 +107,9 @@ podTemplate(
             resourceRequestMemory: '500Mi',
             resourceLimitMemory: '1000Mi',
         ),
+    ],
+    volumes: [
+        emptyDirVolume(mountPath: '/var/run', memory: true),
     ]
 ) {
     node('cyclone') {
