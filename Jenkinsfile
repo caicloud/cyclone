@@ -100,7 +100,7 @@ podTemplate(
         containerTemplate(
             name: 'dind', 
             // Jenkins Slave 作业执行环境， 此处为一个 Docker in Docker 环境，用于跑作业
-            image: 'cargo.caicloud.io/caicloud/docker:1.11-dind', 
+            image: 'cargo.caicloud.io/caicloud/docker:17.03-dind', 
             ttyEnabled: true, 
             command: '', 
             args: '',
