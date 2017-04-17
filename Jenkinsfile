@@ -66,6 +66,7 @@ podTemplate(
                 containerEnvVar(key: 'WORKER_IMAGE', value: 'cargo.caicloud.io/caicloud/cyclone-worker:latest'),
                 containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23'),
+                containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
             ],
             resourceRequestCpu: '1000m',
             resourceLimitCpu: '2000m',
@@ -114,36 +115,44 @@ podTemplate(
             checkout scm
         }
         container('golang') {
-            stage('Run e2e test') {
-                ansiColor('xterm') {
-                    sh('''
-                        set -e
-                        cyclone_pid=$(ps -ef | grep cyclone-server | grep -v "grep" | awk '{print $1}')
-                        if [[ -n "${cyclone_pid}" ]]; then
-                            kill -9 ${cyclone_pid}
-                        fi
+            ansiColor('xterm') {
 
-                        # get host ip
-                        HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
-                        export CYCLONE_SERVER=http://${HOST_IP}:7099
-                        export LOG_SERVER=ws://${HOST_IP}:8000/ws
-                        
-                        mkdir -p /go/src/github.com/caicloud
-                        ln -sf $(pwd) /go/src/github.com/caicloud/cyclone
-                        cd /go/src/github.com/caicloud/cyclone
+                stage("Complie") {
+                    sh('''
+                        set -e 
+                        mkdir -p ${WORKDIR}
+                        ln -sf $(pwd) 
+                        cd ${WORKDIR}
                         echo "buiding server"
                         go build -i -v -o cyclone-server github.com/caicloud/cyclone/cmd/server
 
                         echo "buiding worker"
                         go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
-                        docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+                        # docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+                    ''')
 
+                    docker.build(${env.WORKER_IMAGE}, "-f Dockerfile.worker .")
+                }
+
+                stage('Run e2e test') {
+                    sh('''
+                        set -e
+                        # get host ip
+                        HOST_IP=$(ifconfig eth0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
+                        export CYCLONE_SERVER=http://${HOST_IP}:7099
+                        export LOG_SERVER=ws://${HOST_IP}:8000/ws
+                        
+                        cyclone_pid=$(ps -ef | grep cyclone-server | grep -v "grep" | awk '{print $1}')
+                        if [[ -n "${cyclone_pid}" ]]; then
+                            kill -9 ${cyclone_pid}
+                        fi
                         echo "start server"
                         ./cyclone-server --cloud-auto-discovery=false --log-force-color=true &
 
                         echo "testing ..."
                         # go test compile
                         go test -i ./tests/...
+                        
                         # go test
                         go test -v ./tests/service 
                         go test -v ./tests/version 
@@ -152,13 +161,13 @@ podTemplate(
                 }
             }
 
-            stage("Build image and push") {
-                docker.build("caicloud/cyclone-server:$env.BUILD_NUMBER", "-f Dockerfile.server .")
-                docker.build("caicloud/cyclone-worker:$env.BUILD_NUMBER", "-f Dockerfile.worker .")
+            stage("Build image and publish") {
+                docker.build("caicloud/cyclone-server:${env.BUILD_NUMBER}", "-f Dockerfile.server .")
+                docker.build("caicloud/cyclone-worker:${env.BUILD_NUMBER}", "-f Dockerfile.worker .")
 
                 docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
-                    docker.image("caicloud/cyclone-server:$env.BUILD_NUMBER").push()
-                    docker.image("caicloud/cyclone-worker:$env.BUILD_NUMBER").push()
+                    docker.image("caicloud/cyclone-server:${env.BUILD_NUMBER}").push()
+                    docker.image("caicloud/cyclone-worker:${env.BUILD_NUMBER}").push()
                 }
             }
         }
