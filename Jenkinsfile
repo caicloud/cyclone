@@ -150,6 +150,16 @@ podTemplate(
                     ''')
                 }
             }
+
+            stage("Build image and push") {
+                docker.build("caicloud/cyclone-server:$env.BUILD_NUMBER", "-f Dockerfile.server .")
+                docker.build("caicloud/cyclone-worker:$env.BUILD_NUMBER", "-f Dockerfile.worker .")
+
+                docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
+                    docker.image("caicloud/cyclone-server:$env.BUILD_NUMBER").push()
+                    docker.image("caicloud/cyclone-worker:$env.BUILD_NUMBER").push()
+                }
+            }
         }
     }
 }
