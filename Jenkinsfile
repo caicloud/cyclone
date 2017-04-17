@@ -131,7 +131,7 @@ podTemplate(
                         # docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
                     ''')
 
-                    docker.build(${env.WORKER_IMAGE}, "-f Dockerfile.worker .")
+                    docker.build("${env.WORKER_IMAGE}", "-f Dockerfile.worker .")
                 }
 
                 stage('Run e2e test') {
