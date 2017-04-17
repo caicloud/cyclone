@@ -1,3 +1,5 @@
+def worker_image = 'cargo.caicloud.io/caicloud/cyclone-worker:latest'
+
 podTemplate(
     // 之前配置的 Kubernetes Cloud Provider
     cloud: 'dev-cluster',
@@ -63,7 +65,7 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_LOCATION', value: 'cargo.caicloud.io'),
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
-                containerEnvVar(key: 'WORKER_IMAGE', value: 'cargo.caicloud.io/caicloud/cyclone-worker:latest'),
+                containerEnvVar(key: 'WORKER_IMAGE', value: worker_image),
                 containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23'),
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
@@ -131,7 +133,7 @@ podTemplate(
                         # docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
                     ''')
 
-                    docker.build("${env.WORKER_IMAGE}", "-f Dockerfile.worker .")
+                    docker.build(worker_image, "-f Dockerfile.worker .")
                 }
 
                 stage('Run e2e test') {
