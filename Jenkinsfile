@@ -178,7 +178,7 @@ podTemplate(
 
         stage("deploy") {
             sh("""
-                kubectl --namespace cyclone get deploy circle-server-v0.0.1 | sed 's/caicloud\\/cyclone-server:.*\$/${server_tag}/; s/caicloud\\/cyclone-worker:.*\$/${worker_tag}/' | kubectl --namespace cyclone repalce -f -
+                kubectl --namespace cyclone get deploy circle-server-v0.0.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${env.BUILD_NUMBER}/; s/cyclone-worker:.*\$/cyclone-worker:${env.BUILD_NUMBER}/' | kubectl --namespace cyclone replace -f -
             """)
         }
     }
