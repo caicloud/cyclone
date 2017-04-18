@@ -5,7 +5,7 @@ def registry = "cargo.caicloudprivatetest.com"
 podTemplate(
     // 之前配置的 Kubernetes Cloud Provider
     cloud: 'dev-cluster',
-    namespace: 'kube-system'
+    namespace: 'kube-system',
     // 这个 pipeline 执行环境名称
     name: 'cyclone',
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
