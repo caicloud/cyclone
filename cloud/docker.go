@@ -37,13 +37,6 @@ import (
 	"github.com/zoumo/logdog"
 )
 
-const (
-	// APIVersion is the api version used by DockerCloud to
-	// communicate with docker daemon
-	APIVersion = "1.23"
-	// APIVersion = "1.23"
-)
-
 // DockerCloud is a docker cloud
 type DockerCloud struct {
 	name           string
@@ -104,7 +97,12 @@ func NewDockerCloud(opts Options) (Cloud, error) {
 		}
 	}
 
-	client, err := apiclient.NewClient(cloud.host, APIVersion, httpClient, nil)
+	version := os.Getenv("DOCKER_API_VERSION")
+	if version == "" {
+		version = apiclient.DefaultVersion
+	}
+
+	client, err := apiclient.NewClient(cloud.host, version, httpClient, nil)
 	if err != nil {
 		return nil, err
 	}

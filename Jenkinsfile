@@ -7,7 +7,7 @@ podTemplate(
     name: 'cyclone',
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
     label: 'cyclone',
-    idleMinutes: 60,
+    idleMinutes: 1440,
     containers: [
         // Kubernetes Pod 的配置, 这个 Pod 包含两个容器
         containerTemplate(
@@ -67,7 +67,7 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
                 containerEnvVar(key: 'WORKER_IMAGE', value: worker_image),
                 containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
-                containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23'),
+                containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.26'),
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
             ],
             resourceRequestCpu: '1000m',
@@ -163,10 +163,12 @@ podTemplate(
             }
 
             stage("Build image and publish") {
-                sh '''
-                    docker build -t caicloud/cyclone-server:${env.BUILD_NUMBER} -f Dockerfile.server .
-                    docker build -t caicloud/cyclone-worker:${env.BUILD_NUMBER} -f Dockerfile.worker .
-                '''
+                withEnv(["BUILD_NUMBER=${env.BUILD_NUMBER}"]) {
+                    sh '''
+                        docker build -t caicloud/cyclone-server:${BUILD_NUMBER} -f Dockerfile.server .
+                        docker build -t caicloud/cyclone-worker:${BUILD_NUMBER} -f Dockerfile.worker .
+                    '''
+                }
 
                 docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
                     docker.image("caicloud/cyclone-server:${env.BUILD_NUMBER}").push()
