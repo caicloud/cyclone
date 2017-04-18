@@ -1,8 +1,11 @@
-def worker_image = 'cargo.caicloud.io/caicloud/cyclone-worker:latest'
+def server_tag = "caicloud/cyclone-server:${env.BUILD_NUMBER}"
+def worker_tag = "caicloud/cyclone-worker:${env.BUILD_NUMBER}"
+def registry = "cargo.caicloudprivatetest.com"
 
 podTemplate(
     // 之前配置的 Kubernetes Cloud Provider
     cloud: 'dev-cluster',
+    namespace: 'kube-system'
     // 这个 pipeline 执行环境名称
     name: 'cyclone',
     // 运行在带有 always-golang 标签的 Jenkins Slave 上 
@@ -17,10 +20,10 @@ podTemplate(
             image: 'cargo.caicloud.io/circle/jnlp:2.62',
             command: '',
             args: '${computer.jnlpmac} ${computer.name}',
-            resourceRequestCpu: '300m',
-            resourceLimitCpu: '500m',
-            resourceRequestMemory: '300Mi',
-            resourceLimitMemory: '500Mi',
+            // resourceRequestCpu: '300m',
+            // resourceLimitCpu: '500m',
+            // resourceRequestMemory: '300Mi',
+            // resourceLimitMemory: '500Mi',
         ),
          containerTemplate(
             name: 'zk',
@@ -28,10 +31,10 @@ podTemplate(
             ttyEnabled: true,
             command: "",
             args: "",
-            resourceRequestCpu: '300m',
-            resourceLimitCpu: '500m',
-            resourceRequestMemory: '300Mi',
-            resourceLimitMemory: '500Mi',
+            // resourceRequestCpu: '300m',
+            // resourceLimitCpu: '500m',
+            // resourceRequestMemory: '300Mi',
+            // resourceLimitMemory: '500Mi',
          ),
          containerTemplate(
             name: 'kafka',
@@ -45,10 +48,10 @@ podTemplate(
                 containerEnvVar(key: 'KAFKA_ZOOKEEPER_CONNECT', value: 'localhost:2181'),
                 containerEnvVar(key: 'KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS', value: '60000'),
             ],
-            resourceRequestCpu: '300m',
-            resourceLimitCpu: '500m',
-            resourceRequestMemory: '300Mi',
-            resourceLimitMemory: '500Mi',
+            // resourceRequestCpu: '300m',
+            // resourceLimitCpu: '500m',
+            // resourceRequestMemory: '300Mi',
+            // resourceLimitMemory: '500Mi',
         ),     
         containerTemplate(
             name: 'golang',
@@ -65,15 +68,15 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_LOCATION', value: 'cargo.caicloud.io'),
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
-                containerEnvVar(key: 'WORKER_IMAGE', value: worker_image),
-                containerEnvVar(key: 'DOCKER_HOST', value: 'tcp://127.0.0.1:2375'),
+                containerEnvVar(key: 'WORKER_IMAGE', value: 'cargo.caicloud.io/caicloud/cyclone-worker:latest'),
+                containerEnvVar(key: 'DOCKER_HOST', value: 'unix:///home/jenkins/docker.sock'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.26'),
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
             ],
-            resourceRequestCpu: '1000m',
-            resourceLimitCpu: '2000m',
-            resourceRequestMemory: '1000Mi',
-            resourceLimitMemory: '2000Mi',
+            // resourceRequestCpu: '1000m',
+            // resourceLimitCpu: '2000m',
+            // resourceRequestMemory: '1000Mi',
+            // resourceLimitMemory: '2000Mi',
         ),
         containerTemplate(
             name: 'mongo',
@@ -81,10 +84,10 @@ podTemplate(
             ttyEnabled: true,
             command: 'mongod',
             args: '--smallfiles',
-            resourceRequestCpu: '300m',
-            resourceLimitCpu: '500m',
-            resourceRequestMemory: '300Mi',
-            resourceLimitMemory: '500Mi',
+            // resourceRequestCpu: '300m',
+            // resourceLimitCpu: '500m',
+            // resourceRequestMemory: '300Mi',
+            // resourceLimitMemory: '500Mi',
         ),
         containerTemplate(
             name: 'etcd',
@@ -92,10 +95,10 @@ podTemplate(
             ttyEnabled: true,
             command: 'etcd',
             args: '-name=etcd0 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -initial-advertise-peer-urls http://127.0.0.1:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster-1 -initial-cluster etcd0=http://127.0.0.1:2380 -initial-cluster-state new',
-            resourceRequestCpu: '300m',
-            resourceLimitCpu: '500m',
-            resourceRequestMemory: '300Mi',
-            resourceLimitMemory: '500Mi',
+            // resourceRequestCpu: '300m',
+            // resourceLimitCpu: '500m',
+            // resourceRequestMemory: '300Mi',
+            // resourceLimitMemory: '500Mi',
         ),
         containerTemplate(
             name: 'dind', 
@@ -103,12 +106,12 @@ podTemplate(
             image: 'cargo.caicloud.io/caicloud/docker:17.03-dind', 
             ttyEnabled: true, 
             command: '', 
-            args: '',
+            args: '--host=unix:///home/jenkins/docker.sock',
             privileged: true,
-            resourceRequestCpu: '500m',
-            resourceLimitCpu: '1000m',
-            resourceRequestMemory: '500Mi',
-            resourceLimitMemory: '1000Mi',
+            // resourceRequestCpu: '500m',
+            // resourceLimitCpu: '1000m',
+            // resourceRequestMemory: '500Mi',
+            // resourceLimitMemory: '1000Mi',
         ),
     ]
 ) {
@@ -163,18 +166,18 @@ podTemplate(
             }
 
             stage("Build image and publish") {
-                withEnv(["BUILD_NUMBER=${env.BUILD_NUMBER}"]) {
-                    sh '''
-                        docker build -t caicloud/cyclone-server:${BUILD_NUMBER} -f Dockerfile.server .
-                        docker build -t caicloud/cyclone-worker:${BUILD_NUMBER} -f Dockerfile.worker .
-                    '''
-                }
+                sh "docker build -t ${server_tag} -f Dockerfile.server ."
+                sh "docker build -t ${worker_tag} -f Dockerfile.worker ."
 
-                docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
-                    docker.image("caicloud/cyclone-server:${env.BUILD_NUMBER}").push()
-                    docker.image("caicloud/cyclone-worker:${env.BUILD_NUMBER}").push()
+                docker.withRegistry("https://${registry}", "cargo-private-admin") {
+                    docker.image(server_tag).push()
+                    docker.image(worker_tag).push()
                 }
             }
+        }
+
+        stage("deploy") {
+            sh "kubectl --namespace cyclone get deploy circle-server-v0.0.1 | sed 's/caicloud\/cyclone-server:.*$/${server_tag}/; s/caicloud\/cyclone-worker:.*/${worker_tag}/' | kubectl --namespace cyclone repalce -f -"
         }
     }
 }
