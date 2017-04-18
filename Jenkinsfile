@@ -177,7 +177,7 @@ podTemplate(
         }
 
         stage("deploy") {
-            sh "kubectl --namespace cyclone get deploy circle-server-v0.0.1 | sed 's/caicloud\/cyclone-server:.*$/${server_tag}/; s/caicloud\/cyclone-worker:.*/${worker_tag}/' | kubectl --namespace cyclone repalce -f -"
+            sh "kubectl --namespace cyclone get deploy circle-server-v0.0.1 | sed 's/caicloud\\/cyclone-server:.*$/${server_tag}/; s/caicloud\\/cyclone-worker:.*$/${worker_tag}/' | kubectl --namespace cyclone repalce -f -"
         }
     }
 }
