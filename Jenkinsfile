@@ -163,8 +163,10 @@ podTemplate(
             }
 
             stage("Build image and publish") {
-                docker.build("caicloud/cyclone-server:${env.BUILD_NUMBER}", "-f Dockerfile.server .")
-                docker.build("caicloud/cyclone-worker:${env.BUILD_NUMBER}", "-f Dockerfile.worker .")
+                sh '''
+                    docker build -t caicloud/cyclone-server:${env.BUILD_NUMBER} -f Dockerfile.server .
+                    docker build -t caicloud/cyclone-worker:${env.BUILD_NUMBER} -f Dockerfile.worker .
+                '''
 
                 docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
                     docker.image("caicloud/cyclone-server:${env.BUILD_NUMBER}").push()
