@@ -101,11 +101,11 @@ function run_e2e {
     docker run -d --name mongo -p 27017:27017 mongo:3.0.5 mongod --smallfiles
 
     echo "buiding server"
-    go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
+    go build -i -v -o cyclone-server github.com/caicloud/cyclone/cmd/server
 
     echo "buiding worker"
     # worker run in linux, so need cross compiling
-    GOOS=linux GOARCH=amd64 go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
+    GOOS=linux GOARCH=amd64 go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
     docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
 
     docker push ${WORKER_IMAGE}
@@ -115,6 +115,9 @@ function run_e2e {
     CYCLONE_PID=$!
 
     echo "testing ..."
+    # go test compile
+    go test -i ./tests/...
+    
     go test -v ./tests/service 
     go test -v ./tests/version 
     go test -v ./tests/yaml

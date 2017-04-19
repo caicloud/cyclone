@@ -129,3 +129,21 @@ func deleteCloud(request *restful.Request, response *restful.Response) {
 
 	response.WriteHeader(http.StatusNoContent)
 }
+
+func pingCloud(request *restful.Request, response *restful.Response) {
+	cloudName := request.PathParameter("cloudName")
+	cloud, ok := event.CloudController.GetCloud(cloudName)
+	if !ok {
+		response.AddHeader("Content-Type", "text/plain")
+		response.WriteErrorString(http.StatusNotFound, "no such cloud")
+		return
+	}
+	resp := make(map[string]string)
+	err := cloud.Ping()
+	if err != nil {
+		resp["err"] = err.Error()
+	} else {
+		resp["success"] = "ok"
+	}
+	response.WriteHeaderAndJson(http.StatusOK, resp, restful.MIME_JSON)
+}

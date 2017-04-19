@@ -48,17 +48,9 @@ type APIServer struct {
 // PrepareRun prepare for apiserver running
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 
-	// init debug log
-	if s.Config.Debug {
-		logdog.ApplyOptions(logdog.DebugLevel)
-		log.SetLogLevel(log.DebugLevel)
-		logdog.Debug("Debug mode: True")
-		cloud.Debug = true
-	} else {
-		logdog.ApplyOptions(logdog.InfoLevel)
-		logdog.Debug("Debug mode: False")
-		cloud.Debug = false
-	}
+	s.InitLog()
+	cloud.Debug = s.Config.Debug
+	logdog.Debugf("Debug mode: %t", s.Config.Debug)
 
 	// init api doc
 	if s.Config.ShowAPIDoc {
@@ -93,6 +85,21 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	return &PreparedAPIServer{s}, nil
 }
 
+// InitLog initializes log
+func (s *APIServer) InitLog() {
+	if s.Config.LogForceColor {
+		logdog.ForceColor = s.Config.LogForceColor
+	}
+
+	// init debug log
+	if s.Config.Debug {
+		logdog.ApplyOptions(logdog.DebugLevel)
+		log.SetLogLevel(log.DebugLevel)
+	} else {
+		logdog.ApplyOptions(logdog.InfoLevel)
+	}
+}
+
 // InitStore init database connection. fix me: change function name
 func (s *APIServer) InitStore() error {
 	// init mongodb
@@ -119,7 +126,7 @@ func (s *APIServer) InitStore() error {
 // FIXME
 func (s *APIServer) initEventManager() error {
 	etcd.Init([]string{s.Config.ETCDHost})
-	event.Init(s.WorkerOptions)
+	event.Init(s.WorkerOptions, s.Config.CloudAutoDiscovery)
 
 	return nil
 }

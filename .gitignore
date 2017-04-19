@@ -6,7 +6,7 @@
 *.test
 *.prof
 cyclone
-worker/cyclone-worker
+cyclone-worker
 cyclone-server
 
 # Output of the go coverage tool, specifically when used with LiteIDE

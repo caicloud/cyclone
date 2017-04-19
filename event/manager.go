@@ -54,9 +54,9 @@ var (
 // Step3: load unfinished events from etcd
 // Step4: create a unfinished events watcher
 // Step5: new a remote api manager
-func Init(wopts *cloud.WorkerOptions) {
+func Init(wopts *cloud.WorkerOptions, cloudAutoDiscovery bool) {
 
-	initCloudController(wopts)
+	initCloudController(wopts, cloudAutoDiscovery)
 
 	initOperationMap()
 
@@ -81,7 +81,7 @@ func Init(wopts *cloud.WorkerOptions) {
 
 // FIXME, so ugly
 // load clouds from database
-func initCloudController(wopts *cloud.WorkerOptions) {
+func initCloudController(wopts *cloud.WorkerOptions, cloudAutoDiscovery bool) {
 	CloudController = cloud.NewController()
 	// load clouds from store
 	ds := store.NewStore()
@@ -94,7 +94,7 @@ func initCloudController(wopts *cloud.WorkerOptions) {
 
 	CloudController.AddClouds(clouds...)
 
-	if len(CloudController.Clouds) == 0 {
+	if len(CloudController.Clouds) == 0 && cloudAutoDiscovery {
 		addInClusterK8SCloud()
 	}
 

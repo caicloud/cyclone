@@ -46,9 +46,16 @@ var _ = Describe("Service", func() {
 		log.Info("Wait")
 		// Wait cyclone to start.
 		WaitComponents()
-		err = AddCloud()
+
+		err = Cleanup()
 		if err != nil {
-			log.Fatalf("Unable to register resources: %v", err)
+			log.Fatal("clean up err", log.Fields{"err": err})
+		}
+
+		err = UpsertCloud()
+		if err != nil {
+			log.Fatal("Unable to register cloud", log.Fields{"err": err})
+			return
 		}
 
 		// Get docker host and cert path.

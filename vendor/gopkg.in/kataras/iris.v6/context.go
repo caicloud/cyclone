@@ -199,11 +199,15 @@ func (c *contextPool) Run(w http.ResponseWriter, r *http.Request, runner func(*C
 type (
 
 	// Map is just a conversion for a map[string]interface{}
-	// should not be used inside Render when PongoEngine is used.
 	Map map[string]interface{}
 
-	// Context is resetting every time a request is coming to the server
-	// it is not good practice to use this object in goroutines, for these cases use the .Clone()
+	// Context is the "midle-man"" server's object for the clients.
+	//
+	// A New Context is being acquired from a sync.Pool on each connection.
+	// The Context is the most important thing on the Iris' http flow.
+	//
+	// Developers send responses to the client's request through a Context.
+	// Developers get request information from the client's request a Context.
 	Context struct {
 		ResponseWriter // *responseWriter by default, when record is on then *ResponseRecorder
 		Request        *http.Request
@@ -869,13 +873,6 @@ func (ctx *Context) TryWriteGzip(b []byte) (int, error) {
 // -------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------
 
-const (
-	// NoLayout to disable layout for a particular template file
-	NoLayout = "@.|.@no_layout@.|.@"
-	// TemplateLayoutContextKey is the name of the user values which can be used to set a template layout from a middleware and override the parent's
-	TemplateLayoutContextKey = "templateLayout"
-)
-
 // getGzipOption receives a default value and the render options map and returns if gzip is enabled for this render action
 func getGzipOption(defaultValue bool, options map[string]interface{}) bool {
 	gzipOpt := options["gzip"] // we only need that, so don't create new map to keep the options.
@@ -933,8 +930,66 @@ func (ctx *Context) fastRenderWithStatus(status int, cType string, data []byte) 
 	return
 }
 
+const (
+	// NoLayout to disable layout for a particular template file
+	NoLayout = "@.|.@no_layout@.|.@"
+	// ViewLayoutContextKey is the name of the user values which can be used to set a template layout from a middleware and override the parent's
+	ViewLayoutContextKey = "@viewLayout"
+	ViewDataContextKey   = "@viewData"
+
+	// conversions
+	// TemplateLayoutContextKey same as ViewLayoutContextKey
+	TemplateLayoutContextKey = ViewLayoutContextKey
+)
+
+// ViewLayout sets the "layout" option if and when .Render
+// is being called afterwards, in the same request.
+// Useful when need to set or/and change a layout based on the previous handlers in the chain.
+//
+// Look: .ViewData     | .Render
+//       .MustRender   | .RenderWithStatus also.
+//
+// Example: https://github.com/kataras/iris/tree/v6/_examples/intermediate/view/context-view-data/
+func (ctx *Context) ViewLayout(layoutTmplFile string) {
+	ctx.Set(ViewLayoutContextKey, layoutTmplFile)
+}
+
+// ViewData saves one or more key-value pair in order to be passed if and when .Render
+// is being called afterwards, in the same request.
+// Useful when need to set or/and change template data from previous hanadlers in the chain.
+//
+// If .Render's "binding" argument is not nil and it's not a type of map
+// then these data are being ignored, binding has the priority, so the main route's handler can still decide.
+// If binding is a map or iris.Map then theese data are being added to the view data
+// and passed to the template.
+//
+// After .Render, the data are not destroyed, in order to be re-used if needed (again, in the same request as everything else),
+// to manually clear the view data, developers can call:
+// ctx.Set(iris.ViewDataContextKey, iris.Map{})
+//
+// Look: .ViewLayout   | .Render
+//       .MustRender   | .RenderWithStatus also.
+//
+// Example: https://github.com/kataras/iris/tree/v6/_examples/intermediate/view/context-view-data/
+func (ctx *Context) ViewData(key string, value interface{}) {
+	v := ctx.Get(ViewDataContextKey)
+	if v == nil {
+		ctx.Set(ViewDataContextKey, Map{key: value})
+		return
+	}
+
+	if data, ok := v.(Map); ok {
+		data[key] = value
+	}
+}
+
 // RenderWithStatus builds up the response from the specified template or a serialize engine.
-// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engines
+// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engines.
+//
+// Look: .ViewData     | .Render
+//       .ViewLayout   | .MustRender also.
+//
+// Examples: https://github.com/kataras/iris/tree/v6/_examples/intermediate/view/
 func (ctx *Context) RenderWithStatus(status int, name string, binding interface{}, options ...map[string]interface{}) (err error) {
 	if _, shouldFirstStatusCode := ctx.ResponseWriter.(*responseWriter); shouldFirstStatusCode {
 		ctx.SetStatusCode(status)
@@ -954,6 +1009,38 @@ func (ctx *Context) RenderWithStatus(status int, name string, binding interface{
 			options[0]["layout"] = ctxLayout
 		} else {
 			options = []map[string]interface{}{{"layout": ctxLayout}}
+		}
+	}
+
+	// optional, view data (useful for middleware, although user can already do that with ctx.Set/Get)
+	// check if user sets any view data
+	if v := ctx.Get(ViewDataContextKey); v != nil {
+		// if so, then check its type, to make sure
+		if data, ok := ctx.Get(ViewDataContextKey).(Map); ok {
+			if len(data) > 0 {
+				if binding != nil {
+					// if binding is passed to the Render function then
+					// two things can happen:
+					// if binding is a custom type, we ignore the data
+					// if binding is a map of interface{} or string then, add these to the view data
+					// finally, set the binding to the new data and pass it to the view engine, as we did before.
+
+					if irisMap, ok := binding.(Map); ok {
+						for key, val := range irisMap {
+							data[key] = val
+						} // a little of necessary duplication here...
+					} else if stdMap, ok := binding.(map[string]interface{}); ok {
+						for key, val := range stdMap {
+							data[key] = val
+						}
+					} else if stdMapStr, ok := binding.(map[string]string); ok {
+						for key, val := range stdMapStr {
+							data[key] = val
+						}
+					}
+				}
+				binding = data
+			}
 		}
 	}
 
@@ -999,7 +1086,12 @@ func (ctx *Context) RenderWithStatus(status int, name string, binding interface{
 
 // Render same as .RenderWithStatus but with status to iris.StatusOK (200) if no previous status exists
 // builds up the response from the specified template or a serialize engine.
-// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engine
+// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engine.
+//
+// Look: .ViewData     | .MustRender
+//       .ViewLayout   | .RenderWithStatus also.
+//
+// Examples: https://github.com/kataras/iris/tree/v6/_examples/intermediate/view/
 func (ctx *Context) Render(name string, binding interface{}, options ...map[string]interface{}) error {
 	errCode := ctx.ResponseWriter.StatusCode()
 	if errCode <= 0 {
@@ -1009,7 +1101,12 @@ func (ctx *Context) Render(name string, binding interface{}, options ...map[stri
 }
 
 // MustRender same as .Render but returns 503 service unavailable http status with a (html) message if render failed
-// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engine
+// Note: the options: "gzip" and "charset" are built'n support by Iris, so you can pass these on any template engine or serialize engine.
+//
+// Look: .ViewData     | .Render
+//       .ViewLayout   | .RenderWithStatus also.
+//
+// Examples: https://github.com/kataras/iris/tree/v6/_examples/intermediate/view/
 func (ctx *Context) MustRender(name string, binding interface{}, options ...map[string]interface{}) {
 	if err := ctx.Render(name, binding, options...); err != nil {
 		htmlErr := ctx.HTML(StatusServiceUnavailable,

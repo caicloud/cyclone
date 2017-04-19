@@ -28,6 +28,13 @@ func (d *DataStore) InsertCloud(doc *cloud.Options) error {
 	return err
 }
 
+// UpsertCloud insert a new cloud document to db
+func (d *DataStore) UpsertCloud(doc *cloud.Options) error {
+	col := d.s.DB(defaultDBName).C(CloudsCollection)
+	_, err := col.Upsert(bson.M{"name": doc.Name}, doc)
+	return err
+}
+
 // FindAllClouds returns all clouds
 func (d *DataStore) FindAllClouds() ([]cloud.Options, error) {
 	clouds := []cloud.Options{}

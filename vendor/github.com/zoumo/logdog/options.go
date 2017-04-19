@@ -92,7 +92,7 @@ func OptionCallerStackDepth(depth int) Option {
 	})
 }
 
-// EnableRuntimeCaller is an option useed in :
+// OptionEnableRuntimeCaller is an option useed in :
 // used in every target which has fields named `EnableRuntimeCaller`
 func OptionEnableRuntimeCaller(enable bool) Option {
 	return optFuncWraper(func(target interface{}) bool {
@@ -105,7 +105,7 @@ func OptionEnableRuntimeCaller(enable bool) Option {
 	})
 }
 
-// OtpionHandlers is an option
+// OptionHandlers is an option
 // used in every target which has fields named `Handlers`
 func OptionHandlers(handlers ...Handler) Option {
 	return optFuncWraper(func(target interface{}) bool {

@@ -1,5 +1,5 @@
 hash: 942998c5e675a1b9286602189c479a245437cd701c0e311183639266185dd510
-updated: 2017-03-21T17:55:48.093896874+08:00
+updated: 2017-04-14T17:58:09.652069132+08:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -224,7 +224,7 @@ imports:
 - name: github.com/xanzy/go-gitlab
   version: a1c611d1586b03f91fd042ce3443e818ba050422
 - name: github.com/zoumo/logdog
-  version: 9af4e8d906286f6a15c67576216ee412654aaf25
+  version: dcdc8e8aa7281536a6dd1a1fbb197bdb0ac2b092
   subpackages:
   - pkg/pythonic
   - pkg/when
@@ -300,7 +300,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/kataras/iris.v6
-  version: 5f21622d636684bb29af4c5ca303d7d97150df33
+  version: 9bb72c6e3160f4efa09635086a0223f4d0abe9c8
   repo: https://github.com/kataras/iris.git
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
@@ -314,7 +314,7 @@ imports:
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
   repo: https://github.com/urfave/cli.git
 - name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
   repo: https://github.com/go-yaml/yaml.git
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672

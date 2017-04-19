@@ -18,6 +18,7 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,8 +26,13 @@ import (
 	"net/http"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
+
+	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/coreos/etcd/client"
 	log "github.com/zoumo/logdog"
 )
 
@@ -158,8 +164,8 @@ func WaitComponents() {
 	log.Info("Cyclone started")
 }
 
-// AddCloud register resources to mongo.
-func AddCloud() error {
+// UpsertCloud register resources to mongo.
+func UpsertCloud() error {
 
 	cloudKind := osutil.GetStringEnv("CYCLONE_CLOUD_KIND", "docker")
 
@@ -181,19 +187,33 @@ func AddCloud() error {
 		}
 	}
 
+	// delete old cloud
+	url := fmt.Sprintf("%s/clouds/%s", BaseURL, data.Name)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	// create new cloud
 	buf, err := json.Marshal(&data)
 	if err != nil {
 		return err
 	}
-
-	url := fmt.Sprintf("%s/clouds", BaseURL)
-
-	resp, err := http.Post(url, "application/json;charset=utf-8", bytes.NewBuffer(buf))
+	url = fmt.Sprintf("%s/clouds", BaseURL)
+	req, err = http.NewRequest(http.MethodPut, url, bytes.NewBuffer(buf))
 	if err != nil {
 		return err
 	}
-
-	if resp.StatusCode != 201 {
+	req.Header.Set("Content-Type", "application/json;charset=utf-8")
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%v", resp)
 	}
 
@@ -208,4 +228,50 @@ func IsAvailable() bool {
 		return true
 	}
 	return false
+}
+
+// Cleanup database
+func Cleanup() error {
+	var err error
+
+	// cleanup mongodb
+	mongoHost := osutil.GetStringEnv(server.MongoDBHost, "127.0.0.1:27017")
+	dbSession, err := mgo.Dial(mongoHost)
+	if err != nil {
+		log.Errorf("Unable connect to mongodb addr %s", mongoHost)
+		return err
+	}
+
+	log.Debugf("connect to mongodb addr: %s", mongoHost)
+	dbSession.SetMode(mgo.Strong, true)
+
+	err = dbSession.DB("cyclone").DropDatabase()
+	if err != nil {
+		return err
+	}
+
+	// clean up etcd
+	etcdHost := osutil.GetStringEnv(server.ETCDHost, "http://127.0.0.1:2379")
+	cfg := client.Config{
+		Endpoints: []string{etcdHost},
+		Transport: client.DefaultTransport,
+		// Set timeout per request to fail fast when the target endpoint is unavailable.
+		HeaderTimeoutPerRequest: time.Second * 5,
+	}
+
+	c, err := client.New(cfg)
+	if err != nil {
+		log.Fatalf("connect to etcd err: %v", err)
+		return err
+	}
+	ctx := context.Background()
+
+	kapi := client.NewKeysAPI(c)
+	kapi.Delete(ctx, event.EventsUnfinished, &client.DeleteOptions{Dir: true, Recursive: true})
+	_, err = kapi.Set(ctx, event.EventsUnfinished, "", &client.SetOptions{Dir: true})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
