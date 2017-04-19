@@ -130,60 +130,6 @@ func deleteCloud(request *restful.Request, response *restful.Response) {
 	response.WriteHeader(http.StatusNoContent)
 }
 
-// upsertCloud upsert a cloud to cyclone,
-//
-// PUST: /api/v0.1/clouds
-//
-// PAYLOAD (cloud.Options):
-//   {
-//     	"kind": (string) cloud type such as docker and kubernetes
-//     	"name": (string) cloud name
-//     	"host": (string) cloud host url
-//     	"insecure": (bool) Optional server should be accessed without verifying the TLS certificate. For testing only.
-//     	"dockerCertPath": (string) Optional docker cert path
-//  	"k8sInCluster": (bool) Optional. set true if cyclone runs in k8s cluster and
-//                             use the same cluster as cyclone cloud provider
-//		"k8sNamespace": (string) Optional k8s cloud namespace to use
-// 		"k8sBearerToken": (string) Optional k8s bearer token
-//   }
-//
-// RESPONSE: (cloud.Options)
-//  {
-//      just like payload
-//  }
-func upsertCloud(request *restful.Request, response *restful.Response) {
-	cloudName := request.PathParameter("cloudName")
-	cloudOpt := cloud.Options{}
-	err := request.ReadEntity(&cloudOpt)
-	if err != nil {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, "Unable to parse request body")
-		return
-	}
-
-	cloudOpt.Name = cloudName
-	event.CloudController.DeleteCloud(cloudOpt.Name)
-	err = event.CloudController.AddClouds(cloudOpt)
-	if err != nil {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	cloud, _ := event.CloudController.GetCloud(cloudOpt.Name)
-	opts := cloud.GetOptions()
-
-	ds := store.NewStore()
-	defer ds.Close()
-
-	err = ds.UpsertCloud(&opts)
-	if err != nil {
-		logdog.Error("Can not add cloud to database", logdog.Fields{"cloud": opts.Name, "kind": opts.Kind})
-	}
-
-	response.WriteHeaderAndJson(http.StatusOK, opts, restful.MIME_JSON)
-}
-
 func pingCloud(request *restful.Request, response *restful.Response) {
 	cloudName := request.PathParameter("cloudName")
 	cloud, ok := event.CloudController.GetCloud(cloudName)

@@ -187,23 +187,32 @@ func UpsertCloud() error {
 		}
 	}
 
-	buf, err := json.Marshal(&data)
-	if err != nil {
-		return err
-	}
-
+	// delete old cloud
 	url := fmt.Sprintf("%s/clouds/%s", BaseURL, data.Name)
-
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(buf))
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json;charset=utf-8")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 
+	// create new cloud
+	buf, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	url = fmt.Sprintf("%s/clouds", BaseURL)
+	req, err = http.NewRequest(http.MethodPut, url, bytes.NewBuffer(buf))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json;charset=utf-8")
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%v", resp)
 	}

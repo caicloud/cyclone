@@ -371,11 +371,6 @@ func registerCloudsAPIs(ws *restful.WebService) {
 		Doc("add a cloud to cyclone").
 		Param(ws.PathParameter("cloudName", "cloud name").DataType("string")))
 
-	ws.Route(ws.PUT("/clouds/{cloudName}").
-		To(upsertCloud).
-		Doc("upsert a cloud to cyclone").
-		Param(ws.PathParameter("cloudName", "cloud name").DataType("string")))
-
 	ws.Route(ws.GET("/clouds/{cloudName}/ping").
 		To(pingCloud).
 		Doc("test a cloud ping").
