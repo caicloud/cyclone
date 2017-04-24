@@ -94,7 +94,16 @@ podTemplate(
                 stage("Complie") {
                     sh('''
                         set -e 
-                        mkdir -p $(dirname ${WORKDIR}) && ln -sf $(pwd) ${WORKDIR}
+                        mkdir -p $(dirname ${WORKDIR}) 
+
+                        # if you do not remove target dir manually
+                        # ln will not work according to what you want
+                        # ln link /home/jenkins/workspace/xxxx to /go/src/github.com/caicloud/cyclone at first time
+                        # ln will link /home/jenkins/workspace/xxxx to /go/src/github.com/caicloud/cyclone/xxxx at second time
+                        # so remove the target workdir before you link
+                        rm -rf ${WORKDIR}
+                        ln -sfv $(pwd) ${WORKDIR}
+
                         cd ${WORKDIR}
 
                         echo "buiding server"
