@@ -204,7 +204,7 @@ func UpsertCloud() error {
 		return err
 	}
 	url = fmt.Sprintf("%s/clouds", BaseURL)
-	req, err = http.NewRequest(http.MethodPut, url, bytes.NewBuffer(buf))
+	req, err = http.NewRequest(http.MethodPost, url, bytes.NewBuffer(buf))
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func UpsertCloud() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("%v", resp)
 	}
 
