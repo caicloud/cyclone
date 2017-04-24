@@ -213,7 +213,7 @@ func UpsertCloud() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("%v", resp)
 	}
 
