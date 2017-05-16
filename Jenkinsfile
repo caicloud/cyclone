@@ -144,9 +144,9 @@ podTemplate(
                             go test -v ./tests/version 
                             go test -v ./tests/yaml
                         ''')
-    				} else {
-    					echo "skip integration"
-    				}
+                    } else {
+                        echo "skip integration"
+                    }
                 }
             }
 
@@ -160,8 +160,8 @@ podTemplate(
                        docker.image(server_tag).push()
                        docker.image(worker_tag).push()
 	               } 
-            } else {
-                echo "skip publish"	
+                } else {
+                    echo "skip publish"	
                 }
             }
         }
