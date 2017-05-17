@@ -182,21 +182,21 @@ podTemplate(
                     echo "deploy to test cluster"
                     withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-test', variable: 'SECRET_FILE']]) {
                         sh("""
-                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --namespace cyclone replace -f -
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --kubeconfig=$SECRET_FILE --namespace cyclone replace -f -
                         """)
                     }
                 } else if (params.deployTarget == "stage") {
                     echo "deploy to stage cluster"
                     withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-stage', variable: 'SECRET_FILE']]) {
                         sh("""
-                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag/' | kubectl --namespace cyclone replace -f -
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --kubeconfig=$SECRET_FILE --namespace cyclone replace -f -
                         """)
                     }
                 } else if (params.deployTarget == "prod") {
                     echo "deploy to prod cluster"
                     withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-prod', variable: 'SECRET_FILE']]) {
                         sh("""
-                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --namespace cyclone replace -f -
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --kubeconfig=$SECRET_FILE --namespace cyclone replace -f -
                         """)
                     }
                 } else {
