@@ -1,5 +1,5 @@
-def server_tag = "caicloud/cyclone-server:${env.BUILD_NUMBER}"
-def worker_tag = "caicloud/cyclone-worker:${env.BUILD_NUMBER}"
+def server_tag = "caicloud/cyclone-server:${params.imageTag}"
+def worker_tag = "caicloud/cyclone-worker:${params.imageTag}"
 def registry = "cargo.caicloudprivatetest.com"
 
 podTemplate(
@@ -29,7 +29,7 @@ podTemplate(
         // golang with docker client
         containerTemplate(
             name: 'golang',
-            image: 'cargo.caicloud.io/caicloud/golang-docker:1.8-17.03',
+            image: 'cargo.caicloud.io/caicloud/golang-docker:1.8-17.05',
             ttyEnabled: true,
             command: '',
             args: '',
@@ -177,9 +177,31 @@ podTemplate(
         stage("deploy") {
             if (params.deploy) {
                 echo "exec deploy"
-                sh("""
-                    kubectl --namespace cyclone get deploy circle-server-v0.0.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${env.BUILD_NUMBER}/; s/cyclone-worker:.*\$/cyclone-worker:${env.BUILD_NUMBER}/' | kubectl --namespace cyclone replace -f -
-                """)
+
+                if (params.deployTarget == "test") {
+                    echo "deploy to test cluster"
+                    withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-test', variable: 'SECRET_FILE']]) {
+                        sh("""
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --namespace cyclone replace -f -
+                        """)
+                    }
+                } else if (params.deployTarget == "stage") {
+                    echo "deploy to stage cluster"
+                    withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-stage', variable: 'SECRET_FILE']]) {
+                        sh("""
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag/' | kubectl --namespace cyclone replace -f -
+                        """)
+                    }
+                } else if (params.deployTarget == "prod") {
+                    echo "deploy to prod cluster"
+                    withCredentials([[$class: 'FileBinding', credentialsId: 'kubeconfig-prod', variable: 'SECRET_FILE']]) {
+                        sh("""
+                            kubectl --kubeconfig=$SECRET_FILE --namespace cyclone get deploy circle-server-v0.1.1 -o yaml | sed 's/cyclone-server:.*\$/cyclone-server:${params.imageTag}/; s/cyclone-worker:.*\$/cyclone-worker:${params.imageTag}/' | kubectl --namespace cyclone replace -f -
+                        """)
+                    }
+                } else {
+                    // do nothing
+                }
             } else {
                 echo "skip deploy"	
             }
