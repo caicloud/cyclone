@@ -163,7 +163,7 @@ podTemplate(
 
                     if (params.autoGitTag) {
                         echo "auto git tag: " + params.imageTag
-                        withCredentials ([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'superxi911', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]){
+                        withCredentials ([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'caicloud-bot', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]){
                             sh("git tag -a $imageTag -m $tagDescribe")
                             sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/caicloud/cyclone $imageTag")
                        }
