@@ -159,7 +159,15 @@ podTemplate(
                    docker.withRegistry("https://${registry}", "cargo-private-admin") {
                        docker.image(server_tag).push()
                        docker.image(worker_tag).push()
-	               } 
+	               }
+
+                    if (params.autoGitTag) {
+                        echo "auto git tag: " + params.imageTag
+                        withCredentials ([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'caicloud-bot', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]){
+                            sh("git tag -a $imageTag -m $tagDescribe")
+                            sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/caicloud/cyclone $imageTag")
+                       }
+                    } 
                 } else {
                     echo "skip publish"	
                 }
