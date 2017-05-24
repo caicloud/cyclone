@@ -7,7 +7,7 @@ podTemplate(
     namespace: 'kube-system',
     name: 'cyclone',
     label: 'cyclone',
-    idleMinutes: 1440,
+    // idleMinutes: 1440,
     containers: [
         // jnlp with kubectl
         containerTemplate(
@@ -42,7 +42,7 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_LOCATION', value: 'cargo.caicloud.io'),
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
-                containerEnvVar(key: 'WORKER_IMAGE', value: "${registry}/${worker_tag}"),
+                containerEnvVar(key: 'WORKER_IMAGE', value: "cargo.caicloudprivatetest.com/caicloud/cyclone-worker:e2e"),
                 containerEnvVar(key: 'DOCKER_HOST', value: 'unix:///home/jenkins/docker.sock'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.26'),
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
