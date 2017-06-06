@@ -92,6 +92,7 @@ podTemplate(
             ansiColor('xterm') {
 
                 stage("Complie") {
+                    githubNotify description: 'This is a shorted example',  status: 'PENDING'
                     sh('''
                         set -e 
                         mkdir -p $(dirname ${WORKDIR}) 
