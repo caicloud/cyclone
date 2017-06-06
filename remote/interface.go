@@ -20,6 +20,8 @@ import (
 	"github.com/caicloud/cyclone/api"
 )
 
+
+
 // Remote is the interface of all operations needed for remote repository.
 type Remote interface {
 	GetTokenQuestURL(string) (string, error)
