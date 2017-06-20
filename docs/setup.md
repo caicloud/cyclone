@@ -17,7 +17,7 @@ At first, you need to build Cyclone-server and Cyclone-worker docker images, by 
 ```
 git clone https://github.com/caicloud/cyclone
 cd cyclone
-./scripts/build-image.sh
+./scripts/build-server-image.sh
 ./scripts/build-worker-image.sh
 ```
 
@@ -27,7 +27,7 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-Then Cyclone is started. Docker compose will start Clair before Postgres which may raise an error. If this error is raised, manually execute `docker start clair_clair`.
+Then Cyclone is started. Docker compose will start Clair before Postgres which may raise an error. If this error is raised, manually execute `docker start cyclone_clair_1`.
 
 - Using Kubectl: this approach requires a few yaml files. You can read related files in cirlce/scripts/k8s for more detial. Follow these instructions:
 
@@ -58,20 +58,20 @@ Then Cyclone is started.
 
 Environment variables: 
 
-| ENV                    | Description                              |
-| ---------------------- | ---------------------------------------- |
-| MONGODB_HOST            | The IP of mongodb, default is localhost. |
-| KAFKA_HOST        | The address of kafka, default is 127.0.0.1:9092. |
-| REGISTRY_LOCATION | The registry to push images, default is cargo.caicloud.io. |
-| REGISTRY_USERNAME      | The username in docker registry, default is null. |
-| REGISTRY_PASSWORD      | The password in docker registry, default is null. |
-| GITHUB_CLIENT               | The client ID from Github for oauth, default is null. |
-| GITHUB_SECRET         | The client secret from Github for oauth, default is null. |
-| CONSOLE_WEB_ENDPOINT   | The address of caicloud access point, default is http://localhost:8000. |
+| ENV                  | Description                              |
+| -------------------- | ---------------------------------------- |
+| MONGODB_HOST         | The IP of mongodb, default is localhost. |
+| KAFKA_HOST           | The address of kafka, default is 127.0.0.1:9092. |
+| REGISTRY_LOCATION    | The registry to push images, default is cargo.caicloud.io. |
+| REGISTRY_USERNAME    | The username in docker registry, default is null. |
+| REGISTRY_PASSWORD    | The password in docker registry, default is null. |
+| GITHUB_CLIENT        | The client ID from Github for oauth, default is null. |
+| GITHUB_SECRET        | The client secret from Github for oauth, default is null. |
+| CONSOLE_WEB_ENDPOINT | The address of caicloud access point, default is http://localhost:8000. |
 | GITLAB_CLIENT        | The client ID from Gitlab for oauth, default is null. |
-| GITLAB_SECRET  | The client secret from Gitlab for oauth, default is null. |
-| GITLAB_URL          | The address of gitlab, default is https://gitlab.com. |
-| ETCD_HOST         | The address of etcd, default is 127.0.0.1:2379. |
-| CYCLONE_SERVER    | The host of Cyclone-Server, default is http://localhost:7099. |
-| WORKER_IMAGE           | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
-| CLAIR_SERVER        | The address of clair, default is 127.0.0.1:6060. |
+| GITLAB_SECRET        | The client secret from Gitlab for oauth, default is null. |
+| GITLAB_URL           | The address of gitlab, default is https://gitlab.com. |
+| ETCD_HOST            | The address of etcd, default is 127.0.0.1:2379. |
+| CYCLONE_SERVER       | The host of Cyclone-Server, default is http://localhost:7099. |
+| WORKER_IMAGE         | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
+| CLAIR_SERVER         | The address of clair, default is 127.0.0.1:6060. |
