@@ -53,6 +53,6 @@ func healthCheck(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	healthCheckResponse.ErrorMessage = "ok"
+	healthCheckResponse.ErrorMessage = "cyclone health check passed!"
 	response.WriteHeaderAndEntity(http.StatusOK, healthCheckResponse)
 }
