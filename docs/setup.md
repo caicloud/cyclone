@@ -17,8 +17,8 @@ At first, you need to build Cyclone-server and Cyclone-worker docker images, by 
 ```
 git clone https://github.com/caicloud/cyclone
 cd cyclone
-./scripts/build-server-image.sh
-./scripts/build-worker-image.sh
+./scripts/build-server.sh
+./scripts/build-worker.sh
 ```
 
 - Using Docker Compose: Follow these instructions to bring up Cyclone with docker-compose (you can checkout the compose file for more details):
