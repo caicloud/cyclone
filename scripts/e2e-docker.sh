@@ -14,6 +14,7 @@ cd ${CYCLONE_ROOT}
 
 # Clean up local run of cyclone.
 function cleanup {
+    echo "=> cleanup start."
 
     unset DEBUG
     unset CYCLONE_SERVER
@@ -31,7 +32,6 @@ function cleanup {
 
     [ -n "${CYCLONE_PID-}" ] && ps -p ${CYCLONE_PID} > /dev/null && kill ${CYCLONE_PID}
 
-
     if [[ -n $(docker ps -a | grep kafka) ]];then
         docker rm -f kafka
     fi
@@ -48,7 +48,7 @@ function cleanup {
         docker rm -f cyclone_server
     fi
 
-    echo "=> cleanup now."
+    echo "=> cleanup finished."
 }
 
 function run_e2e {
@@ -118,7 +118,7 @@ function run_e2e {
     ./cyclone-server &
     CYCLONE_PID=$!
 
-    echo "testing ..."
+    echo "start testing ..."
     # go test compile
     go test -i ./tests/...
 
@@ -128,8 +128,8 @@ function run_e2e {
 
 }
 
-trap cleanup SIGINT EXIT SIGQUIT
+#trap cleanup SIGINT EXIT SIGQUIT
 
-run_e2e
-
-cleanup
+#run_e2e
+trap run_e2e SIGINT EXIT SIGQUIT
+#cleanup
