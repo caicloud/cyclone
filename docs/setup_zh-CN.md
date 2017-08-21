@@ -17,8 +17,8 @@ kubernetes：1.2+
 ```
 git clone https://github.com/caicloud/cyclone
 cd cyclone
-./scripts/build-server-image.sh
-./scripts/build-worker-image.sh
+./scripts/build-server.sh
+./scripts/build-worker.sh
 ```
 
 - 使用 docker compose 方式。 你可以去查看 docker-compose.yml 来了解运行过程。具体的操作指令如下：
