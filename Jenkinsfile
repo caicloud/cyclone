@@ -48,14 +48,14 @@ podTemplate(
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
             ],
         ),
-         containerTemplate(
+        containerTemplate(
             name: 'zk',
             image: 'cargo.caicloud.io/caicloud/zookeeper:3.4.6',
             ttyEnabled: true,
             command: "",
             args: "",
         ),
-         containerTemplate(
+        containerTemplate(
             name: 'kafka',
             image: 'cargo.caicloud.io/caicloud/kafka:0.10.1.0',
             ttyEnabled: true,
