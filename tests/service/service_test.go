@@ -43,7 +43,7 @@ var _ = Describe("Service", func() {
 	BeforeSuite(func() {
 		var err error
 
-		log.Info("Wait")
+		log.Info("Wait cyclone to start")
 		// Wait cyclone to start.
 		WaitComponents()
 
@@ -80,8 +80,8 @@ var _ = Describe("Service", func() {
 		}
 	})
 
-	It("should be a available.", func() {
-		Expect(IsAvailable()).To(Equal(true))
+	It("cyclone server should be a running.", func() {
+		Expect(IsRunning()).To(Equal(true))
 	})
 
 	Context("with right information", func() {
