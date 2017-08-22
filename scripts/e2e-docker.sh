@@ -128,8 +128,8 @@ function run_e2e {
 
 }
 
-#trap cleanup SIGINT EXIT SIGQUIT
+trap cleanup SIGINT EXIT SIGQUIT
 
-#run_e2e
-trap run_e2e SIGINT EXIT SIGQUIT
-#cleanup
+run_e2e
+
+cleanup
