@@ -80,7 +80,7 @@ var _ = Describe("Service", func() {
 		}
 	})
 
-	It("cyclone server should be a running.", func() {
+	It("should be running.", func() {
 		Expect(IsRunning()).To(Equal(true))
 	})
 
