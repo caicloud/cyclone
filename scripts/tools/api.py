@@ -341,10 +341,10 @@ if __name__ == '__main__':
     # get_worker_node("e43c0207-f8f3-4513-bcff-c991c50dee74")
     # delete_worker_node("8211f1fc-2c40-42c2-90e9-b8d16f2d6336")
 
-    # get_worker_nodes()
-    # get_clouds()
+    get_worker_nodes()
+    get_clouds()
     user_id = "bmj"
-    create_service(user_id, "go_test5")
+    create_service(user_id, "go_test53")
     # get_services(user_id)
     # svc_id = "8d11d36b-bb95-4364-8547-d92094456cc9"
 
