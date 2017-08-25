@@ -67,7 +67,6 @@ Environment variables:
 | REGISTRY_PASSWORD    | The password in docker registry, default is null. |
 | GITHUB_CLIENT        | The client ID from Github for oauth, default is null. |
 | GITHUB_SECRET        | The client secret from Github for oauth, default is null. |
-| CONSOLE_WEB_ENDPOINT | The address of caicloud access point, default is http://localhost:8000. |
 | GITLAB_CLIENT        | The client ID from Gitlab for oauth, default is null. |
 | GITLAB_SECRET        | The client secret from Gitlab for oauth, default is null. |
 | GITLAB_URL           | The address of gitlab, default is https://gitlab.com. |
