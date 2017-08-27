@@ -38,13 +38,12 @@ And Our travis CI jobs would also run these, so you could also check out the bui
 
 Now cyclone's e2e test would start a local circle server and register local docker host as a worker to circle server. Then it would start a standalone process to run the e2e test cases by sending RESTful requests.
 
-If you deploy with docker, you could run e2e test by typing:
+The e2e test can be run by cyclone itself. 
+If you deploy with docker, you could run it by typing:
 
 ```shell
 ./scripts/e2e-docker.sh
 ```
-
-then, we would run these tests by cyclone.
 
 If you deploy with k8s, you could run e2e test by typing:
 
@@ -52,7 +51,6 @@ If you deploy with k8s, you could run e2e test by typing:
 ./scripts/e2e-k8s.sh
 ```
 
-then, we would run these tests by cyclone.
 ## API Documentation
 
 We use [swagger ui](https://github.com/swagger-api/swagger-ui) to generate API documentation. If your work impacts cyclone API, you could check out API documentation at `http://<your cyclone server host>:7099/apidocs`, else you could check out [our online API documentation](http://117.149.19.162:30010/apidocs/).

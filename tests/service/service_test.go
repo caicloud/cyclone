@@ -34,7 +34,8 @@ import (
 
 const (
 	DefaultServiceName = "test-basic-rest-service"
-	DefaultTestRepo    = "https://github.com/caicloud/toy-dockerfile"
+	// DefaultTestRepo    = "https://github.com/caicloud/toy-dockerfile"
+	DefaultTestRepo = "http://192.168.8.30/bmj/circle-deploy"
 )
 
 var _ = Describe("Service", func() {
