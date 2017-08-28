@@ -26,7 +26,6 @@ const (
 	versionCollectionName        string = "VersionCollection"
 	versionLogCollectionName     string = "VersionLogCollection"
 	recourceCollectionName       string = "RecourceCollection"
-	projectCollectionName        string = "ProjectCollection"
 	projectVersionCollectionName string = "ProjectVersionCollection"
 	daemonCollectionName         string = "DaemonCollection"
 	remoteCollectionName         string = "RemoteCollection"
@@ -34,6 +33,8 @@ const (
 	deployCollectionName         string = "DeployCollection"
 	ResourceCollectionName       string = "ResourceCollection"
 	CloudsCollection             string = "clouds"
+
+	projectCollectionName string = "projects"
 )
 
 var (
@@ -43,6 +44,9 @@ var (
 // DataStore is the type for mongo db store.
 type DataStore struct {
 	s *mgo.Session
+
+	// Collections
+	projectCollection *mgo.Collection
 }
 
 // Init store mongo client session
@@ -52,8 +56,10 @@ func Init(s *mgo.Session) {
 
 // NewStore copy a mongo client session
 func NewStore() *DataStore {
+	s := session.Copy()
 	return &DataStore{
-		s: session.Copy(),
+		s:                 s,
+		projectCollection: s.DB(defaultDBName).C(projectCollectionName),
 	}
 }
 
