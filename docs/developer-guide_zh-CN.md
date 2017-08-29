@@ -36,21 +36,18 @@
 
 目前 Cyclone 的端到端测试会先启动一个 Cyclone server，然后在另外一个独立的进程中通过发送 RESTful 请求的方式对其进行测试，并验证结果。
 
+我们可以使用 Cyclone 来对 Cyclone 进行端到端的测试。
 如果你以docker方式部署，你可以通过：
 
 ```shell
 ./scripts/e2e-docker.sh
 ```
 
-来进行端到端的测试，在之后我们会使用 Cyclone 来对 Cyclone 进行端到端的测试。
-
 如果你以k8s方式部署，你可以通过：
 
 ```shell
 ./scripts/e2e-k8s.sh
 ```
-
-来进行端到端的测试，在之后我们会使用 Cyclone 来对 Cyclone 进行端到端的测试。
 
 ## API 文档
 
