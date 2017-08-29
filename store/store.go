@@ -35,6 +35,7 @@ const (
 	CloudsCollection             string = "clouds"
 
 	projectCollectionName        string = "projects"
+  pipelineCollectionName       string = "pipelines"
 	pipelineRecordCollectionName string = "pipelineRecords"
 )
 
@@ -48,6 +49,7 @@ type DataStore struct {
 
 	// Collections
 	projectCollection        *mgo.Collection
+  pipelineCollection       *mgo.Collection
 	pipelineRecordCollection *mgo.Collection
 }
 
@@ -62,6 +64,7 @@ func NewStore() *DataStore {
 	return &DataStore{
 		s:                        s,
 		projectCollection:        s.DB(defaultDBName).C(projectCollectionName),
+    pipelineCollection:       s.DB(defaultDBName).C(pipelineCollectionName),
 		pipelineRecordCollection: s.DB(defaultDBName).C(pipelineRecordCollectionName),
 	}
 }
