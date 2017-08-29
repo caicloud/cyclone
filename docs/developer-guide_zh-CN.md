@@ -11,7 +11,7 @@
 我们已经写了一些 bash 脚本来帮助你搭建开发环境。如果你想在本地运行一个 Cyclone 服务，可以通过：
 
 ```shell
-./scripts/local-up.sh
+./scripts/setup.sh
 ```
 
 来实现，这段脚本会在容器中启动所有的依赖服务，在**本地**编译和运行 Cyclone server，相比于把全部服务都运行在容器中的方式，在本地运行 Cyclone server 更容易开发与调试。
@@ -27,7 +27,7 @@
 你可以通过：
 
 ```shell
-./tests/run-unit-test.sh
+./scripts/unittest.sh
 ```
 
 来进行单元测试，与此同时目前我们的 Travis 也会进行这样的单元测试，因此你也可以在 Travis 的构建日志中查看测试结果。在之后我们会使用 Cyclone 来对 Cyclone 进行单元测试。
@@ -36,10 +36,18 @@
 
 目前 Cyclone 的端到端测试会先启动一个 Cyclone server，然后在另外一个独立的进程中通过发送 RESTful 请求的方式对其进行测试，并验证结果。
 
-你可以通过：
+如果你以docker方式部署，你可以通过：
 
 ```shell
-./tests/run-e2e.sh
+./scripts/e2e-docker.sh
+```
+
+来进行端到端的测试，在之后我们会使用 Cyclone 来对 Cyclone 进行端到端的测试。
+
+如果你以k8s方式部署，你可以通过：
+
+```shell
+./scripts/e2e-k8s.sh
 ```
 
 来进行端到端的测试，在之后我们会使用 Cyclone 来对 Cyclone 进行端到端的测试。

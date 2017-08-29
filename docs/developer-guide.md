@@ -13,7 +13,7 @@ We have written some bash scripts to help you start contributing code or documen
 If you want to start a cyclone server for dev, you could run:
 
 ```shell
-./scripts/local-up.sh
+./scripts/setup.sh
 ```
 
 The script would run all the dependencies in docker containers, compile and run cyclone server **locally**. This way is more hackable than running all services in containers.
@@ -29,7 +29,7 @@ We have unit test and e2e test cases, you could run these test cases to test you
 You could run unit test by typing:
 
 ```shell
-./tests/run-unit-test.sh
+./scripts/unittest.sh
 ```
 
 And Our travis CI jobs would also run these, so you could also check out the build log to get the test result in travis. In the future we would run these tests by cyclone.
@@ -38,13 +38,18 @@ And Our travis CI jobs would also run these, so you could also check out the bui
 
 Now cyclone's e2e test would start a local circle server and register local docker host as a worker to circle server. Then it would start a standalone process to run the e2e test cases by sending RESTful requests.
 
-You could run e2e test by typing:
+The e2e test can be run by cyclone itself. 
+If you deploy with docker, you could run it by typing:
 
 ```shell
-./tests/run-e2e.sh
+./scripts/e2e-docker.sh
 ```
 
-In the future we would run these tests by cyclone.
+If you deploy with k8s, you could run e2e test by typing:
+
+```shell
+./scripts/e2e-k8s.sh
+```
 
 ## API Documentation
 

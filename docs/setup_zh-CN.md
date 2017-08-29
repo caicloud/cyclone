@@ -29,7 +29,7 @@ docker-compose -f docker-compose.yml up -d
 
 这样 Cyclone 已经启动了。使用 docker compose 的方式来启动时，clair 可能会在 postgres 之前启动，这样会出现错误，因为 clair 是依赖于 postgres。如果出现这种错误，需要手动执行 `docker start cyclone_clair_1`。
 
-- 使用 kubectl 方式，需要一些 YAML 文件。你可以在 cirlce/scripts/k8s 目录下查看这些文件。然后执行下面这些命令，
+- 使用 kubectl 方式，需要一些 YAML 文件。你可以在 cirlce/scripts/k8s 目录下查看这些文件。然后执行下面这些命令:
 
 ```
 git clone https://github.com/caicloud/cyclone
@@ -67,7 +67,6 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 | REGISTRY_PASSWORD    | 镜像仓用户密码，默认是空                             |
 | GITHUB_CLIENT        | 用于github oauth授权的clientID，默认是空           |
 | GITHUB_SECRET        | 用于github oauth授权的secret，默认是空             |
-| CONSOLE_WEB_ENDPOINT | 网页用户界面访问地址，默认是http://localhost:8000      |
 | GITLAB_CLIENT        | 用于gitlab oauth授权的clientID，默认是空           |
 | GITLAB_SECRET        | 用于gitlab oauth授权的secret，默认是空             |
 | GITLAB_URL           | gitlab的服务器地址，默认是https://gitlab.com       |

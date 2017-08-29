@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	// Defines the usernames and pwds in docker registry server.
+	// Define the usernames and passwords in docker registry server.
 
 	// AdminUser is used to run normal test cases, it has all access rights
 	// to docker repositories.
@@ -221,8 +221,8 @@ func UpsertCloud() error {
 	return nil
 }
 
-// IsAvailable returns whether the cyclone is running.
-func IsAvailable() bool {
+// IsRunning returns whether the cyclone is running.
+func IsRunning() bool {
 	_, err := http.Get(BaseURL)
 	if err == nil {
 		return true
@@ -238,7 +238,7 @@ func Cleanup() error {
 	mongoHost := osutil.GetStringEnv(server.MongoDBHost, "127.0.0.1:27017")
 	dbSession, err := mgo.Dial(mongoHost)
 	if err != nil {
-		log.Errorf("Unable connect to mongodb addr %s", mongoHost)
+		log.Errorf("Unable to connect to mongodb addr %s", mongoHost)
 		return err
 	}
 

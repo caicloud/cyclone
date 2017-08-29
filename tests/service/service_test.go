@@ -34,7 +34,8 @@ import (
 
 const (
 	DefaultServiceName = "test-basic-rest-service"
-	DefaultTestRepo    = "https://github.com/caicloud/toy-dockerfile"
+	// DefaultTestRepo    = "https://github.com/caicloud/toy-dockerfile"
+	DefaultTestRepo = "http://192.168.8.30/bmj/circle-deploy"
 )
 
 var _ = Describe("Service", func() {
@@ -43,7 +44,7 @@ var _ = Describe("Service", func() {
 	BeforeSuite(func() {
 		var err error
 
-		log.Info("Wait")
+		log.Info("Wait cyclone to start")
 		// Wait cyclone to start.
 		WaitComponents()
 
@@ -80,8 +81,8 @@ var _ = Describe("Service", func() {
 		}
 	})
 
-	It("should be a available.", func() {
-		Expect(IsAvailable()).To(Equal(true))
+	It("should be running.", func() {
+		Expect(IsRunning()).To(Equal(true))
 	})
 
 	Context("with right information", func() {

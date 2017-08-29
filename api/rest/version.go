@@ -222,7 +222,7 @@ func listVersions(request *restful.Request, response *restful.Response) {
 }
 
 //
-// POST: /api/v0.1/:uid/versions/:versionID/cancelbuild
+// POST: /api/v0.1/:uid/versions/:versionID/cancelbuildcancelbuild
 //
 // RESPONSE: (VersionConcelResponse)
 //  {
