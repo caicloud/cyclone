@@ -56,6 +56,12 @@ func getVersionLog(request *restful.Request, response *restful.Response) {
 //
 // POST: /api/v0.1/:uid/versions/:versionID/logs
 //
+// PAYLOAD (Version):
+//   {
+//     "logs": (string) a short description of the logs
+//     "version_id": (string) id with the version
+//   }
+//
 // RESPONSE: (VersionLogGetResponse)
 //  {
 //    "error_msg": (string) set IFF the request fails.

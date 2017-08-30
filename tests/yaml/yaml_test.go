@@ -43,7 +43,7 @@ const (
 	DefaultServiceTestDeployName = "test-deploy-service"
 	DefaultDeployVersionName     = "v0.1.0-deploy"
 	DefaultTestDeployRepo        = "https://github.com/superxi911/circle-deploy"
-	DefaultTestIntegrationRepo   = "https://github.com/superxi911/circle-integration"
+	DefaultTestIntegrationRepo   = "https://github.com/superxi911/circle-deploy"
 )
 
 // TODO: Test whether the repo has been bound into the container in the integration step.

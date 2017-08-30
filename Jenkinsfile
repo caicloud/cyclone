@@ -42,20 +42,19 @@ podTemplate(
                 containerEnvVar(key: 'REGISTRY_LOCATION', value: 'cargo.caicloud.io'),
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
-                containerEnvVar(key: 'WORKER_IMAGE', value: "cargo.caicloudprivatetest.com/caicloud/cyclone-worker:e2e"),
                 containerEnvVar(key: 'DOCKER_HOST', value: 'unix:///home/jenkins/docker.sock'),
                 containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.26'),
                 containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cyclone')
             ],
         ),
-         containerTemplate(
+        containerTemplate(
             name: 'zk',
             image: 'cargo.caicloud.io/caicloud/zookeeper:3.4.6',
             ttyEnabled: true,
             command: "",
             args: "",
         ),
-         containerTemplate(
+        containerTemplate(
             name: 'kafka',
             image: 'cargo.caicloud.io/caicloud/kafka:0.10.1.0',
             ttyEnabled: true,
@@ -111,7 +110,7 @@ podTemplate(
 
                         echo "buiding worker"
                         go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
-                        docker build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+                        docker build -t cargo.caicloudprivatetest.com/caicloud/cyclone-worker:e2e -f Dockerfile.worker .
                     ''')
                 }
 

@@ -11,7 +11,6 @@ source "$(dirname "${BASH_SOURCE}")/lib/common.sh"
 
 cd ${CYCLONE_ROOT}
 
-
 # Clean up local run of cyclone.
 function cleanup {
     echo "=> cleanup start."
@@ -52,8 +51,7 @@ function cleanup {
 }
 
 function run_e2e {
-    cleanup
-
+ 
     # for worker to connect server
     export HOST_IP="$(ifconfig | grep "inet " | grep -v 127.0.0.1 | tail -1 | cut -d " " -f 2 )"
 
@@ -118,18 +116,10 @@ function run_e2e {
     ./cyclone-server &
     CYCLONE_PID=$!
 
-    echo "start testing ..."
-    # go test compile
-    go test -i ./tests/...
-
-    go test -v ./tests/service 
-    go test -v ./tests/version 
-    go test -v ./tests/yaml
-
 }
 
-trap cleanup SIGINT EXIT SIGQUIT
+cleanup
 
 run_e2e
 
-cleanup
+

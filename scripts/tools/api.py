@@ -6,10 +6,10 @@ import time
 import multiprocessing
 import random
 
-#host = 'http://127.0.0.1:7099/'
+host = 'http://127.0.0.1:7099/'
 #host = 'http://43.254.54.38:7099/'
 #host = 'http://118.193.143.243/'
-host = 'http://192.168.16.81:31799/'
+#host = 'http://192.168.16.81:31799/'
 #host = 'https://fornax-canary.caicloud.io/'
 # host = 'http://192.168.16.201:30010/'
 
@@ -69,7 +69,7 @@ def create_service(user_id, service_name):
         "username": "caicloud",
         "repository": {
             #"url": "/home/superxi/gopath/src/github.com/caicloud/console-web",
-            "url": "https://github.com/zoumo/go_test.git",
+            "url": "https://github.com/zz-bmj/go-demo",
             "vcs": "git",
             #"webhook": "github"
             #"url": "svn://118.193.185.187/svn-demo/trunk",
@@ -298,9 +298,14 @@ def delete_worker_node(node_id):
     r = requests.delete(url.format(**{'node_id': node_id}), headers=headers)
     print r.status_code, r.text
 
+def get_clouds():
+    url = host + "api/v0.1/clouds"
+    r = requests.get(url, headers=headers)
+    print r.status_code, r.text
+
 if __name__ == '__main__':
 
-    # health_check()
+    #health_check()
 
     # get_event('63e3a836-bdf9-4106-8c9a-a068b5e3a987')
     # set_event('63e3a836-bdf9-4106-8c9a-a068b5e3a987', 'success', 'well done')
@@ -337,13 +342,14 @@ if __name__ == '__main__':
     # delete_worker_node("8211f1fc-2c40-42c2-90e9-b8d16f2d6336")
 
     get_worker_nodes()
-    user_id = "zoumo"
-    # create_service(user_id, "go_test")
-    get_services(user_id)
-    svc_id = "8d11d36b-bb95-4364-8547-d92094456cc9"
+    get_clouds()
+    user_id = "bmj"
+    create_service(user_id, "go_test53")
+    # get_services(user_id)
+    # svc_id = "8d11d36b-bb95-4364-8547-d92094456cc9"
 
-    create_version(user_id, svc_id)
-    get_versions(user_id, svc_id)
+    # create_version(user_id, svc_id)
+    # get_versions(user_id, svc_id)
 
     # delete_service(user_id, svc_id)
     # create_service(user_id, "go_test")
