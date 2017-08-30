@@ -23,44 +23,41 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// CreatePipelineRecord creates the pipelineRecord, returns the pipelineRecord created.
+// CreatePipelineRecord creates the pipeline record, returns the pipeline record created.
 func (d *DataStore) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*api.PipelineRecord, error) {
 	pipelineRecord.ID = bson.NewObjectId().Hex()
 	pipelineRecord.StartTime = time.Now()
 
-	err := d.pipelineRecordCollection.Insert(pipelineRecord)
-	if err != nil {
+	if err := d.pipelineRecordCollection.Insert(pipelineRecord); err != nil {
 		return nil, err
 	}
 
 	return pipelineRecord, nil
 }
 
-// FindPipelineRecordsByPipelineID finds the pipelineRecord by pipelineID.
+// FindPipelineRecordsByPipelineID finds the pipeline record by pipelineID.
 func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string) ([]api.PipelineRecord, error) {
 	query := bson.M{"pipelineID": pipelineID}
 
 	pipelineRecords := []api.PipelineRecord{}
-	err := d.pipelineRecordCollection.FindId(query).All(pipelineRecords)
-	if err != nil {
+	if err := d.pipelineRecordCollection.FindId(query).All(pipelineRecords); err != nil {
 		return nil, err
 	}
 
 	return pipelineRecords, nil
 }
 
-// FindPipelineRecordByID finds the pipelineRecord by id.
+// FindPipelineRecordByID finds the pipeline record by id.
 func (d *DataStore) FindPipelineRecordByID(pipelineRecordID string) (*api.PipelineRecord, error) {
 	pipelineRecord := &api.PipelineRecord{}
-	err := d.pipelineRecordCollection.FindId(pipelineRecordID).One(pipelineRecord)
-	if err != nil {
+	if err := d.pipelineRecordCollection.FindId(pipelineRecordID).One(pipelineRecord); err != nil {
 		return nil, err
 	}
 
 	return pipelineRecord, nil
 }
 
-// UpdatePipelineRecord updates the pipelineRecord.
+// UpdatePipelineRecord updates the pipeline record.
 func (d *DataStore) UpdatePipelineRecord(pipelineRecord *api.PipelineRecord) error {
 	updatedPipelineRecord := *pipelineRecord
 	updatedPipelineRecord.EndTime = time.Now()
@@ -68,7 +65,7 @@ func (d *DataStore) UpdatePipelineRecord(pipelineRecord *api.PipelineRecord) err
 	return d.pipelineRecordCollection.UpdateId(pipelineRecord.ID, updatedPipelineRecord)
 }
 
-// DeletePipelineRecord deletes the pipelineRecord by id.
+// DeletePipelineRecord deletes the pipeline record by id.
 func (d *DataStore) DeletePipelineRecord(pipelineRecordID string) error {
 	return d.pipelineRecordCollection.RemoveId(pipelineRecordID)
 }
