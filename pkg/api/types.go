@@ -221,3 +221,50 @@ type CronTrigger struct {
 	GeneralTrigger
 	Expression string `bson:"expression,omitempty" json:"expression,omitempty" description:"expression of cron job"`
 }
+
+// PipelineRecord represents the running record of pipeline.
+type PipelineRecord struct {
+	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
+	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
+	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
+	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
+	StageStatus *StageStatus `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
+	Status      Status       `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	StartTime   time.Time    `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
+	EndTime     time.Time    `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+}
+
+// Status can be the status of some pipeline record or some stage
+type Status string
+
+const (
+	// Pending represents the status that is triggered but still not running.
+	Pending Status = "Pending"
+	// Running represents the status that is running.
+	Running Status = "Running"
+	// Success represents the status that finished and succeeded.
+	Success Status = "Success"
+	// Failure represents the status that finished but failed.
+	Failure Status = "Failed"
+	// Abort represents the status that the stage was aborted by some reason, and we can get the reason from the log.
+	Abort Status = "Aborted"
+)
+
+// TODO The status of every stage may be different.
+// StageStatus represents the collections of status for all stages.
+type StageStatus struct {
+	CodeCheckout    *GeneralStageStatus `bson:"codeCheckout,omitempty" json:"codeCheckout,omitempty" description:"status of code checkout stage"`
+	UnitTest        *GeneralStageStatus `bson:"unitTest,omitempty" json:"unitTest,omitempty" description:"status of unit test stage"`
+	CodeScan        *GeneralStageStatus `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
+	Package         *GeneralStageStatus `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
+	ImageBuild      *GeneralStageStatus `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
+	IntegrationTest *GeneralStageStatus `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
+	ImageRelease    *GeneralStageStatus `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
+}
+
+// GeneralStageStatus represents the information of stage.
+type GeneralStageStatus struct {
+	Status    Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the stage"`
+	StartTime time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the stage"`
+	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
+}

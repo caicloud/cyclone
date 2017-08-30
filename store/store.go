@@ -34,8 +34,9 @@ const (
 	ResourceCollectionName       string = "ResourceCollection"
 	CloudsCollection             string = "clouds"
 
-	projectCollectionName  string = "projects"
-	pipelineCollectionName string = "pipelines"
+	projectCollectionName        string = "projects"
+	pipelineCollectionName       string = "pipelines"
+	pipelineRecordCollectionName string = "pipelineRecords"
 )
 
 var (
@@ -47,8 +48,9 @@ type DataStore struct {
 	s *mgo.Session
 
 	// Collections
-	projectCollection  *mgo.Collection
-	pipelineCollection *mgo.Collection
+	projectCollection        *mgo.Collection
+	pipelineCollection       *mgo.Collection
+	pipelineRecordCollection *mgo.Collection
 }
 
 // Init store mongo client session
@@ -60,9 +62,10 @@ func Init(s *mgo.Session) {
 func NewStore() *DataStore {
 	s := session.Copy()
 	return &DataStore{
-		s:                  s,
-		projectCollection:  s.DB(defaultDBName).C(projectCollectionName),
-		pipelineCollection: s.DB(defaultDBName).C(pipelineCollectionName),
+		s:                        s,
+		projectCollection:        s.DB(defaultDBName).C(projectCollectionName),
+		pipelineCollection:       s.DB(defaultDBName).C(pipelineCollectionName),
+		pipelineRecordCollection: s.DB(defaultDBName).C(pipelineRecordCollectionName),
 	}
 }
 
