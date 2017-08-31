@@ -66,6 +66,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	ws := new(restful.WebService)
 
 	router.registerProjectAPIs(ws)
+	router.registerPipelineAPIs(ws)
 
 	restful.Add(ws)
 
@@ -103,4 +104,40 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 	ws.Route(ws.DELETE("/projects/{project}").To(router.deleteProject).
 		Doc("Delete the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")))
+}
+
+// registerPipelineAPIs registers pipeline related endpoints.
+func (router *router) registerPipelineAPIs(ws *restful.WebService) {
+	logdog.Info("Register pipeline APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// POST /api/v1/projects/{project}/pipelines
+	ws.Route(ws.POST("/projects/{project}/pipelines").To(router.createPipeline).
+		Doc("Add a pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Reads(api.Pipeline{}))
+
+	// GET /api/v1/projects/{project}/pipelines
+	ws.Route(ws.GET("/projects/{project}/pipelines").To(router.listPipelines).
+		Doc("Get all pipelines").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")))
+
+	// PUT /api/v1/projects/{project}/pipelines/{pipeline}
+	ws.Route(ws.PUT("/projects/{project}/pipelines/{pipeline}").To(router.updatePipeline).
+		Doc("Update the pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Reads(api.Pipeline{}))
+
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}").To(router.getPipeline).
+		Doc("Get the pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+
+	// DELETE /api/v1/projects/{project}/pipelines/{pipeline}
+	ws.Route(ws.DELETE("/projects/{project}/pipelines/{pipeline}").To(router.deletePipeline).
+		Doc("Delete a pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
 }

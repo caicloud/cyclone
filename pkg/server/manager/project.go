@@ -21,6 +21,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/store"
+	"github.com/zoumo/logdog"
 )
 
 // ProjectManager represents the interface to manage project.
@@ -88,14 +89,23 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 	return project, nil
 }
 
-// DeleteProject delete the project by name.
+// DeleteProject deletes the project by name.
 func (m *projectManager) DeleteProject(projectName string) error {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		return err
 	}
 
-	// TODO (robin) Delete the pipelines belongs to this project.
+	// Delete the pipelines in this project.
+	if err = m.pipelineManager.DeletePipelines(project.ID); err != nil {
+		logdog.Errorf("Fail to delete all pipelines in the project %s as %s", projectName, err.Error())
+		return err
+	}
 
-	return m.dataStore.DeleteProjectByID(project.ID)
+	if err = m.dataStore.DeleteProjectByID(project.ID); err != nil {
+		logdog.Errorf("Fail to delete the project %s as %s", projectName, err.Error())
+		return err
+	}
+
+	return nil
 }
