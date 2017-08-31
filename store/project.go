@@ -29,8 +29,8 @@ func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
 	project.ID = bson.NewObjectId().Hex()
 	project.CreatedTime = time.Now()
 	project.UpdatedTime = time.Now()
-	err := d.projectCollection.Insert(project)
-	if err != nil {
+
+	if err := d.projectCollection.Insert(project); err != nil {
 		return nil, err
 	}
 
@@ -52,8 +52,7 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 	}
 
 	project := &api.Project{}
-	err = d.projectCollection.Find(query).One(project)
-	if err != nil {
+	if err = d.projectCollection.Find(query).One(project); err != nil {
 		return nil, err
 	}
 
@@ -63,20 +62,18 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 // FindProjectByID finds the project by id.
 func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
 	project := &api.Project{}
-	err := d.projectCollection.FindId(projectID).One(project)
-	if err != nil {
+	if err := d.projectCollection.FindId(projectID).One(project); err != nil {
 		return nil, err
 	}
 
 	return project, nil
 }
 
-// UpdateProject updates the project.
+// UpdateProject updates the project, please make sure the project id is provided before call this method.
 func (d *DataStore) UpdateProject(project *api.Project) error {
-	updatedProject := *project
-	updatedProject.UpdatedTime = time.Now()
+	project.UpdatedTime = time.Now()
 
-	return d.projectCollection.UpdateId(project.ID, updatedProject)
+	return d.projectCollection.UpdateId(project.ID, project)
 }
 
 // DeleteProjectByID deletes the project by id.
