@@ -30,6 +30,7 @@ import (
 	loghttp "github.com/caicloud/cyclone/http"
 	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
 	restful "github.com/emicklei/go-restful"
@@ -143,6 +144,15 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 
 	// start log server
 	go s.StartLogServer()
+
+	dataStore := store.NewStore()
+	defer dataStore.Close()
+
+	// Initialize the V1 API.
+	if err := router.InitRouters(dataStore); err != nil {
+		logdog.Fatal(err)
+		return err
+	}
 
 	// start server
 	server := &http.Server{Addr: fmt.Sprintf(":%d", s.Config.CyclonePort), Handler: restful.DefaultContainer}
