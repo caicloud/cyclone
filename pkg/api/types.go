@@ -68,7 +68,7 @@ type BuildStages struct {
 	CodeScan        *CodeScanStage        `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"code scan stage"`
 	Package         *PackageStage         `bson:"package,omitempty" json:"package,omitempty" description:"package stage"`
 	ImageBuild      *ImageBuildStage      `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"image build stage"`
-	IntegrationTest *IntegrationTestStage `bson:"IntegrationTest,omitempty" json:"IntegrationTest,omitempty" description:"integration test stage"`
+	IntegrationTest *IntegrationTestStage `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"integration test stage"`
 	ImageRelease    *ImageReleaseStage    `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"image release stage"`
 }
 
@@ -104,7 +104,7 @@ type CodeSource struct {
 type GitSource struct {
 	Url      string `bson:"url,omitempty" json:"url,omitempty" description:"url of git repo"`
 	Ref      string `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Username string `bson:"username,omitempty" json:"useranme,omitempty" description:"username of git"`
+	Username string `bson:"username,omitempty" json:"username,omitempty" description:"username of git"`
 	Password string `bson:"password,omitempty" json:"password,omitempty" description:"password of git"`
 }
 
@@ -128,14 +128,15 @@ type PackageStage struct {
 
 // ImageBuildStage represents the config of image build stage.
 type ImageBuildStage struct {
-	BuildInfos []*ImageBuildInfo `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	BuildInfos []*ImageBuildInfo `bson:"buildInfos,omitempty" json:"buildInfos,omitempty" description:"list of output path of this stage"`
 }
 
-// ImageBuildInfo represents the config to build the image.
+// ImageBuildInfo represents the config to build the image. Only one of Dockerfile and DockerfilePath needs to be set.
+// If both of them are set, Dockerfile will be used with high priority.
 type ImageBuildInfo struct {
 	ContextDir     string `bson:"contextDir,omitempty" json:"contextDir,omitempty" description:"context directory for image build"`
 	Dockerfile     string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty" description:"dockerfile content for image build"`
-	DockerfilePath string `bson:"dockerfilePath,omitempty" json:"dockerfilePath,omitempty" description:"dockerfile for image build"`
+	DockerfilePath string `bson:"dockerfilePath,omitempty" json:"dockerfilePath,omitempty" description:"dockerfile path for image build"`
 	ImageName      string `bson:"imageName,omitempty" json:"imageName,omitempty" description:"name of the built image"`
 }
 
@@ -225,8 +226,8 @@ type CronTrigger struct {
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
 	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
-	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
-	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
+	PipelineID  string       `bson:"pipelineId,omitempty" json:"pipelineId,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
+	VersionID   string       `bson:"versionId,omitempty" json:"versionId,omitempty" description:"id of the version which the pipeline record is related to"`
 	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
 	StageStatus *StageStatus `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
 	Status      Status       `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
