@@ -122,9 +122,7 @@ func createService(request *restful.Request, response *restful.Response) {
 
 	// Start creating the service asynchronously, and make sure event is
 	// successfully acked before return.
-	err = event.SendCreateServiceEvent(&service)
-
-	if err != nil {
+	if err = event.SendCreateServiceEvent(&service); err != nil {
 		message := "Unable to create new service job"
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "service": service, "error": err})
 		createResponse.ErrorMessage = message

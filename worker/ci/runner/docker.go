@@ -257,10 +257,12 @@ func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.
 	}
 	err = client.StartContainer(container.ID, cco.HostConfig)
 	if err != nil {
-		// TODO: Check the error.
-		client.RemoveContainer(docker_client.RemoveContainerOptions{
-			ID: container.ID,
-		})
+		log.Errorf("Start container err: %v", err)
+
+		if err2 := client.RemoveContainer(docker_client.RemoveContainerOptions{ID: container.ID}); err2 != nil {
+			log.Errorf("Remove container err: %v", err2)
+		}
+
 		return nil, err
 	}
 	log.InfoWithFields("Successfully create the container.", log.Fields{"config": *cco})

@@ -85,5 +85,5 @@ func (router *router) deleteProject(request *restful.Request, response *restful.
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, nil)
+	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }
