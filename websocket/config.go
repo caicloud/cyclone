@@ -55,7 +55,7 @@ func GetConfig() *ServerConfig {
 }
 
 //LoadServerConfig load config of push-log websocket server
-func LoadServerConfig() error {
+func LoadServerConfig() {
 	mScServer = &ServerConfig{
 		ServerIP:            Localhost,
 		Port:                WSServerPort,
@@ -65,5 +65,4 @@ func LoadServerConfig() error {
 		ServerCertificate:   "",
 		ServerKey:           "",
 	}
-	return nil
 }

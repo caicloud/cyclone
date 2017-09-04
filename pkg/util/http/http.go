@@ -19,15 +19,10 @@ package http
 import (
 	"net/http"
 
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
 )
-
-type errorResponse struct {
-	Message string `json:"message,omitempty"`
-	Reason  string `json:"reason,omitempty"`
-	Details string `json:"details,omitempty"`
-}
 
 // ReadEntityFromRequest reads the entity from request body.
 func ReadEntityFromRequest(request *restful.Request, response *restful.Response, entityPointer interface{}) error {
@@ -42,6 +37,17 @@ func ReadEntityFromRequest(request *restful.Request, response *restful.Response,
 
 // ResponseWithError responses the request with error.
 func ResponseWithError(response *restful.Response, statusCode int, err error) {
-	errResp := errorResponse{Message: err.Error()}
+	errResp := api.ErrorResponse{Message: err.Error()}
 	response.WriteHeaderAndEntity(statusCode, errResp)
+}
+
+// ResponseWithList responses the list request with metedata.
+func ResponseWithList(list interface{}, total int, itemsLength int) api.ListResponse {
+	return api.ListResponse{
+		Meta: api.ListMeta{
+			Total:       total,
+			ItemsLength: itemsLength,
+		},
+		Items: list,
+	}
 }

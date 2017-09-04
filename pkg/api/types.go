@@ -269,3 +269,22 @@ type GeneralStageStatus struct {
 	StartTime time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the stage"`
 	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
 }
+
+// ListMeta represents metadata that list resources must have.
+type ListMeta struct {
+	Total       int `json:"total,omitempty" description:"total items count"`
+	ItemsLength int `json:"itemsLength,omitempty" description:"returned items count"`
+}
+
+// ListResponse represents a collection of some resources.
+type ListResponse struct {
+	Meta  ListMeta    `json:"metadata,omitempty" description:"pagination object"`
+	Items interface{} `json:"items,omitempty" description:"list resources"`
+}
+
+// ErrorResponse represents responce of error.
+type ErrorResponse struct {
+	Message string `json:"message,omitempty"`
+	Reason  string `json:"reason,omitempty"`
+	Details string `json:"details,omitempty"`
+}

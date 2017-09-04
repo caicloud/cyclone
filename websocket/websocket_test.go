@@ -27,10 +27,7 @@ import (
 // TestStartServer test start websocket server and dail it.
 func TestStartServer(t *testing.T) {
 	// Load websocket server config.
-	err := LoadServerConfig()
-	if err != nil {
-		t.Errorf("Load websocket server config error: %v.", err)
-	}
+	LoadServerConfig()
 
 	// Start websocket server.
 	go func() {
