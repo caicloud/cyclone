@@ -30,7 +30,7 @@ type PipelineManager interface {
 	ListPipelines(projectName string) ([]api.Pipeline, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
-	DeletePipelines(projectName string) error
+	ClearPipelinesOfProject(projectName string) error
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -118,8 +118,8 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 	return m.dataStore.DeletePipelineByID(pipeline.ID)
 }
 
-// DeletePipelines deletes all pipelines in one project.
-func (m *pipelineManager) DeletePipelines(projectName string) error {
+// ClearPipelinesOfProject deletes all pipelines in one project.
+func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		return err

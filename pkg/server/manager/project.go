@@ -97,7 +97,7 @@ func (m *projectManager) DeleteProject(projectName string) error {
 	}
 
 	// Delete the pipelines in this project.
-	if err = m.pipelineManager.DeletePipelines(project.ID); err != nil {
+	if err = m.pipelineManager.ClearPipelinesOfProject(project.ID); err != nil {
 		logdog.Errorf("Fail to delete all pipelines in the project %s as %s", projectName, err.Error())
 		return err
 	}
