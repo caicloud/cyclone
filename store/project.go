@@ -80,3 +80,29 @@ func (d *DataStore) UpdateProject(project *api.Project) error {
 func (d *DataStore) DeleteProjectByID(projectID string) error {
 	return d.projectCollection.RemoveId(projectID)
 }
+
+// GetProjects gets all projects. Will returns all projects.
+func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
+	projects := []api.Project{}
+	collection := d.pipelineCollection.Find(nil)
+
+	count, err := collection.Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	if count == 0 {
+		return projects, count, nil
+	}
+
+	if queryParams.Start > 0 {
+		collection.Skip(queryParams.Start)
+	}
+	if queryParams.Limit > 0 {
+		collection.Limit(queryParams.Limit)
+	}
+
+	if err = collection.All(&projects); err != nil {
+		return nil, 0, err
+	}
+	return projects, count, nil
+}

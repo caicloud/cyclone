@@ -269,3 +269,36 @@ type GeneralStageStatus struct {
 	StartTime time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the stage"`
 	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
 }
+
+// ListMeta represents metadata that list resources must have.
+type ListMeta struct {
+	Total       int `json:"total" description:"total items count"`
+	ItemsLength int `json:"itemsLength" description:"returned items count"`
+}
+
+// ListResponse represents a collection of some resources.
+type ListResponse struct {
+	Meta  ListMeta    `json:"metadata" description:"pagination object"`
+	Items interface{} `json:"items" description:"list resources"`
+}
+
+// QueryParams represents a collection of query param.
+type QueryParams struct {
+	Start int `json:"start,omitempty" description:"query start index, default 0"`
+	Limit int `json:"limit,omitempty" description:"specify the number of records, default +Inf, return all"`
+}
+
+const (
+	// Limit represents the name of the query parameter for pagination limit.
+	Limit string = "limit"
+
+	// Start represents the name of the query parameter for pagination start.
+	Start string = "start"
+)
+
+// ErrorResponse represents responce of error.
+type ErrorResponse struct {
+	Message string `json:"message,omitempty"`
+	Reason  string `json:"reason,omitempty"`
+	Details string `json:"details,omitempty"`
+}

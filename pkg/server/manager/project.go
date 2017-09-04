@@ -28,6 +28,7 @@ import (
 type ProjectManager interface {
 	CreateProject(project *api.Project) (*api.Project, error)
 	GetProject(projectName string) (*api.Project, error)
+	ListProjects(queryParams api.QueryParams) ([]api.Project, int, error)
 	UpdateProject(projectName string, newProject *api.Project) (*api.Project, error)
 	DeleteProject(projectName string) error
 }
@@ -59,6 +60,11 @@ func (m *projectManager) CreateProject(project *api.Project) (*api.Project, erro
 // GetProject gets the project by name.
 func (m *projectManager) GetProject(projectName string) (*api.Project, error) {
 	return m.dataStore.FindProjectByName(projectName)
+}
+
+// ListProjects lists all projects of one owner.
+func (m *projectManager) ListProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
+	return m.dataStore.GetProjects(queryParams)
 }
 
 // UpdateProject updates the project by name.
