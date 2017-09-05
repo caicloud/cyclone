@@ -56,9 +56,7 @@ func (worker *Worker) Run() error {
 	// Get event for cyclone server
 	event, err := worker.getEvent()
 	if err != nil {
-		logdog.Errorf("get event err: %v", err)
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
+		setEventFailStatus(&event, err.Error())
 		sendErr := worker.sendEvent(event)
 		if sendErr != nil {
 			logdog.Errorf("set event result err: %v", err)
@@ -121,9 +119,7 @@ func (worker *Worker) handleEvent(event *api.Event) {
 		worker.createVersion(vcsManager, event)
 
 	default:
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = "unkwon operation"
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, "unkwon operation")
 	}
 }
 
@@ -132,12 +128,11 @@ func (worker *Worker) createService(vcsManager *vcs.Manager, event *api.Event) {
 	// err := vcsManager.CloneServiceRepository(event)
 	err := vcsManager.CheckRepoValid(event)
 	if err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 	} else {
 		event.Status = api.EventStatusSuccess
 	}
+
 }
 
 // createVersion create version for service and push log to server via websocket
@@ -153,18 +148,18 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 	dockerManager, err := docker.NewManager(worker.Config.DockerHost, "",
 		api.RegistryCompose{registryLocation, registryUsername, registryPassword})
 	if err != nil {
+		setEventFailStatus(event, err.Error())
 		return
 	}
 	ciManager, err := ci.NewManager(dockerManager)
 	if err != nil {
+		setEventFailStatus(event, err.Error())
 		return
 	}
 
 	err = worker_log.CreateFileBuffer(event.EventID)
 	if err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 		return
 	}
 	output := worker_log.Output
@@ -172,9 +167,7 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 	defer func() {
 		// Push log file to cyclone.
 		if err := helper.PushLogToCyclone(event); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			logdog.Error("Operation failed", logdog.Fields{"event": event})
+			setEventFailStatus(event, err.Error())
 		}
 		output.Close()
 		worker_log.SetWatchLogFileSwitch(output.Name(), false)
@@ -198,9 +191,7 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 	event.Data["tag-name"] = event.Version.Name
 
 	if err = vcsManager.CloneVersionRepository(event); err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 		return
 	}
 
@@ -210,9 +201,7 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 	// Get the execution tree from the caicloud.yml.
 	tree, err := ciManager.Parse(event)
 	if err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 		return
 
 	}
@@ -263,17 +252,13 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	// Load the tree to a runner.Build.
 	r, err := ciManager.LoadTree(event, tree)
 	if err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 		return
 	}
 
 	// Build image
 	if err = helper.ExecBuild(ciManager, r); err != nil {
-		event.Status = api.EventStatusFail
-		event.ErrorMessage = err.Error()
-		logdog.Error("Operation failed", logdog.Fields{"event": event})
+		setEventFailStatus(event, err.Error())
 		return
 	}
 
@@ -281,9 +266,7 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	if strings.Contains(operation, "integration") {
 		// Integration
 		if err = helper.ExecIntegration(ciManager, r); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			logdog.Error("Operation failed", logdog.Fields{"event": event})
+			setEventFailStatus(event, err.Error())
 			return
 		}
 	}
@@ -292,9 +275,7 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	if strings.Contains(operation, "publish") {
 		// Publish
 		if err = helper.ExecPublish(ciManager, r); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			logdog.Error("Operation failed", logdog.Fields{"event": event})
+			setEventFailStatus(event, err.Error())
 			return
 		}
 	}
@@ -303,9 +284,7 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	if strings.Contains(operation, "deploy") {
 		// Deploy
 		if err = helper.ExecDeploy(event, dockerManager, r, tree); err != nil {
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			logdog.Error("Operation failed", logdog.Fields{"event": event})
+			setEventFailStatus(event, err.Error())
 			return
 		}
 
@@ -357,4 +336,11 @@ func isChanClosed(ch chan interface{}) bool {
 		}
 	}
 	return false
+}
+
+// setEventFailStatus sets the fail status of the event.
+func setEventFailStatus(event *api.Event, ErrorMessage string) {
+	event.Status = api.EventStatusFail
+	event.ErrorMessage = ErrorMessage
+	logdog.Error("Operation failed", logdog.Fields{"event": event})
 }
