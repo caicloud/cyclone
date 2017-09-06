@@ -64,15 +64,17 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 
 // listPipelines handles the request to list pipelines.
 func (router *router) listPipelines(request *restful.Request, response *restful.Response) {
+	queryParams := httputil.QueryParamsFromRequest(request)
+
 	projectName := request.PathParameter(projectPathParameterName)
 
-	pipelines, err := router.pipelineManager.ListPipelines(projectName)
+	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams)
 	if err != nil {
 		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, pipelines)
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(pipelines, len(pipelines), count))
 }
 
 // updatePipeline handles the request to update a pipeline.
@@ -104,5 +106,5 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, nil)
+	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }

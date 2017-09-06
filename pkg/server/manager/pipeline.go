@@ -27,7 +27,7 @@ import (
 type PipelineManager interface {
 	CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error)
 	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
-	ListPipelines(projectName string) ([]api.Pipeline, error)
+	ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
@@ -63,13 +63,13 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (
 }
 
 // ListPipelines lists all pipelines in one project.
-func (m *pipelineManager) ListPipelines(projectName string) ([]api.Pipeline, error) {
+func (m *pipelineManager) ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return m.dataStore.FindPipelinesByProjectID(project.ID)
+	return m.dataStore.FindPipelinesByProjectID(project.ID, queryParams)
 }
 
 // UpdatePipeline updates the pipeline by name in one project.

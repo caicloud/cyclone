@@ -17,7 +17,6 @@ limitations under the License.
 package router
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -56,7 +55,14 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 
 // listProjects handles the request to list projects.
 func (router *router) listProjects(request *restful.Request, response *restful.Response) {
-	httputil.ResponseWithError(response, http.StatusInternalServerError, fmt.Errorf("Not implemented"))
+	queryParams := httputil.QueryParamsFromRequest(request)
+	projects, count, err := router.projectManager.ListProjects(queryParams)
+	if err != nil {
+		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(projects, len(projects), count))
 }
 
 // updateProject handles the request to update a project.
@@ -85,5 +91,5 @@ func (router *router) deleteProject(request *restful.Request, response *restful.
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, nil)
+	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }

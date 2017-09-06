@@ -19,15 +19,12 @@ package http
 import (
 	"net/http"
 
+	"strconv"
+
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
 )
-
-type errorResponse struct {
-	Message string `json:"message,omitempty"`
-	Reason  string `json:"reason,omitempty"`
-	Details string `json:"details,omitempty"`
-}
 
 // ReadEntityFromRequest reads the entity from request body.
 func ReadEntityFromRequest(request *restful.Request, response *restful.Response, entityPointer interface{}) error {
@@ -42,6 +39,40 @@ func ReadEntityFromRequest(request *restful.Request, response *restful.Response,
 
 // ResponseWithError responses the request with error.
 func ResponseWithError(response *restful.Response, statusCode int, err error) {
-	errResp := errorResponse{Message: err.Error()}
+	errResp := api.ErrorResponse{Message: err.Error()}
 	response.WriteHeaderAndEntity(statusCode, errResp)
+}
+
+// ResponseWithList responses list with metadata.
+func ResponseWithList(list interface{}, itemsLength int, total int) api.ListResponse {
+	return api.ListResponse{
+		Meta: api.ListMeta{
+			Total:       total,
+			ItemsLength: itemsLength,
+		},
+		Items: list,
+	}
+}
+
+// QueryParamsFromRequest reads the query params from request body.
+func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams) {
+	limitStr := request.QueryParameter(api.Limit)
+	startStr := request.QueryParameter(api.Start)
+
+	if limitStr != "" {
+		qp.Limit = Atoi(limitStr)
+	}
+	if startStr != "" {
+		qp.Start = Atoi(startStr)
+	}
+	return qp
+}
+
+// Atoi casts string to int.
+func Atoi(str string) (i int) {
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		logdog.Errorf("Fail to cast string to int as %s", err.Error())
+	}
+	return i
 }
