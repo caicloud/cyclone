@@ -21,6 +21,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/store"
+	"github.com/zoumo/logdog"
 )
 
 // PipelineManager represents the interface to manage pipeline.
@@ -30,21 +31,26 @@ type PipelineManager interface {
 	ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
-	ClearPipelinesOfProject(projectName string) error
+	ClearPipelinesOfProject(projectID string) error
 }
 
 // pipelineManager represents the manager for pipeline.
 type pipelineManager struct {
-	dataStore *store.DataStore
+	dataStore             *store.DataStore
+	pipelineRecordManager PipelineRecordManager
 }
 
 // NewPipelineManager creates a pipeline manager.
-func NewPipelineManager(dataStore *store.DataStore) (PipelineManager, error) {
+func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager PipelineRecordManager) (PipelineManager, error) {
 	if dataStore == nil {
-		return nil, fmt.Errorf("Fail to new pipeline manager as data store is nil.")
+		return nil, fmt.Errorf("Fail to new pipeline manager as data store is nil")
 	}
 
-	return &pipelineManager{dataStore}, nil
+	if pipelineRecordManager == nil {
+		return nil, fmt.Errorf("Fail to new pipeline manager as pipeline record is nil")
+	}
+
+	return &pipelineManager{dataStore, pipelineRecordManager}, nil
 }
 
 // CreatePipeline creates a pipeline.
@@ -115,15 +121,29 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 		return err
 	}
 
-	return m.dataStore.DeletePipelineByID(pipeline.ID)
-}
-
-// ClearPipelinesOfProject deletes all pipelines in one project.
-func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
-	project, err := m.dataStore.FindProjectByName(projectName)
-	if err != nil {
+	// Delete the pipeline records of this pipeline.
+	if err = m.pipelineRecordManager.ClearPipelineRecordsOfPipeline(pipeline.ID); err != nil {
+		logdog.Errorf("Fail to delete all pipeline records of the pipeline %s in the project %s as %s", pipelineName, projectName, err.Error())
 		return err
 	}
 
-	return m.dataStore.DeletePipelinesByProjectID(project.ID)
+	if err = m.dataStore.DeletePipelineByID(pipeline.ID); err != nil {
+		logdog.Errorf("Fail to delete the pipeline %s in the project %s as %s", pipelineName, projectName, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// ClearPipelinesOfProject deletes all pipelines in one project.
+func (m *pipelineManager) ClearPipelinesOfProject(projectID string) error {
+	// Delete the pipeline records of this project.
+	pipelines, count, err := m.dataStore.FindPipelinesByProjectID(projectID, api.QueryParams{})
+	for i := 0; i < count; i++ {
+		if err = m.pipelineRecordManager.ClearPipelineRecordsOfPipeline(pipelines[i].ID); err != nil {
+			logdog.Errorf("Fail to delete all pipeline records of the project id is %s as %s", projectID, err.Error())
+			return err
+		}
+	}
+	return m.dataStore.DeletePipelinesByProjectID(projectID)
 }

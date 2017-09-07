@@ -33,6 +33,9 @@ const (
 
 	// pipelinePathParameterName represents the name of the path parameter for pipeline.
 	pipelinePathParameterName = "pipeline"
+
+	// pipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
+	pipelineRecordPathParameterName = "recordId"
 )
 
 // router represents the router to distribute the REST requests.
@@ -42,12 +45,21 @@ type router struct {
 
 	// pipelineManager represents the pipeline manager.
 	pipelineManager manager.PipelineManager
+
+	// pipelineRecordManager represents the pipeline record manager.
+	pipelineRecordManager manager.PipelineRecordManager
 }
 
 // InitRouters initializes the router for REST APIs.
 func InitRouters(dataStore *store.DataStore) error {
+	// New pipeline record manager
+	pipelineRecordManager, err := manager.NewPipelineRecordManager(dataStore)
+	if err != nil {
+		return err
+	}
+
 	// New pipeline manager
-	pipelineManager, err := manager.NewPipelineManager(dataStore)
+	pipelineManager, err := manager.NewPipelineManager(dataStore, pipelineRecordManager)
 	if err != nil {
 		return err
 	}
@@ -61,12 +73,14 @@ func InitRouters(dataStore *store.DataStore) error {
 	router := &router{
 		projectManager,
 		pipelineManager,
+		pipelineRecordManager,
 	}
 
 	ws := new(restful.WebService)
 
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
+	router.registerPipelineRecordAPIs(ws)
 
 	restful.Add(ws)
 
@@ -140,4 +154,30 @@ func (router *router) registerPipelineAPIs(ws *restful.WebService) {
 		Doc("Delete a pipeline").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+}
+
+// registerPipelineRecordAPIs registers pipeline record related endpoints.
+func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
+	logdog.Info("Register pipeline record APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records").To(router.listPipelineRecords).
+		Doc("Get all pipeline records of one pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}").To(router.getPipelineRecord).
+		Doc("Get the pipeline record").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+
+	// DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}
+	ws.Route(ws.DELETE("/projects/{project}/pipelines/{pipeline}/records/{recordId}").To(router.deletePipelineRecord).
+		Doc("Delete a pipeline record").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 }
