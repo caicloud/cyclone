@@ -56,35 +56,38 @@ func ConvertPipelineToService(pipeline *newapi.Pipeline) (*api.Service, error) {
 	// Username is used as the repo of built image.
 	service.Username = AdminUsername
 
-	// Convert the build stages to caicloud YAML string for service.
+	// Convert the build stages to caicloud.yml string for service.
 	caicloudYamlStr, err := convertBuildStagesToCaicloudYaml(pipeline)
 	if err != nil {
 		return nil, err
 	}
 	service.CaicloudYaml = caicloudYamlStr
 
+	// Have checked the correction of buildInfos in function convertBuildStagesToCaicloudYaml().
+	service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
+
 	return service, nil
 }
 
-// convertBuildStagesToCaicloudYaml converts the config of build stages in pipeline to caicloud YAML.
+// convertBuildStagesToCaicloudYaml converts the config of build stages in pipeline to caicloud.yml.
 func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error) {
 	if pipeline.Build == nil || pipeline.Build.BuilderImage == nil || pipeline.Build.Stages == nil {
-		return "", fmt.Errorf("fail to generate caicloud YAML as builder image or build stages is empty")
+		return "", fmt.Errorf("fail to generate caicloud.yml as builder image or build stages is empty")
 	}
 
 	builderImage := pipeline.Build.BuilderImage
 	stages := pipeline.Build.Stages
 	if stages.Package == nil {
-		return "", fmt.Errorf("fail to generate caicloud YAML as package stages is empty")
+		return "", fmt.Errorf("fail to generate caicloud.yml as package stages is empty")
 	}
 
 	if stages.ImageBuild == nil {
-		return "", fmt.Errorf("fail to generate caicloud YAML as image build stages is empty")
+		return "", fmt.Errorf("fail to generate caicloud.yml as image build stages is empty")
 	}
 
 	caicloudYAMLConfig := &Config{}
 
-	// Convert the package stage of pipeline to the prebuild of caicloud YAML.
+	// Convert the package stage of pipeline to the prebuild of caicloud.yml.
 	preBuild := &PreBuild{}
 	packageConfig := stages.Package
 	preBuild.Commands = packageConfig.Command
@@ -94,23 +97,22 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 	caicloudYAMLConfig.PreBuild = preBuild
 
-	// Convert the image build stage to the build of caicloud YAML.
+	// Convert the image build stage to the build of caicloud.yml.
 	build := &Build{}
 	imageBuildConfig := stages.ImageBuild
 	buildInfoNum := len(imageBuildConfig.BuildInfos)
 	if buildInfoNum == 0 || buildInfoNum > 1 {
-		return "", fmt.Errorf("fail to generate caicloud YAML as %d buildInfos provided in imageBuild stage", buildInfoNum)
+		return "", fmt.Errorf("fail to generate caicloud.yml as %d buildInfos provided in imageBuild stage", buildInfoNum)
 	}
 
 	// Now only support one build info.
-	// TODO (robin) How to support the customized Dockerfile.
 	buildInfo := imageBuildConfig.BuildInfos[0]
 	build.ContextDir = buildInfo.ContextDir
 	build.DockerfileName = buildInfo.DockerfilePath
 
 	caicloudYAMLConfig.Build = build
 
-	// Convert the integration test stage of pipeline to the integration of caicloud YAML.
+	// Convert the integration test stage of pipeline to the integration of caicloud.yml.
 	if stages.IntegrationTest != nil {
 		integration := &Integration{}
 		integrationTestConfig := stages.IntegrationTest
@@ -137,7 +139,7 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	return string(config), nil
 }
 
-// convertEnvVars converts the environment variables to the string list for caicloud YAML.
+// convertEnvVars converts the environment variables to the string list for caicloud.yml.
 func convertEnvVars(envVars []newapi.EnvVar) []string {
 	environment := []string{}
 	for _, envVar := range envVars {
