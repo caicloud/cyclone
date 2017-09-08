@@ -84,7 +84,7 @@ func (d *DataStore) DeleteProjectByID(projectID string) error {
 // GetProjects gets all projects. Will returns all projects.
 func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
 	projects := []api.Project{}
-	collection := d.pipelineCollection.Find(nil)
+	collection := d.projectCollection.Find(nil)
 
 	count, err := collection.Count()
 	if err != nil {
