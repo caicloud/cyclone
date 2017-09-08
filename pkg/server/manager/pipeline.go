@@ -19,17 +19,13 @@ package manager
 import (
 	"fmt"
 
-	"github.com/caicloud/cyclone/api/conversion"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/store"
-	"github.com/zoumo/logdog"
 )
 
 // PipelineManager represents the interface to manage pipeline.
 type PipelineManager interface {
-	CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error)
+	CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error)
 	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
 	ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
@@ -39,8 +35,7 @@ type PipelineManager interface {
 
 // pipelineManager represents the manager for pipeline.
 type pipelineManager struct {
-	dataStore     *store.DataStore
-	remoteManager *remote.Manager
+	dataStore *store.DataStore
 }
 
 // NewPipelineManager creates a pipeline manager.
@@ -49,46 +44,12 @@ func NewPipelineManager(dataStore *store.DataStore) (PipelineManager, error) {
 		return nil, fmt.Errorf("Fail to new pipeline manager as data store is nil.")
 	}
 
-	remoteManager := remote.NewManager()
-	return &pipelineManager{dataStore, remoteManager}, nil
+	return &pipelineManager{dataStore}, nil
 }
 
 // CreatePipeline creates a pipeline.
-func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error) {
-	// Check the existence of the project and pipeline.
-	if _, err := m.GetPipeline(projectName, pipeline.Name); err == nil {
-		return nil, err
-	}
-
-	// TODO (robin) Remove the creation of service for pipeline after replace service with pipeline.
-	service, err := conversion.ConvertPipelineToService(pipeline)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to generate service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	serviceID, err := m.dataStore.NewServiceDocument(service)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to create service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	err = event.SendCreateServiceEvent(service)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to create service event for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	pipeline.ServiceID = serviceID
-
-	createdPipeline, err := m.dataStore.CreatePipeline(pipeline)
-	if err != nil {
-		// Delete the service if fail to create pipeline.
-		if err := m.dataStore.DeleteServiceByID(serviceID); err != nil {
-			logdog.Error(err)
-		}
-
-		return nil, err
-	}
-
-	return createdPipeline, nil
+func (m *pipelineManager) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
+	return m.dataStore.CreatePipeline(pipeline)
 }
 
 // GetPipeline gets the pipeline by name in one project.
@@ -140,34 +101,6 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		pipeline.AutoTrigger = newPipeline.AutoTrigger
 	}
 
-	// TODO (robin) Remove the updating of service for pipeline after replace service with pipeline.
-	service, err := m.dataStore.FindServiceByID(pipeline.ServiceID)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to find service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	newService, err := conversion.ConvertPipelineToService(pipeline)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to generate service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	newService.ServiceID = service.ServiceID
-
-	// Judge the change of repository url, if not change, just keep the status, if change, need to send event to
-	// check the new status.
-	if newService.Repository.URL == service.Repository.URL {
-		newService.Repository.Status = service.Repository.Status
-	} else {
-		err = event.SendCreateServiceEvent(service)
-		if err != nil {
-			return nil, fmt.Errorf("Fail to create service event for pipeline %s as %s", pipeline.Name, err.Error())
-		}
-	}
-	_, err = m.dataStore.UpsertServiceDocument(newService)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to update service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
 	if err = m.dataStore.UpdatePipeline(pipeline); err != nil {
 		return nil, err
 	}
@@ -182,66 +115,15 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 		return err
 	}
 
-	return m.deletePipeline(pipeline)
+	return m.dataStore.DeletePipelineByID(pipeline.ID)
 }
 
 // ClearPipelinesOfProject deletes all pipelines in one project.
 func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
-	pipelines, err := m.ListPipelines(projectName)
-	if err != nil {
-		return nil
-	}
-
-	for _, pipeline := range pipelines {
-		if err := m.deletePipeline(&pipeline); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// deletePipeline deletes the pipeline and its related services and versions. It can be removed after replace service
-// with pipeline.
-func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
-	ds := m.dataStore
-
-	service, err := ds.FindServiceByID(pipeline.ServiceID)
+	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		return err
 	}
 
-	// Delete the versions related to this pipeline.
-	versions, err := ds.FindVersionsByServiceID(pipeline.ServiceID)
-	if err != nil {
-		return err
-	}
-
-	for _, version := range versions {
-		if err := ds.DeleteVersionByID(version.VersionID); err != nil {
-			return fmt.Errorf("Fail to delete the versions for pipeline %s as %s", pipeline.Name, err.Error())
-		}
-	}
-
-	// Delete the webhook.
-	remote, err := m.remoteManager.FindRemote(service.Repository.Webhook)
-	if err != nil {
-		logdog.Error(err.Error())
-	} else {
-		if err := remote.DeleteHook(service); err != nil {
-			logdog.Errorf("Fail to delete the webhook for pipeline %s as %s", pipeline.Name, err.Error())
-		}
-	}
-
-	// Delete the service related to this pipeline
-	err = ds.DeleteServiceByID(pipeline.ServiceID)
-	if err != nil {
-		return fmt.Errorf("Fail to delete the service for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
-	err = ds.DeletePipelineByID(pipeline.ID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return m.dataStore.DeletePipelinesByProjectID(project.ID)
 }

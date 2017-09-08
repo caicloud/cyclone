@@ -39,7 +39,7 @@ func (router *router) createPipeline(request *restful.Request, response *restful
 	}
 
 	pipeline.ProjectID = project.ID
-	createdPipeline, err := router.pipelineManager.CreatePipeline(projectName, pipeline)
+	createdPipeline, err := router.pipelineManager.CreatePipeline(pipeline)
 	if err != nil {
 		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
 		return
@@ -93,7 +93,7 @@ func (router *router) updatePipeline(request *restful.Request, response *restful
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, updatedPipeline)
+	response.WriteHeaderAndEntity(http.StatusCreated, updatedPipeline)
 }
 
 // deletePipeline handles the request to delete a pipeline.
