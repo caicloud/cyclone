@@ -35,16 +35,32 @@ func (d *DataStore) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*a
 	return pipelineRecord, nil
 }
 
-// FindPipelineRecordsByPipelineID finds the pipeline record by pipelineID.
-func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string) ([]api.PipelineRecord, error) {
-	query := bson.M{"pipelineID": pipelineID}
-
+// FindPipelineRecordsByPipelineID finds the pipeline records by pipelineID.
+func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
-	if err := d.pipelineRecordCollection.FindId(query).All(pipelineRecords); err != nil {
-		return nil, err
+	query := bson.M{"pipelineId": pipelineID}
+	collection := d.pipelineCollection.Find(query)
+
+	count, err := collection.Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	if count == 0 {
+		return pipelineRecords, count, nil
 	}
 
-	return pipelineRecords, nil
+	if queryParams.Start > 0 {
+		collection.Skip(queryParams.Start)
+	}
+	if queryParams.Limit > 0 {
+		collection.Limit(queryParams.Limit)
+	}
+
+	if err = collection.All(&pipelineRecords); err != nil {
+		return nil, 0, err
+	}
+
+	return pipelineRecords, count, nil
 }
 
 // FindPipelineRecordByID finds the pipeline record by id.
@@ -59,13 +75,17 @@ func (d *DataStore) FindPipelineRecordByID(pipelineRecordID string) (*api.Pipeli
 
 // UpdatePipelineRecord updates the pipeline record.
 func (d *DataStore) UpdatePipelineRecord(pipelineRecord *api.PipelineRecord) error {
-	updatedPipelineRecord := *pipelineRecord
-	updatedPipelineRecord.EndTime = time.Now()
+	pipelineRecord.EndTime = time.Now()
 
-	return d.pipelineRecordCollection.UpdateId(pipelineRecord.ID, updatedPipelineRecord)
+	return d.pipelineRecordCollection.UpdateId(pipelineRecord.ID, pipelineRecord)
 }
 
-// DeletePipelineRecord deletes the pipeline record by id.
-func (d *DataStore) DeletePipelineRecord(pipelineRecordID string) error {
+// DeletePipelineRecordByID deletes the pipeline record by id.
+func (d *DataStore) DeletePipelineRecordByID(pipelineRecordID string) error {
 	return d.pipelineRecordCollection.RemoveId(pipelineRecordID)
+}
+
+// DeletePipelineRecordsByPipelineID deletes all the pipeline records of one pipeline by pipeline id.
+func (d *DataStore) DeletePipelineRecordsByPipelineID(pipelineID string) error {
+	return d.pipelineRecordCollection.Remove(bson.M{"pipelineId": pipelineID})
 }
