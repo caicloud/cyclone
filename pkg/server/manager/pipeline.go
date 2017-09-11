@@ -68,7 +68,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	}
 
 	// TODO (robin) Remove the creation of service for pipeline after replace service with pipeline.
-	service, err := conversion.ConvertPipelineToService(pipeline)
+	service, err := conversion.ConvertPipelineToService(projectName, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("Fail to generate service for pipeline %s as %s", pipeline.Name, err.Error())
 	}
@@ -153,7 +153,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		return nil, fmt.Errorf("Fail to find service for pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
-	newService, err := conversion.ConvertPipelineToService(pipeline)
+	newService, err := conversion.ConvertPipelineToService(projectName, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("Fail to generate service for pipeline %s as %s", pipeline.Name, err.Error())
 	}

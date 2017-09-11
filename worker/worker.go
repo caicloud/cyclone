@@ -186,9 +186,23 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 
 	destDir := vcsManager.GetCloneDir(&event.Service, &event.Version)
 	event.Data["context-dir"] = destDir
-	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
-		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
-	event.Data["tag-name"] = event.Version.Name
+
+	var imageName, tagName string
+
+	if event.Service.ImageName == "" {
+		imageName = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
+			strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
+		tagName = fmt.Sprintf("%s-%d", event.Version.Commit, time.Now().Unix())
+	} else {
+		if arr := strings.Split(event.Service.ImageName, ":"); len(arr) == 2 {
+			imageName, tagName = arr[0], arr[1]
+		} else {
+			setEventFailStatus(event, "wrong image name")
+		}
+	}
+
+	event.Data["image-name"] = imageName
+	event.Data["tag-name"] = tagName
 
 	if err = vcsManager.CloneVersionRepository(event); err != nil {
 		setEventFailStatus(event, err.Error())
