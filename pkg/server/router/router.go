@@ -154,6 +154,13 @@ func (router *router) registerPipelineAPIs(ws *restful.WebService) {
 		Doc("Delete a pipeline").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+
+	// POST /api/v1/projects/{project}/pipelines/{pipeline}
+	ws.Route(ws.POST("/projects/{project}/pipelines/{pipeline}").To(router.performPipeline).
+		Doc("Perform the pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Reads(api.PipelinePerformParams{}))
 }
 
 // registerPipelineRecordAPIs registers pipeline record related endpoints.

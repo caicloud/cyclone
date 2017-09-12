@@ -296,9 +296,16 @@ const (
 	Start string = "start"
 )
 
-// ErrorResponse represents responce of error.
+// ErrorResponse represents response of error.
 type ErrorResponse struct {
 	Message string `json:"message,omitempty"`
 	Reason  string `json:"reason,omitempty"`
 	Details string `json:"details,omitempty"`
+}
+
+// PipelinePerformParams the params in the request body to perform the pipeline.
+type PipelinePerformParams struct {
+	Version string   `bson:"version,omitempty" json:"version,omitempty" description:"version of this running of pipeline"`
+	Tagged  bool     `bson:"tagged,omitempty" json:"tagged,omitempty" description:"whether create tag in SCM"`
+	Stages  []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }

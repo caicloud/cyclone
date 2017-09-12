@@ -18,9 +18,12 @@ package conversion
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
+	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/yaml.v2"
 )
 
@@ -190,4 +193,26 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 	}
 
 	return serviceRepository, nil
+}
+
+// ConvertPipelineParamsToVersion converts the pipeline perform params to run the pipeline.
+func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
+	version := &api.Version{
+		Operation:     api.VersionOperation(strings.Join(performParams.Stages, ",")),
+		Status:        api.VersionPending,
+		SecurityCheck: false,
+		CreateTime:    time.Now(),
+	}
+
+	if performParams.Version != "" {
+		version.Name = performParams.Version
+	} else {
+		version.Name = bson.NewObjectId().Hex()
+	}
+
+	if performParams.Tagged {
+		version.Operator = api.APIOperator
+	}
+
+	return version
 }

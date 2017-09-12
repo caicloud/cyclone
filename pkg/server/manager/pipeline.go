@@ -35,6 +35,7 @@ type PipelineManager interface {
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
+	PerformPipeline(projectName string, pipelineName string, performParams *api.PipelinePerformParams) error
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -257,4 +258,28 @@ func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 	}
 
 	return nil
+}
+
+// PerformPipeline performs the pipeline with params.
+func (m *pipelineManager) PerformPipeline(projectName string, pipelineName string, performParams *api.PipelinePerformParams) error {
+	// Find the pipeline in the project.
+	pipeline, err := m.GetPipeline(projectName, pipelineName)
+	if err != nil {
+		return err
+	}
+
+	ds := m.dataStore
+	service, err := ds.FindServiceByID(pipeline.ServiceID)
+	if err != nil {
+		return fmt.Errorf("Fail to find the related service of the pipeline %s", pipelineName)
+	}
+
+	version := conversion.ConvertPipelineParamsToVersion(performParams)
+	version.ServiceID = service.ServiceID
+
+	if _, err = ds.NewVersionDocument(version); err != nil {
+		return err
+	}
+
+	return event.SendCreateVersionEvent(service, version)
 }
