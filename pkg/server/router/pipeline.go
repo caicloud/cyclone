@@ -108,3 +108,21 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }
+
+// performPipeline handles the request to perform a pipeline.
+func (router *router) performPipeline(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+
+	performParams := &api.PipelinePerformParams{}
+	if err := httputil.ReadEntityFromRequest(request, response, performParams); err != nil {
+		return
+	}
+
+	if err := router.pipelineManager.PerformPipeline(projectName, pipelineName, performParams); err != nil {
+		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, nil)
+}
