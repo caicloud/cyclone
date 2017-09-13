@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -87,5 +88,9 @@ func (d *DataStore) DeletePipelineRecordByID(pipelineRecordID string) error {
 
 // DeletePipelineRecordsByPipelineID deletes all the pipeline records of one pipeline by pipeline id.
 func (d *DataStore) DeletePipelineRecordsByPipelineID(pipelineID string) error {
-	return d.pipelineRecordCollection.Remove(bson.M{"pipelineId": pipelineID})
+	if err := d.pipelineRecordCollection.Remove(bson.M{"pipelineId": pipelineID}); err != mgo.ErrNotFound {
+		return err
+	}
+
+	return nil
 }

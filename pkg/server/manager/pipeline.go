@@ -213,11 +213,6 @@ func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 	ds := m.dataStore
 
-	service, err := ds.FindServiceByID(pipeline.ServiceID)
-	if err != nil {
-		return err
-	}
-
 	// Delete the versions related to this pipeline.
 	versions, err := ds.FindVersionsByServiceID(pipeline.ServiceID)
 	if err != nil {
@@ -230,31 +225,31 @@ func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 		}
 	}
 
-	// Delete the webhook.
-	remote, err := m.remoteManager.FindRemote(service.Repository.Webhook)
-	if err != nil {
-		logdog.Error(err.Error())
-	} else {
-		if err := remote.DeleteHook(service); err != nil {
-			logdog.Errorf("Fail to delete the webhook for pipeline %s as %s", pipeline.Name, err.Error())
+	if service, err := ds.FindServiceByID(pipeline.ServiceID); err == nil {
+		// Delete the webhook.
+		remote, err := m.remoteManager.FindRemote(service.Repository.Webhook)
+		if err != nil {
+			logdog.Error(err.Error())
+		} else {
+			if err := remote.DeleteHook(service); err != nil {
+				logdog.Errorf("Fail to delete the webhook for pipeline %s as %s", pipeline.Name, err.Error())
+			}
 		}
-	}
 
-	// Delete the service related to this pipeline
-	err = ds.DeleteServiceByID(pipeline.ServiceID)
-	if err != nil {
-		return fmt.Errorf("Fail to delete the service for pipeline %s as %s", pipeline.Name, err.Error())
+		// Delete the service related to this pipeline
+		err = ds.DeleteServiceByID(pipeline.ServiceID)
+		if err != nil {
+			return fmt.Errorf("Fail to delete the service for pipeline %s as %s", pipeline.Name, err.Error())
+		}
 	}
 
 	// Delete the pipeline records of this pipeline.
 	if err = m.pipelineRecordManager.ClearPipelineRecordsOfPipeline(pipeline.ID); err != nil {
-		logdog.Errorf("Fail to delete all pipeline records for pipeline %s as %s", pipeline.Name, err.Error())
-		return err
+		return fmt.Errorf("Fail to delete all pipeline records for pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
 	if err = ds.DeletePipelineByID(pipeline.ID); err != nil {
-		logdog.Errorf("Fail to delete the pipeline %s as %s", pipeline.Name, err.Error())
-		return err
+		return fmt.Errorf("Fail to delete the pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
 	return nil
