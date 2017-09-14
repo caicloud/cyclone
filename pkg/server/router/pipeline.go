@@ -74,7 +74,7 @@ func (router *router) listPipelines(request *restful.Request, response *restful.
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(pipelines, len(pipelines), count))
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(pipelines, count))
 }
 
 // updatePipeline handles the request to update a pipeline.
