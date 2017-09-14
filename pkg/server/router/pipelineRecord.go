@@ -48,7 +48,7 @@ func (router *router) listPipelineRecords(request *restful.Request, response *re
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(pipelineRecords, len(pipelineRecords), count))
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(pipelineRecords, count))
 }
 
 // deletePipelineRecord handles the request to delete a pipeline record.

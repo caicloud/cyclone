@@ -272,8 +272,7 @@ type GeneralStageStatus struct {
 
 // ListMeta represents metadata that list resources must have.
 type ListMeta struct {
-	Total       int `json:"total" description:"total items count"`
-	ItemsLength int `json:"itemsLength" description:"returned items count"`
+	Total int `json:"total" description:"total items count"`
 }
 
 // ListResponse represents a collection of some resources.
