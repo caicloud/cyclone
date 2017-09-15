@@ -24,7 +24,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/store"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2"
 )
 
 // PipelineManager represents the interface to manage pipeline.
@@ -64,7 +66,7 @@ func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager Pipeli
 func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error) {
 	// Check the existence of the project and pipeline.
 	if _, err := m.GetPipeline(projectName, pipeline.Name); err == nil {
-		return nil, fmt.Errorf("The pipeline %s in project %s alrady exists.", pipeline.Name, projectName)
+		return nil, httperror.ErrorAlreadyExist.Format(pipeline.Name)
 	}
 
 	// TODO (robin) Remove the creation of service for pipeline after replace service with pipeline.
@@ -102,16 +104,32 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(projectName)
+		}
+
 		return nil, err
 	}
 
-	return m.dataStore.FindPipelineByName(project.ID, pipelineName)
+	pipeline, err := m.dataStore.FindPipelineByName(project.ID, pipelineName)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(pipelineName)
+		}
+
+		return nil, err
+	}
+
+	return pipeline, nil
 }
 
 // ListPipelines lists all pipelines in one project.
 func (m *pipelineManager) ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
+		}
 		return nil, 0, err
 	}
 

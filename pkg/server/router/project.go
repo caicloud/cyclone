@@ -55,7 +55,12 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 
 // listProjects handles the request to list projects.
 func (router *router) listProjects(request *restful.Request, response *restful.Response) {
-	queryParams := httputil.QueryParamsFromRequest(request)
+	queryParams, err := httputil.QueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		return
+	}
+
 	projects, count, err := router.projectManager.ListProjects(queryParams)
 	if err != nil {
 		httputil.ResponseWithError(response, http.StatusInternalServerError, err)

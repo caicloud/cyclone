@@ -37,7 +37,11 @@ func (router *router) getPipelineRecord(request *restful.Request, response *rest
 
 // listPipelineRecords handles the request to list pipeline records.
 func (router *router) listPipelineRecords(request *restful.Request, response *restful.Response) {
-	queryParams := httputil.QueryParamsFromRequest(request)
+	queryParams, err := httputil.QueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		return
+	}
 
 	projectName := request.PathParameter(projectPathParameterName)
 	pipelineName := request.PathParameter(pipelinePathParameterName)
