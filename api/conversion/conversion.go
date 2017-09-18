@@ -59,8 +59,6 @@ func ConvertPipelineToService(projectName string, pipeline *newapi.Pipeline) (*a
 	// Username is used as the repo of built image.
 	service.Username = projectName
 
-	service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
-
 	// Convert the build stages to caicloud.yml string for service.
 	caicloudYamlStr, err := convertBuildStagesToCaicloudYaml(pipeline)
 	if err != nil {
@@ -70,6 +68,7 @@ func ConvertPipelineToService(projectName string, pipeline *newapi.Pipeline) (*a
 
 	// Have checked the correction of buildInfos in function convertBuildStagesToCaicloudYaml().
 	service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
+	service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
 
 	return service, nil
 }
