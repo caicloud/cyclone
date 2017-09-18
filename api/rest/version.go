@@ -184,6 +184,8 @@ func getVersion(request *restful.Request, response *restful.Response) {
 		message := fmt.Sprintf("Unable to find version %v", versionID)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		getResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusNotFound, getResponse)
+		return
 	} else {
 		getResponse.Version = *result
 	}
@@ -214,6 +216,8 @@ func listVersions(request *restful.Request, response *restful.Response) {
 		message := "Unable to list version"
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		listResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusNotFound, listResponse)
+		return
 	} else {
 		listResponse.Versions = result
 	}

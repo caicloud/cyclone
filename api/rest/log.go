@@ -45,6 +45,8 @@ func getVersionLog(request *restful.Request, response *restful.Response) {
 		message := fmt.Sprintf("Unable to find version log by versionID %v", versionID)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})
 		getResponse.ErrorMessage = message
+		response.WriteHeaderAndEntity(http.StatusNotFound, getResponse)
+		return
 	} else {
 		getResponse.Logs = result.Logs
 	}
