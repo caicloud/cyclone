@@ -21,14 +21,15 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // CreatePipeline creates the pipeline, returns the pipeline created.
 func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
 	pipeline.ID = bson.NewObjectId().Hex()
-	pipeline.CreatedTime = time.Now()
-	pipeline.UpdatedTime = time.Now()
+	pipeline.CreationTime = time.Now()
+	pipeline.LastUpdateTime = time.Now()
 	err := d.pipelineCollection.Insert(pipeline)
 	if err != nil {
 		return nil, err
@@ -40,14 +41,14 @@ func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error
 // FindPipelineByName finds the pipeline by name in one project. If find no pipeline or more than one pipeline, return
 // error.
 func (d *DataStore) FindPipelineByName(projectID string, name string) (*api.Pipeline, error) {
-	query := bson.M{"projectId": projectID, "name": name}
+	query := bson.M{"projectID": projectID, "name": name}
 	count, err := d.pipelineCollection.Find(query).Count()
 	if err != nil {
 		return nil, err
 	}
 
 	if count == 0 {
-		return nil, fmt.Errorf("there is no pipeline with name %s", name)
+		return nil, mgo.ErrNotFound
 	} else if count > 1 {
 		return nil, fmt.Errorf("there are %d pipelines with the same name %s", count, name)
 	}
@@ -75,7 +76,7 @@ func (d *DataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
 // FindPipelinesByProjectID finds the pipelines by project id. Will returns all pipelines in this project.
 func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	pipelines := []api.Pipeline{}
-	query := bson.M{"projectId": projectID}
+	query := bson.M{"projectID": projectID}
 	collection := d.pipelineCollection.Find(query)
 
 	count, err := collection.Count()
@@ -102,7 +103,7 @@ func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.Q
 
 // UpdatePipeline updates the pipeline, please make sure the pipeline id is provided before call this method.
 func (d *DataStore) UpdatePipeline(pipeline *api.Pipeline) error {
-	pipeline.UpdatedTime = time.Now()
+	pipeline.LastUpdateTime = time.Now()
 
 	return d.pipelineCollection.UpdateId(pipeline.ID, pipeline)
 }
@@ -114,5 +115,5 @@ func (d *DataStore) DeletePipelineByID(pipelineID string) error {
 
 // DeletePipelinesByProjectID deletes all the pipelines in one project by project id.
 func (d *DataStore) DeletePipelinesByProjectID(projectID string) error {
-	return d.pipelineCollection.Remove(bson.M{"projectId": projectID})
+	return d.pipelineCollection.Remove(bson.M{"projectID": projectID})
 }

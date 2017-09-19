@@ -39,7 +39,7 @@ func (d *DataStore) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*a
 // FindPipelineRecordsByPipelineID finds the pipeline records by pipelineID.
 func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
-	query := bson.M{"pipelineId": pipelineID}
+	query := bson.M{"pipelineID": pipelineID}
 	collection := d.pipelineCollection.Find(query)
 
 	count, err := collection.Count()
@@ -88,7 +88,7 @@ func (d *DataStore) DeletePipelineRecordByID(pipelineRecordID string) error {
 
 // DeletePipelineRecordsByPipelineID deletes all the pipeline records of one pipeline by pipeline id.
 func (d *DataStore) DeletePipelineRecordsByPipelineID(pipelineID string) error {
-	if err := d.pipelineRecordCollection.Remove(bson.M{"pipelineId": pipelineID}); err != mgo.ErrNotFound {
+	if err := d.pipelineRecordCollection.Remove(bson.M{"pipelineID": pipelineID}); err != mgo.ErrNotFound {
 		return err
 	}
 

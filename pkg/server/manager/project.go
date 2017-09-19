@@ -20,8 +20,10 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
 	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2"
 )
 
 // ProjectManager represents the interface to manage project.
@@ -54,12 +56,26 @@ func NewProjectManager(dataStore *store.DataStore, pipelineManager PipelineManag
 
 // CreateProject creates a project.
 func (m *projectManager) CreateProject(project *api.Project) (*api.Project, error) {
+	projectName := project.Name
+	if _, err := m.GetProject(projectName); err == nil {
+		return nil, httperror.ErrorAlreadyExist.Format(projectName)
+	}
+
 	return m.dataStore.CreateProject(project)
 }
 
 // GetProject gets the project by name.
 func (m *projectManager) GetProject(projectName string) (*api.Project, error) {
-	return m.dataStore.FindProjectByName(projectName)
+	project, err := m.dataStore.FindProjectByName(projectName)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(projectName)
+		}
+
+		return nil, err
+	}
+
+	return project, nil
 }
 
 // ListProjects lists all projects of one owner.
@@ -69,7 +85,7 @@ func (m *projectManager) ListProjects(queryParams api.QueryParams) ([]api.Projec
 
 // UpdateProject updates the project by name.
 func (m *projectManager) UpdateProject(projectName string, newProject *api.Project) (*api.Project, error) {
-	project, err := m.dataStore.FindProjectByName(projectName)
+	project, err := m.GetProject(projectName)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +113,7 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 
 // DeleteProject deletes the project by name.
 func (m *projectManager) DeleteProject(projectName string) error {
-	project, err := m.dataStore.FindProjectByName(projectName)
+	project, err := m.GetProject(projectName)
 	if err != nil {
 		return err
 	}

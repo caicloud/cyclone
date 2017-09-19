@@ -20,12 +20,12 @@ import "time"
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
 type Project struct {
-	ID          string    `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
-	Name        string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
-	Description string    `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
-	Owner       string    `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
-	CreatedTime time.Time `bson:"createdTime,omitempty" json:"createdTime,omitempty" description:"created time of the project"`
-	UpdatedTime time.Time `bson:"updatedTime,omitempty" json:"updatedTime,omitempty" description:"updated time of the project"`
+	ID             string    `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
+	Name           string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
+	Description    string    `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
+	Owner          string    `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
+	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
+	LastUpdateTime time.Time `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
 }
 
 // Pipeline represents a set of configs to describe the workflow of CI/CD.
@@ -34,13 +34,13 @@ type Pipeline struct {
 	Name        string `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline，unique in one project"`
 	Description string `bson:"description,omitempty" json:"description,omitempty" description:"description of the pipeline"`
 	Owner       string `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
-	ProjectID   string `bson:"projectId,omitempty" json:"projectId,omitempty" description:"id of the project which the pipeline belongs to"`
+	ProjectID   string `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
 	// TODO （robin）Remove the association between the pipeline and the service after pipeline replaces service.
-	ServiceID   string       `bson:"serviceId,omitempty" json:"serviceId,omitempty" description:"id of the service which the pipeline is related to"`
-	Build       *Build       `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
-	AutoTrigger *AutoTrigger `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
-	CreatedTime time.Time    `bson:"createdTime,omitempty" json:"createdTime,omitempty" description:"created time of the pipeline"`
-	UpdatedTime time.Time    `bson:"updatedTime,omitempty" json:"updatedTime,omitempty" description:"updated time of the pipeline"`
+	ServiceID      string       `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
+	Build          *Build       `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	AutoTrigger    *AutoTrigger `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
+	CreationTime   time.Time    `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
+	LastUpdateTime time.Time    `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
 }
 
 // Build represents the build config and stages of CI.
@@ -226,8 +226,8 @@ type CronTrigger struct {
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
 	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
-	PipelineID  string       `bson:"pipelineId,omitempty" json:"pipelineId,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
-	VersionID   string       `bson:"versionId,omitempty" json:"versionId,omitempty" description:"id of the version which the pipeline record is related to"`
+	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
+	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
 	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
 	StageStatus *StageStatus `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
 	Status      Status       `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`

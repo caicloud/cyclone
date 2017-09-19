@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
 )
@@ -39,8 +40,21 @@ func ReadEntityFromRequest(request *restful.Request, response *restful.Response,
 
 // ResponseWithError responses the request with error.
 func ResponseWithError(response *restful.Response, statusCode int, err error) {
-	errResp := api.ErrorResponse{Message: err.Error()}
-	response.WriteHeaderAndEntity(statusCode, errResp)
+	switch err := err.(type) {
+	case *httperror.Error:
+		response.WriteHeaderAndEntity(err.Code, api.ErrorResponse{
+			Message: err.Error(),
+			Reason: err.Reason,
+		})
+	case error:
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, api.ErrorResponse{
+			Message: err.Error(),
+			Reason: httperror.ReasonInternal,
+		})
+	default:
+		// should not come here
+		logdog.Fatalf("%s is an unknown error type", err)
+	}
 }
 
 // ResponseWithList responses list with metadata.
@@ -54,24 +68,22 @@ func ResponseWithList(list interface{}, total int) api.ListResponse {
 }
 
 // QueryParamsFromRequest reads the query params from request body.
-func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams) {
+func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err error) {
 	limitStr := request.QueryParameter(api.Limit)
 	startStr := request.QueryParameter(api.Start)
 
 	if limitStr != "" {
-		qp.Limit = Atoi(limitStr)
+		qp.Limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Limit, "number", "string")
+		}
 	}
 	if startStr != "" {
-		qp.Start = Atoi(startStr)
+		qp.Start, err = strconv.Atoi(startStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Start, "number", "string")
+		}
 	}
-	return qp
-}
 
-// Atoi casts string to int.
-func Atoi(str string) (i int) {
-	i, err := strconv.Atoi(str)
-	if err != nil {
-		logdog.Errorf("Fail to cast string to int as %s", err.Error())
-	}
-	return i
+	return qp, nil
 }

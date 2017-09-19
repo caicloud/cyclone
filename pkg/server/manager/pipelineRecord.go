@@ -20,7 +20,9 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
+	"gopkg.in/mgo.v2"
 )
 
 // PipelineRecordManager represents the interface to manage pipeline record.
@@ -61,11 +63,17 @@ func (m *pipelineRecordManager) GetPipelineRecord(pipelineRecordID string) (*api
 func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipelineName string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
+		}
 		return nil, 0, err
 	}
 
 	pipeline, err := m.dataStore.FindPipelineByName(project.ID, pipelineName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, 0, httperror.ErrorContentNotFound.Format(pipelineName)
+		}
 		return nil, 0, err
 	}
 

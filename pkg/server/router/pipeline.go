@@ -64,7 +64,11 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 
 // listPipelines handles the request to list pipelines.
 func (router *router) listPipelines(request *restful.Request, response *restful.Response) {
-	queryParams := httputil.QueryParamsFromRequest(request)
+	queryParams, err := httputil.QueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		return
+	}
 
 	projectName := request.PathParameter(projectPathParameterName)
 
