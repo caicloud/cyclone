@@ -37,7 +37,7 @@ const (
 
 // ConvertPipelineToService converts the pipeline to service, as the running of pipeline dependents on service. This
 // is just a workaround, the pipeline will can be run directly in the future.
-func ConvertPipelineToService(pipeline *newapi.Pipeline) (*api.Service, error) {
+func ConvertPipelineToService(projectName string, pipeline *newapi.Pipeline) (*api.Service, error) {
 	service := &api.Service{}
 
 	// Basic information of service.
@@ -57,7 +57,7 @@ func ConvertPipelineToService(pipeline *newapi.Pipeline) (*api.Service, error) {
 
 	service.UserID = AdminUserID
 	// Username is used as the repo of built image.
-	service.Username = AdminUsername
+	service.Username = projectName
 
 	// Convert the build stages to caicloud.yml string for service.
 	caicloudYamlStr, err := convertBuildStagesToCaicloudYaml(pipeline)
@@ -68,6 +68,7 @@ func ConvertPipelineToService(pipeline *newapi.Pipeline) (*api.Service, error) {
 
 	// Have checked the correction of buildInfos in function convertBuildStagesToCaicloudYaml().
 	service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
+	service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
 
 	return service, nil
 }

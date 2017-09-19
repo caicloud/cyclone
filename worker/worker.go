@@ -186,14 +186,13 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 
 	destDir := vcsManager.GetCloneDir(&event.Service, &event.Version)
 	event.Data["context-dir"] = destDir
-	event.Data["image-name"] = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
-		strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
-	event.Data["tag-name"] = event.Version.Name
 
 	if err = vcsManager.CloneVersionRepository(event); err != nil {
 		setEventFailStatus(event, err.Error())
 		return
 	}
+
+	setImageNameAndTag(dockerManager, event)
 
 	replaceDockerfile(event, destDir)
 	replaceCaicloudYaml(event, destDir)
@@ -344,3 +343,38 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 	event.ErrorMessage = ErrorMessage
 	logdog.Error("Operation failed", logdog.Fields{"event": event})
 }
+
+// setImageNameAndTag sets the image name and tag name of the event.
+func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
+
+	var imageName, tagName string
+
+	imageName = event.Service.ImageName
+	names := strings.Split(strings.TrimSpace(imageName), ":")
+	switch len(names) {
+	case 1:
+		imageName = names[0]
+	case 2:
+		imageName = names[0]
+		tagName = names[1]
+	default:
+		logdog.Error("image name error", logdog.Fields{"imageName": imageName})
+		imageName = ""
+	}
+
+	if imageName == "" {
+		imageName = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
+			strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
+	}
+
+	if tagName == "" {
+		tagName = fmt.Sprintf("%s", time.Now().Format("060102150405"))
+		if event.Version.Commit != "" {
+			tagName = fmt.Sprintf("%s-%s", event.Version.Commit[:7], tagName)
+		}
+	}
+
+	event.Data["image-name"] = imageName
+	event.Data["tag-name"] = tagName
+}
+

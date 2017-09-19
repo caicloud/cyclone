@@ -85,6 +85,8 @@ type Service struct {
 
 	Dockerfile   string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty"`
 	CaicloudYaml string `bson:"caicloudYaml,omitempty" json:"caicloudYaml,omitempty"`
+
+	ImageName string `bson:"image_name,omitempty" json:"image_name,omitempty"`
 }
 
 // Hook is a callback hook
