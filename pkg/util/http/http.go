@@ -44,11 +44,10 @@ func ResponseWithError(response *restful.Response, statusCode int, err error) {
 }
 
 // ResponseWithList responses list with metadata.
-func ResponseWithList(list interface{}, itemsLength int, total int) api.ListResponse {
+func ResponseWithList(list interface{}, total int) api.ListResponse {
 	return api.ListResponse{
 		Meta: api.ListMeta{
-			Total:       total,
-			ItemsLength: itemsLength,
+			Total: total,
 		},
 		Items: list,
 	}

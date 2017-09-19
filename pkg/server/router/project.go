@@ -62,7 +62,7 @@ func (router *router) listProjects(request *restful.Request, response *restful.R
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(projects, len(projects), count))
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(projects, count))
 }
 
 // updateProject handles the request to update a project.
