@@ -17,6 +17,7 @@ limitations under the License.
 package cloud
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/caicloud/cyclone/pkg/register"
@@ -114,6 +115,10 @@ func (cc *Controller) Provision(id string, opts WorkerOptions) (Worker, error) {
 
 	if cc.provisionErr == nil {
 		cc.provisionErr = NewErrCloudProvision()
+	}
+
+	if len(cc.Clouds) == 0 {
+		return nil, errors.New("Cloud needs to be registered first")
 	}
 
 	if opts.Quota.IsZero() {
