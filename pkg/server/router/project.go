@@ -27,13 +27,14 @@ import (
 // createProject handles the request to create a project.
 func (router *router) createProject(request *restful.Request, response *restful.Response) {
 	project := &api.Project{}
-	if err := httputil.ReadEntityFromRequest(request, response, project); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, project); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	createdProject, err := router.projectManager.CreateProject(project)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -46,7 +47,7 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 
 	project, err := router.projectManager.GetProject(name)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -57,13 +58,13 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 func (router *router) listProjects(request *restful.Request, response *restful.Response) {
 	queryParams, err := httputil.QueryParamsFromRequest(request)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	projects, count, err := router.projectManager.ListProjects(queryParams)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -74,13 +75,14 @@ func (router *router) listProjects(request *restful.Request, response *restful.R
 func (router *router) updateProject(request *restful.Request, response *restful.Response) {
 	name := request.PathParameter(projectPathParameterName)
 	project := &api.Project{}
-	if err := httputil.ReadEntityFromRequest(request, response, project); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, project); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	updatedProject, err := router.projectManager.UpdateProject(name, project)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -92,7 +94,7 @@ func (router *router) deleteProject(request *restful.Request, response *restful.
 	name := request.PathParameter(projectPathParameterName)
 
 	if err := router.projectManager.DeleteProject(name); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 

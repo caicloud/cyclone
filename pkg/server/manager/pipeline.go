@@ -22,9 +22,9 @@ import (
 	"github.com/caicloud/cyclone/api/conversion"
 	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/api"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/store"
-	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
 )

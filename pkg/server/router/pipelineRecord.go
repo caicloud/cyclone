@@ -28,7 +28,7 @@ func (router *router) getPipelineRecord(request *restful.Request, response *rest
 
 	pipelineRecord, err := router.pipelineRecordManager.GetPipelineRecord(pipelineRecordID)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (router *router) getPipelineRecord(request *restful.Request, response *rest
 func (router *router) listPipelineRecords(request *restful.Request, response *restful.Response) {
 	queryParams, err := httputil.QueryParamsFromRequest(request)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (router *router) listPipelineRecords(request *restful.Request, response *re
 
 	pipelineRecords, count, err := router.pipelineRecordManager.ListPipelineRecords(projectName, pipelineName, queryParams)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (router *router) deletePipelineRecord(request *restful.Request, response *r
 	pipelineRecordID := request.PathParameter(pipelineRecordPathParameterName)
 
 	if err := router.pipelineRecordManager.DeletePipelineRecord(pipelineRecordID); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 

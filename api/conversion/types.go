@@ -33,8 +33,8 @@ type PreBuild struct {
 
 // Build represents the config of Build in caicloud YAML.
 type Build struct {
-	ContextDir     string   `yaml:"context_dir,omitempty"`
-	DockerfileName string   `yaml:"dockerfile_name,omitempty"`
+	ContextDir     string `yaml:"context_dir,omitempty"`
+	DockerfileName string `yaml:"dockerfile_name,omitempty"`
 }
 
 // Integration represents the config of Integration in caicloud YAML.
