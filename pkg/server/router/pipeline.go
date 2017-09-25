@@ -29,19 +29,20 @@ func (router *router) createPipeline(request *restful.Request, response *restful
 	projectName := request.PathParameter(projectPathParameterName)
 	project, err := router.projectManager.GetProject(projectName)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	pipeline := &api.Pipeline{}
-	if err := httputil.ReadEntityFromRequest(request, response, pipeline); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, pipeline); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	pipeline.ProjectID = project.ID
 	createdPipeline, err := router.pipelineManager.CreatePipeline(projectName, pipeline)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -55,7 +56,7 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 
 	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -66,7 +67,7 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 func (router *router) listPipelines(request *restful.Request, response *restful.Response) {
 	queryParams, err := httputil.QueryParamsFromRequest(request)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusBadRequest, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -74,7 +75,7 @@ func (router *router) listPipelines(request *restful.Request, response *restful.
 
 	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -87,13 +88,14 @@ func (router *router) updatePipeline(request *restful.Request, response *restful
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
 	pipeline := &api.Pipeline{}
-	if err := httputil.ReadEntityFromRequest(request, response, pipeline); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, pipeline); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	updatedPipeline, err := router.pipelineManager.UpdatePipeline(projectName, pipelineName, pipeline)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -106,7 +108,7 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
 	if err := router.pipelineManager.DeletePipeline(projectName, pipelineName); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -119,12 +121,13 @@ func (router *router) performPipeline(request *restful.Request, response *restfu
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
 	performParams := &api.PipelinePerformParams{}
-	if err := httputil.ReadEntityFromRequest(request, response, performParams); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, performParams); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	if err := router.pipelineManager.PerformPipeline(projectName, pipelineName, performParams); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 

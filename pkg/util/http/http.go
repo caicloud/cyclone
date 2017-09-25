@@ -18,38 +18,37 @@ package http
 
 import (
 	"net/http"
-
 	"strconv"
+
+	"github.com/emicklei/go-restful"
+	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
-	"github.com/emicklei/go-restful"
-	"github.com/zoumo/logdog"
 )
 
 // ReadEntityFromRequest reads the entity from request body.
-func ReadEntityFromRequest(request *restful.Request, response *restful.Response, entityPointer interface{}) error {
+func ReadEntityFromRequest(request *restful.Request, entityPointer interface{}) error {
 	if err := request.ReadEntity(entityPointer); err != nil {
 		logdog.Errorf("Fail to read request entity as %s", err.Error())
-		ResponseWithError(response, http.StatusBadRequest, err)
-		return err
+		return httperror.ErrorUnknownRequest.Format(err.Error())
 	}
 
 	return nil
 }
 
 // ResponseWithError responses the request with error.
-func ResponseWithError(response *restful.Response, statusCode int, err error) {
+func ResponseWithError(response *restful.Response, err error) {
 	switch err := err.(type) {
 	case *httperror.Error:
 		response.WriteHeaderAndEntity(err.Code, api.ErrorResponse{
 			Message: err.Error(),
-			Reason: err.Reason,
+			Reason:  err.Reason,
 		})
 	case error:
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, api.ErrorResponse{
 			Message: err.Error(),
-			Reason: httperror.ReasonInternal,
+			Reason:  httperror.ReasonInternal,
 		})
 	default:
 		// should not come here
