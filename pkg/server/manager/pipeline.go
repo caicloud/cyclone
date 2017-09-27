@@ -177,13 +177,27 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	}
 
 	newService.ServiceID = service.ServiceID
+	newService.Versions = service.Versions
+	newService.VersionFails = service.VersionFails
+	newService.LastVersionName = service.LastVersionName
+
 
 	// Judge the change of repository url, if not change, just keep the status, if change, need to send event to
 	// check the new status.
 	if newService.Repository.URL == service.Repository.URL {
 		newService.Repository.Status = service.Repository.Status
 	} else {
-		err = event.SendCreateServiceEvent(service)
+		// Delete the old webhook.
+		remote, err := m.remoteManager.FindRemote(service.Repository.Webhook)
+		if err != nil {
+			logdog.Error(err.Error())
+		} else {
+			if err := remote.DeleteHook(service); err != nil {
+				logdog.Errorf("Fail to delete the webhook for pipeline %s as %s", pipeline.Name, err.Error())
+			}
+		}
+
+		err = event.SendCreateServiceEvent(newService)
 		if err != nil {
 			return nil, fmt.Errorf("Fail to create service event for pipeline %s as %s", pipeline.Name, err.Error())
 		}
