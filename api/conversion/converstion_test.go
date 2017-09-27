@@ -56,7 +56,7 @@ var Pipeline = &newapi.Pipeline{
 				},
 			},
 			IntegrationTest: &newapi.IntegrationTestStage{
-				IntegrationTestSet: &newapi.IntegrationTestSet{
+				Config: &newapi.IntegrationTestConfig{
 					Command: []string{"go test"},
 				},
 				Services: []newapi.Service{

@@ -32,6 +32,7 @@ type Project struct {
 type Pipeline struct {
 	ID          string `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline"`
 	Name        string `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline，unique in one project"`
+	Alias       string `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the pipeline"`
 	Description string `bson:"description,omitempty" json:"description,omitempty" description:"description of the pipeline"`
 	Owner       string `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
 	ProjectID   string `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
@@ -142,14 +143,15 @@ type ImageBuildInfo struct {
 
 // IntegrationTestStage represents the config of integration test stage.
 type IntegrationTestStage struct {
-	IntegrationTestSet *IntegrationTestSet `bson:"integrationTestSet,omitempty" json:"integrationTestSet,omitempty" description:"integration test config"`
-	Services           []Service           `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	Config   *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
+	Services []Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
 }
 
-// IntegrationTestSet represents the config for integration test set.
-type IntegrationTestSet struct {
-	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"built image to run the integration test"`
-	Command []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to run for integration test"`
+// IntegrationTestConfig represents the config for integration test.
+type IntegrationTestConfig struct {
+	ImageName string   `bson:"imageName,omitempty" json:"imageName,omitempty" description:"built image name to run the integration test"`
+	Command   []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to run for integration test"`
+	EnvVars   []EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables for integration test"`
 }
 
 // Service represents the dependent service needed for integration test.
@@ -181,8 +183,8 @@ const (
 
 // ImageReleasePolicy represents the policy to release image.
 type ImageReleasePolicy struct {
-	Image string                 `bson:"image,omitempty" json:"image,omitempty" description:"image to be released"`
-	Type  ImageReleasePolicyType `bson:"type,omitempty" json:"type,omitempty" description:"type of image release policy"`
+	ImageName string                 `bson:"imageName,omitempty" json:"imageName,omitempty" description:"image to be released"`
+	Type      ImageReleasePolicyType `bson:"type,omitempty" json:"type,omitempty" description:"type of image release policy"`
 }
 
 // AutoTrigger represents the auto trigger strategy of the pipeline.
@@ -198,7 +200,7 @@ type SCMTrigger struct {
 
 // GeneralTrigger represents the general config for all auto trigger strategies.
 type GeneralTrigger struct {
-	FinalStage string `bson:"finalStage,omitempty" json:"finalStage,omitempty" description:"final stage of the auto triggered running"`
+	Stages string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages of the auto triggered running"`
 }
 
 // CommitTrigger represents the trigger from SCM commit.
@@ -226,6 +228,7 @@ type CronTrigger struct {
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
 	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
+	Name        string       `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
 	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
 	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
 	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
