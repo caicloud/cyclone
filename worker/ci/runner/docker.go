@@ -367,7 +367,8 @@ func CopyOutPutFiles(dockerManager *docker.Manager, cid string,
 	os.Mkdir(outPutPath, 0755)
 	for _, output := range outputs {
 		log.Infof("copy file(%s) to %s\n", output, outPutPath)
-		err := CopyFromContainer(dockerManager.Client, cid, output, outPutPath)
+		// outPutPath is the CLONE_DIR, where the repo is cloned to. output is the relative path to outPutPath.
+		err := CopyFromContainer(dockerManager.Client, cid, outPutPath+output, outPutPath)
 		if nil != err {
 			return err
 		}
