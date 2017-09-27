@@ -3,63 +3,34 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Cyclone API V1](#cyclone-api-v1)
+  - [Endpoint](#endpoint)
   - [API Summary](#api-summary)
     - [Project APIs](#project-apis)
     - [Pipeline APIs](#pipeline-apis)
     - [Pipeline Record APIs](#pipeline-record-apis)
   - [API Common](#api-common)
-    - [Prefix](#prefix)
     - [Path Parameter Explanation](#path-parameter-explanation)
-    - [Client Error Response](#client-error-response)
   - [API Details](#api-details)
     - [ProjectDataStructure](#projectdatastructure)
-    - [Add a project](#add-a-project)
-      - [Request](#request)
-      - [Response](#response)
-    - [Get all projects](#get-all-projects)
-      - [Request](#request-1)
-      - [Response](#response-1)
-    - [Update a project](#update-a-project)
-      - [Request](#request-2)
-      - [Response](#response-2)
-    - [Get a project](#get-a-project)
-      - [Request](#request-3)
-      - [Response](#response-3)
-    - [Delete a project](#delete-a-project)
-      - [Request](#request-4)
-      - [Response](#response-4)
+    - [List projects](#list-projects)
+    - [Create project](#create-project)
+    - [Get project](#get-project)
+    - [Update project](#update-project)
+    - [Delete project](#delete-project)
     - [PipelineDataStructure](#pipelinedatastructure)
-    - [Add a pipeline](#add-a-pipeline)
-      - [Request](#request-5)
-      - [Response](#response-5)
-    - [Get all pipelines](#get-all-pipelines)
-      - [Request](#request-6)
-      - [Response](#response-6)
-    - [Update a pipeline](#update-a-pipeline)
-      - [Request](#request-7)
-      - [Response](#response-7)
-    - [Get a pipeline](#get-a-pipeline)
-      - [Request](#request-8)
-      - [Response](#response-8)
-    - [Delete a pipeline](#delete-a-pipeline)
-      - [Request](#request-9)
-      - [Response](#response-9)
-    - [Trigger a pipeline](#trigger-a-pipeline)
-      - [Request](#request-10)
-      - [Response](#response-10)
     - [PipelineRecordDataStructure](#pipelinerecorddatastructure)
-    - [Get all pipeline records](#get-all-pipeline-records)
-      - [Request](#request-11)
-      - [Response](#response-11)
-    - [Get a pipeline record](#get-a-pipeline-record)
-      - [Request](#request-12)
-      - [Response](#response-12)
-    - [Delete a pipeline record](#delete-a-pipeline-record)
-      - [Request](#request-13)
-      - [Response](#response-13)
-    - [Get log of a pipeline record](#get-log-of-a-pipeline-record)
-      - [Request](#request-14)
-      - [Response](#response-14)
+    - [ListedPipelineDataStructure](#listedpipelinedatastructure)
+    - [List pipelines](#list-pipelines)
+    - [Create pipeline](#create-pipeline)
+    - [Get Pipeline](#get-pipeline)
+    - [Update pipeline](#update-pipeline)
+    - [Delete pipeline](#delete-pipeline)
+    - [PipelinePerformParamsDataStructure](#pipelineperformparamsdatastructure)
+    - [List pipeline records](#list-pipeline-records)
+    - [Create pipeline record](#create-pipeline-record)
+    - [Get pipeline record](#get-pipeline-record)
+    - [Delete pipeline record](#delete-pipeline-record)
+    - [Update Pipeline Record Status](#update-pipeline-record-status)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -76,7 +47,7 @@
       |
 +-------------+ Server Side
       |
-      v
+      v 
     +-+-------+
     | cyclone |
     +---------+
@@ -88,118 +59,69 @@
 
 - [Project Data Structure](#ProjectDataStructure)
 
-| Method | SubPath | Request Body | Response Body | function | Detail |
-| --- | --- | --- | --- | --- | --- |
-| POST | /projects | Project | Project | Add a project | WIP, [link](#add-a-project) |
-| GET | /projects |     | Project list | Get all projects | WIP, [link](#get-all-projects) |
-| PUT | /projects/{project} | Project | Project | Update a project | WIP, [link](#update-a-project) |
-| GET | /projects/{project} |     | Project | Get a project | WIP, [link](#get-a-project) |
-| DELETE | /projects/{project} |     |     | Delete a project | WIP, [link](#delete-a-project) |
+| API | Path | Detail |
+| --- | --- | --- |
+| List | GET `/api/v1/projects` | WIP, [link](#list-projects) |
+| Create | POST `/api/v1/projects` | WIP, [link](#create-project) |
+| Get | GET `/api/v1/projects/{project}` | WIP, [[link](#get-project) |
+| Update | PATCH `/api/v1/projects/{project}` | WIP, [link](#update-project) |
+| Delete | DELETE `/api/v1/projects/{project}` | WIP, [link](#delete-project) |
 
 ### Pipeline APIs
 
 - [Pipeline Data Structure](#PipelineDataStructure)
+- [Pipeline Record  Data Structure](#pipelinerecorddatastructure)
+- [Listed Pipeline  Data Structure](#listedpipelinedatastructure)
 
-| Method | SubPath | Request Body | Response Body | function | Detail |
-| --- | --- | --- | --- | --- | --- |
-| POST | /projects/{project}/pipelines | Pipeline</br> * name: required</br> * build.builderImage: required</br> * build.stages: required| Pipeline | Add a pipeline | WIP, [link](#add-a-pipeline) |
-| GET | /projects/{project}/pipelines |     | Pipeline list | Get all pipelines | WIP, [link](#get-all-pipelines) |
-| PUT | /projects/{project}/pipelines/{pipeline} | Pipeline</br>| Pipeline | Update a pipeline | WIP, [link](#update-a-pipeline) |
-| GET | /projects/{project}/pipelines/{pipeline} |     | Pipeline | Get a pipeline | WIP, [link](#get-a-pipeline) |
-| DELETE | /projects/{project}/pipelines/{pipeline} |     |     | Delete a pipeline | WIP, [link](#delete-a-pipeline) |
-| POST | /projects/{project}/pipelines/{pipeline} | version:string</br>description:string</br>createTag:bool</br>stages:[]string</br> |     | Trigger a pipeline | WIP, [link](#trigger-a-pipeline) |
-| POST | /projects/{project}/pipelines/{pipeline}/gitLabWebhook |     |     | Trigger a pipeline by gitlab webhook | trigger by gitlab |
-| POST | /projects/{project}/pipelines/{pipeline}/gitHubWebhook |     |     | Trigger a pipeline by github webhook | trigger by github |
+| API | Path | Detail |
+| --- | --- | --- |
+| List | GET `/api/v1/projects/{project}/pipelines` | WIP, [link](#list-pipelines) |
+| Create | POST `/api/v1/projects/{project}/pipelines` | WIP, [link](#create-pipeline) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}` | WIP, [link](#get-pipeline) |
+| Update | PUT `/api/v1/projects/{project}/pipelines/{pipeline}` | WIP, [link](#update-pipeline) |
+| Delete | DELETE `/api/v1/projects/{project}/pipelines/{pipeline}` | WIP, [link](#delete-pipeline) |
 
 ### Pipeline Record APIs
 
 - [Pipeline Record Data Structure](#PipelineRecordDataStructure)
 
-| Method | SubPath | Request Body | Response Body | function | Detail |
-| --- | --- | --- | --- | --- | --- |
-| GET | /projects/{project}/pipelines/{pipeline}/records |     | Pipeline record list | Get all pipeline records | WIP, [link](#get-all-pipeline-records) |
-| GET | /projects/{project}/pipelines/{pipeline}/records/{recordId} |     | Pipeline record | Get a pipeline record | WIP, [link](#get-a-pipeline-record) |
-| DELETE | /projects/{project}/pipelines/{pipeline}/records/{recordId} |     |     | Delete a pipeline record | WIP, [link](#delete-a-pipeline-record) |
-| GET | /projects/{project}/pipelines/{pipeline}/records/{recordId}/logs |     | string | Get log of a pipeline record | WIP, [link](#get-log-of-a-pipeline-record) |
+| API | Path | Detail |
+| --- | --- | --- |
+| List | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records` | WIP, [link](#list-pipeline-records) |
+| Create | POST `/api/v1/projects/{project}/pipelines/{pipeline}/records` | WIP, [link](#create-pipeline-record) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}` | WIP, [link](#get-pipeline-record) |
+| Delete | DELETE `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}` | WIP, [link](#delete-pipeline-record) |
+| Update Status | PATCH `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status` | WIP, [link](#update-pipeline-record-status) |
 
 ## API Common
-
-### Prefix
-
-Add `/api/v1/` ahead, complete path: `/api/v1/` + `SubPath`
 
 ### Path Parameter Explanation
 
 In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{recordId}` is `ID`
 
-### Client Error Response
-
-```
-400 Bad Request
-
-{
-    "message": "a human readable debug message",
-    "code": "E0001",
-    "data": <DataForTemplateRendering>
-}
-```
-
 ## API Details
 
 ### ProjectDataStructure
 
-```json
+```
 {
-  "createdTime": "2017-08-23T09:44:08.653Z", 
-  "description": "string",                   // string, optional
-  "id": "string",                            
-  "name": "string",                          // string, always
-  "owner": "string",                        
-  "updatedTime": "2017-08-23T09:44:08.653Z"  
+  "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
+  "description": "string",                      // description of the project
+  "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
+  "name": "string",                             // name of the project, should be unique
+  "owner": "string"                             // owner of the project
 }
 ```
 
 Project is responsible for managing a set of applications, in this system, mainly managing a number of pipelines corresponding to this set of applications.
 
-### Add a project
-
-Create a new project.
-
-#### Request
-
-Http method: `POST`
-
-URL: `/api/v1/projects`
-
-Body:
-
-```
-{
-    "description": "",                   // string, optional
-    "name": "",                          // string, required
-    "owner": ""                          // string, required
-}
-```
-
-#### Response
-
-Success:
-
-```
-201 Created
-
-{
-    // all <ProjectDataStructure> fields
-}
-```
-
-### Get all projects
+### List projects
 
 List all projects.
 
-#### Request
+**Request**
 
-Http method: GET
+Http method: `GET`
 
 URL: `/api/v1/projects[?start=&limit=]`
 
@@ -210,7 +132,7 @@ Args:
 | start | number, optional | The starting position of the query. |
 | limit | number, optional | The quantity limit for the result. |
 
-#### Response
+**Response**
 
 Success:
 
@@ -225,13 +147,73 @@ Success:
 }
 ```
 
-### Update a project
+### Create project
+
+Create a new project.
+
+**Request**
+
+Http method: `POST`
+
+URL: `/api/v1/projects`
+
+Body:
+
+```
+{
+    "description": "",                   // string, optional
+    "name": "",                          // string, required
+}
+```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| name | ^[a-z0-9]+((?:[._-][a-z0-9]+)*){1,29}$ |
+| description | The length is limited to 100 characters |
+
+**Response**
+
+Success:
+
+```
+201 Created
+
+{
+    // all <ProjectDataStructure> fields
+}
+```
+
+### Get project
+
+Get the information of a project.
+
+**Request**
+
+Http method: `GET`
+
+URL: `/api/v1/projects/{project}`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <ProjectDataStructure> fields
+}
+```
+
+### Update project
 
 Update the information of a project.
 
-#### Request
+**Request**
 
-Http method: PUT
+Http method: `PATCH`
 
 URL: `/api/v1/projects/{project}`
 
@@ -239,12 +221,17 @@ Body:
 
 ```
 {
-    "description": "",                   // string, optional
-    "name": "",                          // string, optional
+    "description": "New description.",  // string, required
 }
 ```
 
-#### Response
+Note:
+
+| Field | Note |
+| --- | --- |
+| description | The length is limited to 100 characters |
+
+**Response**
 
 Success:
 
@@ -256,68 +243,59 @@ Success:
 }
 ```
 
-### Get a project
+### Delete project
 
-Get the information of a project.
+Delete project.
 
-#### Request
+**Request**
 
-Http method: GET
+Http method: `DELETE`
 
 URL: `/api/v1/projects/{project}`
 
-#### Response
+**Response**
 
 Success:
 
 ```
-200 OK
-
-{
-    // all <ProjectDataStructure> fields
-}
-```
-
-### Delete a project
-
-Delete a project.
-
-#### Request
-
-Http method: DELETE
-
-URL: `/api/v1/projects/{project}`
-
-#### Response
-
-Success:
-
-```
-203 NoContent
+204 NoContent
 ```
 
 ### PipelineDataStructure
 
-```json
+```
 {
+    "id": "string", 
+    "name": "string", 
+    "alias": "string", 
+    "description": "string", 
+    "owner": "string", 
+    "projectID": "string", 
+    "serviceID": "string",                  // workaround, remove soon
+    "notification": {                       // not implemented
+        "emailNotification": {
+            "emails": [
+                "string"
+            ]
+        }, 
+        "notificationPolicy": "string"
+    }, 
     "autoTrigger": {
-        "cronTrigger": {
+        "cronTrigger": {                    // not implemented
             "crons": [
                 {
                     "expression": "string", 
-                    "finalStage": "string"
+                    "stages": ["string", ...]
                 }
             ]
         }, 
-        "scmTrigger": {
+        "scmTrigger": {                     // return error if can not create webhook as not admin
             "commitTrigger": {
-                "finalStage": "string"
+                "stages": ["string", ...]
             }, 
             "commitWithCommentsTrigger": {
-                "comments": [
-                    "string"
-                ], 
-                "finalStage": "string"
+                "comments": ["string", ...], 
+                "stages": ["string", ...]
             }
         }
     }, 
@@ -333,14 +311,196 @@ Success:
         }, 
         "stages": {
             "codeCheckout": {
-                "codeSources": [
+                "codeSources": [                      // only support one element
                     {
                         "gitHub": {
-                            "branch": "string", 
+                            "ref": "string", 
                             "url": "string"
                         }, 
                         "gitLab": {
-                            "branch": "string", 
+                            "ref": "string", 
+                            "url": "string"
+                        }, 
+                        "main": true, 
+                        "otherCodeSource": {
+                            "password": "string", 
+                            "path": "string", 
+                            "url": "string", 
+                            "username": "string"
+                        }, 
+                        "type": "string"              // type of code source, it must be github or gitlab or other.
+                    }
+                ]
+            }, 
+            "unitTest": {
+                "command": ["string", ...], 
+                "outputs": ["string", ...]
+            }, 
+            "codeScan": {
+                "command": ["string", ...], 
+                "outputs": ["string", ...]
+            }, 
+            "package": {
+                "command": ["string", ...], 
+                "outputs": ["string", ...]
+            }, 
+            "imageBuild": {
+                "buildInfos": [                       // only support one element
+                    {
+                        "contextDir": "string", 
+                        "dockerfile": "string", 
+                        "dockerfilePath": "string", 
+                        "imageName": "string"
+                    }
+                ]
+            }, 
+            "imageRelease": {
+                "releasePolicy": [                    // image names which are not listed will be ignored.
+                    {
+                        "imageName": "string", 
+                        "type": "string"                // type of image release policy, it must be Always or IntegrationTestSuccess.
+                    }
+                ]
+            }, 
+            "integrationTest": {
+                "config": {
+                    "command": ["string", ...],
+                    "envVars": [
+                        {
+                            "name": "string", 
+                            "value": "string"
+                        }
+                    ], 
+                    "imageName": "string"
+                }, 
+                "services": [
+                    {
+                        "command": ["string", ...], 
+                        "envVars": [
+                            {
+                                "name": "string", 
+                                "value": "string"
+                            }
+                        ], 
+                        "image": "string", 
+                        "name": "string"
+                    }
+                ]
+            }
+        }
+    }, 
+    "creationTime": "2017-08-23T08:40:33.764Z", 
+    "lastUpdateTime": "2017-08-23T08:40:33.764Z"
+}
+```
+
+Pipeline is responsible for automating the lifecycle management of an application, and can safely and reliably deploy the application from the source code to the production environment in strict accordance with a set of scientific and rational software management processes.
+
+### PipelineRecordDataStructure
+
+```
+{
+    "id": "",                   // string, required
+    "name": "",                 // string, required
+    "pipelineID": "",           // string, required
+    "versionID": "",            // string, required
+    "trigger": "",              // string, optional. Can be user, scmTrigger, cronTrigger
+    "performParams": {
+        "ref": "master",                  // string, required
+        "name": "newVersion",             // string, optional
+        "description": "",                // string, optional
+        "createScmTag": false,            // bool, optional
+        "stages": ["codeCheckout", "unitTest", ...]     // string array, optional. Elements can be codeCheckout、unitTest、codeScan、package、imageBuild、integrationTest and imageRelease
+    },
+    "status": "",               // string, required. Can be Pending, Running, Success, Failed, Aborted.
+    "startTime": "2017-08-23T08:40:33.764Z",        // time, required
+    "endTime": "2017-08-23T08:40:33.764Z",          // time, optional
+}
+```
+
+### ListedPipelineDataStructure
+
+```
+{
+    <PipelineObject>
+    recentRecords: [<PipelineRecordObject>, ... ],
+    recentSuccessRecords: [<PipelineRecordObject>, ... ],
+    recentFailedRecords: [<PipelineRecordObject>, ... ]
+}
+```
+
+### List pipelines
+
+List all pipelines of one project.
+
+**Request**
+
+Http method: `GET`
+
+URL: `/api/v1/workspaces/{workspace}/pipelines[?start=&limit=&recentCount=&recentSuccessCount=&recentFailedCount=]`
+
+Args:
+
+| Field | Type | Detail |
+| --- | --- | --- |
+| start | number, optional | The starting position of the query. |
+| limit | number, optional | The quantity limit for the result. |
+| recentCount | number, optional | The default is 0, and the latest pipeline record is not returned |
+| recentSuccessCount | number, optional | The default is 0, and the latest successful pipeline record is not returned |
+| recentFailedCount | number, optional | The default is 0, and the latest failed pipeline record is not returned |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": {
+        "total": 0,  // number, always 
+    },
+    "items": [ <PipelineDataStructure>, ... ]
+}
+```
+
+### Create pipeline
+
+Create a new pipeline.
+
+**Request**
+
+Http method: `POST`
+
+URL: `/api/v1/projects/{project}/pipelines`
+
+Body:
+
+```
+{
+    "name": "newworkspace",             // string, required
+    "alias": "",                        // string, optional
+    "description": ""                   // string, optional
+    "build": {
+        "builderImage": {
+            "envVars": [
+                {
+                    "name": "string", 
+                    "value": "string"
+                }
+            ], 
+            "image": "string"          // string, required
+        }, 
+        "stages": {
+            "codeCheckout": {
+                "codeSources": [
+                    {
+                        "gitHub": {
+                            "ref": "string", 
+                            "url": "string"
+                        }, 
+                        "gitLab": {
+                            "ref": "string", 
                             "url": "string"
                         }, 
                         "main": true, 
@@ -354,44 +514,44 @@ Success:
                     }
                 ]
             }, 
-            "codeScan": {
-                "command": [
-                    "string"
-                ], 
-                "outputs": [
-                    "string"
-                ]
+            "unitTest": {             // struct, optional
+                "command": ["string", ...], 
+                "outputs": ["string", ...]
+            }, 
+            "codeScan": {             // struct, optional
+                "command": ["string", ...], 
+                "outputs": ["string", ...]
+            }, 
+            "package": {
+                "command": ["string", ...],           // array, required
+                "outputs": ["string", ...]            // array, required
             }, 
             "imageBuild": {
-                "buildInfos": [
+                "buildInfos": [       // array, required
                     {
                         "contextDir": "string", 
                         "dockerfile": "string", 
                         "dockerfilePath": "string", 
-                        "imageName": "string"
+                        "imageName": "string"          // string, required
                     }
                 ]
             }, 
-            "imageRelease": {
+            "imageRelease": {         // struct, optional
                 "releasePolicy": [
                     {
-                        "image": "string", 
-                        "type": "string"                // type of image release policy, it must be Always or Never or IntegrationTestSuccess.
+                        "imageName": "string",
+                        "type": "string"                // type of image release policy, it must be Always or IntegrationTestSuccess.
                     }
                 ]
             }, 
-            "integrationTest": {
-                "integrationTestSet": {
-                    "command": [
-                        "string"
-                    ], 
-                    "image": "string"
+            "integrationTest": {      // struct, optional
+                "config": {
+                    "command": ["string", ...], 
+                    "imageName": "string"
                 }, 
                 "services": [
                     {
-                        "command": [
-                            "string"
-                        ], 
+                        "command": ["string", ...], 
                         "envVars": [
                             {
                                 "name": "string", 
@@ -402,65 +562,13 @@ Success:
                         "name": "string"
                     }
                 ]
-            }, 
-            "package": {
-                "command": [
-                    "string"
-                ], 
-                "outputs": [
-                    "string"
-                ]
-            }, 
-            "unitTest": {
-                "command": [
-                    "string"
-                ], 
-                "outputs": [
-                    "string"
-                ]
             }
         }
-    }, 
-    "createdTime": "2017-08-23T08:40:33.764Z", 
-    "description": "string", 
-    "id": "string", 
-    "name": "string", 
-    "notification": {
-        "emailNotification": {
-            "emails": [
-                "string"
-            ]
-        }, 
-        "notificationPolicy": "string"
-    }, 
-    "owner": "string", 
-    "projectID": "string", 
-    "serviceID": "string", 
-    "updatedTime": "2017-08-23T08:40:33.764Z"
+    }
 }
 ```
 
-Pipeline is responsible for automating the lifecycle management of an application, and can safely and reliably deploy the application from the source code to the production environment in strict accordance with a set of scientific and rational software management processes.
-
-### Add a pipeline
-
-Create a new pipeline.
-
-#### Request
-
-Http method: `POST`
-
-URL: `/api/v1/projects/{project}/pipelines`
-
-Body:
-
-```
-{
-    // all <PipelineDataStructure> fields
-}
-```
-
-#### Response
+**Response**
 
 Success:
 
@@ -472,24 +580,17 @@ Success:
 }
 ```
 
-### Get all pipelines
+### Get Pipeline
 
-List all pipelines of one project.
+Get a pipeline.
 
-#### Request
+**Request**
 
-Http method: GET
+Http method: `PUT`
 
-URL: `/api/v1/projects/{project}/pipelines[?start=&limit=]`
+URL: `/api/v1/workspaces/{workspace}/pipelines/{pipeline}`
 
-Args:
-
-| Name | Type | Detail |
-| --- | --- | --- |
-| start | number, optional | The starting position of the query. |
-| limit | number, optional | The quantity limit for the result. |
-
-#### Response
+**Response**
 
 Success:
 
@@ -497,20 +598,17 @@ Success:
 200 OK
 
 {
-    "metadata": {
-        "total": 0,            // number, always 
-    },
-    "items": [ <PipelineDataStructure>, ... ]
+    // all <PipelineDataStructure> fields
 }
 ```
 
-### Update a pipeline
+### Update pipeline
 
 Update the information of a pipeline.
 
-#### Request
+**Request**
 
-Http method: PUT
+Http method: `PUT`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
 
@@ -522,7 +620,14 @@ Body:
 }
 ```
 
-#### Response
+Note:
+
+| Field | Note |
+| --- | --- |
+| name | ^[a-z0-9]+((?:[._-][a-z0-9]+)*){1,29}$ |
+| description | The length is limited to 100 characters |
+
+**Response**
 
 Success:
 
@@ -534,140 +639,45 @@ Success:
 }
 ```
 
-### Get a pipeline
-
-Get the information of a pipeline.
-
-#### Request
-
-Http method: GET
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
-
-#### Response
-
-Success:
-
-```
-200 OK
-
-{
-    // all <PipelineDataStructure> fields
-}
-```
-
-### Delete a pipeline
+### Delete pipeline
 
 Delete a pipeline.
 
-#### Request
+**Request**
 
-Http method: DELETE
+Http method: `DELETE`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
 
-#### Response
+**Response**
 
 Success:
 
 ```
-203 NoContent
+204 NoContent
 ```
 
-### Trigger a pipeline
-
-Trigger a pipeline.
-
-#### Request
-
-Http method: `POST`
-
-URL: `/api/v1/projects/{project}/pipelines`
-
-Body:
-
-```json
+### PipelinePerformParamsDataStructure
 
 ```
-
-#### Response
-
-Success:
-
-```
-201 Created
-
 {
-    // string
+    "ref": "master",                  // string, required. Support SCM branch and tag.
+    "name": "newVersion",             // string, optional. Genereated if not specified, used as repo and image tag.
+    "description": "",                // string, optional
+    "createScmTag": false,            // bool, optional
+    "stages": ["codeCheckout", "unitTest", ... ]        // string array, optional. If not specified, will perfrom all stages in pipeline.
 }
 ```
 
-### PipelineRecordDataStructure
+Params to perform pipeline.
 
-```json
-{
-    "endTime": "2017-08-23T10:52:19.610Z", 
-    "id": "string", 
-    "pipelineID": "string", 
-    "stageStatus": {
-        "codeCheckout": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "codeScan": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "imageBuild": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "imageRelease": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "integrationTest": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "package": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }, 
-        "unitTest": {
-            "endTime": "2017-08-23T10:52:19.610Z", 
-            "startTime": "2017-08-23T10:52:19.610Z", 
-            "status": "string"
-        }
-    }, 
-    "startTime": "2017-08-23T10:52:19.610Z", 
-    "status": "string", 
-    "trigger": "string", 
-    "versionID": "string"
-}
-```
-
-Args:
-
-| Name | Detail |
-| --- | --- |
-| status | it can be "Pending" or "Running" or "Success" or "Failed" or "Aborted" |
-
-Pipeline Record is an execution record of a pipeline that clearly records and displays detailed information about each stage of the application's lifecycle.
-
-### Get all pipeline records
+### List pipeline records
 
 List all pipeline records of one pipeline.
 
-#### Request
+**Request**
 
-Http method: POST
+Http method: `POST`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records[?start=&limit=]`
 
@@ -678,7 +688,7 @@ Args:
 | start | number, optional | The starting position of the query. |
 | limit | number, optional | The quantity limit for the result. |
 
-#### Response
+**Response**
 
 Success:
 
@@ -687,23 +697,63 @@ Success:
 
 {
     "metadata": {
-        "total": 0,            // number, always 
+        "total": 0,  // number, always 
     },
     "items": [ <PipelineRecordDataStructure>, ... ]
 }
 ```
 
-### Get a pipeline record
+### Create pipeline record
 
-Get the information of a pipeline.
+Careate a pipeline record, which means trigger a pipeline.
 
-#### Request
+**Request**
 
-Http method: GET
+URL: `POST /api/v1/workspaces/{workspace}/pipelines/{pipeline}/records`
+
+Body:
+
+```
+{
+    "ref": "master",                                       // string, required. Support SCM branch and tag.
+    "name": "v1.0.0",                                      // string, optional
+    "description": "",                                     // string, optional
+    "createScmTag": false,                                 // bool, optional
+    "stages": ["codeCheckout", "package", ... ]            // string array, optional
+}
+```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| version | ^[a-z0-9]+((?:[._-][a-z0-9]+)*){1,29}$ |
+| description | The length is limited to 100 characters |
+| stages | Only can be some of `codeCheckout、unitTest、codeScan、package、imageBuild、integrationTest、imageRelease` |
+
+**Response**
+
+Success:
+
+```
+201 Created
+
+{
+    // all <PipelineRecordDataStructure> fields
+}
+```
+
+### Get pipeline record
+
+Get the pipeline execution information.
+
+**Request**
+
+Http method: `GET`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}`
 
-#### Response
+**Response**
 
 Success:
 
@@ -715,42 +765,56 @@ Success:
 }
 ```
 
-### Delete a pipeline record
+### Delete pipeline record
 
 Delete a pipeline record.
 
-#### Request
+**Request**
 
-Http method: DELETE
+Http method: `DELETE`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}`
 
-#### Response
+**Response**
 
 Success:
 
 ```
-203 NoContent
+204 NoContent
 ```
 
-### Get log of a pipeline record
+### Update Pipeline Record Status
 
-Get log of a pipeline record.
+Update the pipeline record status. Only the pipeline status of the Running state can be changed to Aborted, which means the pipeline is terminated.
 
-#### Request
+**Request**
 
-Http method: GET
+Http method: `PATCH`
 
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs`
+URL: `/api/v1/workspaces/{workspace}/pipelines/{pipeline}/records/{recordID}/status`
 
-#### Response
+Body:
+
+```
+{
+    "status": ""  // string, required
+}
+```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| status | Only support Aborted status |
+
+**Response**
 
 Success:
 
 ```
-200 OK
+200 Ok
 
 {
-    // string
+    // all <WorkspaceObject> fields
 }
 ```
