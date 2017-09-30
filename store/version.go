@@ -68,6 +68,57 @@ func (d *DataStore) FindVersionsByServiceID(serviceID string) ([]api.Version, er
 	return versions, err
 }
 
+// FindVersionsWithPaginationByServiceID finds a page of versions by service ID.
+func (d *DataStore) FindVersionsWithPaginationByServiceID(serviceID string, start, limit int) ([]api.Version, int, error) {
+	versions := []api.Version{}
+	filter := bson.M{"service_id": serviceID}
+	col := d.s.DB(defaultDBName).C(versionCollectionName)
+	query :=  col.Find(filter)
+	total, err := query.Count()
+	if err != nil {
+		return versions, 0, err
+	}
+
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
+	}
+
+	if err = query.Skip(start).Sort("-create_time").All(&versions); err != nil {
+		return versions, 0, err
+	}
+
+	return versions, total, err
+}
+
+// FindRecentVersionsByServiceID finds a set of versions with conditions by service ID.
+func (d *DataStore) FindRecentVersionsByServiceID(serviceID string, filter map[string]interface{}, limit int) ([]api.Version, int, error) {
+	versions := []api.Version{}
+	if filter == nil {
+		filter = bson.M{"service_id": serviceID}
+	} else {
+		filter["service_id"] = serviceID
+	}
+
+	col := d.s.DB(defaultDBName).C(versionCollectionName)
+	query :=  col.Find(filter)
+	total, err := query.Count()
+	if err != nil {
+		return versions, 0, err
+	}
+
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
+	}
+
+	if err = query.Sort("-create_time").All(&versions); err != nil {
+		return versions, 0, err
+	}
+
+	return versions, total, err
+}
+
 // FindLatestVersionByServiceID finds the latest version entity by service ID.
 func (d *DataStore) FindLatestVersionByServiceID(serviceID string) (*api.Version, error) {
 	version := &api.Version{}

@@ -18,22 +18,25 @@ package manager
 
 import (
 	"fmt"
+	"sync"
 
+	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2"
+
+	oldapi "github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/api/conversion"
 	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/store"
-	"github.com/zoumo/logdog"
-	"gopkg.in/mgo.v2"
 )
 
 // PipelineManager represents the interface to manage pipeline.
 type PipelineManager interface {
 	CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error)
 	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
-	ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error)
+	ListPipelines(projectName string, queryParams api.QueryParams, recentCount, recentSuccessCount, recentFailedCount int) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
@@ -124,8 +127,11 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (
 }
 
 // ListPipelines lists all pipelines in one project.
-func (m *pipelineManager) ListPipelines(projectName string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
-	project, err := m.dataStore.FindProjectByName(projectName)
+func (m *pipelineManager) ListPipelines(projectName string, queryParams api.QueryParams,
+	recentCount, recentSuccessCount, recentFailedCount int) ([]api.Pipeline, int, error) {
+	ds := m.dataStore
+
+	project, err := ds.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
@@ -133,7 +139,80 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 		return nil, 0, err
 	}
 
-	return m.dataStore.FindPipelinesByProjectID(project.ID, queryParams)
+	pipelines, total, err := ds.FindPipelinesByProjectID(project.ID, queryParams)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if recentCount <= 0 && recentSuccessCount <= 0 && recentFailedCount <= 0 {
+		return pipelines, total, nil
+	}
+
+	wg := sync.WaitGroup{}
+	for i, _ := range pipelines {
+		wg.Add(1)
+
+		go func(pipeline *api.Pipeline) {
+			defer wg.Done()
+
+			if recentCount > 0 {
+				recentVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, nil, recentCount)
+				if err != nil {
+					logdog.Error(err)
+				} else {
+					for _, version := range recentVersions {
+						pipelineRecord, err := conversion.ConvertVersionToPipelineRecord(&version)
+						if err != nil {
+							logdog.Error(err)
+						} else {
+							pipeline.RecentRecords = append(pipeline.RecentRecords, *pipelineRecord)
+						}
+					}
+				}
+			}
+
+			if recentSuccessCount > 0 {
+				filter := map[string]interface{}{
+					"status": oldapi.VersionHealthy,
+				}
+				recentSuccessVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentCount)
+				if err != nil {
+					logdog.Error(err)
+				} else {
+					for _, version := range recentSuccessVersions {
+						pipelineRecord, err := conversion.ConvertVersionToPipelineRecord(&version)
+						if err != nil {
+							logdog.Error(err)
+						} else {
+							pipeline.RecentSuccessRecords = append(pipeline.RecentSuccessRecords, *pipelineRecord)
+						}
+					}
+				}
+			}
+
+			if recentFailedCount > 0 {
+				filter := map[string]interface{}{
+					"status": oldapi.VersionFailed,
+				}
+				recentFailedVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentCount)
+				if err != nil {
+					logdog.Error(err)
+				} else {
+					for _, version := range recentFailedVersions {
+						pipelineRecord, err := conversion.ConvertVersionToPipelineRecord(&version)
+						if err != nil {
+							logdog.Error(err)
+						} else {
+							pipeline.RecentFailedRecords = append(pipeline.RecentFailedRecords, *pipelineRecord)
+						}
+					}
+				}
+			}
+		}(&pipelines[i])
+	}
+	wg.Wait()
+
+	return pipelines, total, nil
 }
 
 // UpdatePipeline updates the pipeline by name in one project.
@@ -181,7 +260,6 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	newService.VersionFails = service.VersionFails
 	newService.LastVersionName = service.LastVersionName
 
-
 	// Judge the change of repository url, if not change, just keep the status, if change, need to send event to
 	// check the new status.
 	if newService.Repository.URL == service.Repository.URL {
@@ -226,7 +304,7 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 
 // ClearPipelinesOfProject deletes all pipelines in one project.
 func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
-	pipelines, _, err := m.ListPipelines(projectName, api.QueryParams{})
+	pipelines, _, err := m.ListPipelines(projectName, api.QueryParams{}, 0, 0, 0)
 	if err != nil {
 		return nil
 	}
@@ -244,20 +322,8 @@ func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 // with pipeline.
 func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 	ds := m.dataStore
-
-	// Delete the versions related to this pipeline.
-	versions, err := ds.FindVersionsByServiceID(pipeline.ServiceID)
-	if err != nil {
-		return err
-	}
-
-	for _, version := range versions {
-		if err := ds.DeleteVersionByID(version.VersionID); err != nil {
-			return fmt.Errorf("Fail to delete the versions for pipeline %s as %s", pipeline.Name, err.Error())
-		}
-	}
-
-	if service, err := ds.FindServiceByID(pipeline.ServiceID); err == nil {
+	service, err := ds.FindServiceByID(pipeline.ServiceID)
+	if err == nil {
 		// Delete the webhook.
 		remote, err := m.remoteManager.FindRemote(service.Repository.Webhook)
 		if err != nil {

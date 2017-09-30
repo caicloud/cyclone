@@ -86,3 +86,31 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 
 	return qp, nil
 }
+
+// RecordCountQueryParamsFromRequest reads the query params of pipeline record count from request body.
+func RecordCountQueryParamsFromRequest(request *restful.Request) (recentCount, recentSuccessCount, recentFailedCount int, err error) {
+	recentCountStr := request.QueryParameter(api.RecentPipelineRecordCount)
+	recentSuccessCountStr := request.QueryParameter(api.RecentSuccessPipelineRecordCount)
+	recentFailedCountStr := request.QueryParameter(api.RecentFailedPipelineRecordCount)
+
+	if recentCountStr != "" {
+		recentCount, err = strconv.Atoi(recentCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentPipelineRecordCount, "number", "string")
+		}
+	}
+	if recentSuccessCountStr != "" {
+		recentSuccessCount, err = strconv.Atoi(recentSuccessCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentSuccessPipelineRecordCount, "number", "string")
+		}
+	}
+	if recentFailedCountStr != "" {
+		recentFailedCount, err = strconv.Atoi(recentFailedCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentFailedPipelineRecordCount, "number", "string")
+		}
+	}
+
+	return
+}

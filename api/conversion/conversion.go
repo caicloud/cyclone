@@ -199,21 +199,58 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 // ConvertPipelineParamsToVersion converts the pipeline perform params to run the pipeline.
 func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
 	version := &api.Version{
+		Description:   performParams.Description,
 		Operation:     api.VersionOperation(strings.Join(performParams.Stages, ",")),
 		Status:        api.VersionPending,
 		SecurityCheck: false,
 		CreateTime:    time.Now(),
 	}
 
-	if performParams.Version != "" {
-		version.Name = performParams.Version
+	if performParams.Name != "" {
+		version.Name = performParams.Name
 	} else {
 		version.Name = bson.NewObjectId().Hex()
 	}
 
-	if performParams.Tagged {
+	if performParams.CreateSCMTag {
 		version.Operator = api.APIOperator
 	}
 
 	return version
+}
+
+// ConvertVersionToPipelineRecord converts the version to pipeline record.
+func ConvertVersionToPipelineRecord(version *api.Version) (*newapi.PipelineRecord, error) {
+	pipelineRecord := &newapi.PipelineRecord{
+		ID: version.VersionID,
+		PipelineID: version.ServiceID,
+		VersionID: version.VersionID,
+		Name: version.Name,
+		StartTime: version.CreateTime,
+	}
+
+	status, err := convertVersionStatusToPipelineRecordStatus(version.Status)
+	if err != nil {
+		return nil, fmt.Errorf("fail to convert version status as %s", err.Error())
+	}
+	pipelineRecord.Status = status
+
+	return pipelineRecord, nil
+}
+
+// convertVersionStatusToPipelineRecordStatus converts the version status to pipeline record status.
+func convertVersionStatusToPipelineRecordStatus(status api.VersionStatus) (newapi.Status, error) {
+	convertionMap := map[api.VersionStatus]newapi.Status{
+		api.VersionPending: newapi.Pending,
+		api.VersionRunning: newapi.Running,
+		api.VersionHealthy: newapi.Success,
+		api.VersionFailed: newapi.Failed,
+		api.VersionCancel: newapi.Aborted,
+	}
+
+	if value, ok := convertionMap[status]; ok {
+		return value, nil
+	}
+
+	return newapi.Status("Unknown"), fmt.Errorf("The version status %s is not supported", status)
 }

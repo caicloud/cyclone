@@ -70,10 +70,15 @@ func (router *router) listPipelines(request *restful.Request, response *restful.
 		httputil.ResponseWithError(response, err)
 		return
 	}
+	recentCount, recentSuccessCount, recentFailedCount, err := httputil.RecordCountQueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
 
 	projectName := request.PathParameter(projectPathParameterName)
 
-	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams)
+	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams, recentCount, recentSuccessCount, recentFailedCount)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return

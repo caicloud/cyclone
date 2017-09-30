@@ -16,11 +16,37 @@ limitations under the License.
 package router
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/zoumo/logdog"
+
+	oldapi "github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/api"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	restful "github.com/emicklei/go-restful"
 )
+
+// createPipelineRecord handles the request to perform pipeline, which will create a pipeline record.
+func (router *router) createPipelineRecord(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+
+	performParams := &api.PipelinePerformParams{}
+	if err := httputil.ReadEntityFromRequest(request, performParams); err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	if err := router.pipelineManager.PerformPipeline(projectName, pipelineName, performParams); err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, nil)
+}
 
 // getPipelineRecord handles the request to get a pipeline record.
 func (router *router) getPipelineRecord(request *restful.Request, response *restful.Response) {
@@ -65,4 +91,52 @@ func (router *router) deletePipelineRecord(request *restful.Request, response *r
 	}
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
+}
+
+// updatePipelineRecordStatus handles the request to update a pipeline record status, only support to set 'Aborted'
+// status for running pipeline records.
+func (router *router) updatePipelineRecordStatus(request *restful.Request, response *restful.Response) {
+	pipelineRecordID := request.PathParameter(pipelineRecordPathParameterName)
+
+	pipelineRecord, err := router.pipelineRecordManager.GetPipelineRecord(pipelineRecordID)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	if pipelineRecord.Status != api.Running {
+		logdog.Warnf("The pipeline record %s is not running, can not be aborted, will do no action", pipelineRecord.Name)
+		return
+	}
+
+	type RecordStatus struct {
+		Status api.Status `json:"status"`
+	}
+
+	recordStatus := &RecordStatus{}
+	if err := httputil.ReadEntityFromRequest(request, recordStatus); err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	if recordStatus.Status != api.Aborted {
+		err = httperror.ErrorValidationFailed.Format("status", "only support Aborted")
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	e, err := event.LoadEventFromEtcd(oldapi.EventID(pipelineRecord.ID))
+	if err != nil {
+		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
+		logdog.Error(err)
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	if e.Status == oldapi.EventStatusRunning {
+		e.Status = oldapi.EventStatusCancel
+		event.SaveEventToEtcd(e)
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, nil)
 }
