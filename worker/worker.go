@@ -103,13 +103,14 @@ func (worker *Worker) handleEvent(event *api.Event) {
 	vcsManager := vcs.NewManager()
 
 	logServer := worker.Envs.LogServer
-	err := worker_log.DialLogServer(logServer)
-	if err != nil {
-		logdog.Errorf("dail log server err: %v", err)
-	} else {
-		go worker_log.SendHeartBeat()
-		defer worker_log.Disconnect()
+
+	if err := worker_log.DialLogServer(logServer); err != nil {
+		setEventFailStatus(event, err.Error())
+		return
 	}
+
+	go worker_log.SendHeartBeat()
+	defer worker_log.Disconnect()
 
 	switch event.Operation {
 	case "create-service":
