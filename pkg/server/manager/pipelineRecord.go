@@ -19,10 +19,12 @@ package manager
 import (
 	"fmt"
 
+	"gopkg.in/mgo.v2"
+
+	"github.com/caicloud/cyclone/api/conversion"
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
-	"gopkg.in/mgo.v2"
 )
 
 // PipelineRecordManager represents the interface to manage pipeline record.
@@ -56,10 +58,20 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 
 // GetPipelineRecord gets the pipeline record by id.
 func (m *pipelineRecordManager) GetPipelineRecord(pipelineRecordID string) (*api.PipelineRecord, error) {
-	return m.dataStore.FindPipelineRecordByID(pipelineRecordID)
+	version, err := m.dataStore.FindVersionByID(pipelineRecordID)
+	if err != nil {
+		return nil, err
+	}
+
+	pipelineRecord, err := conversion.ConvertVersionToPipelineRecord(version)
+	if err != nil {
+		return nil, err
+	}
+
+	return pipelineRecord, nil
 }
 
-// ListPipelineRecords finds the pipeline records by pipelineID.
+// ListPipelineRecords finds the pipeline records by pipeline id.
 func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipelineName string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
@@ -77,7 +89,21 @@ func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipeline
 		return nil, 0, err
 	}
 
-	return m.dataStore.FindPipelineRecordsByPipelineID(pipeline.ID, queryParams)
+	versions, total, err := m.dataStore.FindVersionsWithPaginationByServiceID(pipeline.ServiceID, queryParams.Start, queryParams.Limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	pipelineRecords := []api.PipelineRecord{}
+	for _, version := range versions {
+		record, err := conversion.ConvertVersionToPipelineRecord(&version)
+		if err != nil {
+			return nil, 0, err
+		}
+		pipelineRecords = append(pipelineRecords, *record)
+	}
+
+	return pipelineRecords, total, nil
 }
 
 // UpdatePipelineRecord updates pipeline record by id.
@@ -104,10 +130,29 @@ func (m *pipelineRecordManager) UpdatePipelineRecord(pipelineRecordID string, ne
 
 // DeletePipelineRecord deletes the pipeline record by id.
 func (m *pipelineRecordManager) DeletePipelineRecord(pipelineRecordID string) error {
-	return m.dataStore.DeletePipelineRecordByID(pipelineRecordID)
+	return m.dataStore.DeleteVersionByID(pipelineRecordID)
 }
 
 // ClearPipelineRecordsOfPipeline deletes all the pipeline records of one pipeline by pipeline id.
 func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string) error {
-	return m.dataStore.DeletePipelineRecordsByPipelineID(pipelineID)
+	ds := m.dataStore
+
+	pipeline, err := ds.FindPipelineByID(pipelineID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the versions related to this pipeline.
+	versions, err := ds.FindVersionsByServiceID(pipeline.ServiceID)
+	if err != nil {
+		return err
+	}
+
+	for _, version := range versions {
+		if err := ds.DeleteVersionByID(version.VersionID); err != nil {
+			return fmt.Errorf("Fail to delete the versions for pipeline %s as %s", pipeline.Name, err.Error())
+		}
+	}
+
+	return nil
 }

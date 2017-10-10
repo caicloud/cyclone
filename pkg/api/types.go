@@ -32,15 +32,19 @@ type Project struct {
 type Pipeline struct {
 	ID          string `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline"`
 	Name        string `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline，unique in one project"`
+	Alias       string `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the pipeline"`
 	Description string `bson:"description,omitempty" json:"description,omitempty" description:"description of the pipeline"`
 	Owner       string `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
 	ProjectID   string `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
 	// TODO （robin）Remove the association between the pipeline and the service after pipeline replaces service.
-	ServiceID      string       `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
-	Build          *Build       `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
-	AutoTrigger    *AutoTrigger `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
-	CreationTime   time.Time    `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
-	LastUpdateTime time.Time    `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
+	ServiceID            string          `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
+	Build                *Build          `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	AutoTrigger          *AutoTrigger    `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
+	CreationTime         time.Time       `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
+	LastUpdateTime       time.Time       `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
+	RecentRecords        []PipelineRecord `bson:"recentRecords,omitempty" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
+	RecentSuccessRecords []PipelineRecord `bson:"recentSuccessRecords,omitempty" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
+	RecentFailedRecords  []PipelineRecord `bson:"recentFailedRecords,omitempty" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
 }
 
 // Build represents the build config and stages of CI.
@@ -142,14 +146,15 @@ type ImageBuildInfo struct {
 
 // IntegrationTestStage represents the config of integration test stage.
 type IntegrationTestStage struct {
-	IntegrationTestSet *IntegrationTestSet `bson:"integrationTestSet,omitempty" json:"integrationTestSet,omitempty" description:"integration test config"`
-	Services           []Service           `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	Config   *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
+	Services []Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
 }
 
-// IntegrationTestSet represents the config for integration test set.
-type IntegrationTestSet struct {
-	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"built image to run the integration test"`
-	Command []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to run for integration test"`
+// IntegrationTestConfig represents the config for integration test.
+type IntegrationTestConfig struct {
+	ImageName string   `bson:"imageName,omitempty" json:"imageName,omitempty" description:"built image name to run the integration test"`
+	Command   []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to run for integration test"`
+	EnvVars   []EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables for integration test"`
 }
 
 // Service represents the dependent service needed for integration test.
@@ -172,17 +177,14 @@ const (
 	// AlwaysRelease always releases the images.
 	AlwaysRelease ImageReleasePolicyType = "Always"
 
-	// NeverRelease never releases the images.
-	NeverRelease ImageReleasePolicyType = "Never"
-
 	// IntegrationTestSuccessRelease releases the images only when the integration test success.
 	IntegrationTestSuccessRelease ImageReleasePolicyType = "IntegrationTestSuccess"
 )
 
 // ImageReleasePolicy represents the policy to release image.
 type ImageReleasePolicy struct {
-	Image string                 `bson:"image,omitempty" json:"image,omitempty" description:"image to be released"`
-	Type  ImageReleasePolicyType `bson:"type,omitempty" json:"type,omitempty" description:"type of image release policy"`
+	ImageName string                 `bson:"imageName,omitempty" json:"imageName,omitempty" description:"image to be released"`
+	Type      ImageReleasePolicyType `bson:"type,omitempty" json:"type,omitempty" description:"type of image release policy"`
 }
 
 // AutoTrigger represents the auto trigger strategy of the pipeline.
@@ -198,7 +200,7 @@ type SCMTrigger struct {
 
 // GeneralTrigger represents the general config for all auto trigger strategies.
 type GeneralTrigger struct {
-	FinalStage string `bson:"finalStage,omitempty" json:"finalStage,omitempty" description:"final stage of the auto triggered running"`
+	Stages string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages of the auto triggered running"`
 }
 
 // CommitTrigger represents the trigger from SCM commit.
@@ -226,6 +228,7 @@ type CronTrigger struct {
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
 	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
+	Name        string       `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
 	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
 	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
 	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
@@ -245,10 +248,10 @@ const (
 	Running Status = "Running"
 	// Success represents the status that finished and succeeded.
 	Success Status = "Success"
-	// Failure represents the status that finished but failed.
-	Failure Status = "Failed"
-	// Abort represents the status that the stage was aborted by some reason, and we can get the reason from the log.
-	Abort Status = "Aborted"
+	// Failed represents the status that finished but failed.
+	Failed Status = "Failed"
+	// Aborted represents the status that the stage was aborted by some reason, and we can get the reason from the log.
+	Aborted Status = "Aborted"
 )
 
 // TODO The status of every stage may be different.
@@ -293,6 +296,15 @@ const (
 
 	// Start represents the name of the query parameter for pagination start.
 	Start string = "start"
+
+	// RecentPipelineRecordCount represents the count of recent pipeline records.
+	RecentPipelineRecordCount string = "recentCount"
+
+	// RecentSuccessPipelineRecordCount represents the count of recent success pipeline records.
+	RecentSuccessPipelineRecordCount string = "recentSuccessCount"
+
+	// RecentFailedPipelineRecordCount represents the count of recent failed pipeline records.
+	RecentFailedPipelineRecordCount string = "recentFailedCount"
 )
 
 // ErrorResponse represents response of error.
@@ -302,9 +314,11 @@ type ErrorResponse struct {
 	Details string `json:"details,omitempty"`
 }
 
-// PipelinePerformParams the params in the request body to perform the pipeline.
+// PipelinePerformParams the params to perform the pipeline.
 type PipelinePerformParams struct {
-	Version string   `bson:"version,omitempty" json:"version,omitempty" description:"version of this running of pipeline"`
-	Tagged  bool     `bson:"tagged,omitempty" json:"tagged,omitempty" description:"whether create tag in SCM"`
-	Stages  []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
+	Ref          string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Name         string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
+	Description  string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
+	CreateSCMTag bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
+	Stages       []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }

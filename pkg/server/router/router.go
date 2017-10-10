@@ -168,6 +168,13 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 	logdog.Info("Register pipeline record APIs")
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// POST /api/v1/projects/{project}/pipelines/{pipeline}/records
+	ws.Route(ws.POST("/projects/{project}/pipelines/{pipeline}/records").To(router.createPipelineRecord).
+		Doc("Perform pipeline, which will create a pipeline record").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Reads(api.PipelinePerformParams{}))
+
 	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records
 	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records").To(router.listPipelineRecords).
 		Doc("Get all pipeline records of one pipeline").
@@ -187,4 +194,10 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+
+	// PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/status
+	ws.Route(ws.POST("/projects/{project}/pipelines/{pipeline}/records/{recordId}/status").To(router.updatePipelineRecordStatus).
+		Doc("Update the status of pipeline record, only support to set the status as Aborted for running pipeline record").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
 }
