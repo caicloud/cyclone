@@ -196,7 +196,7 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 
 	// PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/status
-	ws.Route(ws.POST("/projects/{project}/pipelines/{pipeline}/records/{recordId}/status").To(router.updatePipelineRecordStatus).
+	ws.Route(ws.PATCH("/projects/{project}/pipelines/{pipeline}/records/{recordId}/status").To(router.updatePipelineRecordStatus).
 		Doc("Update the status of pipeline record, only support to set the status as Aborted for running pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
