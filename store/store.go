@@ -37,6 +37,7 @@ const (
 	projectCollectionName        string = "projects"
 	pipelineCollectionName       string = "pipelines"
 	pipelineRecordCollectionName string = "pipelineRecords"
+	scmCollectionName            string = "scm"
 )
 
 var (
@@ -51,6 +52,7 @@ type DataStore struct {
 	projectCollection        *mgo.Collection
 	pipelineCollection       *mgo.Collection
 	pipelineRecordCollection *mgo.Collection
+	scmCollection            *mgo.Collection
 }
 
 // Init store mongo client session
@@ -66,6 +68,7 @@ func NewStore() *DataStore {
 		projectCollection:        s.DB(defaultDBName).C(projectCollectionName),
 		pipelineCollection:       s.DB(defaultDBName).C(pipelineCollectionName),
 		pipelineRecordCollection: s.DB(defaultDBName).C(pipelineRecordCollectionName),
+		scmCollection:            s.DB(defaultDBName).C(scmCollectionName),
 	}
 }
 

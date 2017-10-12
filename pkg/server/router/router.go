@@ -18,6 +18,7 @@ package router
 
 import (
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/server/manager"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
@@ -48,6 +49,9 @@ type router struct {
 
 	// pipelineRecordManager represents the pipeline record manager.
 	pipelineRecordManager manager.PipelineRecordManager
+
+	// scmManager represents the scm manager.
+	scmManager scm.Manager
 }
 
 // InitRouters initializes the router for REST APIs.
@@ -70,10 +74,14 @@ func InitRouters(dataStore *store.DataStore) error {
 		return err
 	}
 
+	// scmManager represents the manager of scm.
+	scmManager := scm.Manager{DataStore: dataStore}
+
 	router := &router{
 		projectManager,
 		pipelineManager,
 		pipelineRecordManager,
+		scmManager,
 	}
 
 	ws := new(restful.WebService)
@@ -81,6 +89,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
 	router.registerPipelineRecordAPIs(ws)
+	router.registerScmAPIs(ws)
 
 	restful.Add(ws)
 
@@ -200,4 +209,37 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Doc("Update the status of pipeline record, only support to set the status as Aborted for running pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+}
+
+// registerScmAPIs registers scm related endpoints.
+func (router *router) registerScmAPIs(ws *restful.WebService) {
+	logdog.Info("Register scm APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// GET /api/v1/projects/{project}/scm/{type}/token
+	ws.Route(ws.GET("/projects/{project}/scm/{type}/token").To(router.getAuthCodeURL).
+		Doc("Get a token").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("type", "type of the scm").DataType("string")))
+
+	// GET /api/v1/scm/{type}/authcallback
+	ws.Route(ws.GET("scm/{type}/authcallback").To(router.authcallback).
+		Doc("Auth callback with project id and scm type").
+		Param(ws.PathParameter("type", "type of the scm").DataType("string")).
+		Param(ws.QueryParameter("code", "parameter of oauth API, we use scm type in this place").DataType("string")).
+		Param(ws.QueryParameter("state", "parameter of oauth API, we use project id in this place").DataType("string")))
+
+	// GET /api/v1/projects/{project}/scm/{type}/repos
+	ws.Route(ws.GET("/projects/{project}/scm/{type}/repos").To(router.listrepos).
+		Doc("Get a token").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("type", "type of the scm").DataType("string")).
+		Writes(api.ListReposResponse{}))
+
+	// GET /api/v1/projects/{project}/scm/{type}/logout
+	ws.Route(ws.GET("/projects/{project}/scm/{type}/logout").To(router.logout).
+		Doc("Log out and delete the token").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("type", "type of the scm").DataType("string")))
+
 }

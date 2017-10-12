@@ -16,7 +16,11 @@ limitations under the License.
 
 package api
 
-import "time"
+import (
+	"time"
+
+	"golang.org/x/oauth2"
+)
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
 type Project struct {
@@ -322,3 +326,31 @@ type PipelinePerformParams struct {
 	CreateSCMTag bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
 	Stages       []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }
+
+// ScmToken represents a set of token informations of the projcet.
+type ScmToken struct {
+	ProjectID string       `bson:"projectId,omitempty" json:"projectId,omitempty" description:"id of the project which the token belongs to"`
+	ScmType   string       `bson:"scmType,omitempty" json:"scmType,omitempty" description:"the type of scm, it can be github or gitlab"`
+	Token     oauth2.Token `bson:"token,omitempty" json:"token,omitempty"`
+}
+
+// ListReposResponse represents a collection of repositories.
+type ListReposResponse struct {
+	Username  string       `json:"username,omitempty"`
+	Repos     []Repository `json:"repos,omitempty"`
+	AvatarURL string       `json:"avatarUrl,omitempty"`
+}
+
+// Repository represents the informations of a repository.
+type Repository struct {
+	Name  string `json:"name,omitempty"`
+	Owner string `json:"owner,omitempty"`
+	URL   string `json:"url,omitempty"`
+}
+
+const (
+	// GITHUB is the name of github.
+	GITHUB string = "github"
+	// GITLAB is the name of gitlab.
+	GITLAB string = "gitlab"
+)
