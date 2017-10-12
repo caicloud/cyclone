@@ -89,7 +89,7 @@ func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipeline
 		return nil, 0, err
 	}
 
-	versions, total, err := m.dataStore.FindVersionsWithPaginationByServiceID(pipeline.ServiceID, queryParams.Start, queryParams.Limit)
+	versions, total, err := m.dataStore.FindVersionsWithPaginationByServiceID(pipeline.ServiceID, queryParams.Filter, queryParams.Start, queryParams.Limit)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -69,9 +69,14 @@ func (d *DataStore) FindVersionsByServiceID(serviceID string) ([]api.Version, er
 }
 
 // FindVersionsWithPaginationByServiceID finds a page of versions by service ID.
-func (d *DataStore) FindVersionsWithPaginationByServiceID(serviceID string, start, limit int) ([]api.Version, int, error) {
+func (d *DataStore) FindVersionsWithPaginationByServiceID(serviceID string, filter map[string]interface{}, start, limit int) ([]api.Version, int, error) {
 	versions := []api.Version{}
-	filter := bson.M{"service_id": serviceID}
+	if filter == nil {
+		filter = bson.M{"service_id": serviceID}
+	} else {
+		filter["service_id"] = serviceID
+	}
+
 	col := d.s.DB(defaultDBName).C(versionCollectionName)
 	query :=  col.Find(filter)
 	total, err := query.Count()

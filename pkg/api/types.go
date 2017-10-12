@@ -41,11 +41,11 @@ type Pipeline struct {
 	Owner       string `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
 	ProjectID   string `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
 	// TODO （robin）Remove the association between the pipeline and the service after pipeline replaces service.
-	ServiceID            string          `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
-	Build                *Build          `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
-	AutoTrigger          *AutoTrigger    `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
-	CreationTime         time.Time       `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
-	LastUpdateTime       time.Time       `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
+	ServiceID            string           `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
+	Build                *Build           `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	AutoTrigger          *AutoTrigger     `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
+	CreationTime         time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
+	LastUpdateTime       time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
 	RecentRecords        []PipelineRecord `bson:"recentRecords,omitempty" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
 	RecentSuccessRecords []PipelineRecord `bson:"recentSuccessRecords,omitempty" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
 	RecentFailedRecords  []PipelineRecord `bson:"recentFailedRecords,omitempty" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
@@ -290,8 +290,9 @@ type ListResponse struct {
 
 // QueryParams represents a collection of query param.
 type QueryParams struct {
-	Start int `json:"start,omitempty" description:"query start index, default 0"`
-	Limit int `json:"limit,omitempty" description:"specify the number of records, default +Inf, return all"`
+	Start  int                    `json:"start,omitempty" description:"query start index, default is 0"`
+	Limit  int                    `json:"limit,omitempty" description:"specify the number of records, default is +Inf to not limit"`
+	Filter map[string]interface{} `json:"filter,omitempty" description:"pattern to filter the records, default is nil to not filter"`
 }
 
 const (
@@ -300,6 +301,9 @@ const (
 
 	// Start represents the name of the query parameter for pagination start.
 	Start string = "start"
+
+	// Filter represents the name of the query parameter for filtering.
+	Filter string = "filter"
 
 	// RecentPipelineRecordCount represents the count of recent pipeline records.
 	RecentPipelineRecordCount string = "recentCount"

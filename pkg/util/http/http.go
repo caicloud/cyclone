@@ -19,9 +19,11 @@ package http
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
@@ -70,6 +72,7 @@ func ResponseWithList(list interface{}, total int) api.ListResponse {
 func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err error) {
 	limitStr := request.QueryParameter(api.Limit)
 	startStr := request.QueryParameter(api.Start)
+	filterStr := request.QueryParameter(api.Filter)
 
 	if limitStr != "" {
 		qp.Limit, err = strconv.Atoi(limitStr)
@@ -82,6 +85,18 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 		if err != nil {
 			return qp, httperror.ErrorParamTypeError.Format(api.Start, "number", "string")
 		}
+	}
+	if filterStr != "" {
+		// Only support one condition to filter.
+		filterParts := strings.Split(filterStr, "=")
+		if len(filterParts) != 2 {
+			return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+		}
+
+		filter := map[string]interface{}{
+			filterParts[0]: bson.M{"$regex": filterParts[1]},
+		}
+		qp.Filter = filter
 	}
 
 	return qp, nil
