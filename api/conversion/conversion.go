@@ -67,8 +67,10 @@ func ConvertPipelineToService(projectName string, pipeline *newapi.Pipeline) (*a
 	service.CaicloudYaml = caicloudYamlStr
 
 	// Have checked the correction of buildInfos in function convertBuildStagesToCaicloudYaml().
-	service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
-	service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
+	if pipeline.Build.Stages.ImageBuild != nil {
+		service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
+		service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
+	}
 
 	return service, nil
 }
@@ -85,10 +87,6 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 		return "", fmt.Errorf("fail to generate caicloud.yml as package stages is empty")
 	}
 
-	if stages.ImageBuild == nil {
-		return "", fmt.Errorf("fail to generate caicloud.yml as image build stages is empty")
-	}
-
 	caicloudYAMLConfig := &Config{}
 
 	// Convert the package stage of pipeline to the prebuild of caicloud.yml.
@@ -101,20 +99,22 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 	caicloudYAMLConfig.PreBuild = preBuild
 
-	// Convert the image build stage to the build of caicloud.yml.
-	build := &Build{}
-	imageBuildConfig := stages.ImageBuild
-	buildInfoNum := len(imageBuildConfig.BuildInfos)
-	if buildInfoNum == 0 || buildInfoNum > 1 {
-		return "", fmt.Errorf("fail to generate caicloud.yml as %d buildInfos provided in imageBuild stage", buildInfoNum)
+	if stages.ImageBuild != nil {
+		// Convert the image build stage to the build of caicloud.yml.
+		build := &Build{}
+		imageBuildConfig := stages.ImageBuild
+		buildInfoNum := len(imageBuildConfig.BuildInfos)
+		if buildInfoNum == 0 || buildInfoNum > 1 {
+			return "", fmt.Errorf("fail to generate caicloud.yml as %d buildInfos provided in imageBuild stage", buildInfoNum)
+		}
+
+		// Now only support one build info.
+		buildInfo := imageBuildConfig.BuildInfos[0]
+		build.ContextDir = buildInfo.ContextDir
+		build.DockerfileName = buildInfo.DockerfilePath
+
+		caicloudYAMLConfig.Build = build
 	}
-
-	// Now only support one build info.
-	buildInfo := imageBuildConfig.BuildInfos[0]
-	build.ContextDir = buildInfo.ContextDir
-	build.DockerfileName = buildInfo.DockerfilePath
-
-	caicloudYAMLConfig.Build = build
 
 	// Convert the integration test stage of pipeline to the integration of caicloud.yml.
 	if stages.IntegrationTest != nil {
