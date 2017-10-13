@@ -106,6 +106,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 
 	if pipelineRecord.Status != api.Running {
 		logdog.Warnf("The pipeline record %s is not running, can not be aborted, will do no action", pipelineRecord.Name)
+		response.WriteHeaderAndEntity(http.StatusOK, pipelineRecord)
 		return
 	}
 
@@ -136,7 +137,9 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 	if e.Status == oldapi.EventStatusRunning {
 		e.Status = oldapi.EventStatusCancel
 		event.SaveEventToEtcd(e)
+
+		pipelineRecord.Status = api.Aborted
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, nil)
+	response.WriteHeaderAndEntity(http.StatusOK, pipelineRecord)
 }
