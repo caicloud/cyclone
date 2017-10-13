@@ -261,6 +261,7 @@ func createVersionPostHook(event *api.Event) {
 		event.Version.Status = api.VersionFailed
 		event.Version.ErrorMessage = event.ErrorMessage
 	}
+	event.Version.EndTime = time.Now()
 
 	operation := string(event.Version.Operation)
 	// Record that whether this event is a deploy for project. According this flag, we will make some special operations.

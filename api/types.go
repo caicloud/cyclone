@@ -346,6 +346,8 @@ type Version struct {
 	Commit string `bson:"commit,omitempty" json:"commit,omitempty"`
 	// Time when the version is created.
 	CreateTime time.Time `bson:"create_time,omitempty" json:"create_time,omitempty"`
+	// Time when the version finishes.
+	EndTime time.Time `bson:"end_time,omitempty" json:"end_time,omitempty"`
 	// Release version URL. This is used to find the release hosted on remote machine,
 	// e.g. https://github.com/caicloud/cyclone/releases/v1.0.
 	URL string `bson:"url,omitempty" json:"url,omitempty"`
