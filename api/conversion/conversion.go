@@ -200,11 +200,13 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
 	version := &api.Version{
 		Description:   performParams.Description,
-		Operation:     api.VersionOperation(strings.Join(performParams.Stages, ",")),
 		Status:        api.VersionPending,
 		SecurityCheck: false,
 		CreateTime:    time.Now(),
 	}
+
+	stagesStr := strings.Join(performParams.Stages, ",")
+	version.Operation = api.VersionOperation(strings.Replace(stagesStr, "imageRelease", "publish", 1))
 
 	if performParams.Name != "" {
 		version.Name = performParams.Name
@@ -222,11 +224,11 @@ func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams)
 // ConvertVersionToPipelineRecord converts the version to pipeline record.
 func ConvertVersionToPipelineRecord(version *api.Version) (*newapi.PipelineRecord, error) {
 	pipelineRecord := &newapi.PipelineRecord{
-		ID: version.VersionID,
+		ID:         version.VersionID,
 		PipelineID: version.ServiceID,
-		VersionID: version.VersionID,
-		Name: version.Name,
-		StartTime: version.CreateTime,
+		VersionID:  version.VersionID,
+		Name:       version.Name,
+		StartTime:  version.CreateTime,
 	}
 
 	status, err := convertVersionStatusToPipelineRecordStatus(version.Status)
@@ -244,8 +246,8 @@ func convertVersionStatusToPipelineRecordStatus(status api.VersionStatus) (newap
 		api.VersionPending: newapi.Pending,
 		api.VersionRunning: newapi.Running,
 		api.VersionHealthy: newapi.Success,
-		api.VersionFailed: newapi.Failed,
-		api.VersionCancel: newapi.Aborted,
+		api.VersionFailed:  newapi.Failed,
+		api.VersionCancel:  newapi.Aborted,
 	}
 
 	if value, ok := convertionMap[status]; ok {
