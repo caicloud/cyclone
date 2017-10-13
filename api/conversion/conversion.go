@@ -229,6 +229,7 @@ func ConvertVersionToPipelineRecord(version *api.Version) (*newapi.PipelineRecor
 		VersionID:  version.VersionID,
 		Name:       version.Name,
 		StartTime:  version.CreateTime,
+		EndTime:    version.EndTime,
 	}
 
 	status, err := convertVersionStatusToPipelineRecordStatus(version.Status)
