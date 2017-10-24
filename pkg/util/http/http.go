@@ -68,7 +68,7 @@ func ResponseWithList(list interface{}, total int) api.ListResponse {
 	}
 }
 
-// QueryParamsFromRequest reads the query params from request body.
+// QueryParamsFromRequest reads the query params from request.
 func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err error) {
 	limitStr := request.QueryParameter(api.Limit)
 	startStr := request.QueryParameter(api.Start)
@@ -102,7 +102,7 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 	return qp, nil
 }
 
-// RecordCountQueryParamsFromRequest reads the query params of pipeline record count from request body.
+// RecordCountQueryParamsFromRequest reads the query params of pipeline record count from request.
 func RecordCountQueryParamsFromRequest(request *restful.Request) (recentCount, recentSuccessCount, recentFailedCount int, err error) {
 	recentCountStr := request.QueryParameter(api.RecentPipelineRecordCount)
 	recentSuccessCountStr := request.QueryParameter(api.RecentSuccessPipelineRecordCount)
@@ -128,4 +128,21 @@ func RecordCountQueryParamsFromRequest(request *restful.Request) (recentCount, r
 	}
 
 	return
+}
+
+// DownloadQueryParamsFromRequest reads the query param whether download pipeline record logs from request.
+func DownloadQueryParamsFromRequest(request *restful.Request) (bool, error) {
+	downloadStr := request.QueryParameter(api.Download)
+
+	if downloadStr != "" {
+		download, err := strconv.ParseBool(downloadStr)
+		if err != nil {
+			logdog.Errorf("Download param's value is %s", downloadStr)
+			return false, httperror.ErrorParamTypeError.Format(api.Download, "bool", "string")
+		}
+
+		return download, nil
+	}
+
+	return false, nil
 }

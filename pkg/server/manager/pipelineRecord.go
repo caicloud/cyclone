@@ -19,6 +19,7 @@ package manager
 import (
 	"fmt"
 
+	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/api/conversion"
@@ -35,6 +36,7 @@ type PipelineRecordManager interface {
 	UpdatePipelineRecord(pipelineRecordID string, pipelineRecord *api.PipelineRecord) (*api.PipelineRecord, error)
 	DeletePipelineRecord(pipelineRecordID string) error
 	ClearPipelineRecordsOfPipeline(pipelineID string) error
+	GetPipelineRecordLogs(pipelineRecordID string) (string, error)
 }
 
 // pipelineRecordManager represents the manager for pipeline record.
@@ -60,6 +62,9 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 func (m *pipelineRecordManager) GetPipelineRecord(pipelineRecordID string) (*api.PipelineRecord, error) {
 	version, err := m.dataStore.FindVersionByID(pipelineRecordID)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(fmt.Sprintf("pipeline record %s", pipelineRecordID))
+		}
 		return nil, err
 	}
 
@@ -155,4 +160,30 @@ func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string
 	}
 
 	return nil
+}
+
+// GetPipelineRecordLogs gets the pipeline record logs by id.
+func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (string, error) {
+	pipelineRecord, err := m.GetPipelineRecord(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
+	logdog.Debugf("Pipeline record is %s", pipelineRecord)
+
+	status := pipelineRecord.Status
+	if status != api.Success && status != api.Failed {
+		return "", fmt.Errorf("Can not get the logs as pipeline record %s is %s, please try after it finishes",
+			pipelineRecordID, status)
+	}
+
+	log, err := m.dataStore.FindVersionLogByVersionID(pipelineRecordID)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return "", httperror.ErrorContentNotFound.Format(fmt.Sprintf("log of pipeline record %s", pipelineRecordID))
+		}
+		return "", fmt.Errorf("Fail to get the log for pipeline record %s as %s", pipelineRecordID, err.Error())
+	}
+
+	return log.Logs, nil
 }

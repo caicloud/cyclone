@@ -208,7 +208,15 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 	ws.Route(ws.PATCH("/projects/{project}/pipelines/{pipeline}/records/{recordId}/status").To(router.updatePipelineRecordStatus).
 		Doc("Update the status of pipeline record, only support to set the status as Aborted for running pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs").To(router.getPipelineRecordLogs).
+		Doc("Get the pipeline record log").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 }
 
 // registerScmAPIs registers scm related endpoints.
