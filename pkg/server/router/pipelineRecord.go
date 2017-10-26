@@ -161,14 +161,11 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 		return
 	}
 
-	if !download {
-		response.WriteHeaderAndEntity(http.StatusOK, logs)
-		return
+	response.AddHeader(restful.HEADER_ContentType, "text/plain")
+	if download {
+		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", projectName, pipelineName, pipelineRecordID)
+		response.AddHeader("Content-Disposition", fmt.Sprintf("attachment; filename=%s", logFileName))
 	}
-
-	logFileName := fmt.Sprintf("%s-%s-%s-log.txt", projectName, pipelineName, pipelineRecordID)
-	response.AddHeader("Content-Disposition", fmt.Sprintf("attachment; filename=%s", logFileName)).
-		AddHeader("Content-Type", "application/octet-stream")
 
 	response.Write([]byte(logs))
 }
