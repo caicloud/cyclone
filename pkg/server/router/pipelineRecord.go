@@ -143,3 +143,29 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 
 	response.WriteHeaderAndEntity(http.StatusOK, pipelineRecord)
 }
+
+// getPipelineRecordLogs handles the request to get pipeline record logs, only supports finished pipeline records.
+func (router *router) getPipelineRecordLogs(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+	pipelineRecordID := request.PathParameter(pipelineRecordPathParameterName)
+	download, err := httputil.DownloadQueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	logs, err := router.pipelineRecordManager.GetPipelineRecordLogs(pipelineRecordID)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.AddHeader(restful.HEADER_ContentType, "text/plain")
+	if download {
+		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", projectName, pipelineName, pipelineRecordID)
+		response.AddHeader("Content-Disposition", fmt.Sprintf("attachment; filename=%s", logFileName))
+	}
+
+	response.Write([]byte(logs))
+}

@@ -313,6 +313,9 @@ const (
 
 	// RecentFailedPipelineRecordCount represents the count of recent failed pipeline records.
 	RecentFailedPipelineRecordCount string = "recentFailedCount"
+
+	// Download represents the flag whether download pipeline record logs.
+	Download string = "download"
 )
 
 // ErrorResponse represents response of error.
