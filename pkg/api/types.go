@@ -231,15 +231,16 @@ type CronTrigger struct {
 
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
-	ID          string       `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
-	Name        string       `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
-	PipelineID  string       `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
-	VersionID   string       `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
-	Trigger     string       `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
-	StageStatus *StageStatus `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
-	Status      Status       `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
-	StartTime   time.Time    `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
-	EndTime     time.Time    `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+	ID            string                 `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
+	Name          string                 `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
+	PipelineID    string                 `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
+	VersionID     string                 `bson:"versionID,omitempty" json:"versionID,omitempty" description:"id of the version which the pipeline record is related to"`
+	Trigger       string                 `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
+	PerformParams *PipelinePerformParams `bson:"performParams,omitempty" json:"performParams,omitempty" description:"perform params of the pipeline record"`
+	StageStatus   *StageStatus           `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
+	Status        Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	StartTime     time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
+	EndTime       time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
 }
 
 // Status can be the status of some pipeline record or some stage

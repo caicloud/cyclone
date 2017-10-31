@@ -19,6 +19,7 @@ package conversion
 import (
 	"testing"
 
+	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
 )
 
@@ -130,5 +131,58 @@ func TestConvertBuildStagesToCaicloudYaml(t *testing.T) {
 
 	if config != expectedYMALStr {
 		t.Errorf("The converted caicloud yaml is not correct: \n%s\nexpected: \n%s\n", config, expectedYMALStr)
+	}
+}
+
+func TestConvertVersionToPipelineRecord(t *testing.T) {
+	testData := map[string]struct {
+		version *api.Version
+		record  *newapi.PipelineRecord
+		pass    bool
+	}{
+		"correct version": {
+			version: &api.Version{
+				VersionID: "111",
+				ServiceID: "11111",
+				Name:      "test",
+				Status:    api.VersionHealthy,
+				Operation: "integrationTest,publish",
+			},
+			record: &newapi.PipelineRecord{
+				ID:        "111",
+				VersionID: "111",
+				Name:      "test",
+				PerformParams: &newapi.PipelinePerformParams{
+					Stages: []string{"integrationTest", "imageRelease"},
+				},
+				Status: newapi.Success,
+			},
+			pass: true,
+		},
+		"wrong version status": {
+			version: &api.Version{
+				Name:   "test",
+				Status: api.VersionStatus("success"),
+			},
+			record: &newapi.PipelineRecord{
+				Name:   "test",
+				Status: newapi.Success,
+			},
+			pass: false,
+		},
+	}
+
+	for desc, data := range testData {
+		record, err := ConvertVersionToPipelineRecord(data.version)
+		if err != nil {
+			if data.pass {
+				t.Errorf("%s: failed as %s", desc, err.Error())
+			}
+			continue
+		}
+
+		if data.pass && record.Status != data.record.Status {
+			t.Errorf("%s: failed as the result is %s, expect %s", desc, record, data.record)
+		}
 	}
 }
