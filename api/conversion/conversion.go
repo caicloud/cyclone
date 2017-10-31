@@ -238,6 +238,13 @@ func ConvertVersionToPipelineRecord(version *api.Version) (*newapi.PipelineRecor
 	}
 	pipelineRecord.Status = status
 
+	// Convert the performed stages.
+	performStagesStr := strings.Replace(string(version.Operation), "publish", "imageRelease", 1)
+	performParams := &newapi.PipelinePerformParams{
+		Stages: strings.Split(performStagesStr, ","),
+	}
+	pipelineRecord.PerformParams = performParams
+
 	return pipelineRecord, nil
 }
 
