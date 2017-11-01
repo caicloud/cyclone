@@ -172,7 +172,7 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 	logdog.Debugf("Pipeline record is %s", pipelineRecord)
 
 	status := pipelineRecord.Status
-	if status != api.Success && status != api.Failed {
+	if status == api.Pending || status == api.Running {
 		return "", fmt.Errorf("Can not get the logs as pipeline record %s is %s, please try after it finishes",
 			pipelineRecordID, status)
 	}
