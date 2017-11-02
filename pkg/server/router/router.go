@@ -127,6 +127,17 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 	ws.Route(ws.DELETE("/projects/{project}").To(router.deleteProject).
 		Doc("Delete the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")))
+
+	// GET /api/v1/projects/{project}/repos
+	ws.Route(ws.GET("/projects/{project}/repos").To(router.listRepos).
+		Doc("List accessible repos of the project").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")))
+
+	// GET /api/v1/projects/{project}/branches
+	ws.Route(ws.GET("/projects/{project}/branches").To(router.listBranches).
+		Doc("List branches of the repo for the project").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.QueryParameter("repo", "the repo to list branches for").Required(true)))
 }
 
 // registerPipelineAPIs registers pipeline related endpoints.

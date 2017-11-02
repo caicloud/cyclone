@@ -33,14 +33,20 @@ func SendCreateServiceEvent(service *api.Service) error {
 
 	ds := store.NewStore()
 	defer ds.Close()
-	tok, _ := ds.FindtokenByUserID(service.UserID, service.Repository.SubVcs)
+
+	// tok, _ := ds.FindtokenByUserID(service.UserID, service.Repository.SubVcs)
+	project, err := ds.FindProjectByServiceID(service.ServiceID)
+	if err != nil {
+		log.Errorf("fail to get token for service %s", service.Name)
+		return err
+	}
 
 	event := api.Event{
 		EventID:   eventID,
 		Service:   *service,
 		Operation: CreateServiceOps,
 		Status:    api.EventStatusPending,
-		Data:      map[string]interface{}{"Token": tok.Vsctoken.AccessToken},
+		Data:      map[string]interface{}{"Token": project.SCM.Token},
 	}
 
 	// log.Infof("send create service event: %v", event)
@@ -71,7 +77,13 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 
 	ds := store.NewStore()
 	defer ds.Close()
-	tok, _ := ds.FindtokenByUserID(service.UserID, service.Repository.SubVcs)
+
+	// tok, _ := ds.FindtokenByUserID(service.UserID, service.Repository.SubVcs)
+	project, err := ds.FindProjectByServiceID(service.ServiceID)
+	if err != nil {
+		log.Errorf("fail to get token for service %s", serviceName)
+		return err
+	}
 
 	event := api.Event{
 		EventID:   eventID,
@@ -82,7 +94,7 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 			"service-name": serviceName,
 			"version-name": versionName,
 			"username":     username,
-			"Token":        tok.Vsctoken.AccessToken,
+			"Token":        project.SCM.Token,
 		},
 		Status: api.EventStatusPending,
 	}
