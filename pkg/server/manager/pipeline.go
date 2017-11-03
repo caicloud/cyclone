@@ -83,13 +83,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		return nil, fmt.Errorf("Fail to create service for pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
-	err = event.SendCreateServiceEvent(service)
-	if err != nil {
-		return nil, fmt.Errorf("Fail to create service event for pipeline %s as %s", pipeline.Name, err.Error())
-	}
-
 	pipeline.ServiceID = serviceID
-
 	createdPipeline, err := m.dataStore.CreatePipeline(pipeline)
 	if err != nil {
 		// Delete the service if fail to create pipeline.
@@ -98,6 +92,11 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		}
 
 		return nil, err
+	}
+
+	err = event.SendCreateServiceEvent(service)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to create service event for pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
 	return createdPipeline, nil

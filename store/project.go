@@ -70,6 +70,21 @@ func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
 	return project, nil
 }
 
+// FindProjectByServiceID finds the project by service id.
+func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, error) {
+	pipeline, err := d.FindPipelineByServiceID(serviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	project := &api.Project{}
+	if err := d.projectCollection.FindId(pipeline.ProjectID).One(project); err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
 // UpdateProject updates the project, please make sure the project id is provided before call this method.
 func (d *DataStore) UpdateProject(project *api.Project) error {
 	project.LastUpdateTime = time.Now()

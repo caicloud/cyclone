@@ -100,3 +100,42 @@ func (router *router) deleteProject(request *restful.Request, response *restful.
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }
+
+// listRepos handles the request to list repositories.
+func (router *router) listRepos(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	repos, err := router.projectManager.ListRepos(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(repos, len(repos)))
+}
+
+// listBranches handles the request to list branches for SCM repositories.
+func (router *router) listBranches(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+	repo := request.QueryParameter(api.Repo)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	branches, err := router.projectManager.ListBranches(name, repo)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(branches, len(branches)))
+}

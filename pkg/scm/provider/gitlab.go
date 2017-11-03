@@ -17,17 +17,153 @@ limitations under the License.
 package provider
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
+	log "github.com/golang/glog"
+	gitlab "github.com/xanzy/go-gitlab"
+	"golang.org/x/oauth2"
+	mgo "gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/pkg/scm"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
-	gitlab "github.com/xanzy/go-gitlab"
-	"golang.org/x/oauth2"
-	mgo "gopkg.in/mgo.v2"
 )
+
+// gitLabServer represents the server address for public GitLab.
+const gitLabServer = "https://gitlab.com"
+
+// GitLab represents the SCM provider of GitLab.
+type GitLab struct{}
+
+func init() {
+	if err := scm.RegisterProvider(api.GitLab, new(GitLab)); err != nil {
+		log.Errorln(err)
+	}
+}
+
+// GetToken gets the token by the username and password of SCM config.
+func (g *GitLab) GetToken(scm *api.SCMConfig) (string, error) {
+	if len(scm.Username) == 0 || len(scm.Password) == 0 {
+		return "", fmt.Errorf("GitHub username or password is missing")
+	}
+
+	bodyData := struct {
+		GrantType string `json:"grant_type"`
+		Username  string `json:"username"`
+		Password  string `json:"password"`
+	}{
+		GrantType: "password",
+		Username:  scm.Username,
+		Password:  scm.Password,
+	}
+
+	bodyBytes, err := json.Marshal(bodyData)
+	if err != nil {
+		return "", fmt.Errorf("fail to new request body for token as %s", err.Error())
+	}
+
+	// If use the public Gitlab, must use the HTTPS protocol.
+	if strings.Contains(scm.Server, "gitlab.com") && strings.HasPrefix(scm.Server, "http://") {
+		log.Infof("Convert SCM server from %s to %s to use HTTPS protocol for public Gitlab", scm.Server, gitLabServer)
+		scm.Server = gitLabServer
+	}
+
+	tokenURL := fmt.Sprintf("%s%s", scm.Server, "/oauth/token")
+	req, err := http.NewRequest(http.MethodPost, tokenURL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		log.Errorf("Fail to new the request for token as %s", err.Error())
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to request for token as %s", err.Error())
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to request for token as %s", err.Error())
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 == 2 {
+		var token oauth2.Token
+		err := json.Unmarshal(body, &token)
+		if err != nil {
+			return "", err
+		}
+		return token.AccessToken, nil
+	}
+
+	err = fmt.Errorf("Fail to request for token as %s", body)
+	return "", err
+}
+
+// ListRepos lists the repos by the SCM config.
+func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+	client, err := newGitLabClient(scm.Server, scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	opt := &gitlab.ListProjectsOptions{}
+	projects, _, err := client.Projects.ListProjects(opt)
+	if err != nil {
+		log.Errorf("Fail to list projects for %s", scm.Username)
+		return nil, err
+	}
+
+	repos := make([]api.Repository, len(projects))
+	for i, repo := range projects {
+		repos[i].Name = repo.PathWithNamespace
+		repos[i].URL = repo.HTTPURLToRepo
+	}
+
+	return repos, nil
+}
+
+// ListBranches lists the branches for specified repo.
+func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitLabClient(scm.Server, scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	branches, _, err := client.Branches.ListBranches(repo)
+	if err != nil {
+		log.Errorf("Fail to list branches for %s", repo)
+		return nil, err
+	}
+
+	branchNames := make([]string, len(branches))
+	for i, branch := range branches {
+		branchNames[i] = branch.Name
+	}
+
+	return branchNames, nil
+}
+
+// newGitLabClient news GitLab client by token.
+func newGitLabClient(server, token string) (*gitlab.Client, error) {
+	client := gitlab.NewOAuthClient(nil, token)
+	if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	return client, nil
+}
 
 // GitLabManager represents the manager for gitlab.
 type GitLabManager struct {
@@ -116,10 +252,6 @@ func (g *GitLabManager) GetRepos(projectID string) (repos []api.Repository, user
 	for i, repo := range projects {
 		repos[i].Name = repo.Name
 		repos[i].URL = repo.HTTPURLToRepo
-		repos[i].Owner = (*repo.Namespace).Name
-		if repo.Owner != nil {
-			username = repos[i].Owner
-		}
 	}
 
 	optUsers := &gitlab.ListUsersOptions{Username: &username}

@@ -24,12 +24,13 @@ import (
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
 type Project struct {
-	ID             string    `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
-	Name           string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
-	Description    string    `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
-	Owner          string    `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
-	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
-	LastUpdateTime time.Time `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
+	ID             string     `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
+	Name           string     `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
+	Description    string     `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
+	Owner          string     `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
+	SCM            *SCMConfig `bson:"scm,omitempty" json:"scm,omitempty" description:"scm config of the project"`
+	CreationTime   time.Time  `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
+	LastUpdateTime time.Time  `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
 }
 
 // Pipeline represents a set of configs to describe the workflow of CI/CD.
@@ -90,18 +91,27 @@ type CodeCheckoutStage struct {
 	CodeSources []*CodeSource `bson:"codeSources,omitempty" json:"codeSources,omitempty" description:"list of code sources to be checked out"`
 }
 
-// CodeSourceType represents the type of code source, supports gitlab, github and svn.
-type CodeSourceType string
+// SCMType represents the type of SCM, supports gitlab, github and svn.
+type SCMType string
 
 const (
-	GitLab CodeSourceType = "gitlab"
-	GitHub                = "github"
-	SVN                   = "svn"
+	GitLab SCMType = "Gitlab"
+	GitHub         = "Github"
+	SVN            = "SVN"
 )
+
+// SCMConfig represents the config of SCM.
+type SCMConfig struct {
+	Type     SCMType `bson:"type,omitempty" json:"type,omitempty" description:"SCM type, support gitlab, github and svn"`
+	Server   string  `bson:"server,omitempty" json:"server,omitempty" description:"server of the SCM"`
+	Username string  `bson:"username,omitempty" json:"username,omitempty" description:"username of the SCM"`
+	Password string  `bson:"password,omitempty" json:"password,omitempty" description:"password of the SCM"`
+	Token    string  `bson:"token,omitempty" json:"token,omitempty" description:"token of the SCM"`
+}
 
 // CodeSource represents the config of code source, only one type is supported.
 type CodeSource struct {
-	Type CodeSourceType `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
+	Type SCMType `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
 	// Whether is the main repo. Only support webhook and tag for main repo.
 	Main   bool       `bson:"main,omitempty" json:"main,omitempty" description:"whether is the main repo"`
 	GitLab *GitSource `bson:"gitLab,omitempty" json:"gitLab,omitempty" description:"code from gitlab"`
@@ -317,6 +327,9 @@ const (
 
 	// Download represents the flag whether download pipeline record logs.
 	Download string = "download"
+
+	// Repo represents the query param for repo name.
+	Repo string = "repo"
 )
 
 // ErrorResponse represents response of error.
@@ -349,11 +362,10 @@ type ListReposResponse struct {
 	AvatarURL string       `json:"avatarUrl,omitempty"`
 }
 
-// Repository represents the informations of a repository.
+// Repository represents the information of a repository.
 type Repository struct {
-	Name  string `json:"name,omitempty"`
-	Owner string `json:"owner,omitempty"`
-	URL   string `json:"url,omitempty"`
+	Name string `json:"name,omitempty"`
+	URL  string `json:"url,omitempty"`
 }
 
 const (

@@ -18,16 +18,177 @@ package provider
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
+	log "github.com/golang/glog"
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
+	mgo "gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/pkg/scm"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
-	mgo "gopkg.in/mgo.v2"
 )
+
+const (
+	// listPerPageOpt represents the value for PerPage in list options.
+	listPerPageOpt = 30
+)
+
+// GitHub represents the SCM provider of GitHub.
+type GitHub struct{}
+
+func init() {
+	if err := scm.RegisterProvider(api.GitHub, new(GitHub)); err != nil {
+		log.Errorln(err)
+	}
+}
+
+// GetToken gets the token by the username and password of SCM config.
+func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
+	if len(scm.Username) == 0 || len(scm.Password) == 0 {
+		return "", fmt.Errorf("GitHub username or password is missing")
+	}
+
+	client, err := newClientByBasicAuth(scm.Username, scm.Password)
+	if err != nil {
+		return "", err
+	}
+
+	// oauthAppName represents the oauth app name for Cyclone.
+	oauthAppName := "Caicloud"
+	opt := &github.ListOptions{
+		PerPage: listPerPageOpt,
+	}
+	for {
+		auths, resp, err := client.Authorizations.List(opt)
+		if err != nil {
+			return "", err
+		}
+
+		for _, auth := range auths {
+			if *auth.App.Name == oauthAppName {
+				return *auth.Token, nil
+				// TODO(robin) As the tokens of listed authorizations are empty, and hashed token can not directly use.
+				// So delete the already existed authorization, and recreate a new one.
+			}
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	// Create the oauth token for Caicloud after not found.
+	authReq := &github.AuthorizationRequest{
+		Scopes: []github.Scope{github.ScopeRepo},
+		Note: &oauthAppName,
+	}
+	auth, _, err := client.Authorizations.Create(authReq)
+	if err != nil {
+		return "", err
+	}
+
+	return *auth.Token, nil
+}
+
+// ListRepos lists the repos by the SCM config.
+func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+	client, err := newClientByToken(scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	// List all repositories for the authenticated user.
+	opt := &github.RepositoryListOptions{
+		ListOptions: github.ListOptions{
+			PerPage: listPerPageOpt,
+		},
+	}
+	// Get all pages of results.
+	var allRepos []*github.Repository
+	for {
+		repos, resp, err := client.Repositories.List("", opt)
+		if err != nil {
+			return nil, err
+		}
+		allRepos = append(allRepos, repos...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.ListOptions.Page = resp.NextPage
+	}
+
+	repos := make([]api.Repository, len(allRepos))
+	for i, repo := range allRepos {
+		repos[i].Name = *repo.FullName
+		repos[i].URL = *repo.CloneURL
+	}
+
+	return repos, nil
+}
+
+// ListBranches lists the branches for specified repo.
+func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newClientByToken(scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	opt := &github.ListOptions{
+		PerPage: listPerPageOpt,
+	}
+
+	var allBranches []*github.Branch
+	for {
+		branches, resp, err := client.Repositories.ListBranches(scm.Username, repo, opt)
+		if err != nil {
+			return nil, err
+		}
+		allBranches = append(allBranches, branches...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	branches := make([]string, len(allBranches))
+	for i, b := range allBranches {
+		branches[i] = *b.Name
+	}
+
+	return branches, nil
+}
+
+// newClientByBasicAuth news GitHub client by username and password.
+func newClientByBasicAuth(username, password string) (*github.Client, error) {
+	client := &http.Client{
+		Transport: &http.Transport{
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				req.SetBasicAuth(username, password)
+				return nil, nil
+			},
+		},
+	}
+
+	return github.NewClient(client), nil
+}
+
+// newClientByToken news GitHub client by token.
+func newClientByToken(token string) (*github.Client, error) {
+	// Use token to new GitHub client.
+	tokenSource := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+
+	return github.NewClient(httpClient), nil
+}
 
 // GitHubManager represents the manager for github.
 type GitHubManager struct {
@@ -133,7 +294,6 @@ func (g *GitHubManager) GetRepos(projectID string) (Repos []api.Repository, user
 	for i, repo := range allRepos {
 		Repos[i].Name = *repo.Name
 		Repos[i].URL = *repo.CloneURL
-		Repos[i].Owner = *repo.Owner.Login
 	}
 
 	user, _, err := client.Users.Get("")
