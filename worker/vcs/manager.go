@@ -27,6 +27,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/pathutil"
 	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs/provider"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -170,7 +171,7 @@ func (vm *Manager) CloneVersionRepository(event *api.Event) error {
 		return err
 	}
 
-	vm.versionNameNotEmpty(event)
+	vm.formatVersionName(event)
 
 	if api.APIOperator == event.Version.Operator {
 		// create tag
@@ -205,9 +206,9 @@ func (vm *Manager) ensureCommitValid(event *api.Event, destPath string, worker V
 	return nil
 }
 
-// if version name empty, replace it with default name '$createTime|$commitID'
-func (vm *Manager) versionNameNotEmpty(event *api.Event) {
-	if event.Version.Name == "" && event.Version.Commit != "" {
+// if version name empty in create request, replace the random name with default name '$createTime|$commitID'
+func (vm *Manager) formatVersionName(event *api.Event) {
+	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
 		event.Version.Name = fmt.Sprintf("%s|%s", event.Version.CreateTime, event.Version.Commit)
 	}
 }
