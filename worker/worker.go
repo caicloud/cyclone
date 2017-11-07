@@ -33,7 +33,6 @@ import (
 	worker_log "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs"
 	"github.com/zoumo/logdog"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
