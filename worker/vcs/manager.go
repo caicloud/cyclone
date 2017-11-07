@@ -164,23 +164,6 @@ func (vm *Manager) CloneVersionRepository(event *api.Event) error {
 		steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
 		return fmt.Errorf("Unable to clone repository for version: %v\n", err)
 	}
-
-	err = vm.ensureCommitValid(event, destPath, worker)
-	if err != nil {
-		return err
-	}
-
-	if api.APIOperator == event.Version.Operator {
-		// create tag
-		if err := worker.NewTagFromLatest(destPath, event); err != nil {
-			log.Errorf("Unable to push new commit %s :%v\n", event.Version.Commit, err)
-		}
-	}
-	steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Finish, nil)
-	return nil
-}
-
-func (vm *Manager) ensureCommitValid(event *api.Event, destPath string, worker VCS) error {
 	// create version call by UI API, the commit is empty
 	// create version call by webhook, the commit is not empty
 	if "" == event.Version.Commit {
@@ -193,13 +176,20 @@ func (vm *Manager) ensureCommitValid(event *api.Event, destPath string, worker V
 		}
 	} else {
 		// checkout special commit
-		if err := worker.CheckOutByCommitID(event.Version.Commit, destPath, event); err != nil {
+		if err = worker.CheckOutByCommitID(event.Version.Commit, destPath, event); err != nil {
 			event.Service.Repository.Status = api.RepositoryMissing
 			steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
 			return fmt.Errorf("Unable to check out commit %s :%v\n", event.Version.Commit, err)
 		}
 	}
 
+	if api.APIOperator == event.Version.Operator {
+		// create tag
+		if err := worker.NewTagFromLatest(destPath, event); err != nil {
+			log.Errorf("Unable to push new commit %s :%v\n", event.Version.Commit, err)
+		}
+	}
+	steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Finish, nil)
 	return nil
 }
 
