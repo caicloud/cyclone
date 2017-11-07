@@ -27,7 +27,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/pathutil"
 	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs/provider"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -171,8 +170,6 @@ func (vm *Manager) CloneVersionRepository(event *api.Event) error {
 		return err
 	}
 
-	vm.formatVersionName(event)
-
 	if api.APIOperator == event.Version.Operator {
 		// create tag
 		if err := worker.NewTagFromLatest(destPath, event); err != nil {
@@ -204,14 +201,6 @@ func (vm *Manager) ensureCommitValid(event *api.Event, destPath string, worker V
 	}
 
 	return nil
-}
-
-// formatVersionName replace the random name with default name '$createTime|$commitID' when name empty in create version
-func (vm *Manager) formatVersionName(event *api.Event) {
-	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
-		// report to server in sendEvent
-		event.Version.Name = fmt.Sprintf("%s|%s", event.Version.CreateTime, event.Version.Commit)
-	}
 }
 
 // NewTagFromLatest creates a new tag from latest source for a service.

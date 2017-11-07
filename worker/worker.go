@@ -33,6 +33,7 @@ import (
 	worker_log "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs"
 	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -193,6 +194,8 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 		return
 	}
 
+	formatVersionName(event)
+
 	setImageNameAndTag(dockerManager, event)
 
 	replaceDockerfile(event, destDir)
@@ -345,6 +348,14 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 	logdog.Error("Operation failed", logdog.Fields{"event": event})
 }
 
+// formatVersionName replace the random name with default name '$createTime|$commitID' when name empty in create version
+func formatVersionName(event *api.Event) {
+	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
+		// report to server in sendEvent
+		event.Version.Name = fmt.Sprintf("%s|%s", event.Version.CreateTime, event.Version.Commit)
+	}
+}
+
 // setImageNameAndTag sets the image name and tag name of the event.
 func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
 
@@ -378,4 +389,3 @@ func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
 	event.Data["image-name"] = imageName
 	event.Data["tag-name"] = tagName
 }
-
