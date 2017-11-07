@@ -206,9 +206,10 @@ func (vm *Manager) ensureCommitValid(event *api.Event, destPath string, worker V
 	return nil
 }
 
-// if version name empty in create request, replace the random name with default name '$createTime|$commitID'
+// formatVersionName replace the random name with default name '$createTime|$commitID' when name empty in create version
 func (vm *Manager) formatVersionName(event *api.Event) {
 	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
+		// report to server in sendEvent
 		event.Version.Name = fmt.Sprintf("%s|%s", event.Version.CreateTime, event.Version.Commit)
 	}
 }
