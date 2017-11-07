@@ -352,7 +352,7 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 func formatVersionName(event *api.Event) {
 	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
 		// report to server in sendEvent
-		event.Version.Name = fmt.Sprintf("%s|%s", event.Version.CreateTime, event.Version.Commit)
+		event.Version.Name = fmt.Sprintf("%s-%s", event.Version.Commit[:7], event.Version.CreateTime.Format("060102150405"))
 	}
 }
 
