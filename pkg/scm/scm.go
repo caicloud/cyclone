@@ -18,9 +18,13 @@ package scm
 
 import (
 	"fmt"
+	"strings"
+
+	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/store"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // scmProviders represents the set of SCM providers.
@@ -55,6 +59,63 @@ func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 	}
 
 	return provider, nil
+}
+
+// GenerateSCMToken generates the SCM token according to the config.
+// Make sure the type, server of the SCM is provided. If the SCM is Github, the username is required.
+// Generate new token only when the username and password are provided at the same time.
+func GenerateSCMToken(config *api.SCMConfig) error {
+	if config == nil {
+		return httperror.ErrorContentNotFound.Format("SCM config")
+	}
+
+	// Trim suffix '/' of Gitlab server to ensure that the token can work, otherwise there will be 401 error.
+	config.Server = strings.TrimSuffix(config.Server, "/")
+
+	scmType := config.Type
+	token := config.Token
+	provider, err := GetSCMProvider(scmType)
+	if err != nil {
+		return err
+	}
+
+	switch scmType {
+	case api.GitHub:
+		// Github username is required.
+		if len(config.Username) == 0 {
+			err := fmt.Errorf("username of Github is required")
+			return err
+		}
+
+		// If Github password is provided, generate the new token.
+		if len(config.Password) != 0 {
+			token, err = provider.GetToken(config)
+			if err != nil {
+				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
+				return err
+			}
+		}
+	case api.GitLab:
+		// If username and password is provided, generate the new token.
+		if len(config.Username) != 0 && len(config.Password) != 0 {
+			token, err = provider.GetToken(config)
+			if err != nil {
+				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
+				return err
+			}
+		}
+	case api.SVN:
+		return fmt.Errorf("SCM %s is not supported", scmType)
+	default:
+		return fmt.Errorf("SCM type %s is unknow", scmType)
+	}
+
+	// Update the token if generate a new one.
+	config.Token = token
+	// Cleanup the password for security.
+	config.Password = ""
+
+	return nil
 }
 
 // SCM is the interface of all operations needed for scm repository.
