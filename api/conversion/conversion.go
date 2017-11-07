@@ -23,7 +23,6 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/yaml.v2"
 )
 

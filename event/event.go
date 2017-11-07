@@ -32,7 +32,6 @@ import (
 	"github.com/caicloud/cyclone/websocket"
 	"github.com/zoumo/logdog"
 	"golang.org/x/oauth2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
