@@ -194,7 +194,7 @@ func autoPublishVersion(service *api.Service) {
 		defer ds.Close()
 		version := api.Version{}
 		version.ServiceID = service.ServiceID
-		version.Name = bson.NewObjectId().Hex()
+		version.Name = ""
 		version.Description = "trigger by auto publish"
 		version.CreateTime = time.Now()
 		version.Status = api.VersionPending

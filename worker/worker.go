@@ -350,7 +350,7 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 
 // formatVersionName replace the random name with default name '$createTime|$commitID' when name empty in create version
 func formatVersionName(event *api.Event) {
-	if bson.IsObjectIdHex(event.Version.Name) && event.Version.Commit != "" {
+	if event.Version.Name == "" && event.Version.Commit != "" {
 		// report to server in sendEvent
 		event.Version.Name = fmt.Sprintf("%s-%s", event.Version.Commit[:7], event.Version.CreateTime.Format("060102150405"))
 	}
