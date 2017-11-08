@@ -117,6 +117,9 @@ func postHookEvent(event *api.Event) {
 
 		versionLog, err := websocket.StoreTopic(event.Service.UserID, event.Service.ServiceID, event.Version.VersionID)
 		if err == nil {
+			// Append aborted state in log for aborted record.
+			versionLog = versionLog + generateAbortedStateLog(versionLog)
+
 			Log := api.VersionLog{
 				VerisonID: event.Version.VersionID,
 				Logs:      versionLog,
@@ -129,6 +132,15 @@ func postHookEvent(event *api.Event) {
 			}
 		}
 	}
+}
+
+// generateAbortedStateLog generates aborted state log for last stage to illustrate that the record is aborted.
+func generateAbortedStateLog(log string) string {
+	subLogs := log[strings.LastIndex(log, "\nstep: "):]
+	i := strings.Index(subLogs, " state: ")
+	additionalLog := subLogs[1:i+8] + "aborted\n"
+
+	return additionalLog
 }
 
 // createServiceHander is the create service handler.
