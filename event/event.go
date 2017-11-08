@@ -32,6 +32,7 @@ import (
 	"github.com/caicloud/cyclone/websocket"
 	"github.com/zoumo/logdog"
 	"golang.org/x/oauth2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -193,7 +194,7 @@ func autoPublishVersion(service *api.Service) {
 		defer ds.Close()
 		version := api.Version{}
 		version.ServiceID = service.ServiceID
-		version.Name = ""
+		version.Name = bson.NewObjectId().Hex()
 		version.Description = "trigger by auto publish"
 		version.CreateTime = time.Now()
 		version.Status = api.VersionPending

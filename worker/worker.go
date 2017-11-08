@@ -347,7 +347,7 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 	logdog.Error("Operation failed", logdog.Fields{"event": event})
 }
 
-// formatVersionName replace the random name with default name '$createTime|$commitID' when name empty in create version
+// formatVersionName replace the random name with default name '$commitID[:7]-$createTime' when name empty in create version
 func formatVersionName(event *api.Event) {
 	if event.Version.Name == "" && event.Version.Commit != "" {
 		// report to server in sendEvent
