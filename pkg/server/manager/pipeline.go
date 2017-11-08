@@ -227,6 +227,10 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		pipeline.Name = newPipeline.Name
 	}
 
+	if len(newPipeline.Alias) > 0 {
+		pipeline.Alias = newPipeline.Alias
+	}
+
 	if len(newPipeline.Description) > 0 {
 		pipeline.Description = newPipeline.Description
 	}
