@@ -18,7 +18,6 @@ package manager
 
 import (
 	"fmt"
-	"strings"
 
 	log "github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
@@ -66,7 +65,7 @@ func (m *projectManager) CreateProject(project *api.Project) (*api.Project, erro
 		return nil, httperror.ErrorAlreadyExist.Format(projectName)
 	}
 
-	if err := generateSCMToken(project.SCM); err != nil {
+	if err := scm.GenerateSCMToken(project.SCM); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +98,7 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 		return nil, err
 	}
 
-	if err := generateSCMToken(newProject.SCM); err != nil {
+	if err := scm.GenerateSCMToken(newProject.SCM); err != nil {
 		return nil, err
 	}
 	project.SCM = newProject.SCM
@@ -176,33 +175,4 @@ func (m *projectManager) ListBranches(projectName string, repo string) ([]string
 	}
 
 	return sp.ListBranches(scmConfig, repo)
-}
-
-func generateSCMToken(config *api.SCMConfig) error {
-	if config == nil {
-		return httperror.ErrorContentNotFound.Format("SCM config")
-	}
-
-	// Trim suffix '/' of Gitlab server to ensure that the token can work, otherwise there will be 401 error.
-	config.Server = strings.TrimSuffix(config.Server, "/")
-
-	// Get the SCM token when SCM is Github or Gitlab, and the username is provided.
-	if config.Type != api.SVN && len(config.Username) != 0 {
-		provider, err := scm.GetSCMProvider(config.Type)
-		if err != nil {
-			return err
-		}
-
-		token, err := provider.GetToken(config)
-		if err != nil {
-			log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
-			return err
-		}
-
-		config.Token = token
-		// Cleanup the password for security.
-		config.Password = ""
-	}
-
-	return nil
 }

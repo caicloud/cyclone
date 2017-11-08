@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	log "github.com/golang/glog"
 	"github.com/google/go-github/github"
@@ -72,9 +73,13 @@ func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
 
 		for _, auth := range auths {
 			if *auth.App.Name == oauthAppName {
-				return *auth.Token, nil
-				// TODO(robin) As the tokens of listed authorizations are empty, and hashed token can not directly use.
-				// So delete the already existed authorization, and recreate a new one.
+				// The token of existed authorization can not be got, so delete it and recreate a new one.
+				if _, err := client.Authorizations.Delete(*auth.ID); err != nil {
+					log.Errorf("Fail to delete the token for %s as %s", oauthAppName, err.Error())
+					return "", err
+				}
+
+				break
 			}
 		}
 
@@ -84,10 +89,10 @@ func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
 		opt.Page = resp.NextPage
 	}
 
-	// Create the oauth token for Caicloud after not found.
+	// Create the oauth token for Caicloud.
 	authReq := &github.AuthorizationRequest{
 		Scopes: []github.Scope{github.ScopeRepo},
-		Note: &oauthAppName,
+		Note:   &oauthAppName,
 	}
 	auth, _, err := client.Authorizations.Create(authReq)
 	if err != nil {
@@ -99,7 +104,7 @@ func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
 
 // ListRepos lists the repos by the SCM config.
 func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
-	client, err := newClientByToken(scm.Token)
+	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +140,7 @@ func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 
 // ListBranches lists the branches for specified repo.
 func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newClientByToken(scm.Token)
+	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +149,20 @@ func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 		PerPage: listPerPageOpt,
 	}
 
+	owner := scm.Username
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			log.Error(err.Error())
+			return nil, err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
 	var allBranches []*github.Branch
 	for {
-		branches, resp, err := client.Repositories.ListBranches(scm.Username, repo, opt)
+		branches, resp, err := client.Repositories.ListBranches(owner, repo, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +181,9 @@ func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	return branches, nil
 }
 
-// newClientByBasicAuth news GitHub client by username and password.
+// newClientByBasicAuth news GitHub client by basic auth, supports two types: username with password; username
+// with OAuth token.
+// Refer to https://developer.github.com/v3/auth/#basic-authentication
 func newClientByBasicAuth(username, password string) (*github.Client, error) {
 	client := &http.Client{
 		Transport: &http.Transport{
