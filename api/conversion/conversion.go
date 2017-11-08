@@ -23,7 +23,6 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/yaml.v2"
 )
 
@@ -208,11 +207,7 @@ func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams)
 	stagesStr := strings.Join(performParams.Stages, ",")
 	version.Operation = api.VersionOperation(strings.Replace(stagesStr, "imageRelease", "publish", 1))
 
-	if performParams.Name != "" {
-		version.Name = performParams.Name
-	} else {
-		version.Name = bson.NewObjectId().Hex()
-	}
+	version.Name = performParams.Name
 
 	if performParams.CreateSCMTag {
 		version.Operator = api.APIOperator
