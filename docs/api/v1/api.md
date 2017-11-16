@@ -105,11 +105,11 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
 
 ```
 {
-  "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
-  "description": "string",                      // description of the project
-  "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
   "name": "string",                             // name of the project, should be unique
+  "description": "string",                      // description of the project
   "owner": "string"                             // owner of the project
+  "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
+  "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
 }
 ```
 
@@ -437,7 +437,7 @@ List all pipelines of one project.
 
 Http method: `GET`
 
-URL: `/api/v1/workspaces/{workspace}/pipelines[?start=&limit=&recentCount=&recentSuccessCount=&recentFailedCount=]`
+URL: `/api/v1/projects/{project}/pipelines[?start=&limit=&recentCount=&recentSuccessCount=&recentFailedCount=]`
 
 Args:
 
@@ -478,7 +478,7 @@ Body:
 
 ```
 {
-    "name": "newworkspace",             // string, required
+    "name": "newpipeline",             // string, required
     "alias": "",                        // string, optional
     "description": ""                   // string, optional
     "build": {
@@ -588,7 +588,7 @@ Get a pipeline.
 
 Http method: `PUT`
 
-URL: `/api/v1/workspaces/{workspace}/pipelines/{pipeline}`
+URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
 
 **Response**
 
@@ -677,7 +677,7 @@ List all pipeline records of one pipeline.
 
 **Request**
 
-Http method: `POST`
+Http method: `GET`
 
 URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records[?start=&limit=]`
 
@@ -705,11 +705,11 @@ Success:
 
 ### Create pipeline record
 
-Careate a pipeline record, which means trigger a pipeline.
+Create a pipeline record, which means trigger a pipeline.
 
 **Request**
 
-URL: `POST /api/v1/workspaces/{workspace}/pipelines/{pipeline}/records`
+URL: `POST /api/v1/projects/{project}/pipelines/{pipeline}/records`
 
 Body:
 
@@ -791,7 +791,7 @@ Update the pipeline record status. Only the pipeline status of the Running state
 
 Http method: `PATCH`
 
-URL: `/api/v1/workspaces/{workspace}/pipelines/{pipeline}/records/{recordID}/status`
+URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status`
 
 Body:
 
@@ -815,6 +815,6 @@ Success:
 200 Ok
 
 {
-    // all <WorkspaceObject> fields
+    // all <PipelineRecordDataStructure> fields
 }
 ```
