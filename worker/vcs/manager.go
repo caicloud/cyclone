@@ -164,11 +164,18 @@ func (vm *Manager) CloneVersionRepository(event *api.Event) error {
 		steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
 		return fmt.Errorf("Unable to clone repository for version: %v\n", err)
 	}
+
 	// create version call by UI API, the commit is empty
 	// create version call by webhook, the commit is not empty
 	if "" == event.Version.Commit {
+		//checkout branch/tag
+		if err := worker.CheckoutTag(destPath, event.Version.Ref); err != nil {
+			steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
+			return fmt.Errorf("Unable to checkout branch/tag %s : %v\n", event.Version.Ref, err)
+		}
+
 		// set version commit
-		if commit, err := worker.GetTagCommit(destPath, "master"); err != nil {
+		if commit, err := worker.GetTagCommit(destPath, event.Version.Ref); err != nil {
 			log.Error("cannot get tag commit")
 		} else {
 			// write to DB in posthook

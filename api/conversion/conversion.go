@@ -202,12 +202,16 @@ func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams)
 		Status:        api.VersionPending,
 		SecurityCheck: false,
 		CreateTime:    time.Now(),
+		Name:          performParams.Name,
+		Ref:           performParams.Ref,
+	}
+
+	if version.Ref == "" && version.Commit == "" {
+		version.Ref = "master"
 	}
 
 	stagesStr := strings.Join(performParams.Stages, ",")
 	version.Operation = api.VersionOperation(strings.Replace(stagesStr, "imageRelease", "publish", 1))
-
-	version.Name = performParams.Name
 
 	if performParams.CreateSCMTag {
 		version.Operator = api.APIOperator
