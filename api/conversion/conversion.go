@@ -203,10 +203,11 @@ func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams)
 		SecurityCheck: false,
 		CreateTime:    time.Now(),
 		Name:          performParams.Name,
-		Ref:           performParams.Ref,
 	}
 
-	if version.Ref == "" && version.Commit == "" {
+	if performParams.Ref != "" {
+		version.Ref = performParams.Ref
+	} else {
 		version.Ref = "master"
 	}
 
