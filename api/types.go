@@ -327,6 +327,8 @@ type Version struct {
 	LogID string `bson:"version_log_id,omitempty" json:"version_log_id,omitempty"`
 	// The version name, e.g. v1.0.1. This is used as docker image tag directly.
 	Name string `bson:"name,omitempty" json:"name,omitempty"`
+	// Ref reference of git repo, support branch, tag
+	Ref string `bson:"ref,omitempty" json:"ref,omitempty"`
 	// A short, human-readable description of the version.
 	Description string `bson:"description,omitempty" json:"description,omitempty"`
 	// A list of dependencies, reference to other versions.
