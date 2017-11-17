@@ -55,7 +55,6 @@ type StepEvent string
 
 const (
 	CloneRepository StepEvent = "clone repository"
-	CheckoutTag     StepEvent = "checkout branch/tag"
 	CreateTag       StepEvent = "create tag"
 	BuildImage      StepEvent = "Build image"
 	PushImage       StepEvent = "Push image"
