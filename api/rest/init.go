@@ -52,7 +52,7 @@ func Initialize() {
 	//registerProjectAPIs(ws)
 	registerRemoteAPIs(ws)
 	registerVersionLogAPIs(ws)
-	registerVersionLogStreamAPIs(ws)
+
 	registerResourceAPIs(ws)
 	registerDeployAPIs(ws)
 
@@ -280,15 +280,6 @@ func registerVersionLogAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("version_id", "identifier of the version").DataType("string")).
 		Writes(api.VersionLogCreateResponse{}))
 
-}
-
-func registerVersionLogStreamAPIs(ws *restful.WebService) {
-	ws.Route(ws.GET("/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
-		To(getVersionLogStream).
-		Doc("getVersionLogStream get log stream of version").
-		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
-		Param(ws.PathParameter("version_id", "identifier of the version").DataType("string")).
-		Writes(api.VersionLogCreateResponse{}))
 }
 
 // registerDeployAPIs registers deploy related endpoints.

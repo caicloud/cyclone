@@ -89,6 +89,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
 	router.registerPipelineRecordAPIs(ws)
+	router.registerVersionLogStreamAPIs(ws)
 	router.registerScmAPIs(ws)
 
 	restful.Add(ws)
@@ -261,4 +262,13 @@ func (router *router) registerScmAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("type", "type of the scm").DataType("string")))
 
+}
+
+func (router *router) registerVersionLogStreamAPIs(ws *restful.WebService) {
+	ws.Route(ws.GET("/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
+		To(getVersionLogStream).
+		Doc("getVersionLogStream get log stream of version").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
 }
