@@ -147,6 +147,7 @@ func generateAbortedStateLog(log string) string {
 func createServiceHandler(event *api.Event) error {
 	logdog.Infof("create service handler")
 	opts := workerOptions.DeepCopy()
+	opts.Namespace = getNamespaceFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -235,6 +236,7 @@ func createVersionHandler(event *api.Event) error {
 
 	opts := workerOptions.DeepCopy()
 	opts.Quota = Resource2Quota(event.Version.BuildResource, opts.Quota)
+	opts.Namespace = getNamespaceFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -395,4 +397,20 @@ func Resource2Quota(resource api.BuildResource, def cloud.Quota) cloud.Quota {
 	}
 
 	return quota
+}
+
+// getNamespaceFromEvent gets the namespace from event data for worker. Will return empty string if can not get it.
+func getNamespaceFromEvent(event *api.Event) string {
+	if event == nil {
+		log.Error("Can not get namespace from data as event is nil")
+		return ""
+	}
+
+	if v, e := event.Data["namespace"]; e {
+		if sv, ok := v.(string); ok {
+			return sv
+		}
+	}
+
+	return ""
 }
