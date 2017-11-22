@@ -121,7 +121,7 @@ func (d *DataStore) UpsertServiceDocument(service *api.Service) (string, error) 
 
 // findVersionAndService finds service and version entity based on version id.
 func FindServiceAndVersion(versionID string) (*api.Service, *api.Version, error) {
-	ds := store.NewStore()
+	ds := NewStore()
 	defer ds.Close()
 
 	version, err := ds.FindVersionByID(versionID)
