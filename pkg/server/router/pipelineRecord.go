@@ -24,11 +24,11 @@ import (
 	"github.com/zoumo/logdog"
 
 	oldapi "github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/api/rest"
 	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
 
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
@@ -200,7 +200,7 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 func getPipelineRecordLogStream(request *restful.Request, response *restful.Response) {
 	recordID := request.PathParameter("recordID")
 
-	pipeline, _, err := rest.FindServiceAndVersion(recordID)
+	pipeline, _, err := store.FindServiceAndVersion(recordID)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
 		httputil.ResponseWithError(response, httperror.ErrorContentNotFound.Format(recordID))
@@ -274,7 +274,6 @@ func getLogStreamFromKafka(logstream chan []byte, pipelineID string, recordID st
 			}
 		}
 
-		//
 		processKafkaMsg(logstream, string(msg.Value))
 
 		time.Sleep(time.Millisecond * 100)

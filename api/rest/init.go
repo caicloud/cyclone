@@ -52,7 +52,6 @@ func Initialize() {
 	//registerProjectAPIs(ws)
 	registerRemoteAPIs(ws)
 	registerVersionLogAPIs(ws)
-
 	registerResourceAPIs(ws)
 	registerDeployAPIs(ws)
 
@@ -279,7 +278,6 @@ func registerVersionLogAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("user_id", "identifier of the user").DataType("string")).
 		Param(ws.PathParameter("version_id", "identifier of the version").DataType("string")).
 		Writes(api.VersionLogCreateResponse{}))
-
 }
 
 // registerDeployAPIs registers deploy related endpoints.

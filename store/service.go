@@ -118,3 +118,19 @@ func (d *DataStore) UpsertServiceDocument(service *api.Service) (string, error) 
 	_, err := col.Upsert(bson.M{"_id": service.ServiceID}, service)
 	return service.ServiceID, err
 }
+
+// findVersionAndService finds service and version entity based on version id.
+func FindServiceAndVersion(versionID string) (*api.Service, *api.Version, error) {
+	ds := store.NewStore()
+	defer ds.Close()
+
+	version, err := ds.FindVersionByID(versionID)
+	if err != nil {
+		return nil, nil, err
+	}
+	service, err := ds.FindServiceByID(version.ServiceID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return service, version, nil
+}

@@ -141,7 +141,7 @@ func checkACLForVersion(request *restful.Request, response *restful.Response, ch
 	userID := request.PathParameter("user_id")
 	versionID := request.PathParameter("version_id")
 
-	service, _, err := FindServiceAndVersion(versionID)
+	service, _, err := store.FindServiceAndVersion(versionID)
 	if err != nil {
 		message := fmt.Sprintf("Unable to find version %v", versionID)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID, "error": err})

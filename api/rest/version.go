@@ -146,22 +146,6 @@ func createVersion(request *restful.Request, response *restful.Response) {
 	response.WriteEntity(createResponse)
 }
 
-// findVersionAndService finds service and version entity based on version id.
-func FindServiceAndVersion(versionID string) (*api.Service, *api.Version, error) {
-	ds := store.NewStore()
-	defer ds.Close()
-
-	version, err := ds.FindVersionByID(versionID)
-	if err != nil {
-		return nil, nil, err
-	}
-	service, err := ds.FindServiceByID(version.ServiceID)
-	if err != nil {
-		return nil, nil, err
-	}
-	return service, version, nil
-}
-
 // getVersion finds an version from ID.
 //
 // GET: /api/v0.1/:uid/versions/:versionID
