@@ -18,16 +18,42 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/zoumo/logdog"
 
 	oldapi "github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/log"
+	"github.com/caicloud/cyclone/store"
+
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
-	restful "github.com/emicklei/go-restful"
+	"github.com/caicloud/cyclone/websocket"
+	"github.com/emicklei/go-restful"
+	socket "github.com/gorilla/websocket"
 )
+
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 3 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 30 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+)
+
+var upgrader = socket.Upgrader{
+	//disable origin check
+	CheckOrigin:     func(r *http.Request) bool { return true },
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 // createPipelineRecord handles the request to perform pipeline, which will create a pipeline record.
 func (router *router) createPipelineRecord(request *restful.Request, response *restful.Response) {
@@ -168,4 +194,115 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 	}
 
 	response.Write([]byte(logs))
+}
+
+//getPipelineRecordLogStream get real-time log of pipeline record refering to recordID
+func getPipelineRecordLogStream(request *restful.Request, response *restful.Response) {
+	recordID := request.PathParameter("recordID")
+
+	pipeline, _, err := store.FindServiceAndVersion(recordID)
+	if err != nil {
+		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorContentNotFound.Format(recordID))
+		return
+	}
+
+	//upgrade HTTP rest API --> socket connection
+	ws, err := upgrader.Upgrade(response.ResponseWriter, request.Request, nil)
+	if err != nil {
+		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
+		return
+	}
+
+	writerLogStream(ws, pipeline.ServiceID, recordID, pipeline.UserID)
+}
+
+//writerLogStream write logfragment received from chan logstream to websocket connection
+func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID string) {
+	pingTicker := time.NewTicker(pingPeriod)
+	defer func() {
+		pingTicker.Stop()
+		ws.Close()
+	}()
+
+	// load log fragment from kafka --> logstream
+	logstream := make(chan []byte, 10)
+	go getLogStreamFromKafka(logstream, pipelineID, recordID, userID)
+
+	for {
+		select {
+		case logFragment, ok := <-logstream:
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				ws.WriteMessage(socket.CloseMessage, []byte{})
+				return
+			}
+
+			if err := ws.WriteMessage(socket.TextMessage, []byte(logFragment)); err != nil {
+				log.Error(err.Error())
+				return
+			}
+		case <-pingTicker.C:
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := ws.WriteMessage(socket.PingMessage, []byte{}); err != nil {
+				log.Error(err.Error())
+				return
+			}
+		}
+	}
+}
+
+//getLogStreamFromKafka loads msg from kafka
+func getLogStreamFromKafka(logstream chan []byte, pipelineID string, recordID string, userID string) {
+	sTopic := websocket.CreateTopicName(string(event.CreateVersionOps), userID, pipelineID, recordID)
+
+	consumer, err := kafka.NewConsumer(sTopic)
+	if nil != err {
+		log.Error(err.Error())
+		return
+	}
+
+	for {
+		msg, errConsume := consumer.Consume()
+		if errConsume != nil {
+			if errConsume != kafka.ErrNoData {
+				log.Infof("Can't consume %s topic message: %s", sTopic)
+				break
+			} else {
+				continue
+			}
+		}
+
+		processKafkaMsg(logstream, string(msg.Value))
+
+		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+//processKafkaMsg converts kafka msg to log fragment and sends them to chan logstream
+func processKafkaMsg(logstream chan []byte, msg string) {
+	msgFragments := strings.Split(msg, "\n")
+
+	var logFragment []byte
+	for _, msgFragment := range msgFragments {
+		logFragment = parseLogFragment(msgFragment)
+		if len(logFragment) == 0 {
+			continue
+		}
+		logstream <- logFragment
+	}
+}
+
+func parseLogFragment(msgFragment string) []byte {
+	var logFragment string
+	if msgFragment != "\r" && msgFragment != "" {
+		if websocket.IsDockerImageOperationLog(msgFragment) {
+			//omite control characters for folding
+			logFragment = msgFragment[6:]
+		} else {
+			logFragment = msgFragment
+		}
+	}
+	return []byte(logFragment)
 }
