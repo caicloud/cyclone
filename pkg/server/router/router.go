@@ -89,7 +89,6 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
 	router.registerPipelineRecordAPIs(ws)
-	router.registerVersionLogStreamAPIs(ws)
 	router.registerScmAPIs(ws)
 
 	restful.Add(ws)
@@ -223,12 +222,22 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 
+	logdog.Info("Register pipeline records logs APIs")
+
 	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs
 	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs").To(router.getPipelineRecordLogs).
 		Doc("Get the pipeline record log").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
+		To(getPipelineRecordLogStream).
+		Doc("getPipelineRecordLogStream get log stream of version").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
 }
 
 // registerScmAPIs registers scm related endpoints.
@@ -262,13 +271,4 @@ func (router *router) registerScmAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("type", "type of the scm").DataType("string")))
 
-}
-
-func (router *router) registerVersionLogStreamAPIs(ws *restful.WebService) {
-	ws.Route(ws.GET("/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
-		To(getVersionLogStream).
-		Doc("getVersionLogStream get log stream of version").
-		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
 }

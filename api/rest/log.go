@@ -16,31 +16,12 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
-	socket "github.com/gorilla/websocket"
 )
-
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 3 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 30 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-)
-
-var upgrader = socket.Upgrader{
-	CheckOrigin:     func(r *http.Request) bool { return true },
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
 
 // getVersionLog finds an version log from versionID.
 //
