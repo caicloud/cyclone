@@ -1,0 +1,127 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  version = "0.11.0"
+
+[[constraint]]
+  name = "github.com/buildkite/terminal"
+
+[[constraint]]
+  name = "github.com/coreos/etcd"
+
+[[constraint]]
+  name = "github.com/djherbis/buffer"
+
+[[constraint]]
+  name = "github.com/docker/distribution"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  version = "17.3.0-ce"
+
+[[constraint]]
+  name = "github.com/docker/go-connections"
+
+[[constraint]]
+  name = "github.com/emicklei/go-restful"
+
+[[constraint]]
+  name = "github.com/flynn/go-shlex"
+
+[[constraint]]
+  name = "github.com/fsouza/go-dockerclient"
+
+[[constraint]]
+  name = "github.com/golang/glog"
+
+[[constraint]]
+  name = "github.com/google/go-github"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+
+[[constraint]]
+  name = "github.com/optiopay/kafka"
+
+[[constraint]]
+  name = "github.com/optiopay/klar"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+
+[[constraint]]
+  name = "github.com/xanzy/go-gitlab"
+
+[[constraint]]
+  name = "github.com/zoumo/logdog"
+
+[[constraint]]
+  name = "golang.org/x/net"
+  source = "https://github.com/golang/net.git"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"
+  source = "https://github.com/golang/oauth2.git"
+
+[[constraint]]
+  name = "gopkg.in/gomail.v2"
+  source = "https://github.com/go-gomail/gomail.git"
+
+[[constraint]]
+  name = "gopkg.in/h2non/gock.v1"
+  source = "https://github.com/h2non/gock.git"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/mgo.v2"
+  source = "https://github.com/go-mgo/mgo.git"
+
+[[constraint]]
+  name = "gopkg.in/urfave/cli.v1"
+  source = "https://github.com/urfave/cli.git"
+  version = "1.19.1"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
+  source = "https://github.com/go-yaml/yaml.git"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "2.0.0"
+
+[[constraint]]
+  name = "k8s.io/kubernetes"
+  version = "1.5.0"

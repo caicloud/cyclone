@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Creates packages based on the given gzipped terminal-to-html release file
+#
+# Usage: package [gzip source] [version] [arch] [package type] [final package path]
+
+set -eu
+
+package_tmp_dir="packages-dist"
+
+echo "--- Unarchiving $1 to $package_tmp_dir/usr/bin"
+
+[ -d "$package_tmp_dir" ] && rm -r "$package_tmp_dir"; mkdir -p "$package_tmp_dir/usr/bin"
+
+binary="$(basename "$1" .gz)"
+gunzip "$1" -c > "$package_tmp_dir/usr/bin/terminal-to-html"
+chmod a+x "$package_tmp_dir"/usr/bin/*
+
+echo "--- Creating package for $1 into $5"
+
+fpm -s dir \
+    -C "$package_tmp_dir" \
+    -v "$2" \
+    -a "$3" \
+    -t "$4" \
+    -p "$5" \
+    --license MIT \
+    --vendor Buildkite \
+    --provides terminal-to-html \
+    --description "Converts arbitrary shell output (with ANSI) into beautifully rendered HTML" \
+    --url "http://buildkite.github.io/terminal/" \
+    -n terminal-to-html \
+    usr/bin

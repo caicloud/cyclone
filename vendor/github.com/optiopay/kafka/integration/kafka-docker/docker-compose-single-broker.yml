@@ -1,0 +1,12 @@
+zookeeper:
+  image: wurstmeister/zookeeper
+  ports:
+    - "2181:2181"
+kafka:
+  build: .
+  ports:
+    - "9092:9092"
+  links:
+    - zookeeper:zk
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
