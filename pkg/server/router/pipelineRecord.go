@@ -47,8 +47,8 @@ const (
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 
-	// Stop load logfragment from kafka
-	STOP_LOAD = 1
+	// Stop signal
+	STOP = 1
 
 	// Interval of loading logfragment
 	LOAD_INTERVAL = time.Millisecond * 100
@@ -228,18 +228,24 @@ func getPipelineRecordLogStream(request *restful.Request, response *restful.Resp
 func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID string) {
 	pingTicker := time.NewTicker(pingPeriod)
 
-	// stop send signal to stop loading log from kafka
-	stop := make(chan int, 1)
+	// stopLoad send signal to stop loading log from kafka when socket closed
+	stopLoad := make(chan int, 1)
+
+	// closeSocket send signal to close socket when load log from kafka error
+	closeSocket := make(chan int, 1)
+	loadError := false
 
 	defer func() {
-		stop <- STOP_LOAD
+		if !loadError {
+			stopLoad <- STOP
+		}
 		pingTicker.Stop()
 		ws.Close()
 	}()
 
 	// load log fragment from kafka --> logstream
 	logstream := make(chan []byte, 10)
-	go getLogStreamFromKafka(logstream, stop, pipelineID, recordID, userID)
+	go getLogStreamFromKafka(logstream, stopLoad, closeSocket, pipelineID, recordID, userID)
 
 	for {
 		select {
@@ -268,12 +274,24 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 				}
 				return
 			}
+		// closeSocket means something wrong in loading log from kafka
+		case <-closeSocket:
+			loadError = true
+			ws.WriteMessage(socket.CloseMessage, []byte{})
+			return
 		}
 	}
 }
 
 //getLogStreamFromKafka loads msg from kafka
-func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID string, recordID string, userID string) {
+func getLogStreamFromKafka(logstream chan []byte, stopLoad chan int, closeSocket chan int, pipelineID string, recordID string, userID string) {
+	socketClosed := false
+	defer func() {
+		if !socketClosed {
+			closeSocket <- STOP
+		}
+	}()
+
 	sTopic := websocket.CreateTopicName(string(event.CreateVersionOps), userID, pipelineID, recordID)
 
 	consumer, err := kafka.NewConsumer(sTopic)
@@ -296,7 +314,9 @@ func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID stri
 				}
 			}
 			processKafkaMsg(logstream, string(msg.Value))
-		case <-stop:
+		// stopLoad means socket is closed, should return this goroutine
+		case <-stopLoad:
+			socketClosed = true
 			return
 		}
 	}
