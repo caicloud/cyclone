@@ -48,10 +48,10 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Stop signal
-	STOP = 1
+	stopSignal = 1
 
 	// Interval of loading logfragment
-	LOAD_INTERVAL = time.Millisecond * 100
+	loadInterval = 100 * time.Millisecond
 )
 
 var upgrader = socket.Upgrader{
@@ -245,7 +245,7 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 			ws.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				ws.WriteMessage(socket.CloseMessage, []byte{})
-				stop <- STOP
+				stop <- stopSignal
 				return
 			}
 
@@ -255,7 +255,7 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 				} else {
 					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
 				}
-				stop <- STOP
+				stop <- stopSignal
 				return
 			}
 		case <-pingTicker.C:
@@ -266,7 +266,7 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 				} else {
 					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
 				}
-				stop <- STOP
+				stop <- stopSignal
 				return
 			}
 		// stop means something wrong in loading log from kafka
@@ -287,7 +287,7 @@ func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID stri
 		return
 	}
 
-	loadTicker := time.NewTicker(LOAD_INTERVAL)
+	loadTicker := time.NewTicker(loadInterval)
 	for {
 		select {
 		case <-loadTicker.C:
@@ -295,7 +295,7 @@ func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID stri
 			if errConsume != nil {
 				if errConsume != kafka.ErrNoData {
 					log.Infof("Can't consume %s topic message: %s", sTopic)
-					stop <- STOP
+					stop <- stopSignal
 					return
 				} else {
 					continue
