@@ -46,6 +46,12 @@ const (
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
+
+	// Stop signal
+	stopSignal = 1
+
+	// Interval of loading logfragment
+	loadInterval = 100 * time.Millisecond
 )
 
 var upgrader = socket.Upgrader{
@@ -221,6 +227,9 @@ func getPipelineRecordLogStream(request *restful.Request, response *restful.Resp
 //writerLogStream write logfragment received from chan logstream to websocket connection
 func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID string) {
 	pingTicker := time.NewTicker(pingPeriod)
+
+	stop := make(chan int, 2)
+
 	defer func() {
 		pingTicker.Stop()
 		ws.Close()
@@ -228,7 +237,7 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 
 	// load log fragment from kafka --> logstream
 	logstream := make(chan []byte, 10)
-	go getLogStreamFromKafka(logstream, pipelineID, recordID, userID)
+	go getLogStreamFromKafka(logstream, stop, pipelineID, recordID, userID)
 
 	for {
 		select {
@@ -236,25 +245,40 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 			ws.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				ws.WriteMessage(socket.CloseMessage, []byte{})
+				stop <- stopSignal
 				return
 			}
 
 			if err := ws.WriteMessage(socket.TextMessage, []byte(logFragment)); err != nil {
-				log.Error(err.Error())
+				if isWriteClosedError(err) {
+					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID(%s), maybe the client closed socket: %s", recordID, err.Error()))
+				} else {
+					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
+				}
+				stop <- stopSignal
 				return
 			}
 		case <-pingTicker.C:
 			ws.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := ws.WriteMessage(socket.PingMessage, []byte{}); err != nil {
-				log.Error(err.Error())
+				if isWriteClosedError(err) {
+					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID(%s), maybe the client closed socket: %s", recordID, err.Error()))
+				} else {
+					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
+				}
+				stop <- stopSignal
 				return
 			}
+		// stop means something wrong in loading log from kafka
+		case <-stop:
+			ws.WriteMessage(socket.CloseMessage, []byte{})
+			return
 		}
 	}
 }
 
 //getLogStreamFromKafka loads msg from kafka
-func getLogStreamFromKafka(logstream chan []byte, pipelineID string, recordID string, userID string) {
+func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID string, recordID string, userID string) {
 	sTopic := websocket.CreateTopicName(string(event.CreateVersionOps), userID, pipelineID, recordID)
 
 	consumer, err := kafka.NewConsumer(sTopic)
@@ -263,20 +287,25 @@ func getLogStreamFromKafka(logstream chan []byte, pipelineID string, recordID st
 		return
 	}
 
+	loadTicker := time.NewTicker(loadInterval)
 	for {
-		msg, errConsume := consumer.Consume()
-		if errConsume != nil {
-			if errConsume != kafka.ErrNoData {
-				log.Infof("Can't consume %s topic message: %s", sTopic)
-				break
-			} else {
-				continue
+		select {
+		case <-loadTicker.C:
+			msg, errConsume := consumer.Consume()
+			if errConsume != nil {
+				if errConsume != kafka.ErrNoData {
+					log.Infof("Can't consume %s topic message: %s", sTopic)
+					stop <- stopSignal
+					return
+				} else {
+					continue
+				}
 			}
+			processKafkaMsg(logstream, string(msg.Value))
+		// stop means socket is closed, should return this goroutine
+		case <-stop:
+			return
 		}
-
-		processKafkaMsg(logstream, string(msg.Value))
-
-		time.Sleep(time.Millisecond * 100)
 	}
 }
 
@@ -305,4 +334,13 @@ func parseLogFragment(msgFragment string) []byte {
 		}
 	}
 	return []byte(logFragment)
+}
+
+// isWriteClosedError return true when err is about writeClosed
+func isWriteClosedError(err error) bool {
+	if strings.Contains(err.Error(), "write closed") || strings.Contains(err.Error(), "broken pipe") {
+		return true
+	}
+
+	return false
 }
