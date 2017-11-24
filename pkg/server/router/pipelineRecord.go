@@ -217,7 +217,7 @@ func getPipelineRecordLogStream(request *restful.Request, response *restful.Resp
 	ws, err := upgrader.Upgrade(response.ResponseWriter, request.Request, nil)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
-		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format("header: %v, ###  err: %s", request.Request.Header, err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
 		return
 	}
 
