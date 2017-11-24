@@ -180,7 +180,17 @@ func (cloud *K8SCloud) CanProvision(quota Quota) (bool, error) {
 
 // Provision returns a worker if the cloud can provison
 func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error) {
-	can, err := cloud.CanProvision(wopts.Quota)
+	var cp *K8SCloud
+	// If specify the namespace for worker in worker options, new a cloud pointer and set its namespace.
+	if len(wopts.Namespace) != 0 {
+		nc := *cloud
+		cp = &nc
+		cp.namespace = wopts.Namespace
+	} else {
+		cp = cloud
+	}
+
+	can, err := cp.CanProvision(wopts.Quota)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +204,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 	Privileged := true
 	pod := &apiv1.Pod{
 		ObjectMeta: apiv1.ObjectMeta{
-			Namespace: cloud.namespace,
+			Namespace: cp.namespace,
 			Name:      name,
 			Labels: map[string]string{
 				"cyclone":    "worker",
@@ -222,7 +232,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 	// }
 
 	worker := &K8SPodWorker{
-		K8SCloud: cloud,
+		K8SCloud: cp,
 		pod:      pod,
 	}
 

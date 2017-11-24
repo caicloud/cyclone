@@ -218,6 +218,9 @@ type WorkerOptions struct {
 	WorkerEnvs *WorkerEnvs
 
 	Quota Quota
+
+	// Namespace represents the k8s namespace where to create worker, only works for k8s cloud provider.
+	Namespace string
 }
 
 // NewWorkerOptions creates a new WorkerOptions with default value

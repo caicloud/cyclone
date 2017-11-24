@@ -49,7 +49,12 @@ func SendCreateServiceEvent(service *api.Service) error {
 		Data:      map[string]interface{}{"Token": project.SCM.Token},
 	}
 
-	// log.Infof("send create service event: %v", event)
+	// Set the namespace for worker in k8s cloud.
+	if project.Worker != nil && len(project.Worker.Namespace) != 0 {
+		event.Data["namespace"] = project.Worker.Namespace
+	}
+
+	log.Infof("send create service event: %v", event)
 
 	etcdClient := etcd.GetClient()
 	jsEvent, err := json.Marshal(&event)
@@ -99,7 +104,12 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		Status: api.EventStatusPending,
 	}
 
-	// log.Infof("send create version event: %v", event)
+	// Set the namespace for worker in k8s cloud.
+	if project.Worker != nil && len(project.Worker.Namespace) != 0 {
+		event.Data["namespace"] = project.Worker.Namespace
+	}
+
+	log.Infof("send create version event: %v", event)
 
 	etcdClient := etcd.GetClient()
 	jsEvent, err := json.Marshal(&event)
