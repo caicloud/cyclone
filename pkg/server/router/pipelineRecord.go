@@ -257,20 +257,20 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 			}
 
 			if err := ws.WriteMessage(socket.TextMessage, []byte(logFragment)); err != nil {
-				if isWriteClosed(err) {
-					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID( %s ), maybe the client closed socket: %s", recordID, err.Error()))
+				if isWriteClosedError(err) {
+					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID(%s), maybe the client closed socket: %s", recordID, err.Error()))
 				} else {
-					log.Error(fmt.Sprintf("Websocket err: %s for recordID( %s )", err.Error(), recordID))
+					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
 				}
 				return
 			}
 		case <-pingTicker.C:
 			ws.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := ws.WriteMessage(socket.PingMessage, []byte{}); err != nil {
-				if isWriteClosed(err) {
-					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID( %s ), maybe the client closed socket: %s", recordID, err.Error()))
+				if isWriteClosedError(err) {
+					log.Warn(fmt.Sprintf("Something happens when write log fragment for recordID(%s), maybe the client closed socket: %s", recordID, err.Error()))
 				} else {
-					log.Error(fmt.Sprintf("Websocket err: %s for recordID( %s )", err.Error(), recordID))
+					log.Error(fmt.Sprintf("Websocket err: %s for recordID(%s)", err.Error(), recordID))
 				}
 				return
 			}
@@ -349,8 +349,8 @@ func parseLogFragment(msgFragment string) []byte {
 	return []byte(logFragment)
 }
 
-// if err means socket is closed when writed, return true
-func isWriteClosed(err error) bool {
+// isWriteClosedError return true when err is about writeClosed
+func isWriteClosedError(err error) bool {
 	if strings.Contains(err.Error(), "write closed") || strings.Contains(err.Error(), "broken pipe") {
 		return true
 	}
