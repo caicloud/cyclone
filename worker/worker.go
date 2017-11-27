@@ -258,10 +258,18 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 		return
 	}
 
-	// Build image
-	if err = helper.ExecBuild(ciManager, r); err != nil {
+	// Always run prebuild.
+	if err = ciManager.ExecPreBuild(r); err != nil {
 		setEventFailStatus(event, err.Error())
 		return
+	}
+
+	// Run build if needed.
+	if strings.Contains(operation, "imageBuild") {
+		if err = ciManager.ExecBuild(r); err != nil {
+			setEventFailStatus(event, err.Error())
+			return
+		}
 	}
 
 	// If need integration
