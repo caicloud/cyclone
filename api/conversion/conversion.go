@@ -92,6 +92,9 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	preBuild := &PreBuild{}
 	packageConfig := stages.Package
 	preBuild.Commands = packageConfig.Command
+	if stages.UnitTest != nil {
+		preBuild.Commands = append(stages.UnitTest.Command, preBuild.Commands...)
+	}
 	preBuild.Outputs = packageConfig.Outputs
 	preBuild.Image = builderImage.Image
 	preBuild.Environment = convertEnvVars(builderImage.EnvVars)
@@ -213,7 +216,6 @@ func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams)
 
 	stagesStr := strings.Join(performParams.Stages, ",")
 	version.Operation = api.VersionOperation(strings.Replace(stagesStr, "imageRelease", "publish", 1))
-
 	if performParams.CreateSCMTag {
 		version.Operator = api.APIOperator
 	}
