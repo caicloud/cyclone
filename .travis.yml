@@ -33,7 +33,7 @@ install:
   # - docker version
   # - docker-compose version
   # - docker images
-  - travis_wait 40 mvn install
+  - travis_wait 20 mvn install
   - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
   - go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
 
