@@ -80,7 +80,9 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}) (*mgo.S
 	}
 
 	log.Infof("connect to mongodb addr: %s", host)
-	session.SetMode(mgo.Strong, true)
+	// Set the session mode as Eventual to ensure that the socket is created for each request.
+	// Can switch to other mode only after the old APIs are cleaned up.
+	session.SetMode(mgo.Eventual, true)
 
 	go backgroundMongo(closing)
 
