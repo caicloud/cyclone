@@ -114,6 +114,7 @@ func postHookEvent(event *api.Event) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
+		break
 	}
 
 	// Include cancel manual or timeout
