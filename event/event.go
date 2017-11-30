@@ -103,13 +103,12 @@ func postHookEvent(event *api.Event) {
 	mapOperation[event.Operation].PostHook(event)
 	w, err := CloudController.LoadWorker(event.Worker)
 	if err != nil {
-		logdog.Errorf("load worker err: %v", err)
-		return
-	}
-	err = w.Terminate()
-	if err != nil {
-		logdog.Errorf("Terminate worker err: %v", err)
-		return
+		logdog.Warnf("load worker err: %v", err)
+	} else {
+		err = w.Terminate()
+		if err != nil {
+			logdog.Warnf("Terminate worker err: %v", err)
+		}
 	}
 
 	// Include cancel manual or timeout
@@ -242,6 +241,9 @@ func createVersionHandler(event *api.Event) error {
 		return err
 	}
 
+	// set worker info to event
+	event.Worker = worker.GetWorkerInfo()
+
 	err = worker.Do()
 	if err != nil {
 		return err
@@ -250,8 +252,6 @@ func createVersionHandler(event *api.Event) error {
 	// trigger after get an valid worker
 	triggerHooks(event, PostStartPhase)
 
-	// set worker info to event
-	event.Worker = worker.GetWorkerInfo()
 	SaveEventToEtcd(event)
 	go CheckWorkerTimeout(event)
 
