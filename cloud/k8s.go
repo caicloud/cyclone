@@ -171,6 +171,7 @@ func (cloud *K8SCloud) CanProvision(quota Quota) (bool, error) {
 		return true, nil
 	}
 
+	logdog.Debugf("Resource of namespace %s is %s", cloud.namespace, resource)
 	if resource.Limit.Enough(resource.Used, quota) {
 		return true, nil
 	}
@@ -181,11 +182,19 @@ func (cloud *K8SCloud) CanProvision(quota Quota) (bool, error) {
 // Provision returns a worker if the cloud can provison
 func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error) {
 	var cp *K8SCloud
+	namespace := wopts.Namespace
 	// If specify the namespace for worker in worker options, new a cloud pointer and set its namespace.
-	if len(wopts.Namespace) != 0 {
-		nc := *cloud
-		cp = &nc
-		cp.namespace = wopts.Namespace
+	if len(namespace) != 0 {
+		// Check the existence of k8s namespace.
+		if _, err := cloud.client.CoreV1().Namespaces().Get(namespace); err == nil {
+			nc := *cloud
+			cp = &nc
+			cp.namespace = namespace
+		} else {
+			// If the namespace of worker option does not exist, use the system cloud config.
+			logdog.Warnf("Namespace %s for workers does not exist, will use the system cloud config", namespace)
+			cp = cloud
+		}
 	} else {
 		cp = cloud
 	}
@@ -241,18 +250,22 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 
 // LoadWorker rebuilds a worker from worker info
 func (cloud *K8SCloud) LoadWorker(info WorkerInfo) (Worker, error) {
-
 	if cloud.Kind() != info.CloudKind {
 		return nil, fmt.Errorf("K8SCloud: can not load worker with another cloud kind %s", info.CloudKind)
 	}
 
-	pod, err := cloud.client.CoreV1().Pods(cloud.namespace).Get(info.PodName)
+	// Create cloud for each worker.
+	nc := *cloud
+	cp := &nc
+	cp.namespace = info.Namespace
+
+	pod, err := cloud.client.CoreV1().Pods(cp.namespace).Get(info.PodName)
 	if err != nil {
 		return nil, err
 	}
 
 	worker := &K8SPodWorker{
-		K8SCloud:   cloud,
+		K8SCloud:   cp,
 		createTime: info.CreateTime,
 		dueTime:    info.DueTime,
 		pod:        pod,
@@ -337,6 +350,7 @@ func (worker *K8SPodWorker) GetWorkerInfo() WorkerInfo {
 		CloudKind:  worker.Kind(),
 		CreateTime: worker.createTime,
 		DueTime:    worker.dueTime,
+		Namespace:  worker.namespace,
 		PodName:    worker.pod.Name,
 	}
 }

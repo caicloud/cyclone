@@ -419,6 +419,9 @@ func handlePendingEvents() {
 
 			if cloud.IsAllCloudsBusyErr(err) {
 				log.Info("All system worker are busy, wait for 10 seconds")
+				// Try the next event and push this event back into the queue.
+				pendingEvents.Out()
+				pendingEvents.In(&event)
 				time.Sleep(time.Second * 10)
 				continue
 			}

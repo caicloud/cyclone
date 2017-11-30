@@ -278,7 +278,8 @@ type WorkerInfo struct {
 	DueTime    time.Time `json:"dueTime,omitempty" bson:"dueTime,omitempty"`
 
 	// for k8s
-	PodName string `json:"podID,omitempty" bson:"podName,omitempty"`
+	Namespace string `json:"namespace,omitempty" bson:"namespace,omitempty"`
+	PodName   string `json:"podID,omitempty" bson:"podName,omitempty"`
 
 	// for docker
 	ContainerID string `json:"containerID,omitempty" bson:"containerID,omitempty"`
