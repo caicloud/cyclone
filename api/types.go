@@ -844,6 +844,9 @@ type Event struct {
 
 	// NewWorkerInfo
 	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
+
+	// Retry represents the number of retry when cloud is busy.
+	Retry int `bson:"retry,omitempty" json:"retry,omitempty"`
 }
 
 // EventStatus contains the status of an event.
