@@ -152,14 +152,15 @@ func createServiceHandler(event *api.Event) error {
 		return err
 	}
 
+	// set worker info to event
+	event.Worker = worker.GetWorkerInfo()
+
 	err = worker.Do()
 	if err != nil {
 		logdog.Error("run worker err", logdog.Fields{"err": err})
 		return err
 	}
 
-	// set worker info to event
-	event.Worker = worker.GetWorkerInfo()
 	SaveEventToEtcd(event)
 	go CheckWorkerTimeout(event)
 
