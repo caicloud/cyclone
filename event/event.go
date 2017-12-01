@@ -161,6 +161,9 @@ func createServiceHandler(event *api.Event) error {
 		return err
 	}
 
+	// update worker info to event
+	event.Worker = worker.GetWorkerInfo()
+
 	SaveEventToEtcd(event)
 	go CheckWorkerTimeout(event)
 
@@ -249,6 +252,9 @@ func createVersionHandler(event *api.Event) error {
 	if err != nil {
 		return err
 	}
+
+	// update worker info to event
+	event.Worker = worker.GetWorkerInfo()
 
 	// trigger after get an valid worker
 	triggerHooks(event, PostStartPhase)
