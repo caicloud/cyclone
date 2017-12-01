@@ -48,6 +48,10 @@ var (
 	remoteManager *remote.Manager
 )
 
+// maxRetry represents the max number of retry for event when cloud is busy.
+// TODO(robin) Make this configurable.
+const maxRetry = 60
+
 // Init init event manager
 // Step1: init event operation map
 // Step2: new a etcd client
@@ -417,8 +421,13 @@ func handlePendingEvents() {
 			// 	continue
 			// }
 
-			if cloud.IsAllCloudsBusyErr(err) {
+			if cloud.IsAllCloudsBusyErr(err) && event.Retry < maxRetry {
 				log.Info("All system worker are busy, wait for 10 seconds")
+				// Pop out this event and execute the next event
+				// Increase the retry of this event and push it back into the queue.
+				pendingEvents.Out()
+				event.Retry++
+				pendingEvents.In(&event)
 				time.Sleep(time.Second * 10)
 				continue
 			}
