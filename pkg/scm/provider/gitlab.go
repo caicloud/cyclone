@@ -110,6 +110,14 @@ func (g *GitLab) GetToken(scm *api.SCMConfig) (string, error) {
 	return "", err
 }
 
+// CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
+func (g *GitLab) CheckToken(scm *api.SCMConfig) bool {
+	if _, err := g.ListRepos(scm); err != nil {
+		return false
+	}
+	return true
+}
+
 // ListRepos lists the repos by the SCM config.
 func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 	client, err := newGitLabClient(scm.Server, scm.Token)

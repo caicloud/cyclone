@@ -23,8 +23,8 @@ import (
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	"github.com/caicloud/cyclone/store"
 )
 
 // scmProviders represents the set of SCM providers.
@@ -49,6 +49,7 @@ type SCMProvider interface {
 	GetToken(scm *api.SCMConfig) (string, error)
 	ListRepos(scm *api.SCMConfig) ([]api.Repository, error)
 	ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
+	CheckToken(scm *api.SCMConfig) bool
 }
 
 // GetSCMProvider gets the SCM provider by the type.
@@ -63,6 +64,7 @@ func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 
 // GenerateSCMToken generates the SCM token according to the config.
 // Make sure the type, server of the SCM is provided. If the SCM is Github, the username is required.
+// If the access token is provided, it should be checked whether has authority of repos.
 // Generate new token only when the username and password are provided at the same time.
 func GenerateSCMToken(config *api.SCMConfig) error {
 	if config == nil {
@@ -94,7 +96,13 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
+
+			// Update the token if generate a new one.
+			config.Token = token
+		} else if !provider.CheckToken(config) {
+			return fmt.Errorf("token is unauthorized to repos")
 		}
+
 	case api.GitLab:
 		// If username and password is provided, generate the new token.
 		if len(config.Username) != 0 && len(config.Password) != 0 {
@@ -103,6 +111,9 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
+
+			// Update the token if generate a new one.
+			config.Token = token
 		}
 	case api.SVN:
 		return fmt.Errorf("SCM %s is not supported", scmType)
@@ -110,8 +121,6 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 		return fmt.Errorf("SCM type %s is unknow", scmType)
 	}
 
-	// Update the token if generate a new one.
-	config.Token = token
 	// Cleanup the password for security.
 	config.Password = ""
 
