@@ -114,6 +114,8 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 
 			// Update the token if generate a new one.
 			config.Token = token
+		} else if !provider.CheckToken(config) {
+			return fmt.Errorf("token is unauthorized to repos")
 		}
 	case api.SVN:
 		return fmt.Errorf("SCM %s is not supported", scmType)
