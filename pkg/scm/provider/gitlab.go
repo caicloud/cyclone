@@ -120,7 +120,7 @@ func (g *GitLab) CheckToken(scm *api.SCMConfig) bool {
 
 // ListRepos lists the repos by the SCM config.
 func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
-	client, err := newGitLabClient(scm.Server, scm.Token)
+	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 
 // ListBranches lists the branches for specified repo.
 func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newGitLabClient(scm.Server, scm.Token)
+	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -162,12 +162,22 @@ func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	return branchNames, nil
 }
 
-// newGitLabClient news GitLab client by token.
-func newGitLabClient(server, token string) (*gitlab.Client, error) {
-	client := gitlab.NewOAuthClient(nil, token)
-	if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
-		log.Error(err.Error())
-		return nil, err
+// newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token
+func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
+	var client *gitlab.Client
+
+	if len(username) == 0 {
+		client = gitlab.NewClient(nil, token)
+		if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
+			log.Error(err.Error())
+			return nil, err
+		}
+	} else {
+		client = gitlab.NewOAuthClient(nil, token)
+		if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
+			log.Error(err.Error())
+			return nil, err
+		}
 	}
 
 	return client, nil
