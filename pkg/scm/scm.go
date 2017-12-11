@@ -75,11 +75,12 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	config.Server = strings.TrimSuffix(config.Server, "/")
 
 	scmType := config.Type
-	token := config.Token
 	provider, err := GetSCMProvider(scmType)
 	if err != nil {
 		return err
 	}
+
+	var generatedToken string
 
 	switch scmType {
 	case api.GitHub:
@@ -91,36 +92,33 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 
 		// If Github password is provided, generate the new token.
 		if len(config.Password) != 0 {
-			token, err = provider.GetToken(config)
+			generatedToken, err = provider.GetToken(config)
 			if err != nil {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
-
-			// Update the token if generate a new one.
-			config.Token = token
 		} else if !provider.CheckToken(config) {
 			return fmt.Errorf("token is unauthorized to repos")
 		}
-
 	case api.GitLab:
 		// If username and password is provided, generate the new token.
 		if len(config.Username) != 0 && len(config.Password) != 0 {
-			token, err = provider.GetToken(config)
+			generatedToken, err = provider.GetToken(config)
 			if err != nil {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
-
-			// Update the token if generate a new one.
-			config.Token = token
-		} else if !provider.CheckToken(config) {
-			return fmt.Errorf("token is unauthorized to repos")
 		}
 	case api.SVN:
 		return fmt.Errorf("SCM %s is not supported", scmType)
 	default:
 		return fmt.Errorf("SCM type %s is unknow", scmType)
+	}
+
+	if generatedToken != "" {
+		config.Token = generatedToken
+	} else if !provider.CheckToken(config) {
+		return fmt.Errorf("token is unauthorized to repos")
 	}
 
 	// Cleanup the password for security.
