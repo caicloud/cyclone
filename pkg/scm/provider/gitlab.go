@@ -110,7 +110,7 @@ func (g *GitLab) GetToken(scm *api.SCMConfig) (string, error) {
 	return "", err
 }
 
-// CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
+// CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
 func (g *GitLab) CheckToken(scm *api.SCMConfig) bool {
 	if _, err := g.ListRepos(scm); err != nil {
 		return false
@@ -162,22 +162,19 @@ func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	return branchNames, nil
 }
 
-// newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token
+// newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token.
 func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
 
 	if len(username) == 0 {
 		client = gitlab.NewClient(nil, token)
-		if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
-			log.Error(err.Error())
-			return nil, err
-		}
 	} else {
 		client = gitlab.NewOAuthClient(nil, token)
-		if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
-			log.Error(err.Error())
-			return nil, err
-		}
+	}
+
+	if err := client.SetBaseURL(server + "/api/v3/"); err != nil {
+		log.Error(err.Error())
+		return nil, err
 	}
 
 	return client, nil

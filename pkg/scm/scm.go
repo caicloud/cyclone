@@ -97,8 +97,6 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
-		} else if !provider.CheckToken(config) {
-			return fmt.Errorf("token is unauthorized to repos")
 		}
 	case api.GitLab:
 		// If username and password is provided, generate the new token.
