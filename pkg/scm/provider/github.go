@@ -102,6 +102,14 @@ func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
 	return *auth.Token, nil
 }
 
+// CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
+func (g *GitHub) CheckToken(scm *api.SCMConfig) bool {
+	if _, err := g.ListRepos(scm); err != nil {
+		return false
+	}
+	return true
+}
+
 // ListRepos lists the repos by the SCM config.
 func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
