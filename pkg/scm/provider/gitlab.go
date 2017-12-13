@@ -167,7 +167,7 @@ func newGitLabClient(server, token string) (*gitlab.Client, error) {
 
 // GitLabManager represents the manager for gitlab.
 type GitLabManager struct {
-	DataStore *store.DataStore
+	DataStore store.DataStore
 }
 
 // Authcallback is the callback handler.

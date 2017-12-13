@@ -23,8 +23,8 @@ import (
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	"github.com/caicloud/cyclone/store"
 )
 
 // scmProviders represents the set of SCM providers.
@@ -55,7 +55,11 @@ type SCMProvider interface {
 func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 	provider, ok := scmProviders[scmType]
 	if !ok {
-		return nil, fmt.Errorf("unsupported SCM type %s", scmType)
+		var sss []string
+		for i, _ := range scmProviders {
+			sss = append(sss, string(i))
+		}
+		return nil, fmt.Errorf("unsupported SCM type %s, for %v", scmType, sss)
 	}
 
 	return provider, nil
@@ -131,7 +135,7 @@ type SCM interface {
 
 // Manager represents the manager for scm.
 type Manager struct {
-	DataStore *store.DataStore
+	DataStore store.DataStore
 }
 
 // FindScm returns the scm by scm type.

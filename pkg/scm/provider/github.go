@@ -210,7 +210,7 @@ func newClientByToken(token string) (*github.Client, error) {
 
 // GitHubManager represents the manager for github.
 type GitHubManager struct {
-	DataStore *store.DataStore
+	DataStore store.DataStore
 }
 
 // Authcallback is the callback handler.

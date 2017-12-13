@@ -18,22 +18,27 @@ package register
 
 import "sync"
 
-// Register is a struct binds name and interface such as Constructor
-type Register struct {
+type Register interface {
+	Register(string, interface{})
+	Get(string) interface{}
+}
+
+// register is a struct binds name and interface such as Constructor
+type register struct {
 	data map[string]interface{}
 	mu   sync.RWMutex
 }
 
 // NewRegister returns a new register
-func NewRegister() *Register {
-	return &Register{
+func NewRegister() Register {
+	return &register{
 		data: make(map[string]interface{}),
 	}
 }
 
 // Register binds name and interface
 // It will panic if name already exists
-func (r *Register) Register(name string, v interface{}) {
+func (r *register) Register(name string, v interface{}) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, ok := r.data[name]
@@ -45,7 +50,7 @@ func (r *Register) Register(name string, v interface{}) {
 }
 
 // Get returns an interface registered with the given name
-func (r *Register) Get(name string) interface{} {
+func (r *register) Get(name string) interface{} {
 	// need lock ?
 	return r.data[name]
 }

@@ -41,11 +41,11 @@ type PipelineRecordManager interface {
 
 // pipelineRecordManager represents the manager for pipeline record.
 type pipelineRecordManager struct {
-	dataStore *store.DataStore
+	dataStore store.DataStore
 }
 
 // NewPipelineRecordManager creates a pipeline record manager.
-func NewPipelineRecordManager(dataStore *store.DataStore) (PipelineRecordManager, error) {
+func NewPipelineRecordManager(dataStore store.DataStore) (PipelineRecordManager, error) {
 	if dataStore == nil {
 		return nil, fmt.Errorf("Fail to new pipeline record manager as data store is nil")
 	}
