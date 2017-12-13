@@ -25,7 +25,7 @@ import (
 )
 
 // CreateToken creates creates the token, returns the token created.
-func (d *DataStore) CreateToken(token *api.ScmToken) (*api.ScmToken, error) {
+func (d *dataStore) CreateToken(token *api.ScmToken) (*api.ScmToken, error) {
 	if err := d.scmCollection.Insert(token); err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (d *DataStore) CreateToken(token *api.ScmToken) (*api.ScmToken, error) {
 }
 
 // Findtoken finds the token by project id and scm type.
-func (d *DataStore) Findtoken(projectID, scmType string) (*api.ScmToken, error) {
+func (d *dataStore) Findtoken(projectID, scmType string) (*api.ScmToken, error) {
 
 	query := bson.M{"projectID": projectID, "scmType": scmType}
 
@@ -56,11 +56,11 @@ func (d *DataStore) Findtoken(projectID, scmType string) (*api.ScmToken, error) 
 }
 
 // UpdateToken2 updates the token, please make sure the project id and scm type is provided before call this method.
-func (d *DataStore) UpdateToken2(token *api.ScmToken) error {
+func (d *dataStore) UpdateToken2(token *api.ScmToken) error {
 	return d.scmCollection.Update(bson.M{"projectID": token.ProjectID, "scmType": token.ScmType}, token)
 }
 
 // DeleteToken deletes the token with the project id and scm type.
-func (d *DataStore) DeleteToken(projectID, scmType string) error {
+func (d *dataStore) DeleteToken(projectID, scmType string) error {
 	return d.scmCollection.Remove(bson.M{"projectID": projectID, "scmType": scmType})
 }

@@ -23,21 +23,21 @@ import (
 )
 
 // NewResourceDocument creates a new document (record) in mongodb.
-func (d *DataStore) NewResourceDocument(resource *api.Resource) error {
+func (d *dataStore) NewResourceDocument(resource *api.Resource) error {
 	col := d.s.DB(defaultDBName).C(ResourceCollectionName)
 	_, err := col.Upsert(bson.M{"_id": resource.UserID}, resource)
 	return err
 }
 
 // UpdateResourceDocument update a document (record) in mongodb.
-func (d *DataStore) UpdateResourceDocument(resource *api.Resource) error {
+func (d *dataStore) UpdateResourceDocument(resource *api.Resource) error {
 	col := d.s.DB(defaultDBName).C(ResourceCollectionName)
 	_, err := col.Upsert(bson.M{"_id": resource.UserID}, resource)
 	return err
 }
 
 // FindResourceByID finds a resource entity by userID.
-func (d *DataStore) FindResourceByID(userID string) (*api.Resource, error) {
+func (d *dataStore) FindResourceByID(userID string) (*api.Resource, error) {
 	col := d.s.DB(defaultDBName).C(ResourceCollectionName)
 	resource := &api.Resource{}
 	err := col.Find(bson.M{"_id": userID}).One(resource)
@@ -45,7 +45,7 @@ func (d *DataStore) FindResourceByID(userID string) (*api.Resource, error) {
 }
 
 // UpdateResourceStatus updates resource's memory and cpu.
-func (d *DataStore) UpdateResourceStatus(userID string, memory float64, cpu float64) error {
+func (d *dataStore) UpdateResourceStatus(userID string, memory float64, cpu float64) error {
 	col := d.s.DB(defaultDBName).C(ResourceCollectionName)
 	filter := bson.M{"_id": userID}
 	change := mgo.Change{

@@ -24,7 +24,7 @@ import (
 
 // NewDeployDocument creates a new document (record) in mongodb. It returns deploy
 // id of the newly created deploy.
-func (d *DataStore) NewDeployDocument(deploy *api.Deploy) (string, error) {
+func (d *dataStore) NewDeployDocument(deploy *api.Deploy) (string, error) {
 	deploy.DeployID = uuid.NewV4().String()
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
 	_, err := col.Upsert(bson.M{"_id": deploy.DeployID}, deploy)
@@ -32,7 +32,7 @@ func (d *DataStore) NewDeployDocument(deploy *api.Deploy) (string, error) {
 }
 
 // FindDeployByID finds a deploy entity by ID.
-func (d *DataStore) FindDeployByID(deployID string) (*api.Deploy, error) {
+func (d *dataStore) FindDeployByID(deployID string) (*api.Deploy, error) {
 	deploy := &api.Deploy{}
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
 	err := col.Find(bson.M{"_id": deployID}).One(deploy)
@@ -40,14 +40,14 @@ func (d *DataStore) FindDeployByID(deployID string) (*api.Deploy, error) {
 }
 
 // UpsertDeployDocument upsert a special deploy document
-func (d *DataStore) UpsertDeployDocument(deploy *api.Deploy) (string, error) {
+func (d *dataStore) UpsertDeployDocument(deploy *api.Deploy) (string, error) {
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
 	_, err := col.Upsert(bson.M{"_id": deploy.DeployID}, deploy)
 	return deploy.DeployID, err
 }
 
 // FindDeployByUserID finds deploys entity by userID.
-func (d *DataStore) FindDeployByUserID(userID string) ([]api.Deploy, error) {
+func (d *dataStore) FindDeployByUserID(userID string) ([]api.Deploy, error) {
 	deploys := []api.Deploy{}
 	filter := bson.M{"user_id": userID}
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
@@ -56,7 +56,7 @@ func (d *DataStore) FindDeployByUserID(userID string) ([]api.Deploy, error) {
 }
 
 // DeleteDeployByID removes deploy by deploy_id.
-func (d *DataStore) DeleteDeployByID(deployID string) error {
+func (d *dataStore) DeleteDeployByID(deployID string) error {
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
 	err := col.Remove(bson.M{"_id": deployID})
 	return err

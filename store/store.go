@@ -54,7 +54,7 @@ var (
 )
 
 // DataStore is the type for mongo db store.
-type DataStore struct {
+type dataStore struct {
 	s *mgo.Session
 
 	// Collections
@@ -92,12 +92,12 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}) (*mgo.S
 }
 
 // NewStore copy a mongo client session
-func NewStore() *DataStore {
+func NewStore() DataStore {
 	s := session.Copy()
 
 	// s is for old api, it will be closed after each use.
 	// The new collections are for new api, they will be reused.
-	return &DataStore{
+	return &dataStore{
 		s:                        s,
 		projectCollection:        session.DB(defaultDBName).C(projectCollectionName),
 		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
@@ -107,12 +107,12 @@ func NewStore() *DataStore {
 }
 
 // Close close mongo client session
-func (d *DataStore) Close() {
+func (d *dataStore) Close() {
 	d.s.Close()
 }
 
 // Ping ping mongo server
-func (d *DataStore) Ping() error {
+func (d *dataStore) Ping() error {
 	return d.s.Ping()
 }
 

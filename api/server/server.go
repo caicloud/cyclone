@@ -19,8 +19,8 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os/signal"
 	"os"
+	"os/signal"
 	"syscall"
 
 	"github.com/caicloud/cyclone/api/rest"
