@@ -1,18 +1,31 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cyclone_test
 
 import (
 	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cloud"
-	//"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/server/manager"
 	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/store"
-	//dockerCli "github.com/docker/docker/client"
 	restful "github.com/emicklei/go-restful"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	//"github.com/zoumo/logdog"
 
 	"fmt"
 	"net"
@@ -33,9 +46,8 @@ const (
 	//dockerHost       = "tcp://localhost:2375"
 	mongoPara        = "mongo"
 	mongoDefaultHost = "localhost:27017"
-	//etcdDefaultHost  = "localhost:2379"
-	//mongoImage       = "mongo:3.0.5"
-	//etcdImage = "quay.io/coreos/etcd:v3.1.3"
+	etcdPara         = "etcd"
+	etcdDefaultHost  = "http://localhost:2379"
 
 	projectCollectionName        string = "projects"
 	pipelineCollectionName       string = "pipelines"
@@ -62,8 +74,6 @@ var (
 	pipelineRecordManager manager.PipelineRecordManager
 	pipelineManager       manager.PipelineManager
 	projectManager        manager.ProjectManager
-	//mongoID               []byte
-	//etcdID                []byte
 )
 
 var _ = Describe("Project Suite", func() {
