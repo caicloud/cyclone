@@ -8,6 +8,7 @@
 cyclone
 cyclone-worker
 cyclone-server
+bin
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -20,5 +21,8 @@ cyclone-server
 
 # Coverage file
 *.coverprofile
+
+# Volume for docker-compose
+local
 
 worker/worker
