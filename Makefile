@@ -104,6 +104,7 @@ build-linux:
 	      -e GOOS=linux                                                                \
 	      -e GOARCH=amd64                                                              \
 	      -e GOPATH=/go                                                                \
+	      -e CGO_ENABLED=0                                                             \
 	        $${registry}/golang:1.9.2-alpine3.6                                        \
 	          go build -i -v -o $(OUTPUT_DIR)/$${target}                               \
 	            -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)              \
