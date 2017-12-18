@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:3.6
 
 WORKDIR /root
 
@@ -8,7 +8,7 @@ RUN apk update && apk add ca-certificates && \
     echo "Asia/Shanghai" > /etc/timezone
 
 # Copy cyclone
-COPY ./cyclone-server /cyclone-server
+COPY bin/server /cyclone-server
 COPY ./http/web /http/web
 COPY ./notify/provider /template
 COPY ./node_modules /root/node_modules
