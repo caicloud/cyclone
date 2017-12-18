@@ -13,14 +13,14 @@ podTemplate(
         containerTemplate(
             name: 'jnlp',
             alwaysPullImage: true,
-            image: 'cargo.caicloud.io/circle/jnlp:2.62',
+            image: 'cargo.caicloud.io/caicloud/jnlp-slave:3.14-1-alpine',
             command: '',
             args: '${computer.jnlpmac} ${computer.name}',
         ),
         // docker in docker
         containerTemplate(
             name: 'dind', 
-            image: 'cargo.caicloud.io/caicloud/docker:17.03-dind', 
+            image: 'cargo.caicloud.io/caicloud/docker:17.09-dind',
             ttyEnabled: true, 
             command: '', 
             args: '--host=unix:///home/jenkins/docker.sock',
@@ -29,7 +29,7 @@ podTemplate(
         // golang with docker client
         containerTemplate(
             name: 'golang',
-            image: 'cargo.caicloud.io/caicloud/golang-docker:1.8-17.05',
+            image: 'cargo.caicloud.io/caicloud/golang-docker:1.9-17.09',
             ttyEnabled: true,
             command: '',
             args: '',

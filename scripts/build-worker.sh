@@ -22,6 +22,6 @@ docker run --rm \
        -w ${cyclone_src} \
        ${BUILD_IN} bash -c "go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker"
 
-docker build -t ${IMAGE}:${IMAGE_TEG} -f Dockerfile.worker .
+docker build -t ${IMAGE}:${IMAGE_TEG} -f build/worker/Dockerfile .
 
 cd - > /dev/null
