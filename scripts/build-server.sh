@@ -78,7 +78,7 @@ docker run --rm \
   -w ${cyclone_src} \
   ${BUILD_IN} bash -c "go build -o cyclone-server github.com/caicloud/cyclone/cmd/server"
 
-docker build -t ${IMAGE}:${IMAGE_TAG} -f Dockerfile.server .
+docker build -t ${IMAGE}:${IMAGE_TAG} -f build/server/Dockerfile .
 
 cd - > /dev/null
 
