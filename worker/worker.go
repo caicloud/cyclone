@@ -346,9 +346,7 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 
 // setImageNameAndTag sets the image name and tag name of the event.
 func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
-
 	var imageName, tagName string
-
 	imageName = event.Service.ImageName
 	names := strings.Split(strings.TrimSpace(imageName), ":")
 	switch len(names) {
@@ -368,9 +366,14 @@ func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
 	}
 
 	if tagName == "" {
-		tagName = fmt.Sprintf("%s", time.Now().Format("060102150405"))
-		if event.Version.Commit != "" {
-			tagName = fmt.Sprintf("%s-%s", event.Version.Commit[:7], tagName)
+		version := event.Version
+		if version.Name == "" {
+			tagName = fmt.Sprintf("%s", time.Now().Format("060102150405"))
+			if version.Commit != "" {
+				tagName = fmt.Sprintf("%s-%s", version.Commit[:7], tagName)
+			}
+		} else {
+			tagName = version.Name
 		}
 	}
 
