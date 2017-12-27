@@ -4,7 +4,9 @@ RUN apk add --no-cache git subversion ca-certificates tzdata && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
-COPY bin/worker /cyclone-worker
 COPY ./worker/start.sh /start.sh
+COPY build/worker/daemon.json /etc/docker/daemon.json
+
+COPY bin/worker /cyclone-worker
 
 CMD ["/start.sh"]
