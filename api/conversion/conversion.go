@@ -103,7 +103,9 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 	if stages.ImageBuild != nil {
 		// Convert the image build stage to the build of caicloud.yml.
-		build := &Build{}
+		build := &Build{
+			DockerfileName: "Dockerfile",
+		}
 		imageBuildConfig := stages.ImageBuild
 		buildInfoNum := len(imageBuildConfig.BuildInfos)
 		if buildInfoNum == 0 || buildInfoNum > 1 {
@@ -112,8 +114,13 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 		// Now only support one build info.
 		buildInfo := imageBuildConfig.BuildInfos[0]
-		build.ContextDir = buildInfo.ContextDir
-		build.DockerfileName = buildInfo.DockerfilePath
+		if (len(buildInfo.ContextDir) != 0) {
+			build.ContextDir = buildInfo.ContextDir
+		}
+
+		if (len(buildInfo.DockerfilePath) != 0) {
+			build.DockerfileName = buildInfo.DockerfilePath
+		}
 
 		caicloudYAMLConfig.Build = build
 	}
