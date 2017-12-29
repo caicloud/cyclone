@@ -20,7 +20,7 @@ docker run --rm \
        -v ${CYCLONE_ROOT}:${cyclone_src} \
        -e GOPATH=/go \
        -w ${cyclone_src} \
-       ${BUILD_IN} bash -c "go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker"
+       ${BUILD_IN} bash -c "go build -o bin/worker github.com/caicloud/cyclone/cmd/worker"
 
 docker build -t ${IMAGE}:${IMAGE_TEG} -f build/worker/Dockerfile .
 

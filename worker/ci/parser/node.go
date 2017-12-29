@@ -160,6 +160,15 @@ func newPreBuildNode(typ NodeType, b yaml.PreBuild) *DockerNode {
 	return node
 }
 
+// newIntegrationNode returns a new IntegrationNode, different from the other nodes,
+// IntegrationNode has the commands for running.
+func newIntegrationNode(typ NodeType, b yaml.Build) *DockerNode {
+	node := newDockerNode(typ, b.Container)
+	node.Image = b.Image
+	node.Commands = b.Commands
+	return node
+}
+
 // newDeployNode returns a new DeployNode. A DeployNode represents an action deploying
 // a version to an application.
 func newDeployNode(d yaml.DeployStep) *DeployNode {

@@ -40,6 +40,7 @@ type Build struct {
 // Integration represents the config of Integration in caicloud YAML.
 type Integration struct {
 	Services    map[string]Service `yaml:"services,omitempty"`
+	Image 		string 			   `yaml:"image,omitempty"`
 	Environment []string           `yaml:"environment,omitempty"`
 	Commands    []string           `yaml:"commands,omitempty"`
 }
