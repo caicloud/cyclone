@@ -111,6 +111,9 @@ func (b *Build) walk(node parser.Node) (err error) {
 		case parser.NodeIntegration:
 			// Record image name
 			createContainerOptions := toBuildContainerConfig(node, b, parser.NodeIntegration)
+			if tagname, ok := b.event.Data["tag-name"];ok {
+				createContainerOptions.Config.Image = createContainerOptions.Config.Image + ":" + tagname.(string)
+			}
 			// Encode the commands to one line script.
 			Encode(createContainerOptions, node)
 
