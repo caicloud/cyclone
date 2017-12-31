@@ -8,6 +8,8 @@
     - [Project APIs](#project-apis)
     - [Pipeline APIs](#pipeline-apis)
     - [Pipeline Record APIs](#pipeline-record-apis)
+    - [Pipeline Record Logs API](#pipeline-record-logs-api)
+    - [SCM API](#scm-api)
   - [API Common](#api-common)
     - [Path Parameter Explanation](#path-parameter-explanation)
   - [API Details](#api-details)
@@ -31,6 +33,11 @@
     - [Get pipeline record](#get-pipeline-record)
     - [Delete pipeline record](#delete-pipeline-record)
     - [Update Pipeline Record Status](#update-pipeline-record-status)
+    - [Get Pipeline Record Log](#get-pipeline-record-log)
+    - [Get Realtime Pipeline Record Log](#get-realtime-pipeline-record-log)
+    - [RepoObjectDataStructure](#repoobjectdatastructure)
+    - [List SCM Repos](#list-scm-repos)
+    - [List SCM Branches](#list-scm-branches)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -93,6 +100,22 @@
 | Delete | DELETE `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}` | WIP, [link](#delete-pipeline-record) |
 | Update Status | PATCH `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status` | WIP, [link](#update-pipeline-record-status) |
 
+### Pipeline Record Logs API
+
+| API | Path | Detail |
+| --- | --- | --- |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logs` | WIP, [link](#get-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream` | WIP, [link](#get-realtime-pipeline-record-log) |
+
+### SCM API
+
+- [Repo Object Data Structure](#RepoObjectDataStructure)
+
+| API | Path | Detail |
+| --- | --- | --- |
+| List | GET `/api/v1/workspaces/{workspace}/repos` | WIP, [link](#list-scm-repos) |
+| List | GET `/api/v1/workspaces/{workspace}/branches?repo=` | WIP, [link](#list-scm-branches) |
+
 ## API Common
 
 ### Path Parameter Explanation
@@ -108,12 +131,19 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
   "name": "string",                             // name of the project, should be unique
   "description": "string",                      // description of the project
   "owner": "string"                             // owner of the project
+  "scm": {                                      // required
+      "type": "",                               // string, required. Only support "Gitlab" and "Github".
+      "server": "",                             // string, required
+      "username": "",                           // string, optional
+      "password": "",                           // string, optional
+      "token": "",                              // string, optional
+  },
   "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
   "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
 }
 ```
 
-Project is responsible for managing a set of applications, in this system, mainly managing a number of pipelines corresponding to this set of applications.
+Project is responsible for managing a set of applications, in this system, mainly managing a number of pipelines corresponding to this set of applications. It manages the common configs shared by all pipelines in this project.
 
 ### List projects
 
@@ -121,9 +151,7 @@ List all projects.
 
 **Request**
 
-Http method: `GET`
-
-URL: `/api/v1/projects[?start=&limit=]`
+URL: `GET /api/v1/projects[?start=&limit=]`
 
 Args:
 
@@ -153,9 +181,7 @@ Create a new project.
 
 **Request**
 
-Http method: `POST`
-
-URL: `/api/v1/projects`
+URL: `POST /api/v1/projects`
 
 Body:
 
@@ -163,6 +189,13 @@ Body:
 {
     "description": "",                   // string, optional
     "name": "",                          // string, required
+    "scm": {                             // required
+      "type": "",                        // string, required. Only support "Gitlab" and "Github".
+      "server": "",                      // string, required
+      "username": "",                    // string, optional
+      "password": "",                    // string, optional
+      "token": "",                       // string, optional
+    }
 }
 ```
 
@@ -172,6 +205,15 @@ Note:
 | --- | --- |
 | name | ^[a-z0-9]+((?:[._-][a-z0-9]+)*){1,29}$ |
 | description | The length is limited to 100 characters |
+| type | Supports `Gitlab` and `Github` |
+
+SCM supports two types of auth: 1. username and password; 2. token. At least one type of auth should be provided. If both types are provided, username and password will be used.
+When username and password are provided, the password will not be stored, but a token will be generated and stored instead, the token will be used to access SCM server.
+
+Difference between the auth of Github and Gitlab:
+
+* Gitlab: When use token, username is not required. When generate new token through username and password, the old token is still valid.
+* Github: When use token, username is still required, token just equals password. When generate new token through username and password, the old token will be invalid. If enable 2-factor authorization, please use personal access token.
 
 **Response**
 
@@ -191,9 +233,7 @@ Get the information of a project.
 
 **Request**
 
-Http method: `GET`
-
-URL: `/api/v1/projects/{project}`
+URL: `GET /api/v1/projects/{project}`
 
 **Response**
 
@@ -213,9 +253,7 @@ Update the information of a project.
 
 **Request**
 
-Http method: `PATCH`
-
-URL: `/api/v1/projects/{project}`
+URL: `PATCH /api/v1/projects/{project}`
 
 Body:
 
@@ -249,9 +287,7 @@ Delete project.
 
 **Request**
 
-Http method: `DELETE`
-
-URL: `/api/v1/projects/{project}`
+URL: `DELETE /api/v1/projects/{project}`
 
 **Response**
 
@@ -435,9 +471,7 @@ List all pipelines of one project.
 
 **Request**
 
-Http method: `GET`
-
-URL: `/api/v1/projects/{project}/pipelines[?start=&limit=&recentCount=&recentSuccessCount=&recentFailedCount=]`
+URL: `GET /api/v1/projects/{project}/pipelines[?start=&limit=&recentCount=&recentSuccessCount=&recentFailedCount=]`
 
 Args:
 
@@ -470,9 +504,7 @@ Create a new pipeline.
 
 **Request**
 
-Http method: `POST`
-
-URL: `/api/v1/projects/{project}/pipelines`
+URL: `POST /api/v1/projects/{project}/pipelines`
 
 Body:
 
@@ -586,9 +618,7 @@ Get a pipeline.
 
 **Request**
 
-Http method: `PUT`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}`
 
 **Response**
 
@@ -608,9 +638,7 @@ Update the information of a pipeline.
 
 **Request**
 
-Http method: `PUT`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
+URL: `PUT /api/v1/projects/{project}/pipelines/{pipeline}`
 
 Body:
 
@@ -645,9 +673,7 @@ Delete a pipeline.
 
 **Request**
 
-Http method: `DELETE`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}`
+URL: `DELETE /api/v1/projects/{project}/pipelines/{pipeline}`
 
 **Response**
 
@@ -677,9 +703,7 @@ List all pipeline records of one pipeline.
 
 **Request**
 
-Http method: `GET`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records[?start=&limit=]`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records[?start=&limit=]`
 
 Args:
 
@@ -749,9 +773,7 @@ Get the pipeline execution information.
 
 **Request**
 
-Http method: `GET`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}`
 
 **Response**
 
@@ -771,9 +793,7 @@ Delete a pipeline record.
 
 **Request**
 
-Http method: `DELETE`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}`
+URL: `DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}`
 
 **Response**
 
@@ -789,9 +809,7 @@ Update the pipeline record status. Only the pipeline status of the Running state
 
 **Request**
 
-Http method: `PATCH`
-
-URL: `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status`
+URL: `PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status`
 
 Body:
 
@@ -816,5 +834,151 @@ Success:
 
 {
     // all <PipelineRecordDataStructure> fields
+}
+```
+
+### Get Pipeline Record Log
+
+Get the logs of finished pipeline records.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logs[?download=]`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+Content-Type: text/plain
+
+step: clone repository state: start
+Cloning into 'code'...
+step: clone repository state: finish
+step: Parse Yaml state: start
+step: Parse Yaml state: finish
+step: Pre Build state: start
+$ echo hello
+hello
+step: Pre Build state: finish
+step: Build image state: start
+Step 1 : FROM cargo.caicloud.io/caicloud/cyclone-worker:latest
+ ---> 2437d0db0a28
+Step 2 : ADD ./README.md /README.md
+  ---> e8ca485e1ab8
+......
+```
+
+Note:
+
+This API can be called only after the pipeline records finish.
+
+| Field | Note |
+| --- | --- |
+| download | true: download logs, the log file name is {projectName}-{pipelineName}-{recordId}-log.txt; false: directly return logs. `False` in default. |
+
+### Get Realtime Pipeline Record Log
+
+Get the real-time logs for running pipeline records.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream`
+
+Header:
+```
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Version: 13
+```
+
+**Response**
+
+Success:
+
+```
+101 UPGRADED
+Content-Type: text/plain
+Connection: Upgrade
+Upgrade: tcp
+
+step: clone repository state: start
+Cloning into 'code'...
+step: clone repository state: finish
+step: Parse Yaml state: start
+step: Parse Yaml state: finish
+step: Pre Build state: start
+$ echo hello
+hello
+step: Pre Build state: finish
+step: Build image state: start
+Step 1 : FROM cargo.caicloud.io/caicloud/cyclone-worker:latest
+ ---> 2437d0db0a28
+Step 2 : ADD ./README.md /README.md
+  ---> e8ca485e1ab8
+......
+```
+
+### RepoObjectDataStructure
+
+```
+{
+	"name": string,                                        // string, required. The format is {username}/{repoName}.
+	"url": string                                          // string, required.
+}
+```
+
+### List SCM Repos
+
+All repositories can be accessed by this project.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/repos`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": {
+        "total": 0,  // number, always
+    },
+    "items": [ <RepoObject>, ... ]
+}
+```
+
+### List SCM Branches
+
+List all branches for the repositories can be accessed by this project.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/branches?repo=`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| repo | Required。Which repo to list branch for |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": {
+        "total": 0,  // number, always
+    },
+    "items": [ <branch>, ... ]
 }
 ```
