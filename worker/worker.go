@@ -310,7 +310,7 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	event.Status = api.EventStatusSuccess
 }
 
-// sendEvent used for setting event for circe server
+// sendEvent used for setting event for circe server.
 func (worker *Worker) sendEvent(event api.Event) error {
 	eventID := worker.Config.ID
 	serverHost := worker.Envs.CycloneServer
@@ -355,10 +355,10 @@ func setEventFailStatus(event *api.Event, ErrorMessage string) {
 	logdog.Error("Operation failed", logdog.Fields{"event": event})
 }
 
-// formatVersionName replace the random name with default name '$commitID[:7]-$createTime' when name empty in create version
+// formatVersionName replace the random name with default name '$commitID[:7]-$createTime' when name empty in create version.
 func formatVersionName(event *api.Event) {
-	if event.Version.Name == "" && event.Version.Commit != "" {
-		// report to server in sendEvent
+	if event.Version.Name == event.Version.VersionID && event.Version.Commit != "" {
+		// report to server in sendEvent.
 		event.Version.Name = fmt.Sprintf("%s-%s", event.Version.Commit[:7], event.Version.CreateTime.Format("060102150405"))
 	}
 }
