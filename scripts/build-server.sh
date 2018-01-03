@@ -76,7 +76,7 @@ docker run --rm \
   -v ${CYCLONE_ROOT}:${cyclone_src} \
   -e GOPATH=/go \
   -w ${cyclone_src} \
-  ${BUILD_IN} bash -c "go build -o cyclone-server github.com/caicloud/cyclone/cmd/server"
+  ${BUILD_IN} bash -c "go build -o bin/server github.com/caicloud/cyclone/cmd/server"
 
 docker build -t ${IMAGE}:${IMAGE_TAG} -f build/server/Dockerfile .
 

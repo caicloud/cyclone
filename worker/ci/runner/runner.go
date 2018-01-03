@@ -96,7 +96,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 
 		switch node.Type() {
 		case parser.NodeService:
-			// Record image name
+			// Record image name.
 			createContainerOptions := toServiceContainerConfig(node, b)
 
 			// Run the docker container.
@@ -109,8 +109,14 @@ func (b *Build) walk(node parser.Node) (err error) {
 			b.ciServiceContainers = append(b.ciServiceContainers, container.ID)
 
 		case parser.NodeIntegration:
-			// Record image name
+			// Record image name.
 			createContainerOptions := toBuildContainerConfig(node, b, parser.NodeIntegration)
+
+			// The tag of integration image should be appended.
+			if tagname, ok := b.event.Data["tag-name"];ok {
+				createContainerOptions.Config.Image = createContainerOptions.Config.Image + ":" + tagname.(string)
+			}
+
 			// Encode the commands to one line script.
 			Encode(createContainerOptions, node)
 
@@ -120,7 +126,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 				return err
 			}
 
-			// Check the exitcode from container
+			// Check the exitcode from container.
 			if container.State.ExitCode != 0 {
 				return fmt.Errorf("container meets error")
 			}
@@ -134,7 +140,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			}
 
 		case parser.NodePreBuild:
-			// Record image name
+			// Record image name.
 			steplog.InsertStepLog(b.event, steplog.PreBuild, steplog.Start, nil)
 			if "" != node.DockerfilePath || "" != node.DockerfileName {
 				log.Info("Pre_build with Dockerfile path: ", node.DockerfilePath,
@@ -167,7 +173,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 			steplog.InsertStepLog(b.event, steplog.PreBuild, steplog.Finish, nil)
 
 		case parser.NodePostBuild:
-			// Record image name
+			// Record image name.
 			steplog.InsertStepLog(b.event, steplog.PostBuild, steplog.Start, nil)
 			// create the container with default network.
 			createContainerOptions := toBuildContainerConfig(node, b, parser.NodePostBuild)
@@ -180,7 +186,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 				steplog.InsertStepLog(b.event, steplog.PostBuild, steplog.Stop, err)
 				return err
 			}
-			// Check the exitcode from container
+			// Check the exitcode from container.
 			if container.State.ExitCode != 0 {
 				errExit := fmt.Errorf("container meets error")
 				steplog.InsertStepLog(b.event, steplog.PostBuild, steplog.Stop, errExit)

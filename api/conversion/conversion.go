@@ -138,6 +138,7 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 			}
 		}
 
+		integration.Image = integrationTestConfig.Config.ImageName
 		integration.Services = services
 		integration.Commands = integrationTestConfig.Config.Command
 

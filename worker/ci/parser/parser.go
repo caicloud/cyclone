@@ -123,7 +123,7 @@ func (t *Tree) appendServices(services []yaml.Container) error {
 
 // appendIntegration appends the integration node to the root.
 func (t *Tree) appendIntegration(build yaml.Build) error {
-	node := newBuildNode(NodeIntegration, build)
+	node := newIntegrationNode(NodeIntegration, build)
 	// TODO: add the filter node just like drone,
 	//       to allow cyclone skip some steps in CI.
 	t.Root.append(node)
