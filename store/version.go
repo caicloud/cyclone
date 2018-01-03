@@ -35,6 +35,11 @@ func (d *DataStore) FindVersionsByCondition(serviceID, versionname string) ([]ap
 // id of the newly created version.
 func (d *DataStore) NewVersionDocument(version *api.Version) (string, error) {
 	version.VersionID = bson.NewObjectId().Hex()
+
+	if version.Name == "" {
+		version.Name = version.VersionID
+	}
+	
 	col := d.s.DB(defaultDBName).C(versionCollectionName)
 	_, err := col.Upsert(bson.M{"_id": version.VersionID}, version)
 	return version.VersionID, err
