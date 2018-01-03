@@ -56,18 +56,7 @@ func SendCreateServiceEvent(service *api.Service) error {
 
 	log.Infof("send create service event: %v", event)
 
-	etcdClient := etcd.GetClient()
-	jsEvent, err := json.Marshal(&event)
-	if err != nil {
-		log.Errorf("create service event marshal err: %v", err)
-		return err
-	}
-
-	err = etcdClient.Set(EventsUnfinished+string(eventID), string(jsEvent))
-	if err != nil {
-		log.Errorf("send create service event err: %v", err)
-		return err
-	}
+	ds.CreateMassage(&event)
 
 	return nil
 }
@@ -111,18 +100,7 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 
 	log.Infof("send create version event: %v", event)
 
-	etcdClient := etcd.GetClient()
-	jsEvent, err := json.Marshal(&event)
-	if err != nil {
-		log.Errorf("create version event marshal err: %v", err)
-		return err
-	}
-
-	err = etcdClient.Set(EventsUnfinished+string(eventID), string(jsEvent))
-	if err != nil {
-		log.Errorf("send create version event err: %v", err)
-		return err
-	}
+	ds.CreateMassage(&event)
 
 	return nil
 }
