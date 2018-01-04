@@ -30,7 +30,7 @@ var Pipeline = &newapi.Pipeline{
 	Build: &newapi.Build{
 		BuilderImage: &newapi.BuilderImage{
 			Image: "caicloud.io/golang:1.8",
-			EnvVars: []newapi.EnvVar{
+			EnvVars: []&newapi.EnvVar{
 				newapi.EnvVar{
 					Name:  "GOROOT",
 					Value: "/usr/local/go",
@@ -60,7 +60,7 @@ var Pipeline = &newapi.Pipeline{
 				Config: &newapi.IntegrationTestConfig{
 					Command: []string{"go test"},
 				},
-				Services: []newapi.Service{
+				Services: []&newapi.Service{
 					newapi.Service{
 						Name:    "mongo",
 						Image:   "mongo:3.0.5",

@@ -129,9 +129,9 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	if stages.IntegrationTest != nil {
 		integration := &Integration{}
 		integrationTestConfig := stages.IntegrationTest
-		services := make(map[string]Service)
+		services := make(map[string]*Service)
 		for _, service := range integrationTestConfig.Services {
-			services[service.Name] = Service{
+			services[service.Name] = &Service{
 				Image:       service.Image,
 				Environment: convertEnvVars(service.EnvVars),
 				Commands:    service.Command,
@@ -154,7 +154,7 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 }
 
 // convertEnvVars converts the environment variables to the string list for caicloud.yml.
-func convertEnvVars(envVars []newapi.EnvVar) []string {
+func convertEnvVars(envVars []*newapi.EnvVar) []string {
 	environment := []string{}
 	for _, envVar := range envVars {
 		environment = append(environment, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
