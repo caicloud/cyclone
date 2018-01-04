@@ -122,6 +122,7 @@ func watchMongoMQ() {
 
 		if massage == nil {
 			logdog.Debugf("massage queue empty")
+			continue
 		}
 
 		go handleJob(massage)
