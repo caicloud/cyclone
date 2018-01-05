@@ -17,6 +17,7 @@ limitations under the License.
 package worker
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
 	"github.com/caicloud/cyclone/worker/ci"
 	"github.com/caicloud/cyclone/worker/ci/parser"
@@ -42,6 +44,13 @@ const (
 	DefaultCaicloudYaml = "build:\n  dockerfile_name: Dockerfile"
 )
 
+const (
+	ImageBuild = 1 << iota // 0001
+	Integrate              // 0010
+	Publish                // 0100
+	Deploy                 // 1000
+)
+
 // Worker ...
 type Worker struct {
 	Config *Config
@@ -53,87 +62,54 @@ func (worker *Worker) Run() error {
 
 	logdog.Info("worker start with", logdog.Fields{"config": worker.Config, "envs": worker.Envs})
 
-	// Get event for cyclone server
-	event, err := worker.getEvent()
+	// Get job for cyclone server
+	job, err := worker.getJob()
 	if err != nil {
-		setEventFailStatus(&event, err.Error())
-		sendErr := worker.sendEvent(event)
+		job.PipelineRecord.Status = store.JobStatusFailed
+		sendErr := worker.sendJob(job)
 		if sendErr != nil {
-			logdog.Errorf("set event result err: %v", err)
+			logdog.Errorf("set job result err: %v", err)
 		}
 		return err
 	}
-	logdog.Info("get event success", logdog.Fields{"event": event})
+	logdog.Info("get job success", logdog.Fields{"job": job})
 
-	// Handle event
-	logdog.Info("handleEvent ...")
-	worker.handleEvent(&event)
+	// Handle job
+	logdog.Info("handleJob ...")
+	worker.handleJob(job)
 
-	// Sent event for cyclone server
-	err = worker.sendEvent(event)
+	// Sent job for cyclone server
+	err = worker.sendJob(job)
 	if err != nil {
-		logdog.Errorf("set event result err: %v", err)
+		logdog.Errorf("set job result err: %v", err)
 		return err
 	}
-	logdog.Info("send event to server", logdog.Fields{"event": event})
+	logdog.Info("send job to server", logdog.Fields{"job": job})
 	return nil
 }
 
 // getEvent used for getting event for cyclone server
-func (worker *Worker) getEvent() (api.Event, error) {
-	eventID := worker.Config.ID
-	serverHost := worker.Envs.CycloneServer
-
-	BaseURL := fmt.Sprintf("%s/api/%s", serverHost, api.APIVersion)
-	httpHandler := handler.NewHTTPHandler(BaseURL)
-
-	var getResponse api.GetEventResponse
-	err := httpHandler.GetEvent(eventID, &getResponse)
-	if err != nil {
-		return api.Event{}, err
+func (worker *Worker) getJob() (*store.Job, error) {
+	if worker.Envs.Job == nil {
+		return nil, fmt.Errorf("No job founded in worker")
 	}
-
-	event := getResponse.Event
-
-	return event, nil
+	return worker.Envs.Job, nil
 }
 
 // handleEvent analysize the the operation in event, and do the relate operation
-func (worker *Worker) handleEvent(event *api.Event) {
+func (worker *Worker) handleJob(job *store.Job) {
 	vcsManager := vcs.NewManager()
 
 	logServer := worker.Envs.LogServer
 
 	if err := worker_log.DialLogServer(logServer); err != nil {
-		setEventFailStatus(event, err.Error())
 		return
 	}
 
 	go worker_log.SendHeartBeat()
 	defer worker_log.Disconnect()
 
-	switch event.Operation {
-	case "create-service":
-		worker.createService(vcsManager, event)
-
-	case "create-version":
-		worker.createVersion(vcsManager, event)
-
-	default:
-		setEventFailStatus(event, "unkwon operation")
-	}
-}
-
-// createService verify repo validity for creating service
-func (worker *Worker) createService(vcsManager *vcs.Manager, event *api.Event) {
-	// err := vcsManager.CloneServiceRepository(event)
-	err := vcsManager.CheckRepoValid(event)
-	if err != nil {
-		setEventFailStatus(event, err.Error())
-	} else {
-		event.Status = api.EventStatusSuccess
-	}
-
+	worker.createPipelineRecord(vcsManager, job)
 }
 
 // createVersion create version for service and push log to server via websocket
@@ -141,7 +117,7 @@ func (worker *Worker) createService(vcsManager *vcs.Manager, event *api.Event) {
 // Step2: integretion
 // Step3: publish
 // Step4: deploy
-func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
+func (worker *Worker) createPipelineRecord(vcsManager *vcs.Manager, job *store.Job) {
 	registryLocation := worker.Envs.RegistryLocation
 	registryUsername := worker.Envs.RegistryUsername
 	registryPassword := worker.Envs.RegistryPassword
@@ -149,103 +125,114 @@ func (worker *Worker) createVersion(vcsManager *vcs.Manager, event *api.Event) {
 	dockerManager, err := docker.NewManager(worker.Config.DockerHost, "",
 		api.RegistryCompose{registryLocation, registryUsername, registryPassword})
 	if err != nil {
-		setEventFailStatus(event, err.Error())
 		return
 	}
 	ciManager, err := ci.NewManager(dockerManager)
 	if err != nil {
-		setEventFailStatus(event, err.Error())
 		return
 	}
 
-	err = worker_log.CreateFileBuffer(event.EventID)
-	if err != nil {
-		setEventFailStatus(event, err.Error())
-		return
-	}
-	output := worker_log.Output
-	ch := make(chan interface{})
 	defer func() {
 		// Push log file to cyclone.
-		if err := helper.PushLogToCyclone(event); err != nil {
-			setEventFailStatus(event, err.Error())
-		}
-		output.Close()
-		worker_log.SetWatchLogFileSwitch(output.Name(), false)
+
 		// wait util the send the log to kafka throuth cyclone server totally.
-		for i := 0; i < WaitTimes; i++ {
-			if isChanClosed(ch) {
-				break
-			}
-			time.Sleep(time.Second * 2)
-		}
+
 	}()
 
-	topicLog := websocket.CreateTopicName(string(event.Operation), event.Service.UserID,
-		event.Service.ServiceID, event.Version.VersionID)
-	go worker_log.WatchLogFile(output.Name(), topicLog, ch)
+	destDir := vcsManager.GetCloneDir()
+	job.PipelineRecord.Data["context-dir"] = destDir
 
-	destDir := vcsManager.GetCloneDir(&event.Service, &event.Version)
-	event.Data["context-dir"] = destDir
-
-	if err = vcsManager.CloneVersionRepository(event); err != nil {
-		setEventFailStatus(event, err.Error())
+	if err = vcsManager.CloneVersionRepository(job); err != nil {
 		return
 	}
 
-	formatVersionName(event)
+	formatVersionName(job)
 
-	setImageNameAndTag(dockerManager, event)
+	setImageNameAndTag(dockerManager, job)
 
-	replaceDockerfile(event, destDir)
-	replaceCaicloudYaml(event, destDir)
+	replaceDockerfile(job, destDir)
 
 	// Get the execution tree from the caicloud.yml.
-	tree, err := ciManager.Parse(event)
+	tree, err := ciManager.Parse(job)
 	if err != nil {
-		setEventFailStatus(event, err.Error())
 		return
-
 	}
 	worker.yamlBuild(event, tree, dockerManager, ciManager)
+	worker.build(job, dockerManager)
 }
 
 // replaceDockerfile create new dockerfile to replace the dockerfile in repo
-func replaceDockerfile(event *api.Event, destDir string) {
+func replaceDockerfile(job *store.Job, destDir string) {
 
 	// Create dockerfile and caicloud.yml if need
-	if event.Service.Dockerfile != "" {
+	if job.Pipeline.Dockerfile != "" {
 		path := destDir + "/Dockerfile"
-		err := osutil.ReplaceFile(path, strings.NewReader(event.Service.Dockerfile))
+		err := osutil.ReplaceFile(path, strings.NewReader(job.Pipeline.Dockerfile))
 		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
 			return
 		}
 	}
 }
 
-// replaceCaicloudYaml create new yaml to replace the yaml in repo
-// default yaml file is caicloud.yml
-// if you set your own yaml config name, cyclone will use it.
-// if there is no yaml found, cyclone will create a default yaml file with only build step.
-func replaceCaicloudYaml(event *api.Event, destDir string) {
+func (worker *Worker) prebuild(job *store.Job) {
+	if job.Pipeline.Build
+}
 
-	yamlFile := destDir + "/" + ci.DefaultYamlFile
-	if event.Service.YAMLConfigName != "" {
-		yamlFile = destDir + "/" + event.Service.YAMLConfigName
+func (worker *Worker) imageBuild(job *store.Job) {
+
+}
+
+func (worker *Worker) integrate(job *store.Job) {
+	
+}
+
+func (worker *Worker) publish(job *store.Job) {
+	
+}
+
+func (worker *Worker) deploy(job *store.Job) {
+	
+}
+
+// build func uses for build with job.
+func (worker *Worker) build(job *store.Job, dockerManager *docker.Manager) {
+	operation := string(job.PipelineRecord.Operation)
+
+	err := worker.prebuild(job, dockerManager)
+	if err != nil {
+		return
 	}
 
-	if event.Service.CaicloudYaml != "" || !osutil.IsFileExists(yamlFile) {
-		content := DefaultCaicloudYaml
-		if event.Service.CaicloudYaml != "" {
-			content = event.Service.CaicloudYaml
-		}
-		err := osutil.ReplaceFile(yamlFile, strings.NewReader(content))
+	if operation&ImageBuild != 0 {
+		err = worker.imageBuild(job, dockerManager)
 		if err != nil {
-			worker_log.InsertStepLog(event, worker_log.CloneRepository, worker_log.Stop, err)
 			return
 		}
 	}
+
+	if operation&Integrate != 0 {
+		err = worker.integrate(job, dockerManager)
+		if err != nil {
+			return
+		}
+	}
+
+	if operation&Publish != 0 {
+		err = worker.publish(job, dockerManager)
+		if err != nil {
+			return
+		}
+	}
+
+	if operation&Deploy != 0 {
+		err = worker.deploy(job, dockerManager)
+		if err != nil {
+			return
+		}
+	}
+
+	job.Status = api.EventStatusSuccess
+	job.PipelineRecord = api.EventStatusSuccess
 }
 
 // yamlBuild func uses for build with yaml file.
@@ -310,9 +297,8 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	event.Status = api.EventStatusSuccess
 }
 
-// sendEvent used for setting event for circe server
-func (worker *Worker) sendEvent(event api.Event) error {
-	eventID := worker.Config.ID
+// sendJob used for setting job for circe server
+func (worker *Worker) sendJob(job store.Job) error {
 	serverHost := worker.Envs.CycloneServer
 
 	BaseURL := fmt.Sprintf("%s/api/%s", serverHost, api.APIVersion)
@@ -332,41 +318,24 @@ func (worker *Worker) sendEvent(event api.Event) error {
 			}
 			return err
 		}
-		logdog.Infof("set event result: %v", setResponse)
+		logdog.Infof("set job result: %v", setResponse)
 		return nil
 	}
 	return err
 }
 
-func isChanClosed(ch chan interface{}) bool {
-	if len(ch) == 0 {
-		select {
-		case _, ok := <-ch:
-			return !ok
-		}
-	}
-	return false
-}
-
-// setEventFailStatus sets the fail status of the event.
-func setEventFailStatus(event *api.Event, ErrorMessage string) {
-	event.Status = api.EventStatusFail
-	event.ErrorMessage = ErrorMessage
-	logdog.Error("Operation failed", logdog.Fields{"event": event})
-}
-
-// formatVersionName replace the random name with default name '$commitID[:7]-$createTime' when name empty in create version
-func formatVersionName(event *api.Event) {
-	if event.Version.Name == "" && event.Version.Commit != "" {
-		// report to server in sendEvent
-		event.Version.Name = fmt.Sprintf("%s-%s", event.Version.Commit[:7], event.Version.CreateTime.Format("060102150405"))
+// formatPipelineRecordName replace the random name with default name '$commitID[:7]-$createTime' when name empty in create pipelineRecord
+func formatPipelineRecordName(job *store.Job) {
+	if job.PipelineRecord.Name == job.PipelineRecord.ID && job.PipelineRecord.Commit != "" {
+		// report to server in sendJob
+		job.PipelineRecord.Name = fmt.Sprintf("%s-%s", job.PipelineRecord.Commit[:7], job.PipelineRecord.CreateTime.Format("060102150405"))
 	}
 }
 
 // setImageNameAndTag sets the image name and tag name of the event.
-func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
+func setImageNameAndTag(dockerManager *docker.Manager, job *store.Job) {
 	var imageName, tagName string
-	imageName = event.Service.ImageName
+	imageName = job.Pipeline.ImageName
 	names := strings.Split(strings.TrimSpace(imageName), ":")
 	switch len(names) {
 	case 1:
@@ -381,21 +350,21 @@ func setImageNameAndTag(dockerManager *docker.Manager, event *api.Event) {
 
 	if imageName == "" {
 		imageName = fmt.Sprintf("%s/%s/%s", dockerManager.Registry,
-			strings.ToLower(event.Service.Username), strings.ToLower(event.Service.Name))
+			strings.ToLower(job.Pipeline.Owner), strings.ToLower(job.Pipeline.Name))
 	}
 
 	if tagName == "" {
-		version := event.Version
-		if version.Name == "" {
+		pipelineRecord := job.PipelineRecord
+		if pipelineRecord.Name == "" {
 			tagName = fmt.Sprintf("%s", time.Now().Format("060102150405"))
-			if version.Commit != "" {
-				tagName = fmt.Sprintf("%s-%s", version.Commit[:7], tagName)
+			if pipelineRecord.Commit != "" {
+				tagName = fmt.Sprintf("%s-%s", pipelineRecord.Commit[:7], tagName)
 			}
 		} else {
-			tagName = version.Name
+			tagName = pipelineRecord.Name
 		}
 	}
 
-	event.Data["image-name"] = imageName
-	event.Data["tag-name"] = tagName
+	job.PipelineRecord.Data["image-name"] = imageName
+	job.PipelineRecord.Data["tag-name"] = tagName
 }

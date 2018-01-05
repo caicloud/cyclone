@@ -17,12 +17,12 @@ limitations under the License.
 package store
 
 import (
-	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/api"
 
-	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/mgo.v2"
-	"time"
 	"fmt"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 const (
@@ -30,21 +30,30 @@ const (
 	outQ int = 1
 
 	removeTimeout = 240
+
+	JobStatusFailed = "failed"
 )
 
 type Massage struct {
-	ID    string `bson:"_id" json:"_id,omitempty"`
-	Event  *api.Event `bson:"event" json:"data,omitempty"`
-	State int    `bson:"state" json:"state,omitempty"`
-	Time  int64  `bson:"timestamp" json:"timestamp,omitempty"`
-	OutTime int64 `bson:"outTime" json:"outTime,omitempty"`
-	Retry int    `bson:"retry" json:"retry,omitempty"`
+	ID      string `bson:"_id" json:"_id,omitempty"`
+	Job     *Job   `bson:"job" json:"job,omitempty"`
+	State   int    `bson:"state" json:"state,omitempty"`
+	Time    int64  `bson:"timestamp" json:"timestamp,omitempty"`
+	OutTime int64  `bson:"outTime" json:"outTime,omitempty"`
+	Retry   int    `bson:"retry" json:"retry,omitempty"`
 }
+
+type Job struct {
+	Retry          int
+	Pipeline       *api.Pipeline       `bson:"pipeline" json:"pipeline,omitempty"`
+	PipelineRecord *api.PipelineRecord `bson:"pipelineRecord" json:"pipeline,omitempty"`
+}
+
 // CreateMassage enqueues the job.
-func (d *dataStore) CreateMassage(event *api.Event) {
+func (d *dataStore) CreateMassage(job *Job) {
 	d.queueCollection.Insert(&Massage{
-		ID:    string(event.EventID),
-		Event:  event,
+		ID:    string(job.PipelineRecord.ID),
+		Job:   job,
 		State: inQ,
 		Time:  time.Now().Unix(),
 	})
@@ -52,7 +61,7 @@ func (d *dataStore) CreateMassage(event *api.Event) {
 
 // GetMassage dequeues the job.
 func (d *dataStore) GetMassage() (*Massage, error) {
-	query := bson.M{"$or":[]bson.M{bson.M{"state": inQ}, bson.M{"state": outQ, "outTime": bson.M{"$lte": time.Now().Unix() - removeTimeout}}}}
+	query := bson.M{"$or": []bson.M{bson.M{"state": inQ}, bson.M{"state": outQ, "outTime": bson.M{"$lte": time.Now().Unix() - removeTimeout}}}}
 	change := mgo.Change{
 		Upsert:    false,
 		Remove:    false,
@@ -67,11 +76,11 @@ func (d *dataStore) GetMassage() (*Massage, error) {
 	}
 
 	if changeInfo.Matched > 1 || changeInfo.Updated > 1 {
-		return nil, fmt.Errorf("more than 1 same events in queue")
+		return nil, fmt.Errorf("more than 1 same jobs in queue")
 	}
 
 	if changeInfo.Matched == 0 {
-		return nil, nil 
+		return nil, nil
 	}
 
 	return result, nil
@@ -83,7 +92,7 @@ func (d *dataStore) RemoveMassage(id string) {
 }
 
 // ResetMassage re-enqueues the job when busy.
-func (d *dataStore) ResetMassage(m *Massage) error{
+func (d *dataStore) ResetMassage(m *Massage) error {
 	m.Retry = m.Retry + 1
 	m.State = inQ
 
@@ -94,19 +103,19 @@ func (d *dataStore) ResetMassage(m *Massage) error{
 		addTime = time.Duration(m.Retry) * 600
 	}
 	m.Time = time.Unix(m.Time, 0).Add(time.Duration(addTime * time.Second)).Unix()
-	
+
 	query := bson.M{"_id": m.ID}
-	
+
 	count, err := d.queueCollection.Find(query).Count()
 	if err != nil {
 		return err
 	}
-	
+
 	if count == 0 {
 		return mgo.ErrNotFound
 	} else if count > 1 {
 		return fmt.Errorf("there are %d items with the same id %s", count, m.ID)
 	}
-	
+
 	return d.queueCollection.Update(query, m)
 }

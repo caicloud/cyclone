@@ -17,9 +17,10 @@ limitations under the License.
 package api
 
 import (
-	"time"
-
+	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/cloud"
 	"golang.org/x/oauth2"
+	"time"
 )
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
@@ -48,14 +49,44 @@ type Pipeline struct {
 	Owner       string `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
 	ProjectID   string `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
 	// TODO （robin）Remove the association between the pipeline and the service after pipeline replaces service.
-	ServiceID            string           `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
-	Build                *Build           `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
-	AutoTrigger          *AutoTrigger     `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
-	CreationTime         time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
-	LastUpdateTime       time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
-	RecentRecords        []PipelineRecord `bson:"recentRecords,omitempty" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
-	RecentSuccessRecords []PipelineRecord `bson:"recentSuccessRecords,omitempty" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
-	RecentFailedRecords  []PipelineRecord `bson:"recentFailedRecords,omitempty" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
+	ServiceID            string            `bson:"serviceID,omitempty" json:"serviceID,omitempty" description:"id of the service which the pipeline is related to"`
+	Build                *Build            `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	AutoTrigger          *AutoTrigger      `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
+	CreationTime         *time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
+	LastUpdateTime       *time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
+	RecentRecords        []*PipelineRecord `bson:"recentRecords,omitempty" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
+	RecentSuccessRecords []*PipelineRecord `bson:"recentSuccessRecords,omitempty" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
+	RecentFailedRecords  []*PipelineRecord `bson:"recentFailedRecords,omitempty" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
+
+	// The deploy id
+	DeployID string `bson:"deploy_id,omitempty" json:"deploy_id,omitempty"`
+	// Build script path. When this script path (or maybe change to just text string)
+	// is specified, we build image using BuildPath.
+	// TODO: It's better to change to PreBuildHook and PostBuildHook to let Cyclone
+	// control building image; otherwise, user can use arbitrary image name.
+	BuildPath string `bson:"build_path,omitempty" json:"build_path,omitempty"`
+	// Repository information of the service.
+	// TODO: For private repository, we need OAuth.
+	Repository *api.ServiceRepository `bson:"repository,omitempty" json:"repository,omitempty"`
+	Jconfig    *api.JenkinsConfig     `bson:"jconfig,omitempty" json:"jconfig,omitempty"`
+	// Email porfile.
+	Profile *api.NotifyProfile `bson:"profile,omitempty" json:"profile,omitempty"`
+	// Record last build version time or service create time first
+	LastCreateTIme time.Time `bson:"last_createtime,omitempty" json:"last_createtime,omitempty"`
+	// Record last build version name
+	LastVersionName string `bson:"last_versionname,omitempty" json:"last_versionname,omitempty"`
+	// Deploy plans
+	DeployPlans []api.DeployPlan `bson:"deploy_plans,omitempty" json:"deploy_plans,omitempty"`
+	// Repository information of the service.
+	YAMLConfigName string `bson:"yaml_config_name,omitempty" json:"yaml_config_name,omitempty"`
+
+	// for code to deployment
+	Hooks      []api.Hook `bson:"hooks,omitempty" json:"hooks,omitempty"`
+	PublishNow bool       `bson:"publishNow,omitempty" json:"publishNow,omitempty"`
+
+	Dockerfile string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty"`
+
+	ImageName string `bson:"image_name,omitempty" json:"image_name,omitempty"`
 }
 
 // Build represents the build config and stages of CI.
@@ -72,7 +103,7 @@ type EnvVar struct {
 
 // BuilderImage represents the image information of the builder.
 type BuilderImage struct {
-	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"image name of the builder"`
+	Image   string    `bson:"image,omitempty" json:"image,omitempty" description:"image name of the builder"`
 	EnvVars []*EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the builder"`
 }
 
@@ -85,6 +116,38 @@ type BuildStages struct {
 	ImageBuild      *ImageBuildStage      `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"image build stage"`
 	IntegrationTest *IntegrationTestStage `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"integration test stage"`
 	ImageRelease    *ImageReleaseStage    `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"image release stage"`
+
+	PreBuild   *Prebuild
+	ImageBuild *ImageBuild
+	Integrate  *Integrate
+	Publish    *Publish
+	Deploy     *Deploy
+}
+
+type Prebuild struct {
+	GeneralStage
+	Outputs     []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	Image       string   `bson:"image,omitempty" json:"image,omitempty" description:"image name of the builder"`
+	Environment []string `bson:"env,omitempty" json:"env,omitempty" description:"environment variables of the builder"`
+}
+
+type ImageBuild struct {
+	ImageBuild     *ImageBuildStage `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"image build stage"`
+	DockerfileName string
+	ContextDir     string
+}
+
+type Integrate struct {
+	IntegrationTest *IntegrationTestStage `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"integration test stage"`
+	Image           string
+	Services        *Service
+	GeneralStage
+}
+
+type Publish struct {
+}
+
+type Deploy struct {
 }
 
 // GeneralStage represents the basic config shared by all stages.
@@ -167,7 +230,7 @@ type ImageBuildInfo struct {
 // IntegrationTestStage represents the config of integration test stage.
 type IntegrationTestStage struct {
 	Config   *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
-	Services []*Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	Services []*Service             `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
 }
 
 // IntegrationTestConfig represents the config for integration test.
@@ -179,9 +242,9 @@ type IntegrationTestConfig struct {
 
 // Service represents the dependent service needed for integration test.
 type Service struct {
-	Name    string   `bson:"name,omitempty" json:"name,omitempty" description:"name of the service"`
-	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"image name of the service"`
-	Command []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to start the service"`
+	Name    string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the service"`
+	Image   string    `bson:"image,omitempty" json:"image,omitempty" description:"image name of the service"`
+	Command []string  `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to start the service"`
 	EnvVars []*EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the service"`
 }
 
@@ -257,6 +320,39 @@ type PipelineRecord struct {
 	Status        Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
 	StartTime     time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
 	EndTime       time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+	// The version name, e.g. v1.0.1. This is used as docker image tag directly.
+	Name string `bson:"name,omitempty" json:"name,omitempty"`
+	// Ref reference of git repo, support branch, tag
+	Ref string `bson:"ref,omitempty" json:"ref,omitempty"`
+	// A short, human-readable description of the version.
+	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	// Commit of the version (also known as revision, etc).
+	Commit string `bson:"commit,omitempty" json:"commit,omitempty"`
+	// Release version URL. This is used to find the release hosted on remote machine,
+	// e.g. https://github.com/caicloud/cyclone/releases/v1.0.
+	URL string `bson:"url,omitempty" json:"url,omitempty"`
+	// Version status is the version's status information.
+	Status api.VersionStatus `bson:"status,omitempty" json:"status,omitempty"`
+	// Yaml deploy status is the current status of the version's deployment information.
+	YamlDeployStatus api.VersionDeployStatus `bson:"yaml_deploy_status,omitempty" json:"yaml_deploy_status,omitempty"`
+	// Operator is the version's operator.
+	Operator api.VersionOperator `bson:"operator,omitempty" json:"operator,omitempty"`
+	// Operation is the version's operation to execute.0000-1111 presents deploy,publish,integrate,build
+	Operation int `bson:"operation,omitempty" json:"operation,omitempty"`
+	// Deploy plans and status
+	DeployPlansStatuses []api.DeployPlanStatus `bson:"deploy_plans_statuses,omitempty" json:"deploy_plans_statuses,omitempty"`
+	// Flag of deploying with the information in yaml
+	YamlDeploy api.YamlDeployFlag `bson:"yaml_deploy,omitempty" json:"yaml_deploy,omitempty"`
+	// ProjectVersionID points to the version's projectVersion.
+	ProjectVersionID string `bson:"projectversion_id,omitempty" json:"projectversion_id,omitempty"`
+	// Final status is the version's final status information, finished or unfinished
+	FinalStatus string `bson:"final_status,omitempty" json:"final_status,omitempty"`
+	// BuildResource resoure for building image
+	BuildResource api.BuildResource `bson:"build_resource,omitempty" json:"build_resource,omitempty"`
+	// NewWorkerInfo
+	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
+
+	Data map[string]interface{} `bson:"data,omitempty" json:"data,omitempty"`
 }
 
 // Status can be the status of some pipeline record or some stage

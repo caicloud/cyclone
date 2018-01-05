@@ -125,14 +125,17 @@ func watchMongoMQ() {
 			continue
 		}
 
-		go handleJob(massage)
+		go handleMassage(massage)
 	}
 }
 
-func handleJob(massage *store.Massage) {
+func handleMassage(massage *store.Massage) {
 	for {
-		event := massage.Event
-		err := handleEvent(&event)
+		job := massage.Job
+		ds := store.NewStore()
+		defer ds.Close()
+
+		err := createPipelineRecord(job)
 		if err != nil {
 			// if err == resource.ErrUnableSupport {
 			// 	log.Info("Waiting for resource to be relaesed...")
@@ -145,15 +148,11 @@ func handleJob(massage *store.Massage) {
 			// 	time.Sleep(time.Second * 10)
 			// 	continue
 			// }
-			ds := store.NewStore()
-			defer ds.Close()
 
 			if cloud.IsAllCloudsBusyErr(err) {
-				// Pop out this event and execute the next event
-				// Increase the retry of this event and push it back into the queue.
-				event.Retry++
-				if event.Retry > maxRetry {
-					event.Retry = 0
+				job.Retry++
+				if job.Retry > maxRetry {
+					job.Retry = 0
 					ds.ResetMassage(massage)
 					return
 				}
@@ -163,59 +162,54 @@ func handleJob(massage *store.Massage) {
 				continue
 			}
 
-			// remove the event from queue which had run
+			// remove the job from queue which had run
 			ds.RemoveMassage(massage.ID)
 
-			event.Status = api.EventStatusFail
-			event.ErrorMessage = err.Error()
-			log.Error("handle event err", log.Fields{"error": err, "event": event})
-			postHookEvent(&event)
+			job.PipelineRecord.Status = api.EventStatusFail
+			job.PipelineRecord.ErrorMessage = err.Error()
+			log.Error("handle job err", log.Fields{"error": err, "job": job})
+			postHookJob(&job)
 			continue
 		}
 
-		ds := store.NewStore()
-		defer ds.Close()
-
-		// remove the event from queue which had run
+		// remove the job from queue which had run
 		ds.RemoveMassage(massage.ID)
 
-		event.Status = api.EventStatusRunning
+		job.PipelineRecord.Status = api.EventStatusRunning
 
-		if event.Operation == "create-version" {
-			event.Version.Status = api.VersionRunning
-			if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
-				log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
-			}
+		if err := ds.UpdateJobToPipelineRecord(job.PipelineRecord.ID, job.PipelineRecord); err != nil {
+			log.Errorf("Unable to update version status post hook for %+v: %v", job.PipelineRecord, err)
 		}
+
 	}
 }
 
-// IsEventFinished return event is finished
-func IsEventFinished(event *api.Event) bool {
-	if event.Status == api.EventStatusSuccess ||
-		event.Status == api.EventStatusFail ||
-		event.Status == api.EventStatusCancel {
+// IsJobFinished return job is finished
+func IsJobFinished(job *store.Job) bool {
+	if job.PipelineRecord.Status == api.EventStatusSuccess ||
+		job.PipelineRecord.Status == api.EventStatusFail ||
+		job.PipelineRecord.Status == api.EventStatusCancel {
 		return true
 	}
 	return false
 }
 
-// LoadEventFromPipelineRecord loads event info from pipelineRecord.  || TODO
-func LoadEventFromPipelineRecord(id string) (*api.Event, error) {
-	return event, nil
+// LoadJobFromPipelineRecord loads job info from pipelineRecord.  || TODO
+func LoadJobFromPipelineRecord(id string) (*store.Job, error) {
+	return nil, nil
 }
 
-// UpdateEventToPipelineRecord updates the pipelineRecord based on event    || TODO 
-func UpdateEventToPipelineRecord(event *api.Event) error {
+// UpdateJobToPipelineRecord updates the pipelineRecord based on job    || TODO
+func UpdateJobToPipelineRecord(job *store.Job) error {
 	return nil
 }
 
 // CheckWorkerTimeout ...
-func CheckWorkerTimeout(event *api.Event) {
-	if IsEventFinished(event) {
+func CheckWorkerTimeout(job *store.Job) {
+	if IsJobFinished(job) {
 		return
 	}
-	worker, err := CloudController.LoadWorker(event.Worker)
+	worker, err := CloudController.LoadWorker(job.PipelineRecord.Worker)
 	if err != nil {
 		log.Error("load worker error")
 		return
@@ -223,21 +217,21 @@ func CheckWorkerTimeout(event *api.Event) {
 
 	ok, left := worker.IsTimeout()
 	if ok {
-		event.Status = api.EventStatusFail
-		UpdateEventToPipelineRecord(event)
+		job.PipelineRecord.Status = api.EventStatusFail
+		UpdateJobToPipelineRecord(job)
 		return
 	}
 
 	time.Sleep(left)
 
-	event, err = LoadEventFromPipelineRecord(event.EventID)
+	job, err = LoadJobFromPipelineRecord(job.PipelineRecord.ID)
 	if err != nil {
 		return
 	}
 
-	if !IsEventFinished(event) {
-		log.Infof("event time out: %v", event)
-		event.Status = api.EventStatusCancel
-		UpdateEventToPipelineRecord(event)
+	if !IsJobFinished(job) {
+		log.Infof("job time out: %v", job)
+		job.PipelineRecord.Status = api.EventStatusCancel
+		UpdateJobToPipelineRecord(job)
 	}
 }

@@ -132,6 +132,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 
 	pipelineRecord, err := router.pipelineRecordManager.GetPipelineRecord(pipelineRecordID)
 	if err != nil {
+		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
 		httputil.ResponseWithError(response, err)
 		return
 	}
@@ -158,17 +159,9 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 		return
 	}
 
-	e, err := event.LoadEventFromEtcd(oldapi.EventID(pipelineRecord.ID))
-	if err != nil {
-		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
-		logdog.Error(err)
-		httputil.ResponseWithError(response, err)
-		return
-	}
-
 	if e.Status == oldapi.EventStatusRunning {
 		e.Status = oldapi.EventStatusCancel
-		event.SaveEventToEtcd(e)
+		event.UpdateJobToPipelineRecord(e)
 
 		pipelineRecord.Status = api.Aborted
 	}

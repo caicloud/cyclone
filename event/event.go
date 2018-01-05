@@ -27,6 +27,7 @@ import (
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/notify"
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
@@ -36,72 +37,16 @@ import (
 )
 
 const (
-	// CreateServiceOps defines the operation to create a service, currently it
-	// involves: clone repository (to check if repository exists).
-	CreateServiceOps api.Operation = "create-service"
-
-	// CreateVersionOps defines the operation to create a version, currently it
-	// involves: clone repository, run CI if caicloud.yml exists and the operation
-	// field in the version is not "Publish", thern tag it based on version name,
-	// build docker image and push to caicloud registry, then run the postbuild
-	// hook.
-	CreateVersionOps api.Operation = "create-version"
-
-	// CreateProjectVersionOps defines the operation to create a project version.
-	CreateProjectVersionOps api.Operation = "create-projectversion"
-
 	// PostStartPhase hooks phase
 	PostStartPhase = "postStart"
 	// PreStopPhase hooks phase
 	PreStopPhase = "preStop"
 )
 
-//type EventID string
-//type Operation string
-
-// Handler is the type for event handler.
-type Handler func(*api.Event) error
-
-// PostHook is the type for post hook.
-type PostHook func(*api.Event)
-
-// mapOperation record event operation handler and post hook.
-var mapOperation map[api.Operation]Operation
-
-// Operation define event operation.
-type Operation struct {
-	// PostHook is called when event create.
-	Handler Handler
-	// PostHook is called when event has finished, and event status is set.
-	PostHook PostHook
-}
-
-// initOperationMap registers event handlers to map.
-func initOperationMap() {
-	mapOperation = make(map[api.Operation]Operation)
-
-	// create service ops
-	mapOperation[CreateServiceOps] = Operation{
-		Handler:  createServiceHandler,
-		PostHook: createServicePostHook,
-	}
-
-	// create version ops
-	mapOperation[CreateVersionOps] = Operation{
-		Handler:  createVersionHandler,
-		PostHook: createVersionPostHook,
-	}
-}
-
-// handleEvent is the event create handler.
-func handleEvent(event *api.Event) error {
-	return mapOperation[event.Operation].Handler(event)
-}
-
-// postHookEvent is the event finished post hook.
-func postHookEvent(event *api.Event) {
-	mapOperation[event.Operation].PostHook(event)
-	w, err := CloudController.LoadWorker(event.Worker)
+// postHookJob is the job finished post hook.
+func postHookJob(job *store.Job) {
+	createPipelineRecordPostHook(job)
+	w, err := CloudController.LoadWorker(job.PipelineRecord.Worker)
 	if err != nil {
 		logdog.Warnf("load worker err: %v", err)
 	} else {
@@ -110,237 +55,110 @@ func postHookEvent(event *api.Event) {
 			logdog.Warnf("Terminate worker err: %v", err)
 		}
 	}
-
-	// Include cancel manual or timeout
-	if event.Status == api.EventStatusCancel {
-
-		versionLog, err := websocket.StoreTopic(event.Service.UserID, event.Service.ServiceID, event.Version.VersionID)
-		if err == nil {
-			// Append aborted state in log for aborted record.
-			versionLog = versionLog + generateAbortedStateLog(versionLog)
-
-			Log := api.VersionLog{
-				VerisonID: event.Version.VersionID,
-				Logs:      versionLog,
-			}
-			ds := store.NewStore()
-			defer ds.Close()
-			_, err = ds.NewVersionLogDocument(&Log)
-			if err != nil {
-				logdog.Error(err)
-			}
-		}
-	}
 }
 
-// generateAbortedStateLog generates aborted state log for last stage to illustrate that the record is aborted.
-func generateAbortedStateLog(log string) string {
-	subLogs := log[strings.LastIndex(log, "\nstep: "):]
-	i := strings.Index(subLogs, " state: ")
-	additionalLog := subLogs[1:i+8] + "aborted\n"
+// createPipelineRecord is the create version handler.
+func createPipelineRecord(job *store.Job) error {
+	logdog.Infof("create version handler")
 
-	return additionalLog
-}
-
-// createServiceHander is the create service handler.
-func createServiceHandler(event *api.Event) error {
-	logdog.Infof("create service handler")
 	opts := workerOptions.DeepCopy()
-	opts.Namespace = getNamespaceFromEvent(event)
-	worker, err := CloudController.Provision(string(event.EventID), opts)
+	opts.Quota = Resource2Quota(job.PipelineRecord.BuildResource, opts.Quota)
+	opts.Namespace = getNamespaceFromJob(job)
+	worker, err := CloudController.Provision(string(job.PipelineRecord.ID), opts)
 	if err != nil {
 		return err
 	}
 
-	// set worker info to event
-	event.Worker = worker.GetWorkerInfo()
+	// set worker info to pipelineRecord
+	job.PipelineRecord.Worker = worker.GetWorkerInfo()
 
 	err = worker.Do()
 	if err != nil {
-		logdog.Error("run worker err", logdog.Fields{"err": err})
 		return err
-	}
-
-	// update worker info to event
-	event.Worker = worker.GetWorkerInfo()
-
-	SaveEventToEtcd(event)
-	go CheckWorkerTimeout(event)
-
-	return nil
-}
-
-// createServicePostHook is the create service post hook.
-func createServicePostHook(event *api.Event) {
-	logdog.Infof("create service post hook")
-	if event.Service.Repository.Status == api.RepositoryAccepted {
-		if event.Status == api.EventStatusSuccess {
-			event.Service.Repository.Status = api.RepositoryHealthy
-		} else {
-			event.Service.Repository.Status = api.RepositoryMissing
-		}
 	}
 
 	ds := store.NewStore()
 	defer ds.Close()
 
-	if err := ds.UpdateRepositoryStatus(event.Service.ServiceID, event.Service.Repository.Status); err != nil {
-		event.Service.Repository.Status = api.RepositoryInternalError
-		logdog.Errorf("Unable to update repository status in post hook for %+v: %v\n", event.Service, err)
-	}
+	ds.RemoveMassage(job.PipelineRecord.ID)
 
-	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil &&
-		event.Service.Repository.Status == api.RepositoryHealthy {
-		if err := remote.CreateHook(&event.Service); err != nil {
-			logdog.Error("create hook failed", logdog.Fields{"user_id": event.Service.UserID, "error": err})
-		}
-	}
-
-	autoPublishVersion(&event.Service)
-}
-
-// autoPublishVersion create a new version with
-// publish opration automatically after service created successfully
-func autoPublishVersion(service *api.Service) {
-	if service == nil {
-		return
-	}
-	if service.PublishNow {
-		ds := store.NewStore()
-		defer ds.Close()
-		version := api.Version{}
-		version.ServiceID = service.ServiceID
-		version.Name = bson.NewObjectId().Hex()
-		version.Description = "trigger by auto publish"
-		version.CreateTime = time.Now()
-		version.Status = api.VersionPending
-		version.URL = service.Repository.URL
-		version.SecurityCheck = false
-		version.Operation = "publish"
-		_, err := ds.NewVersionDocument(&version)
-		if err != nil {
-			message := "Unable to create version document in database"
-			logdog.Error(message, logdog.Fields{"error": err})
-			return
-		}
-
-		err = SendCreateVersionEvent(service, &version)
-		if err != nil {
-			message := "Unable to create build version job"
-			logdog.Error(message, logdog.Fields{"service": service, "version": version, "error": err})
-			return
-		}
-	}
-}
-
-// createVersionHandler is the create version handler.
-func createVersionHandler(event *api.Event) error {
-	logdog.Infof("create version handler")
-
-	opts := workerOptions.DeepCopy()
-	opts.Quota = Resource2Quota(event.Version.BuildResource, opts.Quota)
-	opts.Namespace = getNamespaceFromEvent(event)
-	worker, err := CloudController.Provision(string(event.EventID), opts)
-	if err != nil {
-		return err
-	}
-
-	// set worker info to event
-	event.Worker = worker.GetWorkerInfo()
-
-	err = worker.Do()
-	if err != nil {
-		return err
-	}
-
-	// update worker info to event
-	event.Worker = worker.GetWorkerInfo()
+	// update worker info to pipelineRecord
+	job.PipelineRecord.Worker = worker.GetWorkerInfo()
 
 	// trigger after get an valid worker
-	triggerHooks(event, PostStartPhase)
+	triggerHooks(job, PostStartPhase)
 
-	SaveEventToEtcd(event)
-	go CheckWorkerTimeout(event)
+	go CheckWorkerTimeout(job)
 
-	webhook := event.Service.Repository.Webhook
+	webhook := job.Pipeline.Repository.Webhook
 	if remote, err := remoteManager.FindRemote(webhook); webhook == api.GITHUB && err == nil {
-		if err = remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
+		if err = remote.PostCommitStatus(job.Pipeline, job.PipelineRecord); err != nil {
 			logdog.Errorf("Unable to post commit status to github: %v", err)
 		}
 	}
 	return nil
 }
 
-// createVersionPostHook is the create version post hook.
-func createVersionPostHook(event *api.Event) {
+// createPipelineRecordPostHook is the create version post hook.
+func createPipelineRecordPostHook(job *store.Job) {
 	logdog.Infof("create version post hook")
-	if event.Status == api.EventStatusSuccess {
-		event.Version.Status = api.VersionHealthy
-	} else if event.Status == api.EventStatusCancel {
-		event.Version.Status = api.VersionCancel
+	if job.Status == api.EventStatusSuccess {
+		job.PipelineRecord.Status = api.VersionHealthy
+	} else if job.Status == api.EventStatusCancel {
+		job.PipelineRecord.Status = api.VersionCancel
 	} else {
-		event.Version.Status = api.VersionFailed
-		event.Version.ErrorMessage = event.ErrorMessage
+		job.PipelineRecord.Status = api.VersionFailed
 	}
-	event.Version.EndTime = time.Now()
+	job.PipelineRecord.EndTime = time.Now()
 
-	operation := string(event.Version.Operation)
-	// Record that whether this event is a deploy for project. According this flag, we will make some special operations.
+	operation := string(job.PipelineRecord.Operation)
+	// Record that whether this job is a deploy for project. According this flag, we will make some special operations.
 	DeployInProject := false
-	if (operation == string(api.DeployOperation)) && (event.Version.ProjectVersionID != "") {
+	if (operation == string(api.DeployOperation)) && (job.PipelineRecord.ProjectVersionID != "") {
 		DeployInProject = true
 	}
 
 	ds := store.NewStore()
 	defer ds.Close()
 
-	if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
-		logdog.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+	if err := ds.UpdatePipelineRecord(job.PipelineRecord); err != nil {
+		logdog.Errorf("Unable to update version status post hook for %+v: %v", job.Pipeline, err)
 	}
 
-	if remote, err := remoteManager.FindRemote(event.Service.Repository.Webhook); err == nil {
-		if err := remote.PostCommitStatus(&event.Service, &event.Version); err != nil {
-			logdog.Errorf("Unable to post commit status to %s: %v", event.Service.Repository.Webhook, err)
+	if remote, err := remoteManager.FindRemote(job.Pipeline.Repository.Webhook); err == nil {
+		if err := remote.PostCommitStatus(job.Pipeline, job.PipelineRecord); err != nil {
+			logdog.Errorf("Unable to post commit status to %s: %v", job.Pipeline.Repository.Webhook, err)
 		}
 	}
 
 	if DeployInProject == false {
-		if event.Version.Status == api.VersionHealthy {
-			if err := ds.AddNewVersion(event.Version.ServiceID, event.Version.VersionID); err != nil {
-				logdog.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
+		if job.PipelineRecord.Status == api.VersionHealthy {
+			if err := ds.AddNewVersion(job.Pipeline.ID, job.PipelineRecord.ID); err != nil {
+				logdog.Errorf("Unable to add new PipelineRecord in post hook for %+v: %v", job.PipelineRecord, err)
 			}
 		} else {
-			if err := ds.AddNewFailVersion(event.Version.ServiceID, event.Version.VersionID); err != nil {
-				logdog.Errorf("Unable to add new version in post hook for %+v: %v", event.Version, err)
+			if err := ds.AddNewFailVersion(job.Pipeline.ID, job.PipelineRecord.ID); err != nil {
+				logdog.Errorf("Unable to add new PipelineRecord in post hook for %+v: %v", job.PipelineRecord, err)
 			}
 		}
 
 	}
-	if err := ds.UpdateServiceLastInfo(event.Version.ServiceID, event.Version.CreateTime, event.Version.Name); err != nil {
-		logdog.Errorf("Unable to update new version info in service %+v: %v", event.Version, err)
+	if err := ds.UpdateServiceLastInfo(job.PipelineRecord.ServiceID, job.PipelineRecord.CreateTime, job.PipelineRecord.Name); err != nil {
+		logdog.Errorf("Unable to update new version info in service %+v: %v", job.PipelineRecord, err)
 	}
 
 	// Use for checking project's version deploy status.
 	if DeployInProject == true {
-		event.Version.FinalStatus = "finished"
+		job.PipelineRecord.FinalStatus = "finished"
 	}
-
-	// TODO: poll version log, not query once.
-	versionLog, err := ds.FindVersionLogByVersionID(event.Version.VersionID)
-	if err != nil {
-		logdog.Warnf("Notify error, getting version failed: %v", err)
-	} else {
-		notify.Notify(&event.Service, &event.Version, versionLog.Logs)
-	}
-
 	// trigger after create end
-	triggerHooks(event, PreStopPhase)
+	triggerHooks(job, PreStopPhase)
 }
 
 // triggerHooks triggers webhooks for specific phase
-func triggerHooks(event *api.Event, phase string) {
+func triggerHooks(job *store.Job, phase string) {
 
-	hooks := event.Service.Hooks
+	hooks := job.Pipeline.Hooks
 
 	if hooks == nil {
 		return
@@ -351,23 +169,23 @@ func triggerHooks(event *api.Event, phase string) {
 			logdog.Info("trigger version hook", log.Fields{"phase": phase})
 			data := map[string]string{
 				"status":      "failed",
-				"serviceId":   event.Service.ServiceID,
-				"serviceName": event.Service.Name,
-				"versionId":   event.Version.VersionID,
-				"versionName": event.Version.Name,
+				"serviceId":   job.Pipeline.ID,
+				"serviceName": job.Pipeline.Name,
+				"versionId":   job.PipelineRecord.VersionID,
+				"versionName": job.PipelineRecord.Name,
 				"image":       "",
 			}
 			registryLocation := workerOptions.WorkerEnvs.RegistryLocation
 			if phase == PostStartPhase {
 				data["status"] = "building"
-			} else if event.Status == api.EventStatusSuccess {
+			} else if job.PipelineRecord.Status == api.EventStatusSuccess {
 				data["status"] = "success"
 				// registry/username/service_name:version_name
 				data["image"] = fmt.Sprintf("%s/%s/%s:%s",
 					registryLocation,
-					strings.ToLower(event.Service.Username),
-					strings.ToLower(event.Service.Name),
-					event.Version.Name)
+					strings.ToLower(job.Pipeline.Owner),
+					strings.ToLower(job.Pipeline.Name),
+					job.PipelineRecord.Name)
 			}
 			jsonStr, _ := json.Marshal(data)
 
@@ -406,14 +224,14 @@ func Resource2Quota(resource api.BuildResource, def cloud.Quota) cloud.Quota {
 	return quota
 }
 
-// getNamespaceFromEvent gets the namespace from event data for worker. Will return empty string if can not get it.
-func getNamespaceFromEvent(event *api.Event) string {
-	if event == nil {
-		log.Error("Can not get namespace from data as event is nil")
+// getNamespaceFromJob gets the namespace from job data for worker. Will return empty string if can not get it.
+func getNamespaceFromJob(job *store.Job) string {
+	if job == nil {
+		log.Error("Can not get namespace from data as job is nil")
 		return ""
 	}
 
-	if v, e := event.Data["namespace"]; e {
+	if v, e := job.pipelineRecord.Data["namespace"]; e {
 		if sv, ok := v.(string); ok {
 			return sv
 		}

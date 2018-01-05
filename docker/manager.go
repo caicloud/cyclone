@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/filebuffer"
 	"github.com/caicloud/cyclone/pkg/log"
 	steplog "github.com/caicloud/cyclone/worker/log"
@@ -105,7 +105,7 @@ func (dm *Manager) PullImage(imageName string) error {
 		Username: dm.AuthConfig.Username,
 		Password: dm.AuthConfig.Password,
 	}
-
+	
 	err = dm.Client.PullImage(opts, authOpt)
 	if err == nil {
 		log.InfoWithFields("Successfully pull docker image.", log.Fields{"image": imageName})
@@ -113,11 +113,11 @@ func (dm *Manager) PullImage(imageName string) error {
 	return err
 }
 
-// BuildImage builds image from event.
-func (dm *Manager) BuildImage(event *api.Event, output filebuffer.FileBuffer) error {
-	imagename, ok := event.Data["image-name"]
-	tagname, ok2 := event.Data["tag-name"]
-	contextdir, ok3 := event.Data["context-dir"]
+// BuildImage builds image from pipelineRecord.
+func (dm *Manager) BuildImage(pipelineRecord *api.PipelineRecord, output filebuffer.FileBuffer) error {
+	imagename, ok := pipelineRecord.Data["image-name"]
+	tagname, ok2 := pipelineRecord.Data["tag-name"]
+	contextdir, ok3 := pipelineRecord.Data["context-dir"]
 	if !ok || !ok2 || !ok3 {
 		return fmt.Errorf("Unable to retrieve image name")
 	}
@@ -154,10 +154,10 @@ func (dm *Manager) BuildImage(event *api.Event, output filebuffer.FileBuffer) er
 	return err
 }
 
-// PushImage pushes docker image to registry. output will be sent to event status output.
-func (dm *Manager) PushImage(event *api.Event, output filebuffer.FileBuffer) error {
-	imageName, ok := event.Data["image-name"]
-	tagName, ok2 := event.Data["tag-name"]
+// PushImage pushes docker image to registry. output will be sent to pipelineRecord status output.
+func (dm *Manager) PushImage(pipelineRecord *api.pipelineRecord, output filebuffer.FileBuffer) error {
+	imageName, ok := pipelineRecord.Data["image-name"]
+	tagName, ok2 := pipelineRecord.Data["tag-name"]
 
 	if !ok || !ok2 {
 		return fmt.Errorf("Unable to retrieve image name")
@@ -256,13 +256,13 @@ func (dm *Manager) GetAuthOpts() (authOpts docker_client.AuthConfigurations) {
 	return authOpts
 }
 
-// BuildImageSpecifyDockerfile builds docker image with params from event with
-// specify Dockerfile. Build output will be sent to event status output.
-func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
+// BuildImageSpecifyDockerfile builds docker image with params from pipelineRecord with
+// specify Dockerfile. Build output will be sent to pipelineRecord status output.
+func (dm *Manager) BuildImageSpecifyDockerfile(pipelineRecord *api.PipelineRecord,
 	dockerfilePath string, dockerfileName string, output filebuffer.FileBuffer) error {
-	imagename, ok := event.Data["image-name"]
-	tagname, ok2 := event.Data["tag-name"]
-	contextdir, ok3 := event.Data["context-dir"]
+	imagename, ok := pipelineRecord.Data["image-name"]
+	tagname, ok2 := pipelineRecord.Data["tag-name"]
+	contextdir, ok3 := pipelineRecord.Data["context-dir"]
 	if !ok || !ok2 || !ok3 {
 		return fmt.Errorf("Unable to retrieve image name")
 	}
@@ -299,22 +299,22 @@ func (dm *Manager) BuildImageSpecifyDockerfile(event *api.Event,
 		RmTmpContainer: true,
 		Memswap:        -1,
 	}
-	steplog.InsertStepLog(event, steplog.BuildImage, steplog.Start, nil)
+	steplog.InsertStepLog(pipelineRecord, steplog.BuildImage, steplog.Start, nil)
 	err := dm.Client.BuildImage(opt)
 	if err == nil {
-		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Finish, nil)
+		steplog.InsertStepLog(pipelineRecord, steplog.BuildImage, steplog.Finish, nil)
 		log.InfoWithFields("Successfully built docker image.", log.Fields{"image": imageName})
 	} else {
-		steplog.InsertStepLog(event, steplog.BuildImage, steplog.Stop, err)
+		steplog.InsertStepLog(pipelineRecord, steplog.BuildImage, steplog.Stop, err)
 	}
 
 	return err
 }
 
 // CleanUp removes images generated during building image
-func (dm *Manager) CleanUp(event *api.Event) error {
-	imagename, ok := event.Data["image-name"]
-	tagname, ok2 := event.Data["tag-name"]
+func (dm *Manager) CleanUp(pipelineRecord *api.PipelineRecord) error {
+	imagename, ok := pipelineRecord.Data["image-name"]
+	tagname, ok2 := pipelineRecord.Data["tag-name"]
 	if !ok || !ok2 {
 		return fmt.Errorf("Unable to retrieve image name")
 	}

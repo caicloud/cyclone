@@ -23,8 +23,10 @@ import (
 	"strings"
 
 	"github.com/caicloud/cyclone/api"
+	newAPI "github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/pathutil"
+	"github.com/caicloud/cyclone/store"
 	steplog "github.com/caicloud/cyclone/worker/log"
 	"github.com/caicloud/cyclone/worker/vcs/provider"
 )
@@ -78,20 +80,20 @@ func queryEscape(username, pwdBase64 string) string {
 
 // getAuthURL rebuilds url with auth token or username and password
 // for private git repository
-func getAuthURL(event *api.Event) string {
+func getAuthURL(job *store.Job) string {
 
-	url := event.Service.Repository.URL
+	url := job.Pipeline.Repository.URL
 
 	var token string
-	if t, ok := event.Data["Token"]; ok {
+	if t, ok := job.PipelineRecord.Data["Token"]; ok {
 		token = t.(string)
 	}
-	username := event.Service.Repository.Username
-	pwd := event.Service.Repository.Password
+	username := job.Pipeline.Repository.Username
+	pwd := job.Pipeline.Repository.Password
 
 	// rebuild token
 	if token != "" {
-		if event.Service.Repository.SubVcs == api.GITLAB {
+		if job.Pipeline.Repository.SubVcs == api.GITLAB {
 			token = "oauth2:" + token
 		}
 	} else if username != "" && pwd != "" {
@@ -99,7 +101,7 @@ func getAuthURL(event *api.Event) string {
 	}
 
 	// insert token
-	if token != "" && event.Service.Repository.Vcs == api.Git {
+	if token != "" && job.Pipeline.Repository.Vcs == api.Git {
 		position := -1
 		if strings.HasPrefix(url, "http://") {
 			position = len("http://")
@@ -114,154 +116,73 @@ func getAuthURL(event *api.Event) string {
 	return url
 }
 
-// CheckRepoValid check whether the repo is a valid repo
-func (vm *Manager) CheckRepoValid(event *api.Event) error {
+// CloneVersionRepository clones a pipelineRecord's repo.
+func (vm *Manager) CloneVersionRepository(job *store.Job) error {
 	// Get the path to store cloned repository.
-	destPath := vm.GetCloneDir(&event.Service, &event.Version)
-	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
-		event.Service.Repository.Status = api.RepositoryInternalError
-		return fmt.Errorf("Unable to create parent directory for %s: %v\n", destPath, err)
-	}
-
-	// Find version control system worker and return if error occurs.
-	vcs, err := vm.findVcsForService(&event.Service)
-	if err != nil {
-		event.Service.Repository.Status = api.RepositoryUnknownVcs
-		return fmt.Errorf("Unable to write to event output for event: %v\n", err)
-	}
-
-	url := getAuthURL(event)
-	err = vcs.Ping(url, destPath, event)
-	if err != nil {
-		event.Service.Repository.Status = api.RepositoryMissing
-		return fmt.Errorf("Unable to check repository for service: %v\n", err)
-	}
-
-	// Happy path - update status to healthy and return nil error. Database status
-	// will be updated via defer function. If we encounter error during database
-	// update, repository status will be set to internal error.
-	event.Service.Repository.Status = api.RepositoryHealthy
-	return nil
-}
-
-// CloneVersionRepository clones a version's repo
-func (vm *Manager) CloneVersionRepository(event *api.Event) error {
-	// Get the path to store cloned repository.
-	destPath := vm.GetCloneDir(&event.Service, &event.Version)
+	destPath := vm.GetCloneDir()
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
 		return fmt.Errorf("Unable to create parent directory for %s: %v\n", destPath, err)
 	}
 
 	// Find version control system worker and return if error occurs.
-	worker, err := vm.findVcsForService(&event.Service)
+	worker, err := vm.findVcsForPipeline(job.Pipeline)
 	if err != nil {
-		return fmt.Errorf("Unable to write to event output for event: %v\n", err)
+		return fmt.Errorf("Unable to write to job output for job: %v\n", err)
 	}
 
-	url := getAuthURL(event)
-	steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Start, nil)
-	if err := worker.Clone(url, destPath, event); err != nil {
-		steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
+	url := getAuthURL(job)
+
+	if err := worker.Clone(url, destPath, job); err != nil {
 		return fmt.Errorf("Unable to clone repository for version: %v\n", err)
 	}
 
 	// create version call by UI API, the commit is empty
 	// create version call by webhook, the commit is not empty
-	if "" == event.Version.Commit {
+	if "" == job.PipelineRecord.Commit {
 		//checkout branch/tag
-		if err := worker.CheckoutTag(destPath, event.Version.Ref); err != nil {
-			steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
+		if err := worker.CheckoutTag(destPath, job.PipelineRecord.Ref); err != nil {
 			return fmt.Errorf("Unable to checkout branch/tag %s : %v\n", event.Version.Ref, err)
 		}
 
 		// set version commit
-		if commit, err := worker.GetTagCommit(destPath, event.Version.Ref); err != nil {
+		if commit, err := worker.GetTagCommit(destPath, job.PipelineRecord.Ref); err != nil {
 			log.Error("cannot get tag commit")
 		} else {
 			// write to DB in posthook
-			event.Version.Commit = commit
+			job.PipelineRecord.Commit = commit
 		}
 	} else {
 		// checkout special commit
-		if err = worker.CheckOutByCommitID(event.Version.Commit, destPath, event); err != nil {
-			event.Service.Repository.Status = api.RepositoryMissing
-			steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Stop, err)
-			return fmt.Errorf("Unable to check out commit %s :%v\n", event.Version.Commit, err)
+		if err = worker.CheckOutByCommitID(job.PipelineRecord.Commit, destPath, job); err != nil {
+			job.Pipeline.Repository.Status = api.RepositoryMissing
+			return fmt.Errorf("Unable to check out commit %s :%v\n", job.PipelineRecord.Commit, err)
 		}
 	}
 
-	if api.APIOperator == event.Version.Operator {
+	if api.APIOperator == job.PipelineRecord.Operator {
 		// create tag
-		if err := worker.NewTagFromLatest(destPath, event); err != nil {
-			log.Errorf("Unable to push new commit %s :%v\n", event.Version.Commit, err)
+		if err := worker.NewTagFromLatest(destPath, job); err != nil {
+			log.Errorf("Unable to push new commit %s :%v\n", job.PipelineRecord.Commit, err)
 		}
 	}
-	steplog.InsertStepLog(event, steplog.CloneRepository, steplog.Finish, nil)
 	return nil
-}
-
-// NewTagFromLatest creates a new tag from latest source for a service.
-func (vm *Manager) NewTagFromLatest(event *api.Event) error {
-	// Find version control system worker and return if error occurs.
-	worker, err := vm.findVcsForService(&event.Service)
-	if err != nil {
-		return fmt.Errorf("Unable to checkout latest source %#+v: %v", event.Service, err)
-	}
-
-	// Do the actual work.
-	repositoryPath := vm.GetCloneDir(&event.Service, &event.Version)
-	err = worker.NewTagFromLatest(repositoryPath, event)
-	if err != nil {
-		return fmt.Errorf("Unable to create tag for service %#+v: %v\n", event.Service, err)
-	}
-	return nil
-}
-
-// CheckoutTag checkout to given tag in version.
-func (vm *Manager) CheckoutTag(service *api.Service, version *api.Version) error {
-	// Find version control system worker and return if error occurs.
-	worker, err := vm.findVcsForService(service)
-	if err != nil {
-		return err
-	}
-
-	err = worker.CheckoutTag(vm.GetCloneDir(service, version), version.Name)
-	if err != nil {
-		return fmt.Errorf("Unable to checkout tag for service %#+v: %v\n", service, err)
-	}
-	return nil
-}
-
-// GetTagCommit finds commit/revision hash of a given tag.
-func (vm *Manager) GetTagCommit(service *api.Service, version *api.Version) (string, error) {
-	// Find version control system worker and return if error occurs.
-	worker, err := vm.findVcsForService(service)
-	if err != nil {
-		return "", err
-	}
-
-	commit, err := worker.GetTagCommit(vm.GetCloneDir(service, version), version.Name)
-	if err != nil {
-		return "", err
-	}
-	return commit, nil
 }
 
 // GetCloneDir returns the directory where a repository should be cloned to.
-func (vm *Manager) GetCloneDir(service *api.Service, version *api.Version) string {
+func (vm *Manager) GetCloneDir() string {
 	return CLONE_DIR
 }
 
-// findVcsForService is a helper method which finds the VCS worker based on service spec.
-func (vm *Manager) findVcsForService(service *api.Service) (VCS, error) {
-	switch service.Repository.Vcs {
+// findVcsForPipeline is a helper method which finds the VCS worker based on pipeline spec.
+func (vm *Manager) findVcsForPipeline(pipeline *newAPI.Pipeline) (VCS, error) {
+	switch pipeline.Repository.Vcs {
 	case api.Git:
 		return &provider.Git{}, nil
 	case api.Svn:
 		return &provider.Svn{}, nil
 	case api.Fake:
-		return provider.NewFake(service.Repository.URL)
+		return provider.NewFake(pipeline.Repository.URL)
 	default:
-		return nil, fmt.Errorf("Unknown version control system %s", service.Repository.Vcs)
+		return nil, fmt.Errorf("Unknown version control system %s", pipeline.Repository.Vcs)
 	}
 }

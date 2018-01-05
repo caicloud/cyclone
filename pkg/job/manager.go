@@ -14,20 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package remote
+package job
 
-import (
-	"github.com/caicloud/cyclone/api"
-	newAPI "github.com/caicloud/cyclone/pkg/api"
+const (
+	handleTimeout = 120
 )
-
-// Remote is the interface of all operations needed for remote repository.
-type Remote interface {
-	GetTokenQuestURL(string) (string, error)
-	Authcallback(code, state string) (string, error)
-	GetRepos(string) ([]api.Repo, string, string, error)
-	LogOut(userID string) error
-	CreateHook(service *api.Service) error
-	DeleteHook(service *api.Service) error
-	PostCommitStatus(*newAPI.Pipeline, *newAPI.PipelineRecord) error
-}

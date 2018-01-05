@@ -18,6 +18,7 @@ package cloud
 
 import (
 	"time"
+	"github.com/caicloud/cyclone/store"
 
 	cli "gopkg.in/urfave/cli.v1"
 )
@@ -82,6 +83,9 @@ type WorkerEnvs struct {
 	RegistryLocation string `json:"registryLocation,omitempty"`
 	RegistryUsername string `json:"registryUsername,omitempty"`
 	RegistryPassword string `json:"registryPassword,omitempty"`
+
+	// Job
+	Job *store.Job `json:"job,omitempty"`
 
 	// Clair options
 	ClairDisable bool

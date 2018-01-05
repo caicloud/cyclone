@@ -42,7 +42,7 @@ type DataStore interface {
 }
 
 type Queue interface {
-	CreateMassage(*oldAPI.Event)             
+	CreateMassage(*Job)             
 	GetMassage() (*Massage, error)
 	ResetMassage(*Massage)         
 	RemoveMassage(string)         
@@ -57,6 +57,8 @@ type PipeLine interface {
 	UpdatePipeline(pipeline *api.Pipeline) error
 	DeletePipelineByID(pipelineID string) error
 	DeletePipelinesByProjectID(projectID string) error
+	AddNewPipelineRecord(pipelineID string, pipelineRecordID string) error
+	AddNewFailPipelineRecord(pipelineID string, pipelineRecordID string) error
 }
 
 type Project interface {

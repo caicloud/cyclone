@@ -21,12 +21,9 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/worker/ci/parser"
-	"github.com/caicloud/cyclone/worker/clair"
 	steplog "github.com/caicloud/cyclone/worker/log"
 )
 
@@ -209,10 +206,6 @@ func (b *Build) PublishImage() (err error) {
 	// Now image is pushed to registry successfully.
 	b.status |= pushImageSuccess
 
-	disableClair := osutil.GetBoolEnv(cloud.ClairDisable, false)
-	if !disableClair {
-		clair.Analysis(b.event, b.dockerManager)
-	}
 	steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Finish, nil)
 	return nil
 }

@@ -51,7 +51,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	event, err := event.LoadEventFromPipelineRecord(eventID)
+	event, err := event.LoadJobFromPipelineRecord(eventID)
 	if err != nil {
 		message := "Unable to get event from mongo"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
@@ -94,7 +94,7 @@ func setEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	event, err := event.LoadEventFromPipelineRecord(eventID)
+	event, err := event.LoadJobFromPipelineRecord(eventID)
 	if err != nil {
 		message := "Unable to get event from mongo"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})

@@ -870,7 +870,7 @@ type GetEventResponse struct {
 
 // SetEvent is the request body for setevent request.
 type SetEvent struct {
-	Event *Event `json:"event,omitempty"`
+	Event Event `json:"event,omitempty"`
 }
 
 // SetEventResponse is the response type for setevent request.
