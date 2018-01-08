@@ -21,14 +21,15 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // CreateProject creates the project, returns the project created.
 func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
 	project.ID = bson.NewObjectId().Hex()
-	project.CreatedTime = time.Now()
-	project.UpdatedTime = time.Now()
+	project.CreationTime = time.Now()
+	project.LastUpdateTime = time.Now()
 
 	if err := d.projectCollection.Insert(project); err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 	}
 
 	if count == 0 {
-		return nil, fmt.Errorf("there is no project with name %s", name)
+		return nil, mgo.ErrNotFound
 	} else if count > 1 {
 		return nil, fmt.Errorf("there are %d projects with the same name %s", count, name)
 	}
@@ -69,9 +70,24 @@ func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
 	return project, nil
 }
 
+// FindProjectByServiceID finds the project by service id.
+func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, error) {
+	pipeline, err := d.FindPipelineByServiceID(serviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	project := &api.Project{}
+	if err := d.projectCollection.FindId(pipeline.ProjectID).One(project); err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
 // UpdateProject updates the project, please make sure the project id is provided before call this method.
 func (d *DataStore) UpdateProject(project *api.Project) error {
-	project.UpdatedTime = time.Now()
+	project.LastUpdateTime = time.Now()
 
 	return d.projectCollection.UpdateId(project.ID, project)
 }

@@ -183,7 +183,7 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 		array := strings.Split(str, "\n")
 		for _, arr := range array {
 			if arr != "\r" && arr != "" {
-				if isDockerImageOperationLog(arr) {
+				if IsDockerImageOperationLog(arr) {
 					// In order to achieve overlapping the log according to the same layer id,
 					// so extracted the layer id from the log into the ID section
 					// in the websockect package, then the UI received the webpacket can overlap
@@ -218,8 +218,8 @@ func PushTopic(wss *WSSession, pWatchLog *WatchLogPacket) {
 	log.Infof("stop push %s to %s", sTopic, wss.GetSessionID())
 }
 
-// isDockerImageOperationLog check the log whether is the log of pulling or pushing docker image.
-func isDockerImageOperationLog(log string) bool {
+// IsDockerImageOperationLog check the log whether is the log of pulling or pushing docker image.
+func IsDockerImageOperationLog(log string) bool {
 	return strings.HasPrefix(log, DOCKER_IMAGE_LOG_FLAG)
 }
 
@@ -244,7 +244,7 @@ func StoreTopic(userID, serviceID, versionID string) (string, error) {
 		array := strings.Split(str, "\n")
 		for _, arr := range array {
 			if arr != "\r" && arr != "" {
-				if isDockerImageOperationLog(arr) != true {
+				if IsDockerImageOperationLog(arr) != true {
 					versionLog += arr
 					versionLog += "\n"
 				}

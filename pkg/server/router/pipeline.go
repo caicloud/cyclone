@@ -29,19 +29,20 @@ func (router *router) createPipeline(request *restful.Request, response *restful
 	projectName := request.PathParameter(projectPathParameterName)
 	project, err := router.projectManager.GetProject(projectName)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	pipeline := &api.Pipeline{}
-	if err := httputil.ReadEntityFromRequest(request, response, pipeline); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, pipeline); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	pipeline.ProjectID = project.ID
-	createdPipeline, err := router.pipelineManager.CreatePipeline(pipeline)
+	createdPipeline, err := router.pipelineManager.CreatePipeline(projectName, pipeline)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -55,7 +56,7 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 
 	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -64,13 +65,22 @@ func (router *router) getPipeline(request *restful.Request, response *restful.Re
 
 // listPipelines handles the request to list pipelines.
 func (router *router) listPipelines(request *restful.Request, response *restful.Response) {
-	queryParams := httputil.QueryParamsFromRequest(request)
+	queryParams, err := httputil.QueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+	recentCount, recentSuccessCount, recentFailedCount, err := httputil.RecordCountQueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
 
 	projectName := request.PathParameter(projectPathParameterName)
 
-	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams)
+	pipelines, count, err := router.pipelineManager.ListPipelines(projectName, queryParams, recentCount, recentSuccessCount, recentFailedCount)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -83,17 +93,18 @@ func (router *router) updatePipeline(request *restful.Request, response *restful
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
 	pipeline := &api.Pipeline{}
-	if err := httputil.ReadEntityFromRequest(request, response, pipeline); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, pipeline); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	updatedPipeline, err := router.pipelineManager.UpdatePipeline(projectName, pipelineName, pipeline)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusCreated, updatedPipeline)
+	response.WriteHeaderAndEntity(http.StatusOK, updatedPipeline)
 }
 
 // deletePipeline handles the request to delete a pipeline.
@@ -102,9 +113,28 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
 	if err := router.pipelineManager.DeletePipeline(projectName, pipelineName); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
+}
+
+// performPipeline handles the request to perform a pipeline.
+func (router *router) performPipeline(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+
+	performParams := &api.PipelinePerformParams{}
+	if err := httputil.ReadEntityFromRequest(request, performParams); err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	if err := router.pipelineManager.PerformPipeline(projectName, pipelineName, performParams); err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, nil)
 }

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -38,7 +39,7 @@ func (d *DataStore) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*a
 // FindPipelineRecordsByPipelineID finds the pipeline records by pipelineID.
 func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
-	query := bson.M{"pipelineId": pipelineID}
+	query := bson.M{"pipelineID": pipelineID}
 	collection := d.pipelineCollection.Find(query)
 
 	count, err := collection.Count()
@@ -87,5 +88,65 @@ func (d *DataStore) DeletePipelineRecordByID(pipelineRecordID string) error {
 
 // DeletePipelineRecordsByPipelineID deletes all the pipeline records of one pipeline by pipeline id.
 func (d *DataStore) DeletePipelineRecordsByPipelineID(pipelineID string) error {
-	return d.pipelineRecordCollection.Remove(bson.M{"pipelineId": pipelineID})
+	if err := d.pipelineRecordCollection.Remove(bson.M{"pipelineID": pipelineID}); err != mgo.ErrNotFound {
+		return err
+	}
+
+	return nil
+}
+
+// FindRecordsWithPaginationByPipelineID finds a page of records with conditions by pipeline ID.
+func (d *DataStore) FindRecordsWithPaginationByPipelineID(pipelineID string, filter map[string]interface{}, start, limit int) ([]api.PipelineRecord, int, error) {
+	records := []api.PipelineRecord{}
+	if filter == nil {
+		filter = bson.M{"pipelineID": pipelineID}
+	} else {
+		filter["pipelineID"] = pipelineID
+	}
+
+	col := d.s.DB(defaultDBName).C(pipelineRecordCollectionName)
+	query := col.Find(filter)
+	total, err := query.Count()
+	if err != nil {
+		return records, 0, err
+	}
+
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
+	}
+
+	if err = query.Skip(start).Sort("-startTime").All(&records); err != nil {
+		return records, 0, err
+	}
+
+	return records, total, err
+}
+
+// FindRecentRecordsByPipelineID finds a set of records with conditions by pipeline ID.
+func (d *DataStore) FindRecentRecordsByPipelineID(pipelineID string, filter map[string]interface{}, limit int) ([]api.PipelineRecord, int, error) {
+	records := []api.PipelineRecord{}
+	if filter == nil {
+		filter = bson.M{"pipelineID": pipelineID}
+	} else {
+		filter["pipelineID"] = pipelineID
+	}
+
+	col := d.s.DB(defaultDBName).C(pipelineRecordCollectionName)
+	query := col.Find(filter)
+	total, err := query.Count()
+	if err != nil {
+		return records, 0, err
+	}
+
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
+	}
+
+	if err = query.Sort("-startTime").All(&records); err != nil {
+		return records, 0, err
+	}
+
+	return records, total, err
 }

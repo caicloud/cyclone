@@ -31,6 +31,7 @@ import (
 	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
+	newstore "github.com/caicloud/cyclone/pkg/store"
 	"github.com/caicloud/cyclone/store"
 	"github.com/caicloud/cyclone/websocket"
 	restful "github.com/emicklei/go-restful"
@@ -119,7 +120,10 @@ func (s *APIServer) InitStore() error {
 
 	logdog.Debugf("connect to mongodb addr: %s", s.Config.MongoDBHost)
 	s.dbSession.SetMode(mgo.Strong, true)
+
+	// TODO (robin) Remove the old store and use the new one.
 	store.Init(s.dbSession)
+	newstore.Init(s.dbSession)
 
 	return nil
 }
@@ -145,7 +149,7 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	// start log server
 	go s.StartLogServer()
 
-	dataStore := store.NewStore()
+	dataStore := newstore.NewStore()
 	defer dataStore.Close()
 
 	// Initialize the V1 API.

@@ -18,29 +18,44 @@ package http
 
 import (
 	"net/http"
-
 	"strconv"
+	"strings"
 
-	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/caicloud/cyclone/pkg/api"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // ReadEntityFromRequest reads the entity from request body.
-func ReadEntityFromRequest(request *restful.Request, response *restful.Response, entityPointer interface{}) error {
+func ReadEntityFromRequest(request *restful.Request, entityPointer interface{}) error {
 	if err := request.ReadEntity(entityPointer); err != nil {
 		logdog.Errorf("Fail to read request entity as %s", err.Error())
-		ResponseWithError(response, http.StatusBadRequest, err)
-		return err
+		return httperror.ErrorUnknownRequest.Format(err.Error())
 	}
 
 	return nil
 }
 
 // ResponseWithError responses the request with error.
-func ResponseWithError(response *restful.Response, statusCode int, err error) {
-	errResp := api.ErrorResponse{Message: err.Error()}
-	response.WriteHeaderAndEntity(statusCode, errResp)
+func ResponseWithError(response *restful.Response, err error) {
+	switch err := err.(type) {
+	case *httperror.Error:
+		response.WriteHeaderAndEntity(err.Code, api.ErrorResponse{
+			Message: err.Error(),
+			Reason:  err.Reason,
+		})
+	case error:
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, api.ErrorResponse{
+			Message: err.Error(),
+			Reason:  httperror.ReasonInternal,
+		})
+	default:
+		// should not come here
+		logdog.Fatalf("%s is an unknown error type", err)
+	}
 }
 
 // ResponseWithList responses list with metadata.
@@ -53,25 +68,81 @@ func ResponseWithList(list interface{}, total int) api.ListResponse {
 	}
 }
 
-// QueryParamsFromRequest reads the query params from request body.
-func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams) {
+// QueryParamsFromRequest reads the query params from request.
+func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err error) {
 	limitStr := request.QueryParameter(api.Limit)
 	startStr := request.QueryParameter(api.Start)
+	filterStr := request.QueryParameter(api.Filter)
 
 	if limitStr != "" {
-		qp.Limit = Atoi(limitStr)
+		qp.Limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Limit, "number", "string")
+		}
 	}
 	if startStr != "" {
-		qp.Start = Atoi(startStr)
+		qp.Start, err = strconv.Atoi(startStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Start, "number", "string")
+		}
 	}
-	return qp
+	if filterStr != "" {
+		// Only support one condition to filter.
+		filterParts := strings.Split(filterStr, "=")
+		if len(filterParts) != 2 {
+			return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+		}
+
+		filter := map[string]interface{}{
+			filterParts[0]: bson.M{"$regex": filterParts[1]},
+		}
+		qp.Filter = filter
+	}
+
+	return qp, nil
 }
 
-// Atoi casts string to int.
-func Atoi(str string) (i int) {
-	i, err := strconv.Atoi(str)
-	if err != nil {
-		logdog.Errorf("Fail to cast string to int as %s", err.Error())
+// RecordCountQueryParamsFromRequest reads the query params of pipeline record count from request.
+func RecordCountQueryParamsFromRequest(request *restful.Request) (recentCount, recentSuccessCount, recentFailedCount int, err error) {
+	recentCountStr := request.QueryParameter(api.RecentPipelineRecordCount)
+	recentSuccessCountStr := request.QueryParameter(api.RecentSuccessPipelineRecordCount)
+	recentFailedCountStr := request.QueryParameter(api.RecentFailedPipelineRecordCount)
+
+	if recentCountStr != "" {
+		recentCount, err = strconv.Atoi(recentCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentPipelineRecordCount, "number", "string")
+		}
 	}
-	return i
+	if recentSuccessCountStr != "" {
+		recentSuccessCount, err = strconv.Atoi(recentSuccessCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentSuccessPipelineRecordCount, "number", "string")
+		}
+	}
+	if recentFailedCountStr != "" {
+		recentFailedCount, err = strconv.Atoi(recentFailedCountStr)
+		if err != nil {
+			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentFailedPipelineRecordCount, "number", "string")
+		}
+	}
+
+	return
+}
+
+// DownloadQueryParamsFromRequest reads the query param whether download pipeline record logs from request.
+func DownloadQueryParamsFromRequest(request *restful.Request) (bool, error) {
+	downloadStr := request.QueryParameter(api.Download)
+
+	if downloadStr != "" {
+		download, err := strconv.ParseBool(downloadStr)
+		if err != nil {
+			logdog.Errorf("Download param's value is %s", downloadStr)
+			return false, httperror.ErrorParamTypeError.Format(api.Download, "bool", "string")
+		}
+
+		return download, nil
+	}
+
+	return false, nil
 }
