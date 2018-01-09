@@ -19,8 +19,12 @@ package manager
 import (
 	"fmt"
 
+	"github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2"
+
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/store"
+	"github.com/caicloud/cyclone/pkg/store"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // PipelineRecordManager represents the interface to manage pipeline record.
@@ -31,6 +35,7 @@ type PipelineRecordManager interface {
 	UpdatePipelineRecord(pipelineRecordID string, pipelineRecord *api.PipelineRecord) (*api.PipelineRecord, error)
 	DeletePipelineRecord(pipelineRecordID string) error
 	ClearPipelineRecordsOfPipeline(pipelineID string) error
+	GetPipelineRecordLogs(pipelineRecordID string) (string, error)
 }
 
 // pipelineRecordManager represents the manager for pipeline record.
@@ -57,19 +62,25 @@ func (m *pipelineRecordManager) GetPipelineRecord(pipelineRecordID string) (*api
 	return m.dataStore.FindPipelineRecordByID(pipelineRecordID)
 }
 
-// ListPipelineRecords finds the pipeline records by pipelineID.
+// ListPipelineRecords finds the pipeline records by pipeline id.
 func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipelineName string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
+		}
 		return nil, 0, err
 	}
 
 	pipeline, err := m.dataStore.FindPipelineByName(project.ID, pipelineName)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, 0, httperror.ErrorContentNotFound.Format(pipelineName)
+		}
 		return nil, 0, err
 	}
 
-	return m.dataStore.FindPipelineRecordsByPipelineID(pipeline.ID, queryParams)
+	return m.dataStore.FindRecordsWithPaginationByPipelineID(pipeline.ID, queryParams.Filter, queryParams.Start, queryParams.Limit)
 }
 
 // UpdatePipelineRecord updates pipeline record by id.
@@ -101,5 +112,42 @@ func (m *pipelineRecordManager) DeletePipelineRecord(pipelineRecordID string) er
 
 // ClearPipelineRecordsOfPipeline deletes all the pipeline records of one pipeline by pipeline id.
 func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string) error {
-	return m.dataStore.DeletePipelineRecordsByPipelineID(pipelineID)
+	ds := m.dataStore
+
+	pipeline, err := ds.FindPipelineByID(pipelineID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the records related to this pipeline.
+	records, _, err := ds.FindPipelineRecordsByPipelineID(pipelineID, api.QueryParams{})
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		if err := ds.DeletePipelineByID(record.ID); err != nil {
+			return fmt.Errorf("Fail to delete the record %s for pipeline %s as %s", record.ID, pipeline.Name, err.Error())
+		}
+	}
+
+	return nil
+}
+
+// GetPipelineRecordLogs gets the pipeline record logs by id.
+func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (string, error) {
+	pipelineRecord, err := m.GetPipelineRecord(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
+	logdog.Debugf("Pipeline record is %s", pipelineRecord)
+
+	status := pipelineRecord.Status
+	if status == api.Pending || status == api.Running {
+		return "", fmt.Errorf("Can not get the logs as pipeline record %s is %s, please try after it finishes",
+			pipelineRecordID, status)
+	}
+
+	return "", fmt.Errorf("Not implemented")
 }

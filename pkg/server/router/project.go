@@ -27,13 +27,14 @@ import (
 // createProject handles the request to create a project.
 func (router *router) createProject(request *restful.Request, response *restful.Response) {
 	project := &api.Project{}
-	if err := httputil.ReadEntityFromRequest(request, response, project); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, project); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	createdProject, err := router.projectManager.CreateProject(project)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -46,7 +47,7 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 
 	project, err := router.projectManager.GetProject(name)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -55,10 +56,15 @@ func (router *router) getProject(request *restful.Request, response *restful.Res
 
 // listProjects handles the request to list projects.
 func (router *router) listProjects(request *restful.Request, response *restful.Response) {
-	queryParams := httputil.QueryParamsFromRequest(request)
+	queryParams, err := httputil.QueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
 	projects, count, err := router.projectManager.ListProjects(queryParams)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -69,13 +75,14 @@ func (router *router) listProjects(request *restful.Request, response *restful.R
 func (router *router) updateProject(request *restful.Request, response *restful.Response) {
 	name := request.PathParameter(projectPathParameterName)
 	project := &api.Project{}
-	if err := httputil.ReadEntityFromRequest(request, response, project); err != nil {
+	if err := httputil.ReadEntityFromRequest(request, project); err != nil {
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	updatedProject, err := router.projectManager.UpdateProject(name, project)
 	if err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
@@ -87,9 +94,48 @@ func (router *router) deleteProject(request *restful.Request, response *restful.
 	name := request.PathParameter(projectPathParameterName)
 
 	if err := router.projectManager.DeleteProject(name); err != nil {
-		httputil.ResponseWithError(response, http.StatusInternalServerError, err)
+		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
+}
+
+// listRepos handles the request to list repositories.
+func (router *router) listRepos(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	repos, err := router.projectManager.ListRepos(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(repos, len(repos)))
+}
+
+// listBranches handles the request to list branches for SCM repositories.
+func (router *router) listBranches(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+	repo := request.QueryParameter(api.Repo)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	branches, err := router.projectManager.ListBranches(name, repo)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(branches, len(branches)))
 }

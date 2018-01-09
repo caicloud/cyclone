@@ -19,9 +19,13 @@ package manager
 import (
 	"fmt"
 
+	log "github.com/zoumo/logdog"
+	"gopkg.in/mgo.v2"
+
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/store"
-	"github.com/zoumo/logdog"
+	"github.com/caicloud/cyclone/pkg/scm"
+	"github.com/caicloud/cyclone/pkg/store"
+	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // ProjectManager represents the interface to manage project.
@@ -31,6 +35,8 @@ type ProjectManager interface {
 	ListProjects(queryParams api.QueryParams) ([]api.Project, int, error)
 	UpdateProject(projectName string, newProject *api.Project) (*api.Project, error)
 	DeleteProject(projectName string) error
+	ListRepos(projectName string) ([]api.Repository, error)
+	ListBranches(projectName string, repo string) ([]string, error)
 }
 
 // projectManager represents the manager for project.
@@ -54,12 +60,30 @@ func NewProjectManager(dataStore *store.DataStore, pipelineManager PipelineManag
 
 // CreateProject creates a project.
 func (m *projectManager) CreateProject(project *api.Project) (*api.Project, error) {
+	projectName := project.Name
+	if _, err := m.GetProject(projectName); err == nil {
+		return nil, httperror.ErrorAlreadyExist.Format(projectName)
+	}
+
+	if err := scm.GenerateSCMToken(project.SCM); err != nil {
+		return nil, err
+	}
+
 	return m.dataStore.CreateProject(project)
 }
 
 // GetProject gets the project by name.
 func (m *projectManager) GetProject(projectName string) (*api.Project, error) {
-	return m.dataStore.FindProjectByName(projectName)
+	project, err := m.dataStore.FindProjectByName(projectName)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(projectName)
+		}
+
+		return nil, err
+	}
+
+	return project, nil
 }
 
 // ListProjects lists all projects of one owner.
@@ -69,10 +93,15 @@ func (m *projectManager) ListProjects(queryParams api.QueryParams) ([]api.Projec
 
 // UpdateProject updates the project by name.
 func (m *projectManager) UpdateProject(projectName string, newProject *api.Project) (*api.Project, error) {
-	project, err := m.dataStore.FindProjectByName(projectName)
+	project, err := m.GetProject(projectName)
 	if err != nil {
 		return nil, err
 	}
+
+	if err := scm.GenerateSCMToken(newProject.SCM); err != nil {
+		return nil, err
+	}
+	project.SCM = newProject.SCM
 
 	// Update the properties of the project.
 	// TODO (robin) Whether need a method for this merge?
@@ -88,6 +117,8 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 		project.Owner = newProject.Owner
 	}
 
+	project.Worker = newProject.Worker
+
 	if err = m.dataStore.UpdateProject(project); err != nil {
 		return nil, err
 	}
@@ -97,21 +128,53 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 
 // DeleteProject deletes the project by name.
 func (m *projectManager) DeleteProject(projectName string) error {
-	project, err := m.dataStore.FindProjectByName(projectName)
+	project, err := m.GetProject(projectName)
 	if err != nil {
 		return err
 	}
 
 	// Delete the pipelines in this project.
-	if err = m.pipelineManager.ClearPipelinesOfProject(project.ID); err != nil {
-		logdog.Errorf("Fail to delete all pipelines in the project %s as %s", projectName, err.Error())
+	if err = m.pipelineManager.ClearPipelinesOfProject(projectName); err != nil {
+		log.Errorf("Fail to delete all pipelines in the project %s as %s", projectName, err.Error())
 		return err
 	}
 
 	if err = m.dataStore.DeleteProjectByID(project.ID); err != nil {
-		logdog.Errorf("Fail to delete the project %s as %s", projectName, err.Error())
+		log.Errorf("Fail to delete the project %s as %s", projectName, err.Error())
 		return err
 	}
 
 	return nil
+}
+
+// ListRepos lists the SCM repos authorized for the project.
+func (m *projectManager) ListRepos(projectName string) ([]api.Repository, error) {
+	project, err := m.GetProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	scmConfig := project.SCM
+	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return sp.ListRepos(scmConfig)
+}
+
+// ListBranches lists the branches of the SCM repos authorized for the project.
+func (m *projectManager) ListBranches(projectName string, repo string) ([]string, error) {
+	project, err := m.GetProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	scmConfig := project.SCM
+	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return sp.ListBranches(scmConfig, repo)
 }
