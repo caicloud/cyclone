@@ -19,9 +19,9 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"time"
-
-	"k8s.io/client-go/pkg/util/wait"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/caicloud/cyclone/api/rest"
 	"github.com/caicloud/cyclone/cloud"
@@ -69,11 +69,17 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 		swagger.InstallSwaggerService(config)
 	}
 
+	closing := make(chan struct{})
 	// init database
-	err := s.InitStore()
+	session, mclosed, err := store.Init(s.Config.MongoDBHost, s.Config.MongoGracePeriod, closing)
 	if err != nil {
 		return nil, err
 	}
+	// TODO (robin) Remove the old store and use the new one.
+	s.dbSession = session
+	newstore.Init(session)
+
+	go background(closing, mclosed)
 
 	// init event manager
 	err = s.initEventManager()
@@ -100,32 +106,6 @@ func (s *APIServer) InitLog() {
 	} else {
 		logdog.ApplyOptions(logdog.InfoLevel)
 	}
-}
-
-// InitStore init database connection. fix me: change function name
-func (s *APIServer) InitStore() error {
-	// init mongodb
-	var err error
-
-	// dail mongo session
-	// wait mongodb set up
-	wait.Poll(time.Second, s.Config.MongoGracePeriod, func() (bool, error) {
-		s.dbSession, err = mgo.Dial(s.Config.MongoDBHost)
-		return err == nil, nil
-	})
-	if err != nil {
-		logdog.Fatalf("Unable connect to mongodb addr %s", s.Config.MongoDBHost)
-		return err
-	}
-
-	logdog.Debugf("connect to mongodb addr: %s", s.Config.MongoDBHost)
-	s.dbSession.SetMode(mgo.Strong, true)
-
-	// TODO (robin) Remove the old store and use the new one.
-	store.Init(s.dbSession)
-	newstore.Init(s.dbSession)
-
-	return nil
 }
 
 // FIXME
@@ -184,4 +164,20 @@ func (s *PreparedAPIServer) StartLogServer() {
 	if err != nil {
 		log.Error(err.Error())
 	}
+}
+
+// background must be a daemon goroutine for Cyclone server.
+// It can catch system signal and send signal to other goroutine before program exits.
+func background(closing, mclosed chan struct{}) {
+	closed := []chan struct{}{mclosed}
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-sigs
+	log.Info("capture system signal, will close \"closing\" channel")
+	close(closing)
+	for _, c := range closed {
+		<-c
+	}
+	log.Info("exit the process with 0")
+	os.Exit(0)
 }

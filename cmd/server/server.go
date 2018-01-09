@@ -22,6 +22,8 @@ import (
 	"sort"
 
 	"gopkg.in/urfave/cli.v1"
+
+	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 )
 
 // NeverStop may be passed to Until to make it never stop.

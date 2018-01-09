@@ -53,10 +53,10 @@ func NewStore() *DataStore {
 	s := session.Copy()
 	return &DataStore{
 		s:                        s,
-		cloudCollection:          s.DB(defaultDBName).C(cloudCollection),
-		projectCollection:        s.DB(defaultDBName).C(projectCollectionName),
-		pipelineCollection:       s.DB(defaultDBName).C(pipelineCollectionName),
-		pipelineRecordCollection: s.DB(defaultDBName).C(pipelineRecordCollectionName),
+		cloudCollection:          session.DB(defaultDBName).C(cloudCollection),
+		projectCollection:        session.DB(defaultDBName).C(projectCollectionName),
+		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
+		pipelineRecordCollection: session.DB(defaultDBName).C(pipelineRecordCollectionName),
 	}
 }
 
