@@ -174,7 +174,7 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 				filter := map[string]interface{}{
 					"status": oldapi.VersionHealthy,
 				}
-				recentSuccessVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentCount)
+				recentSuccessVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentSuccessCount)
 				if err != nil {
 					logdog.Error(err)
 				} else {
@@ -193,7 +193,7 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 				filter := map[string]interface{}{
 					"status": oldapi.VersionFailed,
 				}
-				recentFailedVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentCount)
+				recentFailedVersions, _, err := ds.FindRecentVersionsByServiceID(pipeline.ServiceID, filter, recentFailedCount)
 				if err != nil {
 					logdog.Error(err)
 				} else {
