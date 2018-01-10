@@ -863,14 +863,14 @@ const (
 
 // GetEventResponse is the response type for getevent request.
 type GetEventResponse struct {
-	Event Event `json:"event,omitempty"`
+	Event *Event `json:"event,omitempty"`
 	// Return the error message IFF not successful. This is used to provide user-facing errors.
 	ErrorMessage string `json:"error_msg,omitempty"`
 }
 
 // SetEvent is the request body for setevent request.
 type SetEvent struct {
-	Event Event `json:"event,omitempty"`
+	Event *Event `json:"event,omitempty"`
 }
 
 // SetEventResponse is the response type for setevent request.

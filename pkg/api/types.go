@@ -73,7 +73,7 @@ type EnvVar struct {
 // BuilderImage represents the image information of the builder.
 type BuilderImage struct {
 	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"image name of the builder"`
-	EnvVars []EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the builder"`
+	EnvVars []*EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the builder"`
 }
 
 // BuildStages represents the build stages of CI.
@@ -167,7 +167,7 @@ type ImageBuildInfo struct {
 // IntegrationTestStage represents the config of integration test stage.
 type IntegrationTestStage struct {
 	Config   *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
-	Services []Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	Services []*Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
 }
 
 // IntegrationTestConfig represents the config for integration test.
@@ -182,7 +182,7 @@ type Service struct {
 	Name    string   `bson:"name,omitempty" json:"name,omitempty" description:"name of the service"`
 	Image   string   `bson:"image,omitempty" json:"image,omitempty" description:"image name of the service"`
 	Command []string `bson:"command,omitempty" json:"command,omitempty" description:"list of commands to start the service"`
-	EnvVars []EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the service"`
+	EnvVars []*EnvVar `bson:"envVars,omitempty" json:"envVars,omitempty" description:"environment variables of the service"`
 }
 
 // ImageReleaseStage represents the config of image release stage.

@@ -22,6 +22,7 @@ import (
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
+	"github.com/caicloud/cyclone/event"
 	eventmanager "github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
@@ -50,20 +51,9 @@ func getEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
+	event, err := event.LoadEventFromPipelineRecord(eventID)
 	if err != nil {
-		message := "Unable to get event from etcd"
-		log.Error(message, log.Fields{"event_id": eventID, "error": err})
-		getResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
-		return
-	}
-
-	var event api.Event
-	err = json.Unmarshal([]byte(sEvent), &event)
-	if err != nil {
-		message := "Unable to unmarshal event from etcd"
+		message := "Unable to get event from mongo"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		getResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
@@ -104,20 +94,9 @@ func setEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
+	event, err := event.LoadEventFromPipelineRecord(eventID)
 	if err != nil {
-		message := "Unable to get event from etcd"
-		log.Error(message, log.Fields{"event_id": eventID, "error": err})
-		setResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
-		return
-	}
-
-	var event api.Event
-	err = json.Unmarshal([]byte(sEvent), &event)
-	if err != nil {
-		message := "Unable to unmarshal event from etcd"
+		message := "Unable to get event from mongo"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
