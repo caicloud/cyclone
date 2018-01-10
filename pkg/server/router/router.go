@@ -225,7 +225,17 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream
 	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
 		To(router.getPipelineRecordLogStream).
-		Doc("getPipelineRecordLogStream get log stream of version").
+		Doc("Get log stream of pipeline record").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
+
+	// TODO (robin) gorilla/websocket only supports GET method. This a workaround as this API is only used by workers,
+	// but still need a better way.
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/stagelogstream
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordID}/stagelogstream").
+		To(router.receivePipelineRecordLogStream).
+		Doc("Receive log stream of pipeline record from worker").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
 		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
