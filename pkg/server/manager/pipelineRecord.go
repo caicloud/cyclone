@@ -69,9 +69,14 @@ func NewPipelineRecordManager(dataStore *store.DataStore) (PipelineRecordManager
 	return &pipelineRecordManager{dataStore}, nil
 }
 
-// CreatePipelineRecord creates a pipeline record.
+// CreatePipelineRecord triggers the pipeline to create a pipeline record.
 func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*api.PipelineRecord, error) {
 	pipeline, err := m.dataStore.FindPipelineByID(pipelineRecord.PipelineID)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := m.dataStore.FindProjectByID(pipeline.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +86,26 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 		return nil, err
 	}
 
-	// Create the logs folder for pipelie record.
+	// Create the build outputs for pipelie record, such logs, etc.
 	logsFolder := strings.Join([]string{cycloneHome, pipeline.ProjectID, pipeline.ID, createdPipelineRecord.ID, logsFolderName}, string(os.PathSeparator))
 	if !fileutil.DirExists(logsFolder) {
 		if err := os.MkdirAll(logsFolder, os.ModePerm); err != nil {
 			log.Errorf("fail to make the folder %s as %s", logsFolder, err.Error())
 			return nil, err
 		}
+	}
+
+	// Create the event for this pipeline record.
+	event := &api.Event{
+		ID:             pipelineRecord.ID,
+		Project:        project,
+		Pipeline:       pipeline,
+		PipelineRecord: pipelineRecord,
+	}
+
+	if _, err := m.dataStore.CreateEvent(event); err != nil {
+		log.Errorf("fail to create the event %s as %s", event.ID, err.Error())
+		return nil, err
 	}
 
 	return createdPipelineRecord, nil

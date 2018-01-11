@@ -46,7 +46,6 @@ func Initialize() {
 	registerWebhookAPIs(ws)
 	registerHealthCheckAPIs(ws)
 	registerServiceAPIs(ws)
-	registerEventAPIs(ws)
 	registerVersionAPIs(ws)
 	// TODO Register project API.
 	//registerProjectAPIs(ws)
@@ -175,22 +174,6 @@ func registerVersionAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("version_id", "identifier of the version").DataType("string")).
 		Writes(api.VersionConcelResponse{}))
 
-}
-
-// registerEventAPIs registers event related endpoints.
-func registerEventAPIs(ws *restful.WebService) {
-	ws.Route(ws.GET("/events/{event_id}").
-		To(getEvent).
-		Doc("get a event info").
-		Param(ws.PathParameter("event_id", "identifier of the event").DataType("string")).
-		Writes(api.GetEventResponse{}))
-
-	ws.Route(ws.PUT("/events/{event_id}").
-		To(setEvent).
-		Doc("set a event info").
-		Param(ws.PathParameter("event_id", "identifier of the event").DataType("string")).
-		Reads(api.SetEvent{}).
-		Writes(api.SetEventResponse{}))
 }
 
 // registerResourceAPIs registers resource related endpoints.

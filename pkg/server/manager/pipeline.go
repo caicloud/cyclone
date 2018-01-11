@@ -24,6 +24,7 @@ import (
 	"gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/remote"
@@ -37,7 +38,6 @@ type PipelineManager interface {
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
-	PerformPipeline(projectName string, pipelineName string, performParams *api.PipelinePerformParams) error
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -45,6 +45,9 @@ type pipelineManager struct {
 	dataStore             *store.DataStore
 	remoteManager         *remote.Manager
 	pipelineRecordManager PipelineRecordManager
+
+	// TODO (robin) Move event manager to pipeline record manager.
+	eventManager event.EventManager
 }
 
 // NewPipelineManager creates a pipeline manager.
@@ -59,7 +62,9 @@ func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager Pipeli
 		return nil, fmt.Errorf("Fail to new pipeline manager as pipeline record is nil")
 	}
 
-	return &pipelineManager{dataStore, remoteManager, pipelineRecordManager}, nil
+	eventManager := event.NewEventManager(dataStore)
+
+	return &pipelineManager{dataStore, remoteManager, pipelineRecordManager, eventManager}, nil
 }
 
 // CreatePipeline creates a pipeline.
@@ -249,16 +254,4 @@ func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 	}
 
 	return nil
-}
-
-// PerformPipeline performs the pipeline with params.
-func (m *pipelineManager) PerformPipeline(projectName string, pipelineName string, performParams *api.PipelinePerformParams) error {
-	// Find the pipeline in the project.
-	_, err := m.GetPipeline(projectName, pipelineName)
-	if err != nil {
-		return err
-	}
-
-	// TODO (robin) Need to implement the perform of pipeline.
-	return fmt.Errorf("Pipeline perform function is not implemented")
 }

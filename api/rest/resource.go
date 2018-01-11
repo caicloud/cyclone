@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
 )
