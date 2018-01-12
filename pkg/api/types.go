@@ -342,13 +342,36 @@ type ErrorResponse struct {
 	Details string `json:"details,omitempty"`
 }
 
+// PipelineStageName represents the name of stages in pipeline.
+type PipelineStageName string
+
+const (
+	// CodeCheckoutStageName represents the name of code checkout stage.
+	CodeCheckoutStageName PipelineStageName = "codeCheckout"
+
+	// UnitTestStageName represents the name of unit test stage.
+	UnitTestStageName PipelineStageName = "unitTest"
+
+	// PackageStageName represents the name of package stage.
+	PackageStageName PipelineStageName = "package"
+
+	// ImageBuildStageName represents the name of image build stage.
+	ImageBuildStageName PipelineStageName = "imageBuild"
+
+	// IntegrationTestStageName represents the name of integration test stage.
+	IntegrationTestStageName PipelineStageName = "integrationTest"
+
+	// ImageReleaseStageName represents the name of image release stage.
+	ImageReleaseStageName PipelineStageName = "imageRelease"
+)
+
 // PipelinePerformParams the params to perform the pipeline.
 type PipelinePerformParams struct {
-	Ref          string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Name         string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
-	Description  string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
-	CreateSCMTag bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
-	Stages       []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
+	Ref          string              `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Name         string              `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
+	Description  string              `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
+	CreateSCMTag bool                `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
+	Stages       []PipelineStageName `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }
 
 // ScmToken represents a set of token informations of the projcet.

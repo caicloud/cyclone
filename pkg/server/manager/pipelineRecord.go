@@ -196,8 +196,25 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 
 	var logs []byte
 	for _, stage := range pipelineRecord.PerformParams.Stages {
-		logFile := stage + logFileSuffix
+		// 'unitTest' stage in merged into 'package' stage, so no need to get the log for this stage.
+		if stage == api.UnitTestStageName {
+			continue
+		}
+
+		logFile := fmt.Sprintf("%s%s", stage, logFileSuffix)
 		logFilePath := strings.Join([]string{logsFolder, logFile}, string(os.PathSeparator))
+
+		// Check the existence of the log file for this stage. If does not exist, return error when pipeline record is success,
+		// otherwise directly return the got logs as pipeline record is failed or aborted.
+		if !fileutil.FileExists(logFilePath) {
+			if pipelineRecord.Status == api.Success {
+				log.Errorf("log file %s does not exist", logFilePath)
+				return "", fmt.Errorf("log file for stage %s does not exist", stage)
+			}
+
+			return string(logs), nil
+		}
+
 		// TODO (robin) Read the whole file, need to consider the memory consumption when the log file is too huge.
 		log, err := ioutil.ReadFile(logFilePath)
 		if err != nil {
