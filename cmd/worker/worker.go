@@ -1,15 +1,22 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"sort"
 
+	"github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
 )
 
 // newCliApp create a new server cli app
 func newCliApp() *cli.App {
+	// Log to standard error instead of files.
+	flag.Set("logtostderr", "true")
+
+	// Flushes all pending log I/O.
+	defer glog.Flush()
 
 	app := cli.NewApp()
 
