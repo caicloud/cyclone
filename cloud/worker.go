@@ -37,11 +37,6 @@ const (
 	RegistryUsername = "REGISTRY_USERNAME"
 	RegistryPassword = "REGISTRY_PASSWORD"
 
-	// Clair
-
-	ClairDisable = "CLAIR_DISABLE"
-	ClairServer  = "CLAIR_SERVER"
-
 	WorkerImage = "WORKER_IMAGE"
 
 	// Github
@@ -83,10 +78,6 @@ type WorkerEnvs struct {
 	RegistryUsername string `json:"registryUsername,omitempty"`
 	RegistryPassword string `json:"registryPassword,omitempty"`
 
-	// Clair options
-	ClairDisable bool
-	ClairServer  string
-
 	// github
 	GithubClient string
 	GithubSecret string
@@ -104,8 +95,7 @@ type WorkerEnvs struct {
 // NewWorkerEnvs creates a new WorkerEnvs
 func NewWorkerEnvs() *WorkerEnvs {
 	return &WorkerEnvs{
-		ClairDisable: false,
-		WorkerImage:  "cargo.caicloud.io/caicloud/cyclone-worker:v1221",
+		WorkerImage: "cargo.caicloud.io/caicloud/cyclone-worker:v1221",
 	}
 }
 
@@ -147,18 +137,6 @@ func (env *WorkerEnvs) AddFlags(app *cli.App) {
 			Destination: &env.RegistryPassword,
 		},
 
-		cli.BoolFlag{
-			Name:        "disable-clair",
-			Usage:       "disable clair security check",
-			EnvVar:      ClairDisable,
-			Destination: &env.ClairDisable,
-		},
-		cli.StringFlag{
-			Name:        "clair-server",
-			Usage:       "clair server host",
-			EnvVar:      ClairServer,
-			Destination: &env.ClairServer,
-		},
 		// Github
 		cli.StringFlag{
 			Name:        "github-client",
