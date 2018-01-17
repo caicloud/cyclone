@@ -25,7 +25,6 @@ function cleanup {
     unset REGISTRY_USERNAME
     unset REGISTRY_PASSWORD
     unset WORKER_IMAGE
-    unset CLAIR_DISABLE
     unset DOCKER_HOST
     unset HOST_IP
 
@@ -56,7 +55,6 @@ function run_e2e {
     export HOST_IP="$(ifconfig | grep "inet " | grep -v 127.0.0.1 | tail -1 | cut -d " " -f 2 )"
 
     export DEBUG=true
-    export CLAIR_DISABLE=true
     export MONGODB_HOST=127.0.0.1:27017
     export KAFKA_HOST=127.0.0.1:9092
     export ETCD_HOST=http://127.0.0.1:2379

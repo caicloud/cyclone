@@ -16,20 +16,14 @@ Cyclone has been integrated with a variety of VCS tools, such as git, svn, etc. 
 	<img src="./list_services.png" alt="list_services" width="500">
 </div>
 
-## Continus integration and security scanning
+## Continus integration
 
-All of the processes in workflow are visible. "prebuild" compiles the executable files. "build" builds the published image. "integration" executes the integrated test. "publish" publishes the image and scans the vulnerabilities. "post build" does some relating operations after image published. "deploy" uses the published image to deploy a application to Kubernetes or any other container cloud platform. Cyclone would send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences caused by environment. 
+All of the processes in workflow are visible. "prebuild" compiles the executable files. "build" builds the published image. "integration" executes the integrated test. "publish" publishes the image. "post build" does some relating operations after image published. "deploy" uses the published image to deploy a application to Kubernetes or any other container cloud platform. Cyclone would send email to notify the result of the workflow. All of the processes are shipped by container. It will wipe off the differences caused by environment. 
 
 - Log of the workflow
 
 <div align="center">
 	<img src="./logs.png" alt="logs" width="500">
-</div>
-
-- Security scanning
-
-<div align="center">
-	<img src="./security.png" alt="security" width="500">
 </div>
 
 - Sending the build log via email 

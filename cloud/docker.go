@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -414,8 +413,6 @@ func buildDockerEnv(id string, opts WorkerOptions) []string {
 		buildEnv(RegistryLocation, opts.WorkerEnvs.RegistryLocation),
 		buildEnv(RegistryUsername, opts.WorkerEnvs.RegistryUsername),
 		buildEnv(RegistryPassword, opts.WorkerEnvs.RegistryPassword),
-		buildEnv(ClairDisable, strconv.FormatBool(opts.WorkerEnvs.ClairDisable)),
-		buildEnv(ClairServer, opts.WorkerEnvs.ClairServer),
 		buildEnv(GitlabURL, opts.WorkerEnvs.GitlabURL),
 		buildEnv(LogServer, opts.WorkerEnvs.LogServer),
 		buildEnv(WorkerImage, opts.WorkerEnvs.WorkerImage),
