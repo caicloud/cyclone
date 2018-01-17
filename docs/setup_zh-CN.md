@@ -27,8 +27,6 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-这样 Cyclone 已经启动了。使用 docker compose 的方式来启动时，clair 可能会在 postgres 之前启动，这样会出现错误，因为 clair 是依赖于 postgres。如果出现这种错误，需要手动执行 `docker start cyclone_clair_1`。
-
 - 使用 kubectl 方式，需要一些 YAML 文件。你可以在 cirlce/scripts/k8s 目录下查看这些文件。然后执行下面这些命令:
 
 ```
@@ -43,11 +41,6 @@ kubectl --namespace=cyclone create -f mongo.yaml
 kubectl --namespace=cyclone create -f mongo-svc.yaml
 kubectl --namespace=cyclone create -f etcd.yaml
 kubectl --namespace=cyclone create -f etcd-svc.yaml
-kubectl --namespace=cyclone create secret generic clairsecret --from-file=config.yaml
-kubectl --namespace=cyclone create -f postgres.yaml
-kubectl --namespace=cyclone create -f postgres-svc.yaml
-kubectl --namespace=cyclone create -f clair.yaml
-kubectl --namespace=cyclone create -f clair-svc.yaml
 kubectl --namespace=cyclone create -f cyclone.yaml
 kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
@@ -73,4 +66,3 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 | ETCD_HOST            | etcd的服务器地址，默认时127.0.0.1:2379             |
 | CYCLONE_SERVER       | Cyclone-Server的访问地址，默认是http://localhost:7099 |
 | WORKER_IMAGE         | Cyclone-Worker容器的镜像名，默认是cargo.caicloud.io/caicloud/cyclone-worker:latest |
-| CLAIR_SERVER         | clair的服务器地址，默认是127.0.0.1:6060            |

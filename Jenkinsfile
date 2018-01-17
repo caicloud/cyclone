@@ -35,7 +35,6 @@ podTemplate(
             args: '',
             envVars: [
                 containerEnvVar(key: 'DEBUG', value: 'true'),
-                containerEnvVar(key: 'CLAIR_DISABLE', value: 'true'),
                 containerEnvVar(key: 'MONGODB_HOST', value: '127.0.0.1:27017'),
                 containerEnvVar(key: 'KAFKA_HOST', value: '127.0.0.1:9092'),
                 containerEnvVar(key: 'ETCD_HOST', value: 'http://127.0.0.1:2379'),

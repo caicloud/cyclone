@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -471,14 +470,6 @@ func buildK8SEnv(id string, opts WorkerOptions) []apiv1.EnvVar {
 		{
 			Name:  RegistryPassword,
 			Value: opts.WorkerEnvs.RegistryPassword,
-		},
-		{
-			Name:  ClairDisable,
-			Value: strconv.FormatBool(opts.WorkerEnvs.ClairDisable),
-		},
-		{
-			Name:  ClairServer,
-			Value: opts.WorkerEnvs.ClairServer,
 		},
 		{
 			Name:  GitlabURL,
