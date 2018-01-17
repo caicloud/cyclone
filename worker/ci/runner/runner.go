@@ -21,12 +21,9 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/docker"
 	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/worker/ci/parser"
-	"github.com/caicloud/cyclone/worker/clair"
 	steplog "github.com/caicloud/cyclone/worker/log"
 )
 
@@ -111,6 +108,12 @@ func (b *Build) walk(node parser.Node) (err error) {
 		case parser.NodeIntegration:
 			// Record image name
 			createContainerOptions := toBuildContainerConfig(node, b, parser.NodeIntegration)
+
+			// The tag of integration image should be appended.
+			if tagname, ok := b.event.Data["tag-name"]; ok {
+				createContainerOptions.Config.Image = createContainerOptions.Config.Image + ":" + tagname.(string)
+			}
+
 			// Encode the commands to one line script.
 			Encode(createContainerOptions, node)
 
@@ -202,11 +205,6 @@ func (b *Build) PublishImage() (err error) {
 
 	// Now image is pushed to registry successfully.
 	b.status |= pushImageSuccess
-
-	disableClair := osutil.GetBoolEnv(cloud.ClairDisable, false)
-	if !disableClair {
-		clair.Analysis(b.event, b.dockerManager)
-	}
 	steplog.InsertStepLog(b.event, steplog.PushImage, steplog.Finish, nil)
 	return nil
 }

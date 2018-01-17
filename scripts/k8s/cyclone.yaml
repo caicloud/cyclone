@@ -50,8 +50,6 @@ spec:
           value: cargo.caicloud.io/caicloud/cyclone-worker:latest
         - name: LOG_SERVER
           value: ws://192.168.10.102:30070/ws
-        - name: CLAIR_SERVER
-          value: http://192.168.10.102:30060
         image: cargo.caicloud.io/caicloud/cyclone-server:latest
         imagePullPolicy: IfNotPresent
         name: cyclone
