@@ -19,16 +19,15 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os/signal"
 	"os"
+	"os/signal"
 	"syscall"
 
 	"github.com/caicloud/cyclone/api/rest"
 	"github.com/caicloud/cyclone/cloud"
-	"github.com/caicloud/cyclone/etcd"
-	"github.com/caicloud/cyclone/event"
 	loghttp "github.com/caicloud/cyclone/http"
 	"github.com/caicloud/cyclone/kafka"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/store"
@@ -107,7 +106,6 @@ func (s *APIServer) InitLog() {
 
 // FIXME
 func (s *APIServer) initEventManager() error {
-	etcd.Init([]string{s.Config.ETCDHost})
 	event.Init(s.WorkerOptions, s.Config.CloudAutoDiscovery)
 
 	return nil

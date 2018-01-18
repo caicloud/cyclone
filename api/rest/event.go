@@ -17,12 +17,10 @@ limitations under the License.
 package rest
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/etcd"
-	eventmanager "github.com/caicloud/cyclone/event"
+	eventmanager "github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
 	log "github.com/zoumo/logdog"
@@ -49,9 +47,10 @@ func getEvent(request *restful.Request, response *restful.Response) {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
 		return
 	}
+	ds := store.NewStore()
+	defer ds.Close()
 
-	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
+	event, err := ds.GetEventByID(eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
@@ -60,17 +59,7 @@ func getEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	var event api.Event
-	err = json.Unmarshal([]byte(sEvent), &event)
-	if err != nil {
-		message := "Unable to unmarshal event from etcd"
-		log.Error(message, log.Fields{"event_id": eventID, "error": err})
-		getResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, getResponse)
-		return
-	}
-
-	getResponse.Event = event
+	getResponse.Event = *event
 	response.WriteHeaderAndEntity(http.StatusAccepted, getResponse)
 }
 
@@ -104,20 +93,11 @@ func setEvent(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	etcdClient := etcd.GetClient()
-	sEvent, err := etcdClient.Get(eventmanager.EventsUnfinished + eventID)
+	ds := store.NewStore()
+	defer ds.Close()
+	event, err := ds.GetEventByID(eventID)
 	if err != nil {
 		message := "Unable to get event from etcd"
-		log.Error(message, log.Fields{"event_id": eventID, "error": err})
-		setResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
-		return
-	}
-
-	var event api.Event
-	err = json.Unmarshal([]byte(sEvent), &event)
-	if err != nil {
-		message := "Unable to unmarshal event from etcd"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
@@ -132,28 +112,14 @@ func setEvent(request *restful.Request, response *restful.Response) {
 	event.ErrorMessage = setEvent.Event.ErrorMessage
 
 	// Write service/version to mongo.
-	ds := store.NewStore()
-	defer ds.Close()
-
 	if "" != event.Service.ServiceID && "" == event.Version.VersionID {
 		ds.UpsertServiceDocument(&event.Service)
 	} else if "" != event.Version.VersionID {
 		ds.UpdateVersionDocument(event.Version.VersionID, setEvent.Event.Version)
 	}
 
-	eventJSON, err := json.Marshal(event)
-	if err != nil {
-		message := "Unable to marshal event from etcd"
-		log.Error(message, log.Fields{"event_id": eventID, "error": err})
-		setResponse.ErrorMessage = message
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)
-		return
-	}
-
-	log.Infof("set etcd: %s", string(eventJSON))
-	err = etcdClient.Set(eventmanager.EventsUnfinished+eventID, string(eventJSON))
-	if err != nil {
-		message := "Unable to set event to etcd"
+	if err = eventmanager.UpdateEvent(event); err != nil {
+		message := "Unable to update event"
 		log.Error(message, log.Fields{"event_id": eventID, "error": err})
 		setResponse.ErrorMessage = message
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, setResponse)

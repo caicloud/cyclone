@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"

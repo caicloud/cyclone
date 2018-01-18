@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"sort"
 
+	"github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
 
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
@@ -42,6 +44,8 @@ func RunServer(opts *ServerOptions, stopCh <-chan struct{}) error {
 
 // newCliApp create a new server cli app
 func newCliApp() *cli.App {
+	flag.Set("logtostderr", "true")
+	defer glog.Flush()
 
 	app := cli.NewApp()
 
