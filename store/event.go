@@ -40,7 +40,7 @@ var (
 	// outTimeout represents the timeout for event to keep "out" status.
 	// After the event is out, then its status will be "handling" after it starts to be handled,
 	// otherwise, it will be re-enqueued and its status will change back to "in".
-	outTimeout, _ = time.ParseDuration("-3m")
+	outTimeout = -3 * time.Minute
 )
 
 // CreateEvent creates the event with the initial status `in`.
@@ -117,7 +117,7 @@ func (d *DataStore) ResetEvent(event *api.Event) error {
 		intervalNum = retryThreshold
 	}
 
-	event.InTime = event.InTime.Add(time.Duration(time.Duration(intervalNum) * retryInterval))
+	event.InTime = event.InTime.Add(time.Duration(intervalNum) * retryInterval)
 
 	query := bson.M{"event_id": event.EventID}
 
