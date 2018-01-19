@@ -18,7 +18,6 @@ package common
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,9 +29,7 @@ import (
 
 	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cloud"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/osutil"
-	"github.com/coreos/etcd/client"
 	log "github.com/zoumo/logdog"
 )
 
@@ -246,29 +243,6 @@ func Cleanup() error {
 	dbSession.SetMode(mgo.Strong, true)
 
 	err = dbSession.DB("cyclone").DropDatabase()
-	if err != nil {
-		return err
-	}
-
-	// clean up etcd
-	etcdHost := osutil.GetStringEnv(server.ETCDHost, "http://127.0.0.1:2379")
-	cfg := client.Config{
-		Endpoints: []string{etcdHost},
-		Transport: client.DefaultTransport,
-		// Set timeout per request to fail fast when the target endpoint is unavailable.
-		HeaderTimeoutPerRequest: time.Second * 5,
-	}
-
-	c, err := client.New(cfg)
-	if err != nil {
-		log.Fatalf("connect to etcd err: %v", err)
-		return err
-	}
-	ctx := context.Background()
-
-	kapi := client.NewKeysAPI(c)
-	kapi.Delete(ctx, event.EventsUnfinished, &client.DeleteOptions{Dir: true, Recursive: true})
-	_, err = kapi.Set(ctx, event.EventsUnfinished, "", &client.SetOptions{Dir: true})
 	if err != nil {
 		return err
 	}
