@@ -39,8 +39,6 @@ kubectl --namespace=cyclone create -f kafka.yaml
 kubectl --namespace=cyclone create -f kafka-svc.yaml
 kubectl --namespace=cyclone create -f mongo.yaml
 kubectl --namespace=cyclone create -f mongo-svc.yaml
-kubectl --namespace=cyclone create -f etcd.yaml
-kubectl --namespace=cyclone create -f etcd-svc.yaml
 kubectl --namespace=cyclone create -f cyclone.yaml
 kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
@@ -63,6 +61,5 @@ Environment variables:
 | GITLAB_CLIENT        | The client ID from Gitlab for oauth, default is null. |
 | GITLAB_SECRET        | The client secret from Gitlab for oauth, default is null. |
 | GITLAB_URL           | The address of gitlab, default is https://gitlab.com. |
-| ETCD_HOST            | The address of etcd, default is 127.0.0.1:2379. |
 | CYCLONE_SERVER       | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE         | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
