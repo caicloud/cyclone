@@ -24,9 +24,9 @@ import (
 	"github.com/zoumo/logdog"
 
 	oldapi "github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 
@@ -158,7 +158,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 		return
 	}
 
-	e, err := event.LoadEventFromEtcd(oldapi.EventID(pipelineRecord.ID))
+	e, err := event.GetEvent(pipelineRecord.ID)
 	if err != nil {
 		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
 		logdog.Error(err)
@@ -168,7 +168,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 
 	if e.Status == oldapi.EventStatusRunning {
 		e.Status = oldapi.EventStatusCancel
-		event.SaveEventToEtcd(e)
+		event.UpdateEvent(e)
 
 		pipelineRecord.Status = api.Aborted
 	}

@@ -25,8 +25,8 @@ import (
 
 	oldapi "github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/api/conversion"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/remote"
 	"github.com/caicloud/cyclone/store"

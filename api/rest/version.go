@@ -24,7 +24,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/event"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/store"
 	"github.com/emicklei/go-restful"
@@ -223,7 +223,7 @@ func cancelVersion(request *restful.Request, response *restful.Response) {
 
 	var cancelresponse api.VersionConcelResponse
 	log.Infof("user(%s) cance build version %s", userID, versionID)
-	e, err := event.LoadEventFromEtcd(api.EventID(versionID))
+	e, err := event.GetEvent(versionID)
 	if err != nil {
 		message := fmt.Sprintf("Unable to find event by versonID %v", versionID)
 		log.ErrorWithFields(message, log.Fields{"user_id": userID})
@@ -234,7 +234,7 @@ func cancelVersion(request *restful.Request, response *restful.Response) {
 
 	if e.Status == api.EventStatusRunning {
 		e.Status = api.EventStatusCancel
-		event.SaveEventToEtcd(e)
+		event.UpdateEvent(e)
 	} else {
 		message := fmt.Sprintf("the state of event is not running")
 		log.ErrorWithFields(message, log.Fields{"user_id": userID})

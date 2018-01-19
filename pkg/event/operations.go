@@ -17,17 +17,14 @@ limitations under the License.
 package event
 
 import (
-	"encoding/json"
-
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/etcd"
 	log "github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/store"
 )
 
 // SendCreateServiceEvent is a helper method which sends a create service event
-// to etcd and wait for the event to be acked.
+// in MongoDB and wait for the event to be acked.
 func SendCreateServiceEvent(service *api.Service) error {
 	eventID := api.EventID(service.ServiceID)
 
@@ -41,7 +38,7 @@ func SendCreateServiceEvent(service *api.Service) error {
 		return err
 	}
 
-	event := api.Event{
+	event := &api.Event{
 		EventID:   eventID,
 		Service:   *service,
 		Operation: CreateServiceOps,
@@ -54,18 +51,10 @@ func SendCreateServiceEvent(service *api.Service) error {
 		event.Data["namespace"] = project.Worker.Namespace
 	}
 
-	log.Infof("send create service event: %v", event)
+	log.Infof("create service event: %v", event)
 
-	etcdClient := etcd.GetClient()
-	jsEvent, err := json.Marshal(&event)
-	if err != nil {
-		log.Errorf("create service event marshal err: %v", err)
-		return err
-	}
-
-	err = etcdClient.Set(EventsUnfinished+string(eventID), string(jsEvent))
-	if err != nil {
-		log.Errorf("send create service event err: %v", err)
+	if _, err := ds.CreateEvent(event); err != nil {
+		log.Errorf("fail to create service event %s", eventID)
 		return err
 	}
 
@@ -73,7 +62,7 @@ func SendCreateServiceEvent(service *api.Service) error {
 }
 
 // SendCreateVersionEvent is a helper method which sends a create version event
-// to etcd and wait for the event to be acked.
+// in MongoDB and wait for the event to be acked.
 func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 	username := service.Username
 	serviceName := service.Name
@@ -90,7 +79,7 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		return err
 	}
 
-	event := api.Event{
+	event := &api.Event{
 		EventID:   eventID,
 		Service:   *service,
 		Version:   *version,
@@ -109,18 +98,10 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		event.Data["namespace"] = project.Worker.Namespace
 	}
 
-	log.Infof("send create version event: %v", event)
+	log.Infof("create version event: %v", event)
 
-	etcdClient := etcd.GetClient()
-	jsEvent, err := json.Marshal(&event)
-	if err != nil {
-		log.Errorf("create version event marshal err: %v", err)
-		return err
-	}
-
-	err = etcdClient.Set(EventsUnfinished+string(eventID), string(jsEvent))
-	if err != nil {
-		log.Errorf("send create version event err: %v", err)
+	if _, err := ds.CreateEvent(event); err != nil {
+		log.Errorf("fail to create version event %s", eventID)
 		return err
 	}
 

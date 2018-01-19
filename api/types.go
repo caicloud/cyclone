@@ -846,8 +846,19 @@ type Event struct {
 	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
 
 	// Retry represents the number of retry when cloud is busy.
-	Retry int `bson:"retry,omitempty" json:"retry,omitempty"`
+	Retry       int         `bson:"retry,omitempty" json:"retry,omitempty"`
+	InTime      time.Time   `bson:"inTime,omitempty" json:"inTime,omitempty"`
+	OutTime     time.Time   `bson:"outTime,omitempty" json:"outTime,omitempty"`
+	QueueStatus QueueStatus `bson:"queueStatus,omitempty" json:"queueStatus,omitempty"`
 }
+
+type QueueStatus string
+
+const (
+	InQueue  QueueStatus = "in"
+	OutQueue QueueStatus = "out"
+	Handling QueueStatus = "handling"
+)
 
 // EventStatus contains the status of an event.
 type EventStatus string
