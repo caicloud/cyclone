@@ -39,8 +39,6 @@ kubectl --namespace=cyclone create -f kafka.yaml
 kubectl --namespace=cyclone create -f kafka-svc.yaml
 kubectl --namespace=cyclone create -f mongo.yaml
 kubectl --namespace=cyclone create -f mongo-svc.yaml
-kubectl --namespace=cyclone create -f etcd.yaml
-kubectl --namespace=cyclone create -f etcd-svc.yaml
 kubectl --namespace=cyclone create -f cyclone.yaml
 kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
@@ -63,6 +61,5 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 | GITLAB_CLIENT        | 用于gitlab oauth授权的clientID，默认是空           |
 | GITLAB_SECRET        | 用于gitlab oauth授权的secret，默认是空             |
 | GITLAB_URL           | gitlab的服务器地址，默认是https://gitlab.com       |
-| ETCD_HOST            | etcd的服务器地址，默认时127.0.0.1:2379             |
 | CYCLONE_SERVER       | Cyclone-Server的访问地址，默认是http://localhost:7099 |
 | WORKER_IMAGE         | Cyclone-Worker容器的镜像名，默认是cargo.caicloud.io/caicloud/cyclone-worker:latest |

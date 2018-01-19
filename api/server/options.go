@@ -30,8 +30,6 @@ const (
 	MongoDBHost = "MONGODB_HOST"
 	// KafkaHost ...
 	KafkaHost = "KAFKA_HOST"
-	// ETCDHost ...
-	ETCDHost = "ETCD_HOST"
 	// CloudAutoDiscovery ...
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
 )
@@ -40,7 +38,6 @@ const (
 type APIServerOptions struct {
 	MongoDBHost         string
 	KafkaHost           string
-	ETCDHost            string
 	MongoGracePeriod    time.Duration
 	CyclonePort         int
 	CycloneAddrTemplate string
@@ -76,13 +73,6 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "kafka host",
 			EnvVar:      KafkaHost,
 			Destination: &opts.KafkaHost,
-		},
-		cli.StringFlag{
-			Name:        "etcd-host",
-			Value:       "http://127.0.0.1:2379",
-			Usage:       "etcd host",
-			EnvVar:      ETCDHost,
-			Destination: &opts.ETCDHost,
 		},
 		cli.BoolTFlag{
 			Name:        "show-api-doc",
