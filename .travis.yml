@@ -38,7 +38,7 @@ install:
 
 script:
   - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
-  - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api
+  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api
   # - ./tests/run-e2e.sh
 
 after_success:
