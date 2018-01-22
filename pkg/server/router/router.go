@@ -17,11 +17,12 @@ limitations under the License.
 package router
 
 import (
+	"github.com/emicklei/go-restful"
+	log "github.com/golang/glog"
+
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/server/manager"
 	"github.com/caicloud/cyclone/pkg/store"
-	"github.com/emicklei/go-restful"
-	"github.com/zoumo/logdog"
 )
 
 const (
@@ -92,7 +93,7 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 	// TODO (robin) Update the go-restful to support API tags.
 	// projectTags := []string{"Project"}
 
-	logdog.Info("Register project APIs")
+	log.Info("Register project APIs")
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 	// POST /api/v1/projects
@@ -133,7 +134,7 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 
 // registerPipelineAPIs registers pipeline related endpoints.
 func (router *router) registerPipelineAPIs(ws *restful.WebService) {
-	logdog.Info("Register pipeline APIs")
+	log.Info("Register pipeline APIs")
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 	// POST /api/v1/projects/{project}/pipelines
@@ -176,7 +177,7 @@ func (router *router) registerPipelineAPIs(ws *restful.WebService) {
 
 // registerPipelineRecordAPIs registers pipeline record related endpoints.
 func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
-	logdog.Info("Register pipeline record APIs")
+	log.Info("Register pipeline record APIs")
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 	// POST /api/v1/projects/{project}/pipelines/{pipeline}/records
@@ -213,7 +214,7 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 
-	logdog.Info("Register pipeline records logs APIs")
+	log.Info("Register pipeline records logs APIs")
 
 	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs
 	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs").To(router.getPipelineRecordLogs).
