@@ -168,12 +168,12 @@ func (dm *DockerManager) CopyFromContainer(options CopyFromContainerOptions) err
 				log.Error(err)
 				return err
 			}
+			defer fileOutPut.Close()
 
 			if _, err := io.Copy(fileOutPut, tarReader); err != nil {
 				log.Error(err)
 				return err
 			}
-			fileOutPut.Close()
 		}
 	}
 	return nil
