@@ -109,7 +109,7 @@ func addInClusterK8SCloud() {
 
 // EventManager represents the manager of events.
 type EventManager interface {
-	HandleEvent(event *api.Event) error
+	HandleEvent(event *api.Event)
 	WatchEvent()
 }
 
@@ -125,13 +125,13 @@ func NewEventManager(ds *store.DataStore) EventManager {
 }
 
 // HandleEvent handles the event.
-func (em *eventManager) HandleEvent(event *api.Event) error {
+func (em *eventManager) HandleEvent(event *api.Event) {
 	if err := mapOperation[event.Operation].Handler(event); err != nil {
 		if cloud.IsAllCloudsBusyErr(err) && event.Retry < maxRetry {
 			log.Info("All system worker are busy, wait for 10 seconds")
 			event.Retry++
 			em.ds.ResetEvent(event)
-			return nil
+			return
 		}
 
 		event.Status = api.EventStatusFail
@@ -152,11 +152,9 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 			}
 		}
 		if err = em.ds.UpdateEvent(event); err != nil {
-			return err
+			log.Errorf("fail to update event %s as err: %s", event.EventID, err.Error())
 		}
 	}
-
-	return nil
 }
 
 // WatchEvent watches the event queue, and handles the events.
@@ -172,9 +170,7 @@ func (em *eventManager) WatchEvent() {
 			continue
 		}
 
-		if err = em.HandleEvent(event); err != nil {
-			log.Errorf("fail to handle the event as %s", err.Error())
-		}
+		go em.HandleEvent(event)
 	}
 }
 
