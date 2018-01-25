@@ -127,11 +127,15 @@ func postHookEvent(event *api.Event) {
 
 // generateAbortedStateLog generates aborted state log for last stage to illustrate that the record is aborted.
 func generateAbortedStateLog(log string) string {
-	subLogs := log[strings.LastIndex(log, "\nstep: "):]
-	i := strings.Index(subLogs, " state: ")
-	additionalLog := subLogs[1:i+8] + "aborted\n"
+	if strings.Contains(log, "\nstep: ") && strings.Contains(log, " state: ") {
+		subLogs := log[strings.LastIndex(log, "\nstep: "):]
+		i := strings.Index(subLogs, " state: ")
+		additionalLog := subLogs[1:i+8] + "aborted\n"
 
-	return additionalLog
+		return additionalLog
+	}
+
+	return ""
 }
 
 // createServiceHander is the create service handler.
