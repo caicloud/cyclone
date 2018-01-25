@@ -152,6 +152,7 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 			}
 		}
 		if err = em.ds.UpdateEvent(event); err != nil {
+			log.Errorf("fail to update event %s as err: %s", event.EventID, err.Error())
 			return err
 		}
 	}
@@ -172,9 +173,7 @@ func (em *eventManager) WatchEvent() {
 			continue
 		}
 
-		if err = em.HandleEvent(event); err != nil {
-			log.Errorf("fail to handle the event as %s", err.Error())
-		}
+		go em.HandleEvent(event)
 	}
 }
 
