@@ -101,15 +101,7 @@ func handleEvent(event *api.Event) error {
 // postHookEvent is the event finished post hook.
 func postHookEvent(event *api.Event) {
 	mapOperation[event.Operation].PostHook(event)
-	w, err := CloudController.LoadWorker(event.Worker)
-	if err != nil {
-		logdog.Warnf("load worker err: %v", err)
-	} else {
-		err = w.Terminate()
-		if err != nil {
-			logdog.Warnf("Terminate worker err: %v", err)
-		}
-	}
+	terminateEventWorker(event.Worker)
 
 	// Include cancel manual or timeout
 	if event.Status == api.EventStatusCancel {

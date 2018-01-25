@@ -24,6 +24,7 @@ import (
 
 	"github.com/caicloud/cyclone/api/conversion"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
 )
@@ -135,6 +136,10 @@ func (m *pipelineRecordManager) UpdatePipelineRecord(pipelineRecordID string, ne
 
 // DeletePipelineRecord deletes the pipeline record by id.
 func (m *pipelineRecordManager) DeletePipelineRecord(pipelineRecordID string) error {
+	if e, err := event.GetEvent(pipelineRecordID); err == nil {
+		event.DeleteEvent(string(e.EventID))
+	}
+
 	return m.dataStore.DeleteVersionByID(pipelineRecordID)
 }
 
