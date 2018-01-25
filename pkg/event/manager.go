@@ -200,6 +200,30 @@ func UpdateEvent(event *api.Event) error {
 	return nil
 }
 
+// DeleteEvent deletes the event. If it is running, delete its worker at the same time.
+func DeleteEvent(id string) error {
+	event, err := GetEvent(id)
+	if err != nil {
+		log.Errorf("fail to get the event %s as %s", event.EventID, err.Error())
+		return err
+	}
+	ds := store.NewStore()
+	defer ds.Close()
+
+	// Delete the event in event queue.
+	if err := ds.DeleteEvent(string(event.EventID)); err != nil {
+		log.Errorf("fail to delete the event %s", event.EventID)
+		return err
+	}
+
+	if event.QueueStatus == api.Handling {
+		log.Infof("terminate the worker for handling event %s", event.EventID)
+		terminateEventWorker(event.Worker)
+	}
+
+	return nil
+}
+
 // GetEvent get the event by ID.
 func GetEvent(id string) (*api.Event, error) {
 	ds := store.NewStore()
@@ -249,5 +273,17 @@ func CheckWorkerTimeout(event *api.Event) {
 		log.Infof("event time out: %v", event)
 		event.Status = api.EventStatusCancel
 		UpdateEvent(event)
+	}
+}
+
+func terminateEventWorker(workerInfo cloud.WorkerInfo) {
+	w, err := CloudController.LoadWorker(workerInfo)
+	if err != nil {
+		logdog.Warnf("load worker err: %v", err)
+	} else {
+		err = w.Terminate()
+		if err != nil {
+			logdog.Warnf("Terminate worker err: %v", err)
+		}
 	}
 }
