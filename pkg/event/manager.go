@@ -170,8 +170,10 @@ func (em *eventManager) WatchEvent() {
 func createWorkerForEvent(event *api.Event) error {
 	log.Infof("Create worker for event %s", event.ID)
 	opts := workerOptions.DeepCopy()
-	// TODO (robin) Uncomment the namespace after PR #332 merged.
-	// opts.Namespace = event.Project.Worker.Namespace
+	workerCfg := event.Project.Worker
+	if workerCfg != nil {
+		opts.Namespace = workerCfg.Namespace
+	}
 	worker, err := CloudController.Provision(event.ID, opts)
 	if err != nil {
 		return err
