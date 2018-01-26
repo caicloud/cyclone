@@ -65,18 +65,30 @@ func (router *router) createPipelineRecord(request *restful.Request, response *r
 	projectName := request.PathParameter(projectPathParameterName)
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
+	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
 	performParams := &api.PipelinePerformParams{}
 	if err := httputil.ReadEntityFromRequest(request, performParams); err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	if err := router.pipelineManager.PerformPipeline(projectName, pipelineName, performParams); err != nil {
+	pipelineRecord := &api.PipelineRecord{
+		Name:          performParams.Name,
+		PipelineID:    pipeline.ID,
+		PerformParams: performParams,
+	}
+	createdPipelineRecord, err := router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord)
+	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, nil)
+	response.WriteHeaderAndEntity(http.StatusOK, createdPipelineRecord)
 }
 
 // getPipelineRecord handles the request to get a pipeline record.
@@ -201,7 +213,35 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 	response.Write([]byte(logs))
 }
 
-//getPipelineRecordLogStream get real-time log of pipeline record refering to recordID
+// receivePipelineRecordLogStream receives real-time log of pipeline record.
+func (router *router) receivePipelineRecordLogStream(request *restful.Request, response *restful.Response) {
+	recordID := request.PathParameter("recordID")
+	stage := request.QueryParameter("stage")
+
+	_, err := router.pipelineRecordManager.GetPipelineRecord(recordID)
+	if err != nil {
+		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorContentNotFound.Format(recordID))
+		return
+	}
+
+	//upgrade HTTP rest API --> socket connection
+	ws, err := upgrader.Upgrade(response.ResponseWriter, request.Request, nil)
+	if err != nil {
+		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
+		return
+	}
+	defer ws.Close()
+
+	if err := router.pipelineRecordManager.ReceivePipelineRecordLogStream(recordID, stage, ws); err != nil {
+		log.Error(fmt.Sprintf("Fail to receive log stream for pipeline record %s: %s", recordID, err.Error()))
+		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
+		return
+	}
+}
+
+// getPipelineRecordLogStream gets real-time log of pipeline record refering to recordID
 func (router *router) getPipelineRecordLogStream(request *restful.Request, response *restful.Response) {
 	recordID := request.PathParameter("recordID")
 
