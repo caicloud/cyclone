@@ -19,6 +19,7 @@ package api
 import (
 	"time"
 
+	"github.com/caicloud/cyclone/cloud"
 	"golang.org/x/oauth2"
 )
 
@@ -252,6 +253,7 @@ type PipelineRecord struct {
 	PerformParams *PipelinePerformParams `bson:"performParams,omitempty" json:"performParams,omitempty" description:"perform params of the pipeline record"`
 	StageStatus   *StageStatus           `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
 	Status        Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	ErrorMessage  string                 `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
 	StartTime     time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
 	EndTime       time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
 }
@@ -399,4 +401,31 @@ const (
 	GITHUB string = "github"
 	// GITLAB is the name of gitlab.
 	GITLAB string = "gitlab"
+)
+
+// Event represents the pipeline perform event, which contains all basic information to perform the pipeline,
+// and the event status in queue.
+type Event struct {
+	ID             string          `bson:"_id,omitempty" json:"_id,omitempty"`
+	Project        *Project        `bson:"project,omitempty" json:"project,omitempty"`
+	Pipeline       *Pipeline       `bson:"pipeline,omitempty" json:"pipeline,omitempty"`
+	PipelineRecord *PipelineRecord `bson:"pipelineRecord,omitempty" json:"pipelineRecord,omitempty"`
+
+	// WorkerInfo represents the worker infos used to delete the workers.
+	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
+
+	// Retry represents the number of retry when cloud is busy.
+	Retry       int         `bson:"retry,omitempty" json:"retry,omitempty"`
+	InTime      time.Time   `bson:"inTime,omitempty" json:"inTime,omitempty"`
+	OutTime     time.Time   `bson:"outTime,omitempty" json:"outTime,omitempty"`
+	QueueStatus QueueStatus `bson:"queueStatus,omitempty" json:"queueStatus,omitempty"`
+}
+
+// QueueStatus represents the event status in the queue.
+type QueueStatus string
+
+const (
+	InQueue  QueueStatus = "in"
+	OutQueue QueueStatus = "out"
+	Handling QueueStatus = "handling"
 )

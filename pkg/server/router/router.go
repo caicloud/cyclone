@@ -37,6 +37,9 @@ const (
 
 	// pipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
 	pipelineRecordPathParameterName = "recordId"
+
+	// eventPathParameterName represents the name of the path parameter for event.
+	eventPathParameterName = "eventId"
 )
 
 // router represents the router to distribute the REST requests.
@@ -49,6 +52,9 @@ type router struct {
 
 	// pipelineRecordManager represents the pipeline record manager.
 	pipelineRecordManager manager.PipelineRecordManager
+
+	// eventManager represents the event manager.
+	eventManager manager.EventManager
 }
 
 // InitRouters initializes the router for REST APIs.
@@ -71,10 +77,17 @@ func InitRouters(dataStore *store.DataStore) error {
 		return err
 	}
 
+	// New project manager
+	eventManager, err := manager.NewEventManager(dataStore)
+	if err != nil {
+		return err
+	}
+
 	router := &router{
 		projectManager,
 		pipelineManager,
 		pipelineRecordManager,
+		eventManager,
 	}
 
 	ws := new(restful.WebService)
@@ -82,6 +95,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
 	router.registerPipelineRecordAPIs(ws)
+	router.registerEventAPIs(ws)
 
 	restful.Add(ws)
 
@@ -166,13 +180,6 @@ func (router *router) registerPipelineAPIs(ws *restful.WebService) {
 		Doc("Delete a pipeline").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
-
-	// POST /api/v1/projects/{project}/pipelines/{pipeline}
-	ws.Route(ws.POST("/projects/{project}/pipelines/{pipeline}").To(router.performPipeline).
-		Doc("Perform the pipeline").
-		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Reads(api.PipelinePerformParams{}))
 }
 
 // registerPipelineRecordAPIs registers pipeline record related endpoints.
@@ -224,7 +231,7 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
 
 	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream
-	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream").
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logstream").
 		To(router.getPipelineRecordLogStream).
 		Doc("Get log stream of pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
@@ -239,5 +246,22 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Doc("Receive log stream of pipeline record from worker").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+}
+
+// registerEventAPIs registers event related endpoints.
+func (router *router) registerEventAPIs(ws *restful.WebService) {
+	log.Info("Register event APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+
+	// GET /api/v1/events/{eventID}
+	ws.Route(ws.GET("/events/{eventId}").To(router.getEvent).
+		Doc("Get event by id").
+		Param(ws.PathParameter("eventId", "id of the event").DataType("string")))
+
+	// PUT /api/v1/events/{eventID}
+	ws.Route(ws.PUT("/events/{eventId}").To(router.setEvent).
+		Doc("Set the event by id").
+		Param(ws.PathParameter("eventId", "id of the event").DataType("string")))
 }

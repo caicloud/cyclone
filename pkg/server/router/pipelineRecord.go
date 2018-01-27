@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package router
 
 import (
@@ -23,10 +24,9 @@ import (
 
 	"github.com/zoumo/logdog"
 
-	oldapi "github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/event"
 	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
@@ -169,7 +169,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 		return
 	}
 
-	e, err := event.LoadEventFromEtcd(oldapi.EventID(pipelineRecord.ID))
+	e, err := event.GetEvent(pipelineRecord.ID)
 	if err != nil {
 		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
 		logdog.Error(err)
@@ -177,9 +177,9 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 		return
 	}
 
-	if e.Status == oldapi.EventStatusRunning {
-		e.Status = oldapi.EventStatusCancel
-		event.SaveEventToEtcd(e)
+	if e.PipelineRecord.Status == api.Running {
+		e.PipelineRecord.Status = api.Aborted
+		event.UpdateEvent(e)
 
 		pipelineRecord.Status = api.Aborted
 	}
@@ -321,7 +321,7 @@ func writerLogStream(ws *socket.Conn, pipelineID string, recordID string, userID
 
 //getLogStreamFromKafka loads msg from kafka
 func getLogStreamFromKafka(logstream chan []byte, stop chan int, pipelineID string, recordID string, userID string) {
-	sTopic := websocket.CreateTopicName(string(event.CreateVersionOps), userID, pipelineID, recordID)
+	sTopic := websocket.CreateTopicName("create-version", userID, pipelineID, recordID)
 
 	consumer, err := kafka.NewConsumer(sTopic)
 	if nil != err {
