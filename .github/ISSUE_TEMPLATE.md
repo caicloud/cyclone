@@ -1,20 +1,16 @@
-**Environment**
-- [Include version, operating system name, and other relevant details]
-- xxx
+<!-- Issue template; please answer the questions. -->
 
-**What happened**
-- xxx
-- xxx
+**Is this a BUG REPORT or FEATURE REQUEST?**:
 
-**What you expected to happen**
-- xxx
-- xxx
+> Uncomment only one, leave it on its own line:
+>
+> /kind bug
+> /kind feature
 
-**Reproduce steps** (as minimally and precisely as possible)
-- [As minimally and precisely as possible]
-- xxx
+**What happened**:
 
-**Anything else**
-- xxx
-- xxx
+**What you expected to happen**:
 
+**How to reproduce it (as minimally and precisely as possible)**:
+
+**Anything else we need to know?**:
