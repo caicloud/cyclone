@@ -215,8 +215,8 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 
 // receivePipelineRecordLogStream receives real-time log of pipeline record.
 func (router *router) receivePipelineRecordLogStream(request *restful.Request, response *restful.Response) {
-	recordID := request.PathParameter("recordID")
-	stage := request.QueryParameter("stage")
+	recordID := request.PathParameter(pipelineRecordPathParameterName)
+	stage := request.QueryParameter(pipelineRecordStageQueryParameterName)
 
 	_, err := router.pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {

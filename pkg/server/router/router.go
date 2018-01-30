@@ -36,10 +36,13 @@ const (
 	pipelinePathParameterName = "pipeline"
 
 	// pipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
-	pipelineRecordPathParameterName = "recordId"
+	pipelineRecordPathParameterName = "recordid"
+
+	// pipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
+	pipelineRecordStageQueryParameterName = "stage"
 
 	// eventPathParameterName represents the name of the path parameter for event.
-	eventPathParameterName = "eventId"
+	eventPathParameterName = "eventid"
 )
 
 // router represents the router to distribute the REST requests.
@@ -200,53 +203,53 @@ func (router *router) registerPipelineRecordAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
 
-	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}
-	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}").To(router.getPipelineRecord).
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordid}").To(router.getPipelineRecord).
 		Doc("Get the pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "id of the pipeline record").DataType("string")))
 
-	// DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}
-	ws.Route(ws.DELETE("/projects/{project}/pipelines/{pipeline}/records/{recordId}").To(router.deletePipelineRecord).
+	// DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}
+	ws.Route(ws.DELETE("/projects/{project}/pipelines/{pipeline}/records/{recordid}").To(router.deletePipelineRecord).
 		Doc("Delete a pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "id of the pipeline record").DataType("string")))
 
-	// PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/status
-	ws.Route(ws.PATCH("/projects/{project}/pipelines/{pipeline}/records/{recordId}/status").To(router.updatePipelineRecordStatus).
+	// PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/status
+	ws.Route(ws.PATCH("/projects/{project}/pipelines/{pipeline}/records/{recordid}/status").To(router.updatePipelineRecordStatus).
 		Doc("Update the status of pipeline record, only support to set the status as Aborted for running pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "id of the pipeline record").DataType("string")))
 
 	log.Info("Register pipeline records logs APIs")
 
-	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs
-	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logs").To(router.getPipelineRecordLogs).
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs").To(router.getPipelineRecordLogs).
 		Doc("Get the pipeline record log").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "id of the pipeline record").DataType("string")))
 
-	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream
-	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordId}/logstream").
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream").
 		To(router.getPipelineRecordLogStream).
 		Doc("Get log stream of pipeline record").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordID", "identifier of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "identifier of the pipeline record").DataType("string")))
 
 	// TODO (robin) gorilla/websocket only supports GET method. This a workaround as this API is only used by workers,
 	// but still need a better way.
-	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/stagelogstream
-	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordID}/stagelogstream").
+	// GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/stagelogstream
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/records/{recordid}/stagelogstream").
 		To(router.receivePipelineRecordLogStream).
 		Doc("Receive log stream of pipeline record from worker").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
-		Param(ws.PathParameter("recordId", "id of the pipeline record").DataType("string")))
+		Param(ws.PathParameter("recordid", "id of the pipeline record").DataType("string")))
 }
 
 // registerEventAPIs registers event related endpoints.
@@ -255,13 +258,13 @@ func (router *router) registerEventAPIs(ws *restful.WebService) {
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 
-	// GET /api/v1/events/{eventID}
-	ws.Route(ws.GET("/events/{eventId}").To(router.getEvent).
+	// GET /api/v1/events/{eventid}
+	ws.Route(ws.GET("/events/{eventid}").To(router.getEvent).
 		Doc("Get event by id").
-		Param(ws.PathParameter("eventId", "id of the event").DataType("string")))
+		Param(ws.PathParameter("eventid", "id of the event").DataType("string")))
 
-	// PUT /api/v1/events/{eventID}
-	ws.Route(ws.PUT("/events/{eventId}").To(router.setEvent).
+	// PUT /api/v1/events/{eventid}
+	ws.Route(ws.PUT("/events/{eventid}").To(router.setEvent).
 		Doc("Set the event by id").
-		Param(ws.PathParameter("eventId", "id of the event").DataType("string")))
+		Param(ws.PathParameter("eventid", "id of the event").DataType("string")))
 }
