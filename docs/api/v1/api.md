@@ -96,16 +96,16 @@
 | --- | --- | --- |
 | List | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records` | [link](#list-pipeline-records) |
 | Create | POST `/api/v1/projects/{project}/pipelines/{pipeline}/records` | [link](#create-pipeline-record) |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}` | [link](#get-pipeline-record) |
-| Delete | DELETE `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}` | [link](#delete-pipeline-record) |
-| Update Status | PATCH `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status` | [link](#update-pipeline-record-status) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}` | [link](#get-pipeline-record) |
+| Delete | DELETE `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}` | [link](#delete-pipeline-record) |
+| Update Status | PATCH `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/status` | [link](#update-pipeline-record-status) |
 
 ### Pipeline Record Logs API
 
 | API | Path | Detail |
 | --- | --- | --- |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logs` | [link](#get-pipeline-record-log) |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream` | link](#get-realtime-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs` | [link](#get-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream` | link](#get-realtime-pipeline-record-log) |
 
 ### SCM API
 
@@ -773,7 +773,7 @@ Get the pipeline execution information.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}`
 
 **Response**
 
@@ -793,7 +793,7 @@ Delete a pipeline record.
 
 **Request**
 
-URL: `DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}`
+URL: `DELETE /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}`
 
 **Response**
 
@@ -809,7 +809,7 @@ Update the pipeline record status. Only the pipeline status of the Running state
 
 **Request**
 
-URL: `PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/status`
+URL: `PATCH /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/status`
 
 Body:
 
@@ -843,7 +843,7 @@ Get the logs of finished pipeline records.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logs[?download=]`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs[?download=]`
 
 **Response**
 
@@ -885,7 +885,7 @@ Get the real-time logs for running pipeline records.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordID}/logstream`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream`
 
 Header:
 ```
