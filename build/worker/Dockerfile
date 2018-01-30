@@ -5,6 +5,6 @@ RUN apk add --no-cache git subversion ca-certificates tzdata && \
     echo "Asia/Shanghai" > /etc/timezone
 
 COPY bin/worker /cyclone-worker
-COPY ./worker/start.sh /start.sh
+COPY build/worker/start.sh /start.sh
 
 CMD ["/start.sh"]
