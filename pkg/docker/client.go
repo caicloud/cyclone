@@ -36,10 +36,12 @@ const (
 // The Docker client can be direclty used for some functions not provided by this manager.
 type DockerManager struct {
 	// Client represets the Docker client.
-	Client *docker_client.Client
+	Client     *docker_client.Client
+	EndPoint   string
+	AuthConfig *docker_client.AuthConfiguration
 }
 
-func NewDockerManager(endpoint string) (*DockerManager, error) {
+func NewDockerManager(endpoint, registryServer, registryUsername, registryPassword string) (*DockerManager, error) {
 	if len(strings.TrimSpace(endpoint)) == 0 {
 		endpoint = defaultEndpoint
 	}
@@ -54,7 +56,13 @@ func NewDockerManager(endpoint string) (*DockerManager, error) {
 	}
 
 	return &DockerManager{
-		Client: client,
+		Client:   client,
+		EndPoint: endpoint,
+		AuthConfig: &docker_client.AuthConfiguration{
+			ServerAddress: registryServer,
+			Username:      registryUsername,
+			Password:      registryPassword,
+		},
 	}, nil
 }
 
@@ -76,9 +84,12 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 
 // ExecOptions specify parameters to the ExecInContainer function.
 type ExecOptions struct {
-	Cmd       []string
-	Container string
-	User      string
+	AttachStdin  bool
+	AttachStdout bool
+	AttachStderr bool
+	Cmd          []string
+	Container    string
+	User         string
 
 	// InputStream  io.Reader
 	OutputStream io.Writer
