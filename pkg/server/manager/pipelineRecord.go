@@ -17,7 +17,9 @@ limitations under the License.
 package manager
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -52,6 +54,7 @@ type PipelineRecordManager interface {
 	DeletePipelineRecord(pipelineRecordID string) error
 	ClearPipelineRecordsOfPipeline(pipelineID string) error
 	GetPipelineRecordLogs(pipelineRecordID string) (string, error)
+	GetPipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error
 	ReceivePipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error
 }
 
@@ -195,11 +198,6 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 		return "", err
 	}
 
-	projectID, pipelineID, err := m.getParentInfoByRecordID(pipelineRecordID)
-	if err != nil {
-		return "", err
-	}
-
 	status := pipelineRecord.Status
 	if status == api.Pending || status == api.Running {
 		return "", fmt.Errorf("Can not get the logs as pipeline record %s is %s, please try after it finishes",
@@ -207,7 +205,11 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 	}
 
 	// Check the existence of record folder.
-	logsFolder := strings.Join([]string{cycloneHome, projectID, pipelineID, pipelineRecordID, logsFolderName}, string(os.PathSeparator))
+	logsFolder, err := m.getRecordFolder(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
 	if !fileutil.DirExists(logsFolder) {
 		return "", fmt.Errorf("logs folder %s does not exist", logsFolder)
 	}
@@ -219,8 +221,10 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 			continue
 		}
 
-		logFile := fmt.Sprintf("%s%s", stage, logFileSuffix)
-		logFilePath := strings.Join([]string{logsFolder, logFile}, string(os.PathSeparator))
+		logFilePath, err := m.getLogFilePath(pipelineRecordID, string(stage))
+		if err != nil {
+			return "", err
+		}
 
 		// Check the existence of the log file for this stage. If does not exist, return error when pipeline record is success,
 		// otherwise directly return the got logs as pipeline record is failed or aborted.
@@ -244,18 +248,50 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 	return string(logs), nil
 }
 
-// ReceivePipelineRecordLogStream receives the log stream for one stage of the pipeline record, and stores it into log files.
-func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error {
-	projectID, pipelineID, err := m.getParentInfoByRecordID(pipelineRecordID)
+// GetPipelineRecordLogStream watches the log files and sends the content to the log stream.
+func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error {
+	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage)
 	if err != nil {
 		return err
 	}
 
-	recordFolder := strings.Join([]string{cycloneHome, projectID, pipelineID, pipelineRecordID}, string(os.PathSeparator))
-	logFile := stage + logFileSuffix
-	logFilePath := strings.Join([]string{recordFolder, logsFolderName, logFile}, string(os.PathSeparator))
+	if !fileutil.FileExists(logFilePath) {
+		return fmt.Errorf("log file %s already exists", logFilePath)
+	}
+
+	file, err := os.Open(logFilePath)
+	if err != nil {
+		log.Errorf("fail to open the log file %s as %s", logFilePath, err.Error())
+		return err
+	}
+	defer file.Close()
+
+	buf := bufio.NewReader(file)
+	for {
+		line, err := buf.ReadBytes('\n')
+		if err == io.EOF {
+			continue
+		}
+
+		if err != nil {
+			ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
+			break
+		}
+		ws.WriteMessage(websocket.TextMessage, line)
+	}
+
+	return nil
+}
+
+// ReceivePipelineRecordLogStream receives the log stream for one stage of the pipeline record, and stores it into log files.
+func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error {
+	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage)
+	if err != nil {
+		return err
+	}
+
 	if fileutil.FileExists(logFilePath) {
-		return fmt.Errorf("log file %s already exists", logFile)
+		return fmt.Errorf("log file %s already exists", logFilePath)
 	}
 
 	file, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE, 0666)
@@ -280,16 +316,35 @@ func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID 
 	}
 }
 
-func (m *pipelineRecordManager) getParentInfoByRecordID(pipelineRecordID string) (string, string, error) {
+// getLogFilePath gets the log file path for one stage of the pipeline record.
+func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage string) (string, error) {
+	if stage == "" {
+		return "", fmt.Errorf("the stage can not be empty")
+	}
+
+	recordFolder, err := m.getRecordFolder(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
+	logFile := stage + logFileSuffix
+	logFilePath := strings.Join([]string{recordFolder, logsFolderName, logFile}, string(os.PathSeparator))
+	return logFilePath, nil
+}
+
+// getRecordFolder gets the folder path for the pipeline record.
+func (m *pipelineRecordManager) getRecordFolder(pipelineRecordID string) (string, error) {
 	record, err := m.GetPipelineRecord(pipelineRecordID)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	pipeline, err := m.dataStore.FindPipelineByID(record.PipelineID)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return pipeline.ProjectID, pipeline.ID, nil
+	recordFolder := strings.Join([]string{cycloneHome, pipeline.ProjectID, pipeline.ID, pipelineRecordID}, string(os.PathSeparator))
+
+	return recordFolder, nil
 }
