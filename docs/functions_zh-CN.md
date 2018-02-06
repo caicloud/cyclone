@@ -16,20 +16,14 @@ Cyclone 可以关联多种常用版本管理工具（git、svn等），通过 OA
 	<img src="./list_services.png" alt="list_services" width="500">
 </div>
 
-## 持续集成与安全扫描
+## 持续集成
 
-全过程可视化的工作流水线："prebuild" 编译可执行文件，"build" 构建发布镜像， "integration" 集成测试，"publish" 发布镜像并安全扫描，"post build" 镜像发布后的关联操作，"deploy" 使用发布镜像部署应用。构建结果邮件通知。所有过程均以容器为载体，消除环境差异。
+全过程可视化的工作流水线："prebuild" 编译可执行文件，"build" 构建发布镜像， "integration" 集成测试，"publish" 发布镜像，"post build" 镜像发布后的关联操作，"deploy" 使用发布镜像部署应用。构建结果邮件通知。所有过程均以容器为载体，消除环境差异。
 
 - 工作流水线日志
 
 <div align="center">
 	<img src="./logs.png" alt="logs" width="500">
-</div>
-
-- 安全扫描
-
-<div align="center">
-	<img src="./security.png" alt="security" width="500">
 </div>
 
 - 邮件通知

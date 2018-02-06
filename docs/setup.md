@@ -27,8 +27,6 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-Then Cyclone is started. Docker compose will start Clair before Postgres which may raise an error. If this error is raised, manually execute `docker start cyclone_clair_1`.
-
 - Using Kubectl: this approach requires a few yaml files. You can read related files in cirlce/scripts/k8s for more detial. Follow these instructions:
 
 ```
@@ -43,11 +41,6 @@ kubectl --namespace=cyclone create -f mongo.yaml
 kubectl --namespace=cyclone create -f mongo-svc.yaml
 kubectl --namespace=cyclone create -f etcd.yaml
 kubectl --namespace=cyclone create -f etcd-svc.yaml
-kubectl --namespace=cyclone create secret generic clairsecret --from-file=config.yaml
-kubectl --namespace=cyclone create -f postgres.yaml
-kubectl --namespace=cyclone create -f postgres-svc.yaml
-kubectl --namespace=cyclone create -f clair.yaml
-kubectl --namespace=cyclone create -f clair-svc.yaml
 kubectl --namespace=cyclone create -f cyclone.yaml
 kubectl --namespace=cyclone create -f cyclone-svc.yaml
 ```
@@ -73,4 +66,3 @@ Environment variables:
 | ETCD_HOST            | The address of etcd, default is 127.0.0.1:2379. |
 | CYCLONE_SERVER       | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE         | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
-| CLAIR_SERVER         | The address of clair, default is 127.0.0.1:6060. |
