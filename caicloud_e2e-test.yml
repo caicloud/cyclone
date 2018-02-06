@@ -19,12 +19,6 @@ integration:
         - zookeeper:zk
       ports:
         - "9092:9092"
-    etcd:
-      image: cargo.caicloud.io/caicloud/etcd:v3.0.13
-      ports:
-        - "2379:2379"
-        - "2380:2380"
-      command: /usr/local/bin/etcd --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/mnt
   image: cargo.caicloud.io/caicloud/golang-docker:1.8-17.03
   volumes:
     # auto mount code to container /root/code dir
@@ -36,7 +30,6 @@ integration:
     - REGISTRY_USERNAME=caicloudadmin
     - REGISTRY_PASSWORD=caicloudadmin
     - KAFKA_HOST=kafka:9092
-    - ETCD_HOST=http://etcd:2379
     - MONGODB_HOST=mongo:27017
     - CYCLONE_SERVER=http://172.18.0.1:7099
     - LOG_SERVER=ws://172.18.0.1:8000/ws
@@ -50,7 +43,6 @@ integration:
   links:
     - mongo
     - kafka
-    - etcd
   ports:
     - "7099:7099"
     - "8000:8000"

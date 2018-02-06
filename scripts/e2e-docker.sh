@@ -20,7 +20,6 @@ function cleanup {
     unset CYCLONE_SERVER
     unset MONGODB_HOST
     unset KAFKA_HOST
-    unset ETCD_HOST
     unset LOG_SERVER
     unset REGISTRY_LOCATION
     unset REGISTRY_USERNAME
@@ -36,9 +35,6 @@ function cleanup {
     fi
     if [[ -n $(docker ps -a | grep zookeeper) ]];then
         docker rm -f zookeeper
-    fi
-    if [[ -n $(docker ps -a | grep etcd) ]];then
-        docker rm -f etcd
     fi
     if [[ -n $(docker ps -a | grep mongo) ]];then
         docker rm -f mongo
@@ -59,7 +55,6 @@ function run_e2e {
     export DEBUG=true
     export MONGODB_HOST=127.0.0.1:27017
     export KAFKA_HOST=127.0.0.1:9092
-    export ETCD_HOST=http://127.0.0.1:2379
     export CYCLONE_SERVER=http://${HOST_IP}:7099
     export LOG_SERVER=ws://${HOST_IP}:8000/ws
     export REGISTRY_LOCATION=cargo.caicloud.io
@@ -87,19 +82,6 @@ function run_e2e {
                 -e KAFKA_LOG_DIRS=/data/kafka_log \
                 --link zookeeper:zk \
                 wurstmeister/kafka:0.10.1.0
-
-    echo "setup etcd"
-    docker run -d --name etcd \
-               -p 2379:2379 -p 2380:2380 -p 4001:4001 \
-                quay.io/coreos/etcd:v3.1.3 \
-                etcd -name=etcd0 \
-                -advertise-client-urls http://0.0.0.0:2379 \
-                -listen-client-urls http://0.0.0.0:2379 \
-                -initial-advertise-peer-urls http://${HOST_IP}:2380 \
-                -listen-peer-urls http://0.0.0.0:2380 \
-                -initial-cluster-token etcd-cluster-1 \
-                -initial-cluster etcd0=http://${HOST_IP}:2380 \
-                -initial-cluster-state new
 
     echo "setup mongo"
     docker run -d --name mongo -p 27017:27017 mongo:3.0.5 mongod --smallfiles

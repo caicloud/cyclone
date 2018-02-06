@@ -37,7 +37,6 @@ podTemplate(
                 containerEnvVar(key: 'DEBUG', value: 'true'),
                 containerEnvVar(key: 'MONGODB_HOST', value: '127.0.0.1:27017'),
                 containerEnvVar(key: 'KAFKA_HOST', value: '127.0.0.1:9092'),
-                containerEnvVar(key: 'ETCD_HOST', value: 'http://127.0.0.1:2379'),
                 containerEnvVar(key: 'REGISTRY_LOCATION', value: 'cargo.caicloud.io'),
                 containerEnvVar(key: 'REGISTRY_USERNAME', value: 'caicloudadmin'),
                 containerEnvVar(key: 'REGISTRY_PASSWORD', value: 'caicloudadmin'),
@@ -72,13 +71,6 @@ podTemplate(
             ttyEnabled: true,
             command: 'mongod',
             args: '--smallfiles',
-        ),
-        containerTemplate(
-            name: 'etcd',
-            image: 'cargo.caicloud.io/caicloud/etcd:v3.1.3',
-            ttyEnabled: true,
-            command: 'etcd',
-            args: '-name=etcd0 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -initial-advertise-peer-urls http://127.0.0.1:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster-1 -initial-cluster etcd0=http://127.0.0.1:2380 -initial-cluster-state new',
         ),
     ]
 ) {
