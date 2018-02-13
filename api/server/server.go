@@ -23,7 +23,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/caicloud/cyclone/api/rest"
 	"github.com/caicloud/cyclone/cloud"
 	loghttp "github.com/caicloud/cyclone/http"
 	"github.com/caicloud/cyclone/kafka"
@@ -87,7 +86,7 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	}
 
 	// init rest api server
-	rest.Initialize()
+	// rest.Initialize()
 
 	return &PreparedAPIServer{s}, nil
 }
