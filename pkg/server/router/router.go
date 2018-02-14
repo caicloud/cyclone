@@ -51,6 +51,9 @@ const (
 
 // router represents the router to distribute the REST requests.
 type router struct {
+	// dataStore represents the manager for data store.
+	dataStore *store.DataStore
+
 	// projectManager represents the project manager.
 	projectManager manager.ProjectManager
 
@@ -100,6 +103,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	}
 
 	router := &router{
+		dataStore,
 		projectManager,
 		pipelineManager,
 		pipelineRecordManager,
@@ -114,6 +118,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerPipelineRecordAPIs(ws)
 	router.registerEventAPIs(ws)
 	router.registerCloudAPIs(ws)
+	router.registerHealthCheckAPI(ws)
 
 	restful.Add(ws)
 
@@ -307,5 +312,13 @@ func (router *router) registerCloudAPIs(ws *restful.WebService) {
 	ws.Route(ws.GET("/clouds/{cloud}/ping").To(router.pingCloud).
 		Doc("Ping the cloud to check its health").
 		Param(ws.PathParameter("cloud", "name of the cloud").DataType("string")))
+}
 
+// registerHealthCheckAPI registers health check API.
+func (router *router) registerHealthCheckAPI(ws *restful.WebService) {
+	log.Info("Register health check API")
+
+	// GET /api/v1/healthcheck
+	ws.Route(ws.GET("/healthcheck").To(router.healthCheck).
+		Doc("Health check for Cyclone server"))
 }
