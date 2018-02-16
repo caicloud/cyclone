@@ -147,6 +147,7 @@ func createServiceHandler(event *api.Event) error {
 	logdog.Infof("create service handler")
 	opts := workerOptions.DeepCopy()
 	opts.Namespace = getNamespaceFromEvent(event)
+	opts.CacheVolume = getCacheVolumeFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -240,6 +241,7 @@ func createVersionHandler(event *api.Event) error {
 	opts := workerOptions.DeepCopy()
 	opts.Quota = Resource2Quota(event.Version.BuildResource, opts.Quota)
 	opts.Namespace = getNamespaceFromEvent(event)
+	opts.CacheVolume = getCacheVolumeFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -414,6 +416,22 @@ func getNamespaceFromEvent(event *api.Event) string {
 	}
 
 	if v, e := event.Data["namespace"]; e {
+		if sv, ok := v.(string); ok {
+			return sv
+		}
+	}
+
+	return ""
+}
+
+// getCacheVolumeFromEvent gets the cache volume from event data for worker. Will return empty string if can not get it.
+func getCacheVolumeFromEvent(event *api.Event) string {
+	if event == nil {
+		log.Error("Can not get cache volume from data as event is nil")
+		return ""
+	}
+
+	if v, e := event.Data["cachevolume"]; e {
 		if sv, ok := v.(string); ok {
 			return sv
 		}
