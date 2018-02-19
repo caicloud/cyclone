@@ -20,6 +20,7 @@ import (
 	"github.com/emicklei/go-restful"
 	log "github.com/golang/glog"
 
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/server/manager"
 	"github.com/caicloud/cyclone/pkg/store"
@@ -43,6 +44,9 @@ const (
 
 	// eventPathParameterName represents the name of the path parameter for event.
 	eventPathParameterName = "eventid"
+
+	// cloudPathParameterName represents the name of the path parameter for cloud.
+	cloudPathParameterName = "cloud"
 )
 
 // router represents the router to distribute the REST requests.
@@ -58,6 +62,9 @@ type router struct {
 
 	// eventManager represents the event manager.
 	eventManager manager.EventManager
+
+	// cloudManager represents the cloud manager.
+	cloudManager manager.CloudManager
 }
 
 // InitRouters initializes the router for REST APIs.
@@ -80,8 +87,14 @@ func InitRouters(dataStore *store.DataStore) error {
 		return err
 	}
 
-	// New project manager
+	// New event manager
 	eventManager, err := manager.NewEventManager(dataStore)
+	if err != nil {
+		return err
+	}
+
+	// New cloud manager
+	cloudManager, err := manager.NewCloudManager(dataStore)
 	if err != nil {
 		return err
 	}
@@ -91,6 +104,7 @@ func InitRouters(dataStore *store.DataStore) error {
 		pipelineManager,
 		pipelineRecordManager,
 		eventManager,
+		cloudManager,
 	}
 
 	ws := new(restful.WebService)
@@ -99,6 +113,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerPipelineAPIs(ws)
 	router.registerPipelineRecordAPIs(ws)
 	router.registerEventAPIs(ws)
+	router.registerCloudAPIs(ws)
 
 	restful.Add(ws)
 
@@ -267,4 +282,30 @@ func (router *router) registerEventAPIs(ws *restful.WebService) {
 	ws.Route(ws.PUT("/events/{eventid}").To(router.setEvent).
 		Doc("Set the event by id").
 		Param(ws.PathParameter("eventid", "id of the event").DataType("string")))
+}
+
+// registerCloudAPIs registers cloud related endpoints.
+func (router *router) registerCloudAPIs(ws *restful.WebService) {
+	log.Info("Register cloud APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// POST /api/v1/clouds
+	ws.Route(ws.POST("/clouds").To(router.createCloud).
+		Doc("Add a cloud").
+		Reads(cloud.Options{}))
+
+	// GET /api/v1/clouds
+	ws.Route(ws.GET("/clouds").To(router.listClouds).
+		Doc("Get all clouds"))
+
+	// DELETE /api/v1/clouds/{cloud}
+	ws.Route(ws.DELETE("/clouds/{cloud}").To(router.deleteCloud).
+		Doc("Delete the cloud").
+		Param(ws.PathParameter("cloud", "name of the cloud").DataType("string")))
+
+	// GET /api/v1/clouds/{cloud}/ping
+	ws.Route(ws.GET("/clouds/{cloud}/ping").To(router.pingCloud).
+		Doc("Ping the cloud to check its health").
+		Param(ws.PathParameter("cloud", "name of the cloud").DataType("string")))
+
 }
