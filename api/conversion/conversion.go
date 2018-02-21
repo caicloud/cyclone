@@ -21,9 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -114,6 +115,15 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	preBuild.Outputs = packageConfig.Outputs
 	preBuild.Image = builderImage.Image
 	preBuild.Environment = convertEnvVars(builderImage.EnvVars)
+
+	// Mount volume to speed up build.
+	buildInfo := pipeline.Build.BuildInfo
+	if buildInfo != nil && buildInfo.UseDependencyCache && buildInfo.BuildTool != nil {
+		switch buildInfo.BuildTool.Name {
+		case "maven":
+			preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
+		}
+	}
 
 	caicloudYAMLConfig.PreBuild = preBuild
 
@@ -225,11 +235,12 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 // ConvertPipelineParamsToVersion converts the pipeline perform params to run the pipeline.
 func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
 	version := &api.Version{
-		Description:   performParams.Description,
-		Status:        api.VersionPending,
-		SecurityCheck: false,
-		CreateTime:    time.Now(),
-		Name:          performParams.Name,
+		Description:        performParams.Description,
+		Status:             api.VersionPending,
+		SecurityCheck:      false,
+		UseDependencyCache: performParams.UseDependencyCache,
+		CreateTime:         time.Now(),
+		Name:               performParams.Name,
 	}
 
 	if performParams.Ref != "" {

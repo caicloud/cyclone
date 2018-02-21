@@ -115,3 +115,26 @@ func TestToServiceContainerConfig(t *testing.T) {
 		t.Errorf("Expected the length of config's env is 1 but got %d", len(option.Config.Env))
 	}
 }
+
+func TestValidatePath(t *testing.T) {
+	datas := map[string]struct {
+		path     string
+		expected bool
+	}{
+		"absolute path": {
+			"/root/.m2",
+			true,
+		},
+		"relative path": {
+			"var/lib",
+			false,
+		},
+	}
+
+	for desc, d := range datas {
+		r := validatePath(d.path)
+		if r != d.expected {
+			t.Errorf("Test case %s failed, expect %b but got %b", desc, d.expected, r)
+		}
+	}
+}

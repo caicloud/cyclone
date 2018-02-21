@@ -36,8 +36,8 @@ type Project struct {
 
 // Worker represents the config of worker for the pipelines of the project.
 type Worker struct {
-	Namespace        string                     `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
-	DependencyCaches map[string]DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
+	Namespace        string                      `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+	DependencyCaches map[string]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
 }
 
 // DependencyCache represents the cache volume of dependency for CI.
@@ -366,11 +366,12 @@ type ErrorResponse struct {
 
 // PipelinePerformParams the params to perform the pipeline.
 type PipelinePerformParams struct {
-	Ref          string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Name         string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
-	Description  string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
-	CreateSCMTag bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
-	Stages       []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
+	Ref                string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Name               string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
+	Description        string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
+	CreateSCMTag       bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
+	UseDependencyCache bool     `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
+	Stages             []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }
 
 // ScmToken represents a set of token informations of the projcet.

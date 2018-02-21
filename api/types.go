@@ -391,6 +391,8 @@ type Version struct {
 	SecurityInfo []Security `bson:"security_info,omitempty" json:"security_info,omitempty"`
 	// BuildResource resoure for building image
 	BuildResource BuildResource `bson:"build_resource,omitempty" json:"build_resource,omitempty"`
+
+	UseDependencyCache bool `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
 }
 
 // BuildResource is config of resource for building image
