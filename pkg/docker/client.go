@@ -66,7 +66,49 @@ func NewDockerManager(endpoint, registryServer, registryUsername, registryPasswo
 	}, nil
 }
 
+// IsImagePresent checks if given image exists.
+func (dm *DockerManager) IsImagePresent(image string) (bool, error) {
+	_, err := dm.Client.InspectImage(image)
+	if err == nil {
+		return true, nil
+	}
+	if err == docker_client.ErrNoSuchImage {
+		return false, nil
+	}
+	return false, err
+}
+
+// PullImage pulls an image by its name.
+func (dm *DockerManager) PullImage(image string) error {
+	opts := docker_client.PullImageOptions{
+		Repository: image,
+	}
+
+	authOpt := docker_client.AuthConfiguration{
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
+	}
+
+	if err := dm.Client.PullImage(opts, authOpt); err != nil {
+		return fmt.Errorf("Fail to pull image %s as %v", image, err)
+	}
+
+	return nil
+}
+
 func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions) (string, error) {
+	// Check the existence of image.
+	image := options.Config.Image
+	exist, err := dm.IsImagePresent(image)
+	if err != nil {
+		return "", err
+	}
+	if !exist {
+		if err = dm.PullImage(image); err != nil {
+			return "", err
+		}
+	}
+
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
 	if err != nil {
