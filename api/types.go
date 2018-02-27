@@ -87,6 +87,20 @@ type Service struct {
 	CaicloudYaml string `bson:"caicloudYaml,omitempty" json:"caicloudYaml,omitempty"`
 
 	ImageName string `bson:"image_name,omitempty" json:"image_name,omitempty"`
+
+	BuildInfo *BuildInfo `bson:"build_info,omitempty" json:"build_info,omitempty"`
+}
+
+// BuildInfo represents the basic build information of the pipeline.
+type BuildInfo struct {
+	BuildTool       *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
+	CacheDependency bool       `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
+}
+
+// BuildTool represents the build tool for CI.
+type BuildTool struct {
+	Name    string `bson:"name,omitempty" json:"name,omitempty" description:"name of build tool"`
+	Version string `bson:"version,omitempty" json:"version,omitempty" description:"version of build tool"`
 }
 
 // Hook is a callback hook
@@ -377,6 +391,8 @@ type Version struct {
 	SecurityInfo []Security `bson:"security_info,omitempty" json:"security_info,omitempty"`
 	// BuildResource resoure for building image
 	BuildResource BuildResource `bson:"build_resource,omitempty" json:"build_resource,omitempty"`
+
+	CacheDependency bool `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
 }
 
 // BuildResource is config of resource for building image

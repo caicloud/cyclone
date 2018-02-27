@@ -221,6 +221,12 @@ type WorkerOptions struct {
 
 	// Namespace represents the k8s namespace where to create worker, only works for k8s cloud provider.
 	Namespace string
+
+	// CacheVolume represents the volume to cache dependency for worker.
+	CacheVolume string
+
+	// BuildTool represents the tool used for build.
+	BuildTool string
 }
 
 // NewWorkerOptions creates a new WorkerOptions with default value

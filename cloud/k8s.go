@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/zoumo/logdog"
 	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -181,6 +182,7 @@ func (cloud *K8SCloud) CanProvision(quota Quota) (bool, error) {
 
 // Provision returns a worker if the cloud can provison
 func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error) {
+	logdog.Infof("Create worker %s with options %v", id, wopts)
 	var cp *K8SCloud
 	namespace := wopts.Namespace
 	// If specify the namespace for worker in worker options, new a cloud pointer and set its namespace.
@@ -233,6 +235,47 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 				},
 			},
 		},
+	}
+
+	// Mount the cache volume to the worker.
+	cacheVolume := wopts.CacheVolume
+	if len(cacheVolume) != 0 {
+		// Check the existence and status of cache volume.
+		if _, err := cloud.client.CoreV1().PersistentVolumeClaims(cp.namespace).Get(cacheVolume); err == nil {
+			mountPath := "/tmp"
+			volumeName := "cache-dependency"
+			switch wopts.BuildTool {
+			case string(api.MavenBuildTool):
+				mountPath = "/root/.m2"
+			case string(api.NPMBuildTool):
+				mountPath = "/root/.npm"
+			default:
+				// Just log error and let the pipeline to run in non-cache mode.
+				logdog.Errorf("Will mount the volume to the %s path as not support the build tool %s, only supports: %s, %s", mountPath,
+					wopts.BuildTool, api.MavenBuildTool, api.NPMBuildTool)
+			}
+
+			pod.Spec.Containers[0].VolumeMounts = []apiv1.VolumeMount{
+				apiv1.VolumeMount{
+					Name:      volumeName,
+					MountPath: mountPath,
+				},
+			}
+
+			pod.Spec.Volumes = []apiv1.Volume{
+				apiv1.Volume{
+					Name: volumeName,
+				},
+			}
+
+			pod.Spec.Volumes[0].PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
+				ClaimName: cacheVolume,
+			}
+		} else {
+			// Just log error and let the pipeline to run in non-cache mode.
+			logdog.Errorf("Can not use cache volume %s as fail to get it: %v", cacheVolume, err)
+		}
+
 	}
 
 	// pod, err = cloud.Client.CoreV1().Pods(cloud.namespace).Create(pod)

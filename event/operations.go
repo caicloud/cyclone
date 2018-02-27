@@ -49,9 +49,21 @@ func SendCreateServiceEvent(service *api.Service) error {
 		Data:      map[string]interface{}{"Token": project.SCM.Token},
 	}
 
-	// Set the namespace for worker in k8s cloud.
-	if project.Worker != nil && len(project.Worker.Namespace) != 0 {
-		event.Data["namespace"] = project.Worker.Namespace
+	// Set the config for worker in k8s cloud.
+	worker := project.Worker
+	if worker != nil {
+		if len(worker.Namespace) != 0 {
+			event.Data[namespaceEventKey] = worker.Namespace
+		}
+
+		// Use cache dependency.
+		buildInfo := service.BuildInfo
+		if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+			if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
+				event.Data[cacheVolumeEventKey] = cache.Name
+				event.Data[buildToolEventKey] = buildInfo.BuildTool.Name
+			}
+		}
 	}
 
 	log.Infof("send create service event: %v", event)
@@ -104,9 +116,23 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		Status: api.EventStatusPending,
 	}
 
-	// Set the namespace for worker in k8s cloud.
-	if project.Worker != nil && len(project.Worker.Namespace) != 0 {
-		event.Data["namespace"] = project.Worker.Namespace
+	// Set the config for worker in k8s cloud.
+	worker := project.Worker
+	if worker != nil {
+		if len(worker.Namespace) != 0 {
+			event.Data[namespaceEventKey] = worker.Namespace
+		}
+
+		if version.CacheDependency {
+			// Use cache dependency.
+			buildInfo := service.BuildInfo
+			if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+				if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
+					event.Data[cacheVolumeEventKey] = cache.Name
+					event.Data[buildToolEventKey] = buildInfo.BuildTool.Name
+				}
+			}
+		}
 	}
 
 	log.Infof("send create version event: %v", event)

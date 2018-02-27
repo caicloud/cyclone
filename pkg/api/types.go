@@ -36,7 +36,13 @@ type Project struct {
 
 // Worker represents the config of worker for the pipelines of the project.
 type Worker struct {
-	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+	Namespace        string                      `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+	DependencyCaches map[string]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
+}
+
+// DependencyCache represents the cache volume of dependency for CI.
+type DependencyCache struct {
+	Name string `bson:"name,omitempty" json:"name,omitempty" description:"name of the dependency cache"`
 }
 
 // Pipeline represents a set of configs to describe the workflow of CI/CD.
@@ -60,8 +66,31 @@ type Pipeline struct {
 
 // Build represents the build config and stages of CI.
 type Build struct {
+	BuildInfo    *BuildInfo    `bson:"buildInfo,omitempty" json:"buildInfo,omitempty" description:"information to build package"`
 	BuilderImage *BuilderImage `bson:"builderImage,omitempty" json:"builderImage,omitempty" description:"image information of the builder"`
 	Stages       *BuildStages  `bson:"stages,omitempty" json:"stages,omitempty" description:"stages of CI"`
+}
+
+// BuildInfo represents the basic build information of the pipeline.
+type BuildInfo struct {
+	BuildTool       *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
+	CacheDependency bool       `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
+}
+
+type BuildToolName string
+
+const (
+	// MavenTool represents the Maven tool.
+	MavenBuildTool BuildToolName = "Maven"
+
+	// MavenTool represents the NPM tool.
+	NPMBuildTool BuildToolName = "NPM"
+)
+
+// BuildTool represents the build tool for CI.
+type BuildTool struct {
+	Name    BuildToolName `bson:"name,omitempty" json:"name,omitempty" description:"name of build tool"`
+	Version string        `bson:"version,omitempty" json:"version,omitempty" description:"version of build tool"`
 }
 
 // EnvVar represents the environment variables with name and value.
@@ -347,11 +376,12 @@ type ErrorResponse struct {
 
 // PipelinePerformParams the params to perform the pipeline.
 type PipelinePerformParams struct {
-	Ref          string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Name         string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
-	Description  string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
-	CreateSCMTag bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
-	Stages       []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
+	Ref             string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Name            string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
+	Description     string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
+	CreateSCMTag    bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
+	CacheDependency bool     `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
+	Stages          []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }
 
 // ScmToken represents a set of token informations of the projcet.

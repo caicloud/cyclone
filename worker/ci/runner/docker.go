@@ -120,7 +120,7 @@ func toServiceContainerConfig(dn *parser.DockerNode, b *Build) *docker_client.Cr
 		}
 		_, path = mockDotReference(b, path)
 		// TODO: log the failure.
-		if validatePath(b, path) {
+		if validatePath(path) {
 			hostConfig.Binds = append(hostConfig.Binds, path)
 		}
 	}
@@ -191,7 +191,7 @@ func toBuildContainerConfig(dn *parser.DockerNode, b *Build, nodetype parser.Nod
 		}
 		_, path = mockDotReference(b, path)
 		// TODO: log the failure.
-		if validatePath(b, path) {
+		if validatePath(path) {
 			hostConfig.Binds = append(hostConfig.Binds, path)
 		}
 	}
@@ -525,12 +525,12 @@ func mockDotReference(b *Build, path string) (bool, string) {
 	return false, path
 }
 
-// validatePath checks the path, if the path is not "b.contextDir/xxx/yyy",
-// return false, else true.
-func validatePath(b *Build, path string) bool {
+// validatePath checks the path, if the path must be absolute path such as "b.contextDir/xxx/yyy" or "/root/.m2",
+// otherwise return false.
+func validatePath(path string) bool {
 	parts := strings.Split(path, ":")
 	source := parts[0]
-	if strings.HasPrefix(source, b.contextDir) && !strings.Contains(source, "..") {
+	if strings.HasPrefix(source, "/") && !strings.Contains(source, "..") {
 		return true
 	}
 	return false

@@ -21,9 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/caicloud/cyclone/api"
 	newapi "github.com/caicloud/cyclone/pkg/api"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -70,8 +71,24 @@ func ConvertPipelineToService(projectName string, pipeline *newapi.Pipeline) (*a
 		service.Dockerfile = pipeline.Build.Stages.ImageBuild.BuildInfos[0].Dockerfile
 		service.ImageName = pipeline.Build.Stages.ImageBuild.BuildInfos[0].ImageName
 	}
+	service.BuildInfo = convertBuildInfo(pipeline.Build.BuildInfo)
 
 	return service, nil
+}
+
+// convertBuildInfo converts the build info from new API to old API.
+func convertBuildInfo(buildInfo *newapi.BuildInfo) *api.BuildInfo {
+	if buildInfo == nil {
+		return nil
+	}
+
+	return &api.BuildInfo{
+		&api.BuildTool{
+			string(buildInfo.BuildTool.Name),
+			buildInfo.BuildTool.Version,
+		},
+		buildInfo.CacheDependency,
+	}
 }
 
 // convertBuildStagesToCaicloudYaml converts the config of build stages in pipeline to caicloud.yml.
@@ -99,6 +116,19 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	preBuild.Image = builderImage.Image
 	preBuild.Environment = convertEnvVars(builderImage.EnvVars)
 
+	// Mount volume to speed up build.
+	buildInfo := pipeline.Build.BuildInfo
+	if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+		switch buildInfo.BuildTool.Name {
+		case newapi.MavenBuildTool:
+			preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
+		case newapi.NPMBuildTool:
+			preBuild.Volumes = []string{"/root/.npm:/root/.npm"}
+		default:
+			return "", fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, newapi.MavenBuildTool, newapi.NPMBuildTool)
+		}
+	}
+
 	caicloudYAMLConfig.PreBuild = preBuild
 
 	if stages.ImageBuild != nil {
@@ -114,11 +144,11 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 		// Now only support one build info.
 		buildInfo := imageBuildConfig.BuildInfos[0]
-		if (len(buildInfo.ContextDir) != 0) {
+		if len(buildInfo.ContextDir) != 0 {
 			build.ContextDir = buildInfo.ContextDir
 		}
 
-		if (len(buildInfo.DockerfilePath) != 0) {
+		if len(buildInfo.DockerfilePath) != 0 {
 			build.DockerfileName = buildInfo.DockerfilePath
 		}
 
@@ -209,11 +239,12 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 // ConvertPipelineParamsToVersion converts the pipeline perform params to run the pipeline.
 func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
 	version := &api.Version{
-		Description:   performParams.Description,
-		Status:        api.VersionPending,
-		SecurityCheck: false,
-		CreateTime:    time.Now(),
-		Name:          performParams.Name,
+		Description:     performParams.Description,
+		Status:          api.VersionPending,
+		SecurityCheck:   false,
+		CacheDependency: performParams.CacheDependency,
+		CreateTime:      time.Now(),
+		Name:            performParams.Name,
 	}
 
 	if performParams.Ref != "" {
