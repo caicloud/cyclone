@@ -73,14 +73,24 @@ type Build struct {
 
 // BuildInfo represents the basic build information of the pipeline.
 type BuildInfo struct {
-	BuildTool          *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
-	UseDependencyCache bool       `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
+	BuildTool       *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
+	CacheDependency bool       `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
 }
+
+type BuildToolName string
+
+const (
+	// MavenTool represents the Maven tool.
+	MavenTool BuildToolName = "Maven"
+
+	// MavenTool represents the NPM tool.
+	NPMTool BuildToolName = "NPM"
+)
 
 // BuildTool represents the build tool for CI.
 type BuildTool struct {
-	Name    string `bson:"name,omitempty" json:"name,omitempty" description:"name of build tool"`
-	Version string `bson:"version,omitempty" json:"version,omitempty" description:"version of build tool"`
+	Name    BuildToolName `bson:"name,omitempty" json:"name,omitempty" description:"name of build tool"`
+	Version string        `bson:"version,omitempty" json:"version,omitempty" description:"version of build tool"`
 }
 
 // EnvVar represents the environment variables with name and value.
@@ -366,12 +376,12 @@ type ErrorResponse struct {
 
 // PipelinePerformParams the params to perform the pipeline.
 type PipelinePerformParams struct {
-	Ref                string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Name               string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
-	Description        string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
-	CreateSCMTag       bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
-	UseDependencyCache bool     `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
-	Stages             []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
+	Ref             string   `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Name            string   `bson:"name,omitempty" json:"name,omitempty" description:"name of this running of pipeline"`
+	Description     string   `bson:"description,omitempty" json:"description,omitempty" description:"description of this running of pipeline"`
+	CreateSCMTag    bool     `bson:"createScmTag,omitempty" json:"createScmTag,omitempty" description:"whether create tag in SCM"`
+	CacheDependency bool     `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
+	Stages          []string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed"`
 }
 
 // ScmToken represents a set of token informations of the projcet.

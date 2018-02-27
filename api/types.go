@@ -93,8 +93,8 @@ type Service struct {
 
 // BuildInfo represents the basic build information of the pipeline.
 type BuildInfo struct {
-	BuildTool          *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
-	UseDependencyCache bool       `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
+	BuildTool       *BuildTool `bson:"buildTool,omitempty" json:"buildTool,omitempty" description:"tool to build package"`
+	CacheDependency bool       `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
 }
 
 // BuildTool represents the build tool for CI.
@@ -392,7 +392,7 @@ type Version struct {
 	// BuildResource resoure for building image
 	BuildResource BuildResource `bson:"build_resource,omitempty" json:"build_resource,omitempty"`
 
-	UseDependencyCache bool `bson:"useDependencyCache,omitempty" json:"useDependencyCache,omitempty" description:"whether use dependency cache to speedup"`
+	CacheDependency bool `bson:"cacheDependency,omitempty" json:"cacheDependency,omitempty" description:"whether use dependency cache to speedup"`
 }
 
 // BuildResource is config of resource for building image

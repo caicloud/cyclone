@@ -84,10 +84,10 @@ func convertBuildInfo(buildInfo *newapi.BuildInfo) *api.BuildInfo {
 
 	return &api.BuildInfo{
 		&api.BuildTool{
-			buildInfo.BuildTool.Name,
+			string(buildInfo.BuildTool.Name),
 			buildInfo.BuildTool.Version,
 		},
-		buildInfo.UseDependencyCache,
+		buildInfo.CacheDependency,
 	}
 }
 
@@ -118,7 +118,7 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 
 	// Mount volume to speed up build.
 	buildInfo := pipeline.Build.BuildInfo
-	if buildInfo != nil && buildInfo.UseDependencyCache && buildInfo.BuildTool != nil {
+	if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 		switch buildInfo.BuildTool.Name {
 		case "maven":
 			preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
@@ -235,12 +235,12 @@ func convertRepository(codeCheckoutStage *newapi.CodeCheckoutStage) (*api.Servic
 // ConvertPipelineParamsToVersion converts the pipeline perform params to run the pipeline.
 func ConvertPipelineParamsToVersion(performParams *newapi.PipelinePerformParams) *api.Version {
 	version := &api.Version{
-		Description:        performParams.Description,
-		Status:             api.VersionPending,
-		SecurityCheck:      false,
-		UseDependencyCache: performParams.UseDependencyCache,
-		CreateTime:         time.Now(),
-		Name:               performParams.Name,
+		Description:     performParams.Description,
+		Status:          api.VersionPending,
+		SecurityCheck:   false,
+		CacheDependency: performParams.CacheDependency,
+		CreateTime:      time.Now(),
+		Name:            performParams.Name,
 	}
 
 	if performParams.Ref != "" {

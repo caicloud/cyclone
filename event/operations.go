@@ -59,7 +59,7 @@ func SendCreateServiceEvent(service *api.Service) error {
 
 		// Use cache dependency.
 		buildInfo := service.BuildInfo
-		if buildInfo != nil && buildInfo.UseDependencyCache && buildInfo.BuildTool != nil {
+		if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 			if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
 				event.Data["cachevolume"] = cache.Name
 			}
@@ -125,10 +125,10 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 			event.Data["namespace"] = worker.Namespace
 		}
 
-		if version.UseDependencyCache {
+		if version.CacheDependency {
 			// Use cache dependency.
 			buildInfo := service.BuildInfo
-			if buildInfo != nil && buildInfo.UseDependencyCache && buildInfo.BuildTool != nil {
+			if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 				if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
 					event.Data["cachevolume"] = cache.Name
 				}
