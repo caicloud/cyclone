@@ -81,10 +81,10 @@ type BuildToolName string
 
 const (
 	// MavenTool represents the Maven tool.
-	MavenTool BuildToolName = "Maven"
+	MavenBuildTool BuildToolName = "Maven"
 
 	// MavenTool represents the NPM tool.
-	NPMTool BuildToolName = "NPM"
+	NPMBuildTool BuildToolName = "NPM"
 )
 
 // BuildTool represents the build tool for CI.

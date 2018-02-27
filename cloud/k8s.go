@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/zoumo/logdog"
 	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -244,8 +244,15 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 		if _, err := cloud.client.CoreV1().PersistentVolumeClaims(cp.namespace).Get(cacheVolume); err == nil {
 			mountPath := "/tmp"
 			volumeName := "cache-dependency"
-			if strings.Contains(cacheVolume, "maven") {
+			switch wopts.BuildTool {
+			case string(api.MavenBuildTool):
 				mountPath = "/root/.m2"
+			case string(api.NPMBuildTool):
+				mountPath = "/root/.npm"
+			default:
+				// Just log error and let the pipeline to run in non-cache mode.
+				logdog.Errorf("Will mount the volume to the %s path as not support the build tool %s, only supports: %s, %s", mountPath,
+					wopts.BuildTool, api.MavenBuildTool, api.NPMBuildTool)
 			}
 
 			pod.Spec.Containers[0].VolumeMounts = []apiv1.VolumeMount{

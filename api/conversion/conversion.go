@@ -120,8 +120,12 @@ func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error)
 	buildInfo := pipeline.Build.BuildInfo
 	if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 		switch buildInfo.BuildTool.Name {
-		case "maven":
+		case newapi.MavenBuildTool:
 			preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
+		case newapi.NPMBuildTool:
+			preBuild.Volumes = []string{"/root/.npm:/root/.npm"}
+		default:
+			return "", fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, newapi.MavenBuildTool, newapi.NPMBuildTool)
 		}
 	}
 

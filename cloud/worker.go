@@ -224,6 +224,9 @@ type WorkerOptions struct {
 
 	// CacheVolume represents the volume to cache dependency for worker.
 	CacheVolume string
+
+	// BuildTool represents the tool used for build.
+	BuildTool string
 }
 
 // NewWorkerOptions creates a new WorkerOptions with default value

@@ -54,6 +54,15 @@ const (
 	PostStartPhase = "postStart"
 	// PreStopPhase hooks phase
 	PreStopPhase = "preStop"
+
+	// namespaceEventKey represents the key of namespace in event.
+	namespaceEventKey = "namespace"
+
+	// cacheVolumeEventKey represents the key of cache volume in event.
+	cacheVolumeEventKey = "cacheVolume"
+
+	// buildToolEventKey represents the key of build tool in event.
+	buildToolEventKey = "buildTool"
 )
 
 //type EventID string
@@ -148,6 +157,7 @@ func createServiceHandler(event *api.Event) error {
 	opts := workerOptions.DeepCopy()
 	opts.Namespace = getNamespaceFromEvent(event)
 	opts.CacheVolume = getCacheVolumeFromEvent(event)
+	opts.BuildTool = getBuildToolFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -242,6 +252,7 @@ func createVersionHandler(event *api.Event) error {
 	opts.Quota = Resource2Quota(event.Version.BuildResource, opts.Quota)
 	opts.Namespace = getNamespaceFromEvent(event)
 	opts.CacheVolume = getCacheVolumeFromEvent(event)
+	opts.BuildTool = getBuildToolFromEvent(event)
 	worker, err := CloudController.Provision(string(event.EventID), opts)
 	if err != nil {
 		return err
@@ -415,7 +426,7 @@ func getNamespaceFromEvent(event *api.Event) string {
 		return ""
 	}
 
-	if v, e := event.Data["namespace"]; e {
+	if v, e := event.Data[namespaceEventKey]; e {
 		if sv, ok := v.(string); ok {
 			return sv
 		}
@@ -431,7 +442,23 @@ func getCacheVolumeFromEvent(event *api.Event) string {
 		return ""
 	}
 
-	if v, e := event.Data["cachevolume"]; e {
+	if v, e := event.Data[cacheVolumeEventKey]; e {
+		if sv, ok := v.(string); ok {
+			return sv
+		}
+	}
+
+	return ""
+}
+
+// getBuildToolFromEvent gets the build tool from event data for worker. Will return empty string if can not get it.
+func getBuildToolFromEvent(event *api.Event) string {
+	if event == nil {
+		log.Error("Can not get build tool from data as event is nil")
+		return ""
+	}
+
+	if v, e := event.Data[buildToolEventKey]; e {
 		if sv, ok := v.(string); ok {
 			return sv
 		}

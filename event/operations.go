@@ -18,7 +18,6 @@ package event
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/etcd"
@@ -54,14 +53,15 @@ func SendCreateServiceEvent(service *api.Service) error {
 	worker := project.Worker
 	if worker != nil {
 		if len(worker.Namespace) != 0 {
-			event.Data["namespace"] = worker.Namespace
+			event.Data[namespaceEventKey] = worker.Namespace
 		}
 
 		// Use cache dependency.
 		buildInfo := service.BuildInfo
 		if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 			if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
-				event.Data["cachevolume"] = cache.Name
+				event.Data[cacheVolumeEventKey] = cache.Name
+				event.Data[buildToolEventKey] = buildInfo.BuildTool.Name
 			}
 		}
 	}
@@ -116,13 +116,11 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 		Status: api.EventStatusPending,
 	}
 
-	fmt.Printf("version: %+v\n", version)
-
 	// Set the config for worker in k8s cloud.
 	worker := project.Worker
 	if worker != nil {
 		if len(worker.Namespace) != 0 {
-			event.Data["namespace"] = worker.Namespace
+			event.Data[namespaceEventKey] = worker.Namespace
 		}
 
 		if version.CacheDependency {
@@ -130,7 +128,8 @@ func SendCreateVersionEvent(service *api.Service, version *api.Version) error {
 			buildInfo := service.BuildInfo
 			if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 				if cache, ok := worker.DependencyCaches[buildInfo.BuildTool.Name]; ok {
-					event.Data["cachevolume"] = cache.Name
+					event.Data[cacheVolumeEventKey] = cache.Name
+					event.Data[buildToolEventKey] = buildInfo.BuildTool.Name
 				}
 			}
 		}
