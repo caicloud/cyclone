@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/caicloud/cyclone/cloud"
-	"github.com/caicloud/cyclone/worker"
 	"gopkg.in/urfave/cli.v1"
+
+	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/pkg/worker"
+	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 )
 
 // WorkerOptions ...
@@ -28,7 +30,10 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 
 // NewWorker returns a new APIServer with config
 func (opts *WorkerOptions) NewWorker() *worker.Worker {
+	client := cycloneserver.NewClient(opts.WorkerEnvs.CycloneServer)
+
 	s := &worker.Worker{
+		Client: client,
 		Envs:   opts.WorkerEnvs,
 		Config: opts.Config,
 	}
