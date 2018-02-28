@@ -32,7 +32,6 @@ integration:
   environment:
     - GOPATH=/go
     - DEBUG=true
-    - CLAIR_DISABLE=true
     - REGISTRY_LOCATION=cargo.caicloud.io
     - REGISTRY_USERNAME=caicloudadmin
     - REGISTRY_PASSWORD=caicloudadmin
