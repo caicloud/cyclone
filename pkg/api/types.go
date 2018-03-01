@@ -277,13 +277,13 @@ const (
 // TODO The status of every stage may be different.
 // StageStatus represents the collections of status for all stages.
 type StageStatus struct {
-	CodeCheckout    *GeneralStageStatus `bson:"codeCheckout,omitempty" json:"codeCheckout,omitempty" description:"status of code checkout stage"`
-	UnitTest        *GeneralStageStatus `bson:"unitTest,omitempty" json:"unitTest,omitempty" description:"status of unit test stage"`
-	CodeScan        *GeneralStageStatus `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
-	Package         *GeneralStageStatus `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
-	ImageBuild      *GeneralStageStatus `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
-	IntegrationTest *GeneralStageStatus `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
-	ImageRelease    *GeneralStageStatus `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
+	CodeCheckout    *CodeCheckoutStageStatus `bson:"codeCheckout,omitempty" json:"codeCheckout,omitempty" description:"status of code checkout stage"`
+	UnitTest        *GeneralStageStatus      `bson:"unitTest,omitempty" json:"unitTest,omitempty" description:"status of unit test stage"`
+	CodeScan        *GeneralStageStatus      `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
+	Package         *GeneralStageStatus      `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
+	ImageBuild      *GeneralStageStatus      `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
+	IntegrationTest *GeneralStageStatus      `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
+	ImageRelease    *GeneralStageStatus      `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
 }
 
 // GeneralStageStatus represents the information of stage.
@@ -291,6 +291,12 @@ type GeneralStageStatus struct {
 	Status    Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the stage"`
 	StartTime time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the stage"`
 	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
+}
+
+// CodeCheckoutStageStatus includes GeneralStageStatus and pipelineRecord version.
+type CodeCheckoutStageStatus struct {
+	GeneralStageStatus
+	Version string `bson:"version,omitempty" json:"version,omitempty" description:"version of the pipeline record"`
 }
 
 // ListMeta represents metadata that list resources must have.

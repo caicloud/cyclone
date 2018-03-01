@@ -45,6 +45,7 @@ const (
 
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
+	SetEvent(event *api.Event) (*api.Event, error)
 	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error
 }
 
@@ -92,6 +93,38 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 	}
 
 	return resp, nil
+}
+
+func (c *client) SetEvent(event *api.Event) (*api.Event, error) {
+	id := event.ID
+	path := fmt.Sprintf(apiPathForEvent, id)
+	resp, err := c.do(http.MethodPut, path, event)
+	if err != nil {
+		return nil, ErrorUnknownInternal.Format(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, ErrorUnknownInternal.Format(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 == 2 {
+		log.Infof("Set event %s is got from Cyclone server", id)
+		event := &api.Event{}
+		if err := json.Unmarshal(body, event); err != nil {
+			log.Errorf("Fail to unmarshal event %s as %s", id, err.Error())
+			return nil, err
+		}
+
+		return event, nil
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
+	}
+
+	log.Errorf("Set event %s from Cyclone server with error %s", id, body)
+	return nil, ErrorUnknownInternal.Format(body)
 }
 
 func (c *client) GetEvent(id string) (*api.Event, error) {

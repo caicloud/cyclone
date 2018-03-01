@@ -41,7 +41,7 @@ const logFileNameTemplate = "/tmp/logs/%s.log"
 
 type StageManager interface {
 	SetRecordInfo(project, pipeline, recordID string)
-	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error
+	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) (string, error)
 	ExecPackage(*api.BuilderImage, *api.UnitTestStage, *api.PackageStage) error
 	ExecImageBuild(stage *api.ImageBuildStage) ([]string, error)
 	ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) error
@@ -78,25 +78,25 @@ func (sm *stageManager) SetRecordInfo(project, pipeline, recordID string) {
 	sm.recordID = recordID
 }
 
-func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error {
+func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) (string, error) {
 	codeSource := stage.CodeSources[0]
 	scmProvider, err := scm.GetSCMProvider(codeSource.Type)
 	if err != nil {
 		log.Errorf("Fail to get SCM provider as %s", err.Error())
-		return err
+		return "", err
 	}
 
 	cloneDir := scm.GetCloneDir()
 	logs, err := scm.CloneRepo(token, codeSource)
 	if err != nil {
 		logdog.Error(err.Error())
-		return err
+		return "", err
 	}
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.CodeCheckoutStageName)
 	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer logFile.Close()
 
@@ -108,11 +108,11 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	// Get commit ID
 	commitID, err := scmProvider.GetTagCommit(cloneDir, "master")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Infof("The commit id is %s", commitID)
-	return nil
+	return commitID, nil
 }
 
 func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) error {
