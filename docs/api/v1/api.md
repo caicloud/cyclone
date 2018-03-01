@@ -843,7 +843,7 @@ Get the logs of finished pipeline records.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs[?download=]`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs[?stage=&&download=]`
 
 **Response**
 
@@ -854,29 +854,25 @@ Success:
 
 Content-Type: text/plain
 
-step: clone repository state: start
+Stage: Clone repository status: start
 Cloning into 'code'...
-step: clone repository state: finish
-step: Parse Yaml state: start
-step: Parse Yaml state: finish
-step: Pre Build state: start
+Stage: Clone repository status: finish
+Stage: Package status: start
 $ echo hello
 hello
-step: Pre Build state: finish
-step: Build image state: start
+Stage: Package status: finish
+Stage: Build image status: start
 Step 1 : FROM cargo.caicloud.io/caicloud/cyclone-worker:latest
  ---> 2437d0db0a28
 Step 2 : ADD ./README.md /README.md
   ---> e8ca485e1ab8
 ......
+Stage: Build image status: finish
 ```
-
-Note:
-
-This API can be called only after the pipeline records finish.
 
 | Field | Note |
 | --- | --- |
+| stage | Can be only one of `codeCheckout`、`unitTest`、`codeScan`、`package`、`imageBuild`、`integrationTest` and `imageRelease`, the stage must be performed in this record. Currently, `unitTest` and `codeScan` are not supported: `unitTest` is merged into `package`; `codeScan` is not implemented. If provided, only return the log of this stage; if not provided, will return all log. Not provided in default. |
 | download | true: download logs, the log file name is {projectName}-{pipelineName}-{recordId}-log.txt; false: directly return logs. `False` in default. |
 
 ### Get Realtime Pipeline Record Log
@@ -885,7 +881,7 @@ Get the real-time logs for running pipeline records.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream?stage=`
 
 Header:
 ```
@@ -905,22 +901,25 @@ Content-Type: text/plain
 Connection: Upgrade
 Upgrade: tcp
 
-step: clone repository state: start
+Stage: Clone repository status: start
 Cloning into 'code'...
-step: clone repository state: finish
-step: Parse Yaml state: start
-step: Parse Yaml state: finish
-step: Pre Build state: start
+Stage: Clone repository status: finish
+Stage: Package status: start
 $ echo hello
 hello
-step: Pre Build state: finish
-step: Build image state: start
+Stage: Package status: finish
+Stage: Build image status: start
 Step 1 : FROM cargo.caicloud.io/caicloud/cyclone-worker:latest
  ---> 2437d0db0a28
 Step 2 : ADD ./README.md /README.md
   ---> e8ca485e1ab8
 ......
+Stage: Build image status: finish
 ```
+
+Note:
+
+The illustration of stage param is the same as that of last static log API.
 
 ### RepoObjectDataStructure
 
