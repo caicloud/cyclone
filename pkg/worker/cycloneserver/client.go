@@ -27,7 +27,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	log "github.com/golang/glog"
 	"github.com/gorilla/websocket"
@@ -42,8 +41,6 @@ const (
 
 	apiPathForEvent     = "/events/%s"
 	apiPathForLogStream = "/projects/%s/pipelines/%s/records/%s/stagelogstream"
-
-	WorkerTimeout = 7200 * time.Second
 )
 
 type CycloneServerClient interface {
