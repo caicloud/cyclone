@@ -63,6 +63,6 @@ func (m *eventManager) SetEvent(e *api.Event) (*api.Event, error) {
 		return nil, err
 	}
 
-	event.UpdateEvent(e)
-	return e, nil
+	err = event.UpdateEvent(e)
+	return e, err
 }

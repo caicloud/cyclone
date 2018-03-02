@@ -93,20 +93,18 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 			StartTime: time.Now(),
 		},
 	}
-	go sm.cycloneClient.SetEvent(event)
+	go sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
-			event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
 			event.PipelineRecord.Status = api.Failed
 			event.PipelineRecord.ErrorMessage = fmt.Sprintf("code checkout fail : s%", err.Error())
-			go sm.cycloneClient.SetEvent(event)
 		} else {
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
-			event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
-			go sm.cycloneClient.SetEvent(event)
 		}
+		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
+		go sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	codeSource := stage.CodeSources[0]
@@ -154,25 +152,21 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 
 func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) (err error) {
 	event.PipelineRecord.StageStatus.Package = &api.GeneralStageStatus{
-		//		GeneralStageStatus: api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
-		//		},
 	}
-	go sm.cycloneClient.SetEvent(event)
+	go sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
 			event.PipelineRecord.StageStatus.Package.Status = api.Failed
-			event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
 			event.PipelineRecord.Status = api.Failed
 			event.PipelineRecord.ErrorMessage = fmt.Sprintf("package fail : s%", err.Error())
-			go sm.cycloneClient.SetEvent(event)
 		} else {
 			event.PipelineRecord.StageStatus.Package.Status = api.Success
-			event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
-			go sm.cycloneClient.SetEvent(event)
 		}
+		event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
+		go sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	// Trick: bind the docker sock file to container to support
@@ -252,25 +246,21 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, error) {
 	var err error
 	event.PipelineRecord.StageStatus.ImageBuild = &api.GeneralStageStatus{
-		//		GeneralStageStatus: api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
-		//		},
 	}
-	go sm.cycloneClient.SetEvent(event)
+	go sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Failed
-			event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
 			event.PipelineRecord.Status = api.Failed
 			event.PipelineRecord.ErrorMessage = fmt.Sprintf("image build fail : s%", err.Error())
-			go sm.cycloneClient.SetEvent(event)
 		} else {
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Success
-			event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
-			go sm.cycloneClient.SetEvent(event)
 		}
+		event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
+		go sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	authConfig := sm.dockerManager.AuthConfig
@@ -324,25 +314,21 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 
 func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) (err error) {
 	event.PipelineRecord.StageStatus.IntegrationTest = &api.GeneralStageStatus{
-		//		GeneralStageStatus: api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
-		//		},
 	}
-	go sm.cycloneClient.SetEvent(event)
+	go sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Failed
-			event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
 			event.PipelineRecord.Status = api.Failed
 			event.PipelineRecord.ErrorMessage = fmt.Sprintf("integration test fail : s%", err.Error())
-			go sm.cycloneClient.SetEvent(event)
 		} else {
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Success
-			event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
-			go sm.cycloneClient.SetEvent(event)
 		}
+		event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
+		go sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
@@ -442,25 +428,21 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
 	event.PipelineRecord.StageStatus.ImageRelease = &api.GeneralStageStatus{
-		//		GeneralStageStatus: api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
-		//		},
 	}
-	go sm.cycloneClient.SetEvent(event)
+	go sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Failed
-			event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
 			event.PipelineRecord.Status = api.Failed
 			event.PipelineRecord.ErrorMessage = fmt.Sprintf("build images fail : s%", err.Error())
-			go sm.cycloneClient.SetEvent(event)
 		} else {
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Success
-			event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
-			go sm.cycloneClient.SetEvent(event)
 		}
+		event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
+		go sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)

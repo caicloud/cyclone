@@ -48,7 +48,7 @@ func (worker *Worker) Run() error {
 
 		event.PipelineRecord.Status = api.Failed
 		event.PipelineRecord.ErrorMessage = fmt.Sprintf("fail to get event %s as %s", eventID, err.Error())
-		sendErr := worker.Client.SetEvent(event)
+		sendErr := worker.Client.SendEvent(event)
 		if sendErr != nil {
 			logdog.Errorf("set event result err: %v", err)
 		}
@@ -61,7 +61,7 @@ func (worker *Worker) Run() error {
 	worker.HandleEvent(event)
 
 	// Sent event for cyclone server
-	err = worker.Client.SetEvent(event)
+	err = worker.Client.SendEvent(event)
 	if err != nil {
 		logdog.Errorf("set event result err: %v", err)
 		return err

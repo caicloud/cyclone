@@ -48,7 +48,7 @@ const (
 
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
-	SetEvent(event *api.Event) error
+	SendEvent(event *api.Event) error
 	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error
 }
 
@@ -98,16 +98,16 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 	return resp, nil
 }
 
-func (c *client) sendEvent(event *api.Event) (*api.Event, error) {
+func (c *client) SendEvent(event *api.Event) error {
 	id := event.ID
 	path := fmt.Sprintf(apiPathForEvent, id)
 	resp, err := c.do(http.MethodPut, path, event)
 	if err != nil {
-		return nil, ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Format(err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Format(err)
 	}
 	defer resp.Body.Close()
 
@@ -115,39 +115,18 @@ func (c *client) sendEvent(event *api.Event) (*api.Event, error) {
 		event := &api.Event{}
 		if err := json.Unmarshal(body, event); err != nil {
 			log.Errorf("Fail to unmarshal event %s as %s", id, err.Error())
-			return nil, err
-		}
-
-		return event, nil
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
-	}
-
-	log.Errorf("Set event %s from Cyclone server with error %s", id, body)
-	return nil, ErrorUnknownInternal.Format(body)
-}
-
-// SetEvent used for setting event for circe server.
-func (c *client) SetEvent(event *api.Event) error {
-	DueTime := time.Now().Add(time.Duration(WorkerTimeout))
-	for DueTime.After(time.Now()) == true {
-		_, err := c.sendEvent(event)
-		if err != nil {
-			log.Warningf("set event %s failed: %v", event.ID, err)
-
-			if strings.Contains(err.Error(), "connection refused") {
-				time.Sleep(time.Minute)
-				continue
-			}
 			return err
 		}
 
-		log.Infof("set event %s success", event.ID)
 		return nil
 	}
-	return nil
+
+	if resp.StatusCode == http.StatusNotFound {
+		return ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
+	}
+
+	log.Errorf("Set event %s from Cyclone server with error %s", id, string(body))
+	return ErrorUnknownInternal.Format(body)
 }
 
 func (c *client) GetEvent(id string) (*api.Event, error) {
