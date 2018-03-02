@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	log "github.com/golang/glog"
 	"github.com/gorilla/websocket"
@@ -41,11 +42,13 @@ const (
 
 	apiPathForEvent     = "/events/%s"
 	apiPathForLogStream = "/projects/%s/pipelines/%s/records/%s/stagelogstream"
+
+	WorkerTimeout = 7200 * time.Second
 )
 
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
-	SetEvent(event *api.Event) (*api.Event, error)
+	SetEvent(event *api.Event) error
 	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error
 }
 
@@ -95,7 +98,7 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 	return resp, nil
 }
 
-func (c *client) SetEvent(event *api.Event) (*api.Event, error) {
+func (c *client) sendEvent(event *api.Event) (*api.Event, error) {
 	id := event.ID
 	path := fmt.Sprintf(apiPathForEvent, id)
 	resp, err := c.do(http.MethodPut, path, event)
@@ -109,7 +112,6 @@ func (c *client) SetEvent(event *api.Event) (*api.Event, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
-		log.Infof("Set event %s is got from Cyclone server", id)
 		event := &api.Event{}
 		if err := json.Unmarshal(body, event); err != nil {
 			log.Errorf("Fail to unmarshal event %s as %s", id, err.Error())
@@ -125,6 +127,27 @@ func (c *client) SetEvent(event *api.Event) (*api.Event, error) {
 
 	log.Errorf("Set event %s from Cyclone server with error %s", id, body)
 	return nil, ErrorUnknownInternal.Format(body)
+}
+
+// SetEvent used for setting event for circe server.
+func (c *client) SetEvent(event *api.Event) error {
+	DueTime := time.Now().Add(time.Duration(WorkerTimeout))
+	for DueTime.After(time.Now()) == true {
+		_, err := c.sendEvent(event)
+		if err != nil {
+			log.Warningf("set event %s failed: %v", event.ID, err)
+
+			if strings.Contains(err.Error(), "connection refused") {
+				time.Sleep(time.Minute)
+				continue
+			}
+			return err
+		}
+
+		log.Infof("set event %s success", event.ID)
+		return nil
+	}
+	return nil
 }
 
 func (c *client) GetEvent(id string) (*api.Event, error) {

@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	neturl "net/url"
+	"regexp"
 	"strings"
 
 	"github.com/zoumo/logdog"
@@ -32,6 +33,8 @@ const (
 	// cloneDir represents the dir which the repo clone to.
 	// cloneDir = "/root/code"
 	cloneDir = "/tmp/code"
+
+	repoNameRegexp = `^http[s]?://git[\w]+.com/([\S]*).git$`
 )
 
 // scmProviders represents the set of SCM providers.
@@ -40,6 +43,7 @@ var scmProviders map[api.SCMType]SCMProvider
 type SCMProvider interface {
 	Clone(url, destPath string) (string, error)
 	GetTagCommit(repoPath string, tag string) (string, error)
+	GetTagCommitLog(repoPath string, tag string) map[string]string
 }
 
 func init() {
@@ -69,6 +73,20 @@ func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 // GetCloneDir returns the clone dir.
 func GetCloneDir() string {
 	return cloneDir
+}
+
+func GetRepoName(codeSource *api.CodeSource) (string, error) {
+	gitSource, err := getGitSource(codeSource)
+	if err != nil {
+		logdog.Errorf(err.Error())
+		return "", err
+	}
+	r := regexp.MustCompile(repoNameRegexp)
+	results := r.FindStringSubmatch(gitSource.Url)
+	if len(results) < 2 {
+		return gitSource.Url, nil
+	}
+	return results[1], nil
 }
 
 func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
@@ -134,7 +152,6 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 	}
 
 	// insert token
-
 	url := gitSource.Url
 	if scmType == api.GitHub || scmType == api.GitLab {
 		position := -1

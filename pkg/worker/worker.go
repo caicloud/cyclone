@@ -18,8 +18,6 @@ package worker
 
 import (
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/zoumo/logdog"
 
@@ -29,10 +27,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/stage"
-)
-
-const (
-	WorkerTimeout = 7200 * time.Second
 )
 
 // Worker ...
@@ -52,12 +46,12 @@ func (worker *Worker) Run() error {
 	if err != nil {
 		logdog.Errorf("fail to get event %s as %s", eventID, err.Error())
 
-		// TODO update event status
-		//		event.PipelineRecord.Status = api.Failed
-		//		sendErr := worker.sendEvent(event)
-		//		if sendErr != nil {
-		//			logdog.Errorf("set event result err: %v", err)
-		//		}
+		event.PipelineRecord.Status = api.Failed
+		event.PipelineRecord.ErrorMessage = fmt.Sprintf("fail to get event %s as %s", eventID, err.Error())
+		sendErr := worker.Client.SetEvent(event)
+		if sendErr != nil {
+			logdog.Errorf("set event result err: %v", err)
+		}
 		return err
 	}
 	logdog.Info("get event success", logdog.Fields{"event": event})
@@ -67,12 +61,12 @@ func (worker *Worker) Run() error {
 	worker.HandleEvent(event)
 
 	// Sent event for cyclone server
-	err = worker.sendEvent(event)
+	err = worker.Client.SetEvent(event)
 	if err != nil {
 		logdog.Errorf("set event result err: %v", err)
 		return err
 	}
-	logdog.Info("send event to server", logdog.Fields{"event": event})
+	logdog.Info("send event to server", logdog.Fields{"event id": event.ID})
 	return nil
 }
 
@@ -99,17 +93,18 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		return
 	}
 
-	// TODO(robin) Seperate unit test and package stage.
-	stageManager := stage.NewStageManager(dockerManager, worker.Client)
-	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
-
 	// Init StageStatus
 	if event.PipelineRecord.StageStatus == nil {
 		event.PipelineRecord.StageStatus = &api.StageStatus{}
 	}
 
+	// TODO(robin) Seperate unit test and package stage.
+	stageManager := stage.NewStageManager(dockerManager, worker.Client)
+	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
+	stageManager.SetEvent(event)
+
 	// Execute the code checkout stage,
-	err = execCodeCheckout(worker, stageManager, event)
+	err = stageManager.ExecCodeCheckout(project.SCM.Token, build.Stages.CodeCheckout)
 	if err != nil {
 		logdog.Error(err.Error())
 		return
@@ -165,62 +160,4 @@ func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStag
 	}
 
 	return stageSet
-}
-
-// sendEvent used for setting event for circe server.
-func (worker *Worker) sendEvent(event *api.Event) error {
-	DueTime := time.Now().Add(time.Duration(WorkerTimeout))
-	for DueTime.After(time.Now()) == true {
-		response, err := worker.Client.SetEvent(event)
-		if err != nil {
-			logdog.Warnf("set event failed: %v", err)
-			if strings.Contains(err.Error(), "connection refused") {
-				time.Sleep(time.Minute)
-				continue
-			}
-			return err
-		}
-		logdog.Infof("set event result: %v", response)
-		return nil
-	}
-	return nil
-}
-
-// formatVersionName replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version.
-func formatVersionName(id string, event *api.Event) {
-	if event.PipelineRecord.Name == "" && id != "" {
-		// report to server in sendEvent.
-		version := fmt.Sprintf("%s-%s", id[:7], event.PipelineRecord.StartTime.Format("060102150405"))
-		event.PipelineRecord.Name = version
-		event.PipelineRecord.StageStatus.CodeCheckout.Version = version
-	}
-}
-
-// execCodeCheckout Checkout code and report real-time status to cycloue server.
-func execCodeCheckout(worker *Worker, stageManager stage.StageManager, event *api.Event) error {
-	project := event.Project
-	build := event.Pipeline.Build
-	event.PipelineRecord.StageStatus.CodeCheckout = &api.CodeCheckoutStageStatus{
-		GeneralStageStatus: api.GeneralStageStatus{
-			Status:    api.Running,
-			StartTime: time.Now(),
-		},
-	}
-	go worker.sendEvent(event)
-
-	commitID, err := stageManager.ExecCodeCheckout(project.SCM.Token, build.Stages.CodeCheckout)
-	if err != nil {
-		logdog.Error(err.Error())
-		event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
-		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
-		go worker.sendEvent(event)
-		return err
-	}
-
-	event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
-	event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
-	// Format version name when code checkout success.
-	formatVersionName(commitID, event)
-	go worker.sendEvent(event)
-	return nil
 }

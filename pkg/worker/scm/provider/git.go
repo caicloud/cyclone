@@ -64,3 +64,46 @@ func (g *Git) GetTagCommit(repoPath string, tag string) (string, error) {
 
 	return strings.Trim(string(output), "\n"), err
 }
+
+func (g *Git) getTagAuthor(repoPath string, tag string) (string, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%an"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+func (g *Git) getTagDate(repoPath string, tag string) (string, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=format:"%Y-%m-%dT%H:%M:%S.%s%z"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%s"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+// GetTagAuthor implements VCS interface.
+func (g *Git) GetTagCommitLog(repoPath string, tag string) map[string]string {
+	m := make(map[string]string, 3)
+
+	author, erra := g.getTagAuthor(repoPath, tag)
+	if erra != nil {
+		log.Warningf("get tag author fail %s", erra.Error())
+	}
+	m["author"] = author
+	date, errd := g.getTagDate(repoPath, tag)
+	if errd != nil {
+		log.Warningf("get tag date fail %s", errd.Error())
+	}
+	m["date"] = date
+	message, errm := g.getTagMessage(repoPath, tag)
+	if errm != nil {
+		log.Warningf("get tag message fail %s", errm.Error())
+	}
+	m["message"] = message
+	return m
+}
