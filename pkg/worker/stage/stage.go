@@ -140,14 +140,14 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	if err != nil {
 		return err
 	}
+	formatPipelineRecordName(commitID)
 
 	repoName, errn := scm.GetRepoName(codeSource)
 	if errn != nil {
 		log.Warningf("get repo name fail %s", errn.Error())
 	}
-
-	logMap := scmProvider.GetTagCommitLog(cloneDir, "master")
-	formatVersion(repoName, commitID, logMap["author"], logMap["date"], logMap["message"])
+	commitLog := scmProvider.GetTagCommitLog(cloneDir, "master")
+	setVersion(repoName, commitID, commitLog)
 
 	return nil
 }
@@ -547,19 +547,19 @@ func watchLogs(filePath string, lines chan []byte, stop chan bool) error {
 	}
 }
 
-func formatVersion(repoName, id, author, date, message string) {
+// replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version
+func formatPipelineRecordName(id string) {
 	if event.PipelineRecord.Name == "" && id != "" {
-		// replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version
 		version := fmt.Sprintf("%s-%s", id[:7], event.PipelineRecord.StartTime.Format("060102150405"))
 		event.PipelineRecord.Name = version
-		if event.PipelineRecord.StageStatus.CodeCheckout.Version == nil {
-			event.PipelineRecord.StageStatus.CodeCheckout.Version = make(map[string]api.CommitLog)
-		}
-		event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = api.CommitLog{
-			ID:      id,
-			Author:  author,
-			Date:    date,
-			Message: message,
-		}
 	}
+}
+
+func setVersion(repoName, id string, commitLog api.CommitLog) {
+	if event.PipelineRecord.StageStatus.CodeCheckout.Version == nil {
+		event.PipelineRecord.StageStatus.CodeCheckout.Version = make(map[string]api.CommitLog)
+	}
+	commitLog.ID = id
+	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
+
 }

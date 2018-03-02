@@ -19,6 +19,7 @@ package provider
 import (
 	"path"
 	"strings"
+	"time"
 
 	log "github.com/zoumo/logdog"
 
@@ -72,11 +73,19 @@ func (g *Git) getTagAuthor(repoPath string, tag string) (string, error) {
 	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
 }
 
-func (g *Git) getTagDate(repoPath string, tag string) (string, error) {
-	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=format:"%Y-%m-%dT%H:%M:%S.%s%z"`}
+func (g *Git) getTagDate(repoPath string, tag string) (time.Time, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=rfc`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
+	if err != nil {
+		return time.Time{}, err
+	}
 
-	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+	t, err := time.Parse(time.RFC1123Z, strings.Trim(strings.Trim(string(output), "\n"), "\""))
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t.Local(), err
 }
 
 func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
@@ -87,23 +96,26 @@ func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
 }
 
 // GetTagAuthor implements VCS interface.
-func (g *Git) GetTagCommitLog(repoPath string, tag string) map[string]string {
-	m := make(map[string]string, 3)
+func (g *Git) GetTagCommitLog(repoPath string, tag string) api.CommitLog {
+	commitLog := api.CommitLog{}
 
 	author, erra := g.getTagAuthor(repoPath, tag)
 	if erra != nil {
 		log.Warningf("get tag author fail %s", erra.Error())
 	}
-	m["author"] = author
+
+	commitLog.Author = author
 	date, errd := g.getTagDate(repoPath, tag)
 	if errd != nil {
 		log.Warningf("get tag date fail %s", errd.Error())
 	}
-	m["date"] = date
+
+	commitLog.Date = date
 	message, errm := g.getTagMessage(repoPath, tag)
 	if errm != nil {
 		log.Warningf("get tag message fail %s", errm.Error())
 	}
-	m["message"] = message
-	return m
+
+	commitLog.Message = message
+	return commitLog
 }

@@ -43,7 +43,7 @@ var scmProviders map[api.SCMType]SCMProvider
 type SCMProvider interface {
 	Clone(url, destPath string) (string, error)
 	GetTagCommit(repoPath string, tag string) (string, error)
-	GetTagCommitLog(repoPath string, tag string) map[string]string
+	GetTagCommitLog(repoPath string, tag string) api.CommitLog
 }
 
 func init() {

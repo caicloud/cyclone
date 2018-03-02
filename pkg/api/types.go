@@ -300,10 +300,10 @@ type CodeCheckoutStageStatus struct {
 }
 
 type CommitLog struct {
-	ID      string `bson:"id,omitempty" json:"id,omitempty" description:"commint id"`
-	Author  string `bson:"author,omitempty" json:"author,omitempty" description:"author name"`
-	Date    string `bson:"date,omitempty" json:"date,omitempty" description:"author date"`
-	Message string `bson:"message,omitempty" json:"message,omitempty" description:"commint message"`
+	ID      string    `bson:"id,omitempty" json:"id,omitempty" description:"commint id"`
+	Author  string    `bson:"author,omitempty" json:"author,omitempty" description:"author name"`
+	Date    time.Time `bson:"date,omitempty" json:"date,omitempty" description:"author date"`
+	Message string    `bson:"message,omitempty" json:"message,omitempty" description:"commint message"`
 }
 
 // ListMeta represents metadata that list resources must have.
