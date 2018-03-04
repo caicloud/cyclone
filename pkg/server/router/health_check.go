@@ -20,6 +20,9 @@ import (
 	"net/http"
 
 	restful "github.com/emicklei/go-restful"
+	log "github.com/golang/glog"
+
+	"github.com/caicloud/cyclone/pkg/event"
 )
 
 // healthCheck handles the request to check the health of Cyclone server.
@@ -27,7 +30,25 @@ func (router *router) healthCheck(request *restful.Request, response *restful.Re
 	status := http.StatusInternalServerError
 
 	// Check the health of MongoDB connection.
-	if err := router.dataStore.Ping(); err == nil {
+	dbHealth := false
+	if err := router.dataStore.Ping(); err != nil {
+		log.Errorf("Fail to ping database as %v", err)
+	} else {
+		dbHealth = true
+	}
+
+	// Check the health of cloud providers.
+	cloudHealth := false
+	for n, c := range event.CloudController.Clouds {
+		if err := c.Ping(); err != nil {
+			log.Errorf("Cloud %s is not health as %v", n, err)
+			continue
+		}
+
+		cloudHealth = true
+	}
+
+	if dbHealth && cloudHealth {
 		status = http.StatusOK
 	}
 
