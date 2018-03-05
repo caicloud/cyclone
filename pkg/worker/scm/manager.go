@@ -41,7 +41,7 @@ const (
 var scmProviders map[api.SCMType]SCMProvider
 
 type SCMProvider interface {
-	Clone(url, destPath string) (string, error)
+	Clone(url, ref, destPath string) (string, error)
 	GetTagCommit(repoPath string, tag string) (string, error)
 	GetTagCommitLog(repoPath string, tag string) api.CommitLog
 }
@@ -89,6 +89,45 @@ func GetRepoName(codeSource *api.CodeSource) (string, error) {
 	return results[1], nil
 }
 
+func GetCommitID(codeSource *api.CodeSource) (string, error) {
+	cloneDir := GetCloneDir()
+	scmType := codeSource.Type
+	p, err := GetSCMProvider(scmType)
+	if err != nil {
+		logdog.Error(err.Error())
+		return "", err
+	}
+
+	ref, err := getRef(codeSource)
+	if err != nil {
+		return "", err
+	}
+
+	id, err := p.GetTagCommit(cloneDir, ref)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func GetCommitLog(codeSource *api.CodeSource) (api.CommitLog, error) {
+	cloneDir := GetCloneDir()
+	scmType := codeSource.Type
+	p, err := GetSCMProvider(scmType)
+	if err != nil {
+		logdog.Error(err.Error())
+		return api.CommitLog{}, err
+	}
+
+	ref, err := getRef(codeSource)
+	if err != nil {
+		return api.CommitLog{}, err
+	}
+
+	return p.GetTagCommitLog(cloneDir, ref), nil
+}
+
 func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
 	destPath := GetCloneDir()
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
@@ -107,7 +146,12 @@ func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
 		return "", err
 	}
 
-	logs, err := p.Clone(url, destPath)
+	ref, err := getRef(codeSource)
+	if err != nil {
+		return "", err
+	}
+
+	logs, err := p.Clone(url, ref, destPath)
 	if err != nil {
 		return "", err
 	}
@@ -166,6 +210,20 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 	}
 
 	return url, nil
+}
+
+// getRef provide the ref(branch or tag) of the code.
+func getRef(codeSource *api.CodeSource) (string, error) {
+	gitSource, err := getGitSource(codeSource)
+	if err != nil {
+		logdog.Errorf(err.Error())
+		return "", err
+	}
+	if gitSource.Ref == "" {
+		logdog.Warnf("the ref of %s is empty", gitSource.Url)
+		return "master", nil
+	}
+	return gitSource.Ref, nil
 }
 
 // This function is used to insert the string "insertion" into the "url"

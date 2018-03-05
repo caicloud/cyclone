@@ -41,12 +41,12 @@ func init() {
 	}
 }
 
-func (g *Git) Clone(url, destPath string) (string, error) {
+func (g *Git) Clone(url, ref, destPath string) (string, error) {
 	log.Info("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
-	args := []string{"clone", url, base}
+	args := []string{"clone", "-b", ref, url, base}
 
 	output, err := executil.RunInDir(dir, "git", args...)
 

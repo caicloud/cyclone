@@ -93,7 +93,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 			StartTime: time.Now(),
 		},
 	}
-	go sm.cycloneClient.SendEvent(event)
+	sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
@@ -104,17 +104,15 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
 		}
 		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
-		go sm.cycloneClient.SendEvent(event)
+		sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	codeSource := stage.CodeSources[0]
-	scmProvider, err := scm.GetSCMProvider(codeSource.Type)
 	if err != nil {
 		log.Errorf("Fail to get SCM provider as %s", err.Error())
 		return err
 	}
 
-	cloneDir := scm.GetCloneDir()
 	logs, err := scm.CloneRepo(token, codeSource)
 	if err != nil {
 		logdog.Error(err.Error())
@@ -134,7 +132,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, fileName)
 
 	// Get commit ID
-	commitID, err := scmProvider.GetTagCommit(cloneDir, "master")
+	commitID, err := scm.GetCommitID(codeSource)
 	if err != nil {
 		return err
 	}
@@ -144,7 +142,11 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	if errn != nil {
 		log.Warningf("get repo name fail %s", errn.Error())
 	}
-	commitLog := scmProvider.GetTagCommitLog(cloneDir, "master")
+	commitLog, errl := scm.GetCommitLog(codeSource)
+	if errl != nil {
+		log.Warningf("get commit log fail %s", errl.Error())
+	}
+
 	setVersion(repoName, commitID, commitLog)
 
 	return nil
@@ -155,7 +157,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 		Status:    api.Running,
 		StartTime: time.Now(),
 	}
-	go sm.cycloneClient.SendEvent(event)
+	sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
@@ -166,7 +168,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 			event.PipelineRecord.StageStatus.Package.Status = api.Success
 		}
 		event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
-		go sm.cycloneClient.SendEvent(event)
+		sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	// Trick: bind the docker sock file to container to support
@@ -249,7 +251,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		Status:    api.Running,
 		StartTime: time.Now(),
 	}
-	go sm.cycloneClient.SendEvent(event)
+	sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
@@ -260,7 +262,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Success
 		}
 		event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
-		go sm.cycloneClient.SendEvent(event)
+		sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	authConfig := sm.dockerManager.AuthConfig
@@ -317,7 +319,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		Status:    api.Running,
 		StartTime: time.Now(),
 	}
-	go sm.cycloneClient.SendEvent(event)
+	sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
@@ -328,7 +330,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Success
 		}
 		event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
-		go sm.cycloneClient.SendEvent(event)
+		sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
@@ -431,7 +433,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 		Status:    api.Running,
 		StartTime: time.Now(),
 	}
-	go sm.cycloneClient.SendEvent(event)
+	sm.cycloneClient.SendEvent(event)
 
 	defer func(err error) {
 		if err != nil {
@@ -442,7 +444,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Success
 		}
 		event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
-		go sm.cycloneClient.SendEvent(event)
+		sm.cycloneClient.SendEvent(event)
 	}(err)
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
