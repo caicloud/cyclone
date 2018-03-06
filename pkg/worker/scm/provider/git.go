@@ -17,7 +17,9 @@ limitations under the License.
 package provider
 
 import (
+	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -74,18 +76,26 @@ func (g *Git) getTagAuthor(repoPath string, tag string) (string, error) {
 }
 
 func (g *Git) getTagDate(repoPath string, tag string) (time.Time, error) {
-	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=rfc`}
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=raw`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	t, err := time.Parse(time.RFC1123Z, strings.Trim(strings.Trim(string(output), "\n"), "\""))
+	// timeRaw  --> "timestamp timezone"  eg:"1520239308 +0800"
+	timeRaw := strings.TrimSpace(strings.Trim(strings.Trim(string(output), "\n"), "\""))
+
+	ts := strings.Split(timeRaw, " ")
+	if len(ts) < 1 {
+		return time.Time{}, fmt.Errorf("split time raw  %s fail", timeRaw)
+	}
+
+	timestamp, err := strconv.ParseInt(ts[0], 10, 64)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	return t.Local(), err
+	return time.Unix(timestamp, 0), nil
 }
 
 func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
