@@ -109,12 +109,6 @@ func (c *client) SendEvent(event *api.Event) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
-		event := &api.Event{}
-		if err := json.Unmarshal(body, event); err != nil {
-			log.Errorf("Fail to unmarshal event %s as %s", id, err.Error())
-			return err
-		}
-
 		return nil
 	}
 
