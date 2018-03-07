@@ -57,12 +57,9 @@ func (m *eventManager) GetEvent(id string) (*api.Event, error) {
 }
 
 func (m *eventManager) SetEvent(e *api.Event) (*api.Event, error) {
-	err := m.ds.UpdatePipelineRecord(e.PipelineRecord)
+	err := event.UpdateEvent(e)
 	if err != nil {
-		log.Errorf("Fail to set the pipeline record %s", e.PipelineRecord.ID)
-		return nil, err
+		log.Errorf("update event %s error: %v", e.ID, err)
 	}
-
-	err = event.UpdateEvent(e)
 	return e, err
 }

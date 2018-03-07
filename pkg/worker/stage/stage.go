@@ -96,10 +96,10 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	sm.cycloneClient.SendEvent(event)
 
 	defer func() {
-		if errd := recover(); errd != nil || err != nil {
+		if err != nil {
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("code checkout fail : %v %v", err, errd)
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("code checkout fail : %v", err)
 		} else {
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
 		}
@@ -161,10 +161,10 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 	sm.cycloneClient.SendEvent(event)
 
 	defer func() {
-		if errd := recover(); errd != nil || err != nil {
+		if err != nil {
 			event.PipelineRecord.StageStatus.Package.Status = api.Failed
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("package fail : %v %v", err, errd)
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("package fail : %v", err)
 		} else {
 			event.PipelineRecord.StageStatus.Package.Status = api.Success
 		}
@@ -255,10 +255,10 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	sm.cycloneClient.SendEvent(event)
 
 	defer func() {
-		if errd := recover(); errd != nil || err != nil {
+		if err != nil {
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Failed
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("image build fail : %v %v", err, errd)
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("image build fail : %v", err)
 		} else {
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Success
 		}
@@ -323,10 +323,10 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	sm.cycloneClient.SendEvent(event)
 
 	defer func() {
-		if errd := recover(); errd != nil || err != nil {
+		if err != nil {
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Failed
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("integration test fail : %v %v", err, errd)
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("integration test fail : %v", err)
 		} else {
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Success
 		}
@@ -437,10 +437,10 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	sm.cycloneClient.SendEvent(event)
 
 	defer func() {
-		if errd := recover(); errd != nil || err != nil {
+		if err != nil {
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Failed
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("build images fail : %v %v", err, errd)
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("build images fail : %v", err)
 		} else {
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Success
 		}

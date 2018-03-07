@@ -160,7 +160,10 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 
 	if e.PipelineRecord.Status == api.Running {
 		e.PipelineRecord.Status = api.Aborted
-		event.UpdateEvent(e)
+		err = event.UpdateEvent(e)
+		if err != nil {
+			log.Errorf("update event %s error: %v", e.ID, err)
+		}
 
 		pipelineRecord.Status = api.Aborted
 	}

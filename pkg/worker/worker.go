@@ -51,13 +51,6 @@ func (worker *Worker) Run() error {
 	logdog.Info("handleEvent ...")
 	worker.HandleEvent(event)
 
-	// Sent event for cyclone server
-	err = worker.Client.SendEvent(event)
-	if err != nil {
-		logdog.Errorf("set event result err: %v", err)
-		return err
-	}
-	logdog.Info("send event to server", logdog.Fields{"event id": event.ID})
 	return nil
 }
 
@@ -142,6 +135,14 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 
 	// update event.PipelineRecord.Status from running to success
 	event.PipelineRecord.Status = api.Success
+
+	// Sent event for cyclone server
+	err = worker.Client.SendEvent(event)
+	if err != nil {
+		logdog.Errorf("set event result err: %v", err)
+		return
+	}
+	logdog.Info("send event to server", logdog.Fields{"event id": event.ID})
 }
 
 func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStageName]struct{} {
