@@ -37,6 +37,7 @@ type ProjectManager interface {
 	DeleteProject(projectName string) error
 	ListRepos(projectName string) ([]api.Repository, error)
 	ListBranches(projectName string, repo string) ([]string, error)
+	ListTags(projectName string, repo string) ([]string, error)
 }
 
 // projectManager represents the manager for project.
@@ -177,4 +178,20 @@ func (m *projectManager) ListBranches(projectName string, repo string) ([]string
 	}
 
 	return sp.ListBranches(scmConfig, repo)
+}
+
+// ListBranches lists the tags of the SCM repos authorized for the project.
+func (m *projectManager) ListTags(projectName string, repo string) ([]string, error) {
+	project, err := m.GetProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	scmConfig := project.SCM
+	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return sp.ListTags(scmConfig, repo)
 }
