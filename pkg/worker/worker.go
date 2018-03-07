@@ -17,8 +17,6 @@ limitations under the License.
 package worker
 
 import (
-	"fmt"
-
 	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/cloud"
@@ -45,13 +43,6 @@ func (worker *Worker) Run() error {
 	event, err := worker.Client.GetEvent(eventID)
 	if err != nil {
 		logdog.Errorf("fail to get event %s as %s", eventID, err.Error())
-
-		event.PipelineRecord.Status = api.Failed
-		event.PipelineRecord.ErrorMessage = fmt.Sprintf("fail to get event %s as %s", eventID, err.Error())
-		sendErr := worker.Client.SendEvent(event)
-		if sendErr != nil {
-			logdog.Errorf("set event result err: %v", err)
-		}
 		return err
 	}
 	logdog.Info("get event success", logdog.Fields{"event": event})
