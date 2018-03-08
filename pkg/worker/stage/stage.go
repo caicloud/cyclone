@@ -306,7 +306,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 			opt.ContextDir = opt.ContextDir + "/" + buildInfo.ContextDir
 		}
 
-		if err := sm.dockerManager.Client.BuildImage(opt); err != nil {
+		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
 			return nil, err
 		}
 		builtImages = append(builtImages, buildInfo.ImageName)
@@ -352,7 +352,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}
 
 	if testImage == "" {
-		err := fmt.Errorf("image %s in integration test config is not the built images %v", testConfig.ImageName, builtImages)
+		err = fmt.Errorf("image %s in integration test config is not the built images %v", testConfig.ImageName, builtImages)
 		log.Error(err.Error())
 		return err
 	}
@@ -478,7 +478,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 					OutputStream: logFile,
 				}
 
-				if err := sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
+				if err = sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
 					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
 					return err
 				}
