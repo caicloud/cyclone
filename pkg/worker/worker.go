@@ -95,7 +95,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	// Execute the package stage, this stage is required and can not be skipped.
-	err = stageManager.ExecPackage(build.BuilderImage, build.Stages.UnitTest, build.Stages.Package)
+	err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package, performParams.CacheDependency)
 	if err != nil {
 		logdog.Error(err.Error())
 		return
