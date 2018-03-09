@@ -109,11 +109,6 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	}()
 
 	codeSource := stage.CodeSources[0]
-	if err != nil {
-		log.Errorf("Fail to get SCM provider as %s", err.Error())
-		return err
-	}
-
 	logs, err := scm.CloneRepo(token, codeSource)
 	if err != nil {
 		logdog.Error(err.Error())
