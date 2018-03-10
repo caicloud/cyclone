@@ -198,12 +198,6 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 		return "", err
 	}
 
-	status := pipelineRecord.Status
-	if status == api.Pending || status == api.Running {
-		return "", fmt.Errorf("Can not get the logs as pipeline record %s is %s, please try after it finishes",
-			pipelineRecordID, status)
-	}
-
 	// Check the existence of record folder.
 	logsFolder, err := m.getRecordFolder(pipelineRecordID)
 	if err != nil {

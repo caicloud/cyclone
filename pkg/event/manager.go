@@ -211,6 +211,12 @@ func UpdateEvent(event *api.Event) error {
 	ds := store.NewStore()
 	defer ds.Close()
 
+	err := ds.UpdatePipelineRecord(event.PipelineRecord)
+	if err != nil {
+		log.Errorf("Fail to update the pipeline record %s", event.PipelineRecord.ID)
+		return err
+	}
+
 	if IsEventFinished(event) {
 		log.Infof("Event %s has finished", eventID)
 		if err := ds.DeleteEvent(string(eventID)); err != nil {
@@ -286,8 +292,12 @@ func CheckWorkerTimeout(event *api.Event) {
 	pipelineRecord := event.PipelineRecord
 	ok, left := worker.IsTimeout()
 	if ok {
+
 		pipelineRecord.Status = api.Failed
-		UpdateEvent(event)
+		err = UpdateEvent(event)
+		if err != nil {
+			log.Errorf("update event %s error: %v", event.ID, err)
+		}
 		return
 	}
 
@@ -295,15 +305,17 @@ func CheckWorkerTimeout(event *api.Event) {
 
 	ds := store.NewStore()
 	defer ds.Close()
-	event, err = ds.GetEventByID(event.ID)
+	e, err := ds.GetEventByID(event.ID)
 	if err != nil {
 		return
 	}
 
-	if !IsEventFinished(event) {
-		log.Infof("event time out: %v", event)
-		pipelineRecord.Status = api.Aborted
-		UpdateEvent(event)
+	if !IsEventFinished(e) {
+		e.PipelineRecord.Status = api.Aborted
+		err = UpdateEvent(e)
+		if err != nil {
+			log.Errorf("update event %s error: %v", e.ID, err)
+		}
 	}
 }
 

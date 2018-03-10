@@ -45,6 +45,7 @@ const (
 
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
+	SendEvent(event *api.Event) error
 	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error
 }
 
@@ -92,6 +93,31 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 	}
 
 	return resp, nil
+}
+
+func (c *client) SendEvent(event *api.Event) error {
+	id := event.ID
+	path := fmt.Sprintf(apiPathForEvent, id)
+	resp, err := c.do(http.MethodPut, path, event)
+	if err != nil {
+		return ErrorUnknownInternal.Format(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return ErrorUnknownInternal.Format(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 == 2 {
+		return nil
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
+	}
+
+	log.Errorf("Set event %s from Cyclone server with error %s", id, string(body))
+	return ErrorUnknownInternal.Format(body)
 }
 
 func (c *client) GetEvent(id string) (*api.Event, error) {

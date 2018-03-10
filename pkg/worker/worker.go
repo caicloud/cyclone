@@ -77,9 +77,15 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		return
 	}
 
+	// Init StageStatus
+	if event.PipelineRecord.StageStatus == nil {
+		event.PipelineRecord.StageStatus = &api.StageStatus{}
+	}
+
 	// TODO(robin) Seperate unit test and package stage.
 	stageManager := stage.NewStageManager(dockerManager, worker.Client)
 	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
+	stageManager.SetEvent(event)
 
 	// Execute the code checkout stage,
 	err = stageManager.ExecCodeCheckout(project.SCM.Token, build.Stages.CodeCheckout)
@@ -126,6 +132,17 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	logdog.Info("success: ")
+
+	// update event.PipelineRecord.Status from running to success
+	event.PipelineRecord.Status = api.Success
+
+	// Sent event for cyclone server
+	err = worker.Client.SendEvent(event)
+	if err != nil {
+		logdog.Errorf("set event result err: %v", err)
+		return
+	}
+	logdog.Info("send event to server", logdog.Fields{"event id": event.ID})
 }
 
 func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStageName]struct{} {

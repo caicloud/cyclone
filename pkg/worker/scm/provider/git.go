@@ -17,8 +17,11 @@ limitations under the License.
 package provider
 
 import (
+	"fmt"
 	"path"
+	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/zoumo/logdog"
 
@@ -40,12 +43,12 @@ func init() {
 	}
 }
 
-func (g *Git) Clone(url, destPath string) (string, error) {
+func (g *Git) Clone(url, ref, destPath string) (string, error) {
 	log.Info("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
-	args := []string{"clone", url, base}
+	args := []string{"clone", "-b", ref, url, base}
 
 	output, err := executil.RunInDir(dir, "git", args...)
 
@@ -63,4 +66,66 @@ func (g *Git) GetTagCommit(repoPath string, tag string) (string, error) {
 	output, err := executil.RunInDir(repoPath, "git", args...)
 
 	return strings.Trim(string(output), "\n"), err
+}
+
+func (g *Git) getTagAuthor(repoPath string, tag string) (string, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%an"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+func (g *Git) getTagDate(repoPath string, tag string) (time.Time, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=raw`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// timeRaw  --> "timestamp timezone"  eg:"1520239308 +0800"
+	timeRaw := strings.TrimSpace(strings.Trim(strings.Trim(string(output), "\n"), "\""))
+
+	ts := strings.Split(timeRaw, " ")
+	if len(ts) < 1 {
+		return time.Time{}, fmt.Errorf("split time raw  %s fail", timeRaw)
+	}
+
+	timestamp, err := strconv.ParseInt(ts[0], 10, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Unix(timestamp, 0), nil
+}
+
+func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
+	args := []string{"log", "-n", "1", tag, `--pretty=format:"%s"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+// GetTagAuthor implements VCS interface.
+func (g *Git) GetTagCommitLog(repoPath string, tag string) api.CommitLog {
+	commitLog := api.CommitLog{}
+
+	author, erra := g.getTagAuthor(repoPath, tag)
+	if erra != nil {
+		log.Warningf("get tag author fail %s", erra.Error())
+	}
+
+	commitLog.Author = author
+	date, errd := g.getTagDate(repoPath, tag)
+	if errd != nil {
+		log.Warningf("get tag date fail %s", errd.Error())
+	}
+
+	commitLog.Date = date
+	message, errm := g.getTagMessage(repoPath, tag)
+	if errm != nil {
+		log.Warningf("get tag message fail %s", errm.Error())
+	}
+
+	commitLog.Message = message
+	return commitLog
 }

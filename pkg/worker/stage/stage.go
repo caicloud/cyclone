@@ -39,8 +39,11 @@ import (
 // logFileNameTemplate ...
 const logFileNameTemplate = "/tmp/logs/%s.log"
 
+var event *api.Event
+
 type StageManager interface {
 	SetRecordInfo(project, pipeline, recordID string)
+	SetEvent(event *api.Event)
 	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error
 	ExecPackage(*api.BuilderImage, *api.UnitTestStage, *api.PackageStage) error
 	ExecImageBuild(stage *api.ImageBuildStage) ([]string, error)
@@ -78,15 +81,34 @@ func (sm *stageManager) SetRecordInfo(project, pipeline, recordID string) {
 	sm.recordID = recordID
 }
 
-func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error {
-	codeSource := stage.CodeSources[0]
-	scmProvider, err := scm.GetSCMProvider(codeSource.Type)
-	if err != nil {
-		log.Errorf("Fail to get SCM provider as %s", err.Error())
-		return err
-	}
+func (sm *stageManager) SetEvent(e *api.Event) {
+	event = e
+}
 
-	cloneDir := scm.GetCloneDir()
+// ExecCodeCheckout Checkout code and report real-time status to cycloue server.
+func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) (err error) {
+	event.PipelineRecord.StageStatus.CodeCheckout = &api.CodeCheckoutStageStatus{
+		GeneralStageStatus: api.GeneralStageStatus{
+			Status:    api.Running,
+			StartTime: time.Now(),
+		},
+	}
+	sm.cycloneClient.SendEvent(event)
+
+	defer func() {
+		if err != nil {
+			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("code checkout fail : %v", err)
+		} else {
+			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
+		}
+
+		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
+		sm.cycloneClient.SendEvent(event)
+	}()
+
+	codeSource := stage.CodeSources[0]
 	logs, err := scm.CloneRepo(token, codeSource)
 	if err != nil {
 		logdog.Error(err.Error())
@@ -106,16 +128,45 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, fileName)
 
 	// Get commit ID
-	commitID, err := scmProvider.GetTagCommit(cloneDir, "master")
+	commitID, err := scm.GetCommitID(codeSource)
 	if err != nil {
 		return err
 	}
+	formatPipelineRecordName(commitID)
 
-	log.Infof("The commit id is %s", commitID)
+	repoName, errn := scm.GetRepoName(codeSource)
+	if errn != nil {
+		log.Warningf("get repo name fail %s", errn.Error())
+	}
+	commitLog, errl := scm.GetCommitLog(codeSource)
+	if errl != nil {
+		log.Warningf("get commit log fail %s", errl.Error())
+	}
+
+	setVersion(repoName, commitID, commitLog)
+
 	return nil
 }
 
-func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) error {
+func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) (err error) {
+	event.PipelineRecord.StageStatus.Package = &api.GeneralStageStatus{
+		Status:    api.Running,
+		StartTime: time.Now(),
+	}
+	sm.cycloneClient.SendEvent(event)
+
+	defer func() {
+		if err != nil {
+			event.PipelineRecord.StageStatus.Package.Status = api.Failed
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("package fail : %v", err)
+		} else {
+			event.PipelineRecord.StageStatus.Package.Status = api.Success
+		}
+		event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
+		sm.cycloneClient.SendEvent(event)
+	}()
+
 	// Trick: bind the docker sock file to container to support
 	// docker operation in the container.
 	enterpoint := []byte(sm.dockerManager.EndPoint)[7:]
@@ -191,6 +242,25 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 }
 
 func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, error) {
+	var err error
+	event.PipelineRecord.StageStatus.ImageBuild = &api.GeneralStageStatus{
+		Status:    api.Running,
+		StartTime: time.Now(),
+	}
+	sm.cycloneClient.SendEvent(event)
+
+	defer func() {
+		if err != nil {
+			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Failed
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("image build fail : %v", err)
+		} else {
+			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Success
+		}
+		event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
+		sm.cycloneClient.SendEvent(event)
+	}()
+
 	authConfig := sm.dockerManager.AuthConfig
 	authOpt := docker_client.AuthConfiguration{
 		Username: authConfig.Username,
@@ -231,7 +301,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 			opt.ContextDir = opt.ContextDir + "/" + buildInfo.ContextDir
 		}
 
-		if err := sm.dockerManager.Client.BuildImage(opt); err != nil {
+		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
 			return nil, err
 		}
 		builtImages = append(builtImages, buildInfo.ImageName)
@@ -240,7 +310,25 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	return builtImages, nil
 }
 
-func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) error {
+func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) (err error) {
+	event.PipelineRecord.StageStatus.IntegrationTest = &api.GeneralStageStatus{
+		Status:    api.Running,
+		StartTime: time.Now(),
+	}
+	sm.cycloneClient.SendEvent(event)
+
+	defer func() {
+		if err != nil {
+			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Failed
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("integration test fail : %v", err)
+		} else {
+			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Success
+		}
+		event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
+		sm.cycloneClient.SendEvent(event)
+	}()
+
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
 	// Start the services.
@@ -259,7 +347,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}
 
 	if testImage == "" {
-		err := fmt.Errorf("image %s in integration test config is not the built images %v", testConfig.ImageName, builtImages)
+		err = fmt.Errorf("image %s in integration test config is not the built images %v", testConfig.ImageName, builtImages)
 		log.Error(err.Error())
 		return err
 	}
@@ -336,7 +424,25 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 	return serviceNames, nil
 }
 
-func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) error {
+func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
+	event.PipelineRecord.StageStatus.ImageRelease = &api.GeneralStageStatus{
+		Status:    api.Running,
+		StartTime: time.Now(),
+	}
+	sm.cycloneClient.SendEvent(event)
+
+	defer func() {
+		if err != nil {
+			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Failed
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("build images fail : %v", err)
+		} else {
+			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Success
+		}
+		event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
+		sm.cycloneClient.SendEvent(event)
+	}()
+
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
 	policies := stage.ReleasePolicy
@@ -367,7 +473,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 					OutputStream: logFile,
 				}
 
-				if err := sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
+				if err = sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
 					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
 					return err
 				}
@@ -419,4 +525,21 @@ func watchLogs(filePath string, lines chan []byte, stop chan bool) error {
 			return nil
 		}
 	}
+}
+
+// replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version
+func formatPipelineRecordName(id string) {
+	if event.PipelineRecord.Name == "" && id != "" {
+		version := fmt.Sprintf("%s-%s", id[:7], event.PipelineRecord.StartTime.Format("060102150405"))
+		event.PipelineRecord.Name = version
+	}
+}
+
+func setVersion(repoName, id string, commitLog api.CommitLog) {
+	if event.PipelineRecord.StageStatus.CodeCheckout.Version == nil {
+		event.PipelineRecord.StageStatus.CodeCheckout.Version = make(map[string]api.CommitLog)
+	}
+	commitLog.ID = id
+	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
+
 }

@@ -22,6 +22,7 @@ import (
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/store"
 )
 
@@ -55,12 +56,10 @@ func (m *eventManager) GetEvent(id string) (*api.Event, error) {
 	return event, nil
 }
 
-func (m *eventManager) SetEvent(event *api.Event) (*api.Event, error) {
-	err := m.ds.UpdateEvent(event)
+func (m *eventManager) SetEvent(e *api.Event) (*api.Event, error) {
+	err := event.UpdateEvent(e)
 	if err != nil {
-		log.Errorf("Fail to set the event %s", event.ID)
-		return nil, err
+		log.Errorf("update event %s error: %v", e.ID, err)
 	}
-
-	return event, nil
+	return e, err
 }
