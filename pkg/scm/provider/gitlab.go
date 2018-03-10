@@ -157,6 +157,27 @@ func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	return branchNames, nil
 }
 
+// ListTags lists the tags for specified repo.
+func (g *GitLab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	tags, _, err := client.Tags.ListTags(repo)
+	if err != nil {
+		log.Errorf("Fail to list tags for %s", repo)
+		return nil, err
+	}
+
+	tagNames := make([]string, len(tags))
+	for i, tag := range tags {
+		tagNames[i] = tag.Name
+	}
+
+	return tagNames, nil
+}
+
 // newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token.
 func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client

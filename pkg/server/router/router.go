@@ -167,6 +167,12 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 		Doc("List branches of the repo for the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.QueryParameter("repo", "the repo to list branches for").Required(true)))
+
+	// GET /api/v1/projects/{project}/tags
+	ws.Route(ws.GET("/projects/{project}/tags").To(router.listTags).
+		Doc("List tags of the repo for the project").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.QueryParameter("repo", "the repo to list branches for").Required(true)))
 }
 
 // registerPipelineAPIs registers pipeline related endpoints.

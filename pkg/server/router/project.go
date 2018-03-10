@@ -139,3 +139,23 @@ func (router *router) listBranches(request *restful.Request, response *restful.R
 
 	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(branches, len(branches)))
 }
+
+// listBranches handles the request to list branches for SCM repositories.
+func (router *router) listTags(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+	repo := request.QueryParameter(api.Repo)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	tags, err := router.projectManager.ListTags(name, repo)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(tags, len(tags)))
+}

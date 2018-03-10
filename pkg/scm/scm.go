@@ -48,6 +48,7 @@ type SCMProvider interface {
 	GetToken(scm *api.SCMConfig) (string, error)
 	ListRepos(scm *api.SCMConfig) ([]api.Repository, error)
 	ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
+	ListTags(scm *api.SCMConfig, repo string) ([]string, error)
 	CheckToken(scm *api.SCMConfig) bool
 }
 

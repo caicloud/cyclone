@@ -184,6 +184,49 @@ func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	return branches, nil
 }
 
+// ListTags lists the tags for specified repo.
+func (g *GitHub) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newClientByBasicAuth(scm.Username, scm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	opt := &github.ListOptions{
+		PerPage: listPerPageOpt,
+	}
+
+	owner := scm.Username
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			log.Error(err.Error())
+			return nil, err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
+	var allTags []*github.RepositoryTag
+	for {
+		tags, resp, err := client.Repositories.ListTags(owner, repo, opt)
+		if err != nil {
+			return nil, err
+		}
+		allTags = append(allTags, tags...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	tags := make([]string, len(allTags))
+	for i, b := range allTags {
+		tags[i] = *b.Name
+	}
+
+	return tags, nil
+}
+
 // newClientByBasicAuth news GitHub client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
