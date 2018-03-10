@@ -34,6 +34,7 @@ import (
 type PipelineManager interface {
 	CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error)
 	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
+	GetPipelineByID(id string) (*api.Pipeline, error)
 	ListPipelines(projectName string, queryParams api.QueryParams, recentCount, recentSuccessCount, recentFailedCount int) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
@@ -97,6 +98,20 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, httperror.ErrorContentNotFound.Format(pipelineName)
+		}
+
+		return nil, err
+	}
+
+	return pipeline, nil
+}
+
+// GetPipelineByID gets the pipeline by id.
+func (m *pipelineManager) GetPipelineByID(id string) (*api.Pipeline, error) {
+	pipeline, err := m.dataStore.FindPipelineByID(id)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format("pipeline with id %s", id)
 		}
 
 		return nil, err

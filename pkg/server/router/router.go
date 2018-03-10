@@ -36,6 +36,9 @@ const (
 	// pipelinePathParameterName represents the name of the path parameter for pipeline.
 	pipelinePathParameterName = "pipeline"
 
+	// pipelineIDPathParameterName represents the name of the path parameter for pipeline id.
+	pipelineIDPathParameterName = "pipelineid"
+
 	// pipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
 	pipelineRecordPathParameterName = "recordid"
 
@@ -293,6 +296,23 @@ func (router *router) registerEventAPIs(ws *restful.WebService) {
 	ws.Route(ws.PUT("/events/{eventid}").To(router.setEvent).
 		Doc("Set the event by id").
 		Param(ws.PathParameter("eventid", "id of the event").DataType("string")))
+}
+
+// registerWebhookAPIs registers webhook related endpoints.
+func (router *router) registerWebhookAPIs(ws *restful.WebService) {
+	log.Info("Register webhook APIs")
+
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+
+	// GET /api/v1/githubwebhooks/{pipelineid}
+	ws.Route(ws.GET("/githubwebhooks/{pipelineid}").To(router.getEvent).
+		Doc("Trigger the pipeline by github webhook").
+		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
+
+	// PUT /api/v1/gitlabwebhooks/{pipelineid}
+	ws.Route(ws.PUT("/gitlabwebhooks/{pipelineid}").To(router.setEvent).
+		Doc("Trigger the pipeline by gitlab webhook").
+		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
 }
 
 // registerCloudAPIs registers cloud related endpoints.

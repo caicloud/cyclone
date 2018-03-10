@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	log "github.com/golang/glog"
-	gitlab "github.com/xanzy/go-gitlab"
+	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 
 	"github.com/caicloud/cyclone/pkg/api"
