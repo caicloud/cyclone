@@ -289,16 +289,15 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 
 	builtImages := []string{}
 	for _, buildInfo := range stage.BuildInfos {
-		dockerfilePath := "Dockerfile"
+		opt.Dockerfile = "Dockerfile"
 		if buildInfo.DockerfilePath != "" {
-			dockerfilePath = buildInfo.DockerfilePath
+			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
 		}
 
 		opt.Name = buildInfo.ImageName
-		opt.Dockerfile = dockerfilePath
 		opt.ContextDir = scm.GetCloneDir()
 		if buildInfo.ContextDir != "" {
-			opt.ContextDir = opt.ContextDir + "/" + buildInfo.ContextDir
+			opt.ContextDir = scm.GetCloneDir() + "/" + buildInfo.ContextDir
 		}
 
 		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
