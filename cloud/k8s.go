@@ -179,6 +179,7 @@ func (cloud *K8SCloud) CanProvision(quota Quota) (bool, error) {
 
 // Provision returns a worker if the cloud can provison
 func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error) {
+	logdog.Infof("Create worker %s with options %v", id, wopts)
 	var cp *K8SCloud
 	// If specify the namespace for worker in worker options, new a cloud pointer and set its namespace.
 	if len(wopts.Namespace) != 0 {
@@ -223,6 +224,42 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 				},
 			},
 		},
+	}
+
+	// Mount the cache volume to the worker.
+	cacheVolume := wopts.CacheVolume
+	mountPath := wopts.MountPath
+	if len(cacheVolume) != 0 && len(mountPath) != 0 {
+		// Check the existence and status of cache volume.
+		if pvc, err := cloud.client.CoreV1().PersistentVolumeClaims(cp.namespace).Get(cacheVolume); err == nil {
+			if pvc.Status.Phase == apiv1.ClaimBound {
+				volumeName := "cache-dependency"
+
+				pod.Spec.Containers[0].VolumeMounts = []apiv1.VolumeMount{
+					apiv1.VolumeMount{
+						Name:      volumeName,
+						MountPath: mountPath,
+					},
+				}
+
+				pod.Spec.Volumes = []apiv1.Volume{
+					apiv1.Volume{
+						Name: volumeName,
+					},
+				}
+
+				pod.Spec.Volumes[0].PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
+					ClaimName: cacheVolume,
+				}
+			} else {
+				// Just log error and let the pipeline to run in non-cache mode.
+				logdog.Errorf("Can not use cache volume %s as its status is %v", cacheVolume, pvc.Status.Phase)
+			}
+		} else {
+			// Just log error and let the pipeline to run in non-cache mode.
+			logdog.Errorf("Can not use cache volume %s as fail to get it: %v", cacheVolume, err)
+		}
+
 	}
 
 	// pod, err = cloud.Client.CoreV1().Pods(cloud.namespace).Create(pod)

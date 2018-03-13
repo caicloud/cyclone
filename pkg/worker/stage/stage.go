@@ -45,7 +45,7 @@ type StageManager interface {
 	SetRecordInfo(project, pipeline, recordID string)
 	SetEvent(event *api.Event)
 	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error
-	ExecPackage(*api.BuilderImage, *api.UnitTestStage, *api.PackageStage) error
+	ExecPackage(*api.BuilderImage, *api.BuildInfo, *api.UnitTestStage, *api.PackageStage, bool) error
 	ExecImageBuild(stage *api.ImageBuildStage) ([]string, error)
 	ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) error
 	ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) error
@@ -148,7 +148,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	return nil
 }
 
-func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) (err error) {
+func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *api.BuildInfo, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage, cacheDependency bool) (err error) {
 	event.PipelineRecord.StageStatus.Package = &api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
@@ -176,6 +176,21 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, unitTestStag
 	cloneDir := scm.GetCloneDir()
 	hostConfig := &docker_client.HostConfig{
 		Binds: []string{fmt.Sprintf("%s:%s", cloneDir, cloneDir), pathenterpoint},
+	}
+
+	// Mount the cache volume.
+	if cacheDependency && buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+		var bindVolume string
+		switch buildInfo.BuildTool.Name {
+		case api.MavenBuildTool:
+			bindVolume = "/root/.m2:/root/.m2"
+		case api.NPMBuildTool:
+			bindVolume = "/root/.npm:/root/.npm"
+		default:
+			return fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, api.MavenBuildTool, api.NPMBuildTool)
+		}
+
+		hostConfig.Binds = append(hostConfig.Binds, bindVolume)
 	}
 
 	// Start and run the container from builder image.

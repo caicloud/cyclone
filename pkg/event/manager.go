@@ -17,6 +17,7 @@ limitations under the License.
 package event
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/golang/glog"
@@ -171,9 +172,36 @@ func createWorkerForEvent(event *api.Event) error {
 	log.Infof("Create worker for event %s", event.ID)
 	opts := workerOptions.DeepCopy()
 	workerCfg := event.Project.Worker
+	buildInfo := event.Pipeline.Build.BuildInfo
+	performParams := event.PipelineRecord.PerformParams
 	if workerCfg != nil {
-		opts.Namespace = workerCfg.Namespace
+		if len(workerCfg.Namespace) != 0 {
+			opts.Namespace = workerCfg.Namespace
+		}
+
+		// Only use cache when:
+		// * the project has enable caches
+		// * the pipeline has enable cache and set the build tool
+		// * the perform params has enable cache
+		// * the project has enable the cache for the build tool of the pipeline
+		if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil && performParams.CacheDependency {
+			tool := buildInfo.BuildTool.Name
+			if cache, ok := workerCfg.DependencyCaches[tool]; ok {
+				switch tool {
+				case api.MavenBuildTool:
+					opts.MountPath = "/root/.m2"
+				case api.NPMBuildTool:
+					opts.MountPath = "/root/.npm"
+				default:
+					// Just log error and let the pipeline to run in non-cache mode.
+					return fmt.Errorf("Build tool %s is not supported, only supports: %s, %s", tool, api.MavenBuildTool, api.NPMBuildTool)
+				}
+
+				opts.CacheVolume = cache.Name
+			}
+		}
 	}
+
 	worker, err := CloudController.Provision(event.ID, opts)
 	if err != nil {
 		return err
