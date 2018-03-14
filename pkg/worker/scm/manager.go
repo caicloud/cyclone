@@ -76,7 +76,7 @@ func GetCloneDir() string {
 }
 
 func GetRepoName(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := getGitSource(codeSource)
+	gitSource, err := GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err
@@ -159,7 +159,7 @@ func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
 	return logs, err
 }
 
-func getGitSource(codeSource *api.CodeSource) (*api.GitSource, error) {
+func GetGitSource(codeSource *api.CodeSource) (*api.GitSource, error) {
 	scmType := codeSource.Type
 	var gitSource *api.GitSource
 	switch scmType {
@@ -184,7 +184,7 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 		token = "oauth2:" + token
 	}
 
-	gitSource, err := getGitSource(codeSource)
+	gitSource, err := GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err
@@ -214,7 +214,7 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 
 // getRef provide the ref(branch or tag) of the code.
 func getRef(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := getGitSource(codeSource)
+	gitSource, err := GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err

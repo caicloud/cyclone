@@ -195,3 +195,21 @@ func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
 
 	return client, nil
 }
+
+// NewTagFromLatest generate a new tag
+func (g *GitLab) NewTagFromLatest(tagName, description, commitID, url, token string) error {
+	owner, name := parseURL(url)
+	ref := "master"
+	tag := &gitlab.CreateTagOptions{
+		TagName: &tagName,
+		Ref:     &ref,
+		Message: &description,
+	}
+
+	gitlabServer := "https://gitlab.com"
+	client := gitlab.NewOAuthClient(nil, token)
+	client.SetBaseURL(gitlabServer + "/api/v3/")
+
+	_, _, err := client.Tags.CreateTag(owner+"/"+name, tag)
+	return err
+}

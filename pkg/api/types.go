@@ -333,6 +333,7 @@ type CommitLog struct {
 	Author  string    `bson:"author,omitempty" json:"author,omitempty" description:"author name"`
 	Date    time.Time `bson:"date,omitempty" json:"date,omitempty" description:"author date"`
 	Message string    `bson:"message,omitempty" json:"message,omitempty" description:"commint message"`
+	Main    bool      `bson:"main,omitempty" json:"main,omitempty" description:"whether is the main repo"`
 }
 
 // ListMeta represents metadata that list resources must have.

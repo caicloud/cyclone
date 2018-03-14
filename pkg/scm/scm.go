@@ -24,6 +24,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	wscm "github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
 // scmProviders represents the set of SCM providers.
@@ -50,6 +51,7 @@ type SCMProvider interface {
 	ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	ListTags(scm *api.SCMConfig, repo string) ([]string, error)
 	CheckToken(scm *api.SCMConfig) bool
+	NewTagFromLatest(tagName, description, commitID, url, token string) error
 }
 
 // GetSCMProvider gets the SCM provider by the type.
@@ -121,6 +123,33 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 
 	// Cleanup the password for security.
 	config.Password = ""
+
+	return nil
+}
+
+func NewTagFromLatest(codeSource *api.CodeSource, tagName, description, token string) error {
+	commitID, err := wscm.GetCommitID(codeSource)
+	if err != nil {
+		return err
+	}
+	scmType := codeSource.Type
+
+	gitSource, err := wscm.GetGitSource(codeSource)
+	if err != nil {
+		return err
+	}
+
+	url := gitSource.Url
+
+	p, err := GetSCMProvider(scmType)
+	if err != nil {
+		return err
+	}
+
+	err = p.NewTagFromLatest(tagName, description, commitID, url, token)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

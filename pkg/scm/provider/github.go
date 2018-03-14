@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	log "github.com/golang/glog"
 	"github.com/google/go-github/github"
@@ -252,4 +253,58 @@ func newClientByToken(token string) (*github.Client, error) {
 	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
 	return github.NewClient(httpClient), nil
+}
+
+// NewTagFromLatest generate a new tag
+func (g *GitHub) NewTagFromLatest(tagName, description, commitID, url, token string) error {
+	objecttype := "commit"
+	curtime := time.Now()
+	email := "circle@caicloud.io"
+	name := "circle"
+
+	tag := &github.Tag{
+		Tag:     &tagName,
+		Message: &(description),
+		Object: &github.GitObject{
+			Type: &objecttype,
+			SHA:  &commitID,
+		},
+		Tagger: &github.CommitAuthor{
+			Date:  &curtime,
+			Name:  &name,
+			Email: &email,
+		},
+	}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+	client := github.NewClient(tc)
+
+	owner, repo := parseURL(url)
+	_, _, err := client.Git.CreateTag(owner, repo, tag)
+	if err != nil {
+		return err
+	}
+
+	ref := "refs/tags/" + tagName
+	reference := &github.Reference{
+		Ref: &ref,
+		Object: &github.GitObject{
+			Type: &objecttype,
+			SHA:  &commitID,
+		},
+	}
+	refs, _, err := client.Git.CreateRef(owner, repo, reference)
+	log.Info(refs)
+	return err
+}
+
+// parseURL is a helper func to parse the url,such as https://github.com/caicloud/test.git
+// to return owner(caicloud) and name(test)
+func parseURL(url string) (string, string) {
+	strs := strings.SplitN(url, "/", -1)
+	name := strings.SplitN(strs[4], ".", -1)
+	return strs[3], name[0]
 }
