@@ -230,6 +230,7 @@ func createWorkerForEvent(event *api.Event) error {
 
 func postHookEvent(event *api.Event) {
 	log.Info("posthook of event")
+	terminateEventWorker(event.Worker)
 }
 
 // UpdateEvent updates the event. If it is finished, delete it and trigger the post hook.
