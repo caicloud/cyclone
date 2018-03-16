@@ -311,7 +311,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
 		}
 
-		opt.Name = buildInfo.ImageName
+		opt.Name = formatImageName(buildInfo.ImageName)
 		opt.ContextDir = scm.GetCloneDir()
 		if buildInfo.ContextDir != "" {
 			opt.ContextDir = scm.GetCloneDir() + "/" + buildInfo.ContextDir
@@ -320,7 +320,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
 			return nil, err
 		}
-		builtImages = append(builtImages, buildInfo.ImageName)
+		builtImages = append(builtImages, opt.Name)
 	}
 
 	return builtImages, nil
@@ -480,9 +480,9 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 
 	for _, p := range policies {
 		for _, builtImage := range builtImages {
-			if strings.HasPrefix(builtImage, p.ImageName) {
+			imageParts := strings.Split(builtImage, ":")
+			if strings.EqualFold(imageParts[0], strings.Split(p.ImageName, ":")[0]) {
 				log.Infof("Release the built image %s", builtImage)
-				imageParts := strings.Split(builtImage, ":")
 				opts := docker_client.PushImageOptions{
 					Name:         imageParts[0],
 					Tag:          imageParts[1],
@@ -559,4 +559,26 @@ func setVersion(repoName, id string, main bool, commitLog api.CommitLog) {
 	commitLog.Main = main
 	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
 
+}
+
+/* formatImageName Ensure that the image name including a tag.
+//  input        output
+//  test:v1      test:v1
+//  test         test:{rocordName}
+*/
+func formatImageName(namein string) string {
+	var nameout string
+	tname := strings.TrimSpace(namein)
+	names := strings.Split(tname, ":")
+	switch len(names) {
+	case 1:
+		nameout = names[0] + ":" + event.PipelineRecord.Name
+	case 2:
+		nameout = tname
+	default:
+		logdog.Error("image name error", logdog.Fields{"imageName": namein})
+		nameout = tname
+	}
+
+	return nameout
 }
