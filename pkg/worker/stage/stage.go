@@ -109,6 +109,8 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	}()
 
 	codeSource := stage.CodeSources[0]
+	// TODO check parameter, the number of `codeSource.Main=true` must >= 1
+
 	logs, err := scm.CloneRepo(token, codeSource)
 	if err != nil {
 		logdog.Error(err.Error())
@@ -143,7 +145,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 		log.Warningf("get commit log fail %s", errl.Error())
 	}
 
-	setVersion(repoName, commitID, commitLog)
+	setVersion(repoName, commitID, codeSource.Main, commitLog)
 
 	return nil
 }
@@ -549,11 +551,12 @@ func formatPipelineRecordName(id string) {
 	}
 }
 
-func setVersion(repoName, id string, commitLog api.CommitLog) {
+func setVersion(repoName, id string, main bool, commitLog api.CommitLog) {
 	if event.PipelineRecord.StageStatus.CodeCheckout.Version == nil {
 		event.PipelineRecord.StageStatus.CodeCheckout.Version = make(map[string]api.CommitLog)
 	}
 	commitLog.ID = id
+	commitLog.Main = main
 	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
 
 }

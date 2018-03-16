@@ -17,13 +17,18 @@ limitations under the License.
 package worker
 
 import (
+	"fmt"
+
 	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
+	"github.com/caicloud/cyclone/pkg/scm"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
+
 	"github.com/caicloud/cyclone/pkg/worker/stage"
 )
 
@@ -122,11 +127,27 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		}
 	}
 
-	// Execute the integration test stage if necessary.
+	// Execute the image release stage if necessary.
 	if _, ok := stageSet[api.ImageReleaseStageName]; ok {
 		err = stageManager.ExecImageRelease(builtImages, build.Stages.ImageRelease)
 		if err != nil {
 			logdog.Error(err.Error())
+			return
+		}
+	}
+
+	if event.PipelineRecord.PerformParams.CreateSCMTag {
+		codesource := event.Pipeline.Build.Stages.CodeCheckout.CodeSources[0]
+		err = scm.NewTagFromLatest(codesource, event.PipelineRecord.Name, event.PipelineRecord.PerformParams.Description, project.SCM.Token)
+		if err != nil {
+			logdog.Errorf("new tag from latest fail : %v", err)
+			event.PipelineRecord.Status = api.Failed
+			event.PipelineRecord.ErrorMessage = fmt.Sprintf("generate tag fail: %v", err)
+			err = worker.Client.SendEvent(event)
+			if err != nil {
+				logdog.Errorf("set event result err: %v", err)
+				return
+			}
 			return
 		}
 	}
