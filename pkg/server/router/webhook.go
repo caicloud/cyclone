@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/google/go-github/github"
@@ -82,6 +83,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
+			Name:        *event.Release.TagName,
 			Ref:         *event.Release.TagName,
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
@@ -192,6 +194,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		performParams = &api.PipelinePerformParams{
 			// TODO (robin) Unify the ref here.
+			Name:        strings.Split(event.Ref, "/")[2],
 			Ref:         event.Ref,
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
@@ -211,7 +214,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		performParams = &api.PipelinePerformParams{
 			Ref:         fmt.Sprintf(pullRefTemplate, objectAttributes.ID),
-			Description: "Triggered by pull request",
+			Description: objectAttributes.Title,
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
 	case gitlab.MergeCommentEvent:

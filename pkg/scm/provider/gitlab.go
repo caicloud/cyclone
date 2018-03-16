@@ -178,6 +178,68 @@ func (g *GitLab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// CreateWebHook creates webhook for specified repo.
+func (g *GitLab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
+		return fmt.Errorf("The webhook %v is not correct", webHook)
+	}
+
+	client, err := newGitLabClient(cfg.Server, cfg.Username, cfg.Token)
+	if err != nil {
+		return err
+	}
+
+	enableState, disableState := true, false
+	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
+	hook := gitlab.AddProjectHookOptions{
+		PushEvents: &disableState,
+	}
+
+	for _, e := range webHook.Events {
+		switch e {
+		case scm.PullRequestEventType:
+			hook.MergeRequestsEvents = &enableState
+		case scm.PullRequestCommentEventType:
+			hook.NoteEvents = &enableState
+		case scm.PushEventType:
+			hook.PushEvents = &enableState
+		case scm.TagReleaseEventType:
+			hook.TagPushEvents = &enableState
+		default:
+			log.Errorf("The event type %s is not supported, will be ignored", e)
+			return nil
+		}
+	}
+	hook.URL = &webHook.Url
+
+	onwer, name := parseURL(repoURL)
+	_, _, err = client.Projects.AddProjectHook(onwer+"/"+name, &hook)
+	return err
+}
+
+// DeleteWebHook deletes webhook from specified repo.
+func (g *GitLab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl string) error {
+	client, err := newGitLabClient(cfg.Server, cfg.Username, cfg.Token)
+	if err != nil {
+		return err
+	}
+
+	owner, name := parseURL(repoURL)
+	hooks, _, err := client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if strings.HasPrefix(hook.URL, webHookUrl) {
+			_, err = client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID)
+			return nil
+		}
+	}
+
+	return nil
+}
+
 // newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token.
 func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client

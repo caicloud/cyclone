@@ -154,10 +154,10 @@ type CodeSource struct {
 
 // GitSource represents the config to get code from git.
 type GitSource struct {
-	Url      string   `bson:"url,omitempty" json:"url,omitempty" description:"url of git repo"`
-	Ref      *CodeRef `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
-	Username string   `bson:"username,omitempty" json:"username,omitempty" description:"username of git"`
-	Password string   `bson:"password,omitempty" json:"password,omitempty" description:"password of git"`
+	Url      string `bson:"url,omitempty" json:"url,omitempty" description:"url of git repo"`
+	Ref      string `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
+	Username string `bson:"username,omitempty" json:"username,omitempty" description:"username of git"`
+	Password string `bson:"password,omitempty" json:"password,omitempty" description:"password of git"`
 }
 
 type CodeRefType string
@@ -255,6 +255,8 @@ type SCMTrigger struct {
 	TagRelease         *TagReleaseTrigger         `bson:"tagRelease,omitempty" json:"tagRelease,omitempty" description:"commit trigger strategy"`
 	PullRequest        *PullRequestTrigger        `bson:"pullRequest,omitempty" json:"pullRequest,omitempty" description:"pull request trigger strategy"`
 	PullRequestComment *PullRequestCommentTrigger `bson:"pullRequestComment,omitempty" json:"pullRequestComment,omitempty" description:"pull request comment trigger strategy"`
+
+	Webhook string `bson:"webhook,omitempty" json:"webhook,omitempty" description:"webhook for the SCM trigger"`
 }
 
 // GeneralTrigger represents the general config for all auto trigger strategies.

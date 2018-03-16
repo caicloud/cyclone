@@ -30,6 +30,8 @@ const (
 
 	CycloneServer      = "CYCLONE_SERVER"
 	ConsoleWebEndpoint = "CONSOLE_WEB_ENDPOINT"
+	// CallbackURL ...
+	CallbackURL = "CALLBACK_URL"
 
 	// Registry
 

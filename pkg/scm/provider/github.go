@@ -228,6 +228,55 @@ func (g *GitHub) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 	return tags, nil
 }
 
+// CreateWebHook creates webhook for specified repo.
+func (g *GitHub) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
+		return fmt.Errorf("The webhook %v is not correct", webHook)
+	}
+
+	client, err := newClientByBasicAuth(scm.Username, scm.Token)
+	if err != nil {
+		return err
+	}
+	hookName := "web"
+	hook := github.Hook{
+		Name:   &hookName,
+		Events: convertToGithubEvents(webHook.Events),
+		Config: map[string]interface{}{
+			"url":          webHook.Url,
+			"content_type": "json",
+		},
+	}
+	owner, name := parseURL(repoURL)
+	_, _, err = client.Repositories.CreateHook(owner, name, &hook)
+	return err
+}
+
+// DeleteWebHook deletes webhook from specified repo.
+func (g *GitHub) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
+	client, err := newClientByBasicAuth(scm.Username, scm.Token)
+	if err != nil {
+		return err
+	}
+
+	owner, name := parseURL(repoURL)
+	hooks, _, err := client.Repositories.ListHooks(owner, name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if hookurl, ok := hook.Config["url"].(string); ok {
+			if strings.HasPrefix(hookurl, webHookUrl) {
+				_, err = client.Repositories.DeleteHook(owner, name, *hook.ID)
+				return nil
+			}
+		}
+	}
+
+	return nil
+}
+
 // newClientByBasicAuth news GitHub client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
@@ -301,10 +350,23 @@ func (g *GitHub) NewTagFromLatest(tagName, description, commitID, url, token str
 	return err
 }
 
-// parseURL is a helper func to parse the url,such as https://github.com/caicloud/test.git
-// to return owner(caicloud) and name(test)
-func parseURL(url string) (string, string) {
-	strs := strings.SplitN(url, "/", -1)
-	name := strings.SplitN(strs[4], ".", -1)
-	return strs[3], name[0]
+// convertToGithubEvents converts the defined event types to Github event types.
+func convertToGithubEvents(events []scm.EventType) []string {
+	var ge []string
+	for _, e := range events {
+		switch e {
+		case scm.PullRequestEventType:
+			ge = append(ge, "pull_request")
+		case scm.PullRequestCommentEventType:
+			ge = append(ge, "pull_request_review_comment")
+		case scm.PushEventType:
+			ge = append(ge, "push")
+		case scm.TagReleaseEventType:
+			ge = append(ge, "release")
+		default:
+			log.Errorf("The event type %s is not supported, will be ignored", e)
+		}
+	}
+
+	return ge
 }

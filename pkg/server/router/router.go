@@ -122,6 +122,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	router.registerEventAPIs(ws)
 	router.registerCloudAPIs(ws)
 	router.registerHealthCheckAPI(ws)
+	router.registerWebhookAPIs(ws)
 
 	restful.Add(ws)
 
@@ -304,13 +305,13 @@ func (router *router) registerWebhookAPIs(ws *restful.WebService) {
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 
-	// GET /api/v1/githubwebhooks/{pipelineid}
-	ws.Route(ws.GET("/githubwebhooks/{pipelineid}").To(router.getEvent).
+	// POST /api/v1/githubwebhooks/{pipelineid}
+	ws.Route(ws.POST("/githubwebhooks/{pipelineid}").To(router.handleGithubWebhook).
 		Doc("Trigger the pipeline by github webhook").
 		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
 
-	// PUT /api/v1/gitlabwebhooks/{pipelineid}
-	ws.Route(ws.PUT("/gitlabwebhooks/{pipelineid}").To(router.setEvent).
+	// POST /api/v1/gitlabwebhooks/{pipelineid}
+	ws.Route(ws.POST("/gitlabwebhooks/{pipelineid}").To(router.handleGitlabWebhook).
 		Doc("Trigger the pipeline by gitlab webhook").
 		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
 }

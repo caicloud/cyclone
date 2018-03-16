@@ -45,6 +45,7 @@ func RegisterProvider(scmType api.SCMType, provider SCMProvider) error {
 }
 
 // SCMProvider represents the interface of SCM provider.
+// TODO(robin) Refactor this interface to avoid the SCM config param for each method.
 type SCMProvider interface {
 	GetToken(scm *api.SCMConfig) (string, error)
 	ListRepos(scm *api.SCMConfig) ([]api.Repository, error)
@@ -52,7 +53,24 @@ type SCMProvider interface {
 	ListTags(scm *api.SCMConfig, repo string) ([]string, error)
 	CheckToken(scm *api.SCMConfig) bool
 	NewTagFromLatest(tagName, description, commitID, url, token string) error
+	CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *WebHook) error
+	DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error
 }
+
+// WebHook represents the params for SCM webhook.
+type WebHook struct {
+	Events []EventType
+	Url    string
+}
+
+type EventType string
+
+const (
+	PullRequestEventType        EventType = "PullRequest"
+	PullRequestCommentEventType EventType = "PullRequestComment"
+	PushEventType               EventType = "Push"
+	TagReleaseEventType         EventType = "TagRelease"
+)
 
 // GetSCMProvider gets the SCM provider by the type.
 func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
@@ -134,7 +152,7 @@ func NewTagFromLatest(codeSource *api.CodeSource, tagName, description, token st
 	}
 	scmType := codeSource.Type
 
-	gitSource, err := wscm.GetGitSource(codeSource)
+	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		return err
 	}
