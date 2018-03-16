@@ -324,8 +324,8 @@ type GeneralStageStatus struct {
 
 // CodeCheckoutStageStatus includes GeneralStageStatus and pipelineRecord version.
 type CodeCheckoutStageStatus struct {
-	GeneralStageStatus
-	Version map[string]CommitLog `bson:"version,omitempty" json:"version,omitempty" description:"version of the pipeline record"`
+	GeneralStageStatus `bson:",inline"`
+	Version            map[string]CommitLog `bson:"version,omitempty" json:"version,omitempty" description:"version of the pipeline record"`
 }
 
 type CommitLog struct {
