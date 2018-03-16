@@ -30,6 +30,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
+	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/pkg/pathutil"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
@@ -305,16 +306,22 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	}
 
 	builtImages := []string{}
+	cloneDir := scm.GetCloneDir()
 	for _, buildInfo := range stage.BuildInfos {
 		opt.Dockerfile = "Dockerfile"
-		if buildInfo.DockerfilePath != "" {
-			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
+		if buildInfo.Dockerfile != "" {
+			if err = osutil.ReplaceFile(cloneDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
+				return nil, err
+			}
+		} else {
+			if buildInfo.DockerfilePath != "" {
+				opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
+			}
 		}
-
 		opt.Name = formatImageName(buildInfo.ImageName)
-		opt.ContextDir = scm.GetCloneDir()
+		opt.ContextDir = cloneDir
 		if buildInfo.ContextDir != "" {
-			opt.ContextDir = scm.GetCloneDir() + "/" + buildInfo.ContextDir
+			opt.ContextDir = cloneDir + "/" + buildInfo.ContextDir
 		}
 
 		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
