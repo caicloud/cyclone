@@ -76,7 +76,7 @@ func GetCloneDir() string {
 }
 
 func GetRepoName(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := GetGitSource(codeSource)
+	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err
@@ -159,23 +159,6 @@ func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
 	return logs, err
 }
 
-func GetGitSource(codeSource *api.CodeSource) (*api.GitSource, error) {
-	scmType := codeSource.Type
-	var gitSource *api.GitSource
-	switch scmType {
-	case api.GitHub:
-		gitSource = codeSource.GitHub
-	case api.GitLab:
-		gitSource = codeSource.GitLab
-	case api.SVN:
-		return nil, fmt.Errorf("SCM type SVN is not implemented")
-	default:
-		return nil, fmt.Errorf("SCM type %s is not supported", scmType)
-	}
-
-	return gitSource, nil
-}
-
 // getAuthURL rebuilds url with auth token or username and password
 // for private git repository
 func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
@@ -184,7 +167,7 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 		token = "oauth2:" + token
 	}
 
-	gitSource, err := GetGitSource(codeSource)
+	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err
@@ -214,7 +197,7 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 
 // getRef provide the ref(branch or tag) of the code.
 func getRef(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := GetGitSource(codeSource)
+	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err

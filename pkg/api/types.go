@@ -160,6 +160,14 @@ type GitSource struct {
 	Password string `bson:"password,omitempty" json:"password,omitempty" description:"password of git"`
 }
 
+type CodeRefType string
+
+// Ref represents the branch, tag of git.
+type CodeRef struct {
+	Type CodeRefType `bson:"type,omitempty" json:"type,omitempty" description:"type of code ref"`
+	Name string      `bson:"name,omitempty" json:"name,omitempty" description:"name of code ref"`
+}
+
 // UnitTestStage represents the config of unit test stage.
 type UnitTestStage struct {
 	GeneralStage
@@ -243,16 +251,43 @@ type AutoTrigger struct {
 
 // SCMTrigger represents the auto trigger strategy from SCM.
 type SCMTrigger struct {
-	CommitTrigger *CommitTrigger `bson:"commitTrigger,omitempty" json:"commitTrigger,omitempty" description:"commit trigger strategy"`
+	Push               *PushTrigger               `bson:"push,omitempty" json:"push,omitempty" description:"push trigger strategy"`
+	TagRelease         *TagReleaseTrigger         `bson:"tagRelease,omitempty" json:"tagRelease,omitempty" description:"commit trigger strategy"`
+	PullRequest        *PullRequestTrigger        `bson:"pullRequest,omitempty" json:"pullRequest,omitempty" description:"pull request trigger strategy"`
+	PullRequestComment *PullRequestCommentTrigger `bson:"pullRequestComment,omitempty" json:"pullRequestComment,omitempty" description:"pull request comment trigger strategy"`
+
+	Webhook string `bson:"webhook,omitempty" json:"webhook,omitempty" description:"webhook for the SCM trigger"`
 }
 
 // GeneralTrigger represents the general config for all auto trigger strategies.
 type GeneralTrigger struct {
-	Stages string `bson:"stages,omitempty" json:"stages,omitempty" description:"stages of the auto triggered running"`
+	Stages []PipelineStageName `bson:"stages,omitempty" json:"stages,omitempty" description:"stages to be executed when automatically triggered by SCM webhook"`
 }
 
 // CommitTrigger represents the trigger from SCM commit.
 type CommitTrigger struct {
+	GeneralTrigger
+}
+
+// PullRequestTrigger represents the SCM auto trigger from pull request.
+type PullRequestTrigger struct {
+	GeneralTrigger
+}
+
+// PullRequestCommentTrigger represents the SCM auto trigger from pull request comment.
+type PullRequestCommentTrigger struct {
+	GeneralTrigger
+	Comments []string `bson:"comments" json:"comments" description:"pull request comments to trigger"`
+}
+
+// PushTrigger represents the SCM auto trigger from push into branches.
+type PushTrigger struct {
+	GeneralTrigger
+	Branches []string `bson:"branches" json:"branches" description:"branches with new commit to trigger"`
+}
+
+// TagReleaseTrigger represents the SCM auto trigger from tag release.
+type TagReleaseTrigger struct {
 	GeneralTrigger
 }
 

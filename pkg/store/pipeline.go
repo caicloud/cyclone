@@ -27,7 +27,10 @@ import (
 
 // CreatePipeline creates the pipeline, returns the pipeline created.
 func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
-	pipeline.ID = bson.NewObjectId().Hex()
+	if pipeline.ID != "" {
+		pipeline.ID = bson.NewObjectId().Hex()
+	}
+
 	pipeline.CreationTime = time.Now()
 	pipeline.LastUpdateTime = time.Now()
 	err := d.pipelineCollection.Insert(pipeline)

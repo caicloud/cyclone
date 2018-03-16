@@ -18,13 +18,18 @@ package manager
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
+	"github.com/caicloud/cyclone/pkg/osutil"
+	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/remote"
@@ -34,6 +39,7 @@ import (
 type PipelineManager interface {
 	CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error)
 	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
+	GetPipelineByID(id string) (*api.Pipeline, error)
 	ListPipelines(projectName string, queryParams api.QueryParams, recentCount, recentSuccessCount, recentFailedCount int) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
@@ -48,6 +54,10 @@ type pipelineManager struct {
 
 	// TODO (robin) Move event manager to pipeline record manager.
 	eventManager event.EventManager
+
+	// callbackURL represents callback url for SCM webhooks.
+	// It's mainly for SCM webhooks to trigger pipelines when SCM server can not directly connect Cyclone server.
+	// callbackURL string
 }
 
 // NewPipelineManager creates a pipeline manager.
@@ -74,6 +84,45 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		return nil, httperror.ErrorAlreadyExist.Format(pipeline.Name)
 	}
 
+	scmConfig, err := m.GetSCMConfigFromProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := scm.GetSCMProvider(scmConfig.Type)
+	if err != nil {
+		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
+	}
+
+	// Create SCM webhook if enable SCM trigger.
+	var webHook *scm.WebHook
+	var gitSource *api.GitSource
+	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
+		gitSource, err = api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources[0])
+		if err != nil {
+			return nil, err
+		}
+
+		pipeline.ID = bson.NewObjectId().Hex()
+		webHook = &scm.WebHook{
+			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
+			Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
+		}
+		if err := provider.CreateWebHook(scmConfig, gitSource.Url, webHook); err != nil {
+			return nil, err
+		}
+		pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
+	}
+
+	// Remove the webhook if there is error.
+	defer func() {
+		if err != nil && gitSource != nil && webHook != nil {
+			if err = provider.DeleteWebHook(scmConfig, gitSource.Url, webHook.Url); err != nil {
+				logdog.Errorf("Fail to delete the pipeline %s", pipeline.Name)
+			}
+		}
+	}()
+
 	createdPipeline, err := m.dataStore.CreatePipeline(pipeline)
 	if err != nil {
 		return nil, err
@@ -97,6 +146,20 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, httperror.ErrorContentNotFound.Format(pipelineName)
+		}
+
+		return nil, err
+	}
+
+	return pipeline, nil
+}
+
+// GetPipelineByID gets the pipeline by id.
+func (m *pipelineManager) GetPipelineByID(id string) (*api.Pipeline, error) {
+	pipeline, err := m.dataStore.FindPipelineByID(id)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format("pipeline with id %s", id)
 		}
 
 		return nil, err
@@ -180,6 +243,52 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		return nil, err
 	}
 
+	scmConfig, err := m.GetSCMConfigFromProject(projectName)
+	if err != nil {
+		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM config")
+	}
+
+	provider, err := scm.GetSCMProvider(scmConfig.Type)
+	if err != nil {
+		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
+	}
+
+	// Remove the old webhook if exists.
+	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
+		scmTrigger := pipeline.AutoTrigger.SCMTrigger
+		if scmTrigger.Webhook != "" {
+			gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources[0])
+			if err != nil {
+				return nil, err
+			}
+
+			if err := provider.DeleteWebHook(scmConfig, gitSource.Url, scmTrigger.Webhook); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Create the new webhook if necessary.
+	if newPipeline.AutoTrigger != nil && newPipeline.AutoTrigger.SCMTrigger != nil {
+		scmTrigger := newPipeline.AutoTrigger.SCMTrigger
+		gitSource, err := api.GetGitSource(newPipeline.Build.Stages.CodeCheckout.CodeSources[0])
+		if err != nil {
+			return nil, err
+		}
+
+		webHook := &scm.WebHook{
+			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
+			Events: collectSCMEvents(scmTrigger),
+		}
+		if err := provider.CreateWebHook(scmConfig, gitSource.Url, webHook); err != nil {
+			return nil, httperror.ErrorInternalTypeError.Format("Can not create webhook")
+		}
+
+		newPipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
+	}
+
+	pipeline.AutoTrigger = newPipeline.AutoTrigger
+
 	// Update the properties of the pipeline.
 	// TODO (robin) Whether need a method for this merge?
 	if len(newPipeline.Name) > 0 {
@@ -202,10 +311,6 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		pipeline.Build = newPipeline.Build
 	}
 
-	if newPipeline.AutoTrigger != nil {
-		pipeline.AutoTrigger = newPipeline.AutoTrigger
-	}
-
 	if err = m.dataStore.UpdatePipeline(pipeline); err != nil {
 		return nil, err
 	}
@@ -220,7 +325,12 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 		return err
 	}
 
-	return m.deletePipeline(pipeline)
+	scmConfig, err := m.GetSCMConfigFromProject(projectName)
+	if err != nil {
+		return err
+	}
+
+	return m.deletePipeline(scmConfig, pipeline)
 }
 
 // ClearPipelinesOfProject deletes all pipelines in one project.
@@ -230,8 +340,12 @@ func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 		return nil
 	}
 
+	scmConfig, err := m.GetSCMConfigFromProject(projectName)
+	if err != nil {
+		return err
+	}
 	for _, pipeline := range pipelines {
-		if err := m.deletePipeline(&pipeline); err != nil {
+		if err := m.deletePipeline(scmConfig, &pipeline); err != nil {
 			return err
 		}
 	}
@@ -240,7 +354,7 @@ func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 }
 
 // deletePipeline deletes the pipeline.
-func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
+func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api.Pipeline) error {
 	ds := m.dataStore
 	var err error
 
@@ -253,5 +367,63 @@ func (m *pipelineManager) deletePipeline(pipeline *api.Pipeline) error {
 		return fmt.Errorf("Fail to delete the pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
+	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
+		gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources[0])
+		if err != nil {
+			return err
+		}
+
+		provider, err := scm.GetSCMProvider(scmConfig.Type)
+		if err != nil {
+			return fmt.Errorf("Can not get provider for SCM %s", scmConfig.Type)
+		}
+
+		if err := provider.DeleteWebHook(scmConfig, gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
+			logdog.Errorf("Fail to delete webhook for pipeline %s", pipeline.Name)
+		}
+	}
+
 	return nil
+}
+
+func generateWebhookURL(scmType api.SCMType, pipelineID string) string {
+	callbackURL := osutil.GetStringEnv(cloud.CallbackURL, "http://127.0.0.1:7099/v1")
+	return fmt.Sprintf("%s/%swebhooks/%s", callbackURL, strings.ToLower(string(scmType)), pipelineID)
+}
+
+func collectSCMEvents(scmTrigger *api.SCMTrigger) []scm.EventType {
+	var events []scm.EventType
+	if scmTrigger == nil {
+		return events
+	}
+
+	if scmTrigger.PullRequest != nil {
+		events = append(events, scm.PullRequestEventType)
+	}
+	if scmTrigger.PullRequestComment != nil {
+		events = append(events, scm.PullRequestCommentEventType)
+	}
+	if scmTrigger.TagRelease != nil {
+		events = append(events, scm.TagReleaseEventType)
+	}
+	if scmTrigger.Push != nil {
+		events = append(events, scm.PushEventType)
+	}
+
+	return events
+}
+
+// GetSCMConfigFromProject
+func (m *pipelineManager) GetSCMConfigFromProject(projectName string) (*api.SCMConfig, error) {
+	// Get the SCM config from project.
+	project, err := m.dataStore.FindProjectByName(projectName)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(projectName)
+		}
+
+		return nil, err
+	}
+
+	return project.SCM, nil
 }
