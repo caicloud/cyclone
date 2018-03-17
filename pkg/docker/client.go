@@ -96,6 +96,29 @@ func (dm *DockerManager) PullImage(image string) error {
 	return nil
 }
 
+// PushImage pushes an image to a registry.
+func (dm *DockerManager) PushImage(options docker_client.PushImageOptions) error {
+	authOpt := docker_client.AuthConfiguration{
+		Username: dm.AuthConfig.Username,
+		Password: dm.AuthConfig.Password,
+	}
+
+	if err := dm.Client.PushImage(options, authOpt); err != nil {
+		return fmt.Errorf("Fail to push image %s as %v", fmt.Sprintf("%s:%s", options.Name, options.Tag), err)
+	}
+
+	return nil
+}
+
+// BuildImage builds an image.
+func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) error {
+	if err := dm.Client.BuildImage(options); err != nil {
+		return fmt.Errorf("Fail to build image %s as %v", options.Name, err)
+	}
+
+	return nil
+}
+
 func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions) (string, error) {
 	// Check the existence of image.
 	image := options.Config.Image
