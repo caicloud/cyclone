@@ -32,7 +32,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
-	"github.com/caicloud/cyclone/remote"
 )
 
 // PipelineManager represents the interface to manage pipeline.
@@ -49,7 +48,6 @@ type PipelineManager interface {
 // pipelineManager represents the manager for pipeline.
 type pipelineManager struct {
 	dataStore             *store.DataStore
-	remoteManager         *remote.Manager
 	pipelineRecordManager PipelineRecordManager
 
 	// TODO (robin) Move event manager to pipeline record manager.
@@ -66,15 +64,13 @@ func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager Pipeli
 		return nil, fmt.Errorf("Fail to new pipeline manager as data store is nil")
 	}
 
-	remoteManager := remote.NewManager()
-
 	if pipelineRecordManager == nil {
 		return nil, fmt.Errorf("Fail to new pipeline manager as pipeline record is nil")
 	}
 
 	eventManager := event.NewEventManager(dataStore)
 
-	return &pipelineManager{dataStore, remoteManager, pipelineRecordManager, eventManager}, nil
+	return &pipelineManager{dataStore, pipelineRecordManager, eventManager}, nil
 }
 
 // CreatePipeline creates a pipeline.
