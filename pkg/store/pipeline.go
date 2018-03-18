@@ -27,7 +27,7 @@ import (
 
 // CreatePipeline creates the pipeline, returns the pipeline created.
 func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
-	if pipeline.ID != "" {
+	if pipeline.ID == "" {
 		pipeline.ID = bson.NewObjectId().Hex()
 	}
 
