@@ -164,4 +164,66 @@ var _ = Describe("Stage", func() {
 			})
 		})
 	})
+
+	Describe("Integration test stage", func() {
+		BeforeEach(func() {
+			// Cleanup the temp folder.
+			os.RemoveAll(logDir)
+			os.MkdirAll(logDir, os.ModePerm)
+		})
+
+		AfterEach(func() {
+			// Cleanup the temp folder.
+			os.RemoveAll(logDir)
+		})
+
+		Context("without services", func() {
+			Context("for", func() {
+				stage := &api.IntegrationTestStage{
+					Config: &api.IntegrationTestConfig{
+						Command:   []string{"echo hello", "echo integration test"},
+						ImageName: "cargo.caicloud.io/caicloud/busybox",
+					},
+				}
+
+				It("single built image", func() {
+					builtImages := []string{"cargo.caicloud.io/caicloud/busybox:latest"}
+					err := stageManager.ExecIntegrationTest(builtImages, stage)
+					Expect(err).NotTo(HaveOccurred())
+
+					stage.Config.ImageName = "cargo.caicloud.io/caicloud/testabc"
+					err = stageManager.ExecIntegrationTest(builtImages, stage)
+					Expect(err).Should(HaveOccurred())
+				})
+			})
+		})
+
+		Context("with services", func() {
+			Context("for", func() {
+				stage := &api.IntegrationTestStage{
+					Config: &api.IntegrationTestConfig{
+						Command:   []string{"echo hello", "echo integration test"},
+						ImageName: "cargo.caicloud.io/caicloud/busybox",
+					},
+					Services: []api.Service{
+						api.Service{
+							Name:    "mongo",
+							Image:   "mongo:3.0.5",
+							Command: []string{"mongod", "--smallfiles"},
+						},
+					},
+				}
+
+				It("single built image", func() {
+					builtImages := []string{"cargo.caicloud.io/caicloud/busybox:latest"}
+					err := stageManager.ExecIntegrationTest(builtImages, stage)
+					Expect(err).NotTo(HaveOccurred())
+
+					stage.Config.ImageName = "cargo.caicloud.io/caicloud/testabc"
+					err = stageManager.ExecIntegrationTest(builtImages, stage)
+					Expect(err).Should(HaveOccurred())
+				})
+			})
+		})
+	})
 })
