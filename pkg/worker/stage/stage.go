@@ -45,7 +45,7 @@ type StageManager interface {
 	SetRecordInfo(project, pipeline, recordID string)
 	SetEvent(event *api.Event)
 	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error
-	ExecPackage(*api.BuilderImage, *api.BuildInfo, *api.UnitTestStage, *api.PackageStage, bool) error
+	ExecPackage(*api.BuilderImage, *api.BuildInfo, *api.UnitTestStage, *api.PackageStage) error
 	ExecImageBuild(stage *api.ImageBuildStage) ([]string, error)
 	ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) error
 	ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) error
@@ -61,9 +61,11 @@ type stageManager struct {
 	recordInfo
 	dockerManager *docker.DockerManager
 	cycloneClient cycloneserver.CycloneServerClient
+	performParams *api.PipelinePerformParams
 }
 
-func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cycloneserver.CycloneServerClient) StageManager {
+func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cycloneserver.CycloneServerClient,
+	performParams *api.PipelinePerformParams) StageManager {
 	err := pathutil.EnsureParentDir(logFileNameTemplate, os.ModePerm)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -72,6 +74,7 @@ func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cyclones
 	return &stageManager{
 		dockerManager: dockerManager,
 		cycloneClient: cycloneClient,
+		performParams: performParams,
 	}
 }
 
@@ -111,7 +114,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	codeSource := stage.CodeSources[0]
 	// TODO check parameter, the number of `codeSource.Main=true` must >= 1
 
-	logs, err := scm.CloneRepo(token, codeSource)
+	logs, err := scm.CloneRepo(token, codeSource, sm.performParams.Ref)
 	if err != nil {
 		logdog.Error(err.Error())
 		return err
@@ -150,7 +153,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	return nil
 }
 
-func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *api.BuildInfo, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage, cacheDependency bool) (err error) {
+func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *api.BuildInfo, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) (err error) {
 	event.PipelineRecord.StageStatus.Package = &api.GeneralStageStatus{
 		Status:    api.Running,
 		StartTime: time.Now(),
@@ -181,7 +184,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	}
 
 	// Mount the cache volume.
-	if cacheDependency && buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+	if sm.performParams.CacheDependency && buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
 		var bindVolume string
 		switch buildInfo.BuildTool.Name {
 		case api.MavenBuildTool:

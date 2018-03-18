@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	restful "github.com/emicklei/go-restful"
+	log "github.com/golang/glog"
 	"github.com/google/go-github/github"
 	"github.com/xanzy/go-gitlab"
 
@@ -32,8 +33,17 @@ import (
 )
 
 const (
-	// pullRefTemplate represents the template of the reference of pull request.
-	pullRefTemplate = "+refs/pull/%d/merge"
+	// branchRefTemplate represents reference template for branches.
+	branchRefTemplate = "refs/heads/%s"
+
+	// tagRefTemplate represents reference template for tags.
+	tagRefTemplate = "refs/tags/%s"
+
+	// githubPullRefTemplate represents reference template for Github pull request.
+	githubPullRefTemplate = "refs/pull/%d/merge"
+
+	// gitlabMergeRefTemplate represents reference template for Gitlab merge request.
+	gitlabMergeRefTemplate = "refs/merge-requests/%d/head"
 
 	// gitlabEventTypeHeader represents the Gitlab header key used to pass the event type.
 	gitlabEventTypeHeader = "X-Gitlab-Event"
@@ -72,23 +82,25 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		httputil.ResponseWithError(response, err)
 		return
 	}
+	log.Infof("Github webhook event: %v", event)
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
 	switch event := event.(type) {
-	case github.ReleaseEvent:
+	case *github.ReleaseEvent:
 		if scmTrigger.TagRelease == nil {
 			response.WriteHeaderAndEntity(http.StatusOK, "Release trigger is not enabled")
 			return
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Name:        *event.Release.TagName,
+			Name:        fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
 			Ref:         *event.Release.TagName,
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
-	case github.PullRequestEvent:
+		log.Info("Triggered by Github release event")
+	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
 		if *event.Action != "opened" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when pull request is created")
@@ -101,11 +113,12 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(pullRefTemplate, event.PullRequest.Number),
+			Ref:         fmt.Sprintf(githubPullRefTemplate, event.PullRequest.Number),
 			Description: "Triggered by pull request",
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
-	case github.PullRequestReviewCommentEvent:
+		log.Info("Triggered by Github pull request event")
+	case *github.PullRequestReviewCommentEvent:
 		// Only handle when the pull request comments are created.
 		if *event.Action != "created" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when pull request comment is created")
@@ -130,10 +143,11 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(pullRefTemplate, event.PullRequest.Number),
+				Ref:         fmt.Sprintf(githubPullRefTemplate, event.PullRequest.Number),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
+			log.Info("Triggered by Github pull request review comment event")
 		}
 	}
 
@@ -182,11 +196,12 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		httputil.ResponseWithError(response, err)
 		return
 	}
+	log.Infof("Gitlab webhook event: %v", event)
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
 	switch event := event.(type) {
-	case gitlab.TagEvent:
+	case *gitlab.TagEvent:
 		if scmTrigger.TagRelease == nil {
 			response.WriteHeaderAndEntity(http.StatusOK, "Release trigger is not enabled")
 			return
@@ -194,12 +209,13 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		performParams = &api.PipelinePerformParams{
 			// TODO (robin) Unify the ref here.
-			Name:        strings.Split(event.Ref, "/")[2],
+			Name:        fmt.Sprintf(tagRefTemplate, strings.Split(event.Ref, "/")[2]),
 			Ref:         event.Ref,
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
-	case gitlab.MergeEvent:
+		log.Info("Triggered by Gitlab tag event")
+	case *gitlab.MergeEvent:
 		// Only handle when the pull request are created.
 		objectAttributes := event.ObjectAttributes
 		if objectAttributes.Action != "open" {
@@ -213,11 +229,12 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(pullRefTemplate, objectAttributes.ID),
+			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.ID),
 			Description: objectAttributes.Title,
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
-	case gitlab.MergeCommentEvent:
+		log.Info("Triggered by Gitlab merge event")
+	case *gitlab.MergeCommentEvent:
 		if scmTrigger.PullRequestComment == nil {
 			response.WriteHeaderAndEntity(http.StatusOK, "Pull request comment trigger is not enabled")
 			return
@@ -235,10 +252,11 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(pullRefTemplate, event.MergeRequest.ID),
+				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.ID),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
+			log.Info("Triggered by Gitlab merge comment event")
 		}
 	}
 

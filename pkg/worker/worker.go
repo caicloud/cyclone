@@ -88,7 +88,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	// TODO(robin) Seperate unit test and package stage.
-	stageManager := stage.NewStageManager(dockerManager, worker.Client)
+	stageManager := stage.NewStageManager(dockerManager, worker.Client, performParams)
 	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
 	stageManager.SetEvent(event)
 
@@ -100,7 +100,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	// Execute the package stage, this stage is required and can not be skipped.
-	err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package, performParams.CacheDependency)
+	err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
 	if err != nil {
 		logdog.Error(err.Error())
 		return

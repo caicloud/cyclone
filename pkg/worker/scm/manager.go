@@ -128,7 +128,7 @@ func GetCommitLog(codeSource *api.CodeSource) (api.CommitLog, error) {
 	return p.GetTagCommitLog(cloneDir, ref), nil
 }
 
-func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
+func CloneRepo(token string, codeSource *api.CodeSource, ref string) (string, error) {
 	destPath := GetCloneDir()
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
 		return "", fmt.Errorf("Unable to create parent directory for %s: %v\n", destPath, err)
@@ -142,11 +142,6 @@ func CloneRepo(token string, codeSource *api.CodeSource) (string, error) {
 	}
 
 	url, err := getAuthURL(token, codeSource)
-	if err != nil {
-		return "", err
-	}
-
-	ref, err := getRef(codeSource)
 	if err != nil {
 		return "", err
 	}
