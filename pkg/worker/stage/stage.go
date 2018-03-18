@@ -118,7 +118,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	}
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.CodeCheckoutStageName)
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
+	logFile, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
@@ -213,6 +213,12 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		return err
 	}
 
+	defer func() {
+		if err := sm.dockerManager.RemoveContainer(cid); err != nil {
+			log.Errorf("Fail to remove the container %s", cid)
+		}
+	}()
+
 	// Execute unit test and package commands in the builder container.
 	// Run stage script in container
 	cmds := packageStage.Command
@@ -222,7 +228,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	}
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.PackageStageName)
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
+	logFile, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
@@ -289,7 +295,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	authOpts.Configs[authConfig.ServerAddress] = authOpt
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
+	logFile, err := os.Create(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -348,10 +354,18 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
 	// Start the services.
-	serviceNames, err := sm.StartServicesForIntegrationTest(stage.Services)
+	serviceInfos, err := sm.StartServicesForIntegrationTest(stage.Services)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		var err error
+		for s, cid := range serviceInfos {
+			if err = sm.dockerManager.RemoveContainer(cid); err != nil {
+				log.Errorf("Fail to remove container %s for the service %s", cid, s)
+			}
+		}
+	}()
 
 	testConfig := stage.Config
 	var testImage string
@@ -368,11 +382,16 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		return err
 	}
 
+	var serviceNames []string
+	for name := range serviceInfos {
+		serviceNames = append(serviceNames, name)
+	}
+
 	// Start the built image.
 	config := &docker_client.Config{
-		Image:      testImage,
-		Env:        convertEnvs(testConfig.EnvVars),
-		Entrypoint: testConfig.Command,
+		Image:     testImage,
+		Env:       convertEnvs(testConfig.EnvVars),
+		OpenStdin: true, // Open stdin to keep the container running after starts.
 	}
 
 	hostConfig := &docker_client.HostConfig{
@@ -386,9 +405,14 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := sm.dockerManager.RemoveContainer(cid); err != nil {
+			log.Errorf("Fail to remove the container %s", cid)
+		}
+	}()
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.IntegrationTestStageName)
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
+	logFile, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
@@ -415,8 +439,8 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	return nil
 }
 
-func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) ([]string, error) {
-	var serviceNames []string
+func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) (map[string]string, error) {
+	serviceInfos := make(map[string]string)
 	for _, svc := range services {
 		// Start and run the container from builder image.
 		config := &docker_client.Config{
@@ -430,14 +454,15 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 			Config: config,
 			// HostConfig: hostConfig,
 		}
-		_, err := sm.dockerManager.StartContainer(cco)
+		cid, err := sm.dockerManager.StartContainer(cco)
 		if err != nil {
 			return nil, err
 		}
-		serviceNames = append(serviceNames, svc.Name)
+
+		serviceInfos[svc.Name] = cid
 	}
 
-	return serviceNames, nil
+	return serviceInfos, nil
 }
 
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
@@ -465,7 +490,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	authConfig := sm.dockerManager.AuthConfig
 
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageReleaseStageName)
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
+	logFile, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
