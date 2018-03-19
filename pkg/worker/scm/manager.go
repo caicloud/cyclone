@@ -34,7 +34,7 @@ const (
 	// cloneDir = "/root/code"
 	cloneDir = "/tmp/code"
 
-	repoNameRegexp = `^http[s]?://git[\w]+.com/([\S]*).git$`
+	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
 )
 
 // scmProviders represents the set of SCM providers.
