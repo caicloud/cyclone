@@ -284,16 +284,6 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		sm.cycloneClient.SendEvent(event)
 	}()
 
-	authConfig := sm.dockerManager.AuthConfig
-	authOpt := docker_client.AuthConfiguration{
-		Username: authConfig.Username,
-		Password: authConfig.Password,
-	}
-	authOpts := docker_client.AuthConfigurations{
-		Configs: make(map[string]docker_client.AuthConfiguration),
-	}
-	authOpts.Configs[authConfig.ServerAddress] = authOpt
-
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
@@ -304,7 +294,6 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, fileName)
 
 	opt := docker_client.BuildImageOptions{
-		AuthConfigs:    authOpts,
 		RmTmpContainer: true,
 		Memswap:        -1,
 		OutputStream:   logFile,
@@ -322,7 +311,6 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		if buildInfo.ContextDir != "" {
 			opt.ContextDir = scm.GetCloneDir() + "/" + buildInfo.ContextDir
 		}
-
 		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
 			return nil, err
 		}
@@ -486,9 +474,6 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
-	policies := stage.ReleasePolicy
-	authConfig := sm.dockerManager.AuthConfig
-
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageReleaseStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
@@ -498,11 +483,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, fileName)
 
-	authOpt := docker_client.AuthConfiguration{
-		Username: authConfig.Username,
-		Password: authConfig.Password,
-	}
-
+	policies := stage.ReleasePolicy
 	for _, p := range policies {
 		for _, builtImage := range builtImages {
 			imageParts := strings.Split(builtImage, ":")
@@ -514,7 +495,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 					OutputStream: logFile,
 				}
 
-				if err = sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
+				if err = sm.dockerManager.PushImage(opts); err != nil {
 					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
 					return err
 				}

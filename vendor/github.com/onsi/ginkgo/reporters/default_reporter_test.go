@@ -28,6 +28,7 @@ var _ = Describe("DefaultReporter", func() {
 			NoColor:           false,
 			SlowSpecThreshold: 0.1,
 			NoisyPendings:     false,
+			NoisySkippings:    false,
 			Verbose:           true,
 			FullTrace:         true,
 		}
@@ -77,10 +78,9 @@ var _ = Describe("DefaultReporter", func() {
 			})
 
 			It("should announce the suite, announce that it's a parallel run, then announce the number of specs", func() {
-				Ω(stenographer.Calls()).Should(HaveLen(3))
+				Ω(stenographer.Calls()).Should(HaveLen(2))
 				Ω(stenographer.Calls()[0]).Should(Equal(call("AnnounceSuite", "A Sweet Suite", ginkgoConfig.RandomSeed, true, false)))
-				Ω(stenographer.Calls()[1]).Should(Equal(call("AnnounceParallelRun", 1, 2, 10, 20, false)))
-				Ω(stenographer.Calls()[2]).Should(Equal(call("AnnounceNumberOfSpecs", 8, 10, false)))
+				Ω(stenographer.Calls()[1]).Should(Equal(call("AnnounceParallelRun", 1, 2, false)))
 			})
 		})
 	})
@@ -259,8 +259,8 @@ var _ = Describe("DefaultReporter", func() {
 				spec.State = types.SpecStateSkipped
 			})
 
-			It("should announce the skipped spec", func() {
-				Ω(stenographer.Calls()[0]).Should(Equal(call("AnnounceSkippedSpec", spec, false, true)))
+			It("should announce the skipped spec, succinctly", func() {
+				Ω(stenographer.Calls()[0]).Should(Equal(call("AnnounceSkippedSpec", spec, true, true)))
 			})
 		})
 
@@ -308,6 +308,24 @@ var _ = Describe("DefaultReporter", func() {
 
 				It("should announce the pending spec, noisily", func() {
 					Ω(stenographer.Calls()[0]).Should(Equal(call("AnnouncePendingSpec", spec, true)))
+				})
+			})
+		})
+
+		Context("in noisy skippings mode", func() {
+			BeforeEach(func() {
+				reporterConfig.Succinct = false
+				reporterConfig.NoisySkippings = true
+				reporter = reporters.NewDefaultReporter(reporterConfig, stenographer)
+			})
+
+			Context("When the spec is skipped", func() {
+				BeforeEach(func() {
+					spec.State = types.SpecStateSkipped
+				})
+
+				It("should announce the skipped spec, noisily", func() {
+					Ω(stenographer.Calls()[0]).Should(Equal(call("AnnounceSkippedSpec", spec, false, true)))
 				})
 			})
 		})

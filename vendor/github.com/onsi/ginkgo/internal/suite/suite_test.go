@@ -121,6 +121,7 @@ var _ = Describe("Suite", func() {
 			Ω(description.LineNumber).Should(BeNumerically(">", 50))
 			Ω(description.LineNumber).Should(BeNumerically("<", 150))
 			Ω(description.Failed).Should(BeFalse())
+			Ω(description.Duration).Should(BeNumerically(">", 0))
 		})
 
 		Measure("should run measurements", func(b Benchmarker) {
@@ -152,6 +153,19 @@ var _ = Describe("Suite", func() {
 				"AfterSuite",
 			}))
 		})
+		Context("when in an AfterEach block", func() {
+			AfterEach(func() {
+				description := CurrentGinkgoTestDescription()
+				Ω(description.IsMeasurement).Should(BeFalse())
+				Ω(description.FileName).Should(ContainSubstring("suite_test.go"))
+				Ω(description.Failed).Should(BeFalse())
+				Ω(description.Duration).Should(BeNumerically(">", 0))
+			})
+
+			It("still provides information about the current test", func() {
+				Ω(true).To(BeTrue())
+			})
+		})
 
 		Context("when told to randomize all specs", func() {
 			BeforeEach(func() {
@@ -167,43 +181,6 @@ var _ = Describe("Suite", func() {
 					"top BE", "BE 2", "top JBE", "IT 2", "top AE",
 					"AfterSuite",
 				}))
-			})
-		})
-
-		Describe("with ginkgo.parallel.total > 1", func() {
-			BeforeEach(func() {
-				parallelTotal = 2
-				randomizeAllSpecs = true
-			})
-
-			Context("for one worker", func() {
-				BeforeEach(func() {
-					parallelNode = 1
-				})
-
-				It("should run a subset of tests", func() {
-					Ω(runOrder).Should(Equal([]string{
-						"BeforeSuite",
-						"top BE", "top JBE", "top IT", "top AE",
-						"top BE", "BE", "top JBE", "JBE", "inner IT", "AE", "top AE",
-						"AfterSuite",
-					}))
-				})
-			})
-
-			Context("for another worker", func() {
-				BeforeEach(func() {
-					parallelNode = 2
-				})
-
-				It("should run a (different) subset of tests", func() {
-					Ω(runOrder).Should(Equal([]string{
-						"BeforeSuite",
-						"top BE", "BE", "top JBE", "JBE", "IT", "AE", "top AE",
-						"top BE", "BE 2", "top JBE", "IT 2", "top AE",
-						"AfterSuite",
-					}))
-				})
 			})
 		})
 
@@ -397,6 +374,12 @@ var _ = Describe("Suite", func() {
 			Ω(func() {
 				By("registering more than one callback", func() {}, func() {})
 			}).Should(Panic())
+		})
+	})
+
+	Describe("GinkgoRandomSeed", func() {
+		It("returns the current config's random seed", func() {
+			Ω(GinkgoRandomSeed()).Should(Equal(config.GinkgoConfig.RandomSeed))
 		})
 	})
 })
