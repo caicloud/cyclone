@@ -124,6 +124,16 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 	return container.ID, nil
 }
 
+// RemoveContainer forcefully remove the container.
+func (dm *DockerManager) RemoveContainer(cid string) error {
+	opts := docker_client.RemoveContainerOptions{
+		ID:    cid,
+		Force: true,
+	}
+
+	return dm.Client.RemoveContainer(opts)
+}
+
 // ExecOptions specify parameters to the ExecInContainer function.
 type ExecOptions struct {
 	AttachStdin  bool
