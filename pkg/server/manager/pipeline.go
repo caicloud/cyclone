@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
@@ -43,6 +44,7 @@ type PipelineManager interface {
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
+	GetStatistics(projectName, pipelineName string, start, end string) (*api.PipelineStatusStats, error)
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -422,4 +424,82 @@ func (m *pipelineManager) GetSCMConfigFromProject(projectName string) (*api.SCMC
 	}
 
 	return project.SCM, nil
+}
+
+/// GetStatistics gets the statistic by pipeline name.
+func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start, end string) (*api.PipelineStatusStats, error) {
+	pipeline, err := m.GetPipeline(projectName, pipelineName)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Format(projectName)
+		}
+
+		return nil, err
+	}
+
+	// find all records ( start<={records}.startTime<end && {records}.pipelineID=pipeline.ID )
+	records, _, err := m.dataStore.FindPipelineRecordsByStartTime(pipeline.ID, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	return transRecordsToStats(records)
+}
+
+func transRecordsToStats(records []api.PipelineRecord) (*api.PipelineStatusStats, error) {
+	statistics := &api.PipelineStatusStats{
+		Overview: api.StatsOverview{
+			Total: len(records),
+		},
+		Details: []*api.StatsDetail{},
+	}
+
+	for _, record := range records {
+		t := formatTimeToDay(record.StartTime)
+
+		exist := false
+		for _, detail := range statistics.Details {
+			if detail.Timestamp == t {
+				exist = true
+				detail.StatsStatus = statsStatus(detail.StatsStatus, record.Status)
+			}
+
+		}
+
+		if !exist {
+			detail := &api.StatsDetail{
+				Timestamp: t,
+			}
+
+			detail.StatsStatus = statsStatus(detail.StatsStatus, record.Status)
+			statistics.Details = append(statistics.Details, detail)
+		}
+
+		statistics.Overview.StatsStatus = statsStatus(statistics.Overview.StatsStatus, record.Status)
+	}
+	if statistics.Overview.Total == 0 {
+		statistics.Overview.SuccessRatio = "0.00%"
+	} else {
+		statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%", float64(statistics.Overview.Success)/float64(statistics.Overview.Total)*100)
+	}
+	return statistics, nil
+}
+
+func formatTimeToDay(t time.Time) string {
+	formater := "2006-01-02Z"
+	return t.Format(formater)
+}
+
+func statsStatus(s api.StatsStatus, recordStatus api.Status) api.StatsStatus {
+	switch recordStatus {
+	case api.Success:
+		s.Success++
+	case api.Failed:
+		s.Failed++
+	case api.Aborted:
+		s.Aborted++
+	default:
+	}
+
+	return s
 }

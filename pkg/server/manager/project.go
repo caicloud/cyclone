@@ -38,6 +38,7 @@ type ProjectManager interface {
 	ListRepos(projectName string) ([]api.Repository, error)
 	ListBranches(projectName string, repo string) ([]string, error)
 	ListTags(projectName string, repo string) ([]string, error)
+	GetStatistics(projectName string, start, end string) (*api.PipelineStatusStats, error)
 }
 
 // projectManager represents the manager for project.
@@ -195,4 +196,34 @@ func (m *projectManager) ListTags(projectName string, repo string) ([]string, er
 	}
 
 	return sp.ListTags(scmConfig, repo)
+}
+
+// GetStatistics gets the statistic by project name.
+func (m *projectManager) GetStatistics(projectName string, start, end string) (*api.PipelineStatusStats, error) {
+	project, err := m.GetProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	pipelines, err := m.GetPipelines(project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalRecords := []api.PipelineRecord{}
+	for _, pipeline := range pipelines {
+		// find all records ( start<={records}.startTime<end && {records}.pipelineID=pipeline.ID )
+		records, _, err := m.dataStore.FindPipelineRecordsByStartTime(pipeline.ID, start, end)
+		if err != nil {
+			return nil, err
+		}
+		totalRecords = append(totalRecords, records...)
+	}
+
+	return transRecordsToStats(totalRecords)
+}
+
+func (m *projectManager) GetPipelines(projectID string) ([]api.Pipeline, error) {
+	pipelines, _, err := m.dataStore.FindPipelinesByProjectID(projectID, api.QueryParams{})
+	return pipelines, err
 }

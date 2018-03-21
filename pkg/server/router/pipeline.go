@@ -119,3 +119,19 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
 }
+
+// getPipelineStatistics handles the request to get a pipeline's statistics.
+func (router *router) getPipelineStatistics(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+	start := request.QueryParameter(api.StartTime)
+	end := request.QueryParameter(api.EndTime)
+
+	stats, err := router.pipelineManager.GetStatistics(projectName, pipelineName, start, end)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, stats)
+}

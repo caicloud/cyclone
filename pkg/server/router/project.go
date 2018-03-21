@@ -159,3 +159,18 @@ func (router *router) listTags(request *restful.Request, response *restful.Respo
 
 	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(tags, len(tags)))
 }
+
+// getProjectStatistics handles the request to get a project's statistics.
+func (router *router) getProjectStatistics(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	start := request.QueryParameter(api.StartTime)
+	end := request.QueryParameter(api.EndTime)
+
+	stats, err := router.projectManager.GetStatistics(projectName, start, end)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, stats)
+}
