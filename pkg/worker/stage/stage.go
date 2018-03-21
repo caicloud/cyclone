@@ -62,10 +62,11 @@ type stageManager struct {
 	dockerManager *docker.DockerManager
 	cycloneClient cycloneserver.CycloneServerClient
 	performParams *api.PipelinePerformParams
+	registry      *api.Registry
 }
 
 func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cycloneserver.CycloneServerClient,
-	performParams *api.PipelinePerformParams) StageManager {
+	registry *api.Registry, performParams *api.PipelinePerformParams) StageManager {
 	err := pathutil.EnsureParentDir(logFileNameTemplate, os.ModePerm)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -75,6 +76,7 @@ func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cyclones
 		dockerManager: dockerManager,
 		cycloneClient: cycloneClient,
 		performParams: performParams,
+		registry:      registry,
 	}
 }
 
@@ -211,7 +213,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-	cid, err := sm.dockerManager.StartContainer(cco)
+	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
 	if err != nil {
 		return err
 	}
@@ -300,16 +302,6 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		sm.cycloneClient.SendEvent(event)
 	}()
 
-	authConfig := sm.dockerManager.AuthConfig
-	authOpt := docker_client.AuthConfiguration{
-		Username: authConfig.Username,
-		Password: authConfig.Password,
-	}
-	authOpts := docker_client.AuthConfigurations{
-		Configs: make(map[string]docker_client.AuthConfiguration),
-	}
-	authOpts.Configs[authConfig.ServerAddress] = authOpt
-
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
@@ -319,6 +311,19 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, fileName)
 
+	authOpts := docker_client.AuthConfigurations{
+		Configs: make(map[string]docker_client.AuthConfiguration),
+	}
+	if sm.registry != nil {
+		authOpt := docker_client.AuthConfiguration{
+			Username: sm.registry.Username,
+			Password: sm.registry.Password,
+		}
+
+		authOpts.Configs[sm.registry.Server] = authOpt
+	}
+
+	// Image build ptions, need AuthConfigs for auth to pull images in Dockerfiles.
 	opt := docker_client.BuildImageOptions{
 		AuthConfigs:    authOpts,
 		RmTmpContainer: true,
@@ -346,7 +351,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		}
 		opt.Name = formatImageName(buildInfo.ImageName)
 
-		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
+		if err = sm.dockerManager.BuildImage(opt); err != nil {
 			return nil, err
 		}
 		builtImages = append(builtImages, opt.Name)
@@ -424,7 +429,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-	cid, err := sm.dockerManager.StartContainer(cco)
+	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
 	if err != nil {
 		return err
 	}
@@ -477,7 +482,7 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 			Config: config,
 			// HostConfig: hostConfig,
 		}
-		cid, err := sm.dockerManager.StartContainer(cco)
+		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
 		if err != nil {
 			return nil, err
 		}
@@ -509,9 +514,6 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
-	policies := stage.ReleasePolicy
-	authConfig := sm.dockerManager.AuthConfig
-
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageReleaseStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
@@ -521,12 +523,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, fileName)
 
-	authOpt := docker_client.AuthConfiguration{
-		Username: authConfig.Username,
-		Password: authConfig.Password,
-	}
-
-	for _, p := range policies {
+	for _, p := range stage.ReleasePolicy {
 		for _, builtImage := range builtImages {
 			imageParts := strings.Split(builtImage, ":")
 			if strings.EqualFold(imageParts[0], strings.Split(p.ImageName, ":")[0]) {
@@ -537,7 +534,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 					OutputStream: logFile,
 				}
 
-				if err = sm.dockerManager.Client.PushImage(opts, authOpt); err != nil {
+				if err = sm.dockerManager.PushImage(opts, generateAuthConfig(sm.registry)); err != nil {
 					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
 					return err
 				}
@@ -629,4 +626,18 @@ func formatImageName(namein string) string {
 	}
 
 	return nameout
+}
+
+// generateAuthConfig generates auth config for Docker registry.
+func generateAuthConfig(registry *api.Registry) docker_client.AuthConfiguration {
+	var auth docker_client.AuthConfiguration
+	if registry != nil {
+		auth = docker_client.AuthConfiguration{
+			ServerAddress: registry.Server,
+			Username:      registry.Username,
+			Password:      registry.Password,
+		}
+	}
+
+	return auth
 }
