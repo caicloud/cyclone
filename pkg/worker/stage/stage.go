@@ -308,9 +308,14 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	builtImages := []string{}
 	cloneDir := scm.GetCloneDir()
 	for _, buildInfo := range stage.BuildInfos {
+		opt.ContextDir = cloneDir
+		if buildInfo.ContextDir != "" {
+			opt.ContextDir = cloneDir + "/" + buildInfo.ContextDir
+		}
+
 		opt.Dockerfile = "Dockerfile"
 		if buildInfo.Dockerfile != "" {
-			if err = osutil.ReplaceFile(cloneDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
+			if err = osutil.ReplaceFile(opt.ContextDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
 				return nil, err
 			}
 		} else {
@@ -319,10 +324,6 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 			}
 		}
 		opt.Name = formatImageName(buildInfo.ImageName)
-		opt.ContextDir = cloneDir
-		if buildInfo.ContextDir != "" {
-			opt.ContextDir = cloneDir + "/" + buildInfo.ContextDir
-		}
 
 		if err = sm.dockerManager.Client.BuildImage(opt); err != nil {
 			return nil, err
