@@ -517,7 +517,7 @@ type Event struct {
 // PipelineStatusStats represents statistics of workspace or pipeline.
 type PipelineStatusStats struct {
 	Overview StatsOverview  `json:"overview"`
-	Details  []*StatsDetail `json:"details,omitempty"`
+	Details  []*StatsDetail `json:"details"`
 }
 
 type StatsOverview struct {
@@ -527,7 +527,7 @@ type StatsOverview struct {
 }
 
 type StatsDetail struct {
-	Timestamp string `json:"timestamp,omitempty"`
+	Timestamp string `json:"timestamp"`
 	StatsStatus
 }
 

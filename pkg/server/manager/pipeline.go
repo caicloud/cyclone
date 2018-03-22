@@ -18,6 +18,7 @@ package manager
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -443,45 +444,39 @@ func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start,
 		return nil, err
 	}
 
-	return transRecordsToStats(records)
+	return transRecordsToStats(records, start, end)
 }
 
-func transRecordsToStats(records []api.PipelineRecord) (*api.PipelineStatusStats, error) {
+func transRecordsToStats(records []api.PipelineRecord, start, end string) (*api.PipelineStatusStats, error) {
 	statistics := &api.PipelineStatusStats{
 		Overview: api.StatsOverview{
-			Total: len(records),
+			Total:        len(records),
+			SuccessRatio: "0.00%",
 		},
 		Details: []*api.StatsDetail{},
 	}
 
-	for _, record := range records {
-		t := formatTimeToDay(record.StartTime)
+	detailStartTime, detailEndTime, err := getDetailTimes(start, end)
+	if err != nil {
+		return statistics, err
+	}
 
-		exist := false
+	initStatsDetails(statistics, detailStartTime, detailEndTime)
+
+	for _, record := range records {
 		for _, detail := range statistics.Details {
-			if detail.Timestamp == t {
-				exist = true
+			if detail.Timestamp == formatTimeToDay(record.StartTime) {
+				// set details status
 				detail.StatsStatus = statsStatus(detail.StatsStatus, record.Status)
 			}
 
 		}
 
-		if !exist {
-			detail := &api.StatsDetail{
-				Timestamp: t,
-			}
-
-			detail.StatsStatus = statsStatus(detail.StatsStatus, record.Status)
-			statistics.Details = append(statistics.Details, detail)
-		}
-
+		// set overview status
 		statistics.Overview.StatsStatus = statsStatus(statistics.Overview.StatsStatus, record.Status)
 	}
-	if statistics.Overview.Total == 0 {
-		statistics.Overview.SuccessRatio = "0.00%"
-	} else {
-		statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%", float64(statistics.Overview.Success)/float64(statistics.Overview.Total)*100)
-	}
+
+	statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%", float64(statistics.Overview.Success)/float64(statistics.Overview.Total)*100)
 	return statistics, nil
 }
 
@@ -502,4 +497,44 @@ func statsStatus(s api.StatsStatus, recordStatus api.Status) api.StatsStatus {
 	}
 
 	return s
+}
+
+// getDetailTimes returns the start time and end time of the Details.
+func getDetailTimes(start, end string) (int64, int64, error) {
+	var detailStartTime, detailEndTime int64
+
+	startInt, err := strconv.ParseInt(start, 10, 64)
+	if err != nil {
+		return detailStartTime, detailEndTime, err
+	}
+	detailStartTime = startInt
+
+	endInt, err := strconv.ParseInt(end, 10, 64)
+	if err != nil {
+		return detailStartTime, detailEndTime, err
+	}
+	detailEndTime = endInt
+
+	return detailStartTime, detailEndTime, nil
+}
+
+func initStatsDetails(statistics *api.PipelineStatusStats, start, end int64) {
+	for ; start <= end; start += 86400 {
+		detail := &api.StatsDetail{
+			Timestamp: formatTimeToDay(time.Unix(start, 0)),
+		}
+		statistics.Details = append(statistics.Details, detail)
+	}
+
+	// if last day not equal end day, append end day.
+	endDay := formatTimeToDay(time.Unix(end, 0))
+	length := len(statistics.Details)
+	if length > 0 {
+		if statistics.Details[length-1].Timestamp != endDay {
+			detail := &api.StatsDetail{
+				Timestamp: endDay,
+			}
+			statistics.Details = append(statistics.Details, detail)
+		}
+	}
 }

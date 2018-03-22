@@ -220,7 +220,7 @@ func (m *projectManager) GetStatistics(projectName string, start, end string) (*
 		totalRecords = append(totalRecords, records...)
 	}
 
-	return transRecordsToStats(totalRecords)
+	return transRecordsToStats(totalRecords, start, end)
 }
 
 func (m *projectManager) GetPipelines(projectID string) ([]api.Pipeline, error) {

@@ -17,6 +17,7 @@ limitations under the License.
 package router
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -126,6 +127,12 @@ func (router *router) getPipelineStatistics(request *restful.Request, response *
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 	start := request.QueryParameter(api.StartTime)
 	end := request.QueryParameter(api.EndTime)
+
+	if start == "" || end == "" {
+		err := fmt.Errorf("query parameters `startTime` and `endTime` can not be empty.")
+		httputil.ResponseWithError(response, err)
+		return
+	}
 
 	stats, err := router.pipelineManager.GetStatistics(projectName, pipelineName, start, end)
 	if err != nil {
