@@ -256,8 +256,16 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 
 	// Copy the build outputs if necessary.
 	// Only need to copy the outputs not in the current workspace. The outputs must be absolute path of files or folders.
-	for _, output := range packageStage.Outputs {
-		if err = runner.CopyFromContainer(sm.dockerManager.Client, cid, output, cloneDir+"/"); err != nil {
+	for _, ot := range packageStage.Outputs {
+		cloneDir := cloneDir + "/"
+		if strings.HasPrefix(ot, "./") {
+			ot = strings.TrimPrefix(ot, "./")
+			ot = cloneDir + ot
+		} else if !strings.HasPrefix(ot, "/") {
+			ot = cloneDir + ot
+		}
+
+		if err = runner.CopyFromContainer(sm.dockerManager.Client, cid, ot, cloneDir); err != nil {
 			return err
 		}
 	}
