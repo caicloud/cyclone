@@ -20,13 +20,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/mozillazg/go-slugify"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/caicloud/cyclone/pkg/api"
 )
 
 // CreateProject creates the project, returns the project created.
 func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
+	if project.Name == "" && project.Alias != "" {
+		project.Name = slugify.Slugify(project.Alias)
+
+	}
+
 	project.ID = bson.NewObjectId().Hex()
 	project.CreationTime = time.Now()
 	project.LastUpdateTime = time.Now()
@@ -87,6 +94,11 @@ func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, erro
 
 // UpdateProject updates the project, please make sure the project id is provided before call this method.
 func (d *DataStore) UpdateProject(project *api.Project) error {
+	if project.Name == "" && project.Alias != "" {
+		project.Name = slugify.Slugify(project.Alias)
+
+	}
+
 	project.LastUpdateTime = time.Now()
 
 	return d.projectCollection.UpdateId(project.ID, project)

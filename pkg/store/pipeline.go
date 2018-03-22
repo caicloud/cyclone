@@ -20,15 +20,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/mozillazg/go-slugify"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/caicloud/cyclone/pkg/api"
 )
 
 // CreatePipeline creates the pipeline, returns the pipeline created.
 func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
 	if pipeline.ID == "" {
 		pipeline.ID = bson.NewObjectId().Hex()
+	}
+
+	if pipeline.Name == "" && pipeline.Alias != "" {
+		pipeline.Name = slugify.Slugify(pipeline.Alias)
 	}
 
 	pipeline.CreationTime = time.Now()
@@ -118,6 +124,10 @@ func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.Q
 
 // UpdatePipeline updates the pipeline, please make sure the pipeline id is provided before call this method.
 func (d *DataStore) UpdatePipeline(pipeline *api.Pipeline) error {
+	if pipeline.Name == "" && pipeline.Alias != "" {
+		pipeline.Name = slugify.Slugify(pipeline.Alias)
+	}
+
 	pipeline.LastUpdateTime = time.Now()
 
 	return d.pipelineCollection.UpdateId(pipeline.ID, pipeline)

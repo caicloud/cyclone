@@ -110,6 +110,10 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 		project.Name = newProject.Name
 	}
 
+	if len(newProject.Alias) > 0 {
+		project.Alias = newProject.Alias
+	}
+
 	if len(newProject.Description) > 0 {
 		project.Description = newProject.Description
 	}
