@@ -81,10 +81,17 @@ func GetRepoName(codeSource *api.CodeSource) (string, error) {
 		logdog.Errorf(err.Error())
 		return "", err
 	}
+
+	return getRepoNameByURL(gitSource.Url)
+}
+
+// input   url      =  `https://github.com/caicloud/cyclone.git`
+// output  reponame =  `caicloud/cyclone`
+func getRepoNameByURL(url string) (string, error) {
 	r := regexp.MustCompile(repoNameRegexp)
-	results := r.FindStringSubmatch(gitSource.Url)
+	results := r.FindStringSubmatch(url)
 	if len(results) < 2 {
-		return gitSource.Url, nil
+		return url, nil
 	}
 	return results[1], nil
 }
