@@ -48,16 +48,30 @@ func (g *Git) Clone(url, ref, destPath string) (string, error) {
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
-	args := []string{"clone", "-b", ref, url, base}
-
-	output, err := executil.RunInDir(dir, "git", args...)
-
-	if err != nil {
-		log.Error("Error when clone", log.Fields{"error": err})
-	} else {
-		log.Info("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
+	type cmd struct {
+		dir  string
+		args []string
 	}
-	return string(output), err
+	cmds := []cmd{
+		cmd{dir, []string{"clone", url, base}},
+		cmd{destPath, []string{"fetch", "origin", ref}},
+		cmd{destPath, []string{"checkout", "-qf", "FETCH_HEAD"}},
+	}
+
+	var outputs string
+	for _, cmd := range cmds {
+		output, err := executil.RunInDir(cmd.dir, "git", cmd.args...)
+		if err != nil {
+			log.Error("Error when clone", log.Fields{"command": cmd, "error": err})
+			return "", err
+		}
+
+		outputs = outputs + string(output) + "/n"
+	}
+
+	log.Info("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})
+
+	return outputs, nil
 }
 
 // GetTagCommit implements VCS interface.
