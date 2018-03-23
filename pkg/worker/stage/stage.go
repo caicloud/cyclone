@@ -34,7 +34,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/pathutil"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
-	"github.com/caicloud/cyclone/worker/ci/runner"
 )
 
 // logFileNameTemplate ...
@@ -259,8 +258,8 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 
 	// Copy the build outputs if necessary.
 	// Only need to copy the outputs not in the current workspace. The outputs must be absolute path of files or folders.
+	cloneDir = cloneDir + "/"
 	for _, ot := range packageStage.Outputs {
-		cloneDir := cloneDir + "/"
 		if strings.HasPrefix(ot, "./") {
 			ot = strings.TrimPrefix(ot, "./")
 			ot = cloneDir + ot
@@ -268,7 +267,12 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 			ot = cloneDir + ot
 		}
 
-		if err = runner.CopyFromContainer(sm.dockerManager.Client, cid, ot, cloneDir); err != nil {
+		opt := docker.CopyFromContainerOptions{
+			Container:     cid,
+			HostPath:      cloneDir,
+			ContainerPath: ot,
+		}
+		if err = sm.dockerManager.CopyFromContainer(opt); err != nil {
 			return err
 		}
 	}
