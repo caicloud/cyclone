@@ -37,10 +37,10 @@ func (p PullRequestComment) String() string {
 // PullRequestListCommentsOptions specifies the optional parameters to the
 // PullRequestsService.ListComments method.
 type PullRequestListCommentsOptions struct {
-	// Sort specifies how to sort comments.  Possible values are: created, updated.
+	// Sort specifies how to sort comments. Possible values are: created, updated.
 	Sort string `url:"sort,omitempty"`
 
-	// Direction in which to sort comments.  Possible values are: asc, desc.
+	// Direction in which to sort comments. Possible values are: asc, desc.
 	Direction string `url:"direction,omitempty"`
 
 	// Since filters comments by time.
@@ -49,7 +49,7 @@ type PullRequestListCommentsOptions struct {
 	ListOptions
 }
 
-// ListComments lists all comments on the specified pull request.  Specifying a
+// ListComments lists all comments on the specified pull request. Specifying a
 // pull request number of 0 will return all comments on all pull requests for
 // the repository.
 //
@@ -74,13 +74,13 @@ func (s *PullRequestsService) ListComments(owner string, repo string, number int
 	// TODO: remove custom Accept header when this API fully launches.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
-	comments := new([]*PullRequestComment)
-	resp, err := s.client.Do(req, comments)
+	var comments []*PullRequestComment
+	resp, err := s.client.Do(req, &comments)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *comments, resp, err
+	return comments, resp, nil
 }
 
 // GetComment fetches the specified pull request comment.
@@ -102,7 +102,7 @@ func (s *PullRequestsService) GetComment(owner string, repo string, number int) 
 		return nil, resp, err
 	}
 
-	return comment, resp, err
+	return comment, resp, nil
 }
 
 // CreateComment creates a new comment on the specified pull request.
@@ -121,7 +121,7 @@ func (s *PullRequestsService) CreateComment(owner string, repo string, number in
 		return nil, resp, err
 	}
 
-	return c, resp, err
+	return c, resp, nil
 }
 
 // EditComment updates a pull request comment.
@@ -140,7 +140,7 @@ func (s *PullRequestsService) EditComment(owner string, repo string, number int,
 		return nil, resp, err
 	}
 
-	return c, resp, err
+	return c, resp, nil
 }
 
 // DeleteComment deletes a pull request comment.

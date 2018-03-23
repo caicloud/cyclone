@@ -29,6 +29,20 @@ var (
 	Discard = devNull(0)
 )
 
+type flusher interface {
+	Sync() error
+}
+
+type flushWriter interface {
+	io.Writer
+	flusher
+}
+
+type flushWriteCloser interface {
+	io.WriteCloser
+	flusher
+}
+
 type devNull int
 
 func (devNull) Write(p []byte) (int, error) {
@@ -37,6 +51,10 @@ func (devNull) Write(p []byte) (int, error) {
 
 func (devNull) Read(p []byte) (n int, err error) {
 	return len(p), nil
+}
+
+func (devNull) Sync() error {
+	return nil
 }
 
 func (devNull) Close() error {
@@ -49,6 +67,9 @@ type Handler interface {
 	Filter(*LogRecord) bool
 	// Emit log record to output - e.g. stderr or file
 	Emit(*LogRecord)
+	// Flush flushes the file system's in-memory copy of recently written data to disk.
+	// Typically, calls the file.Sync()
+	Flush() error
 	// Close output stream, if not return error
 	Close() error
 }
@@ -79,6 +100,11 @@ func (hdlr *NullHandler) Emit(*LogRecord) {
 	// do nothing
 }
 
+// Flush flushes in-memory data to disk
+func (hdlr *NullHandler) Flush() error {
+	return nil
+}
+
 // Close output stream, if not return error
 func (hdlr *NullHandler) Close() error {
 	return nil
@@ -92,7 +118,7 @@ type StreamHandler struct {
 	Name      string
 	Level     Level
 	Formatter Formatter
-	Output    io.Writer
+	Output    flushWriter
 	mu        sync.Mutex
 }
 
@@ -163,14 +189,17 @@ func (hdlr *StreamHandler) Emit(record *LogRecord) {
 
 // Filter checks if handler should filter the specified record
 func (hdlr *StreamHandler) Filter(record *LogRecord) bool {
-	if record.Level < hdlr.Level {
-		return true
-	}
-	return false
+	return record.Level < hdlr.Level
+}
+
+// Flush flushes the file system's in-memory copy to disk
+func (hdlr *StreamHandler) Flush() error {
+	return hdlr.Output.Sync()
 }
 
 // Close output stream, if not return error
 func (hdlr *StreamHandler) Close() error {
+	hdlr.Output.Sync()
 	return nil
 }
 
@@ -180,7 +209,7 @@ type FileHandler struct {
 	Name      string
 	Level     Level
 	Formatter Formatter
-	Output    io.WriteCloser
+	Output    flushWriteCloser
 	Path      string
 	mu        sync.Mutex
 }
@@ -277,10 +306,16 @@ func (hdlr *FileHandler) Emit(record *LogRecord) {
 
 // Filter checks if handler should filter the specified record
 func (hdlr *FileHandler) Filter(record *LogRecord) bool {
-	if record.Level < hdlr.Level {
-		return true
+	return record.Level < hdlr.Level
+}
+
+// Flush flushes the file system's in-memory copy
+// of recently written data to disk.
+func (hdlr *FileHandler) Flush() error {
+	if hdlr.Output == nil {
+		return nil
 	}
-	return false
+	return hdlr.Output.Sync()
 }
 
 // Close file, if not return error

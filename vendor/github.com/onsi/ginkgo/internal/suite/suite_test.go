@@ -170,43 +170,6 @@ var _ = Describe("Suite", func() {
 			})
 		})
 
-		Describe("with ginkgo.parallel.total > 1", func() {
-			BeforeEach(func() {
-				parallelTotal = 2
-				randomizeAllSpecs = true
-			})
-
-			Context("for one worker", func() {
-				BeforeEach(func() {
-					parallelNode = 1
-				})
-
-				It("should run a subset of tests", func() {
-					Ω(runOrder).Should(Equal([]string{
-						"BeforeSuite",
-						"top BE", "top JBE", "top IT", "top AE",
-						"top BE", "BE", "top JBE", "JBE", "inner IT", "AE", "top AE",
-						"AfterSuite",
-					}))
-				})
-			})
-
-			Context("for another worker", func() {
-				BeforeEach(func() {
-					parallelNode = 2
-				})
-
-				It("should run a (different) subset of tests", func() {
-					Ω(runOrder).Should(Equal([]string{
-						"BeforeSuite",
-						"top BE", "BE", "top JBE", "JBE", "IT", "AE", "top AE",
-						"top BE", "BE 2", "top JBE", "IT 2", "top AE",
-						"AfterSuite",
-					}))
-				})
-			})
-		})
-
 		Context("when provided with a filter", func() {
 			BeforeEach(func() {
 				focusString = `inner|\d`
@@ -397,6 +360,12 @@ var _ = Describe("Suite", func() {
 			Ω(func() {
 				By("registering more than one callback", func() {}, func() {})
 			}).Should(Panic())
+		})
+	})
+
+	Describe("GinkgoRandomSeed", func() {
+		It("returns the current config's random seed", func() {
+			Ω(GinkgoRandomSeed()).Should(Equal(config.GinkgoConfig.RandomSeed))
 		})
 	})
 })

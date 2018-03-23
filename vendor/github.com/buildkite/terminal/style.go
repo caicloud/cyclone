@@ -1,56 +1,86 @@
 package terminal
 
-import "strings"
+import "strconv"
 
 var emptyStyle = style{}
 
 type style struct {
-	fgColor     string
-	bgColor     string
-	otherColors string
-	classes     string
+	fgColor   uint8
+	bgColor   uint8
+	fgColorX  bool
+	bgColorX  bool
+	bold      bool
+	faint     bool
+	italic    bool
+	underline bool
+	strike    bool
+	blink     bool
 }
+
+const (
+	COLOR_NORMAL        = iota
+	COLOR_GOT_38_NEED_5 = iota
+	COLOR_GOT_48_NEED_5 = iota
+	COLOR_GOT_38        = iota
+	COLOR_GOT_48        = iota
+)
 
 // True if both styles are equal (or are the same object)
 func (s *style) isEqual(o *style) bool {
-	return s == o || (s.fgColor == o.fgColor && s.bgColor == o.bgColor && s.otherColors == o.otherColors)
+	return s == o || *s == *o
 }
 
 // CSS classes that make up the style
-func (s *style) asClasses() string {
-	if s.classes != "" || s.isEmpty() {
-		return s.classes
+func (s *style) asClasses() []string {
+	var styles []string
+
+	if s.fgColor > 0 && s.fgColor < 38 && !s.fgColorX {
+		styles = append(styles, "term-fg"+strconv.Itoa(int(s.fgColor)))
+	}
+	if s.fgColor > 38 && !s.fgColorX {
+		styles = append(styles, "term-fgi"+strconv.Itoa(int(s.fgColor)))
+
+	}
+	if s.fgColorX {
+		styles = append(styles, "term-fgx"+strconv.Itoa(int(s.fgColor)))
+
 	}
 
-	var styles []string
-	if s.fgColor != "" {
-		styles = append(styles, s.fgColor)
+	if s.bgColor > 0 && s.bgColor < 48 && !s.bgColorX {
+		styles = append(styles, "term-bg"+strconv.Itoa(int(s.bgColor)))
 	}
-	if s.bgColor != "" {
-		styles = append(styles, s.bgColor)
+	if s.bgColor > 48 && !s.bgColorX {
+		styles = append(styles, "term-bgi"+strconv.Itoa(int(s.bgColor)))
 	}
-	if s.otherColors != "" {
-		styles = append(styles, s.otherColors)
+	if s.bgColorX {
+		styles = append(styles, "term-bgx"+strconv.Itoa(int(s.bgColor)))
 	}
-	s.classes = strings.TrimSpace(strings.Join(styles, " "))
-	return s.classes
+
+	if s.bold {
+		styles = append(styles, "term-fg1")
+	}
+	if s.faint {
+		styles = append(styles, "term-fg2")
+	}
+	if s.italic {
+		styles = append(styles, "term-fg3")
+	}
+	if s.underline {
+		styles = append(styles, "term-fg4")
+	}
+	if s.blink {
+		styles = append(styles, "term-fg5")
+	}
+	if s.strike {
+		styles = append(styles, "term-fg9")
+	}
+
+	return styles
 }
 
 // True if style is empty
 func (s *style) isEmpty() bool {
-	return s.fgColor == "" && s.bgColor == "" && s.otherColors == ""
-}
-
-// Remove a particular 'other' colour from our style's colour list
-func (s *style) removeOther(r string) {
-	s.otherColors = strings.Replace(s.otherColors, r+" ", "", -1)
-}
-
-func (s *style) addOther(r string) {
-	r = r + " "
-	if strings.Index(s.otherColors, r) == -1 {
-		s.otherColors = s.otherColors + r
-	}
+	return *s == style{}
 }
 
 // Add colours to an existing style, potentially returning
@@ -61,61 +91,92 @@ func (s *style) color(colors []string) *style {
 		return &emptyStyle
 	}
 
-	s = &style{fgColor: s.fgColor, bgColor: s.bgColor, otherColors: s.otherColors}
+	newStyle := style(*s)
+	s = &newStyle
+	color_mode := COLOR_NORMAL
 
-	if len(colors) >= 2 {
-		if colors[0] == "38" && colors[1] == "5" {
-			// Extended set foreground x-term color
-			s.fgColor = "term-fgx" + colors[2]
-			return s
-		}
-
-		// Extended set background x-term color
-		if colors[0] == "48" && colors[1] == "5" {
-			s.bgColor = "term-bgx" + colors[2]
-			return s
-		}
-	}
-
-	for _, cc := range colors {
+	for _, ccs := range colors {
 		// If multiple colors are defined, i.e. \e[30;42m\e then loop through each
 		// one, and assign it to s.fgColor or s.bgColor
+		cc, err := strconv.ParseUint(ccs, 10, 8)
+		if err != nil {
+			continue
+		}
+
+		// State machine for XTerm colors, eg 38;5;150
+		switch color_mode {
+		case COLOR_GOT_38_NEED_5:
+			if cc == 5 {
+				color_mode = COLOR_GOT_38
+			} else {
+				color_mode = COLOR_NORMAL
+			}
+			continue
+		case COLOR_GOT_48_NEED_5:
+			if cc == 5 {
+				color_mode = COLOR_GOT_48
+			} else {
+				color_mode = COLOR_NORMAL
+			}
+			continue
+		case COLOR_GOT_38:
+			s.fgColor = uint8(cc)
+			s.fgColorX = true
+			color_mode = COLOR_NORMAL
+			continue
+		case COLOR_GOT_48:
+			s.bgColor = uint8(cc)
+			s.bgColorX = true
+			color_mode = COLOR_NORMAL
+			continue
+		}
+
 		switch cc {
-		case "0":
+		case 0:
 			// Reset all styles - don't use &emptyStyle here as we could end up adding colours
 			// in this same action.
 			s = &style{}
-		case "21", "22":
-			s.removeOther("term-fg1")
-			s.removeOther("term-fg2")
-			// Turn off italic
-		case "23":
-			s.removeOther("term-fg3")
-			// Turn off underline
-		case "24":
-			s.removeOther("term-fg4")
-			// Turn off crossed-out
-		case "29":
-			s.removeOther("term-fg9")
-		case "39":
-			s.fgColor = ""
-		case "49":
-			s.bgColor = ""
-			// 30–37, then it's a foreground color
-		case "30", "31", "32", "33", "34", "35", "36", "37":
-			s.fgColor = "term-fg" + cc
-			// 40–47, then it's a background color.
-		case "40", "41", "42", "43", "44", "45", "46", "47":
-			s.bgColor = "term-bg" + cc
-			// 90-97 is like the regular fg color, but high intensity
-		case "90", "91", "92", "93", "94", "95", "96", "97":
-			s.fgColor = "term-fgi" + cc
-			// 100-107 is like the regular bg color, but high intensity
-		case "100", "101", "102", "103", "104", "105", "106", "107":
-			s.fgColor = "term-bgi" + cc
-			// 1-9 random other styles
-		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
-			s.addOther("term-fg" + cc)
+		case 1:
+			s.bold = true
+			s.faint = false
+		case 2:
+			s.faint = true
+			s.bold = false
+		case 3:
+			s.italic = true
+		case 4:
+			s.underline = true
+		case 5, 6:
+			s.blink = true
+		case 9:
+			s.strike = true
+		case 21, 22:
+			s.bold = false
+			s.faint = false
+		case 23:
+			s.italic = false
+		case 24:
+			s.underline = false
+		case 25:
+			s.blink = false
+		case 29:
+			s.strike = false
+		case 38:
+			color_mode = COLOR_GOT_38_NEED_5
+		case 39:
+			s.fgColor = 0
+			s.fgColorX = false
+		case 48:
+			color_mode = COLOR_GOT_48_NEED_5
+		case 49:
+			s.bgColor = 0
+			s.bgColorX = false
+		case 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97:
+			s.fgColor = uint8(cc)
+			s.fgColorX = false
+		case 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107:
+			s.bgColor = uint8(cc)
+			s.bgColorX = false
 		}
 	}
 	return s

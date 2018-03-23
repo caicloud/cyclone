@@ -1,0 +1,4 @@
+<span class="term-fgi90">$</span> curl -o &#47;tmp&#47;file.txt https:&#47;&#47;example.com&#47;file.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   170  100   170    0     0    105      0  0:00:01  0:00:01 --:--:--   105

@@ -10,7 +10,7 @@ import "fmt"
 // UsersService handles communication with the user related
 // methods of the GitHub API.
 //
-// GitHub API docs: http://developer.github.com/v3/users/
+// GitHub API docs: https://developer.github.com/v3/users/
 type UsersService service
 
 // User represents a GitHub user.
@@ -68,10 +68,10 @@ func (u User) String() string {
 	return Stringify(u)
 }
 
-// Get fetches a user.  Passing the empty string will fetch the authenticated
+// Get fetches a user. Passing the empty string will fetch the authenticated
 // user.
 //
-// GitHub API docs: http://developer.github.com/v3/users/#get-a-single-user
+// GitHub API docs: https://developer.github.com/v3/users/#get-a-single-user
 func (s *UsersService) Get(user string) (*User, *Response, error) {
 	var u string
 	if user != "" {
@@ -90,7 +90,7 @@ func (s *UsersService) Get(user string) (*User, *Response, error) {
 		return nil, resp, err
 	}
 
-	return uResp, resp, err
+	return uResp, resp, nil
 }
 
 // GetByID fetches a user.
@@ -109,12 +109,12 @@ func (s *UsersService) GetByID(id int) (*User, *Response, error) {
 		return nil, resp, err
 	}
 
-	return user, resp, err
+	return user, resp, nil
 }
 
 // Edit the authenticated user.
 //
-// GitHub API docs: http://developer.github.com/v3/users/#update-the-authenticated-user
+// GitHub API docs: https://developer.github.com/v3/users/#update-the-authenticated-user
 func (s *UsersService) Edit(user *User) (*User, *Response, error) {
 	u := "user"
 	req, err := s.client.NewRequest("PATCH", u, user)
@@ -128,7 +128,7 @@ func (s *UsersService) Edit(user *User) (*User, *Response, error) {
 		return nil, resp, err
 	}
 
-	return uResp, resp, err
+	return uResp, resp, nil
 }
 
 // UserListOptions specifies optional parameters to the UsersService.ListAll
@@ -144,7 +144,7 @@ type UserListOptions struct {
 //
 // To paginate through all users, populate 'Since' with the ID of the last user.
 //
-// GitHub API docs: http://developer.github.com/v3/users/#get-all-users
+// GitHub API docs: https://developer.github.com/v3/users/#get-all-users
 func (s *UsersService) ListAll(opt *UserListOptions) ([]*User, *Response, error) {
 	u, err := addOptions("users", opt)
 	if err != nil {
@@ -156,13 +156,13 @@ func (s *UsersService) ListAll(opt *UserListOptions) ([]*User, *Response, error)
 		return nil, nil, err
 	}
 
-	users := new([]*User)
-	resp, err := s.client.Do(req, users)
+	var users []*User
+	resp, err := s.client.Do(req, &users)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *users, resp, err
+	return users, resp, nil
 }
 
 // ListInvitations lists all currently-open repository invitations for the
@@ -184,7 +184,7 @@ func (s *UsersService) ListInvitations() ([]*RepositoryInvitation, *Response, er
 		return nil, resp, err
 	}
 
-	return invites, resp, err
+	return invites, resp, nil
 }
 
 // AcceptInvitation accepts the currently-open repository invitation for the

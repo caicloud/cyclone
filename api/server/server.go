@@ -25,15 +25,13 @@ import (
 
 	"github.com/caicloud/cyclone/cloud"
 	loghttp "github.com/caicloud/cyclone/http"
-	"github.com/caicloud/cyclone/kafka"
 	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
 	newstore "github.com/caicloud/cyclone/pkg/store"
 	"github.com/caicloud/cyclone/store"
-	"github.com/caicloud/cyclone/websocket"
 	restful "github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
+	swagger "github.com/emicklei/go-restful-swagger12"
 	"github.com/zoumo/logdog"
 	mgo "gopkg.in/mgo.v2"
 )
@@ -120,11 +118,8 @@ type PreparedAPIServer struct {
 
 // Run start a api server
 func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
-
-	// TODO: PostStartHooks
-
-	// start log server
-	go s.StartLogServer()
+	// FIXME: start loghttp server
+	go loghttp.Server()
 
 	dataStore := newstore.NewStore()
 	defer dataStore.Close()
@@ -141,26 +136,6 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	logdog.Fatal(server.ListenAndServe())
 	// <-stopCh
 	return nil
-}
-
-// StartLogServer run a http log server and a websocket server
-func (s *PreparedAPIServer) StartLogServer() {
-
-	// FIXME: start loghttp server
-	go loghttp.Server()
-
-	// start websocket log server
-	err := kafka.Dail([]string{s.Config.KafkaHost})
-	if nil != err {
-		log.Error(err.Error())
-	}
-	defer kafka.Close()
-
-	websocket.LoadServerConfig()
-	err = websocket.StartServer()
-	if err != nil {
-		log.Error(err.Error())
-	}
 }
 
 // background must be a daemon goroutine for Cyclone server.

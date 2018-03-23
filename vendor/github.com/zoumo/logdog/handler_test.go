@@ -33,6 +33,8 @@ func TestStreamHandler(t *testing.T) {
 	assert.Equal(t, handler.Formatter, TerminalFormatter)
 	assert.True(t, handler.Filter(record))
 	assert.False(t, handler.Filter(record2))
+	// sync on stderr stdout will fail
+	assert.Error(t, handler.Flush())
 	assert.Nil(t, handler.Close())
 
 }

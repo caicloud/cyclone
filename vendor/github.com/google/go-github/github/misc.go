@@ -13,7 +13,7 @@ import (
 
 // MarkdownOptions specifies optional parameters to the Markdown method.
 type MarkdownOptions struct {
-	// Mode identifies the rendering mode.  Possible values are:
+	// Mode identifies the rendering mode. Possible values are:
 	//   markdown - render a document as plain Markdown, just like
 	//   README files are rendered.
 	//
@@ -25,7 +25,7 @@ type MarkdownOptions struct {
 	// Default is "markdown".
 	Mode string
 
-	// Context identifies the repository context.  Only taken into account
+	// Context identifies the repository context. Only taken into account
 	// when rendering as "gfm".
 	Context string
 }
@@ -125,7 +125,7 @@ func (c *Client) APIMeta() (*APIMeta, *Response, error) {
 }
 
 // Octocat returns an ASCII art octocat with the specified message in a speech
-// bubble.  If message is empty, a random zen phrase is used.
+// bubble. If message is empty, a random zen phrase is used.
 func (c *Client) Octocat(message string) (string, *Response, error) {
 	u := "octocat"
 	if message != "" {
@@ -187,11 +187,11 @@ func (c *Client) ListServiceHooks() ([]*ServiceHook, *Response, error) {
 		return nil, nil, err
 	}
 
-	hooks := new([]*ServiceHook)
-	resp, err := c.Do(req, hooks)
+	var hooks []*ServiceHook
+	resp, err := c.Do(req, &hooks)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *hooks, resp, err
+	return hooks, resp, nil
 }

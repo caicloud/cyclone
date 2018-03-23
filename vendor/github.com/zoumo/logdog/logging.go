@@ -39,6 +39,11 @@ func ApplyOptions(options ...Option) *Logger {
 	return root
 }
 
+// Flush ...
+func Flush() error {
+	return root.Flush()
+}
+
 // Debugf is an alias of root.Debugf
 func Debugf(msg string, args ...interface{}) {
 	root.log(DebugLevel, msg, args...)

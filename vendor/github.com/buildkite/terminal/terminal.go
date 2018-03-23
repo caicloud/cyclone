@@ -2,7 +2,7 @@
 Package terminal converts ANSI input to HTML output.
 
 The generated HTML needs to be used with the stylesheet at
-https://raw.githubusercontent.com/buildkite/terminal/master/app/assets/stylesheets/terminal.css
+https://raw.githubusercontent.com/buildkite/terminal/master/assets/terminal.css
 and wrapped in a term-container div.
 
 You can call this library from the command line with terminal-to-html:

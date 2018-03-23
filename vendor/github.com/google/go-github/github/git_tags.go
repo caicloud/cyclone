@@ -20,7 +20,7 @@ type Tag struct {
 	Verification *SignatureVerification `json:"verification,omitempty"`
 }
 
-// createTagRequest represents the body of a CreateTag request.  This is mostly
+// createTagRequest represents the body of a CreateTag request. This is mostly
 // identical to Tag with the exception that the object SHA and Type are
 // top-level fields, rather than being nested inside a JSON object.
 type createTagRequest struct {
@@ -33,7 +33,7 @@ type createTagRequest struct {
 
 // GetTag fetchs a tag from a repo given a SHA.
 //
-// GitHub API docs: http://developer.github.com/v3/git/tags/#get-a-tag
+// GitHub API docs: https://developer.github.com/v3/git/tags/#get-a-tag
 func (s *GitService) GetTag(owner string, repo string, sha string) (*Tag, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/tags/%v", owner, repo, sha)
 	req, err := s.client.NewRequest("GET", u, nil)
@@ -51,7 +51,7 @@ func (s *GitService) GetTag(owner string, repo string, sha string) (*Tag, *Respo
 
 // CreateTag creates a tag object.
 //
-// GitHub API docs: http://developer.github.com/v3/git/tags/#create-a-tag-object
+// GitHub API docs: https://developer.github.com/v3/git/tags/#create-a-tag-object
 func (s *GitService) CreateTag(owner string, repo string, tag *Tag) (*Tag, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/tags", owner, repo)
 

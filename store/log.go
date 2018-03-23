@@ -15,7 +15,6 @@ package store
 
 import (
 	"github.com/caicloud/cyclone/api"
-	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -23,7 +22,7 @@ import (
 // log id of the newly created version.
 func (d *DataStore) NewVersionLogDocument(versionLog *api.VersionLog) (string, error) {
 	col := d.s.DB(defaultDBName).C(versionLogCollectionName)
-	versionLog.LogID = uuid.NewV4().String()
+	versionLog.LogID = bson.NewObjectId().Hex()
 	_, err := col.Upsert(bson.M{"_id": versionLog.LogID}, versionLog)
 	return versionLog.LogID, err
 }

@@ -24,7 +24,7 @@ type Subscription struct {
 
 // ListWatchers lists watchers of a particular repo.
 //
-// GitHub API Docs: http://developer.github.com/v3/activity/watching/#list-watchers
+// GitHub API Docs: https://developer.github.com/v3/activity/watching/#list-watchers
 func (s *ActivityService) ListWatchers(owner, repo string, opt *ListOptions) ([]*User, *Response, error) {
 	u := fmt.Sprintf("repos/%s/%s/subscribers", owner, repo)
 	u, err := addOptions(u, opt)
@@ -37,16 +37,16 @@ func (s *ActivityService) ListWatchers(owner, repo string, opt *ListOptions) ([]
 		return nil, nil, err
 	}
 
-	watchers := new([]*User)
-	resp, err := s.client.Do(req, watchers)
+	var watchers []*User
+	resp, err := s.client.Do(req, &watchers)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *watchers, resp, err
+	return watchers, resp, nil
 }
 
-// ListWatched lists the repositories the specified user is watching.  Passing
+// ListWatched lists the repositories the specified user is watching. Passing
 // the empty string will fetch watched repos for the authenticated user.
 //
 // GitHub API Docs: https://developer.github.com/v3/activity/watching/#list-repositories-being-watched
@@ -67,17 +67,17 @@ func (s *ActivityService) ListWatched(user string, opt *ListOptions) ([]*Reposit
 		return nil, nil, err
 	}
 
-	watched := new([]*Repository)
-	resp, err := s.client.Do(req, watched)
+	var watched []*Repository
+	resp, err := s.client.Do(req, &watched)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *watched, resp, err
+	return watched, resp, nil
 }
 
 // GetRepositorySubscription returns the subscription for the specified
-// repository for the authenticated user.  If the authenticated user is not
+// repository for the authenticated user. If the authenticated user is not
 // watching the repository, a nil Subscription is returned.
 //
 // GitHub API Docs: https://developer.github.com/v3/activity/watching/#get-a-repository-subscription
@@ -97,7 +97,7 @@ func (s *ActivityService) GetRepositorySubscription(owner, repo string) (*Subscr
 		return nil, resp, err
 	}
 
-	return sub, resp, err
+	return sub, resp, nil
 }
 
 // SetRepositorySubscription sets the subscription for the specified repository
@@ -122,7 +122,7 @@ func (s *ActivityService) SetRepositorySubscription(owner, repo string, subscrip
 		return nil, resp, err
 	}
 
-	return sub, resp, err
+	return sub, resp, nil
 }
 
 // DeleteRepositorySubscription deletes the subscription for the specified

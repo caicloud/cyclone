@@ -79,9 +79,9 @@ func TestStringify(t *testing.T) {
 	}
 }
 
-// Directly test the String() methods on various GitHub types.  We don't do an
+// Directly test the String() methods on various GitHub types. We don't do an
 // exaustive test of all the various field types, since TestStringify() above
-// takes care of that.  Rather, we just make sure that Stringify() is being
+// takes care of that. Rather, we just make sure that Stringify() is being
 // used to build the strings, which we do by verifying that pointers are
 // stringified as their underlying value.
 func TestString(t *testing.T) {
@@ -109,6 +109,10 @@ func TestString(t *testing.T) {
 		{Organization{ID: Int(1)}, `github.Organization{ID:1}`},
 		{PullRequestComment{ID: Int(1)}, `github.PullRequestComment{ID:1}`},
 		{PullRequest{Number: Int(1)}, `github.PullRequest{Number:1}`},
+		{PullRequestReview{ID: Int(1)}, `github.PullRequestReview{ID:1}`},
+		{DraftReviewComment{Position: Int(1)}, `github.DraftReviewComment{Position:1}`},
+		{PullRequestReviewRequest{Body: String("r")}, `github.PullRequestReviewRequest{Body:"r"}`},
+		{PullRequestReviewDismissalRequest{Message: String("r")}, `github.PullRequestReviewDismissalRequest{Message:"r"}`},
 		{PushEventCommit{SHA: String("s")}, `github.PushEventCommit{SHA:"s"}`},
 		{PushEvent{PushID: Int(1)}, `github.PushEvent{PushID:1}`},
 		{Reference{Ref: String("r")}, `github.Reference{Ref:"r"}`},

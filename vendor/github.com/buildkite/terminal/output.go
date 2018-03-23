@@ -11,7 +11,12 @@ type outputBuffer struct {
 
 func (b *outputBuffer) appendNodeStyle(n node) {
 	b.buf.Write([]byte(`<span class="`))
-	b.buf.Write([]byte(n.style.asClasses()))
+	for idx, class := range n.style.asClasses() {
+		if idx > 0 {
+			b.buf.Write([]byte(" "))
+		}
+		b.buf.Write([]byte(class))
+	}
 	b.buf.Write([]byte(`">`))
 }
 
@@ -40,22 +45,23 @@ func (b *outputBuffer) appendChar(char rune) {
 }
 
 func outputLineAsHTML(line []node) string {
-	var openStyles int
+	var spanOpen bool
 	var lineBuf outputBuffer
 
 	for idx, node := range line {
 		if idx == 0 && !node.style.isEmpty() {
 			lineBuf.appendNodeStyle(node)
-			openStyles++
+			spanOpen = true
 		} else if idx > 0 {
 			previous := line[idx-1]
 			if !node.hasSameStyle(previous) {
-				if node.style.isEmpty() {
+				if spanOpen {
 					lineBuf.closeStyle()
-					openStyles--
-				} else {
+					spanOpen = false
+				}
+				if !node.style.isEmpty() {
 					lineBuf.appendNodeStyle(node)
-					openStyles++
+					spanOpen = true
 				}
 			}
 		}
@@ -65,7 +71,7 @@ func outputLineAsHTML(line []node) string {
 			lineBuf.appendChar(node.blob)
 		}
 	}
-	for i := 0; i < openStyles; i++ {
+	if spanOpen {
 		lineBuf.closeStyle()
 	}
 	return strings.TrimRight(lineBuf.buf.String(), " \t")
