@@ -6,8 +6,8 @@ sudo: required
 #   - docker
 
 go:
-  - 1.7
   - 1.8
+  - 1.9
 
 go_import_path: github.com/caicloud/cyclone
 
