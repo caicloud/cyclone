@@ -1,0 +1,26 @@
+{
+  "Layer": {
+    "Name": "17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52",
+    "NamespaceName": "debian:8",
+    "ParentName": "140f9bdfeb9784cf8730e9dab5dd12fbd704151cf555ac8cae650451794e5ac2",
+    "IndexedByVersion": 1,
+    "Features": [
+      {
+        "Name": "coreutils",
+        "NamespaceName": "debian:8",
+        "Version": "8.23-4",
+        "Vulnerabilities": [
+          {
+            "Name": "CVE-2014-9471",
+            "NamespaceName": "debian:8",
+            "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
+            "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
+            "Severity": "Low",
+            "FixedBy": "9.23-5"
+          }
+        ]
+      }
+    ]
+  }
+}
+
