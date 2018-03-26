@@ -494,9 +494,11 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 }
 
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
-	event.PipelineRecord.StageStatus.ImageRelease = &api.GeneralStageStatus{
-		Status:    api.Running,
-		StartTime: time.Now(),
+	event.PipelineRecord.StageStatus.ImageRelease = &api.ImageReleaseStageStatus{
+		GeneralStageStatus: api.GeneralStageStatus{
+			Status:    api.Running,
+			StartTime: time.Now(),
+		},
 	}
 	sm.cycloneClient.SendEvent(event)
 
@@ -538,6 +540,8 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
 					return err
 				}
+
+				setReleaseImages(builtImage)
 			}
 		}
 	}
@@ -604,6 +608,13 @@ func setVersion(repoName, id string, main bool, commitLog api.CommitLog) {
 	commitLog.Main = main
 	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
 
+}
+
+func setReleaseImages(image string) {
+	if event.PipelineRecord.StageStatus.ImageRelease.Images == nil {
+		event.PipelineRecord.StageStatus.ImageRelease.Images = []string{}
+	}
+	event.PipelineRecord.StageStatus.ImageRelease.Images = append(event.PipelineRecord.StageStatus.ImageRelease.Images, image)
 }
 
 /* formatImageName Ensure that the image name including a tag.

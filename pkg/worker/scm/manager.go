@@ -42,8 +42,8 @@ var scmProviders map[api.SCMType]SCMProvider
 
 type SCMProvider interface {
 	Clone(url, ref, destPath string) (string, error)
-	GetTagCommit(repoPath string, tag string) (string, error)
-	GetTagCommitLog(repoPath string, tag string) api.CommitLog
+	GetCommit(repoPath string) (string, error)
+	GetCommitLog(repoPath string) api.CommitLog
 }
 
 func init() {
@@ -105,12 +105,7 @@ func GetCommitID(codeSource *api.CodeSource) (string, error) {
 		return "", err
 	}
 
-	ref, err := getRef(codeSource)
-	if err != nil {
-		return "", err
-	}
-
-	id, err := p.GetTagCommit(cloneDir, ref)
+	id, err := p.GetCommit(cloneDir)
 	if err != nil {
 		return "", err
 	}
@@ -127,12 +122,7 @@ func GetCommitLog(codeSource *api.CodeSource) (api.CommitLog, error) {
 		return api.CommitLog{}, err
 	}
 
-	ref, err := getRef(codeSource)
-	if err != nil {
-		return api.CommitLog{}, err
-	}
-
-	return p.GetTagCommitLog(cloneDir, ref), nil
+	return p.GetCommitLog(cloneDir), nil
 }
 
 func CloneRepo(token string, codeSource *api.CodeSource, ref string) (string, error) {

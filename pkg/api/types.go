@@ -356,7 +356,7 @@ type StageStatus struct {
 	Package         *GeneralStageStatus      `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
 	ImageBuild      *GeneralStageStatus      `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
 	IntegrationTest *GeneralStageStatus      `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
-	ImageRelease    *GeneralStageStatus      `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
+	ImageRelease    *ImageReleaseStageStatus `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
 }
 
 // GeneralStageStatus represents the information of stage.
@@ -370,6 +370,12 @@ type GeneralStageStatus struct {
 type CodeCheckoutStageStatus struct {
 	GeneralStageStatus `bson:",inline"`
 	Version            map[string]CommitLog `bson:"version,omitempty" json:"version,omitempty" description:"version of the pipeline record"`
+}
+
+// ImageReleaseStageStatus includes GeneralStageStatus and Images.
+type ImageReleaseStageStatus struct {
+	GeneralStageStatus `bson:",inline"`
+	Images             []string `bson:"images,omitempty" json:"images,omitempty" description:"pushed images of the image release stage"`
 }
 
 type CommitLog struct {

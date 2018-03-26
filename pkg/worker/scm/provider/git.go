@@ -75,22 +75,22 @@ func (g *Git) Clone(url, ref, destPath string) (string, error) {
 }
 
 // GetTagCommit implements VCS interface.
-func (g *Git) GetTagCommit(repoPath string, tag string) (string, error) {
-	args := []string{"rev-list", "-n", "1", tag}
-	output, err := executil.RunInDir(repoPath, "git", args...)
-
-	return strings.Trim(string(output), "\n"), err
-}
-
-func (g *Git) getTagAuthor(repoPath string, tag string) (string, error) {
-	args := []string{"log", "-n", "1", tag, `--pretty=format:"%an"`}
+func (g *Git) GetCommit(repoPath string) (string, error) {
+	args := []string{"log", "-n", "1", `--pretty=format:"%H"`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
 
 	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
 }
 
-func (g *Git) getTagDate(repoPath string, tag string) (time.Time, error) {
-	args := []string{"log", "-n", "1", tag, `--pretty=format:"%ad"`, `--date=raw`}
+func (g *Git) getAuthor(repoPath string) (string, error) {
+	args := []string{"log", "-n", "1", `--pretty=format:"%an"`}
+	output, err := executil.RunInDir(repoPath, "git", args...)
+
+	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
+}
+
+func (g *Git) getDate(repoPath string) (time.Time, error) {
+	args := []string{"log", "-n", "1", `--pretty=format:"%ad"`, `--date=raw`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
 	if err != nil {
 		return time.Time{}, err
@@ -112,30 +112,30 @@ func (g *Git) getTagDate(repoPath string, tag string) (time.Time, error) {
 	return time.Unix(timestamp, 0), nil
 }
 
-func (g *Git) getTagMessage(repoPath string, tag string) (string, error) {
-	args := []string{"log", "-n", "1", tag, `--pretty=format:"%s"`}
+func (g *Git) getMessage(repoPath string) (string, error) {
+	args := []string{"log", "-n", "1", `--pretty=format:"%s"`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
 
 	return strings.Trim(strings.Trim(string(output), "\n"), "\""), err
 }
 
 // GetTagAuthor implements VCS interface.
-func (g *Git) GetTagCommitLog(repoPath string, tag string) api.CommitLog {
+func (g *Git) GetCommitLog(repoPath string) api.CommitLog {
 	commitLog := api.CommitLog{}
 
-	author, erra := g.getTagAuthor(repoPath, tag)
+	author, erra := g.getAuthor(repoPath)
 	if erra != nil {
 		log.Warningf("get tag author fail %s", erra.Error())
 	}
 
 	commitLog.Author = author
-	date, errd := g.getTagDate(repoPath, tag)
+	date, errd := g.getDate(repoPath)
 	if errd != nil {
 		log.Warningf("get tag date fail %s", errd.Error())
 	}
 
 	commitLog.Date = date
-	message, errm := g.getTagMessage(repoPath, tag)
+	message, errm := g.getMessage(repoPath)
 	if errm != nil {
 		log.Warningf("get tag message fail %s", errm.Error())
 	}
