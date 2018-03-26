@@ -18,14 +18,13 @@ package store
 
 import (
 	"github.com/caicloud/cyclone/api"
-	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // NewDeployDocument creates a new document (record) in mongodb. It returns deploy
 // id of the newly created deploy.
 func (d *DataStore) NewDeployDocument(deploy *api.Deploy) (string, error) {
-	deploy.DeployID = uuid.NewV4().String()
+	deploy.DeployID = bson.NewObjectId().Hex()
 	col := d.s.DB(defaultDBName).C(deployCollectionName)
 	_, err := col.Upsert(bson.M{"_id": deploy.DeployID}, deploy)
 	return deploy.DeployID, err

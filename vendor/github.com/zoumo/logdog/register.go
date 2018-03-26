@@ -14,47 +14,15 @@
 
 package logdog
 
-import "sync"
+import "github.com/zoumo/register"
 
 var (
-	formatters   = NewRegister()
-	handlers     = NewRegister()
-	constructors = NewRegister()
-	loggers      = NewRegister()
-	levels       = NewRegister()
+	formatters   = register.NewRegister(nil)
+	handlers     = register.NewRegister(nil)
+	constructors = register.NewRegister(nil)
+	loggers      = register.NewRegister(nil)
+	levels       = register.NewRegister(nil)
 )
-
-// Register is a struct binds name and interface such as Constructor
-type Register struct {
-	data map[string]interface{}
-	mu   sync.RWMutex
-}
-
-// NewRegister returns a new register
-func NewRegister() *Register {
-	return &Register{
-		data: make(map[string]interface{}),
-	}
-}
-
-// Register binds name and interface
-// It will panic if name already exists
-func (r *Register) Register(name string, v interface{}) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	_, ok := r.data[name]
-	if ok {
-		panic("Repeated registration key: " + name)
-	}
-	r.data[name] = v
-
-}
-
-// Get returns an interface registered with the given name
-func (r *Register) Get(name string) interface{} {
-	// need lock ?
-	return r.data[name]
-}
 
 // Constructor is a function which returns an ConfigLoader
 type Constructor func() ConfigLoader
@@ -62,8 +30,8 @@ type Constructor func() ConfigLoader
 // GetConstructor returns an Constructor registered with the given name
 // if not, returns nil
 func GetConstructor(name string) Constructor {
-	v := constructors.Get(name)
-	if v == nil {
+	v, ok := constructors.Get(name)
+	if !ok {
 		return nil
 	}
 	return v.(Constructor)
@@ -81,8 +49,8 @@ func RegisterFormatter(name string, formatter Formatter) {
 
 // GetFormatter returns an Formatter registered with the given name
 func GetFormatter(name string) Formatter {
-	v := formatters.Get(name)
-	if v == nil {
+	v, ok := formatters.Get(name)
+	if !ok {
 		return nil
 	}
 	return v.(Formatter)
@@ -95,8 +63,8 @@ func RegisterHandler(name string, handler Handler) {
 
 // GetHandler returns a Handler registered with the given name
 func GetHandler(name string) Handler {
-	v := handlers.Get(name)
-	if v == nil {
+	v, ok := handlers.Get(name)
+	if !ok {
 		return nil
 	}
 	return v.(Handler)
@@ -109,9 +77,8 @@ func GetLogger(name string, options ...Option) *Logger {
 		name = RootLoggerName
 	}
 
-	var v interface{}
-	v = loggers.Get(name)
-	if v != nil {
+	v, ok := loggers.Get(name)
+	if ok {
 		return v.(*Logger)
 	}
 
@@ -120,8 +87,8 @@ func GetLogger(name string, options ...Option) *Logger {
 
 	// check twice
 	// maybe sb. adds logger when this logger is creating
-	v = loggers.Get(name)
-	if v != nil {
+	v, ok = loggers.Get(name)
+	if ok {
 		return v.(*Logger)
 	}
 
@@ -131,8 +98,8 @@ func GetLogger(name string, options ...Option) *Logger {
 
 // GetLevel returns a Level registered with the given name
 func GetLevel(name string) Level {
-	v := levels.Get(name)
-	if v == nil {
+	v, ok := levels.Get(name)
+	if !ok {
 		return Level(-1)
 	}
 	return v.(Level)
@@ -148,15 +115,15 @@ func RegisterLevel(name string, level Level) {
 // DisableExistingLoggers closes all existing loggers and unregister them
 func DisableExistingLoggers() {
 	// close all existing logger
-	loggers.mu.Lock()
-	for _, logger := range loggers.data {
+	loggers.Lock()
+	for _, logger := range loggers.Iter() {
 		_logger := logger.(*Logger)
 		_logger.Close()
 	}
-	loggers.data = make(map[string]interface{})
-	loggers.mu.Unlock()
+	loggers.Unlock()
 
-	loggers = NewRegister()
+	loggers.Clear()
+
 	// reset root
 	root = GetLogger(RootLoggerName)
 	root.ApplyOptions(OptionHandlers(NewStreamHandler()))

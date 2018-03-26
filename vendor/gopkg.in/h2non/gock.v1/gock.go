@@ -52,6 +52,10 @@ func Intercept() {
 // InterceptClient allows the developer to intercept HTTP traffic using
 // a custom http.Client who uses a non default http.Transport/http.RoundTripper implementation.
 func InterceptClient(cli *http.Client) {
+	_, ok := cli.Transport.(*Transport)
+	if ok {
+		return // if transport already intercepted, just ignore it
+	}
 	trans := NewTransport()
 	trans.Transport = cli.Transport
 	cli.Transport = trans
@@ -79,6 +83,13 @@ func Disable() {
 func Off() {
 	Flush()
 	Disable()
+}
+
+// OffAll is like `Off()`, but it also removes the unmatched requests registry.
+func OffAll() {
+	Flush()
+	Disable()
+	CleanUnmatchedRequest()
 }
 
 // EnableNetworking enables real HTTP networking
@@ -119,6 +130,13 @@ func GetUnmatchedRequests() []*http.Request {
 // HasUnmatchedRequest returns true if gock has received any requests that didn't match a mock
 func HasUnmatchedRequest() bool {
 	return len(GetUnmatchedRequests()) > 0
+}
+
+// CleanUnmatchedRequest cleans the unmatched requests internal registry.
+func CleanUnmatchedRequest() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	unmatchedRequests = []*http.Request{}
 }
 
 func trackUnmatchedRequest(req *http.Request) {

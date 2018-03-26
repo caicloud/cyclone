@@ -46,7 +46,7 @@ type updateRefRequest struct {
 
 // GetRef fetches the Reference object for a given Git ref.
 //
-// GitHub API docs: http://developer.github.com/v3/git/refs/#get-a-reference
+// GitHub API docs: https://developer.github.com/v3/git/refs/#get-a-reference
 func (s *GitService) GetRef(owner string, repo string, ref string) (*Reference, *Response, error) {
 	ref = strings.TrimPrefix(ref, "refs/")
 	u := fmt.Sprintf("repos/%v/%v/git/refs/%v", owner, repo, ref)
@@ -61,7 +61,7 @@ func (s *GitService) GetRef(owner string, repo string, ref string) (*Reference, 
 		return nil, resp, err
 	}
 
-	return r, resp, err
+	return r, resp, nil
 }
 
 // ReferenceListOptions specifies optional parameters to the
@@ -74,7 +74,7 @@ type ReferenceListOptions struct {
 
 // ListRefs lists all refs in a repository.
 //
-// GitHub API docs: http://developer.github.com/v3/git/refs/#get-all-references
+// GitHub API docs: https://developer.github.com/v3/git/refs/#get-all-references
 func (s *GitService) ListRefs(owner, repo string, opt *ReferenceListOptions) ([]*Reference, *Response, error) {
 	var u string
 	if opt != nil && opt.Type != "" {
@@ -98,12 +98,12 @@ func (s *GitService) ListRefs(owner, repo string, opt *ReferenceListOptions) ([]
 		return nil, resp, err
 	}
 
-	return rs, resp, err
+	return rs, resp, nil
 }
 
 // CreateRef creates a new ref in a repository.
 //
-// GitHub API docs: http://developer.github.com/v3/git/refs/#create-a-reference
+// GitHub API docs: https://developer.github.com/v3/git/refs/#create-a-reference
 func (s *GitService) CreateRef(owner string, repo string, ref *Reference) (*Reference, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/refs", owner, repo)
 	req, err := s.client.NewRequest("POST", u, &createRefRequest{
@@ -121,12 +121,12 @@ func (s *GitService) CreateRef(owner string, repo string, ref *Reference) (*Refe
 		return nil, resp, err
 	}
 
-	return r, resp, err
+	return r, resp, nil
 }
 
 // UpdateRef updates an existing ref in a repository.
 //
-// GitHub API docs: http://developer.github.com/v3/git/refs/#update-a-reference
+// GitHub API docs: https://developer.github.com/v3/git/refs/#update-a-reference
 func (s *GitService) UpdateRef(owner string, repo string, ref *Reference, force bool) (*Reference, *Response, error) {
 	refPath := strings.TrimPrefix(*ref.Ref, "refs/")
 	u := fmt.Sprintf("repos/%v/%v/git/refs/%v", owner, repo, refPath)
@@ -144,12 +144,12 @@ func (s *GitService) UpdateRef(owner string, repo string, ref *Reference, force 
 		return nil, resp, err
 	}
 
-	return r, resp, err
+	return r, resp, nil
 }
 
 // DeleteRef deletes a ref from a repository.
 //
-// GitHub API docs: http://developer.github.com/v3/git/refs/#delete-a-reference
+// GitHub API docs: https://developer.github.com/v3/git/refs/#delete-a-reference
 func (s *GitService) DeleteRef(owner string, repo string, ref string) (*Response, error) {
 	ref = strings.TrimPrefix(ref, "refs/")
 	u := fmt.Sprintf("repos/%v/%v/git/refs/%v", owner, repo, ref)

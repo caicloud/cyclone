@@ -1,0 +1,134 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
+  name = "github.com/buildkite/terminal"
+  version = "3.1.0"
+
+[[constraint]]
+  name = "github.com/djherbis/buffer"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/docker/distribution"
+  version = "2.6.2"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  version = "1.13.1"
+
+[[constraint]]
+  name = "github.com/docker/go-connections"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "github.com/emicklei/go-restful"
+  version = "2.4.0"
+
+[[constraint]]
+  name = "github.com/emicklei/go-restful-swagger12"
+  version = "1.0.1"
+
+[[constraint]]
+  name = "github.com/fsouza/go-dockerclient"
+  version = "docker-1.9/go-1.4"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/golang/glog"
+
+[[constraint]]
+  name = "github.com/google/go-github"
+  version = "3.0.0"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.1.4"
+
+[[constraint]]
+  name = "github.com/xanzy/go-gitlab"
+  version = "0.4.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/zoumo/logdog"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/net"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"
+
+[[constraint]]
+  name = "gopkg.in/gomail.v2"
+  version = "2.0.0"
+
+[[constraint]]
+  name = "gopkg.in/h2non/gock.v1"
+  version = "1.0.8"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/mgo.v2"
+
+[[constraint]]
+  name = "gopkg.in/urfave/cli.v1"
+  version = "1.20.0"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/api"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/apimachinery"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "6.0.0"
+
+[[override]]
+  name = "github.com/opencontainers/runtime-spec"
+  revision = "1c7c27d043c2a5e513a44084d2b10d77d1402b8c"

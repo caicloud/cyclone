@@ -67,13 +67,13 @@ func (s *LicensesService) List() ([]*License, *Response, error) {
 	// TODO: remove custom Accept header when this API fully launches
 	req.Header.Set("Accept", mediaTypeLicensesPreview)
 
-	licenses := new([]*License)
-	resp, err := s.client.Do(req, licenses)
+	var licenses []*License
+	resp, err := s.client.Do(req, &licenses)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *licenses, resp, err
+	return licenses, resp, nil
 }
 
 // Get extended metadata for one license.
@@ -96,5 +96,5 @@ func (s *LicensesService) Get(licenseName string) (*License, *Response, error) {
 		return nil, resp, err
 	}
 
-	return license, resp, err
+	return license, resp, nil
 }

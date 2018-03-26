@@ -151,14 +151,18 @@ func (r *Request) Compression(scheme string) *Request {
 
 // JSON defines the JSON body to match based on a given structure.
 func (r *Request) JSON(data interface{}) *Request {
-	r.Header.Set("Content-Type", "application/json")
+	if r.Header.Get("Content-Type") == "" {
+		r.Header.Set("Content-Type", "application/json")
+	}
 	r.BodyBuffer, r.Error = readAndDecode(data, "json")
 	return r
 }
 
 // XML defines the XML body to match based on a given structure.
 func (r *Request) XML(data interface{}) *Request {
-	r.Header.Set("Content-Type", "application/xml")
+	if r.Header.Get("Content-Type") == "" {
+		r.Header.Set("Content-Type", "application/xml")
+	}
 	r.BodyBuffer, r.Error = readAndDecode(data, "xml")
 	return r
 }

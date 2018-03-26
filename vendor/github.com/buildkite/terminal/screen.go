@@ -52,10 +52,9 @@ func (s *screen) up(i string) {
 	s.y = int(math.Max(0, float64(s.y)))
 }
 
-// Move the cursor down, if we can
+// Move the cursor down
 func (s *screen) down(i string) {
 	s.y += pi(i)
-	s.y = int(math.Min(float64(s.y), float64(len(s.screen)-1)))
 }
 
 // Move the cursor forward on the line

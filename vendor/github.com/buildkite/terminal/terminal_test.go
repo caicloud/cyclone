@@ -13,13 +13,15 @@ var TestFiles = []string{
 	"homer.sh",
 	"pikachu.sh",
 	"npm.sh",
+	"docker-pull.sh",
+	"weather.sh",
 }
 
-func loadFixture(base string, ext string) []byte {
+func loadFixture(t testing.TB, base string, ext string) []byte {
 	filename := fmt.Sprintf("fixtures/%s.%s", base, ext)
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Errorf("could not load fixture %s: %v", filename, err)
+		t.Errorf("could not load fixture %s: %v", filename, err)
 	}
 	return data
 }
@@ -70,9 +72,9 @@ var rendererTestCases = []struct {
 		"this is\x1b[4Cpoop and stuff",
 		"this is    poop and stuff",
 	}, {
-		`doesn\"t allow you to jump down lines if the line doesn't exist"`,
+		`allows you to jump down further than the bottom of the buffer`,
 		"this is great \x1b[1Bhello",
-		"this is great hello",
+		"this is great\n              hello",
 	}, {
 		`allows you to control the cursor backwards`,
 		"this is good\x1b[4Dpoop and stuff",
@@ -157,9 +159,17 @@ var rendererTestCases = []struct {
 		"\x1b[30;42m\x1b[2KOK (244 tests, 558 assertions)",
 		"<span class=\"term-fg30 term-bg42\">OK (244 tests, 558 assertions)</span>",
 	}, {
+		`does not attempt to incorrectly nest CSS in HTML (https://github.com/buildkite/terminal/issues/36)`,
+		"Some plain text\x1b[0;30;42m yay a green background \x1b[0m\x1b[0;33;49mnow this has no background but is yellow \x1b[0m",
+		"Some plain text<span class=\"term-fg30 term-bg42\"> yay a green background </span><span class=\"term-fg33\">now this has no background but is yellow </span>",
+	}, {
 		`handles xterm colors`,
-		"\x1b[38;5;169mhello\x1b[0m \x1b[38;5;179mgoodbye",
-		"<span class=\"term-fgx169\">hello</span> <span class=\"term-fgx179\">goodbye</span>",
+		"\x1b[38;5;169;48;5;50mhello\x1b[0m \x1b[38;5;179mgoodbye",
+		"<span class=\"term-fgx169 term-bgx50\">hello</span> <span class=\"term-fgx179\">goodbye</span>",
+	}, {
+		`handles non-xterm codes on the same line as xterm colors`,
+		"\x1b[38;5;228;5;1mblinking and bold\x1b",
+		`<span class="term-fgx228 term-fg1 term-fg5">blinking and bold</span>`,
 	}, {
 		`ignores broken escape characters, stripping the escape rune itself`,
 		"hi amazing \x1b[12 nom nom nom friends",
@@ -167,7 +177,7 @@ var rendererTestCases = []struct {
 	}, {
 		`handles colors with 3 attributes`,
 		"\x1b[0;10;4m\x1b[1m\x1b[34mgood news\x1b[0;10m\n\neveryone",
-		"<span class=\"term-fg34 term-fg4 term-fg1\">good news</span>\n&nbsp;\neveryone",
+		"<span class=\"term-fg34 term-fg1 term-fg4\">good news</span>\n&nbsp;\neveryone",
 	}, {
 		`ends underlining with \x1b[24`,
 		"\x1b[4mbegin\x1b[24m\r\nend",
@@ -201,9 +211,9 @@ var rendererTestCases = []struct {
 		"\x1b]1337;File=name=MS5naWY=;inline=1:AA==\a",
 		`<img alt="1.gif" src="data:image/gif;base64,AA==">`,
 	}, {
-		`prints on error on malformed iTerm2 image codes`,
-		"\x1b]1337;;;;\a",
-		"*** Error parsing iTerm2 image escape sequence: expected sequence to start with 1337;File=, 1338; or 1339;, got &quot;1337;;;;&quot; instead",
+		`silently ignores unsupported ANSI escape sequences`,
+		"abc\x1b]9999\aghi",
+		"abcghi",
 	}, {
 		`correctly handles images that we decide not to render`,
 		"hi\x1b]1337;File=name=MS5naWY=;inline=0:AA==\ahello",
@@ -234,8 +244,8 @@ func TestRendererAgainstCases(t *testing.T) {
 
 func TestRendererAgainstFixtures(t *testing.T) {
 	for _, base := range TestFiles {
-		raw := loadFixture(base, "raw")
-		expected := string(loadFixture(base, "rendered"))
+		raw := loadFixture(t, base, "raw")
+		expected := string(loadFixture(t, base, "rendered"))
 
 		output := string(Render(raw))
 
@@ -276,6 +286,10 @@ func BenchmarkRendererHomer(b *testing.B) {
 	benchmark("homer.sh", b)
 }
 
+func BenchmarkRendererDockerPull(b *testing.B) {
+	benchmark("docker-pull.sh", b)
+}
+
 func BenchmarkRendererPikachu(b *testing.B) {
 	benchmark("pikachu.sh", b)
 }
@@ -285,7 +299,7 @@ func BenchmarkRendererNpm(b *testing.B) {
 }
 
 func benchmark(filename string, b *testing.B) {
-	raw := loadFixture(filename, "raw")
+	raw := loadFixture(b, filename, "raw")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = Render(raw)

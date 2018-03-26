@@ -60,16 +60,13 @@ func (s *RepositoriesService) ListTrafficReferrers(owner, repo string) ([]*Traff
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
-	req.Header.Set("Accept", mediaTypeTrafficPreview)
-
-	trafficReferrers := new([]*TrafficReferrer)
+	var trafficReferrers []*TrafficReferrer
 	resp, err := s.client.Do(req, &trafficReferrers)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *trafficReferrers, resp, err
+	return trafficReferrers, resp, nil
 }
 
 // ListTrafficPaths list the top 10 popular content over the last 14 days.
@@ -83,16 +80,13 @@ func (s *RepositoriesService) ListTrafficPaths(owner, repo string) ([]*TrafficPa
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
-	req.Header.Set("Accept", mediaTypeTrafficPreview)
-
-	var paths = new([]*TrafficPath)
+	var paths []*TrafficPath
 	resp, err := s.client.Do(req, &paths)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *paths, resp, err
+	return paths, resp, nil
 }
 
 // ListTrafficViews get total number of views for the last 14 days and breaks it down either per day or week.
@@ -110,16 +104,13 @@ func (s *RepositoriesService) ListTrafficViews(owner, repo string, opt *TrafficB
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
-	req.Header.Set("Accept", mediaTypeTrafficPreview)
-
 	trafficViews := new(TrafficViews)
 	resp, err := s.client.Do(req, &trafficViews)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return trafficViews, resp, err
+	return trafficViews, resp, nil
 }
 
 // ListTrafficClones get total number of clones for the last 14 days and breaks it down either per day or week for the last 14 days.
@@ -137,14 +128,11 @@ func (s *RepositoriesService) ListTrafficClones(owner, repo string, opt *Traffic
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
-	req.Header.Set("Accept", mediaTypeTrafficPreview)
-
 	trafficClones := new(TrafficClones)
 	resp, err := s.client.Do(req, &trafficClones)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return trafficClones, resp, err
+	return trafficClones, resp, nil
 }

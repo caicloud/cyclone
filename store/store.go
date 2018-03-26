@@ -21,7 +21,7 @@ import (
 
 	log "github.com/golang/glog"
 	"gopkg.in/mgo.v2"
-	"k8s.io/client-go/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (

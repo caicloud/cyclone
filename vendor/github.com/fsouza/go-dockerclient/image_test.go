@@ -1,4 +1,4 @@
-// Copyright 2013 go-dockerclient authors. All rights reserved.
+// Copyright 2015 go-dockerclient authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-func newTestClient(rt http.RoundTripper) Client {
+func newTestClient(rt *FakeRoundTripper) Client {
 	endpoint := "http://localhost:4243"
 	u, _ := parseEndpoint("http://localhost:4243", false)
 	testAPIVersion, _ := NewAPIVersion("1.17")
@@ -702,10 +702,9 @@ func TestBuildImageParameters(t *testing.T) {
 		BuildArgs:           []BuildArg{{Name: "SOME_VAR", Value: "some_value"}},
 		InputStream:         &buf,
 		OutputStream:        &buf,
-		Labels:              map[string]string{"k": "v"},
 	}
 	err := client.BuildImage(opts)
-	if err != nil && !strings.Contains(err.Error(), "build image fail") {
+	if err != nil && strings.Index(err.Error(), "build image fail") == -1 {
 		t.Fatal(err)
 	}
 	req := fakeRT.requests[0]
@@ -722,7 +721,6 @@ func TestBuildImageParameters(t *testing.T) {
 		"cpuquota":   {"7500"},
 		"cpuperiod":  {"100000"},
 		"cpusetcpus": {"0-3"},
-		"labels":     {`{"k":"v"}`},
 		"ulimits":    {`[{"Name":"nofile","Soft":100,"Hard":200}]`},
 		"buildargs":  {`{"SOME_VAR":"some_value"}`},
 	}
@@ -843,7 +841,7 @@ func TestTagImageParameters(t *testing.T) {
 	client := newTestClient(fakeRT)
 	opts := TagImageOptions{Repo: "testImage"}
 	err := client.TagImage("base", opts)
-	if err != nil && !strings.Contains(err.Error(), "tag image fail") {
+	if err != nil && strings.Index(err.Error(), "tag image fail") == -1 {
 		t.Fatal(err)
 	}
 	req := fakeRT.requests[0]

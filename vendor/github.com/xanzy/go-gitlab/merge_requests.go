@@ -91,6 +91,7 @@ type MergeRequest struct {
 		RenamedFile bool   `json:"renamed_file"`
 		DeletedFile bool   `json:"deleted_file"`
 	} `json:"changes"`
+	WebURL string `json:"web_url"`
 }
 
 func (m MergeRequest) String() string {
@@ -117,16 +118,14 @@ type ListMergeRequestsOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#list-merge-requests
-func (s *MergeRequestsService) ListMergeRequests(
-	pid interface{},
-	opt *ListMergeRequestsOptions) ([]*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) ListMergeRequests(pid interface{}, opt *ListMergeRequestsOptions, options ...OptionFunc) ([]*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/merge_requests", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -144,16 +143,14 @@ func (s *MergeRequestsService) ListMergeRequests(
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#get-single-mr
-func (s *MergeRequestsService) GetMergeRequest(
-	pid interface{},
-	mergeRequest int) (*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) GetMergeRequest(pid interface{}, mergeRequest int, options ...OptionFunc) (*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d", url.QueryEscape(project), mergeRequest)
+	u := fmt.Sprintf("projects/%s/merge_requests/%d", url.QueryEscape(project), mergeRequest)
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -167,21 +164,44 @@ func (s *MergeRequestsService) GetMergeRequest(
 	return m, resp, err
 }
 
+// GetMergeRequestCommits gets a list of merge request commits.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#get-single-mr-commits
+func (s *MergeRequestsService) GetMergeRequestCommits(pid interface{}, mergeRequest int, options ...OptionFunc) ([]*Commit, *Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("projects/%s/merge_requests/%d/commits", url.QueryEscape(project), mergeRequest)
+
+	req, err := s.client.NewRequest("GET", u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var c []*Commit
+	resp, err := s.client.Do(req, &c)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return c, resp, err
+}
+
 // GetMergeRequestChanges shows information about the merge request including
 // its files and changes.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#get-single-mr-changes
-func (s *MergeRequestsService) GetMergeRequestChanges(
-	pid interface{},
-	mergeRequest int) (*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) GetMergeRequestChanges(pid interface{}, mergeRequest int, options ...OptionFunc) (*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d/changes", url.QueryEscape(project), mergeRequest)
+	u := fmt.Sprintf("projects/%s/merge_requests/%d/changes", url.QueryEscape(project), mergeRequest)
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -213,16 +233,14 @@ type CreateMergeRequestOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#create-mr
-func (s *MergeRequestsService) CreateMergeRequest(
-	pid interface{},
-	opt *CreateMergeRequestOptions) (*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) CreateMergeRequest(pid interface{}, opt *CreateMergeRequestOptions, options ...OptionFunc) (*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/merge_requests", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, opt)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -253,17 +271,14 @@ type UpdateMergeRequestOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#update-mr
-func (s *MergeRequestsService) UpdateMergeRequest(
-	pid interface{},
-	mergeRequest int,
-	opt *UpdateMergeRequestOptions) (*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) UpdateMergeRequest(pid interface{}, mergeRequest int, opt *UpdateMergeRequestOptions, options ...OptionFunc) (*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d", url.QueryEscape(project), mergeRequest)
+	u := fmt.Sprintf("projects/%s/merge_requests/%d", url.QueryEscape(project), mergeRequest)
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -296,17 +311,14 @@ type AcceptMergeRequestOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#accept-mr
-func (s *MergeRequestsService) AcceptMergeRequest(
-	pid interface{},
-	mergeRequest int,
-	opt *AcceptMergeRequestOptions) (*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) AcceptMergeRequest(pid interface{}, mergeRequest int, opt *AcceptMergeRequestOptions, options ...OptionFunc) (*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d/merge", url.QueryEscape(project), mergeRequest)
+	u := fmt.Sprintf("projects/%s/merge_requests/%d/merge", url.QueryEscape(project), mergeRequest)
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -318,98 +330,4 @@ func (s *MergeRequestsService) AcceptMergeRequest(
 	}
 
 	return m, resp, err
-}
-
-// MergeRequestComment represents a GitLab merge request comment.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/merge_requests.html
-type MergeRequestComment struct {
-	Note   string `json:"note"`
-	Author struct {
-		ID        int        `json:"id"`
-		Username  string     `json:"username"`
-		Email     string     `json:"email"`
-		Name      string     `json:"name"`
-		State     string     `json:"state"`
-		CreatedAt *time.Time `json:"created_at"`
-	} `json:"author"`
-}
-
-func (m MergeRequestComment) String() string {
-	return Stringify(m)
-}
-
-// GetMergeRequestCommentsOptions represents the available GetMergeRequestComments()
-// options.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/merge_requests.html#get-the-comments-on-a-mr
-type GetMergeRequestCommentsOptions struct {
-	ListOptions
-}
-
-// GetMergeRequestComments gets all the comments associated with a merge
-// request.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/merge_requests.html#get-the-comments-on-a-mr
-func (s *MergeRequestsService) GetMergeRequestComments(
-	pid interface{},
-	mergeRequest int,
-	opt *GetMergeRequestCommentsOptions) ([]*MergeRequestComment, *Response, error) {
-	project, err := parseID(pid)
-	if err != nil {
-		return nil, nil, err
-	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d/comments", url.QueryEscape(project), mergeRequest)
-
-	req, err := s.client.NewRequest("GET", u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var c []*MergeRequestComment
-	resp, err := s.client.Do(req, &c)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return c, resp, err
-}
-
-// PostMergeRequestCommentOptions represents the available
-// PostMergeRequestComment() options.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/commits.html#post-comment-to-mr
-type PostMergeRequestCommentOptions struct {
-	Note *string `url:"note,omitempty" json:"note,omitempty"`
-}
-
-// PostMergeRequestComment dds a comment to a merge request.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/commits.html#post-comment-to-mr
-func (s *MergeRequestsService) PostMergeRequestComment(
-	pid interface{},
-	mergeRequest int,
-	opt *PostMergeRequestCommentOptions) (*MergeRequestComment, *Response, error) {
-	project, err := parseID(pid)
-	if err != nil {
-		return nil, nil, err
-	}
-	u := fmt.Sprintf("projects/%s/merge_request/%d/comments", url.QueryEscape(project), mergeRequest)
-
-	req, err := s.client.NewRequest("POST", u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	c := new(MergeRequestComment)
-	resp, err := s.client.Do(req, c)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return c, resp, err
 }

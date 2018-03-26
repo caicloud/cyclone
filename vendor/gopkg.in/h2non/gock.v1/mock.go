@@ -71,6 +71,8 @@ func (m *Mocker) Disable() {
 // Done returns true in case that the current mock
 // instance is disabled and therefore must be removed.
 func (m *Mocker) Done() bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	return m.disabled || (!m.request.Persisted && m.request.Counter == 0)
 }
 
@@ -110,9 +112,7 @@ func (m *Mocker) Match(req *http.Request) (bool, error) {
 	// Match
 	matches, err := m.matcher.Match(req, m.request)
 	if matches {
-		m.mutex.Lock()
 		m.decrement()
-		m.mutex.Unlock()
 	}
 
 	return matches, err
@@ -135,6 +135,9 @@ func (m *Mocker) decrement() {
 	if m.request.Persisted {
 		return
 	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	m.request.Counter--
 	if m.request.Counter == 0 {

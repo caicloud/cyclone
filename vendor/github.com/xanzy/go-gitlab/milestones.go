@@ -63,16 +63,14 @@ type ListMilestonesOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/milestones.html#list-project-milestones
-func (s *MilestonesService) ListMilestones(
-	pid interface{},
-	opt *ListMilestonesOptions) ([]*Milestone, *Response, error) {
+func (s *MilestonesService) ListMilestones(pid interface{}, opt *ListMilestonesOptions, options ...OptionFunc) ([]*Milestone, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/milestones", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -90,16 +88,14 @@ func (s *MilestonesService) ListMilestones(
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/milestones.html#get-single-milestone
-func (s *MilestonesService) GetMilestone(
-	pid interface{},
-	milestone int) (*Milestone, *Response, error) {
+func (s *MilestonesService) GetMilestone(pid interface{}, milestone int, options ...OptionFunc) (*Milestone, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/milestones/%d", url.QueryEscape(project), milestone)
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -128,16 +124,14 @@ type CreateMilestoneOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/milestones.html#create-new-milestone
-func (s *MilestonesService) CreateMilestone(
-	pid interface{},
-	opt *CreateMilestoneOptions) (*Milestone, *Response, error) {
+func (s *MilestonesService) CreateMilestone(pid interface{}, opt *CreateMilestoneOptions, options ...OptionFunc) (*Milestone, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/milestones", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, opt)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -167,17 +161,14 @@ type UpdateMilestoneOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/milestones.html#edit-milestone
-func (s *MilestonesService) UpdateMilestone(
-	pid interface{},
-	milestone int,
-	opt *UpdateMilestoneOptions) (*Milestone, *Response, error) {
+func (s *MilestonesService) UpdateMilestone(pid interface{}, milestone int, opt *UpdateMilestoneOptions, options ...OptionFunc) (*Milestone, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/milestones/%d", url.QueryEscape(project), milestone)
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -203,17 +194,14 @@ type GetMilestoneIssuesOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/milestones.html#get-all-issues-assigned-to-a-single-milestone
-func (s *MilestonesService) GetMilestoneIssues(
-	pid interface{},
-	milestone int,
-	opt *GetMilestoneIssuesOptions) ([]*Issue, *Response, error) {
+func (s *MilestonesService) GetMilestoneIssues(pid interface{}, milestone int, opt *GetMilestoneIssuesOptions, options ...OptionFunc) ([]*Issue, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/milestones/%d/issues", url.QueryEscape(project), milestone)
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}

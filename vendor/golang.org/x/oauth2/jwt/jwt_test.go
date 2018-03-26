@@ -6,9 +6,16 @@ package jwt
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/jws"
 )
 
 var dummyPrivateKey = []byte(`-----BEGIN RSA PRIVATE KEY-----
@@ -129,5 +136,86 @@ func TestJWTFetch_BadResponseType(t *testing.T) {
 		if got, want := tok.AccessToken, ""; got != want {
 			t.Errorf("access token = %q; want %q", got, want)
 		}
+	}
+}
+
+func TestJWTFetch_Assertion(t *testing.T) {
+	var assertion string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		assertion = r.Form.Get("assertion")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{
+			"access_token": "90d64460d14870c08c81352a05dedd3465940a7c",
+			"scope": "user",
+			"token_type": "bearer",
+			"expires_in": 3600
+		}`))
+	}))
+	defer ts.Close()
+
+	conf := &Config{
+		Email:        "aaa@xxx.com",
+		PrivateKey:   dummyPrivateKey,
+		PrivateKeyID: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		TokenURL:     ts.URL,
+	}
+
+	_, err := conf.TokenSource(context.Background()).Token()
+	if err != nil {
+		t.Fatalf("Failed to fetch token: %v", err)
+	}
+
+	parts := strings.Split(assertion, ".")
+	if len(parts) != 3 {
+		t.Fatalf("assertion = %q; want 3 parts", assertion)
+	}
+	gotjson, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		t.Fatalf("invalid token header; err = %v", err)
+	}
+
+	got := jws.Header{}
+	if err := json.Unmarshal(gotjson, &got); err != nil {
+		t.Errorf("failed to unmarshal json token header = %q; err = %v", gotjson, err)
+	}
+
+	want := jws.Header{
+		Algorithm: "RS256",
+		Typ:       "JWT",
+		KeyID:     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	}
+	if got != want {
+		t.Errorf("access token header = %q; want %q", got, want)
+	}
+}
+
+func TestTokenRetrieveError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "invalid_grant"}`))
+	}))
+	defer ts.Close()
+
+	conf := &Config{
+		Email:      "aaa@xxx.com",
+		PrivateKey: dummyPrivateKey,
+		TokenURL:   ts.URL,
+	}
+
+	_, err := conf.TokenSource(context.Background()).Token()
+	if err == nil {
+		t.Fatalf("got no error, expected one")
+	}
+	_, ok := err.(*oauth2.RetrieveError)
+	if !ok {
+		t.Fatalf("got %T error, expected *RetrieveError", err)
+	}
+	// Test error string for backwards compatibility
+	expected := fmt.Sprintf("oauth2: cannot fetch token: %v\nResponse: %s", "400 Bad Request", `{"error": "invalid_grant"}`)
+	if errStr := err.Error(); errStr != expected {
+		t.Fatalf("got %#v, expected %#v", errStr, expected)
 	}
 }

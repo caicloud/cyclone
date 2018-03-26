@@ -126,10 +126,7 @@ func (lg *Logger) Handle(record *LogRecord) {
 
 // Filter checks if logger should filter the specified record
 func (lg Logger) Filter(record *LogRecord) bool {
-	if record.Level < lg.Level {
-		return true
-	}
-	return false
+	return record.Level < lg.Level
 }
 
 // CallHandlers call all handler registered in logger
@@ -137,6 +134,17 @@ func (lg *Logger) callHandlers(record *LogRecord) {
 	for _, hdlr := range lg.Handlers {
 		hdlr.Emit(record)
 	}
+}
+
+// Flush flushes the file system's in-memory copy to disk
+func (lg *Logger) Flush() error {
+	for _, hdlr := range lg.Handlers {
+		err := hdlr.Flush()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Flush handler failed, [%v]", err)
+		}
+	}
+	return nil
 }
 
 // Close closes output stream

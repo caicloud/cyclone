@@ -30,7 +30,7 @@ type Commit struct {
 	URL          *string                `json:"url,omitempty"`
 	Verification *SignatureVerification `json:"verification,omitempty"`
 
-	// CommentCount is the number of GitHub comments on the commit.  This
+	// CommentCount is the number of GitHub comments on the commit. This
 	// is only populated for requests that fetch GitHub data like
 	// Pulls.ListCommits, Repositories.ListCommits, etc.
 	CommentCount *int `json:"comment_count,omitempty"`
@@ -40,7 +40,7 @@ func (c Commit) String() string {
 	return Stringify(c)
 }
 
-// CommitAuthor represents the author or committer of a commit.  The commit
+// CommitAuthor represents the author or committer of a commit. The commit
 // author may not correspond to a GitHub User.
 type CommitAuthor struct {
 	Date  *time.Time `json:"date,omitempty"`
@@ -57,7 +57,7 @@ func (c CommitAuthor) String() string {
 
 // GetCommit fetchs the Commit object for a given SHA.
 //
-// GitHub API docs: http://developer.github.com/v3/git/commits/#get-a-commit
+// GitHub API docs: https://developer.github.com/v3/git/commits/#get-a-commit
 func (s *GitService) GetCommit(owner string, repo string, sha string) (*Commit, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/commits/%v", owner, repo, sha)
 	req, err := s.client.NewRequest("GET", u, nil)
@@ -74,7 +74,7 @@ func (s *GitService) GetCommit(owner string, repo string, sha string) (*Commit, 
 		return nil, resp, err
 	}
 
-	return c, resp, err
+	return c, resp, nil
 }
 
 // createCommit represents the body of a CreateCommit request.
@@ -92,7 +92,7 @@ type createCommit struct {
 // data if omitted. If the commit.Author is omitted, it will be filled in with
 // the authenticated user’s information and the current date.
 //
-// GitHub API docs: http://developer.github.com/v3/git/commits/#create-a-commit
+// GitHub API docs: https://developer.github.com/v3/git/commits/#create-a-commit
 func (s *GitService) CreateCommit(owner string, repo string, commit *Commit) (*Commit, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/commits", owner, repo)
 
@@ -123,5 +123,5 @@ func (s *GitService) CreateCommit(owner string, repo string, commit *Commit) (*C
 		return nil, resp, err
 	}
 
-	return c, resp, err
+	return c, resp, nil
 }

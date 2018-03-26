@@ -22,11 +22,12 @@ func TestListProjects(t *testing.T) {
 			"search":     "query",
 			"simple":     "true",
 			"visibility": "public",
+			"statistics": "true",
 		})
 		fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 	})
 
-	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public")}
+	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public"), Bool(true)}
 	projects, _, err := client.Projects.ListProjects(opt)
 
 	if err != nil {
@@ -54,11 +55,12 @@ func TestListOwnedProjects(t *testing.T) {
 			"search":     "query",
 			"simple":     "true",
 			"visibility": "public",
+			"statistics": "false",
 		})
 		fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 	})
 
-	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public")}
+	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public"), Bool(false)}
 	projects, _, err := client.Projects.ListOwnedProjects(opt)
 
 	if err != nil {
@@ -86,11 +88,12 @@ func TestListStarredProjects(t *testing.T) {
 			"search":     "query",
 			"simple":     "true",
 			"visibility": "public",
+			"statistics": "false",
 		})
 		fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 	})
 
-	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public")}
+	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public"), Bool(false)}
 	projects, _, err := client.Projects.ListStarredProjects(opt)
 
 	if err != nil {
@@ -118,11 +121,12 @@ func TestListAllProjects(t *testing.T) {
 			"search":     "query",
 			"simple":     "true",
 			"visibility": "public",
+			"statistics": "false",
 		})
 		fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 	})
 
-	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public")}
+	opt := &ListProjectsOptions{ListOptions{2, 3}, Bool(true), String("name"), String("asc"), String("query"), Bool(true), String("public"), Bool(false)}
 	projects, _, err := client.Projects.ListAllProjects(opt)
 
 	if err != nil {
@@ -161,7 +165,7 @@ func TestGetProject_byName(t *testing.T) {
 	defer teardown(server)
 
 	mux.HandleFunc("/projects/", func(w http.ResponseWriter, r *http.Request) {
-		testUrl(t, r, "/projects/namespace%2Fname")
+		testURL(t, r, "/projects/namespace%2Fname")
 		testMethod(t, r, "GET")
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -212,7 +216,7 @@ func TestCreateProject(t *testing.T) {
 
 	mux.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		testJsonBody(t, r, values{
+		testJSONBody(t, r, values{
 			"name": "n",
 		})
 

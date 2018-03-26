@@ -48,8 +48,8 @@ type ListMembersOptions struct {
 	// organization), list only publicly visible members.
 	PublicOnly bool `url:"-"`
 
-	// Filter members returned in the list.  Possible values are:
-	// 2fa_disabled, all.  Default is "all".
+	// Filter members returned in the list. Possible values are:
+	// 2fa_disabled, all. Default is "all".
 	Filter string `url:"filter,omitempty"`
 
 	// Role filters members returned by their role in the organization.
@@ -64,11 +64,11 @@ type ListMembersOptions struct {
 	ListOptions
 }
 
-// ListMembers lists the members for an organization.  If the authenticated
+// ListMembers lists the members for an organization. If the authenticated
 // user is an owner of the organization, this will return both concealed and
 // public members, otherwise it will only return public members.
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#members-list
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#members-list
 func (s *OrganizationsService) ListMembers(org string, opt *ListMembersOptions) ([]*User, *Response, error) {
 	var u string
 	if opt != nil && opt.PublicOnly {
@@ -86,18 +86,18 @@ func (s *OrganizationsService) ListMembers(org string, opt *ListMembersOptions) 
 		return nil, nil, err
 	}
 
-	members := new([]*User)
-	resp, err := s.client.Do(req, members)
+	var members []*User
+	resp, err := s.client.Do(req, &members)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return *members, resp, err
+	return members, resp, nil
 }
 
 // IsMember checks if a user is a member of an organization.
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#check-membership
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#check-membership
 func (s *OrganizationsService) IsMember(org, user string) (bool, *Response, error) {
 	u := fmt.Sprintf("orgs/%v/members/%v", org, user)
 	req, err := s.client.NewRequest("GET", u, nil)
@@ -112,7 +112,7 @@ func (s *OrganizationsService) IsMember(org, user string) (bool, *Response, erro
 
 // IsPublicMember checks if a user is a public member of an organization.
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#check-public-membership
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#check-public-membership
 func (s *OrganizationsService) IsPublicMember(org, user string) (bool, *Response, error) {
 	u := fmt.Sprintf("orgs/%v/public_members/%v", org, user)
 	req, err := s.client.NewRequest("GET", u, nil)
@@ -127,7 +127,7 @@ func (s *OrganizationsService) IsPublicMember(org, user string) (bool, *Response
 
 // RemoveMember removes a user from all teams of an organization.
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#remove-a-member
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#remove-a-member
 func (s *OrganizationsService) RemoveMember(org, user string) (*Response, error) {
 	u := fmt.Sprintf("orgs/%v/members/%v", org, user)
 	req, err := s.client.NewRequest("DELETE", u, nil)
@@ -141,7 +141,7 @@ func (s *OrganizationsService) RemoveMember(org, user string) (*Response, error)
 // PublicizeMembership publicizes a user's membership in an organization. (A
 // user cannot publicize the membership for another user.)
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#publicize-a-users-membership
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#publicize-a-users-membership
 func (s *OrganizationsService) PublicizeMembership(org, user string) (*Response, error) {
 	u := fmt.Sprintf("orgs/%v/public_members/%v", org, user)
 	req, err := s.client.NewRequest("PUT", u, nil)
@@ -154,7 +154,7 @@ func (s *OrganizationsService) PublicizeMembership(org, user string) (*Response,
 
 // ConcealMembership conceals a user's membership in an organization.
 //
-// GitHub API docs: http://developer.github.com/v3/orgs/members/#conceal-a-users-membership
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#conceal-a-users-membership
 func (s *OrganizationsService) ConcealMembership(org, user string) (*Response, error) {
 	u := fmt.Sprintf("orgs/%v/public_members/%v", org, user)
 	req, err := s.client.NewRequest("DELETE", u, nil)
@@ -196,7 +196,7 @@ func (s *OrganizationsService) ListOrgMemberships(opt *ListOrgMembershipsOptions
 		return nil, resp, err
 	}
 
-	return memberships, resp, err
+	return memberships, resp, nil
 }
 
 // GetOrgMembership gets the membership for a user in a specified organization.
@@ -224,7 +224,7 @@ func (s *OrganizationsService) GetOrgMembership(user, org string) (*Membership, 
 		return nil, resp, err
 	}
 
-	return membership, resp, err
+	return membership, resp, nil
 }
 
 // EditOrgMembership edits the membership for user in specified organization.
@@ -254,10 +254,10 @@ func (s *OrganizationsService) EditOrgMembership(user, org string, membership *M
 		return nil, resp, err
 	}
 
-	return m, resp, err
+	return m, resp, nil
 }
 
-// RemoveOrgMembership removes user from the specified organization.  If the
+// RemoveOrgMembership removes user from the specified organization. If the
 // user has been invited to the organization, this will cancel their invitation.
 //
 // GitHub API docs: https://developer.github.com/v3/orgs/members/#remove-organization-membership
@@ -269,4 +269,30 @@ func (s *OrganizationsService) RemoveOrgMembership(user, org string) (*Response,
 	}
 
 	return s.client.Do(req, nil)
+}
+
+// ListPendingOrgInvitations returns a list of pending invitations.
+//
+// GitHub API docs: https://developer.github.com/v3/orgs/members/#list-pending-organization-invitations
+func (s *OrganizationsService) ListPendingOrgInvitations(org int, opt *ListOptions) ([]*Invitation, *Response, error) {
+	u := fmt.Sprintf("orgs/%v/invitations", org)
+	u, err := addOptions(u, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// TODO: remove custom Accept header when this API fully launches.
+	req.Header.Set("Accept", mediaTypeOrgMembershipPreview)
+
+	var pendingInvitations []*Invitation
+	resp, err := s.client.Do(req, &pendingInvitations)
+	if err != nil {
+		return nil, resp, err
+	}
+	return pendingInvitations, resp, nil
 }

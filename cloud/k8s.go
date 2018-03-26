@@ -23,9 +23,10 @@ import (
 	"time"
 
 	"github.com/zoumo/logdog"
+	apiv1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/rest"
 )
 
@@ -73,7 +74,9 @@ func newK8SCloud(opts Options) (Cloud, error) {
 	config := &rest.Config{
 		Host:        opts.Host,
 		BearerToken: opts.K8SBearerToken,
-		Insecure:    opts.Insecure,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: opts.Insecure,
+		},
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -127,13 +130,13 @@ func (cloud *K8SCloud) Kind() string {
 
 // Ping returns nil if cloud is accessible
 func (cloud *K8SCloud) Ping() error {
-	_, err := cloud.client.CoreV1().Pods(cloud.namespace).List(apiv1.ListOptions{})
+	_, err := cloud.client.CoreV1().Pods(cloud.namespace).List(meta_v1.ListOptions{})
 	return err
 }
 
 // Resource returns the limit and used quotas of the cloud
 func (cloud *K8SCloud) Resource() (*Resource, error) {
-	quotas, err := cloud.client.CoreV1().ResourceQuotas(cloud.namespace).List(apiv1.ListOptions{})
+	quotas, err := cloud.client.CoreV1().ResourceQuotas(cloud.namespace).List(meta_v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +206,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 	name := "cyclone-worker-" + id
 	Privileged := true
 	pod := &apiv1.Pod{
-		ObjectMeta: apiv1.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: cp.namespace,
 			Name:      name,
 			Labels: map[string]string{
@@ -231,7 +234,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 	mountPath := wopts.MountPath
 	if len(cacheVolume) != 0 && len(mountPath) != 0 {
 		// Check the existence and status of cache volume.
-		if pvc, err := cloud.client.CoreV1().PersistentVolumeClaims(cp.namespace).Get(cacheVolume); err == nil {
+		if pvc, err := cloud.client.CoreV1().PersistentVolumeClaims(cp.namespace).Get(cacheVolume, meta_v1.GetOptions{}); err == nil {
 			if pvc.Status.Phase == apiv1.ClaimBound {
 				volumeName := "cache-dependency"
 
@@ -282,7 +285,7 @@ func (cloud *K8SCloud) LoadWorker(info WorkerInfo) (Worker, error) {
 		return nil, fmt.Errorf("K8SCloud: can not load worker with another cloud kind %s", info.CloudKind)
 	}
 
-	pod, err := cloud.client.CoreV1().Pods(cloud.namespace).Get(info.PodName)
+	pod, err := cloud.client.CoreV1().Pods(cloud.namespace).Get(info.PodName, meta_v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +332,7 @@ func (worker *K8SPodWorker) Do() error {
 	check := func() (bool, error) {
 
 		// change pod here
-		pod, err = worker.Client().CoreV1().Pods(worker.namespace).Get(worker.pod.Name)
+		pod, err = worker.Client().CoreV1().Pods(worker.namespace).Get(worker.pod.Name, meta_v1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -412,7 +415,7 @@ func (worker *K8SPodWorker) Terminate() error {
 
 	err := client.Delete(
 		worker.pod.Name,
-		&apiv1.DeleteOptions{
+		&meta_v1.DeleteOptions{
 			GracePeriodSeconds: &GracePeriodSeconds,
 		})
 

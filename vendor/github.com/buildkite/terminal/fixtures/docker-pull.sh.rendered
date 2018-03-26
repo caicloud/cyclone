@@ -1,0 +1,16 @@
++ docker push 061442450191.dkr.ecr.eu-central-1.amazonaws.com&#47;lol&#47;thingy:9a5a7e9
+The push refers to a repository [061442450191.dkr.ecr.eu-central-1.amazonaws.com&#47;lol&#47;thingy]
+07e62ecb726a: Layer already exists
+331743f747fb: Layer already exists
+2543649889c9: Layer already exists
+10f91d26a1a9: Layer already exists
+4dd2f6cdfbcf: Layer already exists
+d75290d8c3ab: Layer already exists
+a4c405a1d61b: Layer already exists
+d79093d63949: Layer already exists
+87cbe568afdd: Layer already exists
+787c930753b4: Layer already exists
+9f17712cba0b: Layer already exists
+223c0d04a137: Layer already exists
+fe4c16cbf7a4: Layer already exists
+9a5a7e9: digest: sha256:e0271b89d75b4bf43d89eda0de850770f8f0a026fc7d7e967124cbad3d41f5d3 size: 3052

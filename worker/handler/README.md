@@ -1,1 +1,0 @@
- worker跟server之间的api交互，获取事件和告知事件结果

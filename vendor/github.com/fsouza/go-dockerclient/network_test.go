@@ -57,7 +57,7 @@ func TestFilteredListNetworks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantQuery := "filters={\"name\":{\"blah\":true}}"
+	wantQuery := "filters={\"name\":{\"blah\":true}}\n"
 	fakeRT := &FakeRoundTripper{message: jsonNetworks, status: http.StatusOK}
 	client := newTestClient(fakeRT)
 	opts := NetworkFilterOpts{
@@ -72,7 +72,7 @@ func TestFilteredListNetworks(t *testing.T) {
 	}
 	query := fakeRT.requests[0].URL.RawQuery
 	if query != wantQuery {
-		t.Errorf("FilteredListNetworks: wrong query\nWant %q\nGot  %q", wantQuery, query)
+		t.Errorf("FilteredListNetworks: Expected query: %q, got: %q", wantQuery, query)
 	}
 }
 
@@ -118,7 +118,7 @@ func TestNetworkCreate(t *testing.T) {
 	}
 
 	client := newTestClient(&FakeRoundTripper{message: jsonID, status: http.StatusOK})
-	opts := CreateNetworkOptions{Name: "foobar", Driver: "bridge"}
+	opts := CreateNetworkOptions{"foobar", false, "bridge", IPAMOptions{}, nil, false, false}
 	network, err := client.CreateNetwork(opts)
 	if err != nil {
 		t.Fatal(err)
