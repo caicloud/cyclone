@@ -88,7 +88,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	// TODO(robin) Seperate unit test and package stage.
-	stageManager := stage.NewStageManager(dockerManager, worker.Client, performParams)
+	stageManager := stage.NewStageManager(dockerManager, worker.Client, project.Registry, performParams)
 	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
 	stageManager.SetEvent(event)
 

@@ -79,24 +79,58 @@ func (dm *DockerManager) IsImagePresent(image string) (bool, error) {
 }
 
 // PullImage pulls an image by its name.
-func (dm *DockerManager) PullImage(image string) error {
+func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfiguration) error {
 	opts := docker_client.PullImageOptions{
 		Repository: image,
 	}
 
-	authOpt := docker_client.AuthConfiguration{
-		Username: dm.AuthConfig.Username,
-		Password: dm.AuthConfig.Password,
+	if auth.ServerAddress == "" || auth.Username == "" {
+		auth = docker_client.AuthConfiguration{
+			Username: dm.AuthConfig.Username,
+			Password: dm.AuthConfig.Password,
+		}
 	}
 
-	if err := dm.Client.PullImage(opts, authOpt); err != nil {
+	if err := dm.Client.PullImage(opts, auth); err != nil {
 		return fmt.Errorf("Fail to pull image %s as %v", image, err)
 	}
 
 	return nil
 }
 
-func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions) (string, error) {
+// PushImage pushes an image to a registry.
+func (dm *DockerManager) PushImage(options docker_client.PushImageOptions, auth docker_client.AuthConfiguration) error {
+	if auth.ServerAddress == "" || auth.Username == "" {
+		auth = docker_client.AuthConfiguration{
+			Username: dm.AuthConfig.Username,
+			Password: dm.AuthConfig.Password,
+		}
+	}
+
+	if err := dm.Client.PushImage(options, auth); err != nil {
+		return fmt.Errorf("Fail to push image %s as %v", fmt.Sprintf("%s:%s", options.Name, options.Tag), err)
+	}
+
+	return nil
+}
+
+// BuildImage builds an image.
+func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) error {
+	if len(options.AuthConfigs.Configs) == 0 {
+		options.AuthConfigs.Configs[dm.AuthConfig.ServerAddress] = docker_client.AuthConfiguration{
+			Username: dm.AuthConfig.Username,
+			Password: dm.AuthConfig.Password,
+		}
+	}
+
+	if err := dm.Client.BuildImage(options); err != nil {
+		return fmt.Errorf("Fail to build image %s as %v", options.Name, err)
+	}
+
+	return nil
+}
+
+func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions, auth docker_client.AuthConfiguration) (string, error) {
 	// Check the existence of image.
 	image := options.Config.Image
 	exist, err := dm.IsImagePresent(image)
@@ -104,7 +138,7 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 		return "", err
 	}
 	if !exist {
-		if err = dm.PullImage(image); err != nil {
+		if err = dm.PullImage(image, auth); err != nil {
 			return "", err
 		}
 	}

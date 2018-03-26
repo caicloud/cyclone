@@ -30,9 +30,17 @@ type Project struct {
 	Description    string     `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
 	Owner          string     `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
 	SCM            *SCMConfig `bson:"scm,omitempty" json:"scm,omitempty" description:"scm config of the project"`
+	Registry       *Registry  `bson:"registry,omitempty" json:"registry,omitempty" description:"registry config for image operations"`
 	Worker         *Worker    `bson:"worker,omitempty" json:"worker,omitempty" description:"worker config of the project"`
 	CreationTime   time.Time  `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
 	LastUpdateTime time.Time  `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
+}
+
+// Registry represents registry config for image operations of the project.
+type Registry struct {
+	Server   string `bson:"server,omitempty" json:"server,omitempty"`
+	Username string `bson:"username,omitempty" json:"username,omitempty"`
+	Password string `bson:"password,omitempty" json:"password,omitempty"`
 }
 
 // Worker represents the config of worker for the pipelines of the project.

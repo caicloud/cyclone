@@ -119,6 +119,7 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 	}
 
 	project.Worker = newProject.Worker
+	project.Registry = newProject.Registry
 
 	if err = m.dataStore.UpdateProject(project); err != nil {
 		return nil, err
