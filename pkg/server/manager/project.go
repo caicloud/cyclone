@@ -18,6 +18,7 @@ package manager
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
@@ -38,7 +39,7 @@ type ProjectManager interface {
 	ListRepos(projectName string) ([]api.Repository, error)
 	ListBranches(projectName string, repo string) ([]string, error)
 	ListTags(projectName string, repo string) ([]string, error)
-	GetStatistics(projectName string, start, end string) (*api.PipelineStatusStats, error)
+	GetStatistics(projectName string, start, end time.Time) (*api.PipelineStatusStats, error)
 }
 
 // projectManager represents the manager for project.
@@ -199,7 +200,7 @@ func (m *projectManager) ListTags(projectName string, repo string) ([]string, er
 }
 
 // GetStatistics gets the statistic by project name.
-func (m *projectManager) GetStatistics(projectName string, start, end string) (*api.PipelineStatusStats, error) {
+func (m *projectManager) GetStatistics(projectName string, start, end time.Time) (*api.PipelineStatusStats, error) {
 	project, err := m.GetProject(projectName)
 	if err != nil {
 		return nil, err

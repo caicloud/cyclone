@@ -18,7 +18,6 @@ package manager
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,7 +44,7 @@ type PipelineManager interface {
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
-	GetStatistics(projectName, pipelineName string, start, end string) (*api.PipelineStatusStats, error)
+	GetStatistics(projectName, pipelineName string, start, end time.Time) (*api.PipelineStatusStats, error)
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -428,7 +427,7 @@ func (m *pipelineManager) GetSCMConfigFromProject(projectName string) (*api.SCMC
 }
 
 /// GetStatistics gets the statistic by pipeline name.
-func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start, end string) (*api.PipelineStatusStats, error) {
+func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start, end time.Time) (*api.PipelineStatusStats, error) {
 	pipeline, err := m.GetPipeline(projectName, pipelineName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
@@ -447,7 +446,7 @@ func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start,
 	return transRecordsToStats(records, start, end)
 }
 
-func transRecordsToStats(records []api.PipelineRecord, start, end string) (*api.PipelineStatusStats, error) {
+func transRecordsToStats(records []api.PipelineRecord, start, end time.Time) (*api.PipelineStatusStats, error) {
 	statistics := &api.PipelineStatusStats{
 		Overview: api.StatsOverview{
 			Total:        len(records),
@@ -456,12 +455,7 @@ func transRecordsToStats(records []api.PipelineRecord, start, end string) (*api.
 		Details: []*api.StatsDetail{},
 	}
 
-	detailStartTime, detailEndTime, err := getDetailTimes(start, end)
-	if err != nil {
-		return statistics, err
-	}
-
-	initStatsDetails(statistics, detailStartTime, detailEndTime)
+	initStatsDetails(statistics, start, end)
 
 	for _, record := range records {
 		for _, detail := range statistics.Details {
@@ -499,35 +493,16 @@ func statsStatus(s api.StatsStatus, recordStatus api.Status) api.StatsStatus {
 	return s
 }
 
-// getDetailTimes returns the start time and end time of the Details.
-func getDetailTimes(start, end string) (int64, int64, error) {
-	var detailStartTime, detailEndTime int64
-
-	startInt, err := strconv.ParseInt(start, 10, 64)
-	if err != nil {
-		return detailStartTime, detailEndTime, err
-	}
-	detailStartTime = startInt
-
-	endInt, err := strconv.ParseInt(end, 10, 64)
-	if err != nil {
-		return detailStartTime, detailEndTime, err
-	}
-	detailEndTime = endInt
-
-	return detailStartTime, detailEndTime, nil
-}
-
-func initStatsDetails(statistics *api.PipelineStatusStats, start, end int64) {
-	for ; start <= end; start += 86400 {
+func initStatsDetails(statistics *api.PipelineStatusStats, start, end time.Time) {
+	for ; !start.After(end); start = start.Add(24 * time.Hour) {
 		detail := &api.StatsDetail{
-			Timestamp: formatTimeToDay(time.Unix(start, 0)),
+			Timestamp: formatTimeToDay(start),
 		}
 		statistics.Details = append(statistics.Details, detail)
 	}
 
 	// if last day not equal end day, append end day.
-	endDay := formatTimeToDay(time.Unix(end, 0))
+	endDay := formatTimeToDay(end)
 	length := len(statistics.Details)
 	if length > 0 {
 		if statistics.Details[length-1].Timestamp != endDay {

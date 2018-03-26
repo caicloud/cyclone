@@ -22,7 +22,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
 )
 
 // CreatePipelineRecord creates the pipeline record, returns the pipeline record created.
@@ -153,33 +152,9 @@ func (d *DataStore) FindRecentRecordsByPipelineID(pipelineID string, filter map[
 }
 
 // FindPipelineRecordsByStartTime finds the pipeline records by startTime.
-func (d *DataStore) FindPipelineRecordsByStartTime(pipelineID string, start, end string) ([]api.PipelineRecord, int, error) {
-	var s, e time.Time
-
-	if start == "" {
-		// startTime default : 1970/1/1 0:0:0
-		s = time.Unix(0, 0)
-	} else {
-		startInt, err := strconv.ParseInt(start, 10, 64)
-		if err != nil {
-			return nil, 0, err
-		}
-		s = time.Unix(startInt, 0)
-	}
-
-	if end == "" {
-		// endTime default : now
-		e = time.Now()
-	} else {
-		endInt, err := strconv.ParseInt(end, 10, 64)
-		if err != nil {
-			return nil, 0, err
-		}
-		e = time.Unix(endInt, 0)
-	}
-
+func (d *DataStore) FindPipelineRecordsByStartTime(pipelineID string, start, end time.Time) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
-	query := bson.M{"pipelineID": pipelineID, "startTime": bson.M{"$gte": s, "$lt": e}}
+	query := bson.M{"pipelineID": pipelineID, "startTime": bson.M{"$gte": start, "$lt": end}}
 	collection := d.pipelineRecordCollection.Find(query)
 	count, err := collection.Count()
 	if err != nil {

@@ -15,6 +15,7 @@ package manager
 
 import (
 	"testing"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
 )
@@ -29,33 +30,44 @@ func TestInitStatsDetails(t *testing.T) {
 	}
 	// 1521345720 2018/3/18 12:2:0
 	// 1522468920 2018/3/31 12:2:0
-	initStatsDetails(statistics, 1521345720, 1522468920)
-	if len(statistics.Details) != 14 {
-		t.Errorf("Expect result %d equals to 14", len(statistics.Details))
+
+	testCases := map[string]struct {
+		start int64
+		end   int64
+		pass  int
+	}{
+		"end = start + n*86400": {
+			1521345720,
+			1522468920,
+			14,
+		},
+		"end-1 = start + n*86400": {
+			1521345720,
+			1522468919,
+			14,
+		},
+		"end+1 = start + n*86400": {
+			1521345720,
+			1522468921,
+			14,
+		},
+		"end = start": {
+			1521345720,
+			1521345720,
+			1,
+		},
+		"end < start": {
+			1521345720,
+			1521345719,
+			0,
+		},
 	}
 
-	statistics.Details = []*api.StatsDetail{}
-	initStatsDetails(statistics, 1521345720, 1522468919)
-	if len(statistics.Details) != 14 {
-		t.Errorf("Expect result %d equals to 14", len(statistics.Details))
+	for d, tc := range testCases {
+		initStatsDetails(statistics, time.Unix(tc.start, 0), time.Unix(tc.end, 0))
+		if len(statistics.Details) != tc.pass {
+			t.Errorf("%s failed as error : Expect result %d equals to %d", d, len(statistics.Details), tc.pass)
+		}
+		statistics.Details = []*api.StatsDetail{}
 	}
-
-	statistics.Details = []*api.StatsDetail{}
-	initStatsDetails(statistics, 1521345720, 1522468921)
-	if len(statistics.Details) != 14 {
-		t.Errorf("Expect result %d equals to 14", len(statistics.Details))
-	}
-
-	statistics.Details = []*api.StatsDetail{}
-	initStatsDetails(statistics, 1521345720, 1521345720)
-	if len(statistics.Details) != 1 {
-		t.Errorf("Expect result %d equals to 14", len(statistics.Details))
-	}
-
-	statistics.Details = []*api.StatsDetail{}
-	initStatsDetails(statistics, 1521345720, 1521345719)
-	if len(statistics.Details) != 0 {
-		t.Errorf("Expect result %d equals to 14", len(statistics.Details))
-	}
-
 }
