@@ -21,40 +21,35 @@ import (
 )
 
 func TestGetRepoNameByURL(t *testing.T) {
-
-	url := `https://gitlab.com/jmyue/kubernetes-plugin.git`
-	repoName, err := getRepoNameByURL(url)
-	if err != nil {
-		t.Error("Expect error to be nil")
-	}
-	if repoName != "jmyue/kubernetes-plugin" {
-		t.Errorf("Expect result %d equals to `jmyue/kubernetes-plugin`", repoName)
-	}
-
-	url = `https://github.com/caicloud/cyclone.git`
-	repoName, err = getRepoNameByURL(url)
-	if err != nil {
-		t.Error("Expect error to be nil")
-	}
-	if repoName != "caicloud/cyclone" {
-		t.Errorf("Expect result %d equals to `caicloud/cyclone`", repoName)
-	}
-
-	url = `http://192.168.21.100:10080/jmyue/kubernetes-plugin.git`
-	repoName, err = getRepoNameByURL(url)
-	if err != nil {
-		t.Error("Expect error to be nil")
-	}
-	if repoName != "jmyue/kubernetes-plugin" {
-		t.Errorf("Expect result %d equals to `jmyue/kubernetes-plugin`", repoName)
+	testCases := map[string]struct {
+		url  string
+		pass string
+	}{
+		"general gitlab": {
+			"https://gitlab.com/jmyue/kubernetes-plugin.git",
+			"jmyue/kubernetes-plugin",
+		},
+		"general github": {
+			"https://github.com/caicloud/cyclone.git",
+			"caicloud/cyclone",
+		},
+		"url with ip": {
+			"http://192.168.21.100:10080/jmyue/kubernetes-plugin.git",
+			"jmyue/kubernetes-plugin",
+		},
+		"url with localhost": {
+			"http://localhost:10080/ci-test/ci-demo.git",
+			"ci-test/ci-demo",
+		},
 	}
 
-	url = `http://localhost:10080/ci-test/ci-demo.git`
-	repoName, err = getRepoNameByURL(url)
-	if err != nil {
-		t.Error("Expect error to be nil")
-	}
-	if repoName != "ci-test/ci-demo" {
-		t.Errorf("Expect result %d equals to `ci-test/ci-demo`", repoName)
+	for d, tc := range testCases {
+		repoName, err := getRepoNameByURL(tc.url)
+		if err != nil {
+			t.Error("%s failed as error Expect error to be nil")
+		}
+		if repoName != tc.pass {
+			t.Errorf("%s failed as error : Expect result %s equals to %s", d, repoName, tc.pass)
+		}
 	}
 }
