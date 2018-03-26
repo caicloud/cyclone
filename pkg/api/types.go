@@ -131,7 +131,7 @@ type GeneralStage struct {
 
 // CodeCheckoutStage represents the config of code checkout stage.
 type CodeCheckoutStage struct {
-	CodeSources []*CodeSource `bson:"codeSources,omitempty" json:"codeSources,omitempty" description:"list of code sources to be checked out"`
+	CodeSources *CodeSources `bson:"codeSources,omitempty" json:"codeSources,omitempty" description:"list of code sources to be checked out"`
 }
 
 // SCMType represents the type of SCM, supports gitlab, github and svn.
@@ -152,13 +152,23 @@ type SCMConfig struct {
 	Token    string  `bson:"token,omitempty" json:"token,omitempty" description:"token of the SCM"`
 }
 
+// CodeSources represents the config of code source, include mainRepo and depRepos.
+type CodeSources struct {
+	MainRepo *CodeSource `bson:"mainRepo,omitempty" json:"mainRepo,omitempty" description:"main repository of code sources"`
+	DepRepos []*DepRepo  `bson:"depRepos,omitempty" json:"depRepos,omitempty" description:"dependent repositories of code sources"`
+}
+
 // CodeSource represents the config of code source, only one type is supported.
 type CodeSource struct {
-	Type SCMType `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
-	// Whether is the main repo. Only support webhook and tag for main repo.
-	Main   bool       `bson:"main,omitempty" json:"main,omitempty" description:"whether is the main repo"`
+	Type   SCMType    `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
 	GitLab *GitSource `bson:"gitLab,omitempty" json:"gitLab,omitempty" description:"code from gitlab"`
 	GitHub *GitSource `bson:"gitHub,omitempty" json:"gitHub,omitempty" description:"code from github"`
+}
+
+// DepRepo represents the dependent repositories' config of code source.
+type DepRepo struct {
+	CodeSource `bson:",inline"`
+	Folder     string `bson:"folder,omitempty" json:"folder,omitempty" description:"folder represents the place where the dependent repository lacated in"`
 }
 
 // GitSource represents the config to get code from git.
@@ -369,7 +379,7 @@ type GeneralStageStatus struct {
 // CodeCheckoutStageStatus includes GeneralStageStatus and pipelineRecord version.
 type CodeCheckoutStageStatus struct {
 	GeneralStageStatus `bson:",inline"`
-	Version            map[string]CommitLog `bson:"version,omitempty" json:"version,omitempty" description:"version of the pipeline record"`
+	Commits            Commits `bson:"commits,omitempty" json:"commits,omitempty" description:"commits of the pipeline record"`
 }
 
 // ImageReleaseStageStatus includes GeneralStageStatus and Images.
@@ -378,12 +388,18 @@ type ImageReleaseStageStatus struct {
 	Images             []string `bson:"images,omitempty" json:"images,omitempty" description:"pushed images of the image release stage"`
 }
 
+// ImageReleaseStageStatus includes GeneralStageStatus and Images.
+type Commits struct {
+	MainRepo *CommitLog   `bson:"mainRepo" json:"mainRepo" description:"main repository's' commit of code sources"`
+	DepRepos []*CommitLog `bson:"depRepos,omitempty" json:"depRepos,omitempty" description:"dependent repositories' commit of code sources"`
+}
+
 type CommitLog struct {
-	ID      string    `bson:"id,omitempty" json:"id,omitempty" description:"commint id"`
-	Author  string    `bson:"author,omitempty" json:"author,omitempty" description:"author name"`
-	Date    time.Time `bson:"date,omitempty" json:"date,omitempty" description:"author date"`
-	Message string    `bson:"message,omitempty" json:"message,omitempty" description:"commint message"`
-	Main    bool      `bson:"main,omitempty" json:"main,omitempty" description:"whether is the main repo"`
+	RepoName string    `bson:"repoName,omitempty" json:"repoName,omitempty" description:"repo name"`
+	ID       string    `bson:"id,omitempty" json:"id,omitempty" description:"commint id"`
+	Author   string    `bson:"author,omitempty" json:"author,omitempty" description:"author name"`
+	Date     time.Time `bson:"date,omitempty" json:"date,omitempty" description:"author date"`
+	Message  string    `bson:"message,omitempty" json:"message,omitempty" description:"commint message"`
 }
 
 // ListMeta represents metadata that list resources must have.

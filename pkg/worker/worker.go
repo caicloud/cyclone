@@ -137,7 +137,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	}
 
 	if event.PipelineRecord.PerformParams.CreateSCMTag {
-		codesource := event.Pipeline.Build.Stages.CodeCheckout.CodeSources[0]
+		codesource := event.Pipeline.Build.Stages.CodeCheckout.CodeSources.MainRepo
 		err = scm.NewTagFromLatest(codesource, event.PipelineRecord.Name, event.PipelineRecord.PerformParams.Description, project.SCM.Token)
 		if err != nil {
 			logdog.Errorf("new tag from latest fail : %v", err)

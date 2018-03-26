@@ -113,10 +113,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 		sm.cycloneClient.SendEvent(event)
 	}()
 
-	codeSource := stage.CodeSources[0]
-	// TODO check parameter, the number of `codeSource.Main=true` must >= 1
-
-	logs, err := scm.CloneRepo(token, codeSource, sm.performParams.Ref)
+	logs, err := scm.CloneRepos(token, stage.CodeSources, sm.performParams.Ref)
 	if err != nil {
 		logdog.Error(err.Error())
 		return err
@@ -134,24 +131,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, fileName)
 
-	// Get commit ID
-	commitID, err := scm.GetCommitID(codeSource)
-	if err != nil {
-		return err
-	}
-	formatPipelineRecordName(commitID)
-
-	repoName, errn := scm.GetRepoName(codeSource)
-	if errn != nil {
-		log.Warningf("get repo name fail %s", errn.Error())
-	}
-	commitLog, errl := scm.GetCommitLog(codeSource)
-	if errl != nil {
-		log.Warningf("get commit log fail %s", errl.Error())
-	}
-
-	setVersion(repoName, commitID, codeSource.Main, commitLog)
-
+	setCommits(stage.CodeSources)
 	return nil
 }
 
@@ -600,14 +580,32 @@ func formatPipelineRecordName(id string) {
 	}
 }
 
-func setVersion(repoName, id string, main bool, commitLog api.CommitLog) {
-	if event.PipelineRecord.StageStatus.CodeCheckout.Version == nil {
-		event.PipelineRecord.StageStatus.CodeCheckout.Version = make(map[string]api.CommitLog)
+func setCommit(commitLog *api.CommitLog, main bool) {
+	if main {
+		event.PipelineRecord.StageStatus.CodeCheckout.Commits.MainRepo = commitLog
+	} else {
+		event.PipelineRecord.StageStatus.CodeCheckout.Commits.DepRepos =
+			append(event.PipelineRecord.StageStatus.CodeCheckout.Commits.DepRepos, commitLog)
 	}
-	commitLog.ID = id
-	commitLog.Main = main
-	event.PipelineRecord.StageStatus.CodeCheckout.Version[repoName] = commitLog
 
+}
+
+func setCommits(codeSources *api.CodeSources) {
+	commitLog, errl := scm.GetCommitLog(codeSources.MainRepo, "")
+	if errl != nil {
+		log.Warningf("get commit log fail %s", errl.Error())
+	}
+	formatPipelineRecordName(commitLog.ID)
+
+	setCommit(&commitLog, true)
+	for _, repo := range codeSources.DepRepos {
+		commitLog, errl := scm.GetCommitLog(&repo.CodeSource, repo.Folder)
+		if errl != nil {
+			log.Warningf("get commit log fail %s", errl.Error())
+		}
+
+		setCommit(&commitLog, false)
+	}
 }
 
 func setReleaseImages(image string) {
