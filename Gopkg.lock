@@ -45,7 +45,7 @@
 
 [[projects]]
   name = "github.com/docker/docker"
-  packages = ["api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/mount","api/types/network","api/types/reference","api/types/registry","api/types/strslice","api/types/swarm","api/types/time","api/types/versions","api/types/volume","builder/dockerfile/command","builder/dockerfile/parser","client","daemon/graphdriver","image","image/v1","layer","oci","pkg/archive","pkg/chrootarchive","pkg/fileutils","pkg/idtools","pkg/ioutils","pkg/jsonlog","pkg/jsonmessage","pkg/longpath","pkg/mount","pkg/plugingetter","pkg/plugins","pkg/plugins/transport","pkg/pools","pkg/promise","pkg/random","pkg/reexec","pkg/stringid","pkg/system","pkg/term","pkg/term/windows","pkg/tlsconfig","plugin/v2","reference"]
+  packages = ["api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/mount","api/types/network","api/types/reference","api/types/registry","api/types/strslice","api/types/swarm","api/types/time","api/types/versions","api/types/volume","client","daemon/graphdriver","image","image/v1","layer","oci","pkg/archive","pkg/chrootarchive","pkg/fileutils","pkg/idtools","pkg/ioutils","pkg/jsonlog","pkg/jsonmessage","pkg/longpath","pkg/mount","pkg/plugingetter","pkg/plugins","pkg/plugins/transport","pkg/pools","pkg/promise","pkg/random","pkg/reexec","pkg/stringid","pkg/system","pkg/term","pkg/term/windows","pkg/tlsconfig","plugin/v2","reference"]
   revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
   version = "v1.13.1"
 
@@ -180,6 +180,18 @@
   packages = ["."]
   revision = "1df9eeb2bb81f327b96228865c5687bc2194af3f"
   version = "1.0.0"
+
+[[projects]]
+  name = "github.com/mozillazg/go-slugify"
+  packages = ["."]
+  revision = "591116de2dd717fdb8c05e29fa3bf5d3f7ba8c87"
+  version = "v0.2.0"
+
+[[projects]]
+  name = "github.com/mozillazg/go-unidecode"
+  packages = [".","table"]
+  revision = "7ab3c72180eeb79ccb8746137e14d6b0a60dd685"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -369,6 +381,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d56ab5aa212d4aee9fea95cbc98b07bf2906c28ef10a0fec49f7e7040e1c0b2d"
+  inputs-digest = "c06db1d066f64da41a6d8b272f419ec57eda5b81afe5b760fff4fb53eb607bb8"
   solver-name = "gps-cdcl"
   solver-version = 1

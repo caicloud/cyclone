@@ -27,6 +27,7 @@ import (
 type Project struct {
 	ID             string     `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
 	Name           string     `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
+	Alias          string     `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the project"`
 	Description    string     `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
 	Owner          string     `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
 	SCM            *SCMConfig `bson:"scm,omitempty" json:"scm,omitempty" description:"scm config of the project"`
