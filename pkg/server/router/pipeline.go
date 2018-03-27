@@ -17,7 +17,10 @@ limitations under the License.
 package router
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
@@ -118,4 +121,65 @@ func (router *router) deletePipeline(request *restful.Request, response *restful
 	}
 
 	response.WriteHeaderAndEntity(http.StatusNoContent, nil)
+}
+
+// getPipelineStatistics handles the request to get a pipeline's statistics.
+func (router *router) getPipelineStatistics(request *restful.Request, response *restful.Response) {
+	projectName := request.PathParameter(projectPathParameterName)
+	pipelineName := request.PathParameter(pipelinePathParameterName)
+	start := request.QueryParameter(api.StartTime)
+	end := request.QueryParameter(api.EndTime)
+
+	startTime, endTime, err := checkAndTransTimes(start, end)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	stats, err := router.pipelineManager.GetStatistics(projectName, pipelineName, startTime, endTime)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, stats)
+}
+
+func checkAndTransTimes(start, end string) (time.Time, time.Time, error) {
+	var startTime, endTime time.Time
+	if start == "" || end == "" {
+		err := fmt.Errorf("query parameters `startTime` and `endTime` can not be empty.")
+		return startTime, endTime, err
+	}
+
+	startTime, endTime, err := transTimes(start, end)
+	if err != nil {
+		err := fmt.Errorf("query parameters `startTime` and `endTime` must be int positive integer.")
+		return startTime, endTime, err
+	}
+
+	if startTime.After(endTime) {
+		err := fmt.Errorf("query parameters `startTime` must less or equal than `endTime`.")
+		return startTime, endTime, err
+	}
+	return startTime, endTime, nil
+}
+
+// transTimes trans startTime and endTime from string to time.Time.
+func transTimes(start, end string) (time.Time, time.Time, error) {
+	var startTime, endTime time.Time
+
+	startInt, err := strconv.ParseInt(start, 10, 64)
+	if err != nil {
+		return startTime, endTime, err
+	}
+	startTime = time.Unix(startInt, 0)
+
+	endInt, err := strconv.ParseInt(end, 10, 64)
+	if err != nil {
+		return startTime, endTime, err
+	}
+	endTime = time.Unix(endInt, 0)
+
+	return startTime, endTime, nil
 }

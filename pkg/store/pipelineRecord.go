@@ -40,7 +40,7 @@ func (d *DataStore) CreatePipelineRecord(pipelineRecord *api.PipelineRecord) (*a
 func (d *DataStore) FindPipelineRecordsByPipelineID(pipelineID string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
 	query := bson.M{"pipelineID": pipelineID}
-	collection := d.pipelineCollection.Find(query)
+	collection := d.pipelineRecordCollection.Find(query)
 
 	count, err := collection.Count()
 	if err != nil {
@@ -149,4 +149,24 @@ func (d *DataStore) FindRecentRecordsByPipelineID(pipelineID string, filter map[
 	}
 
 	return records, total, err
+}
+
+// FindPipelineRecordsByStartTime finds the pipeline records by startTime.
+func (d *DataStore) FindPipelineRecordsByStartTime(pipelineID string, start, end time.Time) ([]api.PipelineRecord, int, error) {
+	pipelineRecords := []api.PipelineRecord{}
+	query := bson.M{"pipelineID": pipelineID, "startTime": bson.M{"$gte": start, "$lt": end}}
+	collection := d.pipelineRecordCollection.Find(query)
+	count, err := collection.Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	if count == 0 {
+		return pipelineRecords, count, nil
+	}
+
+	if err = collection.All(&pipelineRecords); err != nil {
+		return nil, 0, err
+	}
+
+	return pipelineRecords, count, nil
 }

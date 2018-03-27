@@ -177,6 +177,13 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 		Doc("List tags of the repo for the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.QueryParameter("repo", "the repo to list branches for").Required(true)))
+
+	// GET /api/v1/projects/{project}/stats
+	ws.Route(ws.GET("/projects/{project}/stats").To(router.getProjectStatistics).
+		Doc("Get statistics of the project").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.QueryParameter("startTime", "the start time of statistics").Required(false)).
+		Param(ws.QueryParameter("endTime", "the end time of statistics").Required(false)))
 }
 
 // registerPipelineAPIs registers pipeline related endpoints.
@@ -213,6 +220,14 @@ func (router *router) registerPipelineAPIs(ws *restful.WebService) {
 		Doc("Delete a pipeline").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")))
+
+	// GET /api/v1/projects/{projects}/pipelines/{pipeline}/stats
+	ws.Route(ws.GET("/projects/{project}/pipelines/{pipeline}/stats").To(router.getPipelineStatistics).
+		Doc("Get statistics of the pipeline").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.PathParameter("pipeline", "name of the pipeline").DataType("string")).
+		Param(ws.QueryParameter("startTime", "the start time of statistics").Required(false)).
+		Param(ws.QueryParameter("endTime", "the end time of statistics").Required(false)))
 }
 
 // registerPipelineRecordAPIs registers pipeline record related endpoints.

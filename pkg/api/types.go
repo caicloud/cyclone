@@ -422,6 +422,12 @@ const (
 
 	// Repo represents the query param for repo name.
 	Repo string = "repo"
+
+	// StartTime represents the query param for stats start time.
+	StartTime string = "startTime"
+
+	// EndTime represents the query param for stats end time.
+	EndTime string = "endTime"
 )
 
 // ErrorResponse represents response of error.
@@ -507,6 +513,29 @@ type Event struct {
 	InTime      time.Time   `bson:"inTime,omitempty" json:"inTime,omitempty"`
 	OutTime     time.Time   `bson:"outTime,omitempty" json:"outTime,omitempty"`
 	QueueStatus QueueStatus `bson:"queueStatus,omitempty" json:"queueStatus,omitempty"`
+}
+
+// PipelineStatusStats represents statistics of workspace or pipeline.
+type PipelineStatusStats struct {
+	Overview StatsOverview  `json:"overview"`
+	Details  []*StatsDetail `json:"details"`
+}
+
+type StatsOverview struct {
+	Total int `json:"total"`
+	StatsStatus
+	SuccessRatio string `json:"successRatio"`
+}
+
+type StatsDetail struct {
+	Timestamp string `json:"timestamp"`
+	StatsStatus
+}
+
+type StatsStatus struct {
+	Success int `json:"success"`
+	Failed  int `json:"failed"`
+	Aborted int `json:"aborted"`
 }
 
 // QueueStatus represents the event status in the queue.
