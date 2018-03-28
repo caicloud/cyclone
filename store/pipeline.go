@@ -26,7 +26,7 @@ import (
 )
 
 // CreatePipeline creates the pipeline, returns the pipeline created.
-func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
+func (d *dataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error) {
 	pipeline.ID = bson.NewObjectId().Hex()
 	pipeline.CreationTime = time.Now()
 	pipeline.LastUpdateTime = time.Now()
@@ -40,7 +40,7 @@ func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error
 
 // FindPipelineByName finds the pipeline by name in one project. If find no pipeline or more than one pipeline, return
 // error.
-func (d *DataStore) FindPipelineByName(projectID string, name string) (*api.Pipeline, error) {
+func (d *dataStore) FindPipelineByName(projectID string, name string) (*api.Pipeline, error) {
 	query := bson.M{"projectID": projectID, "name": name}
 	count, err := d.pipelineCollection.Find(query).Count()
 	if err != nil {
@@ -63,7 +63,7 @@ func (d *DataStore) FindPipelineByName(projectID string, name string) (*api.Pipe
 }
 
 // FindPipelineByID finds the pipeline by id.
-func (d *DataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
+func (d *dataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
 	pipeline := &api.Pipeline{}
 	err := d.pipelineCollection.FindId(pipelineID).One(pipeline)
 	if err != nil {
@@ -74,7 +74,7 @@ func (d *DataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
 }
 
 // FindPipelineByServiceID finds the pipeline by service id.
-func (d *DataStore) FindPipelineByServiceID(serviceID string) (*api.Pipeline, error) {
+func (d *dataStore) FindPipelineByServiceID(serviceID string) (*api.Pipeline, error) {
 	query := bson.M{"serviceID": serviceID}
 	pipeline := &api.Pipeline{}
 	err := d.pipelineCollection.Find(query).One(pipeline)
@@ -86,7 +86,7 @@ func (d *DataStore) FindPipelineByServiceID(serviceID string) (*api.Pipeline, er
 }
 
 // FindPipelinesByProjectID finds the pipelines by project id. Will returns all pipelines in this project.
-func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
+func (d *dataStore) FindPipelinesByProjectID(projectID string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	pipelines := []api.Pipeline{}
 	query := bson.M{"projectID": projectID}
 	collection := d.pipelineCollection.Find(query)
@@ -114,18 +114,18 @@ func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.Q
 }
 
 // UpdatePipeline updates the pipeline, please make sure the pipeline id is provided before call this method.
-func (d *DataStore) UpdatePipeline(pipeline *api.Pipeline) error {
+func (d *dataStore) UpdatePipeline(pipeline *api.Pipeline) error {
 	pipeline.LastUpdateTime = time.Now()
 
 	return d.pipelineCollection.UpdateId(pipeline.ID, pipeline)
 }
 
 // DeletePipelineByID deletes the pipeline by id.
-func (d *DataStore) DeletePipelineByID(pipelineID string) error {
+func (d *dataStore) DeletePipelineByID(pipelineID string) error {
 	return d.pipelineCollection.RemoveId(pipelineID)
 }
 
 // DeletePipelinesByProjectID deletes all the pipelines in one project by project id.
-func (d *DataStore) DeletePipelinesByProjectID(projectID string) error {
+func (d *dataStore) DeletePipelinesByProjectID(projectID string) error {
 	return d.pipelineCollection.Remove(bson.M{"projectID": projectID})
 }

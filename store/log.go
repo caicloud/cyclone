@@ -21,7 +21,7 @@ import (
 
 // NewVersionLogDocument creates a new document (record) in mongodb. It returns version
 // log id of the newly created version.
-func (d *DataStore) NewVersionLogDocument(versionLog *api.VersionLog) (string, error) {
+func (d *dataStore) NewVersionLogDocument(versionLog *api.VersionLog) (string, error) {
 	col := d.s.DB(defaultDBName).C(versionLogCollectionName)
 	versionLog.LogID = uuid.NewV4().String()
 	_, err := col.Upsert(bson.M{"_id": versionLog.LogID}, versionLog)
@@ -29,7 +29,7 @@ func (d *DataStore) NewVersionLogDocument(versionLog *api.VersionLog) (string, e
 }
 
 // FindVersionLogByID finds a version log entity by ID.
-func (d *DataStore) FindVersionLogByID(LogID string) (*api.VersionLog, error) {
+func (d *dataStore) FindVersionLogByID(LogID string) (*api.VersionLog, error) {
 	col := d.s.DB(defaultDBName).C(versionLogCollectionName)
 	log := &api.VersionLog{}
 	err := col.Find(bson.M{"_id": LogID}).One(log)
@@ -37,7 +37,7 @@ func (d *DataStore) FindVersionLogByID(LogID string) (*api.VersionLog, error) {
 }
 
 // FindVersionLogByVersionID finds a version log entity by version ID.
-func (d *DataStore) FindVersionLogByVersionID(versionID string) (*api.VersionLog, error) {
+func (d *dataStore) FindVersionLogByVersionID(versionID string) (*api.VersionLog, error) {
 	col := d.s.DB(defaultDBName).C(versionLogCollectionName)
 	log := &api.VersionLog{}
 	filter := bson.M{"version_id": versionID}
@@ -46,7 +46,7 @@ func (d *DataStore) FindVersionLogByVersionID(versionID string) (*api.VersionLog
 }
 
 // UpdateVersionLogDocument updates a document (record) in mongodb.
-func (d *DataStore) UpdateVersionLogDocument(versionLog *api.VersionLog) error {
+func (d *dataStore) UpdateVersionLogDocument(versionLog *api.VersionLog) error {
 	col := d.s.DB(defaultDBName).C(versionLogCollectionName)
 	_, err := col.Upsert(bson.M{"_id": versionLog.LogID}, versionLog)
 	return err

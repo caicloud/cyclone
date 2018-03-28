@@ -41,12 +41,12 @@ type ProjectManager interface {
 
 // projectManager represents the manager for project.
 type projectManager struct {
-	dataStore       *store.DataStore
+	dataStore       store.DataStore
 	pipelineManager PipelineManager
 }
 
 // NewProjectManager creates a project manager.
-func NewProjectManager(dataStore *store.DataStore, pipelineManager PipelineManager) (ProjectManager, error) {
+func NewProjectManager(dataStore store.DataStore, pipelineManager PipelineManager) (ProjectManager, error) {
 	if dataStore == nil {
 		return nil, fmt.Errorf("Fail to new project manager as data store is nil.")
 	}

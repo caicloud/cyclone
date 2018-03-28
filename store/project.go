@@ -26,7 +26,7 @@ import (
 )
 
 // CreateProject creates the project, returns the project created.
-func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
+func (d *dataStore) CreateProject(project *api.Project) (*api.Project, error) {
 	project.ID = bson.NewObjectId().Hex()
 	project.CreationTime = time.Now()
 	project.LastUpdateTime = time.Now()
@@ -39,7 +39,7 @@ func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
 }
 
 // FindProjectByName finds the project by name. If find no project or more than one project, return error.
-func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
+func (d *dataStore) FindProjectByName(name string) (*api.Project, error) {
 	query := bson.M{"name": name}
 	count, err := d.projectCollection.Find(query).Count()
 	if err != nil {
@@ -61,7 +61,7 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 }
 
 // FindProjectByID finds the project by id.
-func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
+func (d *dataStore) FindProjectByID(projectID string) (*api.Project, error) {
 	project := &api.Project{}
 	if err := d.projectCollection.FindId(projectID).One(project); err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
 }
 
 // FindProjectByServiceID finds the project by service id.
-func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, error) {
+func (d *dataStore) FindProjectByServiceID(serviceID string) (*api.Project, error) {
 	pipeline, err := d.FindPipelineByServiceID(serviceID)
 	if err != nil {
 		return nil, err
@@ -86,19 +86,19 @@ func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, erro
 }
 
 // UpdateProject updates the project, please make sure the project id is provided before call this method.
-func (d *DataStore) UpdateProject(project *api.Project) error {
+func (d *dataStore) UpdateProject(project *api.Project) error {
 	project.LastUpdateTime = time.Now()
 
 	return d.projectCollection.UpdateId(project.ID, project)
 }
 
 // DeleteProjectByID deletes the project by id.
-func (d *DataStore) DeleteProjectByID(projectID string) error {
+func (d *dataStore) DeleteProjectByID(projectID string) error {
 	return d.projectCollection.RemoveId(projectID)
 }
 
 // GetProjects gets all projects. Will returns all projects.
-func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
+func (d *dataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
 	projects := []api.Project{}
 	collection := d.projectCollection.Find(nil)
 

@@ -25,7 +25,7 @@ import (
 )
 
 // FindServiceByCondition finds a list of services via user ID and serice name.
-func (d *DataStore) FindServiceByCondition(userID, servicename string) ([]api.Service, error) {
+func (d *dataStore) FindServiceByCondition(userID, servicename string) ([]api.Service, error) {
 	services := []api.Service{}
 	filter := bson.M{"user_id": userID, "name": servicename}
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
@@ -35,7 +35,7 @@ func (d *DataStore) FindServiceByCondition(userID, servicename string) ([]api.Se
 
 // NewServiceDocument creates a new document (record) in mongodb. It returns service
 // id of the newly created service.
-func (d *DataStore) NewServiceDocument(service *api.Service) (string, error) {
+func (d *dataStore) NewServiceDocument(service *api.Service) (string, error) {
 	// service.ServiceID = uuid.NewV4().String()
 	service.ServiceID = bson.NewObjectId().Hex()
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
@@ -44,7 +44,7 @@ func (d *DataStore) NewServiceDocument(service *api.Service) (string, error) {
 }
 
 // UpdateRepositoryStatus updates service repository status.
-func (d *DataStore) UpdateRepositoryStatus(serviceID string, status api.RepositoryStatus) error {
+func (d *dataStore) UpdateRepositoryStatus(serviceID string, status api.RepositoryStatus) error {
 	filter := bson.M{"_id": serviceID}
 	change := mgo.Change{
 		Update: bson.M{"$set": bson.M{"repository.status": status}},
@@ -57,7 +57,7 @@ func (d *DataStore) UpdateRepositoryStatus(serviceID string, status api.Reposito
 }
 
 // FindServicesByUserID finds a list of services via user ID.
-func (d *DataStore) FindServicesByUserID(userID string) ([]api.Service, error) {
+func (d *dataStore) FindServicesByUserID(userID string) ([]api.Service, error) {
 	services := []api.Service{}
 	filter := bson.M{"user_id": userID}
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
@@ -66,7 +66,7 @@ func (d *DataStore) FindServicesByUserID(userID string) ([]api.Service, error) {
 }
 
 // FindServiceByID finds a service entity by ID.
-func (d *DataStore) FindServiceByID(serviceID string) (*api.Service, error) {
+func (d *dataStore) FindServiceByID(serviceID string) (*api.Service, error) {
 	service := &api.Service{}
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
 	err := col.Find(bson.M{"_id": serviceID}).One(service)
@@ -74,14 +74,14 @@ func (d *DataStore) FindServiceByID(serviceID string) (*api.Service, error) {
 }
 
 // DeleteServiceByID removes service by service_id.
-func (d *DataStore) DeleteServiceByID(serviceID string) error {
+func (d *dataStore) DeleteServiceByID(serviceID string) error {
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
 	err := col.Remove(bson.M{"_id": serviceID})
 	return err
 }
 
 // AddNewVersion adds a new success version (version ID) to a given service.
-func (d *DataStore) AddNewVersion(serviceID string, versionID string) error {
+func (d *dataStore) AddNewVersion(serviceID string, versionID string) error {
 	change := mgo.Change{
 		Update: bson.M{"$push": bson.M{"versions": versionID}},
 	}
@@ -91,7 +91,7 @@ func (d *DataStore) AddNewVersion(serviceID string, versionID string) error {
 }
 
 // AddNewFailVersion adds a new fail version (version ID) to a given service.
-func (d *DataStore) AddNewFailVersion(serviceID string, versionID string) error {
+func (d *dataStore) AddNewFailVersion(serviceID string, versionID string) error {
 	change := mgo.Change{
 		Update: bson.M{"$push": bson.M{"version_fails": versionID}},
 	}
@@ -101,7 +101,7 @@ func (d *DataStore) AddNewFailVersion(serviceID string, versionID string) error 
 }
 
 // UpdateServiceLastInfo updates service's lastCreateTIme and lastVersionName.
-func (d *DataStore) UpdateServiceLastInfo(serviceID string, lasttime time.Time, lastname string) error {
+func (d *dataStore) UpdateServiceLastInfo(serviceID string, lasttime time.Time, lastname string) error {
 	filter := bson.M{"_id": serviceID}
 	change := mgo.Change{
 		Update: bson.M{"$set": bson.M{"last_createtime": lasttime, "last_versionname": lastname}},
@@ -113,7 +113,7 @@ func (d *DataStore) UpdateServiceLastInfo(serviceID string, lasttime time.Time, 
 }
 
 // UpsertServiceDocument upsert a special serivce document
-func (d *DataStore) UpsertServiceDocument(service *api.Service) (string, error) {
+func (d *dataStore) UpsertServiceDocument(service *api.Service) (string, error) {
 	col := d.s.DB(defaultDBName).C(serviceCollectionName)
 	_, err := col.Upsert(bson.M{"_id": service.ServiceID}, service)
 	return service.ServiceID, err

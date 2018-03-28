@@ -22,21 +22,21 @@ import (
 )
 
 // InsertCloud insert a new cloud document to db
-func (d *DataStore) InsertCloud(doc *cloud.Options) error {
+func (d *dataStore) InsertCloud(doc *cloud.Options) error {
 	col := d.s.DB(defaultDBName).C(CloudsCollection)
 	err := col.Insert(doc)
 	return err
 }
 
 // UpsertCloud insert a new cloud document to db
-func (d *DataStore) UpsertCloud(doc *cloud.Options) error {
+func (d *dataStore) UpsertCloud(doc *cloud.Options) error {
 	col := d.s.DB(defaultDBName).C(CloudsCollection)
 	_, err := col.Upsert(bson.M{"name": doc.Name}, doc)
 	return err
 }
 
 // FindAllClouds returns all clouds
-func (d *DataStore) FindAllClouds() ([]cloud.Options, error) {
+func (d *dataStore) FindAllClouds() ([]cloud.Options, error) {
 	clouds := []cloud.Options{}
 
 	col := d.s.DB(defaultDBName).C(CloudsCollection)
@@ -45,7 +45,7 @@ func (d *DataStore) FindAllClouds() ([]cloud.Options, error) {
 }
 
 // FindCloudByName returns a cloud in db by name
-func (d *DataStore) FindCloudByName(name string) (*cloud.Options, error) {
+func (d *dataStore) FindCloudByName(name string) (*cloud.Options, error) {
 	c := &cloud.Options{}
 	col := d.s.DB(defaultDBName).C(CloudsCollection)
 	err := col.Find(bson.M{"name": name}).One(c)
@@ -53,7 +53,7 @@ func (d *DataStore) FindCloudByName(name string) (*cloud.Options, error) {
 }
 
 // DeleteCloudByName delete a cloud in db by name
-func (d *DataStore) DeleteCloudByName(name string) error {
+func (d *dataStore) DeleteCloudByName(name string) error {
 	col := d.s.DB(defaultDBName).C(CloudsCollection)
 	err := col.Remove(bson.M{"name": name})
 	return err

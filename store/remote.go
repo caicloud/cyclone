@@ -22,14 +22,14 @@ import (
 )
 
 // NewTokenDocument creates a new document (record) in mongodb.
-func (d *DataStore) NewTokenDocument(token *api.VscToken) error {
+func (d *dataStore) NewTokenDocument(token *api.VscToken) error {
 	col := d.s.DB(defaultDBName).C(remoteCollectionName)
 	_, err := col.Upsert(bson.M{"vsc": token.Vsc, "userid": token.UserID}, token)
 	return err
 }
 
 // FindtokenByUserID finds token by UserID.
-func (d *DataStore) FindtokenByUserID(userID, urlvsc string) (*api.VscToken, error) {
+func (d *dataStore) FindtokenByUserID(userID, urlvsc string) (*api.VscToken, error) {
 	col := d.s.DB(defaultDBName).C(remoteCollectionName)
 	tok := &api.VscToken{}
 	err := col.Find(bson.M{"userid": userID, "vsc": urlvsc}).One(tok)
@@ -37,7 +37,7 @@ func (d *DataStore) FindtokenByUserID(userID, urlvsc string) (*api.VscToken, err
 }
 
 // UpdateToken update token via user ID.
-func (d *DataStore) UpdateToken(token *api.VscToken) error {
+func (d *dataStore) UpdateToken(token *api.VscToken) error {
 	col := d.s.DB(defaultDBName).C(remoteCollectionName)
 	err := col.Update(bson.M{"userid": token.UserID, "vsc": token.Vsc},
 		bson.M{"$set": bson.M{"vsctoken": token.Vsctoken}})
@@ -45,7 +45,7 @@ func (d *DataStore) UpdateToken(token *api.VscToken) error {
 }
 
 // RemoveTokeninDB removes token.
-func (d *DataStore) RemoveTokeninDB(userID string, urlvsc string) error {
+func (d *dataStore) RemoveTokeninDB(userID string, urlvsc string) error {
 	col := d.s.DB(defaultDBName).C(remoteCollectionName)
 	err := col.Remove(bson.M{"userid": userID, "vsc": urlvsc})
 	return err

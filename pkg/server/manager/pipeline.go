@@ -45,13 +45,13 @@ type PipelineManager interface {
 
 // pipelineManager represents the manager for pipeline.
 type pipelineManager struct {
-	dataStore             *store.DataStore
+	dataStore             store.DataStore
 	remoteManager         *remote.Manager
 	pipelineRecordManager PipelineRecordManager
 }
 
 // NewPipelineManager creates a pipeline manager.
-func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager PipelineRecordManager) (PipelineManager, error) {
+func NewPipelineManager(dataStore store.DataStore, pipelineRecordManager PipelineRecordManager) (PipelineManager, error) {
 	if dataStore == nil {
 		return nil, fmt.Errorf("Fail to new pipeline manager as data store is nil")
 	}
