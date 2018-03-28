@@ -120,15 +120,29 @@ func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 		return nil, err
 	}
 
-	opt := &gitlab.ListProjectsOptions{}
-	projects, _, err := client.Projects.ListProjects(opt)
-	if err != nil {
-		log.Errorf("Fail to list projects for %s", scm.Username)
-		return nil, err
+	opt := &gitlab.ListProjectsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: listPerPageOpt,
+		},
 	}
 
-	repos := make([]api.Repository, len(projects))
-	for i, repo := range projects {
+	// Get all pages of results.
+	var allProjects []*gitlab.Project
+	for {
+		projects, resp, err := client.Projects.ListProjects(opt)
+		if err != nil {
+			return nil, err
+		}
+
+		allProjects = append(allProjects, projects...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.ListOptions.Page = resp.NextPage
+	}
+
+	repos := make([]api.Repository, len(allProjects))
+	for i, repo := range allProjects {
 		repos[i].Name = repo.PathWithNamespace
 		repos[i].URL = repo.HTTPURLToRepo
 	}
