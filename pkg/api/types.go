@@ -567,4 +567,8 @@ const (
 	InQueue  QueueStatus = "in"
 	OutQueue QueueStatus = "out"
 	Handling QueueStatus = "handling"
+
+	TriggerUser string = "user"
+	TriggerSCM  string = "scmTrigger"
+	TriggerCron string = "cronTrigger"
 )

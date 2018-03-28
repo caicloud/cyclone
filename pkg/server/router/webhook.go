@@ -156,6 +156,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Name:          performParams.Name,
 			PipelineID:    pipeline.ID,
 			PerformParams: performParams,
+			Trigger:       api.TriggerSCM,
 		}
 		if _, err = router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			httputil.ResponseWithError(response, err)
@@ -265,6 +266,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			Name:          performParams.Name,
 			PipelineID:    pipeline.ID,
 			PerformParams: performParams,
+			Trigger:       api.TriggerSCM,
 		}
 		if _, err = router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			httputil.ResponseWithError(response, err)
