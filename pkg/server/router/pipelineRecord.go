@@ -177,13 +177,15 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 	projectName := request.PathParameter(projectPathParameterName)
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 	pipelineRecordID := request.PathParameter(pipelineRecordPathParameterName)
+	stage := request.QueryParameter(pipelineRecordStageQueryParameterName)
+	task := request.QueryParameter(pipelineRecordTaskQueryParameterName)
 	download, err := httputil.DownloadQueryParamsFromRequest(request)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	logs, err := router.pipelineRecordManager.GetPipelineRecordLogs(pipelineRecordID)
+	logs, err := router.pipelineRecordManager.GetPipelineRecordLogs(pipelineRecordID, stage, task)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
@@ -191,7 +193,7 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 
 	response.AddHeader(restful.HEADER_ContentType, "text/plain")
 	if download {
-		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", projectName, pipelineName, pipelineRecordID)
+		logFileName := fmt.Sprintf("%s-%s-%s-%s-log.txt", projectName, pipelineName, stage, pipelineRecordID)
 		response.AddHeader("Content-Disposition", fmt.Sprintf("attachment; filename=%s", logFileName))
 	}
 
@@ -202,6 +204,7 @@ func (router *router) getPipelineRecordLogs(request *restful.Request, response *
 func (router *router) receivePipelineRecordLogStream(request *restful.Request, response *restful.Response) {
 	recordID := request.PathParameter(pipelineRecordPathParameterName)
 	stage := request.QueryParameter(pipelineRecordStageQueryParameterName)
+	task := request.QueryParameter(pipelineRecordTaskQueryParameterName)
 
 	_, err := router.pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {
@@ -219,7 +222,7 @@ func (router *router) receivePipelineRecordLogStream(request *restful.Request, r
 	}
 	defer ws.Close()
 
-	if err := router.pipelineRecordManager.ReceivePipelineRecordLogStream(recordID, stage, ws); err != nil {
+	if err := router.pipelineRecordManager.ReceivePipelineRecordLogStream(recordID, stage, task, ws); err != nil {
 		log.Error(fmt.Sprintf("Fail to receive log stream for pipeline record %s: %s", recordID, err.Error()))
 		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
 		return
@@ -229,7 +232,8 @@ func (router *router) receivePipelineRecordLogStream(request *restful.Request, r
 // getPipelineRecordLogStream gets real-time log of pipeline record refering to recordID
 func (router *router) getPipelineRecordLogStream(request *restful.Request, response *restful.Response) {
 	recordID := request.PathParameter(pipelineRecordPathParameterName)
-	stage := request.QueryParameter("stage")
+	stage := request.QueryParameter(pipelineRecordStageQueryParameterName)
+	task := request.QueryParameter(pipelineRecordTaskQueryParameterName)
 
 	_, err := router.pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {
@@ -247,7 +251,7 @@ func (router *router) getPipelineRecordLogStream(request *restful.Request, respo
 	}
 	defer ws.Close()
 
-	if err := router.pipelineRecordManager.GetPipelineRecordLogStream(recordID, stage, ws); err != nil {
+	if err := router.pipelineRecordManager.GetPipelineRecordLogStream(recordID, stage, task, ws); err != nil {
 		log.Error(fmt.Sprintf("Unable to get logstream for pipeline record %s for err: %s", recordID, err.Error()))
 		httputil.ResponseWithError(response, httperror.ErrorUnknownInternal.Format(err.Error()))
 		return

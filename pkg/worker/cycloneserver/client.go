@@ -46,7 +46,7 @@ const (
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
 	SendEvent(event *api.Event) error
-	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error
+	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string) error
 }
 
 type client struct {
@@ -151,7 +151,7 @@ func (c *client) GetEvent(id string) (*api.Event, error) {
 	return nil, ErrorUnknownInternal.Format(body)
 }
 
-func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error {
+func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string) error {
 	path := fmt.Sprintf(apiPathForLogStream, project, pipeline, recordID)
 	log.Infof("Path: %s", path)
 
@@ -162,6 +162,10 @@ func (c *client) PushLogStream(project, pipeline, recordID string, stage api.Pip
 		Path:     cycloneAPIVersion + path,
 		RawQuery: fmt.Sprintf("stage=%s", stage),
 		Scheme:   "ws",
+	}
+
+	if task != "" {
+		requestUrl.RawQuery = requestUrl.RawQuery + "&task=" + task
 	}
 
 	header := http.Header{

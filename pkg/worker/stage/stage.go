@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	docker_client "github.com/fsouza/go-dockerclient"
@@ -129,7 +130,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	// Just one line of log, will add more detailed logs.
 	logFile.WriteString(logs)
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, "", fileName)
 
 	setCommits(stage)
 	return nil
@@ -219,7 +220,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.PackageStageName, fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.PackageStageName, "", fileName)
 
 	eo := docker.ExecOptions{
 		AttachStdout: true,
@@ -282,14 +283,34 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		sm.cycloneClient.SendEvent(event)
 	}()
 
+	builtImages := []string{}
+	wg := sync.WaitGroup{}
+	for _, buildInfo := range stage.BuildInfos {
+		wg.Add(1)
+		go func(buildInfo *api.ImageBuildInfo) {
+			defer wg.Done()
+
+			if image, err := sm.buildImage(buildInfo); err != nil {
+				log.Errorf("Fail to build image %s as %v", buildInfo.Name, err)
+			} else {
+				builtImages = append(builtImages, image)
+			}
+		}(buildInfo)
+	}
+
+	wg.Wait()
+	return builtImages, nil
+}
+
+func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (string, error) {
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, buildInfo.Name, fileName)
 
 	authOpts := docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
@@ -311,33 +332,29 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		OutputStream:   logFile,
 	}
 
-	builtImages := []string{}
 	cloneDir := scm.GetCloneDir()
-	for _, buildInfo := range stage.BuildInfos {
-		opt.ContextDir = cloneDir
-		if buildInfo.ContextDir != "" {
-			opt.ContextDir = cloneDir + "/" + buildInfo.ContextDir
-		}
-
-		opt.Dockerfile = "Dockerfile"
-		if buildInfo.Dockerfile != "" {
-			if err = osutil.ReplaceFile(opt.ContextDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
-				return nil, err
-			}
-		} else {
-			if buildInfo.DockerfilePath != "" {
-				opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
-			}
-		}
-		opt.Name = formatImageName(buildInfo.ImageName)
-
-		if err = sm.dockerManager.BuildImage(opt); err != nil {
-			return nil, err
-		}
-		builtImages = append(builtImages, opt.Name)
+	opt.ContextDir = cloneDir
+	if buildInfo.ContextDir != "" {
+		opt.ContextDir = cloneDir + "/" + buildInfo.ContextDir
 	}
 
-	return builtImages, nil
+	opt.Dockerfile = "Dockerfile"
+	if buildInfo.Dockerfile != "" {
+		if err = osutil.ReplaceFile(opt.ContextDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
+			return "", err
+		}
+	} else {
+		if buildInfo.DockerfilePath != "" {
+			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
+		}
+	}
+	opt.Name = formatImageName(buildInfo.ImageName)
+
+	if err = sm.dockerManager.BuildImage(opt); err != nil {
+		return "", err
+	}
+
+	return opt.Name, nil
 }
 
 func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) (err error) {
@@ -426,7 +443,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.IntegrationTestStageName, fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.IntegrationTestStageName, "", fileName)
 
 	eo := docker.ExecOptions{
 		AttachStdout: true,
@@ -503,7 +520,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, "", fileName)
 
 	for _, p := range stage.ReleasePolicy {
 		for _, builtImage := range builtImages {
