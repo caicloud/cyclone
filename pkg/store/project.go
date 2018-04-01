@@ -18,8 +18,10 @@ package store
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
+	log "github.com/golang/glog"
 	"github.com/mozillazg/go-slugify"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -31,12 +33,16 @@ import (
 func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
 	if project.Name == "" && project.Alias != "" {
 		project.Name = slugify.Slugify(project.Alias)
-
 	}
 
 	project.ID = bson.NewObjectId().Hex()
 	project.CreationTime = time.Now()
 	project.LastUpdateTime = time.Now()
+
+	// Encrypt the passwords.
+	if err := encryptPasswordsForProjects(project, d.saltKey); err != nil {
+		return nil, err
+	}
 
 	if err := d.projectCollection.Insert(project); err != nil {
 		return nil, err
@@ -64,6 +70,11 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 		return nil, err
 	}
 
+	// Decrypt the passwords.
+	if err := decryptPasswordsForProjects(project, d.saltKey); err != nil {
+		return nil, err
+	}
+
 	return project, nil
 }
 
@@ -71,6 +82,11 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 func (d *DataStore) FindProjectByID(projectID string) (*api.Project, error) {
 	project := &api.Project{}
 	if err := d.projectCollection.FindId(projectID).One(project); err != nil {
+		return nil, err
+	}
+
+	// Decrypt the passwords.
+	if err := decryptPasswordsForProjects(project, d.saltKey); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +112,11 @@ func (d *DataStore) FindProjectByServiceID(serviceID string) (*api.Project, erro
 func (d *DataStore) UpdateProject(project *api.Project) error {
 	if project.Name == "" && project.Alias != "" {
 		project.Name = slugify.Slugify(project.Alias)
+	}
 
+	// Encrypt the passwords.
+	if err := encryptPasswordsForProjects(project, d.saltKey); err != nil {
+		return err
 	}
 
 	project.LastUpdateTime = time.Now()
@@ -132,5 +152,19 @@ func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int
 	if err = collection.All(&projects); err != nil {
 		return nil, 0, err
 	}
+
+	wg := sync.WaitGroup{}
+	for i := range projects {
+		wg.Add(1)
+		go func(p *api.Project) {
+			defer wg.Done()
+			if err := decryptPasswordsForProjects(p, d.saltKey); err != nil {
+				log.Errorf("fail to decrypt passwords for project %s as %v", p.Name, err)
+			}
+		}(&projects[i])
+	}
+
+	wg.Wait()
+
 	return projects, count, nil
 }

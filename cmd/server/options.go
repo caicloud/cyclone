@@ -17,10 +17,13 @@ limitations under the License.
 package main
 
 import (
+	"crypto/aes"
+
+	log "github.com/golang/glog"
+	"gopkg.in/urfave/cli.v1"
+
 	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cloud"
-
-	"gopkg.in/urfave/cli.v1"
 )
 
 // ServerOptions ...
@@ -50,5 +53,14 @@ func (opts *ServerOptions) NewAPIServer() *server.APIServer {
 		Config:        opts.APIServerOptions,
 		WorkerOptions: opts.WorkerOptions,
 	}
+
+	log.Infof("Start server with: server options: %+v; worker options: %+v", opts.APIServerOptions, opts.WorkerOptions)
 	return s
+}
+
+// Validate validates options.
+func (opts *ServerOptions) Validate() error {
+	serverOpts := opts.APIServerOptions
+	_, err := aes.NewCipher([]byte(serverOpts.SaltKey))
+	return err
 }

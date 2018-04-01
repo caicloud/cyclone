@@ -31,11 +31,13 @@ const (
 
 var (
 	session *mgo.Session
+	saltKey string
 )
 
 // DataStore is the type for mongo db store.
 type DataStore struct {
-	s *mgo.Session
+	s       *mgo.Session
+	saltKey string
 
 	// Collections
 	cloudCollection          *mgo.Collection
@@ -46,8 +48,9 @@ type DataStore struct {
 }
 
 // Init store mongo client session
-func Init(s *mgo.Session) {
+func Init(s *mgo.Session, key string) {
 	session = s
+	saltKey = key
 }
 
 // NewStore copy a mongo client session
@@ -55,6 +58,7 @@ func NewStore() *DataStore {
 	s := session.Copy()
 	return &DataStore{
 		s:                        s,
+		saltKey:                  saltKey,
 		cloudCollection:          session.DB(defaultDBName).C(cloudCollection),
 		projectCollection:        session.DB(defaultDBName).C(projectCollectionName),
 		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
