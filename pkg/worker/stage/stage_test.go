@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -27,7 +28,12 @@ func init() {
 	flag.Set("logtostderr", "true")
 
 	// Init the common clients.
-	dm, err := docker.NewDockerManager("unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60", "", "", "")
+	endpoint := "unix:///var/run/docker.sock"
+	if runtime.GOOS == "darwin" {
+		endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
+	}
+
+	dm, err := docker.NewDockerManager(endpoint, "", "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +50,7 @@ func init() {
 			StageStatus: &api.StageStatus{},
 		},
 	}
-	stageManager = NewStageManager(dm, client, event.PipelineRecord.PerformParams)
+	stageManager = NewStageManager(dm, client, event.Project.Registry, event.PipelineRecord.PerformParams)
 	stageManager.SetEvent(event)
 
 	fmt.Println("Initialization of common clients has finished")
@@ -66,28 +72,28 @@ func TestExecCodeCheckout(t *testing.T) {
 			},
 			true,
 		},
-		"correct private github": {
-			[]*api.CodeSource{
-				&api.CodeSource{
-					Type: api.GitHub,
-					GitHub: &api.GitSource{
-						Url: "https://github.com/caicloud/dockerfile.git",
-					},
-				},
-			},
-			false,
-		},
-		"wrong github": {
-			[]*api.CodeSource{
-				&api.CodeSource{
-					Type: api.GitHub,
-					GitHub: &api.GitSource{
-						Url: "https://github.com/caicloud/abc.git",
-					},
-				},
-			},
-			false,
-		},
+		// "correct private github": {
+		// 	[]*api.CodeSource{
+		// 		&api.CodeSource{
+		// 			Type: api.GitHub,
+		// 			GitHub: &api.GitSource{
+		// 				Url: "https://github.com/caicloud/dockerfile.git",
+		// 			},
+		// 		},
+		// 	},
+		// 	false,
+		// },
+		// "wrong github": {
+		// 	[]*api.CodeSource{
+		// 		&api.CodeSource{
+		// 			Type: api.GitHub,
+		// 			GitHub: &api.GitSource{
+		// 				Url: "https://github.com/caicloud/abc.git",
+		// 			},
+		// 		},
+		// 	},
+		// 	false,
+		// },
 	}
 
 	stage := &api.CodeCheckoutStage{}
