@@ -182,7 +182,7 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 
 	// insert token
 	url := gitSource.Url
-	if scmType == api.GitHub || scmType == api.GitLab {
+	if token != "" && (scmType == api.GitHub || scmType == api.GitLab) {
 		position := -1
 		if strings.HasPrefix(url, "http://") {
 			position = len("http://")
