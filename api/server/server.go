@@ -28,19 +28,16 @@ import (
 	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
-	newstore "github.com/caicloud/cyclone/pkg/store"
-	"github.com/caicloud/cyclone/store"
+	"github.com/caicloud/cyclone/pkg/store"
 	restful "github.com/emicklei/go-restful"
 	swagger "github.com/emicklei/go-restful-swagger12"
 	"github.com/zoumo/logdog"
-	mgo "gopkg.in/mgo.v2"
 )
 
 // APIServer ...
 type APIServer struct {
 	Config        *APIServerOptions
 	WorkerOptions *cloud.WorkerOptions
-	dbSession     *mgo.Session
 }
 
 // PrepareRun prepare for apiserver running
@@ -67,13 +64,10 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 
 	closing := make(chan struct{})
 	// init database
-	session, mclosed, err := store.Init(s.Config.MongoDBHost, s.Config.MongoGracePeriod, closing)
+	mclosed, err := store.Init(s.Config.MongoDBHost, s.Config.MongoGracePeriod, closing, s.Config.SaltKey)
 	if err != nil {
 		return nil, err
 	}
-	// TODO (robin) Remove the old store and use the new one.
-	s.dbSession = session
-	newstore.Init(session, s.Config.SaltKey)
 
 	go background(closing, mclosed)
 
@@ -121,7 +115,7 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	// FIXME: start loghttp server
 	go loghttp.Server()
 
-	dataStore := newstore.NewStore()
+	dataStore := store.NewStore()
 	defer dataStore.Close()
 
 	// Initialize the V1 API.
