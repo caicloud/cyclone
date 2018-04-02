@@ -146,7 +146,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 }
 
 func NewTagFromLatest(codeSource *api.CodeSource, tagName, description, token string) error {
-	commitID, err := wscm.GetCommitID(codeSource)
+	commitID, err := wscm.GetCommitID(codeSource, "")
 	if err != nil {
 		return err
 	}

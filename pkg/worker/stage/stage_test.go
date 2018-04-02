@@ -30,7 +30,7 @@ func init() {
 	// Init the common clients.
 	endpoint := "unix:///var/run/docker.sock"
 	if runtime.GOOS == "darwin" {
-		endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
+		//endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
 	}
 
 	dm, err := docker.NewDockerManager(endpoint, "", "", "")
@@ -58,42 +58,53 @@ func init() {
 
 func TestExecCodeCheckout(t *testing.T) {
 	testCases := map[string]struct {
-		inputs []*api.CodeSource
+		inputs *api.CodeSources
 		pass   bool
 	}{
 		"correct public github": {
-			[]*api.CodeSource{
-				&api.CodeSource{
+			&api.CodeSources{
+				MainRepo: &api.CodeSource{
 					Type: api.GitHub,
 					GitHub: &api.GitSource{
 						Url: "https://github.com/caicloud/toy-dockerfile.git",
 					},
 				},
+				DepRepos: []*api.DepRepo{
+					&api.DepRepo{
+						CodeSource: api.CodeSource{
+							Type: api.GitHub,
+							GitHub: &api.GitSource{
+								Url: "https://github.com/caicloud/toy-dockerfile.git",
+							},
+						},
+						Folder: "dep",
+					},
+				},
 			},
 			true,
 		},
-		// "correct private github": {
-		// 	[]*api.CodeSource{
-		// 		&api.CodeSource{
-		// 			Type: api.GitHub,
-		// 			GitHub: &api.GitSource{
-		// 				Url: "https://github.com/caicloud/dockerfile.git",
-		// 			},
-		// 		},
-		// 	},
-		// 	false,
-		// },
-		// "wrong github": {
-		// 	[]*api.CodeSource{
-		// 		&api.CodeSource{
-		// 			Type: api.GitHub,
-		// 			GitHub: &api.GitSource{
-		// 				Url: "https://github.com/caicloud/abc.git",
-		// 			},
-		// 		},
-		// 	},
-		// 	false,
-		// },
+		//"correct private github": {
+		//	&api.CodeSources{
+		//		MainRepo: &api.CodeSource{
+		//			Type: api.GitHub,
+		//			GitHub: &api.GitSource{
+		//				Url: "https://github.com/caicloud/dockerfile.git",
+		//			},
+		//		},
+		//	},
+		//	false,
+		//},
+		//"wrong github": {
+		//	&api.CodeSources{
+		//		MainRepo: &api.CodeSource{
+		//			Type: api.GitHub,
+		//			GitHub: &api.GitSource{
+		//				Url: "https://github.com/caicloud/abc.git",
+		//			},
+		//		},
+		//	},
+		//	false,
+		//},
 	}
 
 	stage := &api.CodeCheckoutStage{}

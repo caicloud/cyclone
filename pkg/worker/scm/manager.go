@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	neturl "net/url"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -42,8 +43,8 @@ var scmProviders map[api.SCMType]SCMProvider
 
 type SCMProvider interface {
 	Clone(url, ref, destPath string) (string, error)
-	GetTagCommit(repoPath string, tag string) (string, error)
-	GetTagCommitLog(repoPath string, tag string) api.CommitLog
+	GetCommit(repoPath string) (string, error)
+	GetCommitLog(repoPath string) api.CommitLog
 }
 
 func init() {
@@ -96,8 +97,12 @@ func getRepoNameByURL(url string) (string, error) {
 	return results[1], nil
 }
 
-func GetCommitID(codeSource *api.CodeSource) (string, error) {
+func GetCommitID(codeSource *api.CodeSource, folder string) (string, error) {
 	cloneDir := GetCloneDir()
+	if folder != "" {
+		cloneDir = filepath.Join(cloneDir, folder)
+	}
+
 	scmType := codeSource.Type
 	p, err := GetSCMProvider(scmType)
 	if err != nil {
@@ -105,12 +110,7 @@ func GetCommitID(codeSource *api.CodeSource) (string, error) {
 		return "", err
 	}
 
-	ref, err := getRef(codeSource)
-	if err != nil {
-		return "", err
-	}
-
-	id, err := p.GetTagCommit(cloneDir, ref)
+	id, err := p.GetCommit(cloneDir)
 	if err != nil {
 		return "", err
 	}
@@ -118,8 +118,12 @@ func GetCommitID(codeSource *api.CodeSource) (string, error) {
 	return id, nil
 }
 
-func GetCommitLog(codeSource *api.CodeSource) (api.CommitLog, error) {
+func GetCommitLog(codeSource *api.CodeSource, folder string) (api.CommitLog, error) {
 	cloneDir := GetCloneDir()
+	if folder != "" {
+		cloneDir = filepath.Join(cloneDir, folder)
+	}
+
 	scmType := codeSource.Type
 	p, err := GetSCMProvider(scmType)
 	if err != nil {
@@ -127,16 +131,52 @@ func GetCommitLog(codeSource *api.CodeSource) (api.CommitLog, error) {
 		return api.CommitLog{}, err
 	}
 
-	ref, err := getRef(codeSource)
-	if err != nil {
-		return api.CommitLog{}, err
-	}
+	commitLog := p.GetCommitLog(cloneDir)
 
-	return p.GetTagCommitLog(cloneDir, ref), nil
+	// append repo name
+	repoName, err := GetRepoName(codeSource)
+	if err != nil {
+		return commitLog, err
+	}
+	commitLog.RepoName = repoName
+
+	// Get commit ID
+	commitID, err := GetCommitID(codeSource, folder)
+	if err != nil {
+		return commitLog, err
+	}
+	commitLog.ID = commitID
+
+	return commitLog, nil
 }
 
-func CloneRepo(token string, codeSource *api.CodeSource, ref string) (string, error) {
-	destPath := GetCloneDir()
+// CloneRepo represents clone main repo and dep repos.
+func CloneRepos(token string, codeSources *api.CodeSources, ref string) (string, error) {
+	var logs string
+	// clone main repo
+	mainDestPath := GetCloneDir()
+	logs, err := CloneRepo(token, codeSources.MainRepo, ref, mainDestPath)
+	if err != nil {
+		return logs, err
+	}
+
+	// clone dep repos
+	for _, repo := range codeSources.DepRepos {
+		destPath := filepath.Join(mainDestPath, repo.Folder)
+		log, err := CloneRepo(token, &repo.CodeSource, "", destPath)
+		if err != nil {
+			return log, err
+		}
+
+		// append log
+		logs = fmt.Sprintf("%s\n%s", logs, log)
+	}
+
+	return logs, nil
+}
+
+// CloneRepo represents clone repo to `destPath`, `ref` is for main repo.
+func CloneRepo(token string, codeSource *api.CodeSource, ref string, destPath string) (string, error) {
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
 		return "", fmt.Errorf("Unable to create parent directory for %s: %v\n", destPath, err)
 	}
@@ -153,7 +193,18 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string) (string, er
 		return "", err
 	}
 
-	logs, err := p.Clone(url, ref, destPath)
+	var reference string
+	if ref != "" {
+		// main repo
+		reference = ref
+	} else {
+		// dependent repo
+		reference, err = getRef(codeSource)
+		if err != nil {
+			return "", err
+		}
+	}
+	logs, err := p.Clone(url, reference, destPath)
 	if err != nil {
 		return "", err
 	}
