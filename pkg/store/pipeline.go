@@ -82,18 +82,6 @@ func (d *DataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
 	return pipeline, nil
 }
 
-// FindPipelineByServiceID finds the pipeline by service id.
-func (d *DataStore) FindPipelineByServiceID(serviceID string) (*api.Pipeline, error) {
-	query := bson.M{"serviceID": serviceID}
-	pipeline := &api.Pipeline{}
-	err := d.pipelineCollection.Find(query).One(pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	return pipeline, nil
-}
-
 // FindPipelinesByProjectID finds the pipelines by project id. Will returns all pipelines in this project.
 func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	pipelines := []api.Pipeline{}
