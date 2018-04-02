@@ -58,8 +58,8 @@
   version = "docker-1.9/go-1.4"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/golang/glog"
+  revision = "44145f04b68cf362d9c4df2182967c2275eaefed"
 
 [[constraint]]
   name = "github.com/google/go-github"
