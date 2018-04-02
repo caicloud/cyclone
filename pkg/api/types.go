@@ -567,8 +567,10 @@ const (
 	InQueue  QueueStatus = "in"
 	OutQueue QueueStatus = "out"
 	Handling QueueStatus = "handling"
+)
 
-	TriggerUser string = "user"
-	TriggerSCM  string = "scmTrigger"
-	TriggerCron string = "cronTrigger"
+// pipeline record trigger type.
+const (
+	TriggerSCM  string = "webhook"
+	TriggerCron string = "timer"
 )
