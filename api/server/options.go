@@ -28,8 +28,8 @@ const (
 	Debug = "DEBUG"
 	// MongoDBHost ...
 	MongoDBHost = "MONGODB_HOST"
-	// KafkaHost ...
-	KafkaHost = "KAFKA_HOST"
+	// SaltKey ...
+	SaltKey = "SALT_KEY"
 	// CloudAutoDiscovery ...
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
 )
@@ -37,7 +37,7 @@ const (
 // APIServerOptions contains all options(config) for api server
 type APIServerOptions struct {
 	MongoDBHost         string
-	KafkaHost           string
+	SaltKey             string
 	MongoGracePeriod    time.Duration
 	CyclonePort         int
 	CycloneAddrTemplate string
@@ -68,11 +68,11 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Destination: &opts.MongoDBHost,
 		},
 		cli.StringFlag{
-			Name:        "kafka-host",
-			Value:       "127.0.0.1:9092",
-			Usage:       "kafka host",
-			EnvVar:      KafkaHost,
-			Destination: &opts.KafkaHost,
+			Name:        "salt-key",
+			Value:       "caicloud-cyclone",
+			Usage:       "salt key to encrypt passwords",
+			EnvVar:      SaltKey,
+			Destination: &opts.SaltKey,
 		},
 		cli.BoolTFlag{
 			Name:        "show-api-doc",
@@ -99,5 +99,4 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 	}
 
 	app.Flags = append(app.Flags, flags...)
-
 }

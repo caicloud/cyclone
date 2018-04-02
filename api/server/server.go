@@ -73,7 +73,7 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	}
 	// TODO (robin) Remove the old store and use the new one.
 	s.dbSession = session
-	newstore.Init(session)
+	newstore.Init(session, s.Config.SaltKey)
 
 	go background(closing, mclosed)
 

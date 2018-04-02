@@ -33,6 +33,10 @@ var NeverStop <-chan struct{} = make(chan struct{})
 
 // RunServer starts an api server
 func RunServer(opts *ServerOptions, stopCh <-chan struct{}) error {
+	if err := opts.Validate(); err != nil {
+		return fmt.Errorf("option is not correct: %v", err)
+	}
+
 	s := opts.NewAPIServer()
 	ps, err := s.PrepareRun()
 	if err != nil {
