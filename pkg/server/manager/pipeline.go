@@ -96,7 +96,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	var webHook *scm.WebHook
 	var gitSource *api.GitSource
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
-		gitSource, err = api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources.MainRepo)
+		gitSource, err = api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
 		if err != nil {
 			return nil, err
 		}
@@ -255,7 +255,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
 		scmTrigger := pipeline.AutoTrigger.SCMTrigger
 		if scmTrigger.Webhook != "" {
-			gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources.MainRepo)
+			gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
 			if err != nil {
 				return nil, err
 			}
@@ -269,7 +269,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	// Create the new webhook if necessary.
 	if newPipeline.AutoTrigger != nil && newPipeline.AutoTrigger.SCMTrigger != nil {
 		scmTrigger := newPipeline.AutoTrigger.SCMTrigger
-		gitSource, err := api.GetGitSource(newPipeline.Build.Stages.CodeCheckout.CodeSources.MainRepo)
+		gitSource, err := api.GetGitSource(newPipeline.Build.Stages.CodeCheckout.MainRepo)
 		if err != nil {
 			return nil, err
 		}
@@ -366,7 +366,7 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 	}
 
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
-		gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.CodeSources.MainRepo)
+		gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
 		if err != nil {
 			return err
 		}

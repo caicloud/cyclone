@@ -98,10 +98,7 @@ func getRepoNameByURL(url string) (string, error) {
 }
 
 func GetCommitID(codeSource *api.CodeSource, folder string) (string, error) {
-	cloneDir := GetCloneDir()
-	if folder != "" {
-		cloneDir = filepath.Join(cloneDir, folder)
-	}
+	cloneDir := filepath.Join(GetCloneDir(), folder)
 
 	scmType := codeSource.Type
 	p, err := GetSCMProvider(scmType)
@@ -119,10 +116,7 @@ func GetCommitID(codeSource *api.CodeSource, folder string) (string, error) {
 }
 
 func GetCommitLog(codeSource *api.CodeSource, folder string) (api.CommitLog, error) {
-	cloneDir := GetCloneDir()
-	if folder != "" {
-		cloneDir = filepath.Join(cloneDir, folder)
-	}
+	cloneDir := filepath.Join(GetCloneDir(), folder)
 
 	scmType := codeSource.Type
 	p, err := GetSCMProvider(scmType)
@@ -151,19 +145,17 @@ func GetCommitLog(codeSource *api.CodeSource, folder string) (api.CommitLog, err
 }
 
 // CloneRepo represents clone main repo and dep repos.
-func CloneRepos(token string, codeSources *api.CodeSources, ref string) (string, error) {
+func CloneRepos(token string, codeSources *api.CodeCheckoutStage, ref string) (string, error) {
 	var logs string
 	// clone main repo
-	mainDestPath := GetCloneDir()
-	logs, err := CloneRepo(token, codeSources.MainRepo, ref, mainDestPath)
+	logs, err := CloneRepo(token, codeSources.MainRepo, ref, "")
 	if err != nil {
 		return logs, err
 	}
 
 	// clone dep repos
 	for _, repo := range codeSources.DepRepos {
-		destPath := filepath.Join(mainDestPath, repo.Folder)
-		log, err := CloneRepo(token, &repo.CodeSource, "", destPath)
+		log, err := CloneRepo(token, &repo.CodeSource, "", repo.Folder)
 		if err != nil {
 			return log, err
 		}
@@ -176,7 +168,9 @@ func CloneRepos(token string, codeSources *api.CodeSources, ref string) (string,
 }
 
 // CloneRepo represents clone repo to `destPath`, `ref` is for main repo.
-func CloneRepo(token string, codeSource *api.CodeSource, ref string, destPath string) (string, error) {
+func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder string) (string, error) {
+	destPath := filepath.Join(GetCloneDir(), folder)
+
 	if err := pathutil.EnsureParentDir(destPath, 0750); err != nil {
 		return "", fmt.Errorf("Unable to create parent directory for %s: %v\n", destPath, err)
 	}
