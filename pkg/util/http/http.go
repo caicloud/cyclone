@@ -29,6 +29,11 @@ import (
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
+const (
+	// HeaderUser represents the the key of user in request header.
+	HeaderUser = "X-User"
+)
+
 // ReadEntityFromRequest reads the entity from request body.
 func ReadEntityFromRequest(request *restful.Request, entityPointer interface{}) error {
 	if err := request.ReadEntity(entityPointer); err != nil {

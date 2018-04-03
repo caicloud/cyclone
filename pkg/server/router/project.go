@@ -32,6 +32,8 @@ func (router *router) createProject(request *restful.Request, response *restful.
 		return
 	}
 
+	project.Owner = request.Request.Header.Get(httputil.HeaderUser)
+
 	createdProject, err := router.projectManager.CreateProject(project)
 	if err != nil {
 		httputil.ResponseWithError(response, err)

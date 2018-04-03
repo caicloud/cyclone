@@ -42,6 +42,7 @@ func (router *router) createPipeline(request *restful.Request, response *restful
 		return
 	}
 
+	pipeline.Owner = request.Request.Header.Get(httputil.HeaderUser)
 	pipeline.ProjectID = project.ID
 	createdPipeline, err := router.pipelineManager.CreatePipeline(projectName, pipeline)
 	if err != nil {
