@@ -101,6 +101,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	}
 	sm.cycloneClient.SendEvent(event)
 
+	closeLog := make(chan struct{})
 	defer func() {
 		if err != nil {
 			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
@@ -112,6 +113,8 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 
 		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
 		sm.cycloneClient.SendEvent(event)
+
+		close(closeLog)
 	}()
 
 	logs, err := scm.CloneRepos(token, stage, sm.performParams.Ref)
@@ -125,12 +128,16 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 	if err != nil {
 		return err
 	}
-	defer logFile.Close()
+	defer func() {
+		logFile.WriteString(generateStageFinishLog(api.CodeCheckoutStageName, err))
+		logFile.Close()
+	}()
+	logFile.WriteString(generateStageStartLog(api.CodeCheckoutStageName))
 
 	// Just one line of log, will add more detailed logs.
 	logFile.WriteString(logs)
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, "", fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, "", fileName, closeLog)
 
 	setCommits(stage)
 	return nil
@@ -143,6 +150,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	}
 	sm.cycloneClient.SendEvent(event)
 
+	closeLog := make(chan struct{})
 	defer func() {
 		if err != nil {
 			event.PipelineRecord.StageStatus.Package.Status = api.Failed
@@ -153,6 +161,8 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 		event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
 		sm.cycloneClient.SendEvent(event)
+
+		close(closeLog)
 	}()
 
 	// Trick: bind the docker sock file to container to support
@@ -218,9 +228,13 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	if err != nil {
 		return err
 	}
-	defer logFile.Close()
+	defer func() {
+		logFile.WriteString(generateStageFinishLog(api.PackageStageName, err))
+		logFile.Close()
+	}()
+	logFile.WriteString(generateStageStartLog(api.PackageStageName))
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.PackageStageName, "", fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.PackageStageName, "", fileName, closeLog)
 
 	eo := docker.ExecOptions{
 		AttachStdout: true,
@@ -271,6 +285,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	}
 	sm.cycloneClient.SendEvent(event)
 
+	closeLog := make(chan struct{})
 	defer func() {
 		if err != nil {
 			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Failed
@@ -281,6 +296,8 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		}
 		event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
 		sm.cycloneClient.SendEvent(event)
+
+		close(closeLog)
 	}()
 
 	builtImages := []string{}
@@ -290,8 +307,9 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 		go func(buildInfo *api.ImageBuildInfo) {
 			defer wg.Done()
 
-			if image, err := sm.buildImage(buildInfo); err != nil {
-				log.Errorf("Fail to build image %s as %v", buildInfo.Name, err)
+			if image, bErr := sm.buildImage(buildInfo, closeLog); bErr != nil {
+				log.Errorf("Fail to build image %s as %v", buildInfo.Name, bErr)
+				err = bErr
 			} else {
 				builtImages = append(builtImages, image)
 			}
@@ -299,10 +317,10 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	}
 
 	wg.Wait()
-	return builtImages, nil
+	return builtImages, err
 }
 
-func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (string, error) {
+func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, close chan struct{}) (string, error) {
 	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
 	logFile, err := os.Create(fileName)
 	if err != nil {
@@ -310,7 +328,13 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (string, error
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, buildInfo.Name, fileName)
+	defer func() {
+		logFile.WriteString(generateStageFinishLog(api.ImageBuildStageName, err))
+		logFile.Close()
+	}()
+	logFile.WriteString(generateStageStartLog(api.ImageBuildStageName))
+
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, buildInfo.Name, fileName, close)
 
 	authOpts := docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
@@ -364,6 +388,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}
 	sm.cycloneClient.SendEvent(event)
 
+	closeLog := make(chan struct{})
 	defer func() {
 		if err != nil {
 			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Failed
@@ -374,6 +399,8 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		}
 		event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
 		sm.cycloneClient.SendEvent(event)
+
+		close(closeLog)
 	}()
 
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
@@ -441,9 +468,14 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	if err != nil {
 		return err
 	}
-	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.IntegrationTestStageName, "", fileName)
+	defer func() {
+		logFile.WriteString(generateStageFinishLog(api.ImageBuildStageName, err))
+		logFile.Close()
+	}()
+	logFile.WriteString(generateStageStartLog(api.ImageBuildStageName))
+
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.IntegrationTestStageName, "", fileName, closeLog)
 
 	eo := docker.ExecOptions{
 		AttachStdout: true,
@@ -499,6 +531,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	}
 	sm.cycloneClient.SendEvent(event)
 
+	closeLog := make(chan struct{})
 	defer func() {
 		if err != nil {
 			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Failed
@@ -509,6 +542,8 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 		}
 		event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
 		sm.cycloneClient.SendEvent(event)
+
+		close(closeLog)
 	}()
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
@@ -520,7 +555,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	}
 	defer logFile.Close()
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, "", fileName)
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, "", fileName, closeLog)
 
 	for _, p := range stage.ReleasePolicy {
 		for _, builtImage := range builtImages {

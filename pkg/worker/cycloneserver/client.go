@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	log "github.com/golang/glog"
 	"github.com/gorilla/websocket"
@@ -46,7 +47,7 @@ const (
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
 	SendEvent(event *api.Event) error
-	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string) error
+	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error
 }
 
 type client struct {
@@ -151,7 +152,7 @@ func (c *client) GetEvent(id string) (*api.Event, error) {
 	return nil, ErrorUnknownInternal.Format(body)
 }
 
-func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string) error {
+func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error {
 	path := fmt.Sprintf(apiPathForLogStream, project, pipeline, recordID)
 	log.Infof("Path: %s", path)
 
@@ -184,10 +185,10 @@ func (c *client) PushLogStream(project, pipeline, recordID string, stage api.Pip
 	}
 	defer ws.Close()
 
-	return watchLogs(ws, filePath)
+	return watchLogs(ws, filePath, close)
 }
 
-func watchLogs(ws *websocket.Conn, filePath string) error {
+func watchLogs(ws *websocket.Conn, filePath string, close chan struct{}) error {
 	logFile, err := os.Open(filePath)
 	if err != nil {
 		log.Error(err.Error())
@@ -196,17 +197,24 @@ func watchLogs(ws *websocket.Conn, filePath string) error {
 	defer logFile.Close()
 
 	buf := bufio.NewReader(logFile)
+	ticker := time.NewTicker(1 * time.Second)
 	for {
-		line, errRead := buf.ReadBytes('\n')
-		if errRead != nil {
-			if errRead == io.EOF {
-				continue
+		select {
+		case <-ticker.C:
+			line, errRead := buf.ReadBytes('\n')
+			if errRead != nil {
+				if errRead == io.EOF {
+					continue
+				}
+				log.Errorf("watch log file errs: %v", errRead)
+				ws.WriteMessage(websocket.CloseMessage, []byte(errRead.Error()))
+				return errRead
 			}
-			log.Errorf("watch log file errs: %v", errRead)
-			ws.WriteMessage(websocket.CloseMessage, []byte(errRead.Error()))
-			return errRead
+
+			ws.WriteMessage(websocket.TextMessage, line)
+		case <-close:
+			fmt.Println("Close the watch of log file")
+			return nil
 		}
-		fmt.Printf("%s", line)
-		ws.WriteMessage(websocket.TextMessage, line)
 	}
 }
