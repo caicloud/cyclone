@@ -58,11 +58,11 @@ func init() {
 
 func TestExecCodeCheckout(t *testing.T) {
 	testCases := map[string]struct {
-		inputs *api.CodeSources
+		inputs *api.CodeCheckoutStage
 		pass   bool
 	}{
 		"correct public github": {
-			&api.CodeSources{
+			&api.CodeCheckoutStage{
 				MainRepo: &api.CodeSource{
 					Type: api.GitHub,
 					GitHub: &api.GitSource{
@@ -84,7 +84,7 @@ func TestExecCodeCheckout(t *testing.T) {
 			true,
 		},
 		//"correct private github": {
-		//	&api.CodeSources{
+		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{
 		//			Type: api.GitHub,
 		//			GitHub: &api.GitSource{
@@ -95,7 +95,7 @@ func TestExecCodeCheckout(t *testing.T) {
 		//	false,
 		//},
 		//"wrong github": {
-		//	&api.CodeSources{
+		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{
 		//			Type: api.GitHub,
 		//			GitHub: &api.GitSource{
@@ -111,7 +111,7 @@ func TestExecCodeCheckout(t *testing.T) {
 	for d, tc := range testCases {
 		// Cleanup the temp folder.
 		os.RemoveAll(codeDir)
-		stage.CodeSources = tc.inputs
+		stage = tc.inputs
 		err := stageManager.ExecCodeCheckout("", stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)

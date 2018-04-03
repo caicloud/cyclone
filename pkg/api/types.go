@@ -131,7 +131,8 @@ type GeneralStage struct {
 
 // CodeCheckoutStage represents the config of code checkout stage.
 type CodeCheckoutStage struct {
-	CodeSources *CodeSources `bson:"codeSources,omitempty" json:"codeSources,omitempty" description:"list of code sources to be checked out"`
+	MainRepo *CodeSource `bson:"mainRepo,omitempty" json:"mainRepo,omitempty" description:"main repository of code sources"`
+	DepRepos []*DepRepo  `bson:"depRepos,omitempty" json:"depRepos,omitempty" description:"dependent repositories of code sources"`
 }
 
 // SCMType represents the type of SCM, supports gitlab, github and svn.
@@ -152,17 +153,11 @@ type SCMConfig struct {
 	Token    string  `bson:"token,omitempty" json:"token,omitempty" description:"token of the SCM"`
 }
 
-// CodeSources represents the config of code source, include mainRepo and depRepos.
-type CodeSources struct {
-	MainRepo *CodeSource `bson:"mainRepo,omitempty" json:"mainRepo,omitempty" description:"main repository of code sources"`
-	DepRepos []*DepRepo  `bson:"depRepos,omitempty" json:"depRepos,omitempty" description:"dependent repositories of code sources"`
-}
-
 // CodeSource represents the config of code source, only one type is supported.
 type CodeSource struct {
 	Type   SCMType    `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
-	GitLab *GitSource `bson:"gitLab,omitempty" json:"gitLab,omitempty" description:"code from gitlab"`
-	GitHub *GitSource `bson:"gitHub,omitempty" json:"gitHub,omitempty" description:"code from github"`
+	GitLab *GitSource `bson:"gitlab,omitempty" json:"gitlab,omitempty" description:"code from gitlab"`
+	GitHub *GitSource `bson:"github,omitempty" json:"github,omitempty" description:"code from github"`
 }
 
 // DepRepo represents the dependent repositories' config of code source.

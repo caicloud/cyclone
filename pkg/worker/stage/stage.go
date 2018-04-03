@@ -113,7 +113,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 		sm.cycloneClient.SendEvent(event)
 	}()
 
-	logs, err := scm.CloneRepos(token, stage.CodeSources, sm.performParams.Ref)
+	logs, err := scm.CloneRepos(token, stage, sm.performParams.Ref)
 	if err != nil {
 		logdog.Error(err.Error())
 		return err
@@ -131,7 +131,7 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, fileName)
 
-	setCommits(stage.CodeSources)
+	setCommits(stage)
 	return nil
 }
 
@@ -590,7 +590,7 @@ func setCommit(commitLog *api.CommitLog, main bool) {
 
 }
 
-func setCommits(codeSources *api.CodeSources) {
+func setCommits(codeSources *api.CodeCheckoutStage) {
 	commitLog, errl := scm.GetCommitLog(codeSources.MainRepo, "")
 	if errl != nil {
 		log.Warningf("get commit log fail %s", errl.Error())
