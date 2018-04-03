@@ -470,7 +470,10 @@ func transRecordsToStats(records []api.PipelineRecord, start, end time.Time) (*a
 		statistics.Overview.StatsStatus = statsStatus(statistics.Overview.StatsStatus, record.Status)
 	}
 
-	statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%", float64(statistics.Overview.Success)/float64(statistics.Overview.Total)*100)
+	if statistics.Overview.Total != 0 {
+		statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%",
+			float64(statistics.Overview.Success)/float64(statistics.Overview.Total)*100)
+	}
 	return statistics, nil
 }
 
