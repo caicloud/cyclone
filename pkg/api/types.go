@@ -184,20 +184,20 @@ type CodeRef struct {
 
 // UnitTestStage represents the config of unit test stage.
 type UnitTestStage struct {
-	GeneralStage
-	Outputs []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	GeneralStage `bson:",inline"`
+	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
 }
 
 // CodeScanStage represents the config of code scan stage.
 type CodeScanStage struct {
-	GeneralStage
-	Outputs []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	GeneralStage `bson:",inline"`
+	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
 }
 
 // PackageStage represents the config of package stage.
 type PackageStage struct {
-	GeneralStage
-	Outputs []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	GeneralStage `bson:",inline"`
+	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
 }
 
 // ImageBuildStage represents the config of image build stage.
@@ -280,35 +280,35 @@ type GeneralTrigger struct {
 
 // CommitTrigger represents the trigger from SCM commit.
 type CommitTrigger struct {
-	GeneralTrigger
+	GeneralTrigger `bson:",inline"`
 }
 
 // PullRequestTrigger represents the SCM auto trigger from pull request.
 type PullRequestTrigger struct {
-	GeneralTrigger
+	GeneralTrigger `bson:",inline"`
 }
 
 // PullRequestCommentTrigger represents the SCM auto trigger from pull request comment.
 type PullRequestCommentTrigger struct {
-	GeneralTrigger
-	Comments []string `bson:"comments" json:"comments" description:"pull request comments to trigger"`
+	GeneralTrigger `bson:",inline"`
+	Comments       []string `bson:"comments" json:"comments" description:"pull request comments to trigger"`
 }
 
 // PushTrigger represents the SCM auto trigger from push into branches.
 type PushTrigger struct {
-	GeneralTrigger
-	Branches []string `bson:"branches" json:"branches" description:"branches with new commit to trigger"`
+	GeneralTrigger `bson:",inline"`
+	Branches       []string `bson:"branches" json:"branches" description:"branches with new commit to trigger"`
 }
 
 // TagReleaseTrigger represents the SCM auto trigger from tag release.
 type TagReleaseTrigger struct {
-	GeneralTrigger
+	GeneralTrigger `bson:",inline"`
 }
 
 // CommitWithCommentsTrigger represents the trigger from SCM commit with specified comments.
 type CommitWithCommentsTrigger struct {
-	GeneralTrigger
-	Comment []string `bson:"comment,omitempty" json:"comment,omitempty" description:"list of comments in commit"`
+	GeneralTrigger `bson:",inline"`
+	Comment        []string `bson:"comment,omitempty" json:"comment,omitempty" description:"list of comments in commit"`
 }
 
 // TimerTrigger represents the auto trigger strategy from timer.
@@ -318,8 +318,8 @@ type TimerTrigger struct {
 
 // CronTrigger represents the trigger from cron job.
 type CronTrigger struct {
-	GeneralTrigger
-	Expression string `bson:"expression,omitempty" json:"expression,omitempty" description:"expression of cron job"`
+	GeneralTrigger `bson:",inline"`
+	Expression     string `bson:"expression,omitempty" json:"expression,omitempty" description:"expression of cron job"`
 }
 
 // PipelineRecord represents the running record of pipeline.
