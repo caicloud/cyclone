@@ -156,8 +156,8 @@ type SCMConfig struct {
 // CodeSource represents the config of code source, only one type is supported.
 type CodeSource struct {
 	Type   SCMType    `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
-	GitLab *GitSource `bson:"gitLab,omitempty" json:"gitLab,omitempty" description:"code from gitlab"`
-	GitHub *GitSource `bson:"gitHub,omitempty" json:"gitHub,omitempty" description:"code from github"`
+	GitLab *GitSource `bson:"gitlab,omitempty" json:"gitlab,omitempty" description:"code from gitlab"`
+	GitHub *GitSource `bson:"github,omitempty" json:"github,omitempty" description:"code from github"`
 }
 
 // DepRepo represents the dependent repositories' config of code source.
