@@ -208,7 +208,7 @@ type ImageBuildStage struct {
 // ImageBuildInfo represents the config to build the image. Only one of Dockerfile and DockerfilePath needs to be set.
 // If both of them are set, Dockerfile will be used with high priority.
 type ImageBuildInfo struct {
-	Name           string `bson:"name,omitempty" json:"name,omitempty" description:"name for image build task"`
+	TaskName       string `bson:"taskName,omitempty" json:"taskName,omitempty" description:"task name for image build"`
 	ContextDir     string `bson:"contextDir,omitempty" json:"contextDir,omitempty" description:"context directory for image build"`
 	Dockerfile     string `bson:"dockerfile,omitempty" json:"dockerfile,omitempty" description:"dockerfile content for image build"`
 	DockerfilePath string `bson:"dockerfilePath,omitempty" json:"dockerfilePath,omitempty" description:"dockerfile path for image build"`

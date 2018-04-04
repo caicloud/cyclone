@@ -61,7 +61,7 @@ func init() {
 		Pipeline: &api.Pipeline{},
 		PipelineRecord: &api.PipelineRecord{
 			PerformParams: &api.PipelinePerformParams{
-				Ref: "master",
+				Ref: "refs/heads/master",
 			},
 			StageStatus: &api.StageStatus{},
 		},
@@ -151,6 +151,7 @@ func TestExecImageBuild(t *testing.T) {
 		"default Dockerfile": {
 			[]*api.ImageBuildInfo{
 				&api.ImageBuildInfo{
+					TaskName:  "test1",
 					ImageName: "cargo.caicloud.io/caicloud/test:v1",
 				},
 			},
@@ -179,6 +180,21 @@ func TestExecImageBuild(t *testing.T) {
 				&api.ImageBuildInfo{
 					ImageName:  "cargo.caicloud.io/caicloud/test:v1",
 					Dockerfile: "FROM alpine \nADD README.md /README.md",
+				},
+			},
+			true,
+		},
+		"multiple image build": {
+			[]*api.ImageBuildInfo{
+				&api.ImageBuildInfo{
+					TaskName:       "v1",
+					ImageName:      "cargo.caicloud.io/caicloud/test:v1",
+					DockerfilePath: "Dockerfile",
+				},
+				&api.ImageBuildInfo{
+					TaskName:       "v2",
+					ImageName:      "cargo.caicloud.io/caicloud/test:v2",
+					DockerfilePath: "Dockerfile",
 				},
 			},
 			true,
