@@ -144,6 +144,9 @@ const (
 	SVN            = "SVN"
 )
 
+// SVN username and password seperator, because SVN username can not contain ":".
+const SVNUsernPwdSep string = ":"
+
 // SCMConfig represents the config of SCM.
 type SCMConfig struct {
 	Type     SCMType `bson:"type,omitempty" json:"type,omitempty" description:"SCM type, support gitlab, github and svn"`
@@ -158,6 +161,7 @@ type CodeSource struct {
 	Type   SCMType    `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
 	GitLab *GitSource `bson:"gitlab,omitempty" json:"gitlab,omitempty" description:"code from gitlab"`
 	GitHub *GitSource `bson:"github,omitempty" json:"github,omitempty" description:"code from github"`
+	SVN    *GitSource `bson:"svn,omitempty" json:"svn,omitempty" description:"code from svn"`
 }
 
 // DepRepo represents the dependent repositories' config of code source.

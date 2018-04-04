@@ -30,7 +30,7 @@ func GetGitSource(codeSource *CodeSource) (*GitSource, error) {
 	case GitLab:
 		gitSource = codeSource.GitLab
 	case SVN:
-		return nil, fmt.Errorf("SCM type SVN is not implemented")
+		gitSource = codeSource.SVN
 	default:
 		return nil, fmt.Errorf("SCM type %s is not supported", scmType)
 	}

@@ -22,7 +22,6 @@ import (
 	neturl "net/url"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/zoumo/logdog"
 
@@ -42,8 +41,8 @@ const (
 var scmProviders map[api.SCMType]SCMProvider
 
 type SCMProvider interface {
-	Clone(url, ref, destPath string) (string, error)
-	GetCommit(repoPath string) (string, error)
+	Clone(token, url, ref, destPath string) (string, error)
+	GetCommitID(repoPath string) (string, error)
 	GetCommitLog(repoPath string) api.CommitLog
 }
 
@@ -77,6 +76,10 @@ func GetCloneDir() string {
 }
 
 func GetRepoName(codeSource *api.CodeSource) (string, error) {
+	if codeSource.Type == api.SVN {
+		return codeSource.SVN.Url, nil
+	}
+
 	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
@@ -107,7 +110,7 @@ func GetCommitID(codeSource *api.CodeSource, folder string) (string, error) {
 		return "", err
 	}
 
-	id, err := p.GetCommit(cloneDir)
+	id, err := p.GetCommitID(cloneDir)
 	if err != nil {
 		return "", err
 	}
@@ -182,7 +185,12 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 		return "", err
 	}
 
-	url, err := getAuthURL(token, codeSource)
+	token, err = rebuildToken(token, codeSource)
+	if err != nil {
+		return "", err
+	}
+
+	url, err := getURL(codeSource)
 	if err != nil {
 		return "", err
 	}
@@ -198,7 +206,8 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 			return "", err
 		}
 	}
-	logs, err := p.Clone(url, reference, destPath)
+	logs, err := p.Clone(token, url, reference, destPath)
+
 	if err != nil {
 		return "", err
 	}
@@ -206,10 +215,11 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 	return logs, err
 }
 
-// getAuthURL rebuilds url with auth token or username and password
+// rebuildToken rebuilds token username and password if token is empty.
 // for private git repository
-func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
+func rebuildToken(token string, codeSource *api.CodeSource) (string, error) {
 	scmType := codeSource.Type
+
 	if scmType == api.GitLab && token != "" {
 		token = "oauth2:" + token
 	}
@@ -225,21 +235,18 @@ func getAuthURL(token string, codeSource *api.CodeSource) (string, error) {
 		token = queryEscape(gitSource.Username, gitSource.Password)
 	}
 
-	// insert token
-	url := gitSource.Url
-	if token != "" && (scmType == api.GitHub || scmType == api.GitLab) {
-		position := -1
-		if strings.HasPrefix(url, "http://") {
-			position = len("http://")
-		} else if strings.HasPrefix(url, "https://") {
-			position = len("https://")
-		}
-		if position > 0 {
-			url = insert(url, token+"@", position)
-		}
+	return token, nil
+}
+
+// getRef provide the ref(branch or tag) of the code.
+func getURL(codeSource *api.CodeSource) (string, error) {
+	gitSource, err := api.GetGitSource(codeSource)
+	if err != nil {
+		logdog.Errorf(err.Error())
+		return "", err
 	}
 
-	return url, nil
+	return gitSource.Url, nil
 }
 
 // getRef provide the ref(branch or tag) of the code.
@@ -249,22 +256,12 @@ func getRef(codeSource *api.CodeSource) (string, error) {
 		logdog.Errorf(err.Error())
 		return "", err
 	}
-	if gitSource.Ref == "" {
+
+	if gitSource.Ref == "" && codeSource.Type != api.SVN {
 		logdog.Warnf("the ref of %s is empty", gitSource.Url)
 		return "master", nil
 	}
 	return gitSource.Ref, nil
-}
-
-// This function is used to insert the string "insertion" into the "url"
-// at the "index" postiion
-func insert(url, insertion string, index int) string {
-	result := make([]byte, len(url)+len(insertion))
-	slice := []byte(url)
-	at := copy(result, slice[:index])
-	at += copy(result[at:], insertion)
-	copy(result[at:], slice[index:])
-	return string(result)
 }
 
 // queryEscape escapes the string so it can be safely placed
