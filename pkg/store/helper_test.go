@@ -35,19 +35,19 @@ func TestEncryptPasswordsForProjects(t *testing.T) {
 	}{
 		"Github token": {
 			scm: &api.SCMConfig{
-				Type:  api.GitHub,
+				Type:  api.Github,
 				Token: "dakjfajefpoaiesjfoajefasjfasfeoija",
 			},
 		},
 		"Gitlab token": {
 			scm: &api.SCMConfig{
-				Type:  api.GitLab,
+				Type:  api.Gitlab,
 				Token: "fsdrgraeofasfjaefoawefasfjasfaweojf",
 			},
 		},
 		"empty token": {
 			scm: &api.SCMConfig{
-				Type:  api.GitHub,
+				Type:  api.Github,
 				Token: "",
 			},
 		},
@@ -58,7 +58,7 @@ func TestEncryptPasswordsForProjects(t *testing.T) {
 		},
 		"SCM and registry": {
 			scm: &api.SCMConfig{
-				Type:  api.GitHub,
+				Type:  api.Github,
 				Token: "dakjfajefpoaiesjfoajefasjfasfeoija",
 			},
 			registry: &api.Registry{
@@ -90,7 +90,7 @@ func TestEncryptPasswordsForProjects(t *testing.T) {
 	}{
 		"too short salt key": {
 			scm: &api.SCMConfig{
-				Type:  api.GitHub,
+				Type:  api.Github,
 				Token: "dakjfajefpoaiesjfoajefasjfasfeoija",
 			},
 			saltKey: "1234567",
@@ -122,7 +122,7 @@ func TestDecryptPasswordsForProjects(t *testing.T) {
 		"scm token": {
 			input: input{
 				scm: &api.SCMConfig{
-					Type:  api.GitHub,
+					Type:  api.Github,
 					Token: "quJH1mp13LNGD1JS/ABmka1A62F4hjHq",
 				},
 			},
@@ -143,7 +143,7 @@ func TestDecryptPasswordsForProjects(t *testing.T) {
 		"scm token and registry password": {
 			input: input{
 				scm: &api.SCMConfig{
-					Type:  api.GitHub,
+					Type:  api.Github,
 					Token: "quJH1mp13LNGD1JS/ABmka1A62F4hjHq",
 				},
 				registry: &api.Registry{

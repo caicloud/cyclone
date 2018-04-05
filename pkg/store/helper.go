@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -27,7 +25,6 @@ import (
 
 // encryptPasswordsForProjects encrypts passwords for projects before them are stored.
 func encryptPasswordsForProjects(project *api.Project, saltKey string) error {
-	fmt.Printf("key: %s; len: %d\n", saltKey, len(saltKey))
 	// Encrypt the passwords.
 	if project.Registry != nil {
 		encryptPwd, err := encryptutil.Encrypt(project.Registry.Password, saltKey)

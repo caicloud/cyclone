@@ -80,16 +80,16 @@ func TestExecCodeCheckout(t *testing.T) {
 		"correct public github": {
 			&api.CodeCheckoutStage{
 				MainRepo: &api.CodeSource{
-					Type: api.GitHub,
-					GitHub: &api.GitSource{
+					Type: api.Github,
+					Github: &api.GitSource{
 						Url: "https://github.com/caicloud/toy-dockerfile.git",
 					},
 				},
 				DepRepos: []*api.DepRepo{
 					&api.DepRepo{
 						CodeSource: api.CodeSource{
-							Type: api.GitHub,
-							GitHub: &api.GitSource{
+							Type: api.Github,
+							Github: &api.GitSource{
 								Url: "https://github.com/caicloud/toy-dockerfile.git",
 							},
 						},
@@ -113,8 +113,8 @@ func TestExecCodeCheckout(t *testing.T) {
 		//"correct private github": {
 		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{
-		//			Type: api.GitHub,
-		//			GitHub: &api.GitSource{
+		//			Type: api.Github,
+		//			Github: &api.GitSource{
 		//				Url: "https://github.com/caicloud/dockerfile.git",
 		//			},
 		//		},
@@ -124,8 +124,8 @@ func TestExecCodeCheckout(t *testing.T) {
 		//"wrong github": {
 		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{
-		//			Type: api.GitHub,
-		//			GitHub: &api.GitSource{
+		//			Type: api.Github,
+		//			Github: &api.GitSource{
 		//				Url: "https://github.com/caicloud/abc.git",
 		//			},
 		//		},

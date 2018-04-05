@@ -49,7 +49,7 @@ REGISTRIES ?= cargo.caicloud.io/caicloud
 #
 
 # A list of all packages.
-PKGS := $(shell go list ./... | grep -v /vendor | grep -v /test)
+PKGS := $(shell go list ./... | grep -v /vendor | grep -v /test | grep -v /notify)
 
 # Project main package location (can be multiple ones).
 CMD_DIR := ./cmd
