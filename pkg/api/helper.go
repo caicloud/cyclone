@@ -25,10 +25,10 @@ func GetGitSource(codeSource *CodeSource) (*GitSource, error) {
 	scmType := codeSource.Type
 	var gitSource *GitSource
 	switch scmType {
-	case GitHub:
-		gitSource = codeSource.GitHub
-	case GitLab:
-		gitSource = codeSource.GitLab
+	case Github:
+		gitSource = codeSource.Github
+	case Gitlab:
+		gitSource = codeSource.Gitlab
 	case SVN:
 		gitSource = codeSource.SVN
 	default:

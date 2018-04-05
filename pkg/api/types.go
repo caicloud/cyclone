@@ -139,8 +139,8 @@ type CodeCheckoutStage struct {
 type SCMType string
 
 const (
-	GitLab SCMType = "Gitlab"
-	GitHub         = "Github"
+	Gitlab SCMType = "Gitlab"
+	Github         = "Github"
 	SVN            = "SVN"
 )
 
@@ -159,8 +159,8 @@ type SCMConfig struct {
 // CodeSource represents the config of code source, only one type is supported.
 type CodeSource struct {
 	Type   SCMType    `bson:"type,omitempty" json:"type,omitempty" description:"type of code source, support gitlab, github and svn"`
-	GitLab *GitSource `bson:"gitlab,omitempty" json:"gitlab,omitempty" description:"code from gitlab"`
-	GitHub *GitSource `bson:"github,omitempty" json:"github,omitempty" description:"code from github"`
+	Gitlab *GitSource `bson:"gitlab,omitempty" json:"gitlab,omitempty" description:"code from gitlab"`
+	Github *GitSource `bson:"github,omitempty" json:"github,omitempty" description:"code from github"`
 	SVN    *GitSource `bson:"svn,omitempty" json:"svn,omitempty" description:"code from svn"`
 }
 
@@ -176,14 +176,6 @@ type GitSource struct {
 	Ref      string `bson:"ref,omitempty" json:"ref,omitempty" description:"reference of git repo, support branch, tag"`
 	Username string `bson:"username,omitempty" json:"username,omitempty" description:"username of git"`
 	Password string `bson:"password,omitempty" json:"password,omitempty" description:"password of git"`
-}
-
-type CodeRefType string
-
-// Ref represents the branch, tag of git.
-type CodeRef struct {
-	Type CodeRefType `bson:"type,omitempty" json:"type,omitempty" description:"type of code ref"`
-	Name string      `bson:"name,omitempty" json:"name,omitempty" description:"name of code ref"`
 }
 
 // UnitTestStage represents the config of unit test stage.
