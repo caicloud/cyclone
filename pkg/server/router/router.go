@@ -320,13 +320,13 @@ func (router *router) registerWebhookAPIs(ws *restful.WebService) {
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 
-	// POST /api/v1/githubwebhooks/{pipelineid}
-	ws.Route(ws.POST("/githubwebhooks/{pipelineid}").To(router.handleGithubWebhook).
+	// POST /api/v1/pipelines/{pipelineid}/githubwebhook
+	ws.Route(ws.POST("/pipelines/{pipelineid}/githubwebhook").To(router.handleGithubWebhook).
 		Doc("Trigger the pipeline by github webhook").
 		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
 
-	// POST /api/v1/gitlabwebhooks/{pipelineid}
-	ws.Route(ws.POST("/gitlabwebhooks/{pipelineid}").To(router.handleGitlabWebhook).
+	// POST /api/v1/pipelines/{pipelineid}/gitlabwebhook
+	ws.Route(ws.POST("/pipelines/{pipelineid}/gitlabwebhook").To(router.handleGitlabWebhook).
 		Doc("Trigger the pipeline by gitlab webhook").
 		Param(ws.PathParameter("pipelineid", "id of the pipeline").DataType("string")))
 }
