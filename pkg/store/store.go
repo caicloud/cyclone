@@ -82,7 +82,32 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}, key str
 
 	go backgroundMongo(closing)
 
+	err = ensureIndexes()
+	if err != nil {
+		log.Errorf("Fail to create indexes as %v", err)
+		return nil, err
+	}
+
 	return mclosed, nil
+}
+
+// ensureIndexes ensures the indexes for each collection.
+func ensureIndexes() error {
+	projectCollection := session.DB(defaultDBName).C(projectCollectionName)
+	projectIndex := mgo.Index{Key: []string{"name"}, Unique: true}
+	err := projectCollection.EnsureIndex(projectIndex)
+	if err != nil {
+		return err
+	}
+
+	pipelineCollection := session.DB(defaultDBName).C(pipelineCollectionName)
+	pipelineIndex := mgo.Index{Key: []string{"name", "projectID"}, Unique: true}
+	err = pipelineCollection.EnsureIndex(pipelineIndex)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewStore copy a mongo client session
