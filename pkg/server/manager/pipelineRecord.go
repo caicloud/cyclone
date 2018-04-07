@@ -53,9 +53,9 @@ type PipelineRecordManager interface {
 	UpdatePipelineRecord(pipelineRecordID string, pipelineRecord *api.PipelineRecord) (*api.PipelineRecord, error)
 	DeletePipelineRecord(pipelineRecordID string) error
 	ClearPipelineRecordsOfPipeline(pipelineID string) error
-	GetPipelineRecordLogs(pipelineRecordID string) (string, error)
-	GetPipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error
-	ReceivePipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error
+	GetPipelineRecordLogs(pipelineRecordID, stage, task string) (string, error)
+	GetPipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error
+	ReceivePipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error
 }
 
 // pipelineRecordManager represents the manager for pipeline record.
@@ -192,12 +192,7 @@ func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string
 }
 
 // GetPipelineRecordLogs gets the pipeline record logs by id.
-func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (string, error) {
-	pipelineRecord, err := m.GetPipelineRecord(pipelineRecordID)
-	if err != nil {
-		return "", err
-	}
-
+func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID, stage, task string) (string, error) {
 	// Check the existence of record folder.
 	logsFolder, err := m.getRecordFolder(pipelineRecordID)
 	if err != nil {
@@ -208,43 +203,30 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID string) (
 		return "", fmt.Errorf("logs folder %s does not exist", logsFolder)
 	}
 
-	var logs []byte
-	for _, stage := range pipelineRecord.PerformParams.Stages {
-		// 'unitTest' stage in merged into 'package' stage, so no need to get the log for this stage.
-		if stage == api.UnitTestStageName {
-			continue
-		}
-
-		logFilePath, err := m.getLogFilePath(pipelineRecordID, string(stage))
-		if err != nil {
-			return "", err
-		}
-
-		// Check the existence of the log file for this stage. If does not exist, return error when pipeline record is success,
-		// otherwise directly return the got logs as pipeline record is failed or aborted.
-		if !fileutil.FileExists(logFilePath) {
-			if pipelineRecord.Status == api.Success {
-				log.Errorf("log file %s does not exist", logFilePath)
-				return "", fmt.Errorf("log file for stage %s does not exist", stage)
-			}
-
-			return string(logs), nil
-		}
-
-		// TODO (robin) Read the whole file, need to consider the memory consumption when the log file is too huge.
-		log, err := ioutil.ReadFile(logFilePath)
-		if err != nil {
-			return "", err
-		}
-		logs = append(logs, log...)
+	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage, task)
+	if err != nil {
+		return "", err
 	}
 
-	return string(logs), nil
+	// Check the existence of the log file for this stage. If does not exist, return error when pipeline record is success,
+	// otherwise directly return the got logs as pipeline record is failed or aborted.
+	if !fileutil.FileExists(logFilePath) {
+		log.Errorf("log file %s does not exist", logFilePath)
+		return "", fmt.Errorf("log file for stage %s does not exist", stage)
+	}
+
+	// TODO (robin) Read the whole file, need to consider the memory consumption when the log file is too huge.
+	log, err := ioutil.ReadFile(logFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(log), nil
 }
 
 // GetPipelineRecordLogStream watches the log files and sends the content to the log stream.
-func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error {
-	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage)
+func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error {
+	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage, task)
 	if err != nil {
 		return err
 	}
@@ -278,8 +260,8 @@ func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID stri
 }
 
 // ReceivePipelineRecordLogStream receives the log stream for one stage of the pipeline record, and stores it into log files.
-func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID string, stage string, ws *websocket.Conn) error {
-	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage)
+func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error {
+	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage, task)
 	if err != nil {
 		return err
 	}
@@ -311,7 +293,7 @@ func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID 
 }
 
 // getLogFilePath gets the log file path for one stage of the pipeline record.
-func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage string) (string, error) {
+func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage, task string) (string, error) {
 	if stage == "" {
 		return "", fmt.Errorf("the stage can not be empty")
 	}
@@ -322,6 +304,10 @@ func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage string) (
 	}
 
 	logFile := stage + logFileSuffix
+	if task != "" {
+		logFile = stage + "-" + task + logFileSuffix
+	}
+
 	logFilePath := strings.Join([]string{recordFolder, logsFolderName, logFile}, string(os.PathSeparator))
 	return logFilePath, nil
 }

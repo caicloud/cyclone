@@ -46,6 +46,6 @@ func (c *fakeClient) GetEvent(id string) (*api.Event, error) {
 	return nil, nil
 }
 
-func (c *fakeClient) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, filePath string) error {
+func (c *fakeClient) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error {
 	return nil
 }

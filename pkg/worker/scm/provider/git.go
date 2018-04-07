@@ -66,7 +66,7 @@ func (g *Git) Clone(url, ref, destPath string) (string, error) {
 			return "", err
 		}
 
-		outputs = outputs + string(output) + "/n"
+		outputs = outputs + string(output)
 	}
 
 	log.Info("Successfully cloned git repository.", log.Fields{"url": url, "destPath": destPath})

@@ -1,3 +1,19 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package stage_test
 
 import (
@@ -45,7 +61,7 @@ func init() {
 		Pipeline: &api.Pipeline{},
 		PipelineRecord: &api.PipelineRecord{
 			PerformParams: &api.PipelinePerformParams{
-				Ref: "master",
+				Ref: "refs/heads/master",
 			},
 			StageStatus: &api.StageStatus{},
 		},
@@ -135,6 +151,7 @@ func TestExecImageBuild(t *testing.T) {
 		"default Dockerfile": {
 			[]*api.ImageBuildInfo{
 				&api.ImageBuildInfo{
+					TaskName:  "test1",
 					ImageName: "cargo.caicloud.io/caicloud/test:v1",
 				},
 			},
@@ -163,6 +180,21 @@ func TestExecImageBuild(t *testing.T) {
 				&api.ImageBuildInfo{
 					ImageName:  "cargo.caicloud.io/caicloud/test:v1",
 					Dockerfile: "FROM alpine \nADD README.md /README.md",
+				},
+			},
+			true,
+		},
+		"multiple image build": {
+			[]*api.ImageBuildInfo{
+				&api.ImageBuildInfo{
+					TaskName:       "v1",
+					ImageName:      "cargo.caicloud.io/caicloud/test:v1",
+					DockerfilePath: "Dockerfile",
+				},
+				&api.ImageBuildInfo{
+					TaskName:       "v2",
+					ImageName:      "cargo.caicloud.io/caicloud/test:v2",
+					DockerfilePath: "Dockerfile",
 				},
 			},
 			true,

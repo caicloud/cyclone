@@ -45,6 +45,9 @@ const (
 	// pipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
 	pipelineRecordStageQueryParameterName = "stage"
 
+	// pipelineRecordTaskQueryParameterName represents the name of the query parameter for pipeline record task.
+	pipelineRecordTaskQueryParameterName = "task"
+
 	// eventPathParameterName represents the name of the path parameter for event.
 	eventPathParameterName = "eventid"
 
