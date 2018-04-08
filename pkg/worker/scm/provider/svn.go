@@ -53,7 +53,6 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 
 	url = strings.TrimSuffix(url, "/") + "/" + ref
 
-	fmt.Println("url :", url)
 	username, password, err := s.spilitToken(token)
 	if err != nil {
 		return "", err
@@ -68,7 +67,6 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 	}
 	log.InfoWithFields("Successfully svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
 
-	fmt.Println(" clone output :", string(output))
 	return string(output), err
 }
 
@@ -101,8 +99,6 @@ func (s *Svn) GetCommitLog(repoPath string) api.CommitLog {
 	if err != nil {
 		log.Errorf("get commit log error as %v", err)
 	}
-
-	fmt.Println(" clone info :", string(output))
 
 	lineinfos := strings.Split(string(output), "\n")
 	for _, lineinfo := range lineinfos {

@@ -238,7 +238,7 @@ func rebuildToken(token string, codeSource *api.CodeSource) (string, error) {
 	return token, nil
 }
 
-// getRef provide the ref(branch or tag) of the code.
+// getURL provide the URL of the code.
 func getURL(codeSource *api.CodeSource) (string, error) {
 	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {

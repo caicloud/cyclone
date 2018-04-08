@@ -99,17 +99,17 @@ func TestExecCodeCheckout(t *testing.T) {
 			},
 			true,
 		},
-		"correct svn": {
-			&api.CodeCheckoutStage{
-				MainRepo: &api.CodeSource{
-					Type: api.SVN,
-					SVN: &api.GitSource{
-						Url: "http://192.168.21.100/svn/caicloud/cyclone",
-					},
-				},
-			},
-			true,
-		},
+		//"correct svn": {
+		//	&api.CodeCheckoutStage{
+		//		MainRepo: &api.CodeSource{
+		//			Type: api.SVN,
+		//			SVN: &api.GitSource{
+		//				Url: "http://192.168.21.100/svn/caicloud/cyclone",
+		//			},
+		//		},
+		//	},
+		//	true,
+		//},
 		//"correct private github": {
 		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{
@@ -139,7 +139,7 @@ func TestExecCodeCheckout(t *testing.T) {
 		// Cleanup the temp folder.
 		os.RemoveAll(codeDir)
 		stage = tc.inputs
-		err := stageManager.ExecCodeCheckout("user001:caicloud", stage)
+		err := stageManager.ExecCodeCheckout("", stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
