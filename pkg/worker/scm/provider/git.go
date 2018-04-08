@@ -43,8 +43,40 @@ func init() {
 	}
 }
 
-func (g *Git) Clone(url, ref, destPath string) (string, error) {
+func (g *Git) rebuildURL(token, url string) (string, error) {
+	// insert token
+	if token != "" {
+		position := -1
+		if strings.HasPrefix(url, "http://") {
+			position = len("http://")
+		} else if strings.HasPrefix(url, "https://") {
+			position = len("https://")
+		}
+		if position > 0 {
+			url = insert(url, token+"@", position)
+		}
+	}
+
+	return url, nil
+}
+
+// This function is used to insert the string "insertion" into the "url"
+// at the "index" postiion
+func insert(url, insertion string, index int) string {
+	result := make([]byte, len(url)+len(insertion))
+	slice := []byte(url)
+	at := copy(result, slice[:index])
+	at += copy(result[at:], insertion)
+	copy(result[at:], slice[index:])
+	return string(result)
+}
+
+func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 	log.Info("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
+	url, err := g.rebuildURL(token, url)
+	if err != nil {
+		return "", err
+	}
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
@@ -74,8 +106,8 @@ func (g *Git) Clone(url, ref, destPath string) (string, error) {
 	return outputs, nil
 }
 
-// GetTagCommit implements VCS interface.
-func (g *Git) GetCommit(repoPath string) (string, error) {
+// GetCommitID implements VCS interface.
+func (g *Git) GetCommitID(repoPath string) (string, error) {
 	args := []string{"log", "-n", "1", `--pretty=format:"%H"`}
 	output, err := executil.RunInDir(repoPath, "git", args...)
 

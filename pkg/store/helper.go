@@ -41,9 +41,9 @@ func encryptPasswordsForProjects(project *api.Project, saltKey string) error {
 
 	scm := project.SCM
 	if scm != nil {
-		// Tokens are used when SCM is Github or Gitlab, and passwords are not stored.
+		// Tokens are used when SCM is Github or Gitlab or svn, and passwords are not stored.
 		// So only need to encrypt tokens.
-		if scm.Type == api.GitHub || scm.Type == api.GitLab {
+		if scm.Type == api.GitHub || scm.Type == api.GitLab || scm.Type == api.SVN {
 			encryptToken, err := encryptutil.Encrypt(scm.Token, saltKey)
 			if err != nil {
 				log.Errorf("fail to encrypt SCM token for project %s as %v", project.Name, err)
@@ -71,9 +71,9 @@ func decryptPasswordsForProjects(project *api.Project, saltKey string) error {
 
 	scm := project.SCM
 	if scm != nil {
-		// Tokens are used when SCM is Github or Gitlab, and passwords are not stored.
+		// Tokens are used when SCM is Github or Gitlab or svn, and passwords are not stored.
 		// So only need to decrypt tokens.
-		if scm.Type == api.GitHub || scm.Type == api.GitLab {
+		if scm.Type == api.GitHub || scm.Type == api.GitLab || scm.Type == api.SVN {
 			decryptToken, err := encryptutil.Decrypt(scm.Token, saltKey)
 			if err != nil {
 				log.Errorf("fail to decrypt SCM token for project %s as %v", project.Name, err)

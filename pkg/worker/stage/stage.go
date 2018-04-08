@@ -641,8 +641,12 @@ func watchLogs(filePath string, lines chan []byte, stop chan bool) error {
 // replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version
 func formatPipelineRecordName(id string) {
 	if event.PipelineRecord.Name == "" && id != "" {
-		version := fmt.Sprintf("%s-%s", id[:7], event.PipelineRecord.StartTime.Format("060102150405"))
-		event.PipelineRecord.Name = version
+		if len(id) > 7 {
+			event.PipelineRecord.Name = fmt.Sprintf("%s-%s", id[:7], event.PipelineRecord.StartTime.Format("060102150405"))
+		} else {
+			event.PipelineRecord.Name = fmt.Sprintf("%s-%s", id, event.PipelineRecord.StartTime.Format("060102150405"))
+		}
+
 	}
 }
 

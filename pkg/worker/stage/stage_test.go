@@ -99,6 +99,17 @@ func TestExecCodeCheckout(t *testing.T) {
 			},
 			true,
 		},
+		//"correct svn": {
+		//	&api.CodeCheckoutStage{
+		//		MainRepo: &api.CodeSource{
+		//			Type: api.SVN,
+		//			SVN: &api.GitSource{
+		//				Url: "http://192.168.21.100/svn/caicloud/cyclone",
+		//			},
+		//		},
+		//	},
+		//	true,
+		//},
 		//"correct private github": {
 		//	&api.CodeCheckoutStage{
 		//		MainRepo: &api.CodeSource{

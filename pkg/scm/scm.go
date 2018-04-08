@@ -128,7 +128,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 			}
 		}
 	case api.SVN:
-		return fmt.Errorf("SCM %s is not supported", scmType)
+		generatedToken, _ = provider.GetToken(config)
 	default:
 		return fmt.Errorf("SCM type %s is unknow", scmType)
 	}
