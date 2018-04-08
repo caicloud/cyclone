@@ -386,7 +386,8 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 
 func generateWebhookURL(scmType api.SCMType, pipelineID string) string {
 	callbackURL := osutil.GetStringEnv(cloud.CallbackURL, "http://127.0.0.1:7099/v1")
-	return fmt.Sprintf("%s/%swebhooks/%s", callbackURL, strings.ToLower(string(scmType)), pipelineID)
+	callbackURL = strings.TrimSuffix(callbackURL, "/")
+	return fmt.Sprintf("%s/%s/%swebhook", callbackURL, pipelineID, strings.ToLower(string(scmType)))
 }
 
 func collectSCMEvents(scmTrigger *api.SCMTrigger) []scm.EventType {

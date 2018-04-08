@@ -238,7 +238,7 @@ func (g *GitHub) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.
 	if err != nil {
 		return err
 	}
-	hookName := "web"
+	hookName := "cyclone-webhook"
 	hook := github.Hook{
 		Name:   &hookName,
 		Events: convertToGithubEvents(webHook.Events),
