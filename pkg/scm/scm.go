@@ -52,7 +52,7 @@ type SCMProvider interface {
 	ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 	ListTags(scm *api.SCMConfig, repo string) ([]string, error)
 	CheckToken(scm *api.SCMConfig) bool
-	NewTagFromLatest(tagName, description, commitID, url, token string) error
+	NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error
 	CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *WebHook) error
 	DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error
 }
@@ -145,7 +145,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	return nil
 }
 
-func NewTagFromLatest(codeSource *api.CodeSource, tagName, description, token string) error {
+func NewTagFromLatest(codeSource *api.CodeSource, scm *api.SCMConfig, tagName, description string) error {
 	commitID, err := wscm.GetCommitID(codeSource, "")
 	if err != nil {
 		return err
@@ -164,7 +164,7 @@ func NewTagFromLatest(codeSource *api.CodeSource, tagName, description, token st
 		return err
 	}
 
-	err = p.NewTagFromLatest(tagName, description, commitID, url, token)
+	err = p.NewTagFromLatest(scm, tagName, description, commitID, url)
 	if err != nil {
 		return err
 	}
