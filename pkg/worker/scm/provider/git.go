@@ -34,11 +34,11 @@ import (
 type Git struct{}
 
 func init() {
-	if err := scm.RegisterProvider(api.GitHub, new(Git)); err != nil {
+	if err := scm.RegisterProvider(api.Github, new(Git)); err != nil {
 		log.Error(err)
 	}
 
-	if err := scm.RegisterProvider(api.GitLab, new(Git)); err != nil {
+	if err := scm.RegisterProvider(api.Gitlab, new(Git)); err != nil {
 		log.Error(err)
 	}
 }

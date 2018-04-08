@@ -103,7 +103,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	var generatedToken string
 
 	switch scmType {
-	case api.GitHub:
+	case api.Github:
 		// Github username is required.
 		if len(config.Username) == 0 {
 			err := fmt.Errorf("username of Github is required")
@@ -118,7 +118,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				return err
 			}
 		}
-	case api.GitLab:
+	case api.Gitlab:
 		// If username and password is provided, generate the new token.
 		if len(config.Username) != 0 && len(config.Password) != 0 {
 			generatedToken, err = provider.GetToken(config)

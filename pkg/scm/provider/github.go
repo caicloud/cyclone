@@ -36,19 +36,19 @@ const (
 	listPerPageOpt = 30
 )
 
-// GitHub represents the SCM provider of GitHub.
-type GitHub struct{}
+// Github represents the SCM provider of Github.
+type Github struct{}
 
 func init() {
-	if err := scm.RegisterProvider(api.GitHub, new(GitHub)); err != nil {
+	if err := scm.RegisterProvider(api.Github, new(Github)); err != nil {
 		log.Errorln(err)
 	}
 }
 
 // GetToken gets the token by the username and password of SCM config.
-func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
+func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
 	if len(scm.Username) == 0 || len(scm.Password) == 0 {
-		return "", fmt.Errorf("GitHub username or password is missing")
+		return "", fmt.Errorf("Github username or password is missing")
 	}
 
 	client, err := newClientByBasicAuth(scm.Username, scm.Password)
@@ -99,7 +99,7 @@ func (g *GitHub) GetToken(scm *api.SCMConfig) (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
-func (g *GitHub) CheckToken(scm *api.SCMConfig) bool {
+func (g *Github) CheckToken(scm *api.SCMConfig) bool {
 	if _, err := g.ListRepos(scm); err != nil {
 		return false
 	}
@@ -107,7 +107,7 @@ func (g *GitHub) CheckToken(scm *api.SCMConfig) bool {
 }
 
 // ListRepos lists the repos by the SCM config.
-func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+func (g *Github) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (g *GitHub) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 }
 
 // ListBranches lists the branches for specified repo.
-func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+func (g *Github) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (g *GitHub) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 }
 
 // ListTags lists the tags for specified repo.
-func (g *GitHub) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+func (g *Github) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
@@ -229,7 +229,7 @@ func (g *GitHub) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 }
 
 // CreateWebHook creates webhook for specified repo.
-func (g *GitHub) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+func (g *Github) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webHook)
 	}
@@ -253,7 +253,7 @@ func (g *GitHub) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.
 }
 
 // DeleteWebHook deletes webhook from specified repo.
-func (g *GitHub) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
+func (g *Github) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return err
@@ -277,7 +277,7 @@ func (g *GitHub) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl st
 	return nil
 }
 
-// newClientByBasicAuth news GitHub client by basic auth, supports two types: username with password; username
+// newClientByBasicAuth news Github client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
 func newClientByBasicAuth(username, password string) (*github.Client, error) {
@@ -293,9 +293,9 @@ func newClientByBasicAuth(username, password string) (*github.Client, error) {
 	return github.NewClient(client), nil
 }
 
-// newClientByToken news GitHub client by token.
+// newClientByToken news Github client by token.
 func newClientByToken(token string) *github.Client {
-	// Use token to new GitHub client.
+	// Use token to new Github client.
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
@@ -305,7 +305,7 @@ func newClientByToken(token string) *github.Client {
 }
 
 // NewTagFromLatest generate a new tag
-func (g *GitHub) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
+func (g *Github) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
 	client := newClientByToken(cfg.Token)
 
 	objecttype := "commit"

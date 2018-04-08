@@ -220,7 +220,7 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 func rebuildToken(token string, codeSource *api.CodeSource) (string, error) {
 	scmType := codeSource.Type
 
-	if scmType == api.GitLab && token != "" {
+	if scmType == api.Gitlab && token != "" {
 		token = "oauth2:" + token
 	}
 

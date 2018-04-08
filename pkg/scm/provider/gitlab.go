@@ -32,20 +32,20 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 )
 
-// gitLabServer represents the server address for public GitLab.
+// gitLabServer represents the server address for public Gitlab.
 const gitLabServer = "https://gitlab.com"
 
-// GitLab represents the SCM provider of GitLab.
-type GitLab struct{}
+// Gitlab represents the SCM provider of Gitlab.
+type Gitlab struct{}
 
 func init() {
-	if err := scm.RegisterProvider(api.GitLab, new(GitLab)); err != nil {
+	if err := scm.RegisterProvider(api.Gitlab, new(Gitlab)); err != nil {
 		log.Errorln(err)
 	}
 }
 
 // GetToken gets the token by the username and password of SCM config.
-func (g *GitLab) GetToken(scm *api.SCMConfig) (string, error) {
+func (g *Gitlab) GetToken(scm *api.SCMConfig) (string, error) {
 	if len(scm.Username) == 0 || len(scm.Password) == 0 {
 		return "", fmt.Errorf("GitHub username or password is missing")
 	}
@@ -106,7 +106,7 @@ func (g *GitLab) GetToken(scm *api.SCMConfig) (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
-func (g *GitLab) CheckToken(scm *api.SCMConfig) bool {
+func (g *Gitlab) CheckToken(scm *api.SCMConfig) bool {
 	if _, err := g.ListRepos(scm); err != nil {
 		return false
 	}
@@ -114,8 +114,8 @@ func (g *GitLab) CheckToken(scm *api.SCMConfig) bool {
 }
 
 // ListRepos lists the repos by the SCM config.
-func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
-	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
+func (g *Gitlab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +151,8 @@ func (g *GitLab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 }
 
 // ListBranches lists the branches for specified repo.
-func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
+func (g *Gitlab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -172,8 +172,8 @@ func (g *GitLab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 }
 
 // ListTags lists the tags for specified repo.
-func (g *GitLab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newGitLabClient(scm.Server, scm.Username, scm.Token)
+func (g *Gitlab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -193,12 +193,12 @@ func (g *GitLab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 }
 
 // CreateWebHook creates webhook for specified repo.
-func (g *GitLab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+func (g *Gitlab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webHook)
 	}
 
-	client, err := newGitLabClient(cfg.Server, cfg.Username, cfg.Token)
+	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}
@@ -232,8 +232,8 @@ func (g *GitLab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.
 }
 
 // DeleteWebHook deletes webhook from specified repo.
-func (g *GitLab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl string) error {
-	client, err := newGitLabClient(cfg.Server, cfg.Username, cfg.Token)
+func (g *Gitlab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl string) error {
+	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}
@@ -254,8 +254,8 @@ func (g *GitLab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl st
 	return nil
 }
 
-// newGitLabClient news GitLab client by token.If username is empty, use private-token instead of oauth2.0 token.
-func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
+// newGitlabClient news Gitlab client by token.If username is empty, use private-token instead of oauth2.0 token.
+func newGitlabClient(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
 
 	if len(username) == 0 {
@@ -273,8 +273,8 @@ func newGitLabClient(server, username, token string) (*gitlab.Client, error) {
 }
 
 // NewTagFromLatest generate a new tag
-func (g *GitLab) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
-	client, err := newGitLabClient(cfg.Server, cfg.Username, cfg.Token)
+func (g *Gitlab) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
+	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}

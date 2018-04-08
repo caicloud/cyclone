@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -27,7 +25,6 @@ import (
 
 // encryptPasswordsForProjects encrypts passwords for projects before them are stored.
 func encryptPasswordsForProjects(project *api.Project, saltKey string) error {
-	fmt.Printf("key: %s; len: %d\n", saltKey, len(saltKey))
 	// Encrypt the passwords.
 	if project.Registry != nil {
 		encryptPwd, err := encryptutil.Encrypt(project.Registry.Password, saltKey)
@@ -43,7 +40,7 @@ func encryptPasswordsForProjects(project *api.Project, saltKey string) error {
 	if scm != nil {
 		// Tokens are used when SCM is Github or Gitlab or svn, and passwords are not stored.
 		// So only need to encrypt tokens.
-		if scm.Type == api.GitHub || scm.Type == api.GitLab || scm.Type == api.SVN {
+		if scm.Type == api.Github || scm.Type == api.Gitlab || scm.Type == api.SVN {
 			encryptToken, err := encryptutil.Encrypt(scm.Token, saltKey)
 			if err != nil {
 				log.Errorf("fail to encrypt SCM token for project %s as %v", project.Name, err)
@@ -73,7 +70,7 @@ func decryptPasswordsForProjects(project *api.Project, saltKey string) error {
 	if scm != nil {
 		// Tokens are used when SCM is Github or Gitlab or svn, and passwords are not stored.
 		// So only need to decrypt tokens.
-		if scm.Type == api.GitHub || scm.Type == api.GitLab || scm.Type == api.SVN {
+		if scm.Type == api.Github || scm.Type == api.Gitlab || scm.Type == api.SVN {
 			decryptToken, err := encryptutil.Decrypt(scm.Token, saltKey)
 			if err != nil {
 				log.Errorf("fail to decrypt SCM token for project %s as %v", project.Name, err)
