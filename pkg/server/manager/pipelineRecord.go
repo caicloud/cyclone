@@ -183,7 +183,7 @@ func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string
 	}
 
 	for _, record := range records {
-		if err := ds.DeletePipelineByID(record.ID); err != nil {
+		if err := ds.DeletePipelineRecordByID(record.ID); err != nil {
 			return fmt.Errorf("Fail to delete the record %s for pipeline %s as %s", record.ID, pipeline.Name, err.Error())
 		}
 	}
