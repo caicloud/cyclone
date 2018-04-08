@@ -294,18 +294,20 @@ func newClientByBasicAuth(username, password string) (*github.Client, error) {
 }
 
 // newClientByToken news GitHub client by token.
-func newClientByToken(token string) (*github.Client, error) {
+func newClientByToken(token string) *github.Client {
 	// Use token to new GitHub client.
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
-	return github.NewClient(httpClient), nil
+	return github.NewClient(httpClient)
 }
 
 // NewTagFromLatest generate a new tag
-func (g *GitHub) NewTagFromLatest(tagName, description, commitID, url, token string) error {
+func (g *GitHub) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
+	client := newClientByToken(cfg.Token)
+
 	objecttype := "commit"
 	curtime := time.Now()
 	email := "circle@caicloud.io"
@@ -324,12 +326,6 @@ func (g *GitHub) NewTagFromLatest(tagName, description, commitID, url, token str
 			Email: &email,
 		},
 	}
-
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-	client := github.NewClient(tc)
 
 	owner, repo := parseURL(url)
 	_, _, err := client.Git.CreateTag(owner, repo, tag)

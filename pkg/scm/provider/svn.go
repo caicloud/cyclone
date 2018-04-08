@@ -80,8 +80,8 @@ func (s *SVN) CheckToken(scm *api.SCMConfig) bool {
 	return true
 }
 
-func (s *SVN) NewTagFromLatest(tagName, description, commitID, url, token string) error {
-	username, password, err := s.spilitToken(token)
+func (s *SVN) NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error {
+	username, password, err := s.spilitToken(scm.Token)
 	if err != nil {
 		return err
 	}
