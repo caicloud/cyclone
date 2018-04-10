@@ -567,7 +567,12 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	if err != nil {
 		return err
 	}
-	defer logFile.Close()
+
+	defer func() {
+		logFile.WriteString(generateStageFinishLog(api.ImageReleaseStageName, err))
+		logFile.Close()
+	}()
+	logFile.WriteString(generateStageStartLog(api.ImageReleaseStageName))
 
 	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, "", fileName, closeLog)
 
