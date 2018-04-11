@@ -542,7 +542,7 @@ type StatsOverview struct {
 }
 
 type StatsDetail struct {
-	Timestamp string `json:"timestamp"`
+	Timestamp int64 `json:"timestamp"`
 	StatsStatus
 }
 
