@@ -197,7 +197,7 @@ func watchLogs(ws *websocket.Conn, filePath string, close chan struct{}) error {
 	defer logFile.Close()
 
 	buf := bufio.NewReader(logFile)
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(10 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
