@@ -154,7 +154,7 @@ func (d *DataStore) FindRecentRecordsByPipelineID(pipelineID string, filter map[
 // FindPipelineRecordsByStartTime finds the pipeline records by startTime.
 func (d *DataStore) FindPipelineRecordsByStartTime(pipelineID string, start, end time.Time) ([]api.PipelineRecord, int, error) {
 	pipelineRecords := []api.PipelineRecord{}
-	query := bson.M{"pipelineID": pipelineID, "startTime": bson.M{"$gte": start, "$lt": end}}
+	query := bson.M{"pipelineID": pipelineID, "startTime": bson.M{"$gte": start, "$lte": end}}
 	collection := d.pipelineRecordCollection.Find(query)
 	count, err := collection.Count()
 	if err != nil {

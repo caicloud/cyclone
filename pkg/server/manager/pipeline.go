@@ -478,9 +478,9 @@ func transRecordsToStats(records []api.PipelineRecord, start, end time.Time) (*a
 	return statistics, nil
 }
 
-func formatTimeToDay(t time.Time) string {
-	formater := "2006-01-02Z"
-	return t.Format(formater)
+func formatTimeToDay(t time.Time) int64 {
+	timestamp := t.Unix()
+	return timestamp - (timestamp % 86400)
 }
 
 func statsStatus(s api.StatsStatus, recordStatus api.Status) api.StatsStatus {
