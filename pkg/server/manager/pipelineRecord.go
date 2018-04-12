@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	log "github.com/golang/glog"
 	"github.com/gorilla/websocket"
@@ -32,6 +33,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/store"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
 const (
@@ -232,9 +234,11 @@ func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID, sta
 	}
 
 	if !fileutil.FileExists(logFilePath) {
-		return fmt.Errorf("log file %s already exists", logFilePath)
+		return fmt.Errorf("log file %s does not exist", logFilePath)
 	}
 
+	pingTicker := time.NewTicker(websocketutil.PingPeriod)
+	sendTicker := time.NewTicker(10 * time.Millisecond)
 	file, err := os.Open(logFilePath)
 	if err != nil {
 		log.Errorf("fail to open the log file %s as %s", logFilePath, err.Error())
@@ -243,17 +247,37 @@ func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID, sta
 	defer file.Close()
 
 	buf := bufio.NewReader(file)
+	var line []byte
 	for {
-		line, err := buf.ReadBytes('\n')
-		if err == io.EOF {
-			continue
-		}
+		select {
+		case <-pingTicker.C:
+			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+			if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
+					return nil
+				}
+				return err
+			}
+		case <-sendTicker.C:
+			line, err = buf.ReadBytes('\n')
+			if err == io.EOF {
+				continue
+			}
 
-		if err != nil {
-			ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
-			break
+			if err != nil {
+				ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
+				break
+			}
+
+			err = ws.WriteMessage(websocket.TextMessage, line)
+			if err != nil {
+				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
+					return nil
+				}
+				return err
+			}
+			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
 		}
-		ws.WriteMessage(websocket.TextMessage, line)
 	}
 
 	return nil
@@ -277,12 +301,15 @@ func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID,
 	}
 	defer file.Close()
 
+	var message []byte
 	for {
-		_, message, err := ws.ReadMessage()
+		_, message, err = ws.ReadMessage()
 		if err != nil {
 			if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
 				return nil
 			}
+
+			log.Infoln(err)
 			return err
 		}
 		_, err = file.Write(message)
