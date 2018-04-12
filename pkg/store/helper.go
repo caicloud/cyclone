@@ -21,6 +21,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	encryptutil "github.com/caicloud/cyclone/pkg/util/encrypt"
+	"strings"
 )
 
 // encryptPasswordsForProjects encrypts passwords for projects before them are stored.
@@ -78,6 +79,11 @@ func decryptPasswordsForProjects(project *api.Project, saltKey string) error {
 			}
 
 			project.SCM.Token = decryptToken
+
+			// password is needed when updating project.
+			if scm.Type == api.SVN {
+				project.SCM.Password = strings.TrimPrefix(decryptToken, project.SCM.Username+api.SVNUsernPwdSep)
+			}
 		}
 	}
 
