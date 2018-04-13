@@ -94,8 +94,8 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Name:        fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
-			Ref:         *event.Release.TagName,
+			Name:        *event.Release.TagName,
+			Ref:         fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
@@ -209,8 +209,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			// TODO (robin) Unify the ref here.
-			Name:        fmt.Sprintf(tagRefTemplate, strings.Split(event.Ref, "/")[2]),
+			Name:        strings.Split(event.Ref, "/")[2],
 			Ref:         event.Ref,
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
