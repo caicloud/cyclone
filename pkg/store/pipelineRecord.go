@@ -76,8 +76,6 @@ func (d *DataStore) FindPipelineRecordByID(pipelineRecordID string) (*api.Pipeli
 
 // UpdatePipelineRecord updates the pipeline record.
 func (d *DataStore) UpdatePipelineRecord(pipelineRecord *api.PipelineRecord) error {
-	pipelineRecord.EndTime = time.Now()
-
 	return d.pipelineRecordCollection.UpdateId(pipelineRecord.ID, pipelineRecord)
 }
 
