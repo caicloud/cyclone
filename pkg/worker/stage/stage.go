@@ -98,78 +98,37 @@ func (sm *stageManager) SetEvent(e *api.Event) {
 
 // ExecCodeCheckout Checkout code and report real-time status to cycloue server.
 func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) (err error) {
-	event.PipelineRecord.StageStatus.CodeCheckout = &api.CodeCheckoutStageStatus{
-		GeneralStageStatus: api.GeneralStageStatus{
-			Status:    api.Running,
-			StartTime: time.Now(),
-		},
-	}
-	sm.cycloneClient.SendEvent(event)
-
-	closeLog := make(chan struct{})
+	errChan := make(chan error)
 	defer func() {
-		if err != nil {
-			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Failed
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("code checkout fail : %v", err)
-		} else {
-			event.PipelineRecord.StageStatus.CodeCheckout.Status = api.Success
-		}
-
-		event.PipelineRecord.StageStatus.CodeCheckout.EndTime = time.Now()
-		sm.cycloneClient.SendEvent(event)
-
-		time.Sleep(waitTime)
-		close(closeLog)
+		errChan <- err
+		sm.updateEventAfterStage(api.CodeCheckoutStageName, err)
 	}()
 
-	logs, err := scm.CloneRepos(token, stage, sm.performParams.Ref)
+	logFile, err := sm.startWatchLogs(api.CodeCheckoutStageName, "", errChan)
 	if err != nil {
 		logdog.Error(err.Error())
 		return err
 	}
 
-	fileName := fmt.Sprintf(logFileNameTemplate, api.CodeCheckoutStageName)
-	logFile, err := os.Create(fileName)
+	logs, err := scm.CloneRepos(token, stage, sm.performParams.Ref)
 	if err != nil {
+		logdog.Error(err.Error())
+		logFile.WriteString(err.Error())
 		return err
+	} else {
+		// Just one line of log, will add more detailed logs.
+		logFile.WriteString(logs)
 	}
-	defer func() {
-		logFile.WriteString(generateStageFinishLog(api.CodeCheckoutStageName, err))
-		logFile.Close()
-	}()
-	logFile.WriteString(generateStageStartLog(api.CodeCheckoutStageName))
-
-	// Just one line of log, will add more detailed logs.
-	logFile.WriteString(logs)
-
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.CodeCheckoutStageName, "", fileName, closeLog)
 
 	setCommits(stage)
 	return nil
 }
 
 func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *api.BuildInfo, unitTestStage *api.UnitTestStage, packageStage *api.PackageStage) (err error) {
-	event.PipelineRecord.StageStatus.Package = &api.GeneralStageStatus{
-		Status:    api.Running,
-		StartTime: time.Now(),
-	}
-	sm.cycloneClient.SendEvent(event)
-
-	closeLog := make(chan struct{})
+	errChan := make(chan error)
 	defer func() {
-		if err != nil {
-			event.PipelineRecord.StageStatus.Package.Status = api.Failed
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("package fail : %v", err)
-		} else {
-			event.PipelineRecord.StageStatus.Package.Status = api.Success
-		}
-		event.PipelineRecord.StageStatus.Package.EndTime = time.Now()
-		sm.cycloneClient.SendEvent(event)
-
-		time.Sleep(waitTime)
-		close(closeLog)
+		errChan <- err
+		sm.updateEventAfterStage(api.PackageStageName, err)
 	}()
 
 	// Trick: bind the docker sock file to container to support
@@ -196,6 +155,12 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 
 		hostConfig.Binds = append(hostConfig.Binds, bindVolume)
+	}
+
+	logFile, err := sm.startWatchLogs(api.PackageStageName, "", errChan)
+	if err != nil {
+		log.Infof("fail to watch package log as %v", err)
+		return
 	}
 
 	// Start and run the container from builder image.
@@ -229,19 +194,6 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	if unitTestStage != nil {
 		cmds = append(unitTestStage.Command, cmds...)
 	}
-
-	fileName := fmt.Sprintf(logFileNameTemplate, api.PackageStageName)
-	logFile, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		logFile.WriteString(generateStageFinishLog(api.PackageStageName, err))
-		logFile.Close()
-	}()
-	logFile.WriteString(generateStageStartLog(api.PackageStageName))
-
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.PackageStageName, "", fileName, closeLog)
 
 	eo := docker.ExecOptions{
 		AttachStdout: true,
@@ -284,38 +236,18 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	return nil
 }
 
-func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, error) {
-	var err error
-	event.PipelineRecord.StageStatus.ImageBuild = &api.GeneralStageStatus{
-		Status:    api.Running,
-		StartTime: time.Now(),
-	}
-	sm.cycloneClient.SendEvent(event)
-
-	closeLog := make(chan struct{})
+func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) (builtImages []string, err error) {
 	defer func() {
-		if err != nil {
-			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Failed
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("image build fail : %v", err)
-		} else {
-			event.PipelineRecord.StageStatus.ImageBuild.Status = api.Success
-		}
-		event.PipelineRecord.StageStatus.ImageBuild.EndTime = time.Now()
-		sm.cycloneClient.SendEvent(event)
-
-		time.Sleep(waitTime)
-		close(closeLog)
+		sm.updateEventAfterStage(api.ImageBuildStageName, err)
 	}()
 
-	builtImages := []string{}
 	wg := sync.WaitGroup{}
 	for _, buildInfo := range stage.BuildInfos {
 		wg.Add(1)
 		go func(buildInfo *api.ImageBuildInfo) {
 			defer wg.Done()
 
-			if image, bErr := sm.buildImage(buildInfo, closeLog); bErr != nil {
+			if image, bErr := sm.buildImage(buildInfo); bErr != nil {
 				log.Errorf("Fail to build image %s as %v", buildInfo.TaskName, bErr)
 				err = bErr
 			} else {
@@ -328,25 +260,17 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) ([]string, er
 	return builtImages, err
 }
 
-func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, close chan struct{}) (image string, err error) {
-	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageBuildStageName)
-	if buildInfo.TaskName != "" {
-		fileName = fmt.Sprintf(logFileNameTemplate, fmt.Sprintf("%s-%s", api.ImageBuildStageName, buildInfo.TaskName))
-	}
-
-	logFile, err := os.Create(fileName)
-	if err != nil {
-		return "", err
-	}
-	defer logFile.Close()
-
+func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (image string, err error) {
+	errChan := make(chan error)
 	defer func() {
-		logFile.WriteString(generateStageFinishLog(api.ImageBuildStageName, err))
-		logFile.Close()
+		errChan <- err
 	}()
-	logFile.WriteString(generateStageStartLog(api.ImageBuildStageName))
 
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageBuildStageName, buildInfo.TaskName, fileName, close)
+	logFile, err := sm.startWatchLogs(api.ImageBuildStageName, buildInfo.TaskName, errChan)
+	if err != nil {
+		log.Infof("fail to watch image build log as %v", err)
+		return
+	}
 
 	authOpts := docker_client.AuthConfigurations{
 		Configs: make(map[string]docker_client.AuthConfiguration),
@@ -394,29 +318,19 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, close chan str
 }
 
 func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) (err error) {
-	event.PipelineRecord.StageStatus.IntegrationTest = &api.GeneralStageStatus{
-		Status:    api.Running,
-		StartTime: time.Now(),
-	}
-	sm.cycloneClient.SendEvent(event)
-
-	closeLog := make(chan struct{})
+	errChan := make(chan error)
 	defer func() {
-		if err != nil {
-			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Failed
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("integration test fail : %v", err)
-		} else {
-			event.PipelineRecord.StageStatus.IntegrationTest.Status = api.Success
-		}
-		event.PipelineRecord.StageStatus.IntegrationTest.EndTime = time.Now()
-		sm.cycloneClient.SendEvent(event)
-
-		time.Sleep(waitTime)
-		close(closeLog)
+		errChan <- err
+		sm.updateEventAfterStage(api.IntegrationTestStageName, err)
 	}()
 
 	log.Infof("Exec integration test stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
+
+	logFile, err := sm.startWatchLogs(api.IntegrationTestStageName, "", errChan)
+	if err != nil {
+		log.Infof("fail to watch integration test log as %v", err)
+		return
+	}
 
 	// Start the services.
 	serviceInfos, err := sm.StartServicesForIntegrationTest(stage.Services)
@@ -476,20 +390,6 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		}
 	}()
 
-	fileName := fmt.Sprintf(logFileNameTemplate, api.IntegrationTestStageName)
-	logFile, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		logFile.WriteString(generateStageFinishLog(api.ImageBuildStageName, err))
-		logFile.Close()
-	}()
-	logFile.WriteString(generateStageStartLog(api.ImageBuildStageName))
-
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.IntegrationTestStageName, "", fileName, closeLog)
-
 	eo := docker.ExecOptions{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -536,45 +436,19 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 }
 
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
-	event.PipelineRecord.StageStatus.ImageRelease = &api.ImageReleaseStageStatus{
-		GeneralStageStatus: api.GeneralStageStatus{
-			Status:    api.Running,
-			StartTime: time.Now(),
-		},
-	}
-	sm.cycloneClient.SendEvent(event)
-
-	closeLog := make(chan struct{})
+	errChan := make(chan error)
 	defer func() {
-		if err != nil {
-			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Failed
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("build images fail : %v", err)
-		} else {
-			event.PipelineRecord.StageStatus.ImageRelease.Status = api.Success
-		}
-		event.PipelineRecord.StageStatus.ImageRelease.EndTime = time.Now()
-		sm.cycloneClient.SendEvent(event)
-
-		time.Sleep(waitTime)
-		close(closeLog)
+		errChan <- err
+		sm.updateEventAfterStage(api.ImageReleaseStageName, err)
 	}()
 
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
-	fileName := fmt.Sprintf(logFileNameTemplate, api.ImageReleaseStageName)
-	logFile, err := os.Create(fileName)
+	logFile, err := sm.startWatchLogs(api.ImageReleaseStageName, "", errChan)
 	if err != nil {
-		return err
+		log.Infof("fail to watch image release log as %v", err)
+		return
 	}
-
-	defer func() {
-		logFile.WriteString(generateStageFinishLog(api.ImageReleaseStageName, err))
-		logFile.Close()
-	}()
-	logFile.WriteString(generateStageStartLog(api.ImageReleaseStageName))
-
-	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, api.ImageReleaseStageName, "", fileName, closeLog)
 
 	for _, p := range stage.ReleasePolicy {
 		for _, builtImage := range builtImages {
@@ -598,6 +472,52 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	}
 
 	return nil
+}
+
+func (sm *stageManager) updateEventAfterStage(stage api.PipelineStageName, err error) {
+	if err != nil {
+		updateEvent(sm.cycloneClient, event, stage, api.Failed, err)
+	} else {
+		updateEvent(sm.cycloneClient, event, stage, api.Success, nil)
+	}
+}
+
+func (sm *stageManager) startWatchLogs(stage api.PipelineStageName, task string, errChan chan error) (*os.File, error) {
+	if err := updateEvent(sm.cycloneClient, event, stage, api.Running, nil); err != nil {
+		logdog.Error("fail to update event for stage %s as %v", stage, err)
+		return nil, err
+	}
+
+	fileName := fmt.Sprintf(logFileNameTemplate, stage)
+	if task != "" {
+		fileName = fmt.Sprintf(logFileNameTemplate, fmt.Sprintf("%s-%s", stage, task))
+	}
+
+	logFile, err := os.Create(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = logFile.WriteString(generateStageStartLog(stage)); err != nil {
+		logFile.Close()
+		return nil, err
+	}
+
+	closeLog := make(chan struct{})
+	go sm.cycloneClient.PushLogStream(sm.project, sm.pipeline, sm.recordID, stage, task, fileName, closeLog)
+
+	go func() {
+		err := <-errChan
+		logFile.WriteString(generateStageFinishLog(stage, err))
+
+		// Wait for a while to ensure finish log of stages are reported.
+		time.Sleep(waitTime)
+
+		close(closeLog)
+		logFile.Close()
+	}()
+
+	return logFile, nil
 }
 
 func convertEnvs(envVars []api.EnvVar) []string {

@@ -92,7 +92,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	stageManager.SetRecordInfo(project.Name, pipeline.Name, event.ID)
 	stageManager.SetEvent(event)
 
-	// Execute the code checkout stage,
+	// Execute the code checkout stage.
 	err = stageManager.ExecCodeCheckout(project.SCM.Token, build.Stages.CodeCheckout)
 	if err != nil {
 		logdog.Error(err.Error())
