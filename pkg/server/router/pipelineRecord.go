@@ -63,6 +63,7 @@ func (router *router) createPipelineRecord(request *restful.Request, response *r
 		PipelineID:    pipeline.ID,
 		PerformParams: performParams,
 		Trigger:       request.Request.Header.Get(httputil.HeaderUser),
+		Status:        api.Pending,
 	}
 	createdPipelineRecord, err := router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord)
 	if err != nil {

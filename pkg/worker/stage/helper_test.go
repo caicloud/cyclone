@@ -90,3 +90,34 @@ func TestGenerateStageFinishLog(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateRecordStageStatus(t *testing.T) {
+	pr := &api.PipelineRecord{
+		StageStatus: &api.StageStatus{
+			CodeCheckout: &api.CodeCheckoutStageStatus{},
+			Package:      &api.GeneralStageStatus{},
+		},
+	}
+
+	if err := updateRecordStageStatus(pr, api.CodeCheckoutStageName, api.Running, nil); err == nil {
+		if pr.StageStatus.CodeCheckout.Status != api.Running {
+			t.Errorf("expect code checkout stage status to be Running, but get %s", pr.StageStatus.CodeCheckout.Status)
+		}
+	} else {
+		t.Errorf("expect error to be nil, but got %v", err)
+	}
+
+	if err := updateRecordStageStatus(pr, api.PackageStageName, api.Failed, fmt.Errorf("meets error")); err == nil {
+		if pr.StageStatus.Package.Status != api.Failed {
+			t.Errorf("expect code checkout stage status to be Running, but get %s", pr.StageStatus.CodeCheckout.Status)
+		}
+		if pr.StageStatus.Package.EndTime.IsZero() {
+			t.Errorf("expect end time of package stage status not be empty")
+		}
+		if pr.ErrorMessage == "" {
+			t.Errorf("expect error message of record not be empty")
+		}
+	} else {
+		t.Errorf("expect error to be nil, but got %v", err)
+	}
+}

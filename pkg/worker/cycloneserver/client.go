@@ -154,8 +154,6 @@ func (c *client) GetEvent(id string) (*api.Event, error) {
 
 func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error {
 	path := fmt.Sprintf(apiPathForLogStream, project, pipeline, recordID)
-	log.Infof("Path: %s", path)
-
 	host := strings.TrimPrefix(c.baseURL, "http://")
 	host = strings.TrimPrefix(host, "https://")
 	requestUrl := url.URL{
@@ -168,6 +166,7 @@ func (c *client) PushLogStream(project, pipeline, recordID string, stage api.Pip
 	if task != "" {
 		requestUrl.RawQuery = requestUrl.RawQuery + "&task=" + task
 	}
+	log.Infof("Path: %s", requestUrl.String())
 
 	header := http.Header{
 		"Connection":            []string{"Upgrade"},
@@ -213,7 +212,7 @@ func watchLogs(ws *websocket.Conn, filePath string, close chan struct{}) error {
 
 			ws.WriteMessage(websocket.TextMessage, line)
 		case <-close:
-			fmt.Println("Close the watch of log file")
+			log.Info("Close the watch of log file")
 			return nil
 		}
 	}
