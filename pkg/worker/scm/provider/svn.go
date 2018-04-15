@@ -63,7 +63,7 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 	output, err := executil.RunInDir("./", "svn", args...)
 	if err != nil {
 		log.ErrorWithFields("Error when clone", log.Fields{"error": err})
-		return "", nil
+		return "", err
 	}
 	log.InfoWithFields("Successfully svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
 
