@@ -259,9 +259,11 @@ func (worker *Worker) yamlBuild(event *api.Event, tree *parser.Tree, dockerManag
 	}
 
 	// Always run prebuild.
-	if err = ciManager.ExecPreBuild(r); err != nil {
-		setEventFailStatus(event, err.Error())
-		return
+	if strings.Contains(operation, "package") {
+		if err = ciManager.ExecPreBuild(r); err != nil {
+			setEventFailStatus(event, err.Error())
+			return
+		}
 	}
 
 	// Run build if needed.
