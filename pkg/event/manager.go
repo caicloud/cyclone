@@ -136,7 +136,7 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 	} else {
 		event.QueueStatus = api.Handling
 		pipelineRecord.Status = api.Running
-
+		pipelineRecord.StartTime = time.Now()
 		if err = em.ds.UpdateEvent(event); err != nil {
 			log.Errorf("fail to update event %s as err: %s", eventID, err.Error())
 			return err
@@ -240,24 +240,25 @@ func UpdateEvent(event *api.Event) error {
 	ds := store.NewStore()
 	defer ds.Close()
 
-	err := ds.UpdatePipelineRecord(event.PipelineRecord)
-	if err != nil {
-		log.Errorf("Fail to update the pipeline record %s", event.PipelineRecord.ID)
-		return err
-	}
-
 	if IsEventFinished(event) {
 		log.Infof("Event %s has finished", eventID)
 		if err := ds.DeleteEvent(string(eventID)); err != nil {
 			log.Errorf("fail to delete the event %s", eventID)
 			return err
 		}
+		event.PipelineRecord.EndTime = time.Now()
 		postHookEvent(event)
 	} else {
 		if err := ds.UpdateEvent(event); err != nil {
 			log.Errorf("fail to update the event %s", eventID)
 			return err
 		}
+	}
+
+	err := ds.UpdatePipelineRecord(event.PipelineRecord)
+	if err != nil {
+		log.Errorf("Fail to update the pipeline record %s", event.PipelineRecord.ID)
+		return err
 	}
 
 	return nil
