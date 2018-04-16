@@ -257,18 +257,25 @@ func TestExecPackage(t *testing.T) {
 					},
 				},
 			},
-			buildInfo: &api.BuildInfo{},
+			buildInfo: &api.BuildInfo{
+				BuildTool: &api.BuildTool{
+					Name:    api.MavenBuildTool,
+					Version: "1.0",
+				},
+
+				CacheDependency: true,
+			},
 			unitTestStage: &api.UnitTestStage{
 				GeneralStage: api.GeneralStage{
 					Command: []string{"ls -la"},
 				},
-				Outputs: []string{},
+				Outputs: []string{"README.md"},
 			},
 			packageStage: &api.PackageStage{
 				GeneralStage: api.GeneralStage{
 					Command: []string{"ls -la"},
 				},
-				Outputs: []string{},
+				Outputs: []string{"README.md"},
 			},
 			pass: true,
 		},
@@ -276,6 +283,59 @@ func TestExecPackage(t *testing.T) {
 
 	for d, tc := range testCases {
 		err := stageManager.ExecPackage(tc.buildImage, tc.buildInfo, tc.unitTestStage, tc.packageStage)
+		if tc.pass && err != nil || !tc.pass && err == nil {
+			t.Errorf("%s failed as error: %v", d, err)
+		}
+	}
+}
+
+func TestExecIntegrationTest(t *testing.T) {
+	// Prepare the code folder.
+	dockerfileContent := "FROM alpine \nADD README.md /README.md"
+	readmeContent := "Hello Cyclone"
+	os.RemoveAll(codeDir)
+	os.MkdirAll(codeDir, os.ModePerm)
+	osutil.ReplaceFile(codeDir+"/Dockerfile", strings.NewReader(dockerfileContent))
+	osutil.ReplaceFile(codeDir+"/README.md", strings.NewReader(readmeContent))
+
+	testCases := map[string]struct {
+		builtImages []string
+		stage       *api.IntegrationTestStage
+		pass        bool
+	}{
+		"correct": {
+			builtImages: []string{"busybox:1.24.0"},
+			stage: &api.IntegrationTestStage{
+				Config: &api.IntegrationTestConfig{
+					ImageName: "busybox:1.24.0",
+					Command:   []string{"ls"},
+					EnvVars: []api.EnvVar{
+						api.EnvVar{
+							Name:  "TEST",
+							Value: "TEST",
+						},
+					},
+				},
+				Services: []api.Service{
+				//api.Service{
+				//	Name:    "testService",
+				//	Image:   "busybox:1.24.0",
+				//	Command: []string{"ls"}, // sleep 10 ?
+				//	EnvVars: []api.EnvVar{
+				//		api.EnvVar{
+				//			Name:  "TEST",
+				//			Value: "TEST",
+				//		},
+				//	},
+				//},
+				},
+			},
+			pass: true,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := stageManager.ExecIntegrationTest(tc.builtImages, tc.stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
