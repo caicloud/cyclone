@@ -230,3 +230,54 @@ func TestExecImageBuild(t *testing.T) {
 		}
 	}
 }
+
+func TestExecPackage(t *testing.T) {
+	// Prepare the code folder.
+	dockerfileContent := "FROM alpine \nADD README.md /README.md"
+	readmeContent := "Hello Cyclone"
+	os.RemoveAll(codeDir)
+	os.MkdirAll(codeDir, os.ModePerm)
+	osutil.ReplaceFile(codeDir+"/Dockerfile", strings.NewReader(dockerfileContent))
+	osutil.ReplaceFile(codeDir+"/README.md", strings.NewReader(readmeContent))
+
+	testCases := map[string]struct {
+		buildImage    *api.BuilderImage
+		buildInfo     *api.BuildInfo
+		unitTestStage *api.UnitTestStage
+		packageStage  *api.PackageStage
+		pass          bool
+	}{
+		"correct": {
+			buildImage: &api.BuilderImage{
+				Image: "busybox:1.24.0",
+				EnvVars: []api.EnvVar{
+					api.EnvVar{
+						Name:  "TEST",
+						Value: "TEST",
+					},
+				},
+			},
+			buildInfo: &api.BuildInfo{},
+			unitTestStage: &api.UnitTestStage{
+				GeneralStage: api.GeneralStage{
+					Command: []string{"ls -la"},
+				},
+				Outputs: []string{},
+			},
+			packageStage: &api.PackageStage{
+				GeneralStage: api.GeneralStage{
+					Command: []string{"ls -la"},
+				},
+				Outputs: []string{},
+			},
+			pass: true,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := stageManager.ExecPackage(tc.buildImage, tc.buildInfo, tc.unitTestStage, tc.packageStage)
+		if tc.pass && err != nil || !tc.pass && err == nil {
+			t.Errorf("%s failed as error: %v", d, err)
+		}
+	}
+}
