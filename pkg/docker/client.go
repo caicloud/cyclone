@@ -150,7 +150,7 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 	}
 
 	// Run the container
-	err = dm.Client.StartContainer(container.ID, nil)
+	err = dm.Client.StartContainer(container.ID, options.HostConfig)
 	if err != nil {
 		return "", fmt.Errorf("start container with error %s", err.Error())
 	}
