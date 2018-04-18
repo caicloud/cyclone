@@ -130,7 +130,8 @@ func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) err
 	return nil
 }
 
-func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions, auth docker_client.AuthConfiguration) (string, error) {
+func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions,
+	auth docker_client.AuthConfiguration, logFile *os.File) (string, error) {
 	// Check the existence of image.
 	image := options.Config.Image
 	exist, err := dm.IsImagePresent(image)
@@ -155,7 +156,70 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 		return "", fmt.Errorf("start container with error %s", err.Error())
 	}
 
-	return container.ID, nil
+	// ServicesForIntegrationTest : logFile == nil, and it does not need to get log,
+	// and cann't wait for the contaner to terminal(eg: mongo db)
+	if logFile == nil {
+		return container.ID, nil
+	}
+
+	// channel listening for errors while the container is running async.
+	errc := make(chan error, 1)
+	containerc := make(chan *docker_client.Container, 1)
+
+	go func() {
+		// Options to fetch the stdout and stderr logs by tailing the output.
+		logOptsTail := &docker_client.LogsOptions{
+			Follow:       true,
+			Stdout:       true,
+			Stderr:       true,
+			Container:    container.ID,
+			OutputStream: logFile,
+			ErrorStream:  logFile,
+		}
+
+		// It's possible that the docker logs endpoint returns before the container
+		// is done, we'll naively resume up to 5 times if when the logs unblocks
+		// the container is still reported to be running.
+		for attempts := 0; attempts < 5; attempts++ {
+			if attempts > 0 {
+				// When resuming the stream, only grab the last line when starting the tailing.
+				logOptsTail.Tail = "1"
+			}
+
+			// Blocks and waits for the container to finish by streaming the logs (to /dev/null).
+			// Ideally we could use the `wait` function instead
+			err := dm.Client.Logs(*logOptsTail)
+			if err != nil {
+				log.Errorf("Error tailing %s. %s\n", options.Config.Image, err)
+				errc <- err
+				return
+			}
+
+			info, err := dm.Client.InspectContainer(container.ID)
+			if err != nil {
+				log.Errorf("Error getting exit code for %s. %s\n", options.Config.Image, err)
+				errc <- err
+				return
+			}
+
+			if info.State.Running != true {
+				containerc <- info
+				return
+			}
+		}
+
+		errc <- fmt.Errorf("Maximum number of attempts made while tailing logs.")
+
+	}()
+
+	select {
+	case <-containerc:
+		return container.ID, nil
+	case err := <-errc:
+		log.Errorf("Run the container failed. container ID:%v", container.ID)
+		return container.ID, err
+	}
+
 }
 
 // RemoveContainer forcefully remove the container.
