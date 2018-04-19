@@ -92,15 +92,22 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 		}
 	}
 	if filterStr != "" {
-		// Only support one condition to filter.
-		filterParts := strings.Split(filterStr, "=")
-		if len(filterParts) != 2 {
-			return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+		// Support multiple conditions to filter, they are seperated with comma.
+		conditions := strings.Split(filterStr, ",")
+		filter := make(map[string]interface{})
+		for _, c := range conditions {
+			filterParts := strings.Split(c, "=")
+			if len(filterParts) != 2 {
+				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+			}
+
+			if _, ok := filter[filterParts[0]]; ok {
+				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+			}
+
+			filter[filterParts[0]] = bson.M{"$regex": filterParts[1]}
 		}
 
-		filter := map[string]interface{}{
-			filterParts[0]: bson.M{"$regex": filterParts[1]},
-		}
 		qp.Filter = filter
 	}
 
