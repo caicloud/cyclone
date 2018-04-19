@@ -17,9 +17,7 @@ limitations under the License.
 package stage
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"sync"
@@ -163,20 +161,29 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		return
 	}
 
+	// Execute unit test and package commands in the builder container.
+	// Run stage script in container
+	cmds := packageStage.Command
+	// Run the unit test commands before package commands if there is unit test stage.
+	if unitTestStage != nil {
+		cmds = append(unitTestStage.Command, cmds...)
+	}
+
 	// Start and run the container from builder image.
 	config := &docker_client.Config{
 		Image:      builderImage.Image,
 		Env:        convertEnvs(builderImage.EnvVars),
 		OpenStdin:  true, // Open stdin to keep the container running after starts.
 		WorkingDir: cloneDir,
-		// Entrypoint: []string{"/bin/sh", "-e", "-c"},
+		Cmd:        cmds,
 	}
 
 	cco := docker_client.CreateContainerOptions{
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
+
+	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
 	if err != nil {
 		return err
 	}
@@ -187,33 +194,9 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 	}()
 
-	// Execute unit test and package commands in the builder container.
-	// Run stage script in container
-	cmds := packageStage.Command
-	// Run the unit test commands before package commands if there is unit test stage.
-	if unitTestStage != nil {
-		cmds = append(unitTestStage.Command, cmds...)
-	}
-
-	eo := docker.ExecOptions{
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    cid,
-		OutputStream: logFile,
-		ErrorStream:  logFile,
-	}
-
-	// Run the commands one by one.
-	for _, cmd := range cmds {
-		eo.Cmd = strings.Split(cmd, " ")
-		err = sm.dockerManager.ExecInContainer(eo)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Copy the build outputs if necessary.
-	// Only need to copy the outputs not in the current workspace. The outputs must be absolute path of files or folders.
+	// Only need to copy the outputs not in the current workspace.
+	// The outputs must be absolute path of files or folders.
 	cloneDir = cloneDir + "/"
 	for _, ot := range packageStage.Outputs {
 		if strings.HasPrefix(ot, "./") {
@@ -337,6 +320,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		var err error
 		for s, cid := range serviceInfos {
@@ -380,7 +364,8 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
+
+	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
 	if err != nil {
 		return err
 	}
@@ -390,22 +375,6 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		}
 	}()
 
-	eo := docker.ExecOptions{
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    cid,
-		OutputStream: logFile,
-		ErrorStream:  logFile,
-	}
-
-	// Run the commands one by one.
-	for _, cmd := range testConfig.Command {
-		eo.Cmd = strings.Split(cmd, " ")
-		if err = sm.dockerManager.ExecInContainer(eo); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -414,9 +383,9 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 	for _, svc := range services {
 		// Start and run the container from builder image.
 		config := &docker_client.Config{
-			Image:      svc.Image,
-			Env:        convertEnvs(svc.EnvVars),
-			Entrypoint: svc.Command,
+			Image: svc.Image,
+			Env:   convertEnvs(svc.EnvVars),
+			Cmd:   svc.Command,
 		}
 
 		cco := docker_client.CreateContainerOptions{
@@ -424,7 +393,8 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 			Config: config,
 			// HostConfig: hostConfig,
 		}
-		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry))
+
+		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -527,40 +497,6 @@ func convertEnvs(envVars []api.EnvVar) []string {
 	}
 
 	return envs
-}
-
-func watchLogs(filePath string, lines chan []byte, stop chan bool) error {
-	log.Infof("watch log file: %s", filePath)
-	logFile, err := os.Open(filePath)
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	defer logFile.Close()
-
-	buf := bufio.NewReader(logFile)
-
-	ticker := time.NewTicker(1 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			log.Infoln("ticker")
-			lines <- []byte("hello abc")
-			line, errRead := buf.ReadBytes('\n')
-			if errRead != nil {
-				if errRead == io.EOF {
-					return nil
-				}
-				log.Errorf("watch log file as errs: %s", errRead.Error())
-				return errRead
-			}
-			log.Infof("log:%s", line)
-			lines <- line
-		case <-stop:
-			close(lines)
-			return nil
-		}
-	}
 }
 
 // replace the record name with default name '$commitID[:7]-$createTime' when name empty in create version

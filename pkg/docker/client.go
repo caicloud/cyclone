@@ -130,7 +130,8 @@ func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) err
 	return nil
 }
 
-func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions, auth docker_client.AuthConfiguration) (string, error) {
+func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions,
+	auth docker_client.AuthConfiguration, logFile io.Writer) (string, error) {
 	// Check the existence of image.
 	image := options.Config.Image
 	exist, err := dm.IsImagePresent(image)
@@ -142,6 +143,8 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 			return "", err
 		}
 	}
+	cmds := options.Config.Cmd
+	options.Config.Cmd = nil
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
@@ -150,12 +153,28 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 	}
 
 	// Run the container
-	err = dm.Client.StartContainer(container.ID, options.HostConfig)
+	err = dm.Client.StartContainer(container.ID, nil)
 	if err != nil {
 		return "", fmt.Errorf("start container with error %s", err.Error())
 	}
 
+	eo := ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    container.ID,
+		OutputStream: logFile,
+		ErrorStream:  logFile,
+	}
+
+	eo.Cmd = append(entrypoint, EncodeCmds(cmds))
+
+	err = dm.ExecInContainer(eo)
+	if err != nil {
+		return container.ID, err
+	}
+
 	return container.ID, nil
+
 }
 
 // RemoveContainer forcefully remove the container.
@@ -187,8 +206,8 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 	// In order to return after the command finishes, the options must attach the stdout and stderr,
 	// and set their writer stream.
 	ceo := docker_client.CreateExecOptions{
-		AttachStdout: true,
-		AttachStderr: true,
+		AttachStdout: options.AttachStdout,
+		AttachStderr: options.AttachStderr,
 		Cmd:          options.Cmd,
 		Container:    options.Container,
 	}
@@ -202,6 +221,7 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 		ErrorStream:  options.ErrorStream,
 		OutputStream: options.OutputStream,
 	}
+
 	err = dm.Client.StartExec(exec.ID, seo)
 	if err != nil {
 		return fmt.Errorf("start command %s in container %s with error %s", ceo.Cmd, ceo.Container, err.Error())

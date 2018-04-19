@@ -20,11 +20,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
-
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 )
 
 const (
