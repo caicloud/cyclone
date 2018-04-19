@@ -226,6 +226,7 @@ func (cloud *K8SCloud) Provision(id string, wopts WorkerOptions) (Worker, error)
 					ImagePullPolicy: apiv1.PullAlways,
 				},
 			},
+			RestartPolicy: apiv1.RestartPolicyNever,
 		},
 	}
 
