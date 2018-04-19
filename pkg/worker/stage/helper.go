@@ -17,12 +17,9 @@ limitations under the License.
 package stage
 
 import (
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"time"
 
-	docker_client "github.com/fsouza/go-dockerclient"
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -149,55 +146,4 @@ func updateEvent(c cycloneserver.CycloneServerClient, event *api.Event, stage ap
 	}
 
 	return c.SendEvent(event)
-}
-
-// entrypoint is the default bash entrypoint command
-// slice, used to execute a build script in string format.
-var entrypoint = []string{"/bin/sh", "-e", "-c"}
-
-// traceScript is a helper script that is added
-// to the build script to trace a command.
-const traceScript = `
-echo %s | base64 -d
-%s
-`
-
-// Encode encodes the build script as a command in the
-// provided Container config. For linux, the build script
-// is embedded as the container entrypoint command, base64
-// encoded as a one-line script.
-func Encode(c *docker_client.CreateContainerOptions) {
-	c.Config.Entrypoint = entrypoint
-	c.Config.Cmd = EncodeCmds(c.Config.Cmd)
-}
-
-func EncodeCmds(cmds []string) []string {
-	var buf bytes.Buffer
-	buf.WriteString(writeCmds(cmds))
-	return []string{encode(buf.Bytes())}
-}
-
-// writeCmds is a helper fuction that writes a slice
-// of bash commands as a single script.
-func writeCmds(cmds []string) string {
-	var buf bytes.Buffer
-	for _, cmd := range cmds {
-		buf.WriteString(trace(cmd))
-	}
-	return buf.String()
-}
-
-// trace is a helper function that allows us to echo
-// commands back to the console for debugging purposes.
-func trace(cmd string) string {
-	echo := fmt.Sprintf("$ %s\n", cmd)
-	base := base64.StdEncoding.EncodeToString([]byte(echo))
-	return fmt.Sprintf(traceScript, base, cmd)
-}
-
-// encode is a helper function that base64 encodes
-// a shell command (or entire script)
-func encode(script []byte) string {
-	encoded := base64.StdEncoding.EncodeToString(script)
-	return fmt.Sprintf("echo %s | base64 -d | /bin/sh", encoded)
 }

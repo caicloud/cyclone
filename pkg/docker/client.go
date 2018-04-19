@@ -131,7 +131,7 @@ func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) err
 }
 
 func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions,
-	auth docker_client.AuthConfiguration, logFile *os.File) (string, error) {
+	auth docker_client.AuthConfiguration, logFile io.Writer) (string, error) {
 	// Check the existence of image.
 	image := options.Config.Image
 	exist, err := dm.IsImagePresent(image)
@@ -143,6 +143,8 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 			return "", err
 		}
 	}
+	cmds := options.Config.Cmd
+	options.Config.Cmd = nil
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
@@ -156,69 +158,22 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 		return "", fmt.Errorf("start container with error %s", err.Error())
 	}
 
-	// ServicesForIntegrationTest : logFile == nil, and it does not need to get log,
-	// and cann't wait for the contaner to terminal(eg: mongo db)
-	if logFile == nil {
-		return container.ID, nil
+	eo := ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    container.ID,
+		OutputStream: logFile,
+		ErrorStream:  logFile,
 	}
 
-	// channel listening for errors while the container is running async.
-	errc := make(chan error, 1)
-	containerc := make(chan *docker_client.Container, 1)
+	eo.Cmd = append(entrypoint, EncodeCmds(cmds))
 
-	go func() {
-		// Options to fetch the stdout and stderr logs by tailing the output.
-		logOptsTail := &docker_client.LogsOptions{
-			Follow:       true,
-			Stdout:       true,
-			Stderr:       true,
-			Container:    container.ID,
-			OutputStream: logFile,
-			ErrorStream:  logFile,
-		}
-
-		// It's possible that the docker logs endpoint returns before the container
-		// is done, we'll naively resume up to 5 times if when the logs unblocks
-		// the container is still reported to be running.
-		for attempts := 0; attempts < 5; attempts++ {
-			if attempts > 0 {
-				// When resuming the stream, only grab the last line when starting the tailing.
-				logOptsTail.Tail = "1"
-			}
-
-			// Blocks and waits for the container to finish by streaming the logs (to /dev/null).
-			// Ideally we could use the `wait` function instead
-			err := dm.Client.Logs(*logOptsTail)
-			if err != nil {
-				log.Errorf("Error tailing %s. %s\n", options.Config.Image, err)
-				errc <- err
-				return
-			}
-
-			info, err := dm.Client.InspectContainer(container.ID)
-			if err != nil {
-				log.Errorf("Error getting exit code for %s. %s\n", options.Config.Image, err)
-				errc <- err
-				return
-			}
-
-			if info.State.Running != true {
-				containerc <- info
-				return
-			}
-		}
-
-		errc <- fmt.Errorf("Maximum number of attempts made while tailing logs.")
-
-	}()
-
-	select {
-	case <-containerc:
-		return container.ID, nil
-	case err := <-errc:
-		log.Errorf("Run the container failed. container ID:%v", container.ID)
+	err = dm.ExecInContainer(eo)
+	if err != nil {
 		return container.ID, err
 	}
+
+	return container.ID, nil
 
 }
 
@@ -251,8 +206,8 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 	// In order to return after the command finishes, the options must attach the stdout and stderr,
 	// and set their writer stream.
 	ceo := docker_client.CreateExecOptions{
-		AttachStdout: true,
-		AttachStderr: true,
+		AttachStdout: options.AttachStdout,
+		AttachStderr: options.AttachStderr,
 		Cmd:          options.Cmd,
 		Container:    options.Container,
 	}
@@ -266,6 +221,7 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 		ErrorStream:  options.ErrorStream,
 		OutputStream: options.OutputStream,
 	}
+
 	err = dm.Client.StartExec(exec.ID, seo)
 	if err != nil {
 		return fmt.Errorf("start command %s in container %s with error %s", ceo.Cmd, ceo.Container, err.Error())

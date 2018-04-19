@@ -308,7 +308,7 @@ func TestExecIntegrationTest(t *testing.T) {
 			stage: &api.IntegrationTestStage{
 				Config: &api.IntegrationTestConfig{
 					ImageName: "busybox:1.24.0",
-					Command:   []string{"ls"},
+					Command:   []string{"ls", "cd /"},
 					EnvVars: []api.EnvVar{
 						api.EnvVar{
 							Name:  "TEST",

@@ -175,17 +175,13 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		Env:        convertEnvs(builderImage.EnvVars),
 		OpenStdin:  true, // Open stdin to keep the container running after starts.
 		WorkingDir: cloneDir,
-		// Entrypoint: []string{"/bin/sh", "-e", "-c"},
-		Cmd: cmds,
+		Cmd:        cmds,
 	}
 
 	cco := docker_client.CreateContainerOptions{
 		Config:     config,
 		HostConfig: hostConfig,
 	}
-
-	// Encode the commands to one line script.
-	Encode(&cco)
 
 	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
 	if err != nil {
@@ -369,9 +365,6 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		HostConfig: hostConfig,
 	}
 
-	// Encode the commands to one line script.
-	Encode(&cco)
-
 	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
 	if err != nil {
 		return err
@@ -400,9 +393,6 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 			Config: config,
 			// HostConfig: hostConfig,
 		}
-
-		// Encode the commands to one line script.
-		Encode(&cco)
 
 		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), nil)
 		if err != nil {
