@@ -251,13 +251,17 @@ func getURL(codeSource *api.CodeSource) (string, error) {
 
 // getRef provide the ref(branch or tag) of the code.
 func getRef(codeSource *api.CodeSource) (string, error) {
+	if codeSource.Type == api.SVN {
+		return "", nil
+	}
+
 	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
 		logdog.Errorf(err.Error())
 		return "", err
 	}
 
-	if gitSource.Ref == "" && codeSource.Type != api.SVN {
+	if gitSource.Ref == "" {
 		logdog.Warnf("the ref of %s is empty", gitSource.Url)
 		return "master", nil
 	}
