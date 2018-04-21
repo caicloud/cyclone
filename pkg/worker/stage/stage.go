@@ -249,8 +249,7 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) (builtImages 
 			imageBuildStatus.Tasks[index] = status
 
 			buildInfo := buildInfos[index]
-			bErr := sm.buildImage(buildInfo, status)
-			if bErr != nil {
+			if bErr := sm.buildImage(buildInfo, status); bErr != nil {
 				log.Errorf("Fail to build image %s as %v", buildInfo.TaskName, bErr)
 				err = bErr
 			}
@@ -449,42 +448,99 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 }
 
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
-	errChan := make(chan error)
+	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
+
 	defer func() {
-		errChan <- err
 		sm.updateEventAfterStage(api.ImageReleaseStageName, err)
 	}()
 
-	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
+	if event.PipelineRecord.StageStatus.ImageRelease == nil {
+		event.PipelineRecord.StageStatus.ImageRelease = &api.ImageReleaseStageStatus{}
+	}
+	imageReleaseStatus := event.PipelineRecord.StageStatus.ImageRelease
 
-	logFile, err := sm.startWatchLogs(api.ImageReleaseStageName, "", errChan)
+	wg := sync.WaitGroup{}
+	policies := stage.ReleasePolicy
+	imageReleaseStatus.Tasks = make([]*api.ImageReleaseTaskStatus, len(policies))
+	for i, p := range policies {
+		for _, builtImage := range builtImages {
+			imageParts := strings.Split(builtImage, ":")
+			if strings.EqualFold(imageParts[0], strings.Split(p.ImageName, ":")[0]) {
+				wg.Add(1)
+
+				go func(index int, builtImage string) {
+					defer wg.Done()
+
+					status := &api.ImageReleaseTaskStatus{
+						TaskStatus: api.TaskStatus{
+							Name:      builtImage,
+							Status:    api.Running,
+							StartTime: time.Now(),
+						},
+					}
+					imageReleaseStatus.Tasks[index] = status
+
+					if bErr := sm.releaseImage(builtImage, status); bErr != nil {
+						log.Errorf("Fail to release image %s as %v", builtImage, bErr)
+						err = bErr
+					}
+
+					// Update status again after tasks finish.
+					imageReleaseStatus.Tasks[index] = status
+				}(i, builtImage)
+			}
+		}
+	}
+
+	wg.Wait()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (sm *stageManager) releaseImage(image string, status *api.ImageReleaseTaskStatus) (err error) {
+	log.Infof("Release the built image %s", image)
+
+	errChan := make(chan error)
+
+	defer func() {
+		// Update task status.
+		status.EndTime = time.Now()
+		if err == nil {
+			status.Status = api.Success
+		} else {
+			status.Status = api.Failed
+		}
+
+		errChan <- err
+	}()
+
+	imageParts := strings.Split(image, ":")
+	imageNameParts := strings.Split(imageParts[0], "/")
+	imageName := imageNameParts[len(imageNameParts)-1]
+
+	logFile, err := sm.startWatchLogs(api.ImageReleaseStageName, imageName, errChan)
 	if err != nil {
 		log.Infof("fail to watch image release log as %v", err)
 		return
 	}
 
-	for _, p := range stage.ReleasePolicy {
-		for _, builtImage := range builtImages {
-			imageParts := strings.Split(builtImage, ":")
-			if strings.EqualFold(imageParts[0], strings.Split(p.ImageName, ":")[0]) {
-				log.Infof("Release the built image %s", builtImage)
-				opts := docker_client.PushImageOptions{
-					Name:         imageParts[0],
-					Tag:          imageParts[1],
-					OutputStream: logFile,
-				}
-
-				if err = sm.dockerManager.PushImage(opts, generateAuthConfig(sm.registry)); err != nil {
-					log.Errorf("Fail to release the built image %s as %s", builtImage, err.Error())
-					return err
-				}
-
-				setReleaseImages(builtImage)
-			}
-		}
+	opts := docker_client.PushImageOptions{
+		Name:         imageParts[0],
+		Tag:          imageParts[1],
+		OutputStream: logFile,
 	}
 
-	return nil
+	if err = sm.dockerManager.PushImage(opts, generateAuthConfig(sm.registry)); err != nil {
+		log.Errorf("Fail to release the built image %s as %s", image, err.Error())
+		return
+	}
+
+	status.Image = image
+
+	return
 }
 
 func (sm *stageManager) updateEventAfterStage(stage api.PipelineStageName, err error) {
@@ -580,13 +636,6 @@ func setCommits(codeSources *api.CodeCheckoutStage) {
 
 		setCommit(&commitLog, false)
 	}
-}
-
-func setReleaseImages(image string) {
-	if event.PipelineRecord.StageStatus.ImageRelease.Images == nil {
-		event.PipelineRecord.StageStatus.ImageRelease.Images = []string{}
-	}
-	event.PipelineRecord.StageStatus.ImageRelease.Images = append(event.PipelineRecord.StageStatus.ImageRelease.Images, image)
 }
 
 /* formatImageName Ensure that the image name including a tag.

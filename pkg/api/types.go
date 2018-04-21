@@ -391,13 +391,19 @@ type ImageBuildTaskStatus struct {
 // ImageBuildStageStatus includes GeneralStageStatus and image build infos.
 type ImageBuildStageStatus struct {
 	GeneralStageStatus `bson:",inline"`
-	Tasks              []*ImageBuildTaskStatus `bson:"tasks" json:"tasks" description:"task status of the stage"`
+	Tasks              []*ImageBuildTaskStatus `bson:"tasks,omitempty" json:"tasks,omitempty" description:"task status of the stage"`
 }
 
 // ImageReleaseStageStatus includes GeneralStageStatus and Images.
 type ImageReleaseStageStatus struct {
 	GeneralStageStatus `bson:",inline"`
-	Images             []string `bson:"images,omitempty" json:"images,omitempty" description:"pushed images of the image release stage"`
+	Tasks              []*ImageReleaseTaskStatus `bson:"tasks,omitempty" json:"tasks,omitempty" description:"task status of the stage"`
+}
+
+// ImageReleaseTaskStatus includes GeneralStageStatus and image release infos.
+type ImageReleaseTaskStatus struct {
+	TaskStatus `bson:",inline"`
+	Image      string `bson:"image,omitempty" json:"image,omitempty" description:"released image name"`
 }
 
 // ImageReleaseStageStatus includes GeneralStageStatus and Images.
