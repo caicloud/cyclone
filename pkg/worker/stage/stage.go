@@ -224,28 +224,69 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) (builtImages 
 		sm.updateEventAfterStage(api.ImageBuildStageName, err)
 	}()
 
+	// New ImageBuildStageStatus to store task status.
+	if event.PipelineRecord.StageStatus.ImageBuild == nil {
+		event.PipelineRecord.StageStatus.ImageBuild = &api.ImageBuildStageStatus{}
+	}
+	imageBuildStatus := event.PipelineRecord.StageStatus.ImageBuild
+
 	wg := sync.WaitGroup{}
-	for _, buildInfo := range stage.BuildInfos {
+	buildInfos := stage.BuildInfos
+	imageBuildStatus.Tasks = make([]*api.ImageBuildTaskStatus, len(buildInfos))
+	for i, _ := range buildInfos {
 		wg.Add(1)
-		go func(buildInfo *api.ImageBuildInfo) {
+
+		go func(index int) {
 			defer wg.Done()
 
-			if image, bErr := sm.buildImage(buildInfo); bErr != nil {
+			status := &api.ImageBuildTaskStatus{
+				TaskStatus: api.TaskStatus{
+					Name:      buildInfos[index].TaskName,
+					Status:    api.Running,
+					StartTime: time.Now(),
+				},
+			}
+			imageBuildStatus.Tasks[index] = status
+
+			buildInfo := buildInfos[index]
+			bErr := sm.buildImage(buildInfo, status)
+			if bErr != nil {
 				log.Errorf("Fail to build image %s as %v", buildInfo.TaskName, bErr)
 				err = bErr
-			} else {
-				builtImages = append(builtImages, image)
 			}
-		}(buildInfo)
+			// Update status again after tasks finish.
+			imageBuildStatus.Tasks[index] = status
+		}(i)
 	}
 
 	wg.Wait()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task := range imageBuildStatus.Tasks {
+		if task.Status == api.Success {
+			builtImages = append(builtImages, task.Image)
+		} else {
+			log.Errorf("Image build task %s's status is %s", task.Name, task.Status)
+		}
+	}
+
 	return builtImages, err
 }
 
-func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (image string, err error) {
+func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, status *api.ImageBuildTaskStatus) (err error) {
 	errChan := make(chan error)
+
 	defer func() {
+		// Update task status.
+		status.EndTime = time.Now()
+		if err == nil {
+			status.Status = api.Success
+		} else {
+			status.Status = api.Failed
+		}
+
 		errChan <- err
 	}()
 
@@ -284,7 +325,7 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (image string,
 	opt.Dockerfile = "Dockerfile"
 	if buildInfo.Dockerfile != "" {
 		if err = osutil.ReplaceFile(opt.ContextDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
-			return "", err
+			return
 		}
 	} else {
 		if buildInfo.DockerfilePath != "" {
@@ -294,10 +335,12 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo) (image string,
 	opt.Name = formatImageName(buildInfo.ImageName)
 
 	if err = sm.dockerManager.BuildImage(opt); err != nil {
-		return "", err
+		return
 	}
 
-	return opt.Name, nil
+	status.Image = opt.Name
+
+	return
 }
 
 func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) (err error) {
@@ -454,7 +497,7 @@ func (sm *stageManager) updateEventAfterStage(stage api.PipelineStageName, err e
 
 func (sm *stageManager) startWatchLogs(stage api.PipelineStageName, task string, errChan chan error) (*os.File, error) {
 	if err := updateEvent(sm.cycloneClient, event, stage, api.Running, nil); err != nil {
-		logdog.Error("fail to update event for stage %s as %v", stage, err)
+		logdog.Errorf("fail to update event for stage %s as %v", stage, err)
 		return nil, err
 	}
 

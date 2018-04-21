@@ -356,7 +356,7 @@ type StageStatus struct {
 	UnitTest        *GeneralStageStatus      `bson:"unitTest,omitempty" json:"unitTest,omitempty" description:"status of unit test stage"`
 	CodeScan        *GeneralStageStatus      `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
 	Package         *GeneralStageStatus      `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
-	ImageBuild      *GeneralStageStatus      `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
+	ImageBuild      *ImageBuildStageStatus   `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
 	IntegrationTest *GeneralStageStatus      `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
 	ImageRelease    *ImageReleaseStageStatus `bson:"imageRelease,omitempty" json:"imageRelease,omitempty" description:"status of image release stage"`
 }
@@ -368,10 +368,30 @@ type GeneralStageStatus struct {
 	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
 }
 
+// TaskStatus represents the information of subtasks in one stage.
+type TaskStatus struct {
+	Name      string    `bson:"name,omitempty" json:"name,omitempty" description:"name of subtask in one stage"`
+	Status    Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the stage"`
+	StartTime time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the stage"`
+	EndTime   time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the stage"`
+}
+
 // CodeCheckoutStageStatus includes GeneralStageStatus and pipelineRecord version.
 type CodeCheckoutStageStatus struct {
 	GeneralStageStatus `bson:",inline"`
 	Commits            Commits `bson:"commits,omitempty" json:"commits,omitempty" description:"commits of the pipeline record"`
+}
+
+// ImageBuildStageStatus includes GeneralStageStatus and image build infos.
+type ImageBuildTaskStatus struct {
+	TaskStatus `bson:",inline"`
+	Image      string `bson:"image,omitempty" json:"image,omitempty" description:"built image name"`
+}
+
+// ImageBuildStageStatus includes GeneralStageStatus and image build infos.
+type ImageBuildStageStatus struct {
+	GeneralStageStatus `bson:",inline"`
+	Tasks              []*ImageBuildTaskStatus `bson:"tasks" json:"tasks" description:"task status of the stage"`
 }
 
 // ImageReleaseStageStatus includes GeneralStageStatus and Images.
