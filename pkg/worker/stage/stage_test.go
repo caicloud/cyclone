@@ -318,9 +318,30 @@ func TestExecIntegrationTest(t *testing.T) {
 				},
 				Services: []api.Service{
 					api.Service{
-						Name:    "testService",
+						Name:    "mongo1",
 						Image:   "mongo:3.0.5",
 						Command: []string{"mongod --smallfiles"},
+						EnvVars: []api.EnvVar{
+							api.EnvVar{
+								Name:  "TEST",
+								Value: "TEST",
+							},
+						},
+					},
+					api.Service{
+						Name:  "mongo2",
+						Image: "mongo:3.0.5",
+						EnvVars: []api.EnvVar{
+							api.EnvVar{
+								Name:  "TEST",
+								Value: "TEST",
+							},
+						},
+					},
+					api.Service{
+						Name:    "busybox",
+						Image:   "busybox",
+						Command: []string{"sleep 30"},
 						EnvVars: []api.EnvVar{
 							api.EnvVar{
 								Name:  "TEST",

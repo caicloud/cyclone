@@ -175,7 +175,6 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		Env:        convertEnvs(builderImage.EnvVars),
 		OpenStdin:  true, // Open stdin to keep the container running after starts.
 		WorkingDir: cloneDir,
-		Cmd:        cmds,
 	}
 
 	cco := docker_client.CreateContainerOptions{
@@ -193,6 +192,21 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 			log.Errorf("Fail to remove the container %s", cid)
 		}
 	}()
+
+	eo := docker.ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    cid,
+		Cmd:          cmds,
+		OutputStream: logFile,
+		ErrorStream:  logFile,
+	}
+
+	err = sm.dockerManager.ExecInContainer(eo)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 
 	// Copy the build outputs if necessary.
 	// Only need to copy the outputs not in the current workspace.

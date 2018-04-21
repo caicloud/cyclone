@@ -143,8 +143,11 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 			return "", err
 		}
 	}
-	cmds := options.Config.Cmd
-	options.Config.Cmd = nil
+
+	// Encode cmds.
+	if len(options.Config.Cmd) != 0 {
+		options.Config.Cmd = append(entrypoint, EncodeCmds(options.Config.Cmd))
+	}
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
@@ -158,23 +161,7 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 		return "", fmt.Errorf("start container with error %s", err.Error())
 	}
 
-	eo := ExecOptions{
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    container.ID,
-		OutputStream: logFile,
-		ErrorStream:  logFile,
-	}
-
-	eo.Cmd = append(entrypoint, EncodeCmds(cmds))
-
-	err = dm.ExecInContainer(eo)
-	if err != nil {
-		return container.ID, err
-	}
-
 	return container.ID, nil
-
 }
 
 // RemoveContainer forcefully remove the container.
@@ -211,6 +198,11 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 		Cmd:          options.Cmd,
 		Container:    options.Container,
 	}
+
+	if len(options.Cmd) != 0 {
+		ceo.Cmd = append(entrypoint, EncodeCmds(options.Cmd))
+	}
+
 	exec, err := dm.Client.CreateExec(ceo)
 	if err != nil {
 		return fmt.Errorf("create exec instance in container %s with error %s", ceo.Container, err.Error())
