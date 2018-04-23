@@ -286,7 +286,7 @@ func (cloud *K8SCloud) LoadWorker(info WorkerInfo) (Worker, error) {
 		return nil, fmt.Errorf("K8SCloud: can not load worker with another cloud kind %s", info.CloudKind)
 	}
 
-	pod, err := cloud.client.CoreV1().Pods(cloud.namespace).Get(info.PodName, meta_v1.GetOptions{})
+	pod, err := cloud.client.CoreV1().Pods(info.Namespace).Get(info.PodName, meta_v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -378,6 +378,7 @@ func (worker *K8SPodWorker) GetWorkerInfo() WorkerInfo {
 		CreateTime: worker.createTime,
 		DueTime:    worker.dueTime,
 		PodName:    worker.pod.Name,
+		Namespace:  worker.namespace,
 	}
 }
 

@@ -218,6 +218,8 @@ func createWorkerForEvent(event *api.Event) error {
 	// update worker info to event
 	event.Worker = worker.GetWorkerInfo()
 
+	log.Infof("Worker info: %v", event.Worker)
+
 	// trigger after get an valid worker
 	// triggerHooks(event, PostStartPhase)
 
@@ -315,7 +317,7 @@ func CheckWorkerTimeout(event *api.Event) {
 	}
 	worker, err := CloudController.LoadWorker(event.Worker)
 	if err != nil {
-		log.Error("load worker error")
+		log.Errorf("load worker %v with error: %v", event.Worker, err)
 		return
 	}
 
@@ -352,7 +354,7 @@ func CheckWorkerTimeout(event *api.Event) {
 func terminateEventWorker(workerInfo cloud.WorkerInfo) {
 	w, err := CloudController.LoadWorker(workerInfo)
 	if err != nil {
-		logdog.Warnf("load worker err: %v", err)
+		logdog.Warnf("load worker %v with error: %v", workerInfo, err)
 	} else {
 		err = w.Terminate()
 		if err != nil {
