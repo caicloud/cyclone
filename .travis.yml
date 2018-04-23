@@ -39,7 +39,7 @@ install:
 script:
   - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/' | grep -v '/notify')
   - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api,notify
-  # - ./tests/run-e2e.sh
+  # - ./scripts/e2e-docker.sh
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile

@@ -28,7 +28,6 @@ import (
 	mgo "gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/api/server"
-	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/osutil"
 	log "github.com/zoumo/logdog"
 )
@@ -78,7 +77,7 @@ const (
 
 	// Local cyclone access information.
 	cyclonePort     = "7099"
-	apiVersion      = "v0.1"
+	apiVersion      = "v1"
 	authAPITemplate = "%s/api/v0.1/users/%s/authenticate"
 )
 
@@ -161,63 +160,6 @@ func WaitComponents() {
 	log.Info("Cyclone started")
 }
 
-// UpsertCloud register resources to mongo.
-func UpsertCloud() error {
-
-	cloudKind := osutil.GetStringEnv("CYCLONE_CLOUD_KIND", "docker")
-
-	var data cloud.Options
-
-	if cloudKind == "kubernetes" {
-		data = cloud.Options{
-			Name:           "test",
-			Kind:           "kubernetes",
-			Host:           "https://dev.caicloudprivatetest.com",
-			K8SBearerToken: "d9b04c43c25de5fc7287f7515bf4dc28015c0d43ec547d561c2ba2feea3ba79c1b77e501fdeb23bed14f74578a9675d42919ffb6e2f05490610f6c54b3a105b0",
-			K8SNamespace:   "cyclone",
-		}
-	} else {
-		data = cloud.Options{
-			Name: "test",
-			Kind: "docker",
-			Host: osutil.GetStringEnv("DOCKER_HOST", DefaultDockerHost),
-		}
-	}
-
-	// delete old cloud
-	url := fmt.Sprintf("%s/clouds/%s", BaseURL, data.Name)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return err
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	// create new cloud
-	buf, err := json.Marshal(&data)
-	if err != nil {
-		return err
-	}
-	url = fmt.Sprintf("%s/clouds", BaseURL)
-	req, err = http.NewRequest(http.MethodPost, url, bytes.NewBuffer(buf))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json;charset=utf-8")
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("%v", resp)
-	}
-
-	log.Info("Register cloud", log.Fields{"cloud": data})
-	return nil
-}
-
 // IsRunning returns whether the cyclone is running.
 func IsRunning() bool {
 	_, err := http.Get(BaseURL)
@@ -244,6 +186,7 @@ func Cleanup() error {
 
 	err = dbSession.DB("cyclone").DropDatabase()
 	if err != nil {
+		log.Errorf("drop database fail, err:", err)
 		return err
 	}
 
