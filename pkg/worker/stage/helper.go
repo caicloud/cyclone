@@ -83,9 +83,9 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 		gss = stageStatus.Package
 	case api.ImageBuildStageName:
 		if stageStatus.ImageBuild == nil {
-			stageStatus.ImageBuild = &api.GeneralStageStatus{}
+			stageStatus.ImageBuild = &api.ImageBuildStageStatus{}
 		}
-		gss = stageStatus.ImageBuild
+		gss = &stageStatus.ImageBuild.GeneralStageStatus
 	case api.IntegrationTestStageName:
 		if stageStatus.IntegrationTest == nil {
 			stageStatus.IntegrationTest = &api.GeneralStageStatus{}
