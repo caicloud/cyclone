@@ -460,7 +460,7 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	imageReleaseStatus := event.PipelineRecord.StageStatus.ImageRelease
 
 	wg := sync.WaitGroup{}
-	policies := stage.ReleasePolicy
+	policies := stage.ReleasePolicies
 	imageReleaseStatus.Tasks = make([]*api.ImageReleaseTaskStatus, len(policies))
 	for i, p := range policies {
 		for _, builtImage := range builtImages {
