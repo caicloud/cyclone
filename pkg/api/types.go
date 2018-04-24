@@ -234,7 +234,7 @@ type Service struct {
 
 // ImageReleaseStage represents the config of image release stage.
 type ImageReleaseStage struct {
-	ReleasePolicy []ImageReleasePolicy `bson:"releasePolicy,omitempty" json:"releasePolicy,omitempty" description:"list of policies for image release"`
+	ReleasePolicies []ImageReleasePolicy `bson:"releasePolicies,omitempty" json:"releasePolicies,omitempty" description:"list of policies for image release"`
 }
 
 // ImageReleasePolicyType represents the type of image release policy.
