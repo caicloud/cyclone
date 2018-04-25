@@ -397,6 +397,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		Image:     testImage,
 		Env:       convertEnvs(testConfig.EnvVars),
 		OpenStdin: true, // Open stdin to keep the container running after starts.
+		Cmd:       testConfig.Command,
 	}
 
 	hostConfig := &docker_client.HostConfig{
