@@ -54,14 +54,22 @@ var (
 		ResourceLimitsMemory: ZeroQuantity,
 	}
 
-	// DefaultLimitCPU 500m = 0.5 core = 500 * 100 * 100
-	DefaultLimitCPU = MustParseCPU(0.5)
-	// DefaultLimitMemory 500Mi = 500MiB = 500 * 1024 * 1024
-	DefaultLimitMemory = NewBinaryQuantity(500 * 1024 * 1024)
+	// DefaultLimitCPU 1000m = 1 core = 1000 * 100 * 100
+	DefaultLimitCPU = MustParseCPU(1)
+	// DefaultLimitMemory 1G = 1024MiB = 1024 * 1024 * 1024
+	DefaultLimitMemory = NewBinaryQuantity(1024 * 1024 * 1024)
+
+	// DefaultRequestCPU 500m = 0.5 core = 500 * 100 * 100
+	DefaultRequestCPU = MustParseCPU(0.5)
+	// DefaultRequestMemory 500Mi = 500MiB = 500 * 1024 * 1024
+	DefaultRequestMemory = NewBinaryQuantity(500 * 1024 * 1024)
+
 	// DefaultQuota ...
 	DefaultQuota = Quota{
-		ResourceLimitsCPU:    DefaultLimitCPU,
-		ResourceLimitsMemory: DefaultLimitMemory,
+		ResourceLimitsCPU:      DefaultLimitCPU,
+		ResourceLimitsMemory:   DefaultLimitMemory,
+		ResourceRequestsCPU:    DefaultRequestCPU,
+		ResourceRequestsMemory: DefaultRequestMemory,
 	}
 )
 
@@ -212,7 +220,7 @@ func (q Quota) ToK8SQuota() apiv1.ResourceRequirements {
 		keys := strings.Split(k, ".")
 		n := len(keys)
 		switch {
-		case keys[0] == "request":
+		case keys[0] == "requests":
 			rr.Requests[apiv1.ResourceName(keys[1])] = v.Quantity
 		default:
 			key := keys[0]

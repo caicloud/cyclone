@@ -56,8 +56,10 @@ const (
 
 	// Resource
 
-	LimitMemory = "LIMIT_MEMORY"
-	LimitCPU    = "LIMIT_CPU"
+	LimitMemory   = "LIMIT_MEMORY"
+	LimitCPU      = "LIMIT_CPU"
+	RequestMemory = "REQUEST_MEMORY"
+	RequestCPU    = "REQUEST_CPU"
 
 	WorkingDir = "/root/code"
 )
@@ -247,6 +249,18 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 			Value:  opts.Quota[ResourceLimitsCPU], // 0.5core
 			Usage:  "default limit cpu for worker",
 			EnvVar: LimitCPU,
+		},
+		cli.GenericFlag{
+			Name:   "request-memory",
+			Value:  opts.Quota[ResourceRequestsMemory],
+			Usage:  "default request memory for worker",
+			EnvVar: RequestMemory,
+		},
+		cli.GenericFlag{
+			Name:   "request-cpu",
+			Value:  opts.Quota[ResourceRequestsCPU],
+			Usage:  "default request cpu for worker",
+			EnvVar: RequestCPU,
 		},
 	}
 	app.Flags = append(app.Flags, flags...)

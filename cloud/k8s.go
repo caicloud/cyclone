@@ -471,6 +471,14 @@ func buildK8SEnv(id string, opts WorkerOptions) []apiv1.EnvVar {
 			Name:  LimitMemory,
 			Value: opts.Quota[ResourceLimitsMemory].String(),
 		},
+		{
+			Name:  RequestCPU,
+			Value: opts.Quota[ResourceRequestsCPU].String(),
+		},
+		{
+			Name:  RequestMemory,
+			Value: opts.Quota[ResourceRequestsMemory].String(),
+		},
 	}
 
 	return env
