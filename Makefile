@@ -88,6 +88,7 @@ test:
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
+	  CGO_ENABLED=0                                                                    \
 	  go build -i -v -o $(OUTPUT_DIR)/$${target}                                       \
 	    -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)                      \
 	              -X $(ROOT)/pkg/version.COMMIT=$(COMMIT)                              \
