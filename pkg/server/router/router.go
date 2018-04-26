@@ -245,18 +245,18 @@ func (router *router) registerScmAPIs(ws *restful.WebService) {
 	logdog.Info("Register scm APIs")
 
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
-	// GET /api/v1/projects/{project}/scm/{type}/token
-	ws.Route(ws.GET("/projects/{project}/scm/{type}/token").To(router.getAuthCodeURL).
-		Doc("Get a token").
-		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.PathParameter("type", "type of the scm").DataType("string")))
 
-	// GET /api/v1/scm/{type}/authcallback
-	ws.Route(ws.GET("scm/{type}/authcallback").To(router.authcallback).
-		Doc("Auth callback with project id and scm type").
-		Param(ws.PathParameter("type", "type of the scm").DataType("string")).
-		Param(ws.QueryParameter("code", "parameter of oauth API, we use scm type in this place").DataType("string")).
-		Param(ws.QueryParameter("state", "parameter of oauth API, we use project id in this place").DataType("string")))
+	// gitlab redirect url
+	ws.Route(ws.GET("/scm/gitlab/authcallback").To(router.acceptCode))
+
+	ws.Route(ws.GET("/scm/{type}/code").To(router.getAuthCodeURL).
+		Param(ws.PathParameter("type", "type of scm").DataType("string")))
+
+	ws.Route(ws.GET("/scm/{type}/token").To(router.authcallback).
+		Doc("Auth callback to access token").
+		Param(ws.QueryParameter("code", "parameter of oauth").DataType("string")).
+		Param(ws.PathParameter("type", "type of scm").DataType("string")).
+		Param(ws.QueryParameter("state", "parameter of oauth").DataType("string")))
 
 	// GET /api/v1/projects/{project}/scm/{type}/repos
 	ws.Route(ws.GET("/projects/{project}/scm/{type}/repos").To(router.listrepos).

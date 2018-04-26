@@ -19,36 +19,42 @@ package router
 import (
 	"net/http"
 
+	"fmt"
+	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/osutil"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	restful "github.com/emicklei/go-restful"
 )
 
+// test state value
+var state = "fake-state"
+
+func (router *router) acceptCode(request *restful.Request, response *restful.Response) {
+	code := request.QueryParameter("code")
+	state := request.QueryParameter("state")
+	cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://127.0.0.1:7099")
+	redirectURL := fmt.Sprintf("%s/%s/scm/%s/token?code=%s&state=%s", cyclonePath, "api/v1", api.GITLAB, code, state)
+	response.AddHeader("Location", redirectURL)
+	response.WriteHeaderAndEntity(http.StatusMovedPermanently, redirectURL)
+}
+
 // getAuthCodeURL handles the request to get the oauth url.
 func (router *router) getAuthCodeURL(request *restful.Request, response *restful.Response) {
-	projectName := request.PathParameter("project")
 	scmType := request.PathParameter("type")
-
-	project, err := router.projectManager.GetProject(projectName)
-	if err != nil {
-		httputil.ResponseWithError(response, err)
-		return
-	}
 
 	scm, err := router.scmManager.FindScm(scmType)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
-		return
 	}
 
-	url, err := scm.GetAuthCodeURL(project.ID)
+	url, err := scm.GetAuthCodeURL(state, scmType)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
 	response.WriteEntity(url)
-
 }
 
 // authcallback handles the request auth back from git.

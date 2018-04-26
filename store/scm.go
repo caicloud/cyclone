@@ -41,7 +41,6 @@ func (d *DataStore) Findtoken(projectID, scmType string) (*api.ScmToken, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	if count == 0 {
 		return nil, mgo.ErrNotFound
 	} else if count > 1 {

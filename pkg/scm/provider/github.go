@@ -362,6 +362,6 @@ func (g *GitHubManager) LogOut(projectID string) error {
 }
 
 // GetAuthCodeURL gets the URL for token request.
-func (g *GitHubManager) GetAuthCodeURL(projectID string) (string, error) {
-	return getAuthCodeURL(projectID)
+func (g *GitHubManager) GetAuthCodeURL(state string, scmType string) (string, error) {
+	return getAuthCodeURL(state, scmType)
 }

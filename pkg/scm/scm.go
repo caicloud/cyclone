@@ -25,13 +25,18 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
+	//provider2 "github.com/caicloud/cyclone/pkg/scm/provider"
 )
 
 // scmProviders represents the set of SCM providers.
 var scmProviders map[api.SCMType]SCMProvider
 
+// scmManagers represents the set of SCM managers
+var scmManagers map[string]SCMManager
+
 func init() {
 	scmProviders = make(map[api.SCMType]SCMProvider)
+	scmManagers = make(map[string]SCMManager)
 }
 
 // RegisterProvider registers SCM providers.
@@ -42,6 +47,26 @@ func RegisterProvider(scmType api.SCMType, provider SCMProvider) error {
 
 	scmProviders[scmType] = provider
 	return nil
+}
+
+// RegisterManager registers SCM managers
+func RegisterManager(scmType string, manager SCMManager) error {
+	if _, ok := scmManagers[scmType]; ok {
+		return fmt.Errorf("scm manager %s already exists", scmType)
+	}
+
+	scmManagers[scmType] = manager
+	return nil
+}
+
+// GetSCMProvider gets the SCM provider by the type.
+func GetSCMManager(scmType string) (SCMManager, error) {
+	manager, ok := scmManagers[scmType]
+	if !ok {
+		return nil, fmt.Errorf("unsupported SCM type %s", scmType)
+	}
+
+	return manager, nil
 }
 
 // SCMProvider represents the interface of SCM provider.
@@ -107,6 +132,11 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				return err
 			}
 		}
+			// if oauth finished and return username
+		//} else {
+		//	d := &provider2.GitLabManager{}
+		//	scmConfig, err := d.DataStore.FindTokenByUserName(config.Username, config.Type)
+		//}
 	case api.SVN:
 		return fmt.Errorf("SCM %s is not supported", scmType)
 	default:
@@ -126,11 +156,11 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 }
 
 // SCM is the interface of all operations needed for scm repository.
-type SCM interface {
+type SCMManager interface {
 	Authcallback(code, state string) (string, error)
 	GetRepos(string) ([]api.Repository, string, string, error)
 	LogOut(projectID string) error
-	GetAuthCodeURL(projectID string) (string, error)
+	GetAuthCodeURL(state string, scmType string) (string, error)
 	// CreateWebHook
 	// DeleteWebHook
 	// PostCommitStatus
@@ -142,15 +172,18 @@ type Manager struct {
 }
 
 // FindScm returns the scm by scm type.
-func (scm *Manager) FindScm(scmType string) (SCM, error) {
-	switch scmType {
-	case api.GITHUB:
-		// return &provider.GitHubManager{DataStore: scm.DataStore}, nil
-		return nil, fmt.Errorf("not implemented")
-	case api.GITLAB:
-		// return &provider.GitLabManager{DataStore: scm.DataStore}, nil
-		return nil, fmt.Errorf("not implemented")
-	default:
-		return nil, fmt.Errorf("Unknown scm type %s", scmType)
+func (scm *Manager) FindScm(scmType string) (SCMManager, error) {
+	scmManager, err := GetSCMManager(scmType)
+	if err != nil {
+		return nil, err
 	}
+	//switch scmType {
+	//case api.GitHub:
+	//	return &manager.GitHubManager{DataStore: scm.DataStore}, nil
+	//case api.GitLab:
+	//	return &manager.GitLabManager{DataStore: scm.DataStore}, nil
+	//default:
+	//	return nil, fmt.Errorf("unknown scm type %s", scmType)
+	//}
+	return scmManager, nil
 }

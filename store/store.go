@@ -42,6 +42,7 @@ const (
 	pipelineCollectionName       string = "pipelines"
 	pipelineRecordCollectionName string = "pipelineRecords"
 	scmCollectionName            string = "scm"
+	scmConfigCollectionName      string = "scmConfig"
 
 	socketTimeout  = time.Second * 5
 	syncTimeout    = time.Second * 5
@@ -62,6 +63,7 @@ type DataStore struct {
 	pipelineCollection       *mgo.Collection
 	pipelineRecordCollection *mgo.Collection
 	scmCollection            *mgo.Collection
+	scmConfigCollection      *mgo.Collection
 }
 
 // Init store mongo client session
@@ -103,6 +105,7 @@ func NewStore() *DataStore {
 		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
 		pipelineRecordCollection: session.DB(defaultDBName).C(pipelineRecordCollectionName),
 		scmCollection:            session.DB(defaultDBName).C(scmCollectionName),
+		scmConfigCollection:      session.DB(defaultDBName).C(scmConfigCollectionName),
 	}
 }
 
