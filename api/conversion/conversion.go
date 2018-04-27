@@ -93,43 +93,41 @@ func convertBuildInfo(buildInfo *newapi.BuildInfo) *api.BuildInfo {
 
 // convertBuildStagesToCaicloudYaml converts the config of build stages in pipeline to caicloud.yml.
 func convertBuildStagesToCaicloudYaml(pipeline *newapi.Pipeline) (string, error) {
-	if pipeline.Build == nil || pipeline.Build.BuilderImage == nil || pipeline.Build.Stages == nil {
+	if pipeline.Build == nil || pipeline.Build.Stages == nil {
 		return "", fmt.Errorf("fail to generate caicloud.yml as builder image or build stages is empty")
 	}
 
-	builderImage := pipeline.Build.BuilderImage
 	stages := pipeline.Build.Stages
-	if stages.Package == nil {
-		return "", fmt.Errorf("fail to generate caicloud.yml as package stages is empty")
-	}
-
 	caicloudYAMLConfig := &Config{}
 
-	// Convert the package stage of pipeline to the prebuild of caicloud.yml.
-	preBuild := &PreBuild{}
-	packageConfig := stages.Package
-	preBuild.Commands = packageConfig.Command
-	if stages.UnitTest != nil {
-		preBuild.Commands = append(stages.UnitTest.Command, preBuild.Commands...)
-	}
-	preBuild.Outputs = packageConfig.Outputs
-	preBuild.Image = builderImage.Image
-	preBuild.Environment = convertEnvVars(builderImage.EnvVars)
-
-	// Mount volume to speed up build.
-	buildInfo := pipeline.Build.BuildInfo
-	if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
-		switch buildInfo.BuildTool.Name {
-		case newapi.MavenBuildTool:
-			preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
-		case newapi.NPMBuildTool:
-			preBuild.Volumes = []string{"/root/.npm:/root/.npm"}
-		default:
-			return "", fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, newapi.MavenBuildTool, newapi.NPMBuildTool)
+	if stages.Package != nil {
+		// Convert the package stage of pipeline to the prebuild of caicloud.yml.
+		preBuild := &PreBuild{}
+		builderImage := pipeline.Build.BuilderImage
+		packageConfig := stages.Package
+		preBuild.Commands = packageConfig.Command
+		if stages.UnitTest != nil {
+			preBuild.Commands = append(stages.UnitTest.Command, preBuild.Commands...)
 		}
-	}
+		preBuild.Outputs = packageConfig.Outputs
+		preBuild.Image = builderImage.Image
+		preBuild.Environment = convertEnvVars(builderImage.EnvVars)
 
-	caicloudYAMLConfig.PreBuild = preBuild
+		// Mount volume to speed up build.
+		buildInfo := pipeline.Build.BuildInfo
+		if buildInfo != nil && buildInfo.CacheDependency && buildInfo.BuildTool != nil {
+			switch buildInfo.BuildTool.Name {
+			case newapi.MavenBuildTool:
+				preBuild.Volumes = []string{"/root/.m2:/root/.m2"}
+			case newapi.NPMBuildTool:
+				preBuild.Volumes = []string{"/root/.npm:/root/.npm"}
+			default:
+				return "", fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, newapi.MavenBuildTool, newapi.NPMBuildTool)
+			}
+		}
+
+		caicloudYAMLConfig.PreBuild = preBuild
+	}
 
 	if stages.ImageBuild != nil {
 		// Convert the image build stage to the build of caicloud.yml.
