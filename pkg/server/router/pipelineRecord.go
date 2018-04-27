@@ -19,6 +19,7 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/zoumo/logdog"
@@ -160,17 +161,39 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 		return
 	}
 
-	if e.PipelineRecord.Status == api.Running {
-		e.PipelineRecord.Status = api.Aborted
-		err = event.UpdateEvent(e)
-		if err != nil {
-			log.Errorf("update event %s error: %v", e.ID, err)
-		}
-
-		pipelineRecord.Status = api.Aborted
+	abortPipelineRecord(e.PipelineRecord)
+	// event and pipeline record both will be updated in method "UpdateEvent"
+	err = event.UpdateEvent(e)
+	if err != nil {
+		log.Errorf("update event %s error: %v", e.ID, err)
 	}
 
 	response.WriteHeaderAndEntity(http.StatusOK, pipelineRecord)
+}
+
+func abortPipelineRecord(p *api.PipelineRecord) {
+
+	if p.Status == api.Running {
+		p.Status = api.Aborted
+	}
+
+	if p.StageStatus != nil {
+		stageStatusElem := reflect.ValueOf(p.StageStatus).Elem()
+
+		for i := 0; i < stageStatusElem.NumField(); i++ {
+			if !stageStatusElem.Field(i).IsNil() {
+
+				stageElem := stageStatusElem.Field(i).Elem()
+				statusValue := stageElem.FieldByName("Status")
+				if statusValue.String() == string(api.Running) {
+					statusValue.Set(reflect.ValueOf(api.Aborted))
+				}
+			}
+
+		}
+
+	}
+
 }
 
 // getPipelineRecordLogs handles the request to get pipeline record logs, only supports finished pipeline records.
