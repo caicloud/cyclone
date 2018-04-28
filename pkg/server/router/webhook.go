@@ -113,7 +113,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(githubPullRefTemplate, event.PullRequest.Number),
+			Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
 			Description: "Triggered by pull request",
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
@@ -143,7 +143,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(githubPullRefTemplate, event.PullRequest.Number),
+				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
@@ -229,10 +229,11 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.ID),
+			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.Iid),
 			Description: objectAttributes.Title,
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
+
 		log.Info("Triggered by Gitlab merge event")
 	case *gitlab.MergeCommentEvent:
 		if scmTrigger.PullRequestComment == nil {
@@ -252,7 +253,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.ID),
+				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}

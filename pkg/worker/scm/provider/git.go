@@ -72,7 +72,7 @@ func insert(url, insertion string, index int) string {
 }
 
 func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
-	log.Info("About to clone git repository.", log.Fields{"url": url, "destPath": destPath})
+	log.Info("About to clone git repository.", log.Fields{"url": url, "ref": ref, "destPath": destPath})
 	url, err := g.rebuildURL(token, url)
 	if err != nil {
 		return "", err
