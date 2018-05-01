@@ -105,7 +105,7 @@
 | API | Path | Detail |
 | --- | --- | --- |
 | Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs` | [link](#get-pipeline-record-log) |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream` | link](#get-realtime-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream` | [link](#get-realtime-pipeline-record-log) |
 
 ### SCM API
 
@@ -120,7 +120,7 @@
 
 ### Path Parameter Explanation
 
-In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{recordId}` is `ID`
+In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{recordid}` is `ID`
 
 ## API Details
 
@@ -873,7 +873,7 @@ Stage: Build image status: finish
 | Field | Note |
 | --- | --- |
 | stage | Can be only one of `codeCheckout`、`unitTest`、`codeScan`、`package`、`imageBuild`、`integrationTest` and `imageRelease`, the stage must be performed in this record. Currently, `unitTest` and `codeScan` are not supported: `unitTest` is merged into `package`; `codeScan` is not implemented. If provided, only return the log of this stage; if not provided, will return all log. Not provided in default. |
-| download | true: download logs, the log file name is {projectName}-{pipelineName}-{recordId}-log.txt; false: directly return logs. `False` in default. |
+| download | true: download logs, the log file name is {projectName}-{pipelineName}-{recordid}-log.txt; false: directly return logs. `False` in default. |
 
 ### Get Realtime Pipeline Record Log
 
