@@ -10,24 +10,26 @@
     - [Pipeline Record APIs](#pipeline-record-apis)
     - [Pipeline Record Logs API](#pipeline-record-logs-api)
     - [SCM API](#scm-api)
+    - [Webhook API](#webhook-api)
+    - [Stats API](#stats-api)
   - [API Common](#api-common)
     - [Path Parameter Explanation](#path-parameter-explanation)
   - [API Details](#api-details)
-    - [ProjectDataStructure](#projectdatastructure)
+    - [ProjectObject](#projectobject)
     - [List projects](#list-projects)
     - [Create project](#create-project)
     - [Get project](#get-project)
     - [Update project](#update-project)
     - [Delete project](#delete-project)
-    - [PipelineDataStructure](#pipelinedatastructure)
-    - [PipelineRecordDataStructure](#pipelinerecorddatastructure)
-    - [ListedPipelineDataStructure](#listedpipelinedatastructure)
+    - [PipelineObject](#pipelineobject)
+    - [PipelineRecordObject](#pipelinerecordobject)
+    - [ListedPipelineObject](#listedpipelineobject)
     - [List pipelines](#list-pipelines)
     - [Create pipeline](#create-pipeline)
     - [Get Pipeline](#get-pipeline)
     - [Update pipeline](#update-pipeline)
     - [Delete pipeline](#delete-pipeline)
-    - [PipelinePerformParamsDataStructure](#pipelineperformparamsdatastructure)
+    - [PipelinePerformParamsObject](#pipelineperformparamsobject)
     - [List pipeline records](#list-pipeline-records)
     - [Create pipeline record](#create-pipeline-record)
     - [Get pipeline record](#get-pipeline-record)
@@ -35,9 +37,15 @@
     - [Update Pipeline Record Status](#update-pipeline-record-status)
     - [Get Pipeline Record Log](#get-pipeline-record-log)
     - [Get Realtime Pipeline Record Log](#get-realtime-pipeline-record-log)
-    - [RepoObjectDataStructure](#repoobjectdatastructure)
+    - [RepoObject](#repoobject)
     - [List SCM Repos](#list-scm-repos)
     - [List SCM Branches](#list-scm-branches)
+    - [List SCM Tags](#list-scm-tags)
+    - [Github webhook](#github-webhook)
+    - [Gitlab webhook](#gitlab-webhook)
+    - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
+    - [Get Workspace Stats](#get-workspace-stats)
+    - [Get Pipeline Stats](#get-pipeline-stats)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -64,7 +72,7 @@
 
 ### Project APIs
 
-- [Project Data Structure](#ProjectDataStructure)
+- [Project Object](#ProjectObject)
 
 | API | Path | Detail |
 | --- | --- | --- |
@@ -76,9 +84,9 @@
 
 ### Pipeline APIs
 
-- [Pipeline Data Structure](#PipelineDataStructure)
-- [Pipeline Record  Data Structure](#pipelinerecorddatastructure)
-- [Listed Pipeline  Data Structure](#listedpipelinedatastructure)
+- [Pipeline Object](#PipelineObject)
+- [Pipeline Record Object](#PipelineRecordObject)
+- [Listed Pipeline Object](#listedpipelineobject)
 
 | API | Path | Detail |
 | --- | --- | --- |
@@ -90,7 +98,7 @@
 
 ### Pipeline Record APIs
 
-- [Pipeline Record Data Structure](#PipelineRecordDataStructure)
+- [Pipeline Record Object](#PipelineRecordObject)
 
 | API | Path | Detail |
 | --- | --- | --- |
@@ -104,17 +112,35 @@
 
 | API | Path | Detail |
 | --- | --- | --- |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs` | [link](#get-pipeline-record-log) |
-| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream` | [link](#get-realtime-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logs[?stage=&task=&download=]` | [link](#get-pipeline-record-log) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream[?stage=&task=]` | [link](#get-realtime-pipeline-record-log) |
 
 ### SCM API
 
-- [Repo Object Data Structure](#RepoObjectDataStructure)
+- [Repo Object Object](#RepoObjectObject)
 
 | API | Path | Detail |
 | --- | --- | --- |
 | List | GET `/api/v1/workspaces/{workspace}/repos` | [link](#list-scm-repos) |
 | List | GET `/api/v1/workspaces/{workspace}/branches?repo=` | [link](#list-scm-branches) |
+| List | GET `/api/v1/workspaces/{workspace}/tags?repo=` | WIP, [link](#list-scm-tags) |
+
+### Webhook API
+
+| API | Path | Detail |
+| --- | --- | --- |
+| Create | POST `/api/v1/pipelines/{pipelineid}/githubwebhook` | WIP, [link](#github-webhook) |
+| Create | POST `/api/v1/pipelines/{pipelineid}/gitlabwebhook` | WIP, [link](#gitlab-webhook) |
+
+### Stats API
+
+- [PipelineStatusStatsObject](#pipelinestatusstatsobject)
+
+| API | Path | Detail |
+| --- | --- | --- |
+| Get | GET `/api/v1/workspaces/{workspace}/stats?[startTime=&endTime=]` | WIP, [link](#get-workspace-stats) |
+| Get | GET `/api/v1/workspaces/{workspace}/pipelines/{pipeline}/stats?[startTime=&endTime=]` | WIP, [link](#get-pipeline-stats) |
+
 
 ## API Common
 
@@ -124,19 +150,33 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
 
 ## API Details
 
-### ProjectDataStructure
+### ProjectObject
 
 ```
 {
-  "name": "string",                             // name of the project, should be unique
+  "name": "string",                             // name of the project, if not provided, will be generated from alias.
+  "alias": "string",                            // alias of the project
   "description": "string",                      // description of the project
   "owner": "string"                             // owner of the project
   "scm": {                                      // required
-      "type": "",                               // string, required. Only support "Gitlab" and "Github".
-      "server": "",                             // string, required
-      "username": "",                           // string, optional
-      "password": "",                           // string, optional
-      "token": "",                              // string, optional
+    "type": "",                                 // string, required. Only support "Gitlab" and "Github".
+    "server": "",                               // string, required
+    "username": "",                             // string, optional
+    "password": "",                             // string, optional
+    "token": "",                                // string, optional
+  },
+  "registry": {                                 // optional
+    "server": "",                               // string, required
+    "username": "",                             // string, optional
+    "password": "",                             // string, optional
+  },
+  "worker": {                                   // optional
+    "namespace": "devops",                      // string, optional
+    "dependencyCaches": {                       // map, optional
+        "Maven": {
+            "name": "devops-maven-cache"        // string, required
+        },
+    },
   },
   "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
   "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
@@ -171,7 +211,7 @@ Success:
     "metadata": {
         "total": 0,            // number, always 
     },
-    "items": [ <ProjectDataStructure>, ... ]
+    "items": [ <ProjectObject>, ... ]
 }
 ```
 
@@ -187,15 +227,30 @@ Body:
 
 ```
 {
-    "description": "",                   // string, optional
-    "name": "",                          // string, required
-    "scm": {                             // required
-      "type": "",                        // string, required. Only support "Gitlab" and "Github".
-      "server": "",                      // string, required
-      "username": "",                    // string, optional
-      "password": "",                    // string, optional
-      "token": "",                       // string, optional
-    }
+  "name": "string",                             // name of the project, if not provided, will be generated from alias.
+  "alias": "string",                            // alias of the project
+  "description": "string",                      // description of the project
+  "owner": "string"                             // owner of the project
+  "scm": {                                      // required
+    "type": "",                                 // string, required. Supports "Gitlab", "Github" and "SVN".
+    "server": "",                               // string, required
+    "username": "",                             // string, optional
+    "password": "",                             // string, optional
+    "token": "",                                // string, optional
+  },
+  "registry": {                                 // optional
+    "server": "",                               // string, required
+    "username": "",                             // string, optional
+    "password": "",                             // string, optional
+  },
+  "worker": {                                   // optional
+    "namespace": "devops",                      // string, optional
+    "dependencyCaches": {                       // map, optional
+        "Maven": {
+            "name": "devops-maven-cache"        // string, required
+        },
+    },
+  }
 }
 ```
 
@@ -205,7 +260,7 @@ Note:
 | --- | --- |
 | name | ^[a-z0-9]+((?:[._-][a-z0-9]+)*){1,29}$ |
 | description | The length is limited to 100 characters |
-| type | Supports `Gitlab` and `Github` |
+| type | Supports `Gitlab`, `Github` and `SVN` |
 
 SCM supports two types of auth: 1. username and password; 2. token. At least one type of auth should be provided. If both types are provided, username and password will be used.
 When username and password are provided, the password will not be stored, but a token will be generated and stored instead, the token will be used to access SCM server.
@@ -223,7 +278,7 @@ Success:
 201 Created
 
 {
-    // all <ProjectDataStructure> fields
+    // all <ProjectObject> fields
 }
 ```
 
@@ -243,7 +298,7 @@ Success:
 200 OK
 
 {
-    // all <ProjectDataStructure> fields
+    // all <ProjectObject> fields
 }
 ```
 
@@ -253,21 +308,15 @@ Update the information of a project.
 
 **Request**
 
-URL: `PATCH /api/v1/projects/{project}`
+URL: `PUT /api/v1/projects/{project}`
 
 Body:
 
 ```
 {
-    "description": "New description.",  // string, required
+    // all <ProjectObject> fields
 }
 ```
-
-Note:
-
-| Field | Note |
-| --- | --- |
-| description | The length is limited to 100 characters |
 
 **Response**
 
@@ -277,7 +326,7 @@ Success:
 200 OK
 
 {
-    // all <ProjectDataStructure> fields
+    // all <ProjectObject> fields
 }
 ```
 
@@ -297,7 +346,7 @@ Success:
 204 NoContent
 ```
 
-### PipelineDataStructure
+### PipelineObject
 
 ```
 {
@@ -307,7 +356,6 @@ Success:
     "description": "string", 
     "owner": "string", 
     "projectID": "string", 
-    "serviceID": "string",                  // workaround, remove soon
     "notification": {                       // not implemented
         "emailNotification": {
             "emails": [
@@ -326,13 +374,20 @@ Success:
             ]
         }, 
         "scmTrigger": {                     // return error if can not create webhook as not admin
-            "commitTrigger": {
-                "stages": ["string", ...]
+            "push": {
+                "stages": ["string", ...],
+                "branches": ["string", ...]
             }, 
-            "commitWithCommentsTrigger": {
-                "comments": ["string", ...], 
+            "tagRelease": {
                 "stages": ["string", ...]
-            }
+            },
+            "pullRequest": {
+                "stages": ["string", ...]
+            },
+            "pullRequestComment": {
+                "stages": ["string", ...],
+                "comments": ["string", ...]
+            },
         }
     }, 
     "build": {
@@ -347,27 +402,44 @@ Success:
         }, 
         "stages": {
             "codeCheckout": {
-                "codeSources": [                      // only support one element
+                "mainRepo": {                             // Required
+                    "github": {
+                        "ref": "refs/heads/master",       // string, required
+                        "url": "string"
+                    },
+                    "gitlab": {
+                        "ref": "refs/heads/master",       // string, required
+                        "url": "string"
+                    },
+                    "otherCodeSource": {
+                        "password": "string",
+                        "path": "string",
+                        "url": "string",
+                        "username": "string"
+                    },
+                    "type": "string"                 // type of code source, it must be Github or Gitlab or other.
+                },
+                "depRepos": [                        // Not support now
                     {
-                        "gitHub": {
-                            "ref": "string", 
+                        "github": {
+                            "ref": "refs/heads/master",       // string, required
                             "url": "string"
-                        }, 
-                        "gitLab": {
-                            "ref": "string", 
+                        },
+                        "gitlab": {
+                            "ref": "refs/heads/master",       // string, required
                             "url": "string"
-                        }, 
-                        "main": true, 
+                        },
                         "otherCodeSource": {
-                            "password": "string", 
-                            "path": "string", 
-                            "url": "string", 
+                            "password": "string",
+                            "path": "string",
+                            "url": "string",
                             "username": "string"
-                        }, 
-                        "type": "string"              // type of code source, it must be github or gitlab or other.
+                        },
+                        "folder": "string",           // sub folder which dependent repos will be cloned into.
+                        "type": "string"              // type of code source, it must be Github or Gitlab or other.
                     }
                 ]
-            }, 
+            },
             "unitTest": {
                 "command": ["string", ...], 
                 "outputs": ["string", ...]
@@ -383,6 +455,7 @@ Success:
             "imageBuild": {
                 "buildInfos": [                       // only support one element
                     {
+                        "taskName": "string",
                         "contextDir": "string", 
                         "dockerfile": "string", 
                         "dockerfilePath": "string", 
@@ -391,7 +464,7 @@ Success:
                 ]
             }, 
             "imageRelease": {
-                "releasePolicy": [                    // image names which are not listed will be ignored.
+                "releasePolicies": [                    // image names which are not listed will be ignored.
                     {
                         "imageName": "string", 
                         "type": "string"                // type of image release policy, it must be Always or IntegrationTestSuccess.
@@ -432,29 +505,92 @@ Success:
 
 Pipeline is responsible for automating the lifecycle management of an application, and can safely and reliably deploy the application from the source code to the production environment in strict accordance with a set of scientific and rational software management processes.
 
-### PipelineRecordDataStructure
+### PipelineRecordObject
 
 ```
 {
     "id": "",                   // string, required
     "name": "",                 // string, required
     "pipelineID": "",           // string, required
-    "versionID": "",            // string, required
     "trigger": "",              // string, optional. Can be user, scmTrigger, cronTrigger
     "performParams": {
-        "ref": "master",                  // string, required
+        "ref": "refs/tags/v0.1.0",        // string, required
         "name": "newVersion",             // string, optional
         "description": "",                // string, optional
         "createScmTag": false,            // bool, optional
+        "cacheDependency": false       // bool, optional
         "stages": ["codeCheckout", "unitTest", ...]     // string array, optional. Elements can be codeCheckout、unitTest、codeScan、package、imageBuild、integrationTest and imageRelease
     },
+    "stageStatus": {                                    // struct, required
+        "codeCheckout": {                               // struct, required
+            "status": "Running|Success|Failed|Aborted", // string, required
+            "commits": {                                // struct, optional
+                "mainRepo": {                           // struct, optional
+                    "ID": "",                           // struct, required
+                    "Author": "",                       // struct, required
+                    "Date": "",                         // struct, required
+                    "Message": ""                       // struct, required
+                },
+                "depRepos": [                           // struct, optional
+                    {
+                        "ID": "",                       // struct, required
+                        "Author": "",                   // struct, required
+                        "Date": "",                     // struct, required
+                        "Message": ""                   // struct, required
+                    },
+                ]
+            },
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+        },
+        "package": {                                    // struct, required
+            "status": "Running|Success|Failed|Aborted", // string, required
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+        },
+        "imageBuild": {                                 // struct, optional
+            "status": "Running|Success|Failed|Aborted", // string, required
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+            "tasks": [
+                {
+                    "name": "v1",                                   // string, required
+                    "status": "Running|Success|Failed|Aborted",     // string, required
+                    "image": "test:v1",                             // string, required
+                    "startTime": "2017-08-23T08:40:33.764Z",        // time, required
+                    "endTime": "2017-08-23T08:40:33.764Z"           // time, optional
+                }
+            ]
+        },
+        "integrationTest": {                            // struct, optional
+            "status": "Running|Success|Failed|Aborted", // string, required
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+        },
+        "imageRelease": {                               // struct, optional
+            "status": "Running|Success|Failed|Aborted", // string, required
+            "images": ["xx.io/xx/server:v1", ...],      // struct, required
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+            "tasks": [
+                {
+                    "name": "test:v1",                              // string, required
+                    "status": "Running|Success|Failed|Aborted",     // string, required
+                    "image": "test:v1",                             // string, required
+                    "startTime": "2017-08-23T08:40:33.764Z",        // time, required
+                    "endTime": "2017-08-23T08:40:33.764Z"           // time, optional
+                }
+            ]
+        },
+    },
     "status": "",               // string, required. Can be Pending, Running, Success, Failed, Aborted.
+    "errorMessage": ""          // string, optional
     "startTime": "2017-08-23T08:40:33.764Z",        // time, required
     "endTime": "2017-08-23T08:40:33.764Z",          // time, optional
 }
 ```
 
-### ListedPipelineDataStructure
+### ListedPipelineObject
 
 ```
 {
@@ -494,7 +630,7 @@ Success:
     "metadata": {
         "total": 0,  // number, always 
     },
-    "items": [ <PipelineDataStructure>, ... ]
+    "items": [ <PipelineObject>, ... ]
 }
 ```
 
@@ -608,7 +744,7 @@ Success:
 201 Created
 
 {
-    // all <PipelineDataStructure> fields
+    // all <PipelineObject> fields
 }
 ```
 
@@ -628,7 +764,7 @@ Success:
 200 OK
 
 {
-    // all <PipelineDataStructure> fields
+    // all <PipelineObject> fields
 }
 ```
 
@@ -644,7 +780,7 @@ Body:
 
 ```
 {
-    // all <PipelineDataStructure> fields
+    // all <PipelineObject> fields
 }
 ```
 
@@ -663,7 +799,7 @@ Success:
 200 OK
 
 {
-    // all <PipelineDataStructure> fields
+    // all <PipelineObject> fields
 }
 ```
 
@@ -683,7 +819,7 @@ Success:
 204 NoContent
 ```
 
-### PipelinePerformParamsDataStructure
+### PipelinePerformParamsObject
 
 ```
 {
@@ -723,7 +859,7 @@ Success:
     "metadata": {
         "total": 0,  // number, always 
     },
-    "items": [ <PipelineRecordDataStructure>, ... ]
+    "items": [ <PipelineRecordObject>, ... ]
 }
 ```
 
@@ -763,7 +899,7 @@ Success:
 201 Created
 
 {
-    // all <PipelineRecordDataStructure> fields
+    // all <PipelineRecordObject> fields
 }
 ```
 
@@ -783,7 +919,7 @@ Success:
 200 OK
 
 {
-    // all <PipelineRecordDataStructure> fields
+    // all <PipelineRecordObject> fields
 }
 ```
 
@@ -833,7 +969,7 @@ Success:
 200 Ok
 
 {
-    // all <PipelineRecordDataStructure> fields
+    // all <PipelineRecordObject> fields
 }
 ```
 
@@ -873,6 +1009,7 @@ Stage: Build image status: finish
 | Field | Note |
 | --- | --- |
 | stage | Can be only one of `codeCheckout`、`unitTest`、`codeScan`、`package`、`imageBuild`、`integrationTest` and `imageRelease`, the stage must be performed in this record. Currently, `unitTest` and `codeScan` are not supported: `unitTest` is merged into `package`; `codeScan` is not implemented. If provided, only return the log of this stage; if not provided, will return all log. Not provided in default. |
+| task | Sub task name. If stage is single task, the param will be omitted. If stage is multiple task, will return log of specified task. If the log is not found, will return 404. |
 | download | true: download logs, the log file name is {projectName}-{pipelineName}-{recordid}-log.txt; false: directly return logs. `False` in default. |
 
 ### Get Realtime Pipeline Record Log
@@ -881,7 +1018,7 @@ Get the real-time logs for running pipeline records.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream?stage=`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/records/{recordid}/logstream[?stage=&task=]`
 
 Header:
 ```
@@ -921,7 +1058,7 @@ Note:
 
 The illustration of stage param is the same as that of last static log API.
 
-### RepoObjectDataStructure
+### RepoObject
 
 ```
 {
@@ -979,5 +1116,172 @@ Success:
         "total": 0,  // number, always
     },
     "items": [ <branch>, ... ]
+}
+```
+
+### List SCM Tags
+
+List all tags for the repositories can be accessed by this project.
+
+**Request**
+
+URL: `GET /api/v1/workspaces/{workspace}/tags?repo=`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| repo | Required, repo for which the tags will be listed |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": <PaginationObject>,
+    "items": [ <tag>, ... ]
+}
+```
+
+### Github webhook
+
+Trigger pipeline by Github webhook.
+
+**Request**
+
+URL: `POST /api/v1/pipelines/{pipelineid}/githubwebhook`
+
+Header:
+```
+X-GitHub-Event: ReleaseEvent|ReleaseEvent|PullRequestEvent
+```
+
+Body:
+
+Refer to: https://developer.github.com/webhooks/#payloads
+
+**Response**
+
+Success:
+
+```
+200 OK
+```
+
+### Gitlab webhook
+
+Trigger pipeline by Gitlab webhook.
+
+**Request**
+
+URL: `POST /api/v1/pipelines/{pipelineid}/gitlabwebhook`
+
+Header:
+```
+X-GitHub-Event: Push Hook|Tag Push Hook|Merge Request Hook
+```
+
+Body:
+
+Refer to: https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
+
+**Response**
+
+Success:
+
+```
+200 OK
+```
+
+### PipelineStatusStatsObject
+
+```
+{
+    "overview": {
+        "total": "500",                       // int, required
+        "success": "200",                     // int, required
+        "failed": "200",                      // int, required
+        "aborted": "200",                     // int, required
+        "successRatio": "40.00%"              // ratio, required
+    },
+    "details": {
+        {
+            "timestamp": "1521555816",        // int, required
+            "success": "10",                  // int, required
+            "failed": "20",                   // int, required
+            "aborted": "0"                    // int, required
+        },
+        {
+            "timestamp": "1521555816",        // int, required
+            "success": "10",                  // int, required
+            "failed": "20",                   // int, required
+            "aborted": "0"                    // int, required
+        },
+        {
+            "timestamp": "1521555816",        // int, required
+            "success": "10",                  // int, required
+            "failed": "20",                   // int, required
+            "aborted": "0"                    // int, required
+        }
+    }
+}
+```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| timestamp | Required, Unix timestamp format, counted as 0:0:0 in that day |
+
+### Get Workspace Stats
+
+Get the stats for all pipelines in this project.
+
+**Request**
+
+URL: `GET /api/v1/workspaces/{workspace}/stats?[startTime=&endTime=]`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| startTime | Required, Unix timestamp format, start from 0:0:0 |
+| endTime | Required, Unix timestamp format, start from 23:59:59 |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <PipelineStatusStatsObject> fields
+}
+```
+
+### Get Pipeline Stats
+
+Get the execution stats for the pipeline.
+
+**Request**
+
+URL: `GET /api/v1/workspaces/{workspace}/pipelines/{pipeline}/stats?[startTime=&endTime=]`
+
+Note:
+Illustration of startTime and endTime ditto.
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <PipelineStatusStatsObject> fields
 }
 ```
