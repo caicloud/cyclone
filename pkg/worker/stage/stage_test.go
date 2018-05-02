@@ -20,9 +20,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/caicloud/cyclone/pkg/docker/mock"
+	"github.com/golang/mock/gomock"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
@@ -45,9 +47,9 @@ func init() {
 
 	// Init the common clients.
 	endpoint := "unix:///var/run/docker.sock"
-	if runtime.GOOS == "darwin" {
-		//endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
-	}
+	//if runtime.GOOS == "darwin" {
+	//	endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
+	//}
 
 	dm, err := docker.NewDockerManager(endpoint, "", "", "")
 	if err != nil {
@@ -336,6 +338,64 @@ func TestExecIntegrationTest(t *testing.T) {
 
 	for d, tc := range testCases {
 		err := stageManager.ExecIntegrationTest(tc.builtImages, tc.stage)
+		if tc.pass && err != nil || !tc.pass && err == nil {
+			t.Errorf("%s failed as error: %v", d, err)
+		}
+	}
+}
+
+func TestExecImageRelease(t *testing.T) {
+	ctl := gomock.NewController(t)
+	clientInterface := mock_docker.NewMockClientInterface(ctl)
+	clientInterface.EXPECT().PushImage(gomock.Any(), gomock.Any()).Return(nil)
+
+	// Log to standard error instead of files.
+	flag.Set("logtostderr", "true")
+
+	endpoint := "unix:///var/run/docker.sock"
+
+	dm, err := docker.NewDockerManager(endpoint, "", "", "")
+	if err != nil {
+		panic(err)
+	}
+	dm.Client = clientInterface
+	client := cycloneserver.NewFakeClient("http://fack-server.cyclone.com")
+	event := &api.Event{
+		ID:       "1",
+		Project:  &api.Project{},
+		Pipeline: &api.Pipeline{},
+		PipelineRecord: &api.PipelineRecord{
+			PerformParams: &api.PipelinePerformParams{
+				Ref: "refs/heads/master",
+			},
+			StageStatus: &api.StageStatus{},
+		},
+	}
+
+	stageManager = NewStageManager(dm, client, event.Project.Registry, event.PipelineRecord.PerformParams)
+	stageManager.SetEvent(event)
+
+	testCases := map[string]struct {
+		builtImages []string
+		stage       *api.ImageReleaseStage
+		pass        bool
+	}{
+		"correct": {
+			builtImages: []string{"busybox:1.24.0"},
+			stage: &api.ImageReleaseStage{
+				ReleasePolicies: []api.ImageReleasePolicy{
+					api.ImageReleasePolicy{
+						ImageName: "busybox:1.24.0",
+						Type:      api.AlwaysRelease,
+					},
+				},
+			},
+			pass: true,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := stageManager.ExecImageRelease(tc.builtImages, tc.stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}

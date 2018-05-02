@@ -17,7 +17,6 @@ limitations under the License.
 package router
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -46,9 +45,8 @@ func TestCheckAndTransTimes(t *testing.T) {
 
 	for k, v := range d {
 		s, e, err := checkAndTransTimes(v.start, v.end)
-		fmt.Printf("%v -- %v", s, e)
 		if err != nil {
-			t.Errorf("%s failed: expected nil, but got %v", k, err)
+			t.Errorf("%s failed: expected nil, but got %v, startTime:%v , endTime:%v", k, err, s, e)
 		}
 	}
 }
@@ -77,8 +75,7 @@ func TestCheckAndTransTimesErr(t *testing.T) {
 	}
 
 	for k, v := range d {
-		s, e, err := checkAndTransTimes(v.start, v.end)
-		fmt.Printf("%v -- %v", s, e)
+		_, _, err := checkAndTransTimes(v.start, v.end)
 		if err == nil {
 			t.Errorf("%s failed: expected err, but got nil", k)
 		}
