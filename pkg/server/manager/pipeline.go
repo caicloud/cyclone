@@ -279,6 +279,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 			Events: collectSCMEvents(scmTrigger),
 		}
 		if err := provider.CreateWebHook(scmConfig, gitSource.Url, webHook); err != nil {
+			logdog.Errorf("create webhook failed: %v", err)
 			return nil, httperror.ErrorInternalTypeError.Format("Can not create webhook")
 		}
 

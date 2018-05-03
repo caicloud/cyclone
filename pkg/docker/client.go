@@ -32,11 +32,26 @@ const (
 	defaultEndpoint = "unix:///var/run/docker.sock"
 )
 
+type ClientInterface interface {
+	PullImage(opts docker_client.PullImageOptions, auth docker_client.AuthConfiguration) error
+	InspectImage(name string) (*docker_client.Image, error)
+	PushImage(opts docker_client.PushImageOptions, auth docker_client.AuthConfiguration) error
+	BuildImage(opts docker_client.BuildImageOptions) error
+	CreateContainer(opts docker_client.CreateContainerOptions) (*docker_client.Container, error)
+	StartContainer(id string, hostConfig *docker_client.HostConfig) error
+	RemoveContainer(opts docker_client.RemoveContainerOptions) error
+	CreateExec(opts docker_client.CreateExecOptions) (*docker_client.Exec, error)
+	StartExec(id string, opts docker_client.StartExecOptions) error
+	InspectExec(id string) (*docker_client.ExecInspect, error)
+	DownloadFromContainer(id string, opts docker_client.DownloadFromContainerOptions) error
+}
+
 // DockerManager represents the manager of Docker, it packages the Docker client to easily use it.
 // The Docker client can be direclty used for some functions not provided by this manager.
 type DockerManager struct {
 	// Client represets the Docker client.
-	Client     *docker_client.Client
+	//Client     *docker_client.Client
+	Client     ClientInterface
 	EndPoint   string
 	AuthConfig *docker_client.AuthConfiguration
 }
