@@ -44,6 +44,7 @@ const (
 )
 
 var event *api.Event
+var imageNamePrefix string
 
 type StageManager interface {
 	SetRecordInfo(project, pipeline, recordID string)
@@ -75,6 +76,8 @@ func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cyclones
 	if err != nil {
 		log.Errorf(err.Error())
 	}
+
+	imageNamePrefix = getImagePrifix(registry.Server, registry.Repository)
 
 	return &stageManager{
 		dockerManager: dockerManager,
@@ -331,6 +334,7 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, status *api.Im
 			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
 		}
 	}
+
 	opt.Name = formatImageName(buildInfo.ImageName)
 
 	if err = sm.dockerManager.BuildImage(opt); err != nil {
@@ -358,7 +362,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}
 
 	// Start the services.
-	serviceInfos, err := sm.StartServicesForIntegrationTest(stage.Services)
+	serviceInfos, err := sm.StartServicesForIntegrationTest(builtImages, stage.Services)
 	if err != nil {
 		return err
 	}
@@ -373,15 +377,9 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	}()
 
 	testConfig := stage.Config
-	var testImage string
-	for _, builtImage := range builtImages {
-		if strings.Contains(builtImage, testConfig.ImageName) {
-			testImage = builtImage
-			break
-		}
-	}
 
-	if testImage == "" {
+	included, testImage := getBuiltImageName(builtImages, testConfig.ImageName)
+	if !included {
 		err = fmt.Errorf("image %s in integration test config is not the built images %v", testConfig.ImageName, builtImages)
 		log.Error(err.Error())
 		return err
@@ -421,12 +419,14 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 	return nil
 }
 
-func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) (map[string]string, error) {
+func (sm *stageManager) StartServicesForIntegrationTest(builtImages []string, services []api.Service) (map[string]string, error) {
 	serviceInfos := make(map[string]string)
 	for _, svc := range services {
+
+		_, imageName := getBuiltImageName(builtImages, svc.Image)
 		// Start and run the container from builder image.
 		config := &docker_client.Config{
-			Image: svc.Image,
+			Image: imageName,
 			Env:   convertEnvs(svc.EnvVars),
 			Cmd:   svc.Command,
 		}
@@ -448,6 +448,25 @@ func (sm *stageManager) StartServicesForIntegrationTest(services []api.Service) 
 	return serviceInfos, nil
 }
 
+// if image already built in 'builtImages', return true and the built image name,
+// otherwise return false and origin image name.
+func getBuiltImageName(builtImages []string, image string) (bool, string) {
+	for _, builtImage := range builtImages {
+
+		// trim prefix
+		tempBuiltImage := strings.TrimPrefix(builtImage, imageNamePrefix)
+		tempImage := strings.TrimPrefix(image, imageNamePrefix)
+
+		// is image name equal
+		if strings.EqualFold(strings.Split(tempBuiltImage, ":")[0], strings.Split(tempImage, ":")[0]) {
+			return true, builtImage
+		}
+
+	}
+
+	return false, image
+}
+
 func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) (err error) {
 	log.Infof("Exec image release stage for pipeline record %s/%s/%s", sm.project, sm.pipeline, sm.recordID)
 
@@ -464,32 +483,30 @@ func (sm *stageManager) ExecImageRelease(builtImages []string, stage *api.ImageR
 	policies := stage.ReleasePolicies
 	imageReleaseStatus.Tasks = make([]*api.ImageReleaseTaskStatus, len(policies))
 	for i, p := range policies {
-		for _, builtImage := range builtImages {
-			imageParts := strings.Split(builtImage, ":")
-			if strings.EqualFold(imageParts[0], strings.Split(p.ImageName, ":")[0]) {
-				wg.Add(1)
+		included, builtImage := getBuiltImageName(builtImages, p.ImageName)
+		if included {
+			wg.Add(1)
 
-				go func(index int, builtImage string) {
-					defer wg.Done()
+			go func(index int, image string) {
+				defer wg.Done()
 
-					status := &api.ImageReleaseTaskStatus{
-						TaskStatus: api.TaskStatus{
-							Name:      builtImage,
-							Status:    api.Running,
-							StartTime: time.Now(),
-						},
-					}
-					imageReleaseStatus.Tasks[index] = status
+				status := &api.ImageReleaseTaskStatus{
+					TaskStatus: api.TaskStatus{
+						Name:      image,
+						Status:    api.Running,
+						StartTime: time.Now(),
+					},
+				}
+				imageReleaseStatus.Tasks[index] = status
 
-					if bErr := sm.releaseImage(builtImage, status); bErr != nil {
-						log.Errorf("Fail to release image %s as %v", builtImage, bErr)
-						err = bErr
-					}
+				if bErr := sm.releaseImage(image, status); bErr != nil {
+					log.Errorf("Fail to release image %s as %v", image, bErr)
+					err = bErr
+				}
 
-					// Update status again after tasks finish.
-					imageReleaseStatus.Tasks[index] = status
-				}(i, builtImage)
-			}
+				// Update status again after tasks finish.
+				imageReleaseStatus.Tasks[index] = status
+			}(i, builtImage)
 		}
 	}
 
@@ -533,7 +550,6 @@ func (sm *stageManager) releaseImage(image string, status *api.ImageReleaseTaskS
 		Tag:          imageParts[1],
 		OutputStream: logFile,
 	}
-
 	if err = sm.dockerManager.PushImage(opts, generateAuthConfig(sm.registry)); err != nil {
 		log.Errorf("Fail to release the built image %s as %s", image, err.Error())
 		return
@@ -639,11 +655,7 @@ func setCommits(codeSources *api.CodeCheckoutStage) {
 	}
 }
 
-/* formatImageName Ensure that the image name including a tag.
-//  input        output
-//  test:v1      test:v1
-//  test         test:{rocordName}
-*/
+// formatImageName Ensure that the image name matching a format --- registry[/repository]/name:tag
 func formatImageName(namein string) string {
 	var nameout string
 	tname := strings.TrimSpace(namein)
@@ -658,7 +670,15 @@ func formatImageName(namein string) string {
 		nameout = tname
 	}
 
-	return nameout
+	return imageNamePrefix + nameout
+}
+
+func getImagePrifix(registry, repository string) string {
+	prefix := registry + "/"
+	if repository != "" {
+		prefix = prefix + repository + "/"
+	}
+	return prefix
 }
 
 // generateAuthConfig generates auth config for Docker registry.
