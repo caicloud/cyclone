@@ -17,6 +17,8 @@ limitations under the License.
 package router
 
 import (
+	"time"
+
 	"github.com/emicklei/go-restful"
 	log "github.com/golang/glog"
 
@@ -118,6 +120,7 @@ func InitRouters(dataStore *store.DataStore) error {
 	}
 
 	ws := new(restful.WebService)
+	ws.Filter(NCSACommonLogFormatLogger())
 
 	router.registerProjectAPIs(ws)
 	router.registerPipelineAPIs(ws)
@@ -130,6 +133,24 @@ func InitRouters(dataStore *store.DataStore) error {
 	restful.Add(ws)
 
 	return nil
+}
+
+// NCSACommonLogFormatLogger add filter to produce NCSA standard log.
+func NCSACommonLogFormatLogger() restful.FilterFunction {
+	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+		t := time.Now()
+
+		chain.ProcessFilter(req, resp)
+		log.Infof("%d \"%s %s %s\" - %s %d %.2fs\n",
+			resp.StatusCode(),
+			req.Request.Method,
+			req.Request.URL.RequestURI(),
+			req.Request.Proto,
+			req.Request.RemoteAddr,
+			resp.ContentLength(),
+			time.Since(t).Seconds(),
+		)
+	}
 }
 
 // registerProjectAPIs registers project related endpoints.
