@@ -27,8 +27,8 @@ import (
 
 // CloudManager represents the interface to manage cloud.
 type CloudManager interface {
-	CreateCloud(*cloud.Options) (*cloud.Options, error)
-	ListClouds() map[string]cloud.Options
+	CreateCloud(*cloud.Cloud) (*cloud.Cloud, error)
+	ListClouds() map[string]cloud.Cloud
 	DeleteCloud(name string) error
 	PingCloud(name string) error
 }
@@ -48,19 +48,19 @@ func NewCloudManager(dataStore *store.DataStore) (CloudManager, error) {
 }
 
 // CreateCloud creates a cloud.
-func (m *cloudManager) CreateCloud(cloudOpt *cloud.Options) (*cloud.Options, error) {
-	cloudName := cloudOpt.Name
+func (m *cloudManager) CreateCloud(cloud *cloud.Cloud) (*cloud.Cloud, error) {
+	cloudName := cloud.Name
 
 	if _, ok := event.CloudController.GetCloud(cloudName); ok {
 		return nil, httperror.ErrorAlreadyExist.Format(cloudName)
 	}
 
-	if err := event.CloudController.AddClouds(*cloudOpt); err != nil {
+	if err := event.CloudController.AddClouds(*cloud); err != nil {
 		return nil, err
 	}
 
-	gotCloud, _ := event.CloudController.GetCloud(cloudName)
-	opts := gotCloud.GetOptions()
+	provider, _ := event.CloudController.GetCloud(cloudName)
+	opts := provider.GetCloud()
 
 	if err := m.ds.InsertCloud(&opts); err != nil {
 		return nil, err
@@ -70,10 +70,10 @@ func (m *cloudManager) CreateCloud(cloudOpt *cloud.Options) (*cloud.Options, err
 }
 
 // ListClouds lists all clouds.
-func (m *cloudManager) ListClouds() map[string]cloud.Options {
-	clouds := make(map[string]cloud.Options)
+func (m *cloudManager) ListClouds() map[string]cloud.Cloud {
+	clouds := make(map[string]cloud.Cloud)
 	for name, cloud := range event.CloudController.Clouds {
-		clouds[name] = cloud.GetOptions()
+		clouds[name] = cloud.GetCloud()
 	}
 
 	return clouds

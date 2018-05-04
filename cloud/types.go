@@ -23,8 +23,8 @@ var (
 	DefaultCloudPingTimeout = time.Duration(5 * time.Second)
 )
 
-// Cloud defines a cloud provider which provision workers for cyclone
-type Cloud interface {
+// CloudProvider defines a cloud provider which provision workers for cyclone
+type CloudProvider interface {
 
 	// Name returns cloud name
 	Name() string
@@ -50,7 +50,40 @@ type Cloud interface {
 	LoadWorker(WorkerInfo) (Worker, error)
 
 	//
-	GetOptions() Options
+	GetCloud() Cloud
+}
+
+// CloudType represents cloud type, supports Docker and Kubernetes.
+type CloudType string
+
+const (
+	// CloudTypeDocker represents the Docker cloud type.
+	CloudTypeDocker CloudType = "Docker"
+
+	// CloudTypeKubernetes represents the Kubernetes cloud type.
+	CloudTypeKubernetes CloudType = "Kubernetes"
+)
+
+type CloudDocker struct {
+	Host     string `json:"host,omitempty" bson:"host,omitempty"`
+	CertPath string `json:"certPath,omitempty" bson:"certPath,omitempty"`
+}
+
+type CloudKubernetes struct {
+	Host        string `json:"host,omitempty" bson:"host,omitempty"`
+	InCluster   bool   `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
+	BearerToken string `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
+}
+
+// Cloud represents clouds for workers.
+// TODO (robin) Move this to pkg/api
+type Cloud struct {
+	ID         string           `bson:"_id,omitempty" json:"id,omitempty"`
+	Type       CloudType        `bson:"type,omitempty" json:"type,omitempty"`
+	Name       string           `json:"name,omitempty" bson:"name,omitempty"`
+	Insecure   bool             `json:"insecure,omitempty" bson:"insecure,omitempty"`
+	Docker     *CloudDocker     `json:"docker,omitempty" bson:"docker,omitempty"`
+	Kubernetes *CloudKubernetes `json:"kubernetes,omitempty" bson:"kubernetes,omitempty"`
 }
 
 // Options is options for all kinds of clouds
