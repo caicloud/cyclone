@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -39,7 +40,10 @@ const (
 	codeDir = "/tmp/code"
 )
 
-var stageManager StageManager
+var smTest StageManager
+var dmTest *docker.DockerManager
+var clientTest cycloneserver.CycloneServerClient
+var eventTest *api.Event
 
 func init() {
 	// Log to standard error instead of files.
@@ -47,19 +51,22 @@ func init() {
 
 	// Init the common clients.
 	endpoint := "unix:///var/run/docker.sock"
-	//if runtime.GOOS == "darwin" {
-	//	endpoint = "unix:////Users/robin/Library/Containers/com.docker.docker/Data/s60"
-	//}
-
-	dm, err := docker.NewDockerManager(endpoint, "", "", "")
-	if err != nil {
-		panic(err)
+	if runtime.GOOS == "darwin" {
+		//	endpoint = "unix:////Users/zhujian/Library/Containers/com.docker.docker/Data/s60"
 	}
 
-	client := cycloneserver.NewFakeClient("http://fack-server.cyclone.com")
-	event := &api.Event{
-		ID:       "1",
-		Project:  &api.Project{},
+	registry := api.Registry{
+		Server:     "caicloud.test.com",
+		Repository: "ptest",
+		Username:   "",
+		Password:   "",
+	}
+
+	eventTest = &api.Event{
+		ID: "1",
+		Project: &api.Project{
+			Registry: &registry,
+		},
 		Pipeline: &api.Pipeline{},
 		PipelineRecord: &api.PipelineRecord{
 			PerformParams: &api.PipelinePerformParams{
@@ -68,8 +75,16 @@ func init() {
 			StageStatus: &api.StageStatus{},
 		},
 	}
-	stageManager = NewStageManager(dm, client, event.Project.Registry, event.PipelineRecord.PerformParams)
-	stageManager.SetEvent(event)
+
+	var err error
+	dmTest, err = docker.NewDockerManager(endpoint, registry.Server, registry.Username, registry.Password)
+	if err != nil {
+		panic(err)
+	}
+
+	clientTest = cycloneserver.NewFakeClient("http://fack-server.cyclone.com")
+	smTest = NewStageManager(dmTest, clientTest, eventTest.Project.Registry, eventTest.PipelineRecord.PerformParams)
+	smTest.SetEvent(eventTest)
 
 	fmt.Println("Initialization of common clients has finished")
 }
@@ -141,7 +156,7 @@ func TestExecCodeCheckout(t *testing.T) {
 		// Cleanup the temp folder.
 		os.RemoveAll(codeDir)
 		stage = tc.inputs
-		err := stageManager.ExecCodeCheckout("", stage)
+		err := smTest.ExecCodeCheckout("", stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
@@ -226,7 +241,7 @@ func TestExecImageBuild(t *testing.T) {
 	stage := &api.ImageBuildStage{}
 	for d, tc := range testCases {
 		stage.BuildInfos = tc.inputs
-		_, err := stageManager.ExecImageBuild(stage)
+		_, err := smTest.ExecImageBuild(stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
@@ -284,7 +299,7 @@ func TestExecPackage(t *testing.T) {
 	}
 
 	for d, tc := range testCases {
-		err := stageManager.ExecPackage(tc.buildImage, tc.buildInfo, tc.unitTestStage, tc.packageStage)
+		err := smTest.ExecPackage(tc.buildImage, tc.buildInfo, tc.unitTestStage, tc.packageStage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
@@ -337,7 +352,7 @@ func TestExecIntegrationTest(t *testing.T) {
 	}
 
 	for d, tc := range testCases {
-		err := stageManager.ExecIntegrationTest(tc.builtImages, tc.stage)
+		err := smTest.ExecIntegrationTest(tc.builtImages, tc.stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}
@@ -345,35 +360,17 @@ func TestExecIntegrationTest(t *testing.T) {
 }
 
 func TestExecImageRelease(t *testing.T) {
-	ctl := gomock.NewController(t)
-	clientInterface := mock_docker.NewMockClientInterface(ctl)
-	clientInterface.EXPECT().PushImage(gomock.Any(), gomock.Any()).Return(nil)
-
 	// Log to standard error instead of files.
 	flag.Set("logtostderr", "true")
 
-	endpoint := "unix:///var/run/docker.sock"
+	ctl := gomock.NewController(t)
+	clientMock := mock_docker.NewMockClientInterface(ctl)
+	clientMock.EXPECT().PushImage(gomock.Any(), gomock.Any()).Return(nil)
 
-	dm, err := docker.NewDockerManager(endpoint, "", "", "")
-	if err != nil {
-		panic(err)
-	}
-	dm.Client = clientInterface
-	client := cycloneserver.NewFakeClient("http://fack-server.cyclone.com")
-	event := &api.Event{
-		ID:       "1",
-		Project:  &api.Project{},
-		Pipeline: &api.Pipeline{},
-		PipelineRecord: &api.PipelineRecord{
-			PerformParams: &api.PipelinePerformParams{
-				Ref: "refs/heads/master",
-			},
-			StageStatus: &api.StageStatus{},
-		},
-	}
+	dmTest.Client = clientMock
 
-	stageManager = NewStageManager(dm, client, event.Project.Registry, event.PipelineRecord.PerformParams)
-	stageManager.SetEvent(event)
+	smMock := NewStageManager(dmTest, clientTest, eventTest.Project.Registry, eventTest.PipelineRecord.PerformParams)
+	smMock.SetEvent(eventTest)
 
 	testCases := map[string]struct {
 		builtImages []string
@@ -395,7 +392,7 @@ func TestExecImageRelease(t *testing.T) {
 	}
 
 	for d, tc := range testCases {
-		err := stageManager.ExecImageRelease(tc.builtImages, tc.stage)
+		err := smMock.ExecImageRelease(tc.builtImages, tc.stage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}

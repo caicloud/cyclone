@@ -39,9 +39,10 @@ type Project struct {
 
 // Registry represents registry config for image operations of the project.
 type Registry struct {
-	Server   string `bson:"server,omitempty" json:"server,omitempty"`
-	Username string `bson:"username,omitempty" json:"username,omitempty"`
-	Password string `bson:"password,omitempty" json:"password,omitempty"`
+	Server     string `bson:"server,omitempty" json:"server,omitempty"`
+	Repository string `bson:"repository,omitempty" json:"repository,omitempty"`
+	Username   string `bson:"username,omitempty" json:"username,omitempty"`
+	Password   string `bson:"password,omitempty" json:"password,omitempty"`
 }
 
 // Worker represents the config of worker for the pipelines of the project.
