@@ -25,7 +25,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	"github.com/caicloud/cyclone/store"
-	//provider2 "github.com/caicloud/cyclone/pkg/scm/provider"
 )
 
 // scmProviders represents the set of SCM providers.
@@ -132,11 +131,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 				return err
 			}
 		}
-			// if oauth finished and return username
-		//} else {
-		//	d := &provider2.GitLabManager{}
-		//	scmConfig, err := d.DataStore.FindTokenByUserName(config.Username, config.Type)
-		//}
+
 	case api.SVN:
 		return fmt.Errorf("SCM %s is not supported", scmType)
 	default:
@@ -177,13 +172,6 @@ func (scm *Manager) FindScm(scmType string) (SCMManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	//switch scmType {
-	//case api.GitHub:
-	//	return &manager.GitHubManager{DataStore: scm.DataStore}, nil
-	//case api.GitLab:
-	//	return &manager.GitLabManager{DataStore: scm.DataStore}, nil
-	//default:
-	//	return nil, fmt.Errorf("unknown scm type %s", scmType)
-	//}
+
 	return scmManager, nil
 }

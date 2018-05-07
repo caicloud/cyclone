@@ -247,7 +247,8 @@ func (router *router) registerScmAPIs(ws *restful.WebService) {
 	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 
 	// gitlab redirect url
-	ws.Route(ws.GET("/scm/gitlab/authcallback").To(router.acceptCode))
+	ws.Route(ws.GET("/scm/{type}/authcallback").To(router.acceptCode).
+		Param(ws.PathParameter("type", "type of scm").DataType("string")))
 
 	ws.Route(ws.GET("/scm/{type}/code").To(router.getAuthCodeURL).
 		Param(ws.PathParameter("type", "type of scm").DataType("string")))
