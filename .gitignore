@@ -22,3 +22,6 @@ cyclone-server
 *.coverprofile
 
 worker/worker
+
+# idea
+.idea

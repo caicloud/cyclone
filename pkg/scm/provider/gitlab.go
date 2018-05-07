@@ -47,6 +47,10 @@ func init() {
 	if err := scm.RegisterProvider(api.GitLab, new(GitLab)); err != nil {
 		log.Errorln(err)
 	}
+
+	if err := scm.RegisterManager(api.GITLAB, new(GitLabManager)); err != nil {
+		log.Errorln(err)
+	}
 }
 
 // GetToken gets the token by the username and password of SCM config.
@@ -205,14 +209,35 @@ func (g *GitLabManager) Authcallback(code, state string) (string, error) {
 		return "", fmt.Errorf("code: %s or state: %s is nil", code, state)
 	}
 
-	//caicloud web address,eg caicloud.io
-	uiPath := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "http://localhost:8000")
-	redirectURL := fmt.Sprintf("%s/cyclone/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
-
-	if err := g.setToken(code, state); err != nil {
+	uiPath := osutil.GetStringEnv(cloud.ConsoleWebEndpoint, "")
+	redirectURL := fmt.Sprintf("%s/devops/workspace/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
+	token, err := g.getToken(code, state)
+	if err != nil {
 		return "", err
 	}
+	// add token, username, server to redirectURL
+	userName, server, avatarURL, err := g.getUserInfo(token)
+	redirectURL = redirectURL + fmt.Sprintf("&token=%s&username=%s&server=%s&avatar_url=%s",
+		token.AccessToken, userName, server, avatarURL)
 	return redirectURL, nil
+}
+
+func (g *GitLabManager) getToken(code, state string) (*oauth2.Token, error) {
+	config, err := getConfig(api.GITLAB)
+	if err != nil {
+		return nil, err
+	}
+
+	var token *oauth2.Token
+	token, err = config.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid() {
+		return nil, fmt.Errorf("token invalid. Got: %v", token)
+	}
+	return token, nil
 }
 
 // setToken sets the token.
@@ -225,36 +250,46 @@ func (g *GitLabManager) setToken(code, state string) error {
 
 	// To communicate with gitlab or other scm to get token.
 	var token *oauth2.Token
-	token, err = config.Exchange(oauth2.NoContext, code) // Post a token request and receive toeken.
+	token, err = config.Exchange(oauth2.NoContext, code) // Post a token request and receive token.
 	if err != nil {
 		return err
 	}
 
 	if !token.Valid() {
-		return fmt.Errorf("Token invalid. Got: %#v", token)
-	}
-
-	// Create token in database (but not ready to use yet).
-	scmToken := api.ScmToken{
-		ProjectID: state,
-		ScmType:   api.GITLAB,
-		Token:     *token,
-	}
-
-	if _, err = g.DataStore.Findtoken(state, api.GitHub); err != nil {
-		if err == mgo.ErrNotFound {
-			if _, err = g.DataStore.CreateToken(&scmToken); err != nil {
-				return err
-			}
-		}
-		return err
-	}
-
-	if err = g.DataStore.UpdateToken2(&scmToken); err != nil {
-		return err
+		return fmt.Errorf("token invalid. Got: %#v", token)
 	}
 
 	return nil
+}
+
+func (g *GitLabManager) getUserInfo(token *oauth2.Token) (string, string, string, error) {
+	accessToken := token.AccessToken
+	gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "http://192.168.21.100:10080")
+	userApi := fmt.Sprintf("%s/api/v3/user?access_token=%s", gitlabServer, accessToken)
+	if req, err := http.NewRequest(http.MethodGet, userApi, nil); err != nil {
+		log.Error(err.Error())
+		return "", "", "", nil
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		var userInfo = &api.GitlabUserInfo{}
+		json.Unmarshal(body, &userInfo)
+		userName := userInfo.Username
+		webUrl := userInfo.WebUrl
+		fmt.Println(userInfo)
+		// webUrl --> http://192.168.21.100:10080/u/jmyue
+		server := webUrl[:strings.LastIndex(webUrl, "/")-2]
+		avatarURL := userInfo.AvatarUrl
+		return userName, server, avatarURL, nil
+	}
 }
 
 // GetRepos gets the list of repositories with token from gitlab.
@@ -299,6 +334,6 @@ func (g *GitLabManager) LogOut(projectID string) error {
 }
 
 // GetAuthCodeURL gets the URL for token request.
-func (g *GitLabManager) GetAuthCodeURL(projectID string) (string, error) {
-	return getAuthCodeURL(projectID)
+func (g *GitLabManager) GetAuthCodeURL(state string, scmType string) (string, error) {
+	return getAuthCodeURL(state, scmType)
 }

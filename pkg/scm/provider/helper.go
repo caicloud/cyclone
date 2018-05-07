@@ -34,7 +34,7 @@ func getConfig(scmType string) (*oauth2.Config, error) {
 
 	switch scmType {
 	case api.GitHub:
-		cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://localhost:7099")
+		cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "")
 		clientID = osutil.GetStringEnv(cloud.GithubClient, "")
 		clientSecret = osutil.GetStringEnv(cloud.GithubSecret, "")
 		redirectURL = fmt.Sprintf("%s/%s/scm/%s/authcallback", cyclonePath, "/api/v1", api.GitHub)
@@ -43,8 +43,8 @@ func getConfig(scmType string) (*oauth2.Config, error) {
 		tokenURL = "https://github.com/login/oauth/access_token"
 
 	case api.GITLAB:
-		cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "http://127.0.0.1:7099")
-		gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "https://gitlab.com")
+		cyclonePath := osutil.GetStringEnv(cloud.CycloneServer, "")
+		gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "")
 
 		clientID = osutil.GetStringEnv(cloud.GitlabClient, "")
 		clientSecret = osutil.GetStringEnv(cloud.GitlabSecret, "")
@@ -53,7 +53,7 @@ func getConfig(scmType string) (*oauth2.Config, error) {
 		authURL = fmt.Sprintf("%s/oauth/authorize", gitlabServer)
 		tokenURL = fmt.Sprintf("%s/oauth/token", gitlabServer)
 	default:
-		return nil, fmt.Errorf("Unknown scm type %s", scmType)
+		return nil, fmt.Errorf("unknown scm type %s", scmType)
 	}
 
 	return &oauth2.Config{
@@ -69,11 +69,11 @@ func getConfig(scmType string) (*oauth2.Config, error) {
 }
 
 // getAuthCodeURL gets the URL for token request.
-func getAuthCodeURL(projectID string) (string, error) {
-	conf, err := getConfig(api.GITHUB)
+func getAuthCodeURL(state string, scmType string) (string, error) {
+	conf, err := getConfig(scmType)
 	if err != nil {
 		return "", err
 	}
 
-	return conf.AuthCodeURL(projectID), nil
+	return conf.AuthCodeURL(state), nil
 }
