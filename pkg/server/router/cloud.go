@@ -26,13 +26,13 @@ import (
 
 // createCloud handles the request to create a cloud.
 func (router *router) createCloud(request *restful.Request, response *restful.Response) {
-	cloudOpt := &cloud.Options{}
-	if err := httputil.ReadEntityFromRequest(request, cloudOpt); err != nil {
+	cloud := &cloud.Cloud{}
+	if err := httputil.ReadEntityFromRequest(request, cloud); err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	createdCloud, err := router.cloudManager.CreateCloud(cloudOpt)
+	createdCloud, err := router.cloudManager.CreateCloud(cloud)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return

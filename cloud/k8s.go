@@ -42,7 +42,7 @@ type K8SCloud struct {
 }
 
 // NewK8SCloud ...
-func NewK8SCloud(opts Options) (Cloud, error) {
+func NewK8SCloud(opts Options) (CloudProvider, error) {
 
 	if opts.K8SInCluster == true {
 		return NewK8SCloudInCluster(opts)
@@ -52,7 +52,7 @@ func NewK8SCloud(opts Options) (Cloud, error) {
 }
 
 // newK8SCloud returns a cloud object which uses the Options
-func newK8SCloud(opts Options) (Cloud, error) {
+func newK8SCloud(opts Options) (CloudProvider, error) {
 
 	if opts.Name == "" {
 		return nil, errors.New("K8SCloud: Invalid cloud name")
@@ -88,7 +88,7 @@ func newK8SCloud(opts Options) (Cloud, error) {
 
 // NewK8SCloudInCluster returns a cloud object which uses the service account
 // kubernetes gives to pods
-func NewK8SCloudInCluster(opts Options) (Cloud, error) {
+func NewK8SCloudInCluster(opts Options) (CloudProvider, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -301,16 +301,17 @@ func (cloud *K8SCloud) LoadWorker(info WorkerInfo) (Worker, error) {
 	return worker, nil
 }
 
-// GetOptions ...
-func (cloud *K8SCloud) GetOptions() Options {
-	return Options{
-		Name:           cloud.name,
-		Kind:           cloud.Kind(),
-		Host:           cloud.host,
-		Insecure:       cloud.insecure,
-		K8SBearerToken: cloud.bearerToken,
-		K8SNamespace:   cloud.namespace,
-		K8SInCluster:   cloud.inCluster,
+// GetCloud ...
+func (cloud *K8SCloud) GetCloud() Cloud {
+	return Cloud{
+		Name:     cloud.name,
+		Type:     CloudTypeKubernetes,
+		Insecure: cloud.insecure,
+		Kubernetes: &CloudKubernetes{
+			Host:        cloud.host,
+			BearerToken: cloud.bearerToken,
+			InCluster:   cloud.inCluster,
+		},
 	}
 }
 

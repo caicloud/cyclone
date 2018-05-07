@@ -80,16 +80,18 @@ func addInClusterK8SCloud() {
 	_, err := rest.InClusterConfig()
 	if err == nil {
 		// in k8s cluster
-		opt := cloud.Options{
-			Kind:         cloud.KindK8SCloud,
-			Name:         "_inCluster",
-			K8SInCluster: true,
+		cloud := cloud.Cloud{
+			Name: "_inCluster",
+			Type: cloud.CloudTypeKubernetes,
+			Kubernetes: &cloud.CloudKubernetes{
+				InCluster: true,
+			},
 		}
-		err := CloudController.AddClouds(opt)
+		err := CloudController.AddClouds(cloud)
 		if err != nil {
 			logdog.Warn("Can not add inCluster k8s cloud to database")
 		}
-		err = ds.InsertCloud(&opt)
+		err = ds.InsertCloud(&cloud)
 		if err != nil {
 			logdog.Warn("Can not add inCluster k8s cloud to database")
 		}

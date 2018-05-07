@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	// TODO (robin) User CloudType instead, remove when refactor cloud.
 
 	// KindDockerCloud ...
 	KindDockerCloud = "docker"
@@ -40,12 +41,12 @@ var (
 )
 
 func init() {
-	RegisterConstructor(KindDockerCloud, NewDockerCloud)
-	RegisterConstructor(KindK8SCloud, NewK8SCloud)
+	RegisterConstructor(string(CloudTypeDocker), NewDockerCloud)
+	RegisterConstructor(string(CloudTypeKubernetes), NewK8SCloud)
 }
 
 // Constructor ...
-type Constructor func(Options) (Cloud, error)
+type Constructor func(Options) (CloudProvider, error)
 
 // RegisterConstructor ...
 func RegisterConstructor(kind string, cc Constructor) {
@@ -64,7 +65,7 @@ func GetConstructor(kind string) Constructor {
 // Controller ...
 // TODO cloud controller sync all cloud infomation
 type Controller struct {
-	Clouds map[string]Cloud
+	Clouds map[string]CloudProvider
 	// WorkerOptions *WorkerOptions
 	provisionErr *ErrCloudProvision
 }
@@ -72,34 +73,37 @@ type Controller struct {
 // NewController creates a new CloudController
 func NewController() *Controller {
 	return &Controller{
-		Clouds: make(map[string]Cloud),
+		Clouds: make(map[string]CloudProvider),
 		// WorkerOptions: NewWorkerOptions(),
 		provisionErr: NewErrCloudProvision(),
 	}
 }
 
 // AddClouds creates clouds from CloudOptions and cache it
-func (cc *Controller) AddClouds(opts ...Options) error {
-	for _, opt := range opts {
-		constructor := GetConstructor(opt.Kind)
+func (cc *Controller) AddClouds(clouds ...Cloud) error {
+	for _, c := range clouds {
+		kind := string(c.Type)
+		constructor := GetConstructor(kind)
 		if constructor == nil {
-			err := fmt.Errorf("CloudController: no cloud constructor found for kind[%s]", opt.Kind)
+			err := fmt.Errorf("CloudController: no cloud constructor found for kind[%s]", kind)
 			logdog.Error(err)
 			return err
 		}
+
+		opt := convertCloudToOption(c)
 		cloud, err := constructor(opt)
 		if err != nil {
 			logdog.Error("CloudController: create cloud error", logdog.Fields{"err": err})
 			return err
 		}
-		cc.Clouds[opt.Name] = cloud
-		logdog.Debug("CloudController: add cloud successfully", logdog.Fields{"name": opt.Name, "kind": opt.Kind})
+		cc.Clouds[c.Name] = cloud
+		logdog.Debug("CloudController: add cloud successfully", logdog.Fields{"name": c.Name, "kind": kind})
 	}
 	return nil
 }
 
 // GetCloud returns a cloud by cloud name
-func (cc *Controller) GetCloud(name string) (Cloud, bool) {
+func (cc *Controller) GetCloud(name string) (CloudProvider, bool) {
 	cloud, ok := cc.Clouds[name]
 	return cloud, ok
 }
@@ -170,4 +174,28 @@ func (cc *Controller) Resources() (map[string]*Resource, error) {
 
 	resources["_total"] = total
 	return resources, nil
+}
+
+func convertCloudToOption(c Cloud) (opt Options) {
+	switch c.Type {
+	case CloudTypeDocker:
+		opt = Options{
+			Name:           c.Name,
+			Kind:           string(CloudTypeDocker),
+			Insecure:       c.Insecure,
+			Host:           c.Docker.Host,
+			DockerCertPath: c.Docker.CertPath,
+		}
+	case CloudTypeKubernetes:
+		opt = Options{
+			Name:           c.Name,
+			Kind:           string(CloudTypeKubernetes),
+			Insecure:       c.Insecure,
+			Host:           c.Kubernetes.Host,
+			K8SInCluster:   c.Kubernetes.InCluster,
+			K8SBearerToken: c.Kubernetes.BearerToken,
+		}
+	}
+
+	return opt
 }

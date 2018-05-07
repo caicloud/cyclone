@@ -46,7 +46,7 @@ type DockerCloud struct {
 }
 
 // NewDockerCloud returns a new Cloud from CloudOption
-func NewDockerCloud(opts Options) (Cloud, error) {
+func NewDockerCloud(opts Options) (CloudProvider, error) {
 	if opts.Name == "" {
 		return nil, errors.New("DockerCloud: Invalid cloud name")
 	}
@@ -240,14 +240,16 @@ func (cloud *DockerCloud) LoadWorker(info WorkerInfo) (Worker, error) {
 	return worker, nil
 }
 
-// GetOptions ...
-func (cloud *DockerCloud) GetOptions() Options {
-	return Options{
-		Name:           cloud.name,
-		Kind:           cloud.Kind(),
-		Host:           cloud.host,
-		Insecure:       cloud.insecure,
-		DockerCertPath: cloud.dockerCertPath,
+// GetCloud ...
+func (cloud *DockerCloud) GetCloud() Cloud {
+	return Cloud{
+		Name:     cloud.name,
+		Type:     CloudTypeDocker,
+		Insecure: cloud.insecure,
+		Docker: &CloudDocker{
+			Host:     cloud.host,
+			CertPath: cloud.dockerCertPath,
+		},
 	}
 }
 

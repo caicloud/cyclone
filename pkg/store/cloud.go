@@ -22,22 +22,22 @@ import (
 )
 
 // InsertCloud insert a new cloud document to db
-func (d *DataStore) InsertCloud(doc *cloud.Options) error {
+func (d *DataStore) InsertCloud(doc *cloud.Cloud) error {
 	col := d.s.DB(defaultDBName).C(cloudCollection)
 	err := col.Insert(doc)
 	return err
 }
 
 // UpsertCloud insert a new cloud document to db
-func (d *DataStore) UpsertCloud(doc *cloud.Options) error {
+func (d *DataStore) UpsertCloud(doc *cloud.Cloud) error {
 	col := d.s.DB(defaultDBName).C(cloudCollection)
 	_, err := col.Upsert(bson.M{"name": doc.Name}, doc)
 	return err
 }
 
 // FindAllClouds returns all clouds
-func (d *DataStore) FindAllClouds() ([]cloud.Options, error) {
-	clouds := []cloud.Options{}
+func (d *DataStore) FindAllClouds() ([]cloud.Cloud, error) {
+	clouds := []cloud.Cloud{}
 
 	col := d.s.DB(defaultDBName).C(cloudCollection)
 	err := col.Find(bson.M{}).All(&clouds)
@@ -45,8 +45,8 @@ func (d *DataStore) FindAllClouds() ([]cloud.Options, error) {
 }
 
 // FindCloudByName returns a cloud in db by name
-func (d *DataStore) FindCloudByName(name string) (*cloud.Options, error) {
-	c := &cloud.Options{}
+func (d *DataStore) FindCloudByName(name string) (*cloud.Cloud, error) {
+	c := &cloud.Cloud{}
 	col := d.s.DB(defaultDBName).C(cloudCollection)
 	err := col.Find(bson.M{"name": name}).One(c)
 	return c, err
