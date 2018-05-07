@@ -167,6 +167,7 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
   },
   "registry": {                                 // optional
     "server": "",                               // string, required
+    "repository": "",                           // string, required
     "username": "",                             // string, optional
     "password": "",                             // string, optional
   },
@@ -240,6 +241,7 @@ Body:
   },
   "registry": {                                 // optional
     "server": "",                               // string, required
+    "repository": "",                           // string, required
     "username": "",                             // string, optional
     "password": "",                             // string, optional
   },
