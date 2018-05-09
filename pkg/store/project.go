@@ -17,13 +17,11 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	log "github.com/golang/glog"
 	"github.com/mozillazg/go-slugify"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -54,19 +52,9 @@ func (d *DataStore) CreateProject(project *api.Project) (*api.Project, error) {
 // FindProjectByName finds the project by name. If find no project or more than one project, return error.
 func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 	query := bson.M{"name": name}
-	count, err := d.projectCollection.Find(query).Count()
-	if err != nil {
-		return nil, err
-	}
-
-	if count == 0 {
-		return nil, mgo.ErrNotFound
-	} else if count > 1 {
-		return nil, fmt.Errorf("there are %d projects with the same name %s", count, name)
-	}
 
 	project := &api.Project{}
-	if err = d.projectCollection.Find(query).One(project); err != nil {
+	if err := d.projectCollection.Find(query).One(project); err != nil {
 		return nil, err
 	}
 

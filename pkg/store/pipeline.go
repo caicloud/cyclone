@@ -17,11 +17,9 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mozillazg/go-slugify"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -51,19 +49,9 @@ func (d *DataStore) CreatePipeline(pipeline *api.Pipeline) (*api.Pipeline, error
 // error.
 func (d *DataStore) FindPipelineByName(projectID string, name string) (*api.Pipeline, error) {
 	query := bson.M{"projectID": projectID, "name": name}
-	count, err := d.pipelineCollection.Find(query).Count()
-	if err != nil {
-		return nil, err
-	}
-
-	if count == 0 {
-		return nil, mgo.ErrNotFound
-	} else if count > 1 {
-		return nil, fmt.Errorf("there are %d pipelines with the same name %s", count, name)
-	}
 
 	pipeline := &api.Pipeline{}
-	err = d.pipelineCollection.Find(query).One(pipeline)
+	err := d.pipelineCollection.Find(query).One(pipeline)
 	if err != nil {
 		return nil, err
 	}
