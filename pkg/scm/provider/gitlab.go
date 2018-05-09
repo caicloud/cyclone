@@ -216,9 +216,9 @@ func (g *GitLabManager) Authcallback(code, state string) (string, error) {
 		return "", err
 	}
 	// add token, username, server to redirectURL
-	userName, server, avatarURL, err := g.getUserInfo(token)
-	redirectURL = redirectURL + fmt.Sprintf("&token=%s&username=%s&server=%s&avatar_url=%s",
-		token.AccessToken, userName, server, avatarURL)
+	userName, server, err := g.getUserInfo(token)
+	redirectURL = redirectURL + fmt.Sprintf("&token=%s&username=%s&server=%s",
+		token.AccessToken, userName, server)
 	return redirectURL, nil
 }
 
@@ -262,13 +262,13 @@ func (g *GitLabManager) setToken(code, state string) error {
 	return nil
 }
 
-func (g *GitLabManager) getUserInfo(token *oauth2.Token) (string, string, string, error) {
+func (g *GitLabManager) getUserInfo(token *oauth2.Token) (string, string, error) {
 	accessToken := token.AccessToken
 	gitlabServer := osutil.GetStringEnv(cloud.GitlabURL, "http://192.168.21.100:10080")
 	userApi := fmt.Sprintf("%s/api/v3/user?access_token=%s", gitlabServer, accessToken)
 	if req, err := http.NewRequest(http.MethodGet, userApi, nil); err != nil {
 		log.Error(err.Error())
-		return "", "", "", nil
+		return "", "", nil
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
@@ -283,12 +283,9 @@ func (g *GitLabManager) getUserInfo(token *oauth2.Token) (string, string, string
 		var userInfo = &api.GitlabUserInfo{}
 		json.Unmarshal(body, &userInfo)
 		userName := userInfo.Username
-		webUrl := userInfo.WebUrl
 		fmt.Println(userInfo)
-		// webUrl --> http://192.168.21.100:10080/u/jmyue
-		server := webUrl[:strings.LastIndex(webUrl, "/")-2]
-		avatarURL := userInfo.AvatarUrl
-		return userName, server, avatarURL, nil
+		server := gitlabServer
+		return userName, server, nil
 	}
 }
 
