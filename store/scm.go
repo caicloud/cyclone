@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	"github.com/caicloud/cyclone/pkg/api"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -44,8 +42,6 @@ func (d *DataStore) Findtoken(projectID, scmType string) (*api.ScmToken, error) 
 
 	if count == 0 {
 		return nil, mgo.ErrNotFound
-	} else if count > 1 {
-		return nil, fmt.Errorf("there are %d token with the project id %s and scm type %s", count, projectID, scmType)
 	}
 
 	token := &api.ScmToken{}
