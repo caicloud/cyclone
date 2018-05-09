@@ -27,6 +27,8 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+
+	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
 // ProjectManager represents the interface to manage project.
@@ -63,9 +65,25 @@ func NewProjectManager(dataStore *store.DataStore, pipelineManager PipelineManag
 
 // CreateProject creates a project.
 func (m *projectManager) CreateProject(project *api.Project) (*api.Project, error) {
-	projectName := project.Name
-	if _, err := m.GetProject(projectName); err == nil {
-		return nil, httperror.ErrorAlreadyExist.Format(projectName)
+	if project.Name == "" && project.Alias == "" {
+		return nil, httperror.ErrorValidationFailed.Format("project name and alias", "can not neither be empty")
+	}
+
+	nameEmpty := false
+	if project.Name == "" && project.Alias != "" {
+		project.Name = slug.Slugify(project.Alias, false, -1)
+		nameEmpty = true
+	}
+
+	if p, err := m.GetProject(project.Name); err == nil {
+		log.Errorf("name %s conflict, project alias:%s, exist project alias:%s",
+			project.Name, project.Alias, p.Alias)
+		if nameEmpty {
+			project.Name = slug.Slugify(project.Name, true, -1)
+		} else {
+			return nil, httperror.ErrorAlreadyExist.Format(project.Name)
+		}
+
 	}
 
 	if err := scm.GenerateSCMToken(project.SCM); err != nil {
@@ -108,10 +126,6 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 
 	// Update the properties of the project.
 	// TODO (robin) Whether need a method for this merge?
-	if len(newProject.Name) > 0 {
-		project.Name = newProject.Name
-	}
-
 	if len(newProject.Alias) > 0 {
 		project.Alias = newProject.Alias
 	}
