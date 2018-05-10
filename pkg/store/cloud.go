@@ -23,6 +23,7 @@ import (
 
 // InsertCloud insert a new cloud document to db
 func (d *DataStore) InsertCloud(doc *cloud.Cloud) error {
+	doc.ID = bson.NewObjectId().Hex()
 	col := d.s.DB(defaultDBName).C(cloudCollection)
 	err := col.Insert(doc)
 	return err
