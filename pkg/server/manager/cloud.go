@@ -19,16 +19,16 @@ package manager
 import (
 	"fmt"
 
-	"github.com/caicloud/cyclone/cloud"
-	"github.com/caicloud/cyclone/pkg/event"
+	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // CloudManager represents the interface to manage cloud.
 type CloudManager interface {
-	CreateCloud(*cloud.Cloud) (*cloud.Cloud, error)
-	ListClouds() map[string]cloud.Cloud
+	CreateCloud(*api.Cloud) (*api.Cloud, error)
+	ListClouds() ([]api.Cloud, error)
 	DeleteCloud(name string) error
 	PingCloud(name string) error
 }
@@ -48,50 +48,37 @@ func NewCloudManager(dataStore *store.DataStore) (CloudManager, error) {
 }
 
 // CreateCloud creates a cloud.
-func (m *cloudManager) CreateCloud(cloud *cloud.Cloud) (*cloud.Cloud, error) {
+func (m *cloudManager) CreateCloud(cloud *api.Cloud) (*api.Cloud, error) {
 	cloudName := cloud.Name
 
-	if _, ok := event.CloudController.GetCloud(cloudName); ok {
+	if _, err := m.ds.FindCloudByName(cloudName); err == nil {
 		return nil, httperror.ErrorAlreadyExist.Format(cloudName)
 	}
 
-	if err := event.CloudController.AddClouds(*cloud); err != nil {
+	if err := m.ds.InsertCloud(cloud); err != nil {
 		return nil, err
 	}
 
-	provider, _ := event.CloudController.GetCloud(cloudName)
-	opts := provider.GetCloud()
-
-	if err := m.ds.InsertCloud(&opts); err != nil {
-		return nil, err
-	}
-
-	return &opts, nil
+	return cloud, nil
 }
 
 // ListClouds lists all clouds.
-func (m *cloudManager) ListClouds() map[string]cloud.Cloud {
-	clouds := make(map[string]cloud.Cloud)
-	for name, cloud := range event.CloudController.Clouds {
-		clouds[name] = cloud.GetCloud()
-	}
-
-	return clouds
+func (m *cloudManager) ListClouds() ([]api.Cloud, error) {
+	return m.ds.FindAllClouds()
 }
 
 // DeleteCloud deletes the cloud.
 func (m *cloudManager) DeleteCloud(name string) error {
-	event.CloudController.DeleteCloud(name)
-
 	return m.ds.DeleteCloudByName(name)
 }
 
 // PingCloud pings the cloud to check its health.
 func (m *cloudManager) PingCloud(name string) error {
-	cloud, ok := event.CloudController.GetCloud(name)
-	if !ok {
+	c, err := m.ds.FindCloudByName(name)
+	if err != nil {
 		return httperror.ErrorContentNotFound.Format(name)
 	}
+	cp, err := cloud.NewCloudProvider(c)
 
-	return cloud.Ping()
+	return cp.Ping()
 }

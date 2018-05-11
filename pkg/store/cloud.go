@@ -17,45 +17,41 @@ limitations under the License.
 package store
 
 import (
-	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/pkg/api"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // InsertCloud insert a new cloud document to db
-func (d *DataStore) InsertCloud(doc *cloud.Cloud) error {
-	doc.ID = bson.NewObjectId().Hex()
-	col := d.s.DB(defaultDBName).C(cloudCollection)
-	err := col.Insert(doc)
-	return err
+func (d *DataStore) InsertCloud(c *api.Cloud) error {
+	c.ID = bson.NewObjectId().Hex()
+
+	return d.cloudCollection.Insert(c)
 }
 
 // UpsertCloud insert a new cloud document to db
-func (d *DataStore) UpsertCloud(doc *cloud.Cloud) error {
-	col := d.s.DB(defaultDBName).C(cloudCollection)
-	_, err := col.Upsert(bson.M{"name": doc.Name}, doc)
+func (d *DataStore) UpsertCloud(c *api.Cloud) error {
+	_, err := d.cloudCollection.Upsert(bson.M{"name": c.Name}, c)
+
 	return err
 }
 
 // FindAllClouds returns all clouds
-func (d *DataStore) FindAllClouds() ([]cloud.Cloud, error) {
-	clouds := []cloud.Cloud{}
+func (d *DataStore) FindAllClouds() ([]api.Cloud, error) {
+	cs := []api.Cloud{}
 
-	col := d.s.DB(defaultDBName).C(cloudCollection)
-	err := col.Find(bson.M{}).All(&clouds)
-	return clouds, err
+	err := d.cloudCollection.Find(bson.M{}).All(&cs)
+	return cs, err
 }
 
 // FindCloudByName returns a cloud in db by name
-func (d *DataStore) FindCloudByName(name string) (*cloud.Cloud, error) {
-	c := &cloud.Cloud{}
-	col := d.s.DB(defaultDBName).C(cloudCollection)
-	err := col.Find(bson.M{"name": name}).One(c)
+func (d *DataStore) FindCloudByName(name string) (*api.Cloud, error) {
+	c := &api.Cloud{}
+
+	err := d.cloudCollection.Find(bson.M{"name": name}).One(c)
 	return c, err
 }
 
 // DeleteCloudByName delete a cloud in db by name
 func (d *DataStore) DeleteCloudByName(name string) error {
-	col := d.s.DB(defaultDBName).C(cloudCollection)
-	err := col.Remove(bson.M{"name": name})
-	return err
+	return d.cloudCollection.Remove(bson.M{"name": name})
 }

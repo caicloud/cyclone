@@ -19,14 +19,15 @@ package store
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/wait"
+	log "github.com/golang/glog"
 	"gopkg.in/mgo.v2"
+
+	"github.com/caicloud/cyclone/pkg/wait"
 )
 
 const (
 	defaultDBName                string = "cyclone"
-	cloudCollection              string = "clouds"
+	cloudCollectionName          string = "clouds"
 	projectCollectionName        string = "projects"
 	pipelineCollectionName       string = "pipelines"
 	pipelineRecordCollectionName string = "pipelineRecords"
@@ -97,13 +98,21 @@ func ensureIndexes() error {
 	projectIndex := mgo.Index{Key: []string{"name"}, Unique: true}
 	err := projectCollection.EnsureIndex(projectIndex)
 	if err != nil {
+		log.Errorf("fail to create index for project as %v", err)
 		return err
 	}
 
 	pipelineCollection := session.DB(defaultDBName).C(pipelineCollectionName)
 	pipelineIndex := mgo.Index{Key: []string{"name", "projectID"}, Unique: true}
-	err = pipelineCollection.EnsureIndex(pipelineIndex)
-	if err != nil {
+	if err = pipelineCollection.EnsureIndex(pipelineIndex); err != nil {
+		log.Errorf("fail to create index for pipeline as %v", err)
+		return err
+	}
+
+	cloudCollection := session.DB(defaultDBName).C(cloudCollectionName)
+	cloudIndex := mgo.Index{Key: []string{"name"}, Unique: true}
+	if err = cloudCollection.EnsureIndex(cloudIndex); err != nil {
+		log.Errorf("fail to create index for cloud as %v", err)
 		return err
 	}
 
@@ -116,7 +125,7 @@ func NewStore() *DataStore {
 	return &DataStore{
 		s:                        s,
 		saltKey:                  saltKey,
-		cloudCollection:          session.DB(defaultDBName).C(cloudCollection),
+		cloudCollection:          session.DB(defaultDBName).C(cloudCollectionName),
 		projectCollection:        session.DB(defaultDBName).C(projectCollectionName),
 		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
 		pipelineRecordCollection: session.DB(defaultDBName).C(pipelineRecordCollectionName),

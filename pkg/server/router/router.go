@@ -22,7 +22,6 @@ import (
 	"github.com/emicklei/go-restful"
 	log "github.com/golang/glog"
 
-	"github.com/caicloud/cyclone/cloud"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/server/manager"
 	"github.com/caicloud/cyclone/pkg/store"
@@ -363,7 +362,7 @@ func (router *router) registerCloudAPIs(ws *restful.WebService) {
 	// POST /api/v1/clouds
 	ws.Route(ws.POST("/clouds").To(router.createCloud).
 		Doc("Add a cloud").
-		Reads(cloud.Options{}))
+		Reads(api.Cloud{}))
 
 	// GET /api/v1/clouds
 	ws.Route(ws.GET("/clouds").To(router.listClouds).
