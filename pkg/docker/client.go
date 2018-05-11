@@ -99,13 +99,16 @@ func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfigur
 		Repository: image,
 	}
 
-	if auth.ServerAddress == "" || auth.Username == "" {
+	if !strings.HasPrefix(image, auth.ServerAddress) {
+		auth = docker_client.AuthConfiguration{}
+	} else if auth.ServerAddress == "" || auth.Username == "" {
 		auth = docker_client.AuthConfiguration{
 			Username: dm.AuthConfig.Username,
 			Password: dm.AuthConfig.Password,
 		}
 	}
 
+	log.Infof("image(%s) does not exist, pulling ...", image)
 	if err := dm.Client.PullImage(opts, auth); err != nil {
 		return fmt.Errorf("Fail to pull image %s as %v", image, err)
 	}
