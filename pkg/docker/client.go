@@ -150,6 +150,10 @@ func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) err
 
 func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions,
 	auth docker_client.AuthConfiguration, logFile io.Writer) (string, error) {
+
+	// make sure there will be only one version(latest) image pulled,
+	// instead of all version images.
+	options.Config.Image = AppendLatestTagIfNecessary(options.Config.Image)
 	// Check the existence of image.
 	image := options.Config.Image
 	exist, err := dm.IsImagePresent(image)
@@ -312,4 +316,11 @@ func (dm *DockerManager) CopyFromContainer(options CopyFromContainerOptions) err
 		}
 	}
 	return nil
+}
+
+func AppendLatestTagIfNecessary(image string) string {
+	if strings.Contains(image, ":") {
+		return image
+	}
+	return image + ":latest"
 }
