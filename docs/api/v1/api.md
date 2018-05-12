@@ -44,7 +44,7 @@
     - [Github webhook](#github-webhook)
     - [Gitlab webhook](#gitlab-webhook)
     - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
-    - [Get Workspace Stats](#get-workspace-stats)
+    - [Get Project Stats](#get-project-stats)
     - [Get Pipeline Stats](#get-pipeline-stats)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -121,9 +121,9 @@
 
 | API | Path | Detail |
 | --- | --- | --- |
-| List | GET `/api/v1/workspaces/{workspace}/repos` | [link](#list-scm-repos) |
-| List | GET `/api/v1/workspaces/{workspace}/branches?repo=` | [link](#list-scm-branches) |
-| List | GET `/api/v1/workspaces/{workspace}/tags?repo=` | WIP, [link](#list-scm-tags) |
+| List | GET `/api/v1/projects/{project}/repos` | [link](#list-scm-repos) |
+| List | GET `/api/v1/projects/{project}/branches?repo=` | [link](#list-scm-branches) |
+| List | GET `/api/v1/projects/{project}/tags?repo=` | WIP, [link](#list-scm-tags) |
 
 ### Webhook API
 
@@ -138,9 +138,20 @@
 
 | API | Path | Detail |
 | --- | --- | --- |
-| Get | GET `/api/v1/workspaces/{workspace}/stats?[startTime=&endTime=]` | WIP, [link](#get-workspace-stats) |
-| Get | GET `/api/v1/workspaces/{workspace}/pipelines/{pipeline}/stats?[startTime=&endTime=]` | WIP, [link](#get-pipeline-stats) |
+| Get | GET `/api/v1/projects/{project}/stats?[startTime=&endTime=]` | WIP, [link](#get-project-stats) |
+| Get | GET `/api/v1/projects/{project}/pipelines/{pipeline}/stats?[startTime=&endTime=]` | WIP, [link](#get-pipeline-stats) |
 
+### Cloud API
+
+- [CloudObject](#cloudobject)
+
+| API | Path | Detail |
+| --- | --- | --- |
+| Create | POST `/api/v1/clouds` | WIP, [link](#create-cloud) |
+| List | GET `/api/v1/clouds` | WIP, [link](#list-clouds) |
+| Get | GET `/api/v1/clouds/{cloud}` | WIP, [link](#get-cloud) |
+| Update | PUT `/api/v1/clouds/{cloud}` | WIP, [link](#update-cloud) |
+| Delete | DELETE `/api/v1/clouds/{cloud}` | WIP, [link](#delete-cloud) |
 
 ## API Common
 
@@ -172,7 +183,16 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
     "password": "",                             // string, optional
   },
   "worker": {                                   // optional
-    "namespace": "devops",                      // string, optional
+    "cloudOptions": {
+        "cloudName": "k8s",                            // string, required
+        "namespace": "cyclone-worker",                 // string, optional
+        "quota": {                                     // map, optional
+            "requests.cpu": "0.5",                     // string, optional
+            "requests.memory": "1G",                   // string, optional
+            "limits.cpu": "1",                         // string, optional
+            "limits.memory": "2G"                      // string, optional
+        }
+    },
     "dependencyCaches": {                       // map, optional
         "Maven": {
             "name": "devops-maven-cache"        // string, required
@@ -183,6 +203,14 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
   "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project
 }
 ```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| cloudName | Required，name of cluster for workers to run. |
+| namespace | Optional，only for k8s cloud, k8s namespace for workers to run. If not provided, workers will run in the same namespace with server. |
+| quota | Optional，quota of worker, if not provided, will use the default. |
 
 Project is responsible for managing a set of applications, in this system, mainly managing a number of pipelines corresponding to this set of applications. It manages the common configs shared by all pipelines in this project.
 
@@ -1127,7 +1155,7 @@ List all tags for the repositories can be accessed by this project.
 
 **Request**
 
-URL: `GET /api/v1/workspaces/{workspace}/tags?repo=`
+URL: `GET /api/v1/projects/{project}/tags?repo=`
 
 Note:
 
@@ -1238,13 +1266,13 @@ Note:
 | --- | --- |
 | timestamp | Required, Unix timestamp format, counted as 0:0:0 in that day |
 
-### Get Workspace Stats
+### Get Project Stats
 
 Get the stats for all pipelines in this project.
 
 **Request**
 
-URL: `GET /api/v1/workspaces/{workspace}/stats?[startTime=&endTime=]`
+URL: `GET /api/v1/projects/{project}/stats?[startTime=&endTime=]`
 
 Note:
 
@@ -1271,7 +1299,7 @@ Get the execution stats for the pipeline.
 
 **Request**
 
-URL: `GET /api/v1/workspaces/{workspace}/pipelines/{pipeline}/stats?[startTime=&endTime=]`
+URL: `GET /api/v1/projects/{project}/pipelines/{pipeline}/stats?[startTime=&endTime=]`
 
 Note:
 Illustration of startTime and endTime ditto.
@@ -1286,4 +1314,153 @@ Success:
 {
     // all <PipelineStatusStatsObject> fields
 }
+```
+
+
+### CloudObject
+
+```
+{
+    "id": "123",                                              // string, required.
+    "type": "Docker",                                         // string, required.
+    "name": "cluster1",                                       // string, required.
+    "docker": {
+        "host": "unix:///var/run/docker.sock",                // string, required.
+        "certPath": "/etc/docker",                            // string, optional.
+        "insecure": false                                     // bool, optional.
+    },
+    "kubernetes": {
+        "host": "1.2.3.4",                                    // string, required.
+        "namespace": "cyclone-worker",                        // string, required.
+        "bearerToken": "asdlfjaslfjewasdfasdf"                // string, optional.
+        "username": "root",                                   // string, optional.
+        "password": "123456",                                 // string, optional.
+        "inCluster": true,                                    // bool, optional.
+        "insecure": false                                     // bool, optional.
+    }
+    "creationTime": "2016-04-26T05:21:13.140Z",               // string, required
+    "lastUpdateTime": "2016-04-26T05:21:13.140Z"              // string, required
+}
+```
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| type | Required, cloud type, support Docker and Kubernetes. |
+| namespace | Required, k8s namespace for worker |
+| bearerToken | Optional, must use one of bearerToken and username/password as auth method. |
+
+### Create cloud
+
+Add cloud。
+
+**Request**
+
+URL: `POST /api/v1/clouds`
+
+Body:
+
+```
+    // all <CloudObject> fields
+```
+
+**Response**
+
+Success:
+
+```
+201 OK
+
+{
+    // all <CloudObject> fields
+}
+```
+
+### List clouds
+
+List all clouds.
+
+**Request**
+
+URL: `GET /api/v1/clouds`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <CloudObject> fields
+}
+{
+    "metadata": <PaginationObject>,
+    "items": [ <CloudObject>, ... ]
+}
+```
+
+### Get cloud
+
+Get cloud info。
+
+**Request**
+
+URL: `GET /api/v1/clouds/{cloud}`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <CloudObject> fields
+}
+```
+
+### Update cloud
+
+Update the cloud config.
+
+**Request**
+
+URL: `PUT /api/v1/clouds/{cloud}`
+
+Body:
+
+```
+{
+    // all <CloudObject> fields
+}
+```
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <CloudObject> fields
+}
+```
+
+### Delete cloud
+
+Delete the cloud.
+
+**Request**
+
+URL: `DELETE /api/v1/clouds/{cloud}`
+
+**Response**
+
+Success:
+
+```
+204 No Content
 ```
