@@ -57,7 +57,6 @@ type DataStore struct {
 }
 
 // Init store mongo client session
-// Init store mongo client session
 func Init(host string, gracePeriod time.Duration, closing chan struct{}, key string) (chan struct{}, error) {
 	saltKey = key
 	mclosed = make(chan struct{})
