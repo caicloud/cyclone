@@ -42,8 +42,8 @@ const (
 	// githubPullRefTemplate represents reference template for Github pull request.
 	githubPullRefTemplate = "refs/pull/%d/merge"
 
-	// gitlabMergeRefTemplate represents reference template for Gitlab merge request.
-	gitlabMergeRefTemplate = "refs/merge-requests/%d/head"
+	// gitlabMergeRefTemplate represents reference template for Gitlab merge request and merge target branch
+	gitlabMergeRefTemplate = "refs/merge-requests/%d/head:%s"
 
 	// gitlabEventTypeHeader represents the Gitlab header key used to pass the event type.
 	gitlabEventTypeHeader = "X-Gitlab-Event"
@@ -229,7 +229,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.Iid),
+			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.Iid, objectAttributes.TargetBranch),
 			Description: objectAttributes.Title,
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
@@ -253,7 +253,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID),
+				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
