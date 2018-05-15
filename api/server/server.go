@@ -23,29 +23,29 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/caicloud/cyclone/cloud"
+	restful "github.com/emicklei/go-restful"
+	swagger "github.com/emicklei/go-restful-swagger12"
+	"github.com/zoumo/logdog"
+
+	"github.com/caicloud/cyclone/cmd/worker/options"
 	loghttp "github.com/caicloud/cyclone/http"
+	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/pkg/store"
-	restful "github.com/emicklei/go-restful"
-	swagger "github.com/emicklei/go-restful-swagger12"
-	"github.com/zoumo/logdog"
 )
 
 // APIServer ...
 type APIServer struct {
 	Config        *APIServerOptions
-	WorkerOptions *cloud.WorkerOptions
+	WorkerOptions *options.WorkerOptions
 }
 
 // PrepareRun prepare for apiserver running
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 
 	s.InitLog()
-	cloud.Debug = s.Config.Debug
-	logdog.Debugf("Debug mode: %t", s.Config.Debug)
 
 	// init api doc
 	if s.Config.ShowAPIDoc {
@@ -77,8 +77,10 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 		return nil, err
 	}
 
-	// init rest api server
-	// rest.Initialize()
+	if err = cloud.InitCloud(s.Config.CloudAutoDiscovery); err != nil {
+		log.Error(err)
+		return nil, err
+	}
 
 	return &PreparedAPIServer{s}, nil
 }
@@ -100,7 +102,7 @@ func (s *APIServer) InitLog() {
 
 // FIXME
 func (s *APIServer) initEventManager() error {
-	event.Init(s.WorkerOptions, s.Config.CloudAutoDiscovery)
+	event.Init(s.WorkerOptions)
 
 	return nil
 }

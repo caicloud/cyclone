@@ -25,6 +25,8 @@ import (
 	"github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
 
+	_ "github.com/caicloud/cyclone/pkg/cloud/docker"
+	_ "github.com/caicloud/cyclone/pkg/cloud/kubernetes"
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 )
 

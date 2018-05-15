@@ -26,7 +26,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/osutil"
@@ -386,7 +386,7 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 }
 
 func generateWebhookURL(scmType api.SCMType, pipelineID string) string {
-	callbackURL := osutil.GetStringEnv(cloud.CallbackURL, "http://127.0.0.1:7099/v1/pipelines")
+	callbackURL := osutil.GetStringEnv(options.CallbackURL, "http://127.0.0.1:7099/v1/pipelines")
 	callbackURL = strings.TrimSuffix(callbackURL, "/")
 	return fmt.Sprintf("%s/%s/%swebhook", callbackURL, pipelineID, strings.ToLower(string(scmType)))
 }
