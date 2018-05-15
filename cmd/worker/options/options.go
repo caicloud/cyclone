@@ -19,7 +19,6 @@ package options
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/cloud"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -198,25 +197,25 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 	flags = []cli.Flag{
 		cli.GenericFlag{
 			Name:   "limit-memory",
-			Value:  opts.Quota[cloud.ResourceLimitsMemory], // default 512Mi
+			Value:  opts.Quota[ResourceLimitsMemory], // default 512Mi
 			Usage:  "default limit memory for worker",
 			EnvVar: LimitMemory,
 		},
 		cli.GenericFlag{
 			Name:   "limit-cpu",
-			Value:  opts.Quota[cloud.ResourceLimitsCPU], // 0.5core
+			Value:  opts.Quota[ResourceLimitsCPU], // 0.5core
 			Usage:  "default limit cpu for worker",
 			EnvVar: LimitCPU,
 		},
 		cli.GenericFlag{
 			Name:   "request-memory",
-			Value:  opts.Quota[cloud.ResourceRequestsMemory],
+			Value:  opts.Quota[ResourceRequestsMemory],
 			Usage:  "default request memory for worker",
 			EnvVar: RequestMemory,
 		},
 		cli.GenericFlag{
 			Name:   "request-cpu",
-			Value:  opts.Quota[cloud.ResourceRequestsCPU],
+			Value:  opts.Quota[ResourceRequestsCPU],
 			Usage:  "default request cpu for worker",
 			EnvVar: RequestCPU,
 		},

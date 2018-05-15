@@ -45,15 +45,15 @@ type k8sCloud struct {
 }
 
 func NewK8sCloud(c *api.Cloud) (cloud.Provider, error) {
-	if c.Type != api.CloudTypeDocker {
-		err := fmt.Errorf("fail to new Docker cloud as cloud type %s is not %s", c.Type, api.CloudTypeDocker)
+	if c.Type != api.CloudTypeKubernetes {
+		err := fmt.Errorf("fail to new k8s cloud as cloud type %s is not %s", c.Type, api.CloudTypeKubernetes)
 		log.Error(err)
 		return nil, err
 	}
 
 	var ck *api.CloudKubernetes
-	if c.Docker == nil {
-		err := fmt.Errorf("Docker cloud %s is empty", c.Name)
+	if c.Kubernetes == nil {
+		err := fmt.Errorf("k8s cloud %s is empty", c.Name)
 		log.Error(err)
 		return nil, err
 	} else {
@@ -173,7 +173,7 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 					Image:           opts.WorkerImage,
 					Env:             buildK8SEnv(eventID, *opts),
 					WorkingDir:      scm.GetCloneDir(),
-					Resources:       options.DefaultQuota.ToK8SQuota(),
+					Resources:       opts.Quota.ToK8SQuota(),
 					SecurityContext: &apiv1.SecurityContext{Privileged: &Privileged},
 					ImagePullPolicy: apiv1.PullAlways,
 				},
