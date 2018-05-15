@@ -33,6 +33,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
 // PipelineManager represents the interface to manage pipeline.
@@ -77,9 +78,25 @@ func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager Pipeli
 
 // CreatePipeline creates a pipeline.
 func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error) {
+	if pipeline.Name == "" && pipeline.Alias == "" {
+		return nil, httperror.ErrorValidationFailed.Format("pipeline name and alias", "can not neither be empty")
+	}
+
+	nameEmpty := false
+	if pipeline.Name == "" && pipeline.Alias != "" {
+		pipeline.Name = slug.Slugify(pipeline.Alias, false, -1)
+		nameEmpty = true
+	}
+
 	// Check the existence of the project and pipeline.
-	if _, err := m.GetPipeline(projectName, pipeline.Name); err == nil {
-		return nil, httperror.ErrorAlreadyExist.Format(pipeline.Name)
+	if p, err := m.GetPipeline(projectName, pipeline.Name); err == nil {
+		logdog.Errorf("name %s conflict, pipeline alias:%s, exist pipeline alias:%s",
+			pipeline.Name, pipeline.Alias, p.Alias)
+		if nameEmpty {
+			pipeline.Name = slug.Slugify(pipeline.Name, true, -1)
+		} else {
+			return nil, httperror.ErrorAlreadyExist.Format(pipeline.Name)
+		}
 	}
 
 	scmConfig, err := m.GetSCMConfigFromProject(projectName)
@@ -290,10 +307,6 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 
 	// Update the properties of the pipeline.
 	// TODO (robin) Whether need a method for this merge?
-	if len(newPipeline.Name) > 0 {
-		pipeline.Name = newPipeline.Name
-	}
-
 	if len(newPipeline.Alias) > 0 {
 		pipeline.Alias = newPipeline.Alias
 	}
