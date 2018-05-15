@@ -266,7 +266,7 @@ func TestExecPackage(t *testing.T) {
 	}{
 		"correct": {
 			buildImage: &api.BuilderImage{
-				Image: "busybox:1.24.0",
+				Image: "busybox",
 				EnvVars: []api.EnvVar{
 					api.EnvVar{
 						Name:  "TEST",
