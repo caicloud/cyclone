@@ -105,25 +105,24 @@ func (d *DataStore) DeleteProjectByID(projectID string) error {
 // GetProjects gets all projects. Will returns all projects.
 func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int, error) {
 	projects := []api.Project{}
-	collection := d.projectCollection.Find(nil)
 
-	count, err := collection.Count()
+	filter := queryParams.Filter
+	limit := queryParams.Limit
+	start := queryParams.Start
+
+	query := d.projectCollection.Find(filter)
+	total, err := query.Count()
 	if err != nil {
-		return nil, 0, err
-	}
-	if count == 0 {
-		return projects, count, nil
+		return projects, 0, err
 	}
 
-	if queryParams.Start > 0 {
-		collection.Skip(queryParams.Start)
-	}
-	if queryParams.Limit > 0 {
-		collection.Limit(queryParams.Limit)
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
 	}
 
-	if err = collection.All(&projects); err != nil {
-		return nil, 0, err
+	if err = query.Skip(start).Sort("-creationTime").All(&projects); err != nil {
+		return projects, 0, err
 	}
 
 	wg := sync.WaitGroup{}
@@ -139,5 +138,5 @@ func (d *DataStore) GetProjects(queryParams api.QueryParams) ([]api.Project, int
 
 	wg.Wait()
 
-	return projects, count, nil
+	return projects, total, nil
 }

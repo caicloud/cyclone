@@ -139,7 +139,7 @@ func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipeline
 		return nil, 0, err
 	}
 
-	return m.dataStore.FindRecordsWithPaginationByPipelineID(pipeline.ID, queryParams.Filter, queryParams.Start, queryParams.Limit)
+	return m.dataStore.FindRecordsWithPaginationByPipelineID(pipeline.ID, queryParams)
 }
 
 // UpdatePipelineRecord updates pipeline record by id.

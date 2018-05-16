@@ -73,29 +73,32 @@ func (d *DataStore) FindPipelineByID(pipelineID string) (*api.Pipeline, error) {
 // FindPipelinesByProjectID finds the pipelines by project id. Will returns all pipelines in this project.
 func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.QueryParams) ([]api.Pipeline, int, error) {
 	pipelines := []api.Pipeline{}
-	query := bson.M{"projectID": projectID}
-	collection := d.pipelineCollection.Find(query)
 
-	count, err := collection.Count()
+	filter := queryParams.Filter
+	limit := queryParams.Limit
+	start := queryParams.Start
+	if filter == nil {
+		filter = bson.M{"projectID": projectID}
+	} else {
+		filter["projectID"] = projectID
+	}
+
+	query := d.pipelineCollection.Find(filter)
+	total, err := query.Count()
 	if err != nil {
-		return nil, 0, err
-	}
-	if count == 0 {
-		return pipelines, count, nil
+		return pipelines, 0, err
 	}
 
-	if queryParams.Start > 0 {
-		collection.Skip(queryParams.Start)
-	}
-	if queryParams.Limit > 0 {
-		collection.Limit(queryParams.Limit)
+	// If there is no limit, return all.
+	if limit != 0 {
+		query.Limit(limit)
 	}
 
-	if err = collection.All(&pipelines); err != nil {
-		return nil, 0, err
+	if err = query.Skip(start).Sort("-creationTime").All(&pipelines); err != nil {
+		return pipelines, 0, err
 	}
 
-	return pipelines, count, nil
+	return pipelines, total, err
 }
 
 // UpdatePipeline updates the pipeline, please make sure the pipeline id is provided before call this method.

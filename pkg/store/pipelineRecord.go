@@ -19,9 +19,10 @@ package store
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/api"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/caicloud/cyclone/pkg/api"
 )
 
 // CreatePipelineRecord creates the pipeline record, returns the pipeline record created.
@@ -94,16 +95,19 @@ func (d *DataStore) DeletePipelineRecordsByPipelineID(pipelineID string) error {
 }
 
 // FindRecordsWithPaginationByPipelineID finds a page of records with conditions by pipeline ID.
-func (d *DataStore) FindRecordsWithPaginationByPipelineID(pipelineID string, filter map[string]interface{}, start, limit int) ([]api.PipelineRecord, int, error) {
+func (d *DataStore) FindRecordsWithPaginationByPipelineID(pipelineID string, queryParams api.QueryParams) ([]api.PipelineRecord, int, error) {
 	records := []api.PipelineRecord{}
+	filter := queryParams.Filter
+	limit := queryParams.Limit
+	start := queryParams.Start
 	if filter == nil {
 		filter = bson.M{"pipelineID": pipelineID}
 	} else {
 		filter["pipelineID"] = pipelineID
 	}
 
-	col := d.s.DB(defaultDBName).C(pipelineRecordCollectionName)
-	query := col.Find(filter)
+	query := d.pipelineRecordCollection.Find(filter)
+
 	total, err := query.Count()
 	if err != nil {
 		return records, 0, err
