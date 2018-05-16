@@ -85,12 +85,13 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		args []string
 	}
 	cmds := []cmd{
-		// --single-branch only checkout the direct branch, it make the process faster.
+		// --single-branch only checkout the direct branch, it makes the process faster.
 		cmd{dir, []string{"clone", "-b", "master", "--single-branch", url, base}},
 		cmd{destPath, []string{"fetch", "origin", ref}},
 		cmd{destPath, []string{"checkout", "-qf", "FETCH_HEAD"}},
 	}
 
+	// this block in order to deal with gitlab merge-requests.
 	if strings.HasPrefix(ref, "refs/merge-requests") {
 		refPart := strings.Split(ref, ":")
 		sourceRef := refPart[0]
