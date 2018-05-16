@@ -17,7 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -49,8 +48,6 @@ func (d *DataStore) FindPipelineByName(projectID string, name string) (*api.Pipe
 
 	if count == 0 {
 		return nil, mgo.ErrNotFound
-	} else if count > 1 {
-		return nil, fmt.Errorf("there are %d pipelines with the same name %s", count, name)
 	}
 
 	pipeline := &api.Pipeline{}

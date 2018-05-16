@@ -17,7 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -48,8 +47,6 @@ func (d *DataStore) FindProjectByName(name string) (*api.Project, error) {
 
 	if count == 0 {
 		return nil, mgo.ErrNotFound
-	} else if count > 1 {
-		return nil, fmt.Errorf("there are %d projects with the same name %s", count, name)
 	}
 
 	project := &api.Project{}
