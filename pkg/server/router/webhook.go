@@ -149,6 +149,9 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			}
 			log.Info("Triggered by Github pull request review comment event")
 		}
+
+	default:
+		log.Errorf("event type not support.")
 	}
 
 	if performParams != nil {
