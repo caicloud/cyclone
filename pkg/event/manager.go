@@ -327,7 +327,7 @@ func terminateEventWorker(event *api.Event) {
 	}
 }
 
-func getCloudProvider(w *api.Worker) (cloud.Provider, error) {
+func getCloudProvider(w *api.WorkerConfig) (cloud.Provider, error) {
 
 	log.Infof("worker: %+v", w)
 
@@ -335,21 +335,29 @@ func getCloudProvider(w *api.Worker) (cloud.Provider, error) {
 	defer ds.Close()
 
 	// Use the incluster cloud by default.
-	var clusterName string
-	// if w != nil && w.CloudOptions != nil {
-	// 	clusterName = w.CloudOptions.CloudName
+	var cloudName string
+
 	if w != nil && w.Location != nil {
-		clusterName = w.Location.ClusterName
+		cloudName = w.Location.CloudName
 	} else {
-		clusterName = "inCluster"
-		log.Warningf("No cluster specified for this project, will use the defult cluster %s", clusterName)
+		cloudName = cloud.DefaultCloudName
+		log.Warningf("No cloud specified for this project, will use the defult cloud %s", cloudName)
 	}
 
-	c, err := ds.FindCloudByName(clusterName)
+	c, err := ds.FindCloudByName(cloudName)
 	if err != nil {
-		err = fmt.Errorf("fail to find cloud %s as %v", clusterName, err)
+		err = fmt.Errorf("fail to find cloud %s as %v", cloudName, err)
 		log.Error(err)
 		return nil, err
+	}
+
+	if c.Kubernetes != nil {
+		if c.Kubernetes.InCluster {
+			// default cluster, get default namespace.
+			c.Kubernetes.Namespace = cloud.DefaultNamespace
+		} else {
+			c.Kubernetes.Namespace = w.Location.Namespace
+		}
 	}
 
 	return cloud.NewCloudProvider(c)

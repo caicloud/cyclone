@@ -35,8 +35,10 @@ const (
 
 	WorkerTimeout = time.Duration(2 * time.Hour)
 
-	defaultCloudName = "inCluster"
+	DefaultCloudName = "_inCluster"
 )
+
+var DefaultNamespace = "default"
 
 type newCloudFunc func(c *api.Cloud) (Provider, error)
 
@@ -60,23 +62,25 @@ func InitCloud(autoDiscovery bool) error {
 	ds := store.NewStore()
 	defer ds.Close()
 
-	_, err := ds.FindCloudByName(defaultCloudName)
+	_, err := ds.FindCloudByName(DefaultCloudName)
 	if err != nil && err == mgo.ErrNotFound {
 		if autoDiscovery {
-			log.Info("add the default incluster cloud %s", defaultCloudName)
+			log.Info("add the default incluster cloud %s", DefaultCloudName)
 
 			namespace, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/" + apiv1.ServiceAccountNamespaceKey)
 			if err != nil {
 				log.Error(err)
-				return err
+				// error when running cyclone not in a k8s system, e.g. local docker system.
+				//return err
 			}
 
+			DefaultNamespace = string(namespace)
+
 			defaultK8sCloud := &api.Cloud{
-				Name: defaultCloudName,
+				Name: DefaultCloudName,
 				Type: api.CloudTypeKubernetes,
 				Kubernetes: &api.CloudKubernetes{
 					InCluster: true,
-					Namespace: string(namespace),
 				},
 			}
 
@@ -93,6 +97,7 @@ type Provider interface {
 	Provision(info *api.WorkerInfo, opts *options.WorkerOptions) (*api.WorkerInfo, error)
 	TerminateWorker(string) error
 	Ping() error
+	ListCycloneWorkers() ([]api.WorkerPod, error)
 }
 
 func NewCloudProvider(c *api.Cloud) (Provider, error) {

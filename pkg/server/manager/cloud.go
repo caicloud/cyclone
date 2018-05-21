@@ -31,6 +31,7 @@ type CloudManager interface {
 	ListClouds() ([]api.Cloud, error)
 	DeleteCloud(name string) error
 	PingCloud(name string) error
+	ListWorkers(name string, extendInfo interface{}) ([]api.WorkerPod, error)
 }
 
 // cloudManager represents the manager for cloud.
@@ -81,4 +82,25 @@ func (m *cloudManager) PingCloud(name string) error {
 	cp, err := cloud.NewCloudProvider(c)
 
 	return cp.Ping()
+}
+
+// ListClouds lists all clouds.
+func (m *cloudManager) ListWorkers(name string, extendInfo interface{}) ([]api.WorkerPod, error) {
+	c, err := m.ds.FindCloudByName(name)
+	if err != nil {
+		return nil, httperror.ErrorContentNotFound.Format(name)
+	}
+
+	if c.Kubernetes != nil {
+		if c.Kubernetes.InCluster {
+			// default cluster, get default namespace.
+			c.Kubernetes.Namespace = cloud.DefaultNamespace
+		} else {
+			c.Kubernetes.Namespace = extendInfo.(string)
+		}
+	}
+
+	cp, err := cloud.NewCloudProvider(c)
+
+	return cp.ListCycloneWorkers()
 }
