@@ -28,7 +28,6 @@ import (
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
-
 	"github.com/caicloud/cyclone/pkg/worker/stage"
 )
 

@@ -186,16 +186,17 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		HostConfig: hostConfig,
 	}
 
-	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
-	if err != nil {
-		return err
-	}
-
+	var cid string
 	defer func() {
 		if err := sm.dockerManager.RemoveContainer(cid); err != nil {
 			log.Errorf("Fail to remove the container %s", cid)
 		}
 	}()
+
+	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
+	if err != nil {
+		return err
+	}
 
 	// Copy the build outputs if necessary.
 	// Only need to copy the outputs not in the current workspace.
@@ -361,12 +362,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		return
 	}
 
-	// Start the services.
-	serviceInfos, err := sm.StartServicesForIntegrationTest(builtImages, stage.Services)
-	if err != nil {
-		return err
-	}
-
+	var serviceInfos map[string]string
 	defer func() {
 		var err error
 		for s, cid := range serviceInfos {
@@ -375,6 +371,12 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 			}
 		}
 	}()
+
+	// Start the services.
+	serviceInfos, err = sm.StartServicesForIntegrationTest(builtImages, stage.Services)
+	if err != nil {
+		return err
+	}
 
 	testConfig := stage.Config
 
@@ -406,15 +408,17 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		HostConfig: hostConfig,
 	}
 
-	cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
-	if err != nil {
-		return err
-	}
+	var cid string
 	defer func() {
 		if err := sm.dockerManager.RemoveContainer(cid); err != nil {
 			log.Errorf("Fail to remove the container %s", cid)
 		}
 	}()
+
+	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
