@@ -151,6 +151,7 @@ const SVNUsernPwdSep string = ":"
 // SCMConfig represents the config of SCM.
 type SCMConfig struct {
 	Type     SCMType `bson:"type,omitempty" json:"type,omitempty" description:"SCM type, support gitlab, github and svn"`
+	AuthType string  `bson:"authType,omitempty" json:"authType,omitempty" description:"auth type, support password and token"`
 	Server   string  `bson:"server,omitempty" json:"server,omitempty" description:"server of the SCM"`
 	Username string  `bson:"username,omitempty" json:"username,omitempty" description:"username of the SCM"`
 	Password string  `bson:"password,omitempty" json:"password,omitempty" description:"password of the SCM"`
