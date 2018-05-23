@@ -662,8 +662,8 @@ const (
 	TriggerCron string = "timer"
 )
 
-// WorkerPod represents some infomation of cyclone worker pod in kubernetes.
-type WorkerPod struct {
+// WorkerInstance represents some infomation of cyclone worker instance, e.g. pod of k8s, container of docker.
+type WorkerInstance struct {
 	Name           string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the worker pod, should be unique"`
 	Status         string    `bson:"status,omitempty" json:"status,omitempty" description:"status of the worker pod"`
 	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the worker pod"`

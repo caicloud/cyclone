@@ -17,7 +17,6 @@ limitations under the License.
 package router
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -81,19 +80,10 @@ func (router *router) pingCloud(request *restful.Request, response *restful.Resp
 	response.WriteHeaderAndEntity(http.StatusOK, resp)
 }
 
-// listClouds handles the request to list all clouds.
+// listWorkers handles the request to list all workers.
 func (router *router) listWorkers(request *restful.Request, response *restful.Response) {
 	cloudName := request.PathParameter(cloudPathParameterName)
-	cloudType := request.HeaderParameter(cloudTypeHeaderName)
-	namespace := request.HeaderParameter(namespaceHeaderName)
-
-	if cloudType == string(api.CloudTypeKubernetes) && namespace == "" {
-		err := fmt.Errorf("Request Header error:%v is %v, thus %v can not be empty.",
-			cloudTypeHeaderName, api.CloudTypeKubernetes, namespaceHeaderName)
-		log.Errorf("list worker error:%v", err)
-		httputil.ResponseWithError(response, err)
-		return
-	}
+	namespace := request.QueryParameter(namespaceQueryParameterName)
 
 	workers, err := router.cloudManager.ListWorkers(cloudName, namespace)
 	if err != nil {

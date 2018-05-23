@@ -97,7 +97,7 @@ type Provider interface {
 	Provision(info *api.WorkerInfo, opts *options.WorkerOptions) (*api.WorkerInfo, error)
 	TerminateWorker(string) error
 	Ping() error
-	ListCycloneWorkers() ([]api.WorkerPod, error)
+	ListWorkers() ([]api.WorkerInstance, error)
 }
 
 func NewCloudProvider(c *api.Cloud) (Provider, error) {

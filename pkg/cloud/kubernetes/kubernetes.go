@@ -320,8 +320,8 @@ func buildK8SEnv(id string, opts options.WorkerOptions) []apiv1.EnvVar {
 	return env
 }
 
-func (c *k8sCloud) ListCycloneWorkers() ([]api.WorkerPod, error) {
-	pods := []api.WorkerPod{}
+func (c *k8sCloud) ListWorkers() ([]api.WorkerInstance, error) {
+	pods := []api.WorkerInstance{}
 
 	opts := meta_v1.ListOptions{
 		LabelSelector: "cyclone=worker",
@@ -333,7 +333,7 @@ func (c *k8sCloud) ListCycloneWorkers() ([]api.WorkerPod, error) {
 	}
 
 	for _, item := range cycloneWorkers.Items {
-		pod := api.WorkerPod{
+		pod := api.WorkerInstance{
 			Name:           item.Name,
 			Status:         string(item.Status.Phase),
 			CreationTime:   item.CreationTimestamp.Time,

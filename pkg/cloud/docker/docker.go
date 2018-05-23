@@ -252,8 +252,8 @@ func buildDockerEnv(id string, opts options.WorkerOptions) []string {
 	return env
 }
 
-func (c *dockerCloud) ListCycloneWorkers() ([]api.WorkerPod, error) {
-	pods := []api.WorkerPod{}
+func (c *dockerCloud) ListWorkers() ([]api.WorkerInstance, error) {
+	pods := []api.WorkerInstance{}
 
 	ctx := context.Background()
 	args := filters.NewArgs()
@@ -272,7 +272,7 @@ func (c *dockerCloud) ListCycloneWorkers() ([]api.WorkerPod, error) {
 		t := time.Unix(worker.Created, 0)
 		// the origial name has extra forward slash in name
 		name := strings.TrimSuffix(strings.TrimPrefix(worker.Names[0], "/"), "/")
-		pod := api.WorkerPod{
+		pod := api.WorkerInstance{
 			Name:           name,
 			Status:         worker.Status,
 			CreationTime:   t,
