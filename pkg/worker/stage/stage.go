@@ -239,9 +239,11 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) (builtImages 
 	for i, _ := range buildInfos {
 		wg.Add(1)
 
-		go func(index int) {
+		start := make(chan bool)
+		go func(index int, c chan bool) {
 			defer wg.Done()
 
+			close(c)
 			status := &api.ImageBuildTaskStatus{
 				TaskStatus: api.TaskStatus{
 					Name:      buildInfos[index].TaskName,
@@ -258,7 +260,11 @@ func (sm *stageManager) ExecImageBuild(stage *api.ImageBuildStage) (builtImages 
 			}
 			// Update status again after tasks finish.
 			imageBuildStatus.Tasks[index] = status
-		}(i)
+		}(i, start)
+
+		select {
+		case <-start:
+		}
 	}
 
 	wg.Wait()
