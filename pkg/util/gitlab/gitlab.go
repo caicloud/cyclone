@@ -16,6 +16,7 @@ const (
 	NoteHookEvent         = "Note Hook"
 	MergeRequestHookEvent = "Merge Request Hook"
 	TagPushHookEvent      = "Tag Push Hook"
+	PushHookEvent         = "Push Hook"
 )
 
 // ParseWebHook parses the body from webhook requeset.
@@ -28,6 +29,10 @@ func ParseWebHook(r *http.Request) (payload interface{}, err error) {
 		payload = &gitlab.MergeEvent{}
 	case TagPushHookEvent:
 		payload = &gitlab.TagEvent{}
+	case PushHookEvent:
+		payload = &gitlab.PushEvent{}
+	default:
+		return nil, fmt.Errorf("event type %v not support", eventType)
 	}
 
 	body, err := ioutil.ReadAll(r.Body)

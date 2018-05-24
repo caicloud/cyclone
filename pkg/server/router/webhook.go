@@ -99,6 +99,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
+
 		log.Info("Triggered by Github release event")
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
@@ -117,6 +118,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Description: "Triggered by pull request",
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
+
 		log.Info("Triggered by Github pull request event")
 	case *github.PullRequestReviewCommentEvent:
 		// Only handle when the pull request comments are created.
@@ -149,9 +151,22 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			}
 			log.Info("Triggered by Github pull request review comment event")
 		}
+	case *github.PushEvent:
+		if scmTrigger.Push == nil {
+			response.WriteHeaderAndEntity(http.StatusOK, "Push trigger is not enabled")
+			return
+		}
 
+		performParams = &api.PipelinePerformParams{
+			Ref:         fmt.Sprintf(*event.Ref),
+			Description: "Triggered by push",
+			Stages:      scmTrigger.Push.Stages,
+		}
+
+		log.Info("Triggered by Github push event")
 	default:
 		log.Errorf("event type not support.")
+
 	}
 
 	if performParams != nil {
@@ -217,6 +232,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
+
 		log.Info("Triggered by Gitlab tag event")
 	case *gitlab.MergeEvent:
 		// Only handle when the pull request are created.
@@ -262,6 +278,21 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			}
 			log.Info("Triggered by Gitlab merge comment event")
 		}
+	case *gitlab.PushEvent:
+		if scmTrigger.Push == nil {
+			response.WriteHeaderAndEntity(http.StatusOK, "Push trigger is not enabled")
+			return
+		}
+
+		performParams = &api.PipelinePerformParams{
+			Ref:         event.Ref,
+			Description: "Triggered by push",
+			Stages:      scmTrigger.Push.Stages,
+		}
+
+		log.Info("Triggered by Gitlab push event")
+	default:
+		log.Errorf("event type not support.")
 	}
 
 	if performParams != nil {
