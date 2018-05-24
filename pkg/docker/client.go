@@ -168,8 +168,10 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 			return "", err
 		}
 	}
+
 	cmds := options.Config.Cmd
-	options.Config.Cmd = nil
+	// keep the container running after starts
+	options.Config.Cmd = []string{"tail", "-f", "/dev/null"}
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
@@ -180,7 +182,7 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 	// Run the container
 	err = dm.Client.StartContainer(container.ID, nil)
 	if err != nil {
-		return "", fmt.Errorf("start container with error %s", err.Error())
+		return container.ID, fmt.Errorf("start container with error %s", err.Error())
 	}
 
 	eo := ExecOptions{
@@ -259,7 +261,8 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 	}
 
 	if execInspect.ExitCode != 0 {
-		return fmt.Errorf("command %s failed in container %s", ceo.Cmd, ceo.Container)
+		return fmt.Errorf("command %s failed in container %s, inspect exit code:%v",
+			ceo.Cmd, ceo.Container, execInspect.ExitCode)
 	}
 
 	return nil
