@@ -145,16 +145,25 @@ const (
 	SVN            = "SVN"
 )
 
+// SCMAuthType represents the type of SCM auth, support password and token.
+type SCMAuthType string
+
+const (
+	Password SCMAuthType = "Password"
+	Token                = "Token"
+)
+
 // SVN username and password seperator, because SVN username can not contain ":".
 const SVNUsernPwdSep string = ":"
 
 // SCMConfig represents the config of SCM.
 type SCMConfig struct {
-	Type     SCMType `bson:"type,omitempty" json:"type,omitempty" description:"SCM type, support gitlab, github and svn"`
-	Server   string  `bson:"server,omitempty" json:"server,omitempty" description:"server of the SCM"`
-	Username string  `bson:"username,omitempty" json:"username,omitempty" description:"username of the SCM"`
-	Password string  `bson:"password,omitempty" json:"password,omitempty" description:"password of the SCM"`
-	Token    string  `bson:"token,omitempty" json:"token,omitempty" description:"token of the SCM"`
+	Type     SCMType     `bson:"type,omitempty" json:"type,omitempty" description:"SCM type, support gitlab, github and svn"`
+	AuthType SCMAuthType `bson:"authType,omitempty" json:"authType,omitempty" description:"auth type, support password and token"`
+	Server   string      `bson:"server,omitempty" json:"server,omitempty" description:"server of the SCM"`
+	Username string      `bson:"username,omitempty" json:"username,omitempty" description:"username of the SCM"`
+	Password string      `bson:"password,omitempty" json:"password,omitempty" description:"password of the SCM"`
+	Token    string      `bson:"token,omitempty" json:"token,omitempty" description:"token of the SCM"`
 }
 
 // CodeSource represents the config of code source, only one type is supported.
