@@ -91,6 +91,10 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 		return httperror.ErrorContentNotFound.Format("SCM config")
 	}
 
+	if config.AuthType != api.Password && config.AuthType != api.Token {
+		return fmt.Errorf("SCM authType %s is unknow", config.AuthType)
+	}
+
 	// Trim suffix '/' of Gitlab server to ensure that the token can work, otherwise there will be 401 error.
 	config.Server = strings.TrimSuffix(config.Server, "/")
 
