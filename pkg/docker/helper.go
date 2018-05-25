@@ -26,6 +26,10 @@ import (
 // slice, used to execute a build script in string format.
 var entrypoint = []string{"/bin/sh", "-e", "-c"}
 
+// entrypoint is the bash entrypoint command slice,
+// used to make the container keep running.
+var startCmds = []string{"while (true);do sleep 5;done"}
+
 // traceScript is a helper script that is added
 // to the build script to trace a command.
 const traceScript = `
