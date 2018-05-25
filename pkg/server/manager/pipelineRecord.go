@@ -44,6 +44,9 @@ const (
 	logsFolderName = "logs"
 )
 
+// recordsRotationThreshold is the threshold of records rotation.
+var recordRotationThreshold = 50
+
 // cycloneHome is the home folder for Cyclone.
 var cycloneHome = "/var/lib/cyclone"
 
@@ -66,7 +69,12 @@ type pipelineRecordManager struct {
 }
 
 // NewPipelineRecordManager creates a pipeline record manager.
-func NewPipelineRecordManager(dataStore *store.DataStore) (PipelineRecordManager, error) {
+func NewPipelineRecordManager(dataStore *store.DataStore, threshold int) (PipelineRecordManager, error) {
+	if threshold > 0 {
+		recordRotationThreshold = threshold
+	}
+	log.Infof("record rotation threshold is %v", recordRotationThreshold)
+
 	if dataStore == nil {
 		return nil, fmt.Errorf("Fail to new pipeline record manager as data store is nil")
 	}
@@ -111,6 +119,16 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 	if _, err := m.dataStore.CreateEvent(event); err != nil {
 		log.Errorf("fail to create the event %s as %s", event.ID, err.Error())
 		return nil, err
+	}
+
+	// pipeline record ratetion
+	records, _, err := m.dataStore.FindRotateRecords(pipelineRecord.PipelineID, recordRotationThreshold)
+	if err == nil {
+		for _, r := range records {
+			log.Warningf("pipeline record rotation, threshold:%v, delete record id:%v name:%v start time:%v",
+				recordRotationThreshold, r.ID, r.Name, r.StartTime)
+			m.DeletePipelineRecord(r.ID)
+		}
 	}
 
 	return createdPipelineRecord, nil

@@ -125,6 +125,30 @@ func (d *DataStore) FindRecordsWithPaginationByPipelineID(pipelineID string, que
 	return records, total, err
 }
 
+// FindRotateRecords finds all records inserted earlier than other n records.
+func (d *DataStore) FindRotateRecords(pipelineID string, n int) ([]api.PipelineRecord, int, error) {
+	records := []api.PipelineRecord{}
+	filter := bson.M{"pipelineID": pipelineID}
+
+	query := d.pipelineRecordCollection.Find(filter)
+
+	total, err := query.Count()
+	if err != nil {
+		return records, 0, err
+	}
+
+	limit := total - n
+
+	if limit > 0 {
+		if err = query.Sort("startTime").Limit(limit).All(&records); err != nil {
+			return records, limit, err
+		}
+		return records, limit, nil
+	}
+
+	return records, 0, nil
+}
+
 // FindRecentRecordsByPipelineID finds a set of records with conditions by pipeline ID.
 func (d *DataStore) FindRecentRecordsByPipelineID(pipelineID string, filter map[string]interface{}, limit int) ([]api.PipelineRecord, int, error) {
 	records := []api.PipelineRecord{}

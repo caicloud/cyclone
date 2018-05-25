@@ -119,7 +119,7 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	defer dataStore.Close()
 
 	// Initialize the V1 API.
-	if err := router.InitRouters(dataStore); err != nil {
+	if err := router.InitRouters(dataStore, s.Config.RecordRotationThreshold); err != nil {
 		logdog.Fatal(err)
 		return err
 	}
