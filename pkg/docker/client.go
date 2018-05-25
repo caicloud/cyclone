@@ -171,7 +171,8 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 
 	cmds := options.Config.Cmd
 	// keep the container running after starts
-	options.Config.Cmd = []string{"tail", "-f", "/dev/null"}
+	options.Config.Entrypoint = entrypoint
+	options.Config.Cmd = startCmds
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)
