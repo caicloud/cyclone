@@ -18,6 +18,8 @@ package manager
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	log "github.com/zoumo/logdog"
@@ -27,7 +29,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
-
 	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
@@ -155,6 +156,9 @@ func (m *projectManager) DeleteProject(projectName string) error {
 		return err
 	}
 
+	//delete project logs folder.
+	m.DeleteProjectLogs(project.ID)
+
 	// Delete the pipelines in this project.
 	if err = m.pipelineManager.ClearPipelinesOfProject(projectName); err != nil {
 		log.Errorf("Fail to delete all pipelines in the project %s as %s", projectName, err.Error())
@@ -245,4 +249,22 @@ func (m *projectManager) GetStatistics(projectName string, start, end time.Time)
 func (m *projectManager) GetPipelines(projectID string) ([]api.Pipeline, error) {
 	pipelines, _, err := m.dataStore.FindPipelinesByProjectID(projectID, api.QueryParams{})
 	return pipelines, err
+}
+
+func (m *projectManager) DeleteProjectLogs(projectID string) error {
+	// get project folder
+	projectFolder := m.getProjectFolder(projectID)
+
+	// remove project folder
+	if err := os.RemoveAll(projectFolder); err != nil {
+		log.Errorf("remove project folder %s error:%v", projectFolder, err)
+		return err
+	}
+
+	return nil
+}
+
+// getProjectFolder gets the folder path for the project.
+func (m *projectManager) getProjectFolder(projectID string) string {
+	return strings.Join([]string{cycloneHome, projectID}, string(os.PathSeparator))
 }
