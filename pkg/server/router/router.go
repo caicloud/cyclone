@@ -79,9 +79,9 @@ type router struct {
 }
 
 // InitRouters initializes the router for REST APIs.
-func InitRouters(dataStore *store.DataStore) error {
+func InitRouters(dataStore *store.DataStore, recordRotationThreshold int) error {
 	// New pipeline record manager
-	pipelineRecordManager, err := manager.NewPipelineRecordManager(dataStore)
+	pipelineRecordManager, err := manager.NewPipelineRecordManager(dataStore, recordRotationThreshold)
 	if err != nil {
 		return err
 	}

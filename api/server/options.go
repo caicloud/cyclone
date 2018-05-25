@@ -32,19 +32,22 @@ const (
 	SaltKey = "SALT_KEY"
 	// CloudAutoDiscovery ...
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
+	// RecordLogRotationThreshold ...
+	RecordRotationThreshold = "RECORD_ROTATION_THRESHOLD"
 )
 
 // APIServerOptions contains all options(config) for api server
 type APIServerOptions struct {
-	MongoDBHost         string
-	SaltKey             string
-	MongoGracePeriod    time.Duration
-	CyclonePort         int
-	CycloneAddrTemplate string
-	ShowAPIDoc          bool
-	Debug               bool
-	CloudAutoDiscovery  bool
-	LogForceColor       bool
+	MongoDBHost             string
+	SaltKey                 string
+	MongoGracePeriod        time.Duration
+	CyclonePort             int
+	CycloneAddrTemplate     string
+	ShowAPIDoc              bool
+	Debug                   bool
+	CloudAutoDiscovery      bool
+	LogForceColor           bool
+	RecordRotationThreshold int
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -95,6 +98,12 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Name:        "log-force-color",
 			Usage:       "force log use color output",
 			Destination: &opts.LogForceColor,
+		},
+		cli.IntFlag{
+			Name:        "record-rotation-threshold",
+			Usage:       "pipeline record rotation threshold",
+			EnvVar:      RecordRotationThreshold,
+			Destination: &opts.RecordRotationThreshold,
 		},
 	}
 
