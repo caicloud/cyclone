@@ -18,10 +18,12 @@ package manager
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -337,11 +339,15 @@ func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string
 		return err
 	}
 
+	// delete pipeline record log folder
+	m.DeletePipelineLogs(pipeline.ID)
+
 	scmConfig, err := m.GetSCMConfigFromProject(projectName)
 	if err != nil {
 		return err
 	}
 
+	// delete pipeline and related records
 	return m.deletePipeline(scmConfig, pipeline)
 }
 
@@ -530,4 +536,33 @@ func initStatsDetails(statistics *api.PipelineStatusStats, start, end time.Time)
 			statistics.Details = append(statistics.Details, detail)
 		}
 	}
+}
+
+func (m *pipelineManager) DeletePipelineLogs(pipelineID string) error {
+	// get pipeline folder
+	pipelineFolder, err := m.getPipelineFolder(pipelineID)
+	if err != nil {
+		log.Errorf("delete pipeline %s, get pipeline folder err:%v", pipelineID, err)
+		return err
+	}
+
+	// remove pipeline folder
+	if err := os.RemoveAll(pipelineFolder); err != nil {
+		log.Errorf("remove pipeline folder %s error:%v", pipelineFolder, err)
+		return err
+	}
+
+	return nil
+}
+
+// getPipelineFolder gets the folder path for the pipeline.
+func (m *pipelineManager) getPipelineFolder(pipelineID string) (string, error) {
+	pipeline, err := m.GetPipelineByID(pipelineID)
+	if err != nil {
+		return "", err
+	}
+
+	pipelineFolder := strings.Join([]string{cycloneHome, pipeline.ProjectID, pipeline.ID}, string(os.PathSeparator))
+
+	return pipelineFolder, nil
 }

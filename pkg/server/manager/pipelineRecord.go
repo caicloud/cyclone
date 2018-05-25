@@ -164,19 +164,35 @@ func (m *pipelineRecordManager) UpdatePipelineRecord(pipelineRecordID string, ne
 	return pipelineRecord, nil
 }
 
+func (m *pipelineRecordManager) DeletePipelineRecordLogs(pipelineRecordID string) error {
+	// get pipeline record folder
+	recordFolder, err := m.getRecordFolder(pipelineRecordID)
+	if err != nil {
+		log.Errorf("delete record %s, get record folder err:%v", pipelineRecordID, err)
+		return err
+	}
+
+	// remove pipeline record folder
+	if err := os.RemoveAll(recordFolder); err != nil {
+		log.Errorf("remove recold folder %s error:%v", recordFolder, err)
+		return err
+	}
+
+	return nil
+}
+
 // DeletePipelineRecord deletes the pipeline record by id.
 func (m *pipelineRecordManager) DeletePipelineRecord(pipelineRecordID string) error {
+	// delete related pipeline record log.
+	m.DeletePipelineRecordLogs(pipelineRecordID)
+
+	// delete record in mongodb.
 	return m.dataStore.DeletePipelineRecordByID(pipelineRecordID)
 }
 
 // ClearPipelineRecordsOfPipeline deletes all the pipeline records of one pipeline by pipeline id.
 func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string) error {
 	ds := m.dataStore
-
-	pipeline, err := ds.FindPipelineByID(pipelineID)
-	if err != nil {
-		return err
-	}
 
 	// Delete the records related to this pipeline.
 	records, _, err := ds.FindPipelineRecordsByPipelineID(pipelineID, api.QueryParams{})
@@ -186,7 +202,7 @@ func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string
 
 	for _, record := range records {
 		if err := ds.DeletePipelineRecordByID(record.ID); err != nil {
-			return fmt.Errorf("Fail to delete the record %s for pipeline %s as %s", record.ID, pipeline.Name, err.Error())
+			return fmt.Errorf("Fail to delete the record %s as %s", record.ID, err.Error())
 		}
 	}
 
