@@ -55,10 +55,17 @@ func (router *router) createPipeline(request *restful.Request, response *restful
 
 // getPipeline handles the request to get a pipeline.
 func (router *router) getPipeline(request *restful.Request, response *restful.Response) {
+
+	recentCount, recentSuccessCount, recentFailedCount, err := httputil.RecordCountQueryParamsFromRequest(request)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
 	projectName := request.PathParameter(projectPathParameterName)
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
-	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName)
+	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName, recentCount, recentSuccessCount, recentFailedCount)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return

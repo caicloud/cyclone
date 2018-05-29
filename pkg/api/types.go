@@ -68,9 +68,9 @@ type Pipeline struct {
 	AutoTrigger          *AutoTrigger     `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
 	CreationTime         time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
 	LastUpdateTime       time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
-	RecentRecords        []PipelineRecord `bson:"recentRecords,omitempty" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
-	RecentSuccessRecords []PipelineRecord `bson:"recentSuccessRecords,omitempty" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
-	RecentFailedRecords  []PipelineRecord `bson:"recentFailedRecords,omitempty" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
+	RecentRecords        []PipelineRecord `bson:"-" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
+	RecentSuccessRecords []PipelineRecord `bson:"-" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
+	RecentFailedRecords  []PipelineRecord `bson:"-" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
 }
 
 // Build represents the build config and stages of CI.
