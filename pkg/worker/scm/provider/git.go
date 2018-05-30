@@ -103,7 +103,11 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		cmds = []cmd{
 			cmd{dir, []string{"clone", "-b", targetRef, "--single-branch", url, base}},
 			cmd{destPath, []string{"fetch", "origin", sourceRef}},
-			cmd{destPath, []string{"rebase", "FETCH_HEAD", "--merge"}},
+			cmd{destPath, []string{"config", "user.email", "devops@caicloud.com"}},
+			cmd{destPath, []string{"config", "user.name", "caicloud-devops"}},
+			// TODO
+			// git log -n 1 --pretty=format:"%H"  --- can not get the latest change log.
+			cmd{destPath, []string{"merge", "FETCH_HEAD", "--no-ff", "--no-commit"}},
 		}
 	}
 
@@ -111,7 +115,7 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 	for _, cmd := range cmds {
 		output, err := executil.RunInDir(cmd.dir, "git", cmd.args...)
 		if err != nil {
-			log.Error("Error when clone", log.Fields{"command": cmd, "error": err})
+			log.Error("Error when clone", log.Fields{"command": cmd, "error": err, "output": string(output)})
 			return "", err
 		}
 

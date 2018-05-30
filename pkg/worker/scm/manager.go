@@ -206,13 +206,8 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 			return "", err
 		}
 	}
-	logs, err := p.Clone(token, url, reference, destPath)
 
-	if err != nil {
-		return "", err
-	}
-
-	return logs, err
+	return p.Clone(token, url, reference, destPath)
 }
 
 // rebuildToken rebuilds token username and password if token is empty.
