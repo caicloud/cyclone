@@ -26,10 +26,19 @@ import (
 const (
 	// Debug mode
 	Debug = "DEBUG"
+
 	// MongoDBHost ...
 	MongoDBHost = "MONGODB_HOST"
+
+	// MongoDBUsername ...
+	MongoDBUsername = "MONGODB_USERNAME"
+
+	// MongoDBPassword ...
+	MongoDBPassword = "MONGODB_PASSWORD"
+
 	// SaltKey ...
 	SaltKey = "SALT_KEY"
+
 	// CloudAutoDiscovery ...
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
 	// RecordLogRotationThreshold ...
@@ -39,6 +48,8 @@ const (
 // APIServerOptions contains all options(config) for api server
 type APIServerOptions struct {
 	MongoDBHost             string
+	MongoDBUsername     string
+	MongoDBPassword     string
 	SaltKey                 string
 	MongoGracePeriod        time.Duration
 	CyclonePort             int
@@ -69,6 +80,20 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "mongdb host",
 			EnvVar:      MongoDBHost,
 			Destination: &opts.MongoDBHost,
+		},
+		cli.StringFlag{
+			Name:        "mongodb-username",
+			Value:       "",
+			Usage:       "mongdb username",
+			EnvVar:      MongoDBUsername,
+			Destination: &opts.MongoDBUsername,
+		},
+		cli.StringFlag{
+			Name:        "mongodb-password",
+			Value:       "",
+			Usage:       "mongdb password",
+			EnvVar:      MongoDBPassword,
+			Destination: &opts.MongoDBPassword,
 		},
 		cli.StringFlag{
 			Name:        "salt-key",

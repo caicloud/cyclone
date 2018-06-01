@@ -41,6 +41,9 @@ var (
 	session *mgo.Session
 	saltKey string
 	mclosed chan struct{}
+
+	dbUsername string
+	dbPassword string
 )
 
 // DataStore is the type for mongo db store.
@@ -57,7 +60,7 @@ type DataStore struct {
 }
 
 // Init store mongo client session
-func Init(host string, gracePeriod time.Duration, closing chan struct{}, key string) (chan struct{}, error) {
+func Init(host, username, password string, gracePeriod time.Duration, closing chan struct{}, key string) (chan struct{}, error) {
 	saltKey = key
 	mclosed = make(chan struct{})
 	var err error
@@ -65,7 +68,16 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}, key str
 	// dail mongo session
 	// wait mongodb set up
 	wait.Poll(time.Second, gracePeriod, func() (bool, error) {
-		session, err = mgo.Dial(host)
+		session, err = mgo.DialWithInfo(&mgo.DialInfo{
+			Addrs:    []string{host},
+			Username: username,
+			Password: password,
+			Database: defaultDBName,
+			Timeout:  time.Second * 15,
+		})
+		if err != nil {
+			panic(err)
+		}
 		return err == nil, nil
 	})
 
@@ -73,6 +85,9 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}, key str
 		log.Errorf("Unable connect to mongodb addr %s", host)
 		return nil, err
 	}
+
+	dbUsername = username
+	dbPassword = password
 
 	log.Infof("connect to mongodb addr: %s", host)
 	// Set the session mode as Eventual to ensure that the socket is created for each request.
@@ -92,14 +107,21 @@ func Init(host string, gracePeriod time.Duration, closing chan struct{}, key str
 
 // ensureIndexes ensures the indexes for each collection.
 func ensureIndexes() error {
-	projectCollection := session.DB(defaultDBName).C(projectCollectionName)
+	db := session.DB(defaultDBName)
+	err := db.Login(dbUsername, dbPassword)
+	if err != nil {
+		panic(err)
+	}
+
+	projectCollection := db.C(projectCollectionName)
 	projectIndex := mgo.Index{Key: []string{"name"}, Unique: true}
-	err := projectCollection.EnsureIndex(projectIndex)
+	// err := projectCollection.EnsureIndex(projectIndex)
+	err = projectCollection.EnsureIndex(projectIndex)
 	if err != nil {
 		return err
 	}
 
-	pipelineCollection := session.DB(defaultDBName).C(pipelineCollectionName)
+	pipelineCollection := db.C(pipelineCollectionName)
 	pipelineIndex := mgo.Index{Key: []string{"name", "projectID"}, Unique: true}
 	err = pipelineCollection.EnsureIndex(pipelineIndex)
 	if err != nil {
@@ -112,14 +134,16 @@ func ensureIndexes() error {
 // NewStore copy a mongo client session
 func NewStore() *DataStore {
 	s := session.Copy()
+	db := session.DB(defaultDBName)
+	db.Login(dbUsername, dbPassword)
 	return &DataStore{
 		s:                        s,
 		saltKey:                  saltKey,
-		cloudCollection:          session.DB(defaultDBName).C(cloudCollection),
-		projectCollection:        session.DB(defaultDBName).C(projectCollectionName),
-		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
-		pipelineRecordCollection: session.DB(defaultDBName).C(pipelineRecordCollectionName),
-		eventCollection:          session.DB(defaultDBName).C(eventCollectionName),
+		cloudCollection:          db.C(cloudCollection),
+		projectCollection:        db.C(projectCollectionName),
+		pipelineCollection:       db.C(pipelineCollectionName),
+		pipelineRecordCollection: db.C(pipelineRecordCollectionName),
+		eventCollection:          db.C(eventCollectionName),
 	}
 }
 

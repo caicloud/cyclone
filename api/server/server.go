@@ -44,27 +44,28 @@ type APIServer struct {
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 
 	s.InitLog()
-	cloud.Debug = s.Config.Debug
-	logdog.Debugf("Debug mode: %t", s.Config.Debug)
+	config := s.Config
+	cloud.Debug = config.Debug
+	logdog.Debugf("Debug mode: %t", config.Debug)
 
 	// init api doc
 	if s.Config.ShowAPIDoc {
 		// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
-		config := swagger.Config{
+		sc := swagger.Config{
 			WebServices:    restful.RegisteredWebServices(), // you control what services are visible.
-			WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
+			WebServicesUrl: fmt.Sprintf(config.CycloneAddrTemplate, config.CyclonePort),
 			ApiPath:        "/apidocs.json",
 
 			// Optionally, specify where the UI is located.
 			SwaggerPath:     "/apidocs/",
 			SwaggerFilePath: "./node_modules/swagger-ui/dist",
 		}
-		swagger.InstallSwaggerService(config)
+		swagger.InstallSwaggerService(sc)
 	}
 
 	closing := make(chan struct{})
 	// init database
-	mclosed, err := store.Init(s.Config.MongoDBHost, s.Config.MongoGracePeriod, closing, s.Config.SaltKey)
+	mclosed, err := store.Init(config.MongoDBHost, config.MongoDBUsername, config.MongoDBPassword, config.MongoGracePeriod, closing, config.SaltKey)
 	if err != nil {
 		return nil, err
 	}
