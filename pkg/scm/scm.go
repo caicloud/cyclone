@@ -92,7 +92,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	}
 
 	if config.AuthType != api.Password && config.AuthType != api.Token {
-		return fmt.Errorf("SCM authType %s is unknow", config.AuthType)
+		return httperror.ErrorValidationFailed.Format("SCM authType %s is unknow", config.AuthType)
 	}
 
 	// Trim suffix '/' of Gitlab server to ensure that the token can work, otherwise there will be 401 error.
@@ -110,8 +110,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	case api.Github:
 		// Github username is required.
 		if len(config.Username) == 0 {
-			err := fmt.Errorf("username of Github is required")
-			return err
+			return httperror.ErrorContentNotFound.Format("Github username")
 		}
 
 		// If Github password is provided, generate the new token.
@@ -134,13 +133,13 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	case api.SVN:
 		generatedToken, _ = provider.GetToken(config)
 	default:
-		return fmt.Errorf("SCM type %s is unknow", scmType)
+		return httperror.ErrorValidationFailed.Format("SCM type %s is unknow", scmType)
 	}
 
 	if generatedToken != "" {
 		config.Token = generatedToken
 	} else if !provider.CheckToken(config) {
-		return fmt.Errorf("token is unauthorized to repos")
+		return httperror.ErrorValidationFailed.Format("token is unauthorized to repos")
 	}
 
 	// Cleanup the password for security.

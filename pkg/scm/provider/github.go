@@ -100,7 +100,7 @@ func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
 func (g *Github) CheckToken(scm *api.SCMConfig) bool {
-	if _, err := g.ListRepos(scm); err != nil {
+	if _, err := g.listReposInner(scm, false); err != nil {
 		return false
 	}
 	return true
@@ -108,6 +108,13 @@ func (g *Github) CheckToken(scm *api.SCMConfig) bool {
 
 // ListRepos lists the repos by the SCM config.
 func (g *Github) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+	return g.listReposInner(scm, true)
+}
+
+// listReposInner lists the repos by the SCM config,
+// list all repos while the parameter 'listAll' is true,
+// otherwise, list repos by default 'listPerPageOpt' number.
+func (g *Github) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Repository, error) {
 	client, err := newClientByBasicAuth(scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
@@ -127,7 +134,7 @@ func (g *Github) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 			return nil, err
 		}
 		allRepos = append(allRepos, repos...)
-		if resp.NextPage == 0 {
+		if resp.NextPage == 0 || !listAll {
 			break
 		}
 		opt.ListOptions.Page = resp.NextPage
