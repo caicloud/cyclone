@@ -41,7 +41,7 @@ import (
 // PipelineManager represents the interface to manage pipeline.
 type PipelineManager interface {
 	CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error)
-	GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error)
+	GetPipeline(projectName string, pipelineName string, recentCount, recentSuccessCount, recentFailedCount int) (*api.Pipeline, error)
 	GetPipelineByID(id string) (*api.Pipeline, error)
 	ListPipelines(projectName string, queryParams api.QueryParams, recentCount, recentSuccessCount, recentFailedCount int) ([]api.Pipeline, int, error)
 	UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error)
@@ -91,7 +91,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	}
 
 	// Check the existence of the project and pipeline.
-	if p, err := m.GetPipeline(projectName, pipeline.Name); err == nil {
+	if p, err := m.GetPipeline(projectName, pipeline.Name, 0, 0, 0); err == nil {
 		logdog.Errorf("name %s conflict, pipeline alias:%s, exist pipeline alias:%s",
 			pipeline.Name, pipeline.Alias, p.Alias)
 		if nameEmpty {
@@ -149,7 +149,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 }
 
 // GetPipeline gets the pipeline by name in one project.
-func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (*api.Pipeline, error) {
+func (m *pipelineManager) GetPipeline(projectName string, pipelineName string, recentCount, recentSuccessCount, recentFailedCount int) (*api.Pipeline, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
@@ -167,6 +167,8 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string) (
 
 		return nil, err
 	}
+
+	m.assignRecentRecord(pipeline, recentCount, recentSuccessCount, recentFailedCount)
 
 	return pipeline, nil
 }
@@ -213,39 +215,7 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 
 		go func(pipeline *api.Pipeline) {
 			defer wg.Done()
-
-			if recentCount > 0 {
-				recentRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, nil, recentCount)
-				if err != nil {
-					logdog.Error(err)
-				} else {
-					pipeline.RecentRecords = recentRecords
-				}
-			}
-
-			if recentSuccessCount > 0 {
-				filter := map[string]interface{}{
-					"status": api.Success,
-				}
-				recentSuccessRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentSuccessCount)
-				if err != nil {
-					logdog.Error(err)
-				} else {
-					pipeline.RecentSuccessRecords = recentSuccessRecords
-				}
-			}
-
-			if recentFailedCount > 0 {
-				filter := map[string]interface{}{
-					"status": api.Failed,
-				}
-				recentFailedRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentFailedCount)
-				if err != nil {
-					logdog.Error(err)
-				} else {
-					pipeline.RecentFailedRecords = recentFailedRecords
-				}
-			}
+			m.assignRecentRecord(pipeline, recentCount, recentSuccessCount, recentFailedCount)
 		}(&pipelines[i])
 	}
 	wg.Wait()
@@ -253,9 +223,47 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 	return pipelines, total, nil
 }
 
+// assignRecentRecord assign recent record to pipeline.
+func (m *pipelineManager) assignRecentRecord(pipeline *api.Pipeline, recentCount, recentSuccessCount, recentFailedCount int) {
+	ds := m.dataStore
+
+	if recentCount > 0 {
+		recentRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, nil, recentCount)
+		if err != nil {
+			logdog.Error(err)
+		} else {
+			pipeline.RecentRecords = recentRecords
+		}
+	}
+
+	if recentSuccessCount > 0 {
+		filter := map[string]interface{}{
+			"status": api.Success,
+		}
+		recentSuccessRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentSuccessCount)
+		if err != nil {
+			logdog.Error(err)
+		} else {
+			pipeline.RecentSuccessRecords = recentSuccessRecords
+		}
+	}
+
+	if recentFailedCount > 0 {
+		filter := map[string]interface{}{
+			"status": api.Failed,
+		}
+		recentFailedRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentFailedCount)
+		if err != nil {
+			logdog.Error(err)
+		} else {
+			pipeline.RecentFailedRecords = recentFailedRecords
+		}
+	}
+}
+
 // UpdatePipeline updates the pipeline by name in one project.
 func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string, newPipeline *api.Pipeline) (*api.Pipeline, error) {
-	pipeline, err := m.GetPipeline(projectName, pipelineName)
+	pipeline, err := m.GetPipeline(projectName, pipelineName, 0, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +342,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 
 // DeletePipeline deletes the pipeline by name in one project.
 func (m *pipelineManager) DeletePipeline(projectName string, pipelineName string) error {
-	pipeline, err := m.GetPipeline(projectName, pipelineName)
+	pipeline, err := m.GetPipeline(projectName, pipelineName, 0, 0, 0)
 	if err != nil {
 		return err
 	}
@@ -449,7 +457,7 @@ func (m *pipelineManager) GetSCMConfigFromProject(projectName string) (*api.SCMC
 
 /// GetStatistics gets the statistic by pipeline name.
 func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start, end time.Time) (*api.PipelineStatusStats, error) {
-	pipeline, err := m.GetPipeline(projectName, pipelineName)
+	pipeline, err := m.GetPipeline(projectName, pipelineName, 0, 0, 0)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, httperror.ErrorContentNotFound.Format(projectName)

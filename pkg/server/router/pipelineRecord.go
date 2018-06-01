@@ -47,7 +47,7 @@ func (router *router) createPipelineRecord(request *restful.Request, response *r
 	projectName := request.PathParameter(projectPathParameterName)
 	pipelineName := request.PathParameter(pipelinePathParameterName)
 
-	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName)
+	pipeline, err := router.pipelineManager.GetPipeline(projectName, pipelineName, 0, 0, 0)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
