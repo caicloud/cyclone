@@ -107,7 +107,7 @@ func (g *Gitlab) GetToken(scm *api.SCMConfig) (string, error) {
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
 func (g *Gitlab) CheckToken(scm *api.SCMConfig) bool {
-	if _, err := g.ListRepos(scm); err != nil {
+	if _, err := g.listReposInner(scm, false); err != nil {
 		return false
 	}
 	return true
@@ -115,6 +115,13 @@ func (g *Gitlab) CheckToken(scm *api.SCMConfig) bool {
 
 // ListRepos lists the repos by the SCM config.
 func (g *Gitlab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+	return g.listReposInner(scm, true)
+}
+
+// listReposInner lists the projects by the SCM config,
+// list all projects while the parameter 'listAll' is true,
+// otherwise, list projects by default 'listPerPageOpt' number.
+func (g *Gitlab) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Repository, error) {
 	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
@@ -135,7 +142,7 @@ func (g *Gitlab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 		}
 
 		allProjects = append(allProjects, projects...)
-		if resp.NextPage == 0 {
+		if resp.NextPage == 0 || !listAll {
 			break
 		}
 		opt.ListOptions.Page = resp.NextPage
