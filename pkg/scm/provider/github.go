@@ -364,7 +364,7 @@ func convertToGithubEvents(events []scm.EventType) []string {
 		case scm.PullRequestEventType:
 			ge = append(ge, "pull_request")
 		case scm.PullRequestCommentEventType:
-			ge = append(ge, "pull_request_review_comment")
+			ge = append(ge, "issue_comment")
 		case scm.PushEventType:
 			ge = append(ge, "push")
 		case scm.TagReleaseEventType:

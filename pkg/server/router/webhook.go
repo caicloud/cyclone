@@ -120,7 +120,13 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		}
 
 		log.Info("Triggered by Github pull request event")
-	case *github.PullRequestReviewCommentEvent:
+	case *github.IssueCommentEvent:
+		if event.Issue.PullRequestLinks == nil {
+			log.Infof("Only handle when issues type is pull request ")
+			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when issues type is pull request")
+			return
+		}
+
 		// Only handle when the pull request comments are created.
 		if *event.Action != "created" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when pull request comment is created")
@@ -145,7 +151,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
+				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.Issue.Number),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
