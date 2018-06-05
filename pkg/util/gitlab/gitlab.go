@@ -24,7 +24,11 @@ func ParseWebHook(r *http.Request) (payload interface{}, err error) {
 	eventType := r.Header.Get(gitlabEventTypeHeader)
 	switch eventType {
 	case NoteHookEvent:
-		payload = &gitlab.MergeCommentEvent{}
+		//payload = &gitlab.MergeCommentEvent{}
+		// can not unmarshal request body to gitlab.MergeCommentEvent{}
+		// due to gitlab.MergeCommentEvent.MergeRequest.CreatedAt's type(*time.Time),
+		// parsing time "2018-05-31 02:19:38 UTC" as "2006-01-02T15:04:05Z07:00" will fail.
+		payload = &MergeCommentEvent{}
 	case MergeRequestHookEvent:
 		payload = &gitlab.MergeEvent{}
 	case TagPushHookEvent:

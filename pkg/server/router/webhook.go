@@ -122,7 +122,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		log.Info("Triggered by Github pull request event")
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
-			log.Infof("Only handle when issues type is pull request ")
+			log.Infof("Only handle when issues type is pull request")
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when issues type is pull request")
 			return
 		}
@@ -260,7 +260,13 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		log.Info("Triggered by Gitlab merge event")
-	case *gitlab.MergeCommentEvent:
+	case *gitlabuitl.MergeCommentEvent:
+		if event.MergeRequest == nil {
+			log.Infof("Only handle comments on merge request")
+			response.WriteHeaderAndEntity(http.StatusOK, "Only handle comments on merge request")
+			return
+		}
+
 		if scmTrigger.PullRequestComment == nil {
 			response.WriteHeaderAndEntity(http.StatusOK, "Pull request comment trigger is not enabled")
 			return
