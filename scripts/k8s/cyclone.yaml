@@ -28,26 +28,22 @@ spec:
           value: http://192.168.10.102:30010
         - name: MONGODB_HOST
           value: mongo-server:27017
-        - name: KAFKA_HOST
-          value: kafka-server:9092
         - name: REGISTRY_LOCATION
           value: cargo.caicloudprivatetest.com
-        - name: GITHUB_CLIENT
-          value: d7d1851b08f456fd668e
-        - name: GITHUB_SECRET
-          value: a0c301b13886475c1dd550b21cc31f1bc820664e
-        - name: CONSOLE_WEB_ENDPOINT
-          value: http://console.caicloudprivatetest.com:30000
-        - name: GITLAB_URL
-          value: https://gitlab.com
-        - name: GITLAB_CLIENT
-          value: 55df53729217e00df60e34207492ec9676c16ba3c6bdd47d6e0c026f2ed9f567
-        - name: GITLAB_SECRET
-          value: a4fe95ced771da3808cef3b081423900ff6ac9e42823b6f2b2039f2f9144e8cd
+        - name: LIMIT_MEMORY
+          value: 4Gi
+        - name: LIMIT_CPU
+          value: '2'
+        - name: REQUEST_MEMORY
+          value: 1Gi
+        - name: REQUEST_CPU
+          value: '0.5'
+        - name: RECORD_ROTATION_THRESHOLD
+          value: "50"
+        - name: CALLBACK_URL
+          value: http://192.168.10.102:30010/apis/v1/pipelines
         - name: WORKER_IMAGE
           value: cargo.caicloud.io/caicloud/cyclone-worker:latest
-        - name: LOG_SERVER
-          value: ws://192.168.10.102:30070/ws
         image: cargo.caicloud.io/caicloud/cyclone-server:latest
         imagePullPolicy: IfNotPresent
         name: cyclone

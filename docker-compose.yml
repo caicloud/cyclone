@@ -1,24 +1,3 @@
-zookeeper:
-    image: wurstmeister/zookeeper:3.4.6
-    expose:
-        - "2181"
-
-kafka:
-    image: wurstmeister/kafka:0.10.1.0
-    hostname: kafkahost
-    links:
-        - zookeeper:zk
-    volumes:
-       - ./local/data/kafka_log:/data/kafka_log
-    environment:
-        - KAFKA_ADVERTISED_HOST_NAME=kafkahost
-        - KAFKA_ADVERTISED_PORT=9092
-        - KAFKA_LOG_DIRS=/data/kafka_log
-    ports:
-        - "9092:9092"
-    expose:
-        - "9092"
-
 mongo:
     image: mongo:3.0.5
     # volumes:
@@ -35,7 +14,6 @@ cyclone-server:
     #     - /var/run/docker.sock:/var/run/docker.sock
     links:
         - mongo
-        - kafka
     ports:
         - "7099:7099"
         - "8000:8000"
@@ -45,7 +23,6 @@ cyclone-server:
         - DEBUG=true
         - CYCLONE_SERVER=http://127.0.0.1:7099
         - MONGODB_HOST=mongo:27017
-        - KAFKA_HOST=kafkahost:9092
         - LOG_SERVER=ws://127.0.0.1:8000/ws
         - REGISTRY_LOCATION=cargo.caicloud.io
         - REGISTRY_USERNAME=user
