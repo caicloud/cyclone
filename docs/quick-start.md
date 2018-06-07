@@ -4,13 +4,13 @@
 
 - [Quick Start](#quick-start)
   - [Overview](#overview)
-  - [Register a cloud](#register-a-cloud)
+  - [Register a container cloud](#register-a-container-cloud)
   - [Create a project](#create-a-project)
   - [Create a pipeline](#create-a-pipeline)
   - [Create a pipeline record](#create-a-pipeline-record)
   - [Check out logs](#check-out-logs)
-    - [At the end of the pipeline run](#at-the-end-of-the-pipeline-run)
-    - [While the pipeline is running](#while-the-pipeline-is-running)
+    - [Running log](#running-log)
+    - [Result log](#result-log)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -18,9 +18,9 @@
 
 ## Overview
 
- Once you have [set up Cyclone](), you have a CI/CD platform to ship your code from local development all the way to container engine. This section provides a brief overview of Cyclone operational processes.
+ Once you have [set up Cyclone](./setup.md), you have a CI/CD platform to ship your code from local development all the way to container engine. This section provides a brief overview of Cyclone operational processes.
 
- ## Register a cloud
+ ## Register a container cloud
 
  Cyclone runs pipelines in cyclone-worker container,
  In order to build your pipeline, a cloud where cyclone-worker container runs on must be registered to cyclone-server.
@@ -37,13 +37,13 @@
  }' ''$HOST_URL'/api/v1/clouds'
  ```
 
- The script above would create a cloud at your local computer, then you could set up the project.
+ The command above would create a cloud at your local computer, then you could set up the project.
 
  ## Create a project
 
- A project represents a group to manage a set of related pipelines. project must has a credential to access your VCS repository, and now Cyclone supports three types of VCS: GitHub, GitLab and SVN.
+ A project represents a group to manage a set of related pipelines. project must have a credential to access your VCS(Version Control System) repository, and now Cyclone supports three types of VCS: GitHub, GitLab and SVN.
 
- you can create a project by typing these following instructions:
+ you can create a project by:
 
  ```shell
  # create a project.
@@ -63,7 +63,16 @@
 
  ## Create a pipeline
 
- Pipeline is a workflow contained by a series of stages which make the CI/CD work. There are five stages for you to configure your pipeline, and we will introduce the required two of them, which are CodeCheckout and Package, and you can refer to [Pipelines  APIs]() to get more detailed infomations.
+ Pipeline is a workflow that consists of a series of CI/CD stages. Cyclone supports `5` stages, among which two of them are mandatory:
+ - codeCheckout
+ - package
+
+others are optional:
+ - imageBuild
+ - integrationTest
+ - imageRelease
+
+Here we will create a pipeline includes mandatory stages. Please see [Pipelines  APIs](./../api/v1/api.md#pipeline-apis) for more details.
 
  ```
  # create a pipeline including CodeCheckout and Package.
@@ -95,11 +104,11 @@
     }
  }' ''$HOST_URL'/api/v1/projects/'$PROJECT_NAME'/pipelines'
  ```
- That means checkout code from `$YOUR_GITHUB_REPO_ADDRESS` firstly, and then running a container which used busbox image to perform the commands we defined, which are `echo hello` and `echo word`.
+ That means checkout code from `$YOUR_GITHUB_REPO_ADDRESS` firstly, and then running a container which used busbox image to execute the commands we defined, which are `$YOUR_COMMAND_1` and `$YOUR_COMMAND_2`.
 
  ## Create a pipeline record
 
-After the pipeline is created successfully, you could create a recod to perfom it.
+After the pipeline is created successfully, you could create a recod to execute it.
 
 ```shell
 # create a record.
@@ -110,13 +119,29 @@ After the pipeline is created successfully, you could create a recod to perfom i
  }' ''$HOST_URL'/api/v1/projects/'$PROJECT_NAME'/pipelines/'$PIPELINE_NAME'/records'
 ```
 
-When creating the record, you could choose stages you have defined in pipeline to perform, but `codeCheckout` and `package` are required. If you have defined the optional stages, which are `imageBuild` `integrationTest` and `imageRelease`, of course you can choose them as well.
+When creating the record, you could choose stages you have defined in pipeline to execute. `codeCheckout` and `package` are mandatory. If you have defined the optional stages, of course you can choose them as well.
 
 ## Check out logs
 
 After the record is created successfully, you could get the log generated when the version is being created.
 
-### At the end of the pipeline run
+### Running log
+
+If you want to get logs while the pipeline is running, please typing following instructions to send a websocket connection to cyclone-server:
+
+```
+# get the real time record log stream.
+ curl -v -S --no-buffer \
+     -H "Connection: Upgrade" \
+     -H "Upgrade: websocket" \
+     -H "Host: localhost:8080" \
+     -H "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
+     -H "Sec-WebSocket-Version: 13" \
+ ''$HOST_URL'/api/v1/projects/'PROJECT_NAME'/pipelines/'$PIPELINE_NAME'/records/'$RECORD_ID'/logstream?stage=package'
+```
+
+### Result log
+
 At the end of the pipeline run successfully, you could get the logs by a HTTP GET request.
 
 ```shell
@@ -176,19 +201,4 @@ github.com/caicloud/cyclone/vendor/github.com/docker/docker/api/types/blkiodev
 github.com/caicloud/cyclone/pkg/worker
 github.com/caicloud/cyclone/cmd/worker
 Stage: Package status: finish
-```
-
-### While the pipeline is running
-
-If you want to get logs while the pipeline is running, please typing following instructions to send a websocket connection to cyclone-server:
-
-```
-# get the real time record log stream.
- curl -v -S --no-buffer \
-     -H "Connection: Upgrade" \
-     -H "Upgrade: websocket" \
-     -H "Host: localhost:8080" \
-     -H "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
-     -H "Sec-WebSocket-Version: 13" \
- ''$HOST_URL'/api/v1/projects/'PROJECT_NAME'/pipelines/'$PIPELINE_NAME'/records/'$RECORD_ID'/logstream?stage=package'
 ```
