@@ -24,32 +24,27 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/golang/glog"
-	"github.com/xanzy/go-gitlab"
-	"golang.org/x/oauth2"
-
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
+	log "github.com/golang/glog"
+	gitlabv4 "github.com/xanzy/go-gitlabv4"
+	"golang.org/x/oauth2"
 )
 
-// gitLabServer represents the server address for public Gitlab.
+type GitlabV4 struct{}
+
 const (
-	gitLabServer = "https://gitlab.com"
-
-	v3APIVersion = "/api/v3/"
+	v4APIVersion = "/api/v4/"
 )
 
-// Gitlab represents the SCM provider of Gitlab.
-type Gitlab struct{}
-
-// func init() {
-// 	if err := scm.RegisterProvider(api.Gitlab, new(Gitlab)); err != nil {
-// 		log.Errorln(err)
-// 	}
-// }
+func init() {
+	if err := scm.RegisterProvider(api.Gitlab, new(GitlabV4)); err != nil {
+		log.Errorln(err)
+	}
+}
 
 // GetToken gets the token by the username and password of SCM config.
-func (g *Gitlab) GetToken(scm *api.SCMConfig) (string, error) {
+func (g *GitlabV4) GetToken(scm *api.SCMConfig) (string, error) {
 	if len(scm.Username) == 0 || len(scm.Password) == 0 {
 		return "", fmt.Errorf("GitHub username or password is missing")
 	}
@@ -110,7 +105,7 @@ func (g *Gitlab) GetToken(scm *api.SCMConfig) (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
-func (g *Gitlab) CheckToken(scm *api.SCMConfig) bool {
+func (g *GitlabV4) CheckToken(scm *api.SCMConfig) bool {
 	if _, err := g.listReposInner(scm, false); err != nil {
 		return false
 	}
@@ -118,30 +113,33 @@ func (g *Gitlab) CheckToken(scm *api.SCMConfig) bool {
 }
 
 // ListRepos lists the repos by the SCM config.
-func (g *Gitlab) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+func (g *GitlabV4) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
 	return g.listReposInner(scm, true)
 }
 
 // listReposInner lists the projects by the SCM config,
 // list all projects while the parameter 'listAll' is true,
 // otherwise, list projects by default 'listPerPageOpt' number.
-func (g *Gitlab) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Repository, error) {
-	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
+func (g *GitlabV4) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Repository, error) {
+	client, err := newGitlabV4Client(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	opt := &gitlab.ListProjectsOptions{
-		ListOptions: gitlab.ListOptions{
+	trueVar := true
+	opt := &gitlabv4.ListProjectsOptions{
+		ListOptions: gitlabv4.ListOptions{
 			PerPage: listPerPageOpt,
 		},
+		Membership: &trueVar,
 	}
 
 	// Get all pages of results.
-	var allProjects []*gitlab.Project
+	var allProjects []*gitlabv4.Project
 	for {
 		projects, resp, err := client.Projects.ListProjects(opt)
 		if err != nil {
+			log.Infof("Error: %v", err)
 			return nil, err
 		}
 
@@ -162,13 +160,14 @@ func (g *Gitlab) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Reposit
 }
 
 // ListBranches lists the branches for specified repo.
-func (g *Gitlab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
+func (g *GitlabV4) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitlabV4Client(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	branches, _, err := client.Branches.ListBranches(repo)
+	opts := &gitlabv4.ListBranchesOptions{}
+	branches, _, err := client.Branches.ListBranches(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
 		return nil, err
@@ -183,13 +182,14 @@ func (g *Gitlab) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 }
 
 // ListTags lists the tags for specified repo.
-func (g *Gitlab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newGitlabClient(scm.Server, scm.Username, scm.Token)
+func (g *GitlabV4) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+	client, err := newGitlabV4Client(scm.Server, scm.Username, scm.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, _, err := client.Tags.ListTags(repo)
+	opts := &gitlabv4.ListTagsOptions{}
+	tags, _, err := client.Tags.ListTags(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
 		return nil, err
@@ -204,19 +204,19 @@ func (g *Gitlab) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 }
 
 // CreateWebHook creates webhook for specified repo.
-func (g *Gitlab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+func (g *GitlabV4) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webHook)
 	}
 
-	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
+	client, err := newGitlabV4Client(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}
 
 	enableState, disableState := true, false
 	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
-	hook := gitlab.AddProjectHookOptions{
+	hook := gitlabv4.AddProjectHookOptions{
 		PushEvents: &disableState,
 	}
 
@@ -243,8 +243,8 @@ func (g *Gitlab) CreateWebHook(cfg *api.SCMConfig, repoURL string, webHook *scm.
 }
 
 // DeleteWebHook deletes webhook from specified repo.
-func (g *Gitlab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl string) error {
-	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
+func (g *GitlabV4) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl string) error {
+	client, err := newGitlabV4Client(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}
@@ -265,17 +265,17 @@ func (g *Gitlab) DeleteWebHook(cfg *api.SCMConfig, repoURL string, webHookUrl st
 	return nil
 }
 
-// newGitlabClient news Gitlab client by token.If username is empty, use private-token instead of oauth2.0 token.
-func newGitlabClient(server, username, token string) (*gitlab.Client, error) {
-	var client *gitlab.Client
+// newGitlabV4Client news Gitlab client by token.If username is empty, use private-token instead of oauth2.0 token.
+func newGitlabV4Client(server, username, token string) (*gitlabv4.Client, error) {
+	var client *gitlabv4.Client
 
 	if len(username) == 0 {
-		client = gitlab.NewClient(nil, token)
+		client = gitlabv4.NewClient(nil, token)
 	} else {
-		client = gitlab.NewOAuthClient(nil, token)
+		client = gitlabv4.NewOAuthClient(nil, token)
 	}
 
-	if err := client.SetBaseURL(server + v3APIVersion); err != nil {
+	if err := client.SetBaseURL(server + v4APIVersion); err != nil {
 		log.Error(err.Error())
 		return nil, err
 	}
@@ -284,14 +284,14 @@ func newGitlabClient(server, username, token string) (*gitlab.Client, error) {
 }
 
 // NewTagFromLatest generate a new tag
-func (g *Gitlab) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
-	client, err := newGitlabClient(cfg.Server, cfg.Username, cfg.Token)
+func (g *GitlabV4) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
+	client, err := newGitlabV4Client(cfg.Server, cfg.Username, cfg.Token)
 	if err != nil {
 		return err
 	}
 
 	owner, name := parseURL(url)
-	tag := &gitlab.CreateTagOptions{
+	tag := &gitlabv4.CreateTagOptions{
 		TagName: &tagName,
 		Ref:     &commitID,
 		Message: &description,

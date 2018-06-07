@@ -87,7 +87,10 @@
 
 [[constraint]]
   name = "github.com/xanzy/go-gitlab"
+# For Gitlab API V3
   version = "0.4.0"
+# For Gitlab API V4
+# version = "v0.10.5"
 
 [[constraint]]
   branch = "master"
