@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cloud
+package options
 
 import (
 	"os"
@@ -24,30 +24,7 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
-func TestWorkerOptions_DeepCopy(t *testing.T) {
-	opts := NewWorkerOptions()
-	dep := opts.DeepCopy()
-	deep := &dep
-
-	if !reflect.DeepEqual(opts, deep) {
-		t.Errorf("WorkerOptions.DeepCopy() = %v, want %v", deep, opts)
-	}
-	if deep == opts {
-		t.Errorf("WorkerOptions.DeepCopy() = %v, want %v", &deep, &opts)
-	}
-
-	// change it
-	deep.Quota[ResourceLimitsCPU] = ZeroQuantity
-	deep.Quota[ResourceLimitsMemory] = ZeroQuantity
-
-	if reflect.DeepEqual(opts, deep) {
-		t.Errorf("WorkerOptions.DeepCopy() = %v, want %v", deep, opts)
-	}
-
-}
-
-func TestWorkerOptions_AddFlags(t *testing.T) {
-
+func TestWorkerOptionsAddFlags(t *testing.T) {
 	opts := NewWorkerOptions()
 	app := &cli.App{
 		Action: func(c *cli.Context) {
@@ -56,11 +33,11 @@ func TestWorkerOptions_AddFlags(t *testing.T) {
 				got  interface{}
 				want interface{}
 			}{
-				{CycloneServer, opts.WorkerEnvs.CycloneServer, "http://127.0.0.1:7099"},
-				{ConsoleWebEndpoint, opts.WorkerEnvs.ConsoleWebEndpoint, "http://127.0.0.1:3000"},
-				{RegistryLocation, opts.WorkerEnvs.RegistryLocation, "cargo.caicloud.io"},
-				{GitlabURL, opts.WorkerEnvs.GitlabURL, "https://gitlab.com"},
-				{WorkerImage, opts.WorkerEnvs.WorkerImage, "cargo.caicloud.io/caicloud/cyclone-worker"},
+				{CycloneServer, opts.CycloneServer, "http://127.0.0.1:7099"},
+				{ConsoleWebEndpoint, opts.ConsoleWebEndpoint, "http://127.0.0.1:3000"},
+				{RegistryLocation, opts.RegistryLocation, "cargo.caicloud.io"},
+				{GitlabURL, opts.GitlabURL, "https://gitlab.com"},
+				{WorkerImage, opts.WorkerImage, "cargo.caicloud.io/caicloud/cyclone-worker"},
 				{ResourceLimitsMemory, opts.Quota[ResourceLimitsMemory], DefaultLimitMemory},
 				{ResourceLimitsCPU, opts.Quota[ResourceLimitsCPU], DefaultLimitCPU},
 			}

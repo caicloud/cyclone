@@ -14,27 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cloud
+package options
 
 import (
 	"time"
 
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 )
 
-// env
+// NewWorkerOptions creates a new WorkerOptions
+func NewWorkerOptions() *WorkerOptions {
+	return &WorkerOptions{}
+}
+
 const (
-
-	// WorkerEventID is special
-	WorkerEventID = "WORKER_EVENTID"
-
 	CycloneServer      = "CYCLONE_SERVER"
 	ConsoleWebEndpoint = "CONSOLE_WEB_ENDPOINT"
+
 	// CallbackURL ...
 	CallbackURL = "CALLBACK_URL"
 
 	// Registry
-
 	RegistryLocation = "REGISTRY_LOCATION"
 	RegistryUsername = "REGISTRY_USERNAME"
 	RegistryPassword = "REGISTRY_PASSWORD"
@@ -42,37 +42,33 @@ const (
 	WorkerImage = "WORKER_IMAGE"
 
 	// Github
-
 	GithubClient = "GITHUB_CLIENT"
 	GithubSecret = "GITHUB_SECRET"
 
 	//Gitlab
-
 	GitlabURL    = "GITLAB_URL"
 	GitlabClient = "GITLAB_CLIENT"
 	GitlabSecret = "GITLAB_SECRET"
 
-	LogServer = "LOG_SERVER"
-
 	// Resource
-
 	LimitMemory   = "LIMIT_MEMORY"
 	LimitCPU      = "LIMIT_CPU"
 	RequestMemory = "REQUEST_MEMORY"
 	RequestCPU    = "REQUEST_CPU"
 
 	WorkingDir = "/root/code"
-)
 
-const (
+	// EventID for worker to get the event.
+	EventID = "EVENT_ID"
+
+	DockerHost = "DOCKER_HOST"
+
 	// WorkerTimeout ...
 	WorkerTimeout = 2 * time.Hour
 )
 
-// -----------------------------------------------------------------------
-
-// WorkerEnvs ...
-type WorkerEnvs struct {
+// WorkerOptions ...
+type WorkerOptions struct {
 	// for worker env
 	CycloneServer      string
 	ConsoleWebEndpoint string
@@ -91,34 +87,29 @@ type WorkerEnvs struct {
 	GitlabClient string
 	GitlabSecret string
 
-	LogServer string
-
 	WorkerImage string
+	EventID     string
+	DockerHost  string
+
+	Quota Quota
 }
 
-// NewWorkerEnvs creates a new WorkerEnvs
-func NewWorkerEnvs() *WorkerEnvs {
-	return &WorkerEnvs{
-		WorkerImage: "cargo.caicloud.io/caicloud/cyclone-worker:v1221",
-	}
-}
-
-// AddFlags adds flags for a specific APIServer to the specified cli.app
-func (env *WorkerEnvs) AddFlags(app *cli.App) {
+// AddFlags adds flags to app.Flags
+func (opts *WorkerOptions) AddFlags(app *cli.App) {
 	flags := []cli.Flag{
 		cli.StringFlag{
 			Name:        "cyclone-server",
 			Value:       "http://127.0.0.1:7099",
 			Usage:       "cyclone server host for worker to connect server",
 			EnvVar:      CycloneServer,
-			Destination: &env.CycloneServer,
+			Destination: &opts.CycloneServer,
 		},
 		cli.StringFlag{
 			Name:        "console-web-endpoint",
 			Value:       "http://127.0.0.1:3000",
 			Usage:       "for worker to deploy to caicloud kubernetes",
 			EnvVar:      ConsoleWebEndpoint,
-			Destination: &env.ConsoleWebEndpoint,
+			Destination: &opts.ConsoleWebEndpoint,
 		},
 
 		cli.StringFlag{
@@ -126,19 +117,19 @@ func (env *WorkerEnvs) AddFlags(app *cli.App) {
 			Value:       "cargo.caicloud.io",
 			Usage:       "docker registry location for docker push",
 			EnvVar:      RegistryLocation,
-			Destination: &env.RegistryLocation,
+			Destination: &opts.RegistryLocation,
 		},
 		cli.StringFlag{
 			Name:        "registry-username",
 			Usage:       "docker registry username",
 			EnvVar:      RegistryUsername,
-			Destination: &env.RegistryUsername,
+			Destination: &opts.RegistryUsername,
 		},
 		cli.StringFlag{
 			Name:        "registry-password",
 			Usage:       "docker registry password",
 			EnvVar:      RegistryPassword,
-			Destination: &env.RegistryPassword,
+			Destination: &opts.RegistryPassword,
 		},
 
 		// Github
@@ -146,98 +137,64 @@ func (env *WorkerEnvs) AddFlags(app *cli.App) {
 			Name:        "github-client",
 			Usage:       "github client id",
 			EnvVar:      GithubClient,
-			Destination: &env.GithubClient,
+			Destination: &opts.GithubClient,
 		},
 		cli.StringFlag{
 			Name:        "github-secret",
 			Usage:       "github client secret",
 			EnvVar:      GithubSecret,
-			Destination: &env.GithubSecret,
+			Destination: &opts.GithubSecret,
 		},
+
 		// Gitlab
 		cli.StringFlag{
 			Name:        "gitlab-url",
 			Value:       "https://gitlab.com",
 			Usage:       "gitlab url domain",
 			EnvVar:      GitlabURL,
-			Destination: &env.GitlabURL,
+			Destination: &opts.GitlabURL,
 		},
 		cli.StringFlag{
 			Name:        "gitlab-client",
 			Usage:       "gitlab client id",
 			EnvVar:      GitlabClient,
-			Destination: &env.GitlabClient,
+			Destination: &opts.GitlabClient,
 		},
 		cli.StringFlag{
 			Name:        "gitlab-secret",
 			Usage:       "gitlab client secret",
 			EnvVar:      GitlabSecret,
-			Destination: &env.GitlabSecret,
+			Destination: &opts.GitlabSecret,
 		},
-		cli.StringFlag{
-			Name:        "log-server",
-			Value:       "ws://127.0.0.1:8000/ws",
-			Usage:       "cyclone log server websocket host",
-			EnvVar:      LogServer,
-			Destination: &env.LogServer,
-		},
-
 		cli.StringFlag{
 			Name:        "worker-image",
 			Value:       "cargo.caicloud.io/caicloud/cyclone-worker",
 			Usage:       "basic worker image",
 			EnvVar:      WorkerImage,
-			Destination: &env.WorkerImage,
+			Destination: &opts.WorkerImage,
+		},
+		cli.StringFlag{
+			Name:        "event-id",
+			Usage:       "id of event to handle",
+			EnvVar:      EventID,
+			Destination: &opts.EventID,
+		},
+		cli.StringFlag{
+			Name:        "docker-host",
+			Value:       "unix:///var/run/docker.sock",
+			Usage:       "worker used docker host",
+			EnvVar:      DockerHost,
+			Destination: &opts.DockerHost,
 		},
 	}
 	app.Flags = append(app.Flags, flags...)
-}
 
-// ---------------------------------------------------------------------------
-
-// WorkerOptions contains the options for workers creation
-type WorkerOptions struct {
-	WorkerEnvs *WorkerEnvs
-
-	Quota Quota
-
-	// Namespace represents the k8s namespace where to create worker, only works for k8s cloud provider.
-	Namespace string
-
-	// CacheVolume represents the volume to cache dependency for worker.
-	CacheVolume string
-
-	// MountPath represents the mount path for the cache volume.
-	MountPath string
-}
-
-// NewWorkerOptions creates a new WorkerOptions with default value
-func NewWorkerOptions() *WorkerOptions {
-	return &WorkerOptions{
-		WorkerEnvs: NewWorkerEnvs(),
-		Quota:      DefaultQuota.DeepCopy(),
-	}
-}
-
-// DeepCopy returns a deep-copy of the WorkerOptions value.  Note that the method
-// receiver is a value, so we can mutate it in-place and return it.
-func (opts WorkerOptions) DeepCopy() WorkerOptions {
-	opts.Quota = opts.Quota.DeepCopy()
-	return opts
-}
-
-// AddFlags adds flags for a specific APIServer to the specified cli.app
-func (opts *WorkerOptions) AddFlags(app *cli.App) {
-
-	// add env flags
-	opts.WorkerEnvs.AddFlags(app)
-
-	// add quota flags
+	// For quota flags
 	if opts.Quota == nil {
 		opts.Quota = DefaultQuota.DeepCopy()
 	}
 
-	flags := []cli.Flag{
+	flags = []cli.Flag{
 		cli.GenericFlag{
 			Name:   "limit-memory",
 			Value:  opts.Quota[ResourceLimitsMemory], // default 512Mi
@@ -264,23 +221,4 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 		},
 	}
 	app.Flags = append(app.Flags, flags...)
-}
-
-// ---------------------------------------------------------------------------
-
-// WorkerInfo ...
-type WorkerInfo struct {
-	CloudName string `json:"cloudName,omitempty" bson:"cloudName,omitempty"`
-	CloudKind string `json:"cloudKind,omitempty" bson:"cloudKind,omitempty"`
-
-	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
-	CreateTime time.Time `json:"createTime,omitempty" bson:"createTime,omitempty"`
-	DueTime    time.Time `json:"dueTime,omitempty" bson:"dueTime,omitempty"`
-
-	// for k8s
-	PodName   string `json:"podName,omitempty" bson:"podName,omitempty"`
-	Namespace string `json:"namespace,omitempty" bson:"namespace,omitempty"`
-
-	// for docker
-	ContainerID string `json:"containerID,omitempty" bson:"containerID,omitempty"`
 }
