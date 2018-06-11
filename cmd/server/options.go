@@ -23,19 +23,19 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/caicloud/cyclone/api/server"
-	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/cmd/worker/options"
 )
 
 // ServerOptions ...
 type ServerOptions struct {
-	WorkerOptions    *cloud.WorkerOptions
+	WorkerOptions    *options.WorkerOptions
 	APIServerOptions *server.APIServerOptions
 }
 
 // NewServerOptions creates a new ServerOptions
 func NewServerOptions() *ServerOptions {
 	return &ServerOptions{
-		WorkerOptions:    cloud.NewWorkerOptions(),
+		WorkerOptions:    options.NewWorkerOptions(),
 		APIServerOptions: server.NewAPIServerOptions(),
 	}
 }

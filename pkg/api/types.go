@@ -19,7 +19,6 @@ package api
 import (
 	"time"
 
-	"github.com/caicloud/cyclone/cloud"
 	"golang.org/x/oauth2"
 )
 
@@ -47,8 +46,22 @@ type Registry struct {
 
 // Worker represents the config of worker for the pipelines of the project.
 type Worker struct {
-	Namespace        string                             `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+	Location         *WorkerLocation                    `bson:"location,omitempty" json:"location,omitempty"`
 	DependencyCaches map[BuildToolName]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
+}
+
+// type WorkerCloudOptions struct {
+// 	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cluster to create the worker"`
+// 	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+// }
+
+type WorkerLocation struct {
+	ClusterName string `bson:"clusterName,omitempty" json:"clusterName,omitempty" description:"name of cluster to create the worker"`
+	Namespace   string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+}
+
+type WorkerQuota struct {
+	Request string
 }
 
 // DependencyCache represents the cache volume of dependency for CI.
@@ -540,6 +553,39 @@ type Repository struct {
 	URL  string `json:"url,omitempty"`
 }
 
+// CloudType represents cloud type, supports Docker and Kubernetes.
+type CloudType string
+
+const (
+	// CloudTypeDocker represents the Docker cloud type.
+	CloudTypeDocker CloudType = "Docker"
+
+	// CloudTypeKubernetes represents the Kubernetes cloud type.
+	CloudTypeKubernetes CloudType = "Kubernetes"
+)
+
+type CloudDocker struct {
+	Host     string `json:"host,omitempty" bson:"host,omitempty"`
+	CertPath string `json:"certPath,omitempty" bson:"certPath,omitempty"`
+}
+
+type CloudKubernetes struct {
+	Host        string `json:"host,omitempty" bson:"host,omitempty"`
+	InCluster   bool   `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
+	BearerToken string `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
+	Namespace   string `json:"namespace,omitempty" bson:"namespace,omitempty"`
+}
+
+// Cloud represents clouds for workers.
+type Cloud struct {
+	ID         string           `bson:"_id,omitempty" json:"id,omitempty"`
+	Type       CloudType        `bson:"type,omitempty" json:"type,omitempty"`
+	Name       string           `json:"name,omitempty" bson:"name,omitempty"`
+	Insecure   bool             `json:"insecure,omitempty" bson:"insecure,omitempty"`
+	Docker     *CloudDocker     `json:"docker,omitempty" bson:"docker,omitempty"`
+	Kubernetes *CloudKubernetes `json:"kubernetes,omitempty" bson:"kubernetes,omitempty"`
+}
+
 const (
 	// GITHUB is the name of github.
 	GITHUB string = "github"
@@ -556,13 +602,26 @@ type Event struct {
 	PipelineRecord *PipelineRecord `bson:"pipelineRecord,omitempty" json:"pipelineRecord,omitempty"`
 
 	// WorkerInfo represents the worker infos used to delete the workers.
-	Worker cloud.WorkerInfo `bson:"worker,omitempty" json:"worker,omitempty"`
+	WorkerInfo *WorkerInfo `bson:"workerInfo,omitempty" json:"workerInfo,omitempty"`
 
 	// Retry represents the number of retry when cloud is busy.
 	Retry       int         `bson:"retry,omitempty" json:"retry,omitempty"`
 	InTime      time.Time   `bson:"inTime,omitempty" json:"inTime,omitempty"`
 	OutTime     time.Time   `bson:"outTime,omitempty" json:"outTime,omitempty"`
 	QueueStatus QueueStatus `bson:"queueStatus,omitempty" json:"queueStatus,omitempty"`
+}
+
+type WorkerInfo struct {
+	// CacheVolume represents the volume to cache dependency for worker.
+	CacheVolume string
+
+	// MountPath represents the mount path for the cache volume.
+	MountPath string
+
+	Name string
+
+	StartTime time.Time `json:"startTime,omitempty" bson:"startTime,omitempty"`
+	DueTime   time.Time `json:"dueTime,omitempty" bson:"dueTime,omitempty"`
 }
 
 // PipelineStatusStats represents statistics of workspace or pipeline.

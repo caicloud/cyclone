@@ -1,3 +1,19 @@
+/*
+Copyright 2016 caicloud authors. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
@@ -6,6 +22,8 @@ import (
 	"os"
 	"sort"
 
+	"github.com/caicloud/cyclone/cmd/worker/options"
+	"github.com/caicloud/cyclone/pkg/worker"
 	"github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -22,11 +40,13 @@ func newCliApp() *cli.App {
 
 	app.Name = "cyclone-worker"
 
-	opts := NewWorkerOptions()
+	opts := options.NewWorkerOptions()
 	opts.AddFlags(app)
 
 	app.Action = func(c *cli.Context) error {
-		worker := opts.NewWorker()
+		glog.Info("worker options: %v", opts)
+
+		worker := worker.NewWorker(opts)
 		return worker.Run()
 	}
 

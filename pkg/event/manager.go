@@ -23,79 +23,31 @@ import (
 	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
 	mgo "gopkg.in/mgo.v2"
-	"k8s.io/client-go/rest"
 
-	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/store"
-)
-
-var (
-	CloudController *cloud.Controller
-
-	workerOptions *cloud.WorkerOptions
 )
 
 // maxRetry represents the max number of retry for event when cloud is busy.
 // TODO(robin) Make this configurable.
 const maxRetry = 60
 
+var (
+	defaultWorkerOptions *options.WorkerOptions
+)
+
 // Init init event manager
-// Step1: init cloud controller
-// Step2: new event manager
-// Step3: create a goroutine to watch events
-func Init(wopts *cloud.WorkerOptions, cloudAutoDiscovery bool) {
-	initCloudController(wopts, cloudAutoDiscovery)
+// Step1: new event manager
+// Step2: create a goroutine to watch events
+func Init(opts *options.WorkerOptions) {
 	ds := store.NewStore()
-
 	em := NewEventManager(ds)
+
+	defaultWorkerOptions = opts
+
 	go em.WatchEvent()
-}
-
-// FIXME, so ugly
-// load clouds from database
-func initCloudController(wopts *cloud.WorkerOptions, cloudAutoDiscovery bool) {
-	CloudController = cloud.NewController()
-	// load clouds from store
-	ds := store.NewStore()
-	defer ds.Close()
-	clouds, err := ds.FindAllClouds()
-	if err != nil {
-		logdog.Error("Can not find clouds from ds", logdog.Fields{"err": err})
-		return
-	}
-
-	CloudController.AddClouds(clouds...)
-
-	if len(CloudController.Clouds) == 0 && cloudAutoDiscovery {
-		addInClusterK8SCloud()
-	}
-
-	workerOptions = wopts
-}
-
-func addInClusterK8SCloud() {
-	ds := store.NewStore()
-	defer ds.Close()
-	_, err := rest.InClusterConfig()
-	if err == nil {
-		// in k8s cluster
-		cloud := cloud.Cloud{
-			Name: "_inCluster",
-			Type: cloud.CloudTypeKubernetes,
-			Kubernetes: &cloud.CloudKubernetes{
-				InCluster: true,
-			},
-		}
-		err := CloudController.AddClouds(cloud)
-		if err != nil {
-			logdog.Warn("Can not add inCluster k8s cloud to database")
-		}
-		err = ds.InsertCloud(&cloud)
-		if err != nil {
-			logdog.Warn("Can not add inCluster k8s cloud to database")
-		}
-	}
 }
 
 // EventManager represents the manager of events.
@@ -119,7 +71,8 @@ func NewEventManager(ds *store.DataStore) EventManager {
 func (em *eventManager) HandleEvent(event *api.Event) error {
 	eventID := event.ID
 	pipelineRecord := event.PipelineRecord
-	if err := createWorkerForEvent(event); err != nil {
+	err := createWorkerForEvent(event)
+	if err != nil {
 		if cloud.IsAllCloudsBusyErr(err) && event.Retry < maxRetry {
 			log.Info("All system worker are busy, wait for 10 seconds")
 			event.Retry++
@@ -172,15 +125,14 @@ func (em *eventManager) WatchEvent() {
 
 func createWorkerForEvent(event *api.Event) error {
 	log.Infof("Create worker for event %s", event.ID)
-	opts := workerOptions.DeepCopy()
 	workerCfg := event.Project.Worker
 	buildInfo := event.Pipeline.Build.BuildInfo
 	performParams := event.PipelineRecord.PerformParams
-	if workerCfg != nil {
-		if len(workerCfg.Namespace) != 0 {
-			opts.Namespace = workerCfg.Namespace
-		}
+	workerInfo := &api.WorkerInfo{
+		Name: "cyclone-worker-" + event.ID,
+	}
 
+	if workerCfg != nil {
 		// Only use cache when:
 		// * the project has enable caches
 		// * the pipeline has enable cache and set the build tool
@@ -191,36 +143,43 @@ func createWorkerForEvent(event *api.Event) error {
 			if cache, ok := workerCfg.DependencyCaches[tool]; ok {
 				switch tool {
 				case api.MavenBuildTool:
-					opts.MountPath = "/root/.m2"
+					workerInfo.MountPath = "/root/.m2"
 				case api.NPMBuildTool:
-					opts.MountPath = "/root/.npm"
+					workerInfo.MountPath = "/root/.npm"
 				default:
 					// Just log error and let the pipeline to run in non-cache mode.
 					return fmt.Errorf("Build tool %s is not supported, only supports: %s, %s", tool, api.MavenBuildTool, api.NPMBuildTool)
 				}
 
-				opts.CacheVolume = cache.Name
+				workerInfo.CacheVolume = cache.Name
 			}
 		}
 	}
 
-	worker, err := CloudController.Provision(event.ID, opts)
+	cp, err := getCloudProvider(workerCfg)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	opts := defaultWorkerOptions
+	opts.EventID = event.ID
+	workerInfo, err = cp.Provision(workerInfo, opts)
 	if err != nil {
 		return err
 	}
 
-	// set worker info to event
-	event.Worker = worker.GetWorkerInfo()
+	event.WorkerInfo = workerInfo
 
-	err = worker.Do()
-	if err != nil {
-		return err
-	}
+	// err = worker.Do()
+	// if err != nil {
+	// 	return err
+	// }
 
 	// update worker info to event
-	event.Worker = worker.GetWorkerInfo()
+	// event.Worker = worker.GetWorkerInfo()
 
-	log.Infof("Worker info: %v", event.Worker)
+	// log.Infof("Worker info: %v", event.Worker)
 
 	// trigger after get an valid worker
 	// triggerHooks(event, PostStartPhase)
@@ -234,7 +193,8 @@ func createWorkerForEvent(event *api.Event) error {
 
 func postHookEvent(event *api.Event) {
 	log.Info("posthook of event")
-	terminateEventWorker(event.Worker)
+	log.Infof("worker： %s", event.Project.Worker)
+	terminateEventWorker(event)
 }
 
 // UpdateEvent updates the event. If it is finished, delete it and trigger the post hook.
@@ -298,7 +258,7 @@ func DeleteEvent(id string) error {
 
 	if event.QueueStatus == api.Handling {
 		log.Infof("terminate the worker for handling event %s", id)
-		terminateEventWorker(event.Worker)
+		terminateEventWorker(event)
 	}
 
 	return nil
@@ -317,25 +277,25 @@ func CheckWorkerTimeout(event *api.Event) {
 	if IsEventFinished(event) {
 		return
 	}
-	worker, err := CloudController.LoadWorker(event.Worker)
-	if err != nil {
-		log.Errorf("load worker %v with error: %v", event.Worker, err)
-		return
-	}
+	// worker, err := CloudController.LoadWorker(event.Worker)
+	// if err != nil {
+	// 	log.Errorf("load worker %v with error: %v", event.Worker, err)
+	// 	return
+	// }
 
 	pipelineRecord := event.PipelineRecord
-	ok, left := worker.IsTimeout()
-	if ok {
-
+	now := time.Now()
+	workerInfo := event.WorkerInfo
+	if now.After(workerInfo.DueTime) {
 		pipelineRecord.Status = api.Failed
-		err = UpdateEvent(event)
+		err := UpdateEvent(event)
 		if err != nil {
 			log.Errorf("update event %s error: %v", event.ID, err)
 		}
 		return
 	}
 
-	time.Sleep(left)
+	time.Sleep(workerInfo.DueTime.Sub(now))
 
 	ds := store.NewStore()
 	defer ds.Close()
@@ -353,14 +313,44 @@ func CheckWorkerTimeout(event *api.Event) {
 	}
 }
 
-func terminateEventWorker(workerInfo cloud.WorkerInfo) {
-	w, err := CloudController.LoadWorker(workerInfo)
+func terminateEventWorker(event *api.Event) {
+	cp, err := getCloudProvider(event.Project.Worker)
 	if err != nil {
-		logdog.Warnf("load worker %v with error: %v", workerInfo, err)
+		logdog.Warnf("load worker %v with error: %v", event.WorkerInfo, err)
 	} else {
-		err = w.Terminate()
-		if err != nil {
-			logdog.Warnf("Terminate worker err: %v", err)
+		if event.WorkerInfo != nil {
+			err = cp.TerminateWorker(event.WorkerInfo.Name)
+			if err != nil {
+				logdog.Warnf("Terminate worker err: %v", err)
+			}
 		}
 	}
+}
+
+func getCloudProvider(w *api.Worker) (cloud.Provider, error) {
+
+	log.Infof("worker: %+v", w)
+
+	ds := store.NewStore()
+	defer ds.Close()
+
+	// Use the incluster cloud by default.
+	var clusterName string
+	// if w != nil && w.CloudOptions != nil {
+	// 	clusterName = w.CloudOptions.CloudName
+	if w != nil && w.Location != nil {
+		clusterName = w.Location.ClusterName
+	} else {
+		clusterName = "inCluster"
+		log.Warningf("No cluster specified for this project, will use the defult cluster %s", clusterName)
+	}
+
+	c, err := ds.FindCloudByName(clusterName)
+	if err != nil {
+		err = fmt.Errorf("fail to find cloud %s as %v", clusterName, err)
+		log.Error(err)
+		return nil, err
+	}
+
+	return cloud.NewCloudProvider(c)
 }

@@ -22,7 +22,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	log "github.com/golang/glog"
 
-	"github.com/caicloud/cyclone/pkg/event"
+	"github.com/caicloud/cyclone/pkg/cloud"
 )
 
 // healthCheck handles the request to check the health of Cyclone server.
@@ -39,13 +39,24 @@ func (router *router) healthCheck(request *restful.Request, response *restful.Re
 
 	// Check the health of cloud providers.
 	cloudHealth := false
-	for n, c := range event.CloudController.Clouds {
-		if err := c.Ping(); err != nil {
-			log.Errorf("Cloud %s is not health as %v", n, err)
-			continue
-		}
+	cs, err := router.dataStore.FindAllClouds()
+	if err != nil {
+		log.Errorf("Fail to list all clouds %v", err)
+	} else {
+		for _, c := range cs {
+			cp, err := cloud.NewCloudProvider(&c)
+			if err != nil {
+				log.Error(err)
+				break
+			}
 
-		cloudHealth = true
+			if err := cp.Ping(); err != nil {
+				log.Errorf("Cloud %v is not health as %v", cp, err)
+				break
+			}
+
+			cloudHealth = true
+		}
 	}
 
 	if dbHealth && cloudHealth {

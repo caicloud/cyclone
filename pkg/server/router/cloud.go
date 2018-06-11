@@ -19,14 +19,14 @@ package router
 import (
 	"net/http"
 
-	"github.com/caicloud/cyclone/cloud"
+	"github.com/caicloud/cyclone/pkg/api"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	restful "github.com/emicklei/go-restful"
 )
 
 // createCloud handles the request to create a cloud.
 func (router *router) createCloud(request *restful.Request, response *restful.Response) {
-	cloud := &cloud.Cloud{}
+	cloud := &api.Cloud{}
 	if err := httputil.ReadEntityFromRequest(request, cloud); err != nil {
 		httputil.ResponseWithError(response, err)
 		return
@@ -43,7 +43,11 @@ func (router *router) createCloud(request *restful.Request, response *restful.Re
 
 // listClouds handles the request to list all clouds.
 func (router *router) listClouds(request *restful.Request, response *restful.Response) {
-	clouds := router.cloudManager.ListClouds()
+	clouds, err := router.cloudManager.ListClouds()
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
 
 	response.WriteHeaderAndEntity(http.StatusOK, clouds)
 }
