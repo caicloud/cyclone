@@ -41,7 +41,7 @@
 
  ## Create a project
 
- A project represents a group to manage a set of related pipelines. project must have a credential to access your VCS(Version Control System) repository, and now Cyclone supports three types of VCS: GitHub, GitLab and SVN.
+ A project represents a group to manage a set of related pipelines. project must have a credential to access your SCM(Software Configuration Management) repository, and now Cyclone supports three types of SCM: GitHub, GitLab and SVN.
 
  you can create a project by:
 
@@ -56,14 +56,15 @@
 		"server": "https://github.com/",
 		"authType": "Password",
 		"username": "'$USERNAME'",
-		"password": "'PASSWORD'"
+		"password": "'$PASSWORD'"
 	}
  }' ''$HOST_URL'/api/v1/projects'
  ```
 
  ## Create a pipeline
 
- Pipeline is a workflow that consists of a series of CI/CD stages. Cyclone supports `5` stages, among which two of them are mandatory:
+ Pipeline is a workflow that consists of a series of CI/CD stages. Cyclone supports `5` stages, among which
+ two of them are mandatory:
  - codeCheckout
  - package
 
@@ -72,7 +73,7 @@ others are optional:
  - integrationTest
  - imageRelease
 
-Here we will create a pipeline includes mandatory stages. Please see [Pipelines  APIs](./../api/v1/api.md#pipeline-apis) for more details.
+Here we will create a pipeline includes mandatory stages. Please see [Pipelines  APIs](./api/v1/api.md#pipeline-apis) for more details.
 
  ```
  # create a pipeline including CodeCheckout and Package.
@@ -104,7 +105,7 @@ Here we will create a pipeline includes mandatory stages. Please see [Pipelines 
     }
  }' ''$HOST_URL'/api/v1/projects/'$PROJECT_NAME'/pipelines'
  ```
- That means checkout code from `$YOUR_GITHUB_REPO_ADDRESS` firstly, and then running a container which used busbox image to execute the commands we defined, which are `$YOUR_COMMAND_1` and `$YOUR_COMMAND_2`.
+ That means checkout code from `$YOUR_GITHUB_REPO_ADDRESS` firstly, and then running a container which used `busbox` image to execute the commands we defined, which are `$YOUR_COMMAND_1` and `$YOUR_COMMAND_2`.
 
  ## Create a pipeline record
 
@@ -130,7 +131,7 @@ After the record is created successfully, you could get the log generated when t
 If you want to get logs while the pipeline is running, please typing following instructions to send a websocket connection to cyclone-server:
 
 ```
-# get the real time record log stream.
+# get package stage record log stream in the real time.
  curl -v -S --no-buffer \
      -H "Connection: Upgrade" \
      -H "Upgrade: websocket" \
@@ -145,7 +146,7 @@ If you want to get logs while the pipeline is running, please typing following i
 At the end of the pipeline run successfully, you could get the logs by a HTTP GET request.
 
 ```shell
-# get record logs.
+# get package stage record logs.
  curl -v -S ''$HOST_URL'/api/v1/projects/'PROJECT_NAME'/pipelines/'$PIPELINE_NAME'/records/'$RECORD_ID'/logs?stage=package'
 ```
 
