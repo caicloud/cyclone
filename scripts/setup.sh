@@ -18,7 +18,6 @@ function cleanup {
     unset DEBUG
     unset CYCLONE_SERVER
     unset MONGODB_HOST
-    unset KAFKA_HOST
     unset LOG_SERVER
     unset REGISTRY_LOCATION
     unset REGISTRY_USERNAME
@@ -29,12 +28,6 @@ function cleanup {
 
     [ -n "${CYCLONE_PID-}" ] && ps -p ${CYCLONE_PID} > /dev/null && kill ${CYCLONE_PID}
 
-    if [[ -n $(docker ps -a | grep kafka) ]];then
-        docker rm -f kafka
-    fi
-    if [[ -n $(docker ps -a | grep zookeeper) ]];then
-        docker rm -f zookeeper
-    fi
     if [[ -n $(docker ps -a | grep mongo) ]];then
         docker rm -f mongo
     fi
@@ -52,7 +45,6 @@ function run_e2e {
 
     export DEBUG=true
     export MONGODB_HOST=127.0.0.1:27017
-    export KAFKA_HOST=127.0.0.1:9092
     export CYCLONE_SERVER=http://${HOST_IP}:7099
     export LOG_SERVER=ws://${HOST_IP}:8000/ws
     export REGISTRY_LOCATION=cargo.caicloud.io
@@ -69,18 +61,6 @@ function run_e2e {
         export DOCKER_HOST=unix:///var/run/docker.sock
     fi
 
-    echo "setup zookeeper"
-    docker run -d --name zookeeper wurstmeister/zookeeper:3.4.6
-    sleep 2
-    echo "setup kafka"
-    docker run -d --name kafka --hostname kafka \
-                -p 9092:9092 \
-                -e KAFKA_ADVERTISED_HOST_NAME=0.0.0.0 \
-                -e KAFKA_ADVERTISED_PORT=9092 \
-                -e KAFKA_LOG_DIRS=/data/kafka_log \
-                --link zookeeper:zk \
-                wurstmeister/kafka:0.10.1.0
-
     echo "setup mongo"
     docker run -d --name mongo -p 27017:27017 mongo:3.0.5 mongod --smallfiles
 
@@ -90,7 +70,7 @@ function run_e2e {
     echo "buiding worker"
     # worker run in linux, so need cross compiling
     GOOS=linux GOARCH=amd64 go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
-    docker -H ${DOCKER_HOST} build -t ${WORKER_IMAGE} -f Dockerfile.worker .
+    docker -H ${DOCKER_HOST} build -t ${WORKER_IMAGE} -f build/worker/Dockerfile .
 
     echo "start server"
     ./cyclone-server &
