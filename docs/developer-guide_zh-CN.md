@@ -74,31 +74,34 @@
 
 ### 工作流
 
-![flow](./images/work-flow-2.7.jpeg)
+![flow](./images/work-flow-2.7.png)
 
  虚线框表示规划中的特性
 
  Cyclone提供了丰富的[API](http://118.193.142.27:7099/apidocs/)供web应用调用（详见API说明）
 
-- 通过调用cyclone-serser的API创建一个基于软件配置管理（SCM）系统中某代码库的流水线
-- 在流水线中定义要执行的各个阶段的操作
+- 通过调用cyclone-serser的API创建一个基于软件配置管理（SCM）系统中某代码库的流水线，在流水线中定义要执行的各个阶段的操作
 - 直接手动触发，或者通过SCM的提交、发布等动作以webhook的形式触发Cyclone-Server
 - Cyclone-Server启动一个基于Docker in Docker技术的Cyclone-Worker容器，在该容器中，按照pipeline的配置，依次执行：
   - codeCheckout：从指定代码库中拉取源码
   - package：启动用户配置的镜像，执行用户配置命令构建代码
   - imageBuild：根据用户指定的Dockerfile制作镜像
-  - integrationTest：运行持续集成所依赖的微服务，启动一个容器对imageBuild阶段构建成功的镜像执行集成测试
+  - integrationTest：运行持续集成所依赖的微服务，启动一个容器对`imageBuild`阶段构建成功的镜像执行集成测试
   - imageRelease：将构建成功的镜像发布到镜像仓库中
+  - deploy：使用发布的镜像部署应用到kubernetes等容器集群Paas平台（敬请期待）
 - 构建过程日志可以通过Websocket从Cyclone-Server拉取
-- 构建结束后Cyclone-Server将构建结果和完整构建日志通过邮件通知用户
+- 构建结束后Cyclone-Server将构建结果和完整构建日志通过邮件通知用户（敬请期待）
 
 工作流示例可参考[快速开始](./quick-start_zh-CN.md)
 
 ### 软件架构
 
-![architecture](./images/architecture.png)
+![architecture](./images/architecture-2.7.png)
+
+每个立方体代表一个容器
 
 - Cyclone-Server中Api-Server组件提供Restful API服务，被调用后需要较长时间处理的任务生成一个待处理事件写入mongoDB
 - Scheduler定期从mongoDB任务队列中获取任务，然后调度worker运行
 - Cyclone-Worker启动后，从server获取任务信息，然后执行pipeline的各个stage，在执行的同时，将日志实时输出到server
-- Log-Server负责收集Worker发送过来的实时日志，并持久化到本地的日志文件中
+- Log-Server负责收集Worker发送过来的实时日志，并持久化到日志文件中
+- 需要持久化的数据存入mongo
