@@ -27,16 +27,12 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-- Using Kubectl: this approach requires a few yaml files. You can read related files in cirlce/scripts/k8s for more detial. Follow these instructions:
+- Using Kubectl: this approach requires a few yaml files. You can read related files in cyclone/scripts/k8s for more detial, and adjust the parameters before executing these instructions:
 
 ```
-git clone https://github.com/caicloud/cirlce
+git clone https://github.com/caicloud/cyclone
 cd cyclone/scripts/k8s
 kubectl create namespace cyclone
-kubectl --namespace=cyclone create -f zookeeper.yaml
-kubectl --namespace=cyclone create -f zookeeper-svc.yaml
-kubectl --namespace=cyclone create -f kafka.yaml
-kubectl --namespace=cyclone create -f kafka-svc.yaml
 kubectl --namespace=cyclone create -f mongo.yaml
 kubectl --namespace=cyclone create -f mongo-svc.yaml
 kubectl --namespace=cyclone create -f cyclone.yaml
@@ -49,17 +45,17 @@ Then Cyclone is started.
 
 Environment variables: 
 
-| ENV                  | Description                              |
-| -------------------- | ---------------------------------------- |
-| MONGODB_HOST         | The IP of mongodb, default is localhost. |
-| KAFKA_HOST           | The address of kafka, default is 127.0.0.1:9092. |
-| REGISTRY_LOCATION    | The registry to push images, default is cargo.caicloud.io. |
-| REGISTRY_USERNAME    | The username in docker registry, default is null. |
-| REGISTRY_PASSWORD    | The password in docker registry, default is null. |
-| GITHUB_CLIENT        | The client ID from Github for oauth, default is null. |
-| GITHUB_SECRET        | The client secret from Github for oauth, default is null. |
-| GITLAB_CLIENT        | The client ID from Gitlab for oauth, default is null. |
-| GITLAB_SECRET        | The client secret from Gitlab for oauth, default is null. |
-| GITLAB_URL           | The address of gitlab, default is https://gitlab.com. |
-| CYCLONE_SERVER       | The host of Cyclone-Server, default is http://localhost:7099. |
-| WORKER_IMAGE         | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
+| ENV                       | Description                              |
+| ------------------------- | ---------------------------------------- |
+| MONGODB_HOST              | The IP of mongodb, default is localhost. |
+| REGISTRY_LOCATION         | The registry to push images, default is cargo.caicloud.io. |
+| REGISTRY_USERNAME         | The default username for docker registry, default is null. |
+| REGISTRY_PASSWORD         | The default password for docker registry, default is null. |
+| LIMIT_MEMORY              | Same concept as [kubernetes limits.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 1Gi     |
+| LIMIT_CPU                 | Same concept as [kubernetes limits.cpu](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is1           |
+| REQUEST_MEMORY            | Same concept as [kubernetes requests.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 0.5Gi |
+| REQUEST_CPU               | Same concept as [kubernetes requests.cpu](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 0.5      |
+| RECORD_ROTATION_THRESHOLD | The number of pipeline records cyclone preserved, default is 50      |
+| CALLBACK_URL              | Tth URL used for webhook to callback, default is http://127.0.0.1:7099/v1/pipelines       |
+| CYCLONE_SERVER            | The host of Cyclone-Server, default is http://localhost:7099. |
+| WORKER_IMAGE              | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |

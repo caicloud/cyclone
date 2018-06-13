@@ -11,10 +11,6 @@ spec:
     port: 7099
     protocol: TCP
     nodePort: 30010
-  - name: wss 
-    port: 8000
-    protocol: TCP
-    nodePort: 30070
   selector:
     name: cyclone-server
   sessionAffinity: None
