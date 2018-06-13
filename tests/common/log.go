@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	//"github.com/caicloud/cyclone/pkg/log"
-	//"github.com/caicloud/cyclone/websocket"
-	//"github.com/satori/go.uuid"
 	gwebsocket "golang.org/x/net/websocket"
 )
 
@@ -84,75 +81,3 @@ func analysisMsg(msg []byte) (mapData map[string]interface{}, err error) {
 	}
 	return mapData, nil
 }
-
-//// WatchLog begins to watch the log.
-//func WatchLog(ws *gwebsocket.Conn, apiName string, userID string,
-//	serviceID string, versionID string) (err error) {
-//	//start watch log
-//	msg := websocket.PacketWatchLog(apiName, userID, serviceID,
-//		versionID, StartOperation, uuid.NewV4().String())
-//	if err = SendMsgToLogServer(ws, msg); err != nil {
-//		return err
-//	}
-//
-//	var rec = make([]byte, ReadMsgBufferSize)
-//	//start watch log response
-//	if rec, err = ReadMsgFromLogServer(ws, TimeOutResponse); err != nil {
-//		return err
-//	}
-//
-//	var mapData map[string]interface{}
-//	if mapData, err = analysisMsg(rec); err != nil {
-//		return err
-//	}
-//	if "response" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
-//		log.Errorf("Receive unexcept data: %s", string(rec))
-//		return fmt.Errorf("start watch log error")
-//	}
-//
-//	//watch log
-//	bHasReceiveLog := false
-//	for {
-//		if rec, err = ReadMsgFromLogServer(ws, TimeOutPushLog); err != nil {
-//			break
-//		}
-//
-//		if mapData, err = analysisMsg(rec); err != nil {
-//			return err
-//		}
-//
-//		if "push_log" == mapData["action"].(string) {
-//			bHasReceiveLog = true
-//		}
-//	}
-//	if false == bHasReceiveLog {
-//		return ErrUnfoundLog
-//	}
-//
-//	// Stop watch log.
-//	msg = websocket.PacketWatchLog(apiName, userID, serviceID,
-//		versionID, StopOperation, uuid.NewV4().String())
-//	if err = SendMsgToLogServer(ws, msg); err != nil {
-//		return err
-//	}
-//
-//	if rec, err = ReadMsgFromLogServer(ws, TimeOutResponse); err != nil {
-//		return err
-//	}
-//
-//	if mapData, err = analysisMsg(rec); err != nil {
-//		return err
-//	}
-//	if "response" != mapData["action"].(string) && "successful" != mapData["error_msg"] {
-//		return fmt.Errorf("stop watch log error")
-//	}
-//	return nil
-//}
-
-//// StopWatchLog stop watching log.
-//func StopWatchLog(ws *gwebsocket.Conn, apiName string, userID string,
-//	serviceID string, versionID string) {
-//	msg := websocket.PacketWatchLog(apiName, userID, serviceID,
-//		versionID, StopOperation, uuid.NewV4().String())
-//	SendMsgToLogServer(ws, msg)
-//}

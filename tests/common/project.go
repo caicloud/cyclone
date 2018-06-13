@@ -23,7 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	apinew "github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/api"
 )
 
 type Metadata struct {
@@ -31,12 +31,12 @@ type Metadata struct {
 }
 
 type ListResponse struct {
-	Metadata Metadata         `bson:"metadata,omitempty" json:"metadata,omitempty"`
-	Items    []apinew.Project `bson:"items,omitempty" json:"items,omitempty"`
+	Metadata Metadata      `bson:"metadata,omitempty" json:"metadata,omitempty"`
+	Items    []api.Project `bson:"items,omitempty" json:"items,omitempty"`
 }
 
 // CreateProject creates a project with given configurations.
-func CreateProject(project *apinew.Project, response *apinew.Project, errResp *apinew.ErrorResponse) (int, error) {
+func CreateProject(project *api.Project, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	buf, err := json.Marshal(project)
 	if err != nil {
 		return 500, err
@@ -55,7 +55,7 @@ func CreateProject(project *apinew.Project, response *apinew.Project, errResp *a
 	if err != nil {
 		return resp.StatusCode, err
 	}
-	//fmt.Println("================== respBody:", string(respBody))
+
 	if resp.StatusCode/100 == 2 {
 		err = json.Unmarshal(respBody, response)
 		if err != nil {
@@ -74,7 +74,7 @@ func CreateProject(project *apinew.Project, response *apinew.Project, errResp *a
 }
 
 // SetProject set a project with given configurations.
-func SetProject(project *apinew.Project, response *apinew.Project, errResp *apinew.ErrorResponse) (int, error) {
+func SetProject(project *api.Project, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	buf, err := json.Marshal(project)
 	if err != nil {
 		return 500, err
@@ -94,7 +94,7 @@ func SetProject(project *apinew.Project, response *apinew.Project, errResp *apin
 	if err != nil {
 		return resp.StatusCode, err
 	}
-	//fmt.Println("================== respBody:", string(respBody))
+
 	if resp.StatusCode/100 == 2 {
 		err = json.Unmarshal(respBody, response)
 		if err != nil {
@@ -113,11 +113,7 @@ func SetProject(project *apinew.Project, response *apinew.Project, errResp *apin
 }
 
 // GetProject retrieves a project from user ID and project ID.
-func GetProject(name string, response *apinew.Project, errResp *apinew.ErrorResponse) (int, error) {
-	//buf, err := json.Marshal(project)
-	//if err != nil {
-	//	return 500, err
-	//}
+func GetProject(name string, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/projects/%s", BaseURL, name), nil)
 	if err != nil {
 		return 500, err
@@ -132,15 +128,13 @@ func GetProject(name string, response *apinew.Project, errResp *apinew.ErrorResp
 	if err != nil {
 		return resp.StatusCode, err
 	}
-	//fmt.Println("================== respBody:", string(respBody))
-	//fmt.Println("================== resp.StatusCode:", resp.StatusCode)
+
 	if resp.StatusCode/100 == 2 {
 		err = json.Unmarshal(respBody, response)
 		if err != nil {
 			fmt.Println("unmarshl error :", err)
 			return resp.StatusCode, err
 		}
-		//return resp.StatusCode, nil
 	} else {
 		err = json.Unmarshal(respBody, errResp)
 		if err != nil {
@@ -153,11 +147,7 @@ func GetProject(name string, response *apinew.Project, errResp *apinew.ErrorResp
 }
 
 //// ListProjects list projects by user ID.
-func ListProjects(response *ListResponse, errResp *apinew.ErrorResponse) (int, error) {
-	//buf, err := json.Marshal(project)
-	//if err != nil {
-	//	return 500, err
-	//}
+func ListProjects(response *ListResponse, errResp *api.ErrorResponse) (int, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/projects", BaseURL), nil)
 	if err != nil {
 		return 500, err
@@ -172,15 +162,13 @@ func ListProjects(response *ListResponse, errResp *apinew.ErrorResponse) (int, e
 	if err != nil {
 		return resp.StatusCode, err
 	}
-	//fmt.Println("================== respBody:", string(respBody))
-	//fmt.Println("================== resp.StatusCode:", resp.StatusCode)
+
 	if resp.StatusCode/100 == 2 {
 		err = json.Unmarshal(respBody, response)
 		if err != nil {
 			fmt.Println("unmarshl error :", err)
 			return resp.StatusCode, err
 		}
-		//return resp.StatusCode, nil
 	} else {
 		err = json.Unmarshal(respBody, errResp)
 		if err != nil {
@@ -193,11 +181,7 @@ func ListProjects(response *ListResponse, errResp *apinew.ErrorResponse) (int, e
 }
 
 // DeleteProject delete a project from user ID and project ID.
-func DeleteProject(name string, response *apinew.Project, errResp *apinew.ErrorResponse) (int, error) {
-	//buf, err := json.Marshal(project)
-	//if err != nil {
-	//	return 500, err
-	//}
+func DeleteProject(name string, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/projects/%s", BaseURL, name), nil)
 	if err != nil {
 		return 500, err
@@ -212,8 +196,7 @@ func DeleteProject(name string, response *apinew.Project, errResp *apinew.ErrorR
 	if err != nil {
 		return resp.StatusCode, err
 	}
-	//fmt.Println("================== respBody:", string(respBody))
-	//fmt.Println("================== resp.StatusCode:", resp.StatusCode)
+
 	if resp.StatusCode/100 == 2 {
 		return resp.StatusCode, nil
 	} else {

@@ -17,12 +17,7 @@ limitations under the License.
 package common
 
 import (
-	//"errors"
-	//"fmt"
 	"net/http"
-	//"strings"
-	//"github.com/caicloud/cyclone/pkg/docker"
-	//docker_client "github.com/fsouza/go-dockerclient"
 )
 
 const (
@@ -38,20 +33,3 @@ func generateRequestWithToken(request *http.Request, contentType string) error {
 	request.Header.Add("token", fakeToken)
 	return nil
 }
-
-//
-//// PushImageToLocalRegistry pushes the image to local registry.
-//func PushImageToLocalRegistry(dm *docker.Manager, image string) error {
-//	if strings.Index(image, ":") == -1 {
-//		return errors.New("Invalid image name.")
-//	}
-//	parts := strings.Split(image, ":")
-//	return dm.Client.PushImage(docker_client.PushImageOptions{
-//		Name:     fmt.Sprintf("%s/%s", dm.Registry, parts[0]),
-//		Tag:      parts[1],
-//		Registry: dm.Registry,
-//	}, docker_client.AuthConfiguration{
-//		Username: dm.AuthConfig.Username,
-//		Password: dm.AuthConfig.Password,
-//	})
-//}

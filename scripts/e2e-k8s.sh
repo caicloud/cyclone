@@ -18,7 +18,6 @@ function cleanup {
     unset DEBUG
     unset CYCLONE_SERVER
     unset MONGODB_HOST
-    unset LOG_SERVER
     unset REGISTRY_LOCATION
     unset REGISTRY_USERNAME
     unset REGISTRY_PASSWORD
@@ -49,7 +48,6 @@ function run_e2e {
     export DEBUG=true
     export MONGODB_HOST=127.0.0.1:27017
     export CYCLONE_SERVER=http://${HOST_IP}:7099
-    export LOG_SERVER=ws://${HOST_IP}:8000/ws
     export REGISTRY_LOCATION=cargo.caicloud.io
     export REGISTRY_USERNAME=caicloudadmin
     export REGISTRY_PASSWORD=caicloudadmin
@@ -61,26 +59,23 @@ function run_e2e {
     docker run -d --name mongo -p 27017:27017 mongo:3.0.5 mongod --smallfiles
 
     echo "buiding server"
-    go build -i -v -o cyclone-server github.com/caicloud/cyclone/cmd/server
+    go build -i -v -o bin/server github.com/caicloud/cyclone/cmd/server
 
     echo "buiding worker"
     # worker run in linux, so need cross compiling
-    GOOS=linux GOARCH=amd64 go build -i -v -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
+    GOOS=linux GOARCH=amd64 go build -i -v -o bin/worker github.com/caicloud/cyclone/cmd/worker
     docker build -t ${WORKER_IMAGE} -f build/worker/Dockerfile .
 
     docker push ${WORKER_IMAGE}
 
     echo "start server"
-    ./cyclone-server &
+    ./bin/server &
     CYCLONE_PID=$!
 
     echo "start testing ..."
     # go test compile
     go test -i ./tests/...
 
-#    go test -v ./tests/service
-#    go test -v ./tests/version
-#    go test -v ./tests/yaml
     go test -v ./tests/project
 
 }
