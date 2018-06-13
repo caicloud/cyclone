@@ -50,8 +50,6 @@ spec:
         ports:
         - containerPort: 7099
           protocol: TCP
-        - containerPort: 8000
-          protocol: TCP
         resources:
           limits:
             cpu: 500m

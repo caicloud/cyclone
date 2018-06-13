@@ -18,7 +18,6 @@ function cleanup {
     unset DEBUG
     unset CYCLONE_SERVER
     unset MONGODB_HOST
-    unset LOG_SERVER
     unset REGISTRY_LOCATION
     unset REGISTRY_USERNAME
     unset REGISTRY_PASSWORD
@@ -46,7 +45,6 @@ function run_e2e {
     export DEBUG=true
     export MONGODB_HOST=127.0.0.1:27017
     export CYCLONE_SERVER=http://${HOST_IP}:7099
-    export LOG_SERVER=ws://${HOST_IP}:8000/ws
     export REGISTRY_LOCATION=cargo.caicloud.io
     export REGISTRY_USERNAME=caicloudadmin
     export REGISTRY_PASSWORD=caicloudadmin

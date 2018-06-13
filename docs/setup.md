@@ -27,7 +27,7 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-- Using Kubectl: this approach requires a few yaml files. You can read related files in cyclone/scripts/k8s for more detial, and be sure to substitute the values of parameter with real values according to your own situation before executing these instructions:
+- Using Kubectl: this approach requires a few yaml files. You can read related files in cyclone/scripts/k8s for more detial, and adjust the parameters before executing these instructions:
 
 ```
 git clone https://github.com/caicloud/cyclone
@@ -49,8 +49,8 @@ Environment variables:
 | ------------------------- | ---------------------------------------- |
 | MONGODB_HOST              | The IP of mongodb, default is localhost. |
 | REGISTRY_LOCATION         | The registry to push images, default is cargo.caicloud.io. |
-| REGISTRY_USERNAME         | The username in docker registry, default is null. |
-| REGISTRY_PASSWORD         | The password in docker registry, default is null. |
+| REGISTRY_USERNAME         | The default username for docker registry, default is null. |
+| REGISTRY_PASSWORD         | The default password for docker registry, default is null. |
 | LIMIT_MEMORY              | Same concept as [kubernetes limits.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 1Gi     |
 | LIMIT_CPU                 | Same concept as [kubernetes limits.cpu](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is1           |
 | REQUEST_MEMORY            | Same concept as [kubernetes requests.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 0.5Gi |

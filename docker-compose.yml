@@ -16,14 +16,12 @@ cyclone-server:
         - mongo
     ports:
         - "7099:7099"
-        - "8000:8000"
     expose:
         - "7099"
     environment:
         - DEBUG=true
         - CYCLONE_SERVER=http://127.0.0.1:7099
         - MONGODB_HOST=mongo:27017
-        - LOG_SERVER=ws://127.0.0.1:8000/ws
         - REGISTRY_LOCATION=cargo.caicloud.io
         - REGISTRY_USERNAME=user
         - REGISTRY_PASSWORD=pwd

@@ -48,9 +48,9 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 | 环境变量                   | 说明                                       |
 | ------------------------- | ---------------------------------------- |
 | MONGODB_HOST              | mongo db的地址, 默认是localhost                  |
-| REGISTRY_LOCATION         | 镜像仓的地址，默认是cargo.caicloud.io             |
-| REGISTRY_USERNAME         | 镜像仓用户名，默认是空                             |
-| REGISTRY_PASSWORD         | 镜像仓用户密码，默认是空                           |
+| REGISTRY_LOCATION         | 镜像仓库的地址，默认是cargo.caicloud.io             |
+| REGISTRY_USERNAME         | 镜像仓库默认用户名，默认是空                             |
+| REGISTRY_PASSWORD         | 镜像仓库默认用户密码，默认是空                           |
 | LIMIT_MEMORY              | 与[kubernetes limits.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas)概念相同，用于限制cyclone-worker，默认是1Gi     |
 | LIMIT_CPU                 | 与[kubernetes limits.cpu](https://kubernetes.io/docs/concepts/policy/resource-quotas)概念相同，用于限制cyclone-worker，默认是1          |
 | REQUEST_MEMORY            | 与[kubernetes requests.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas)概念相同，用于限制cyclone-worker，默认是0.5Gi |
