@@ -154,8 +154,11 @@ func WaitComponents() {
 		_, err := http.Get(fmt.Sprintf("http://localhost:%s", cyclonePort))
 		if err == nil {
 			cycloneOK = true
+		} else {
+			log.Warn("waiting for cyclone to start , error : %v", err)
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
+
 	}
 	log.Info("Cyclone started")
 }

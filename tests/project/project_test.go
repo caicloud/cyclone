@@ -40,7 +40,7 @@ const (
 	ProjectNameForSet  = "project-mongo-set"
 )
 
-var _ = Describe("Service", func() {
+var _ = Describe("Project", func() {
 
 	BeforeSuite(func() {
 		// Wait cyclone to start.
@@ -70,26 +70,35 @@ var _ = Describe("Service", func() {
 		errResp := &api.ErrorResponse{}
 		listResponse := &ListResponse{}
 
+		BeforeEach(func() {
+			response = &api.Project{}
+			errResp = &api.ErrorResponse{}
+			listResponse = &ListResponse{}
+		})
+
 		It("should create project successfully.", func() {
 			code, err := CreateProject(project, response, errResp)
 			Expect(err).To(BeNil())
 			Expect(code).To(Equal(201))
-			//			Expect(response.ErrorMessage).To(Equal(""))
+			Expect(errResp.Message).To(Equal(""))
 			log.Infof("create project response code :%v", code)
 			log.Infof("create project error response :%v", errResp)
 		})
 
-		It("should create project conflict.", func() {
+		It("should create project failed(conflict).", func() {
 			code, err := CreateProject(project, response, errResp)
 			Expect(err).To(BeNil())
 			Expect(code).To(Equal(409))
-			//			Expect(response.ErrorMessage).To(Equal(""))
+			Expect(errResp.Message).To(ContainSubstring("conflict"))
+			log.Infof("create project response code :%v", code)
+			log.Infof("create project error response :%v", errResp)
 		})
 
 		It("should get project successfully.", func() {
 			code, err := GetProject(project.Name, response, errResp)
 			Expect(err).To(BeNil())
 			Expect(code).To(Equal(200))
+			Expect(errResp.Message).To(Equal(""))
 			Expect(response.Name).To(Equal(project.Name))
 		})
 
@@ -99,6 +108,7 @@ var _ = Describe("Service", func() {
 			code, err := SetProject(&p1, response, errResp)
 			Expect(err).To(BeNil())
 			Expect(code).To(Equal(200))
+			Expect(errResp.Message).To(Equal(""))
 			Expect(response.Description).To(Equal(p1.Description))
 		})
 
@@ -106,12 +116,14 @@ var _ = Describe("Service", func() {
 			code, err := ListProjects(listResponse, errResp)
 			Expect(err).To(BeNil())
 			Expect(code).To(Equal(200))
+			Expect(errResp.Message).To(Equal(""))
 			Expect(listResponse.Metadata.Total).To(Equal(1))
 		})
 
 		It("should delete project successfully.", func() {
 			code, err := DeleteProject(project.Name, response, errResp)
 			Expect(err).To(BeNil())
+			Expect(errResp.Message).To(Equal(""))
 			Expect(code).To(Equal(204))
 		})
 
