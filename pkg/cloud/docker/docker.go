@@ -23,10 +23,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/sockets"
 	"github.com/docker/go-connections/tlsconfig"
@@ -163,10 +165,15 @@ func (c *dockerCloud) CanProvision(quota options.Quota) (bool, error) {
 
 func (c *dockerCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) (*api.WorkerInfo, error) {
 	image := opts.WorkerImage
+	eventID := opts.EventID
 	config := &container.Config{
 		Image:      image,
-		Env:        buildDockerEnv(opts.EventID, *opts),
+		Env:        buildDockerEnv(eventID, *opts),
 		WorkingDir: scm.GetCloneDir(),
+		Labels: map[string]string{
+			"cyclone":    "worker",
+			"cyclone/id": eventID,
+		},
 	}
 
 	hostConfig := &container.HostConfig{
@@ -243,4 +250,36 @@ func buildDockerEnv(id string, opts options.WorkerOptions) []string {
 	}
 
 	return env
+}
+
+func (c *dockerCloud) ListWorkers() ([]api.WorkerInstance, error) {
+	pods := []api.WorkerInstance{}
+
+	ctx := context.Background()
+	args := filters.NewArgs()
+	args.Add("label", "cyclone=worker")
+	opts := types.ContainerListOptions{
+		Filters: args,
+	}
+
+	cycloneWorkers, err := c.client.ContainerList(ctx, opts)
+	if err != nil {
+		log.Errorf("list cyclone workers errorerr:%v", err)
+		return pods, err
+	}
+
+	for _, worker := range cycloneWorkers {
+		t := time.Unix(worker.Created, 0)
+		// the origial name has extra forward slash in name
+		name := strings.TrimSuffix(strings.TrimPrefix(worker.Names[0], "/"), "/")
+		pod := api.WorkerInstance{
+			Name:           name,
+			Status:         worker.Status,
+			CreationTime:   t,
+			LastUpdateTime: t,
+		}
+		pods = append(pods, pod)
+	}
+
+	return pods, nil
 }

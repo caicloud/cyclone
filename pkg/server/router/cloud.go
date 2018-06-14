@@ -21,7 +21,8 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
-	restful "github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful"
+	log "github.com/golang/glog"
 )
 
 // createCloud handles the request to create a cloud.
@@ -77,4 +78,19 @@ func (router *router) pingCloud(request *restful.Request, response *restful.Resp
 	}
 
 	response.WriteHeaderAndEntity(http.StatusOK, resp)
+}
+
+// listWorkers handles the request to list all workers.
+func (router *router) listWorkers(request *restful.Request, response *restful.Response) {
+	cloudName := request.PathParameter(cloudPathParameterName)
+	namespace := request.QueryParameter(namespaceQueryParameterName)
+
+	workers, err := router.cloudManager.ListWorkers(cloudName, namespace)
+	if err != nil {
+		log.Errorf("list worker error:%v", err)
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, workers)
 }

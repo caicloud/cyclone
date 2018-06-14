@@ -24,16 +24,16 @@ import (
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
 type Project struct {
-	ID             string     `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
-	Name           string     `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
-	Alias          string     `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the project"`
-	Description    string     `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
-	Owner          string     `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
-	SCM            *SCMConfig `bson:"scm,omitempty" json:"scm,omitempty" description:"scm config of the project"`
-	Registry       *Registry  `bson:"registry,omitempty" json:"registry,omitempty" description:"registry config for image operations"`
-	Worker         *Worker    `bson:"worker,omitempty" json:"worker,omitempty" description:"worker config of the project"`
-	CreationTime   time.Time  `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
-	LastUpdateTime time.Time  `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
+	ID             string        `bson:"_id,omitempty" json:"id,omitempty" description:"id of the project"`
+	Name           string        `bson:"name,omitempty" json:"name,omitempty" description:"name of the project, should be unique"`
+	Alias          string        `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the project"`
+	Description    string        `bson:"description,omitempty" json:"description,omitempty" description:"description of the project"`
+	Owner          string        `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the project"`
+	SCM            *SCMConfig    `bson:"scm,omitempty" json:"scm,omitempty" description:"scm config of the project"`
+	Registry       *Registry     `bson:"registry,omitempty" json:"registry,omitempty" description:"registry config for image operations"`
+	Worker         *WorkerConfig `bson:"worker,omitempty" json:"worker,omitempty" description:"worker config of the project"`
+	CreationTime   time.Time     `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the project"`
+	LastUpdateTime time.Time     `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the project"`
 }
 
 // Registry represents registry config for image operations of the project.
@@ -44,8 +44,8 @@ type Registry struct {
 	Password   string `bson:"password,omitempty" json:"password,omitempty"`
 }
 
-// Worker represents the config of worker for the pipelines of the project.
-type Worker struct {
+// WorkerConfig represents the config of worker for the pipelines of the project.
+type WorkerConfig struct {
 	Location         *WorkerLocation                    `bson:"location,omitempty" json:"location,omitempty"`
 	DependencyCaches map[BuildToolName]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
 }
@@ -56,8 +56,8 @@ type Worker struct {
 // }
 
 type WorkerLocation struct {
-	ClusterName string `bson:"clusterName,omitempty" json:"clusterName,omitempty" description:"name of cluster to create the worker"`
-	Namespace   string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
+	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cloud to create the worker"`
+	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
 }
 
 type WorkerQuota struct {
@@ -573,7 +573,7 @@ type CloudKubernetes struct {
 	Host        string `json:"host,omitempty" bson:"host,omitempty"`
 	InCluster   bool   `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
 	BearerToken string `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
-	Namespace   string `json:"namespace,omitempty" bson:"namespace,omitempty"`
+	Namespace   string `json:"namespace,omitempty" bson:"-"`
 }
 
 // Cloud represents clouds for workers.
@@ -661,3 +661,11 @@ const (
 	TriggerSCM  string = "webhook"
 	TriggerCron string = "timer"
 )
+
+// WorkerInstance represents some infomation of cyclone worker instance, e.g. pod of k8s, container of docker.
+type WorkerInstance struct {
+	Name           string    `bson:"name,omitempty" json:"name,omitempty" description:"name of the worker pod, should be unique"`
+	Status         string    `bson:"status,omitempty" json:"status,omitempty" description:"status of the worker pod"`
+	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the worker pod"`
+	LastUpdateTime time.Time `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of worker pod"`
+}

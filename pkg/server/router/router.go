@@ -54,6 +54,9 @@ const (
 
 	// cloudPathParameterName represents the name of the path parameter for cloud.
 	cloudPathParameterName = "cloud"
+
+	// namespaceQueryParameterName represents the k8s cluster namespce of the query parameter for cloud.
+	namespaceQueryParameterName = "namespace"
 )
 
 // router represents the router to distribute the REST requests.
@@ -377,6 +380,12 @@ func (router *router) registerCloudAPIs(ws *restful.WebService) {
 	ws.Route(ws.GET("/clouds/{cloud}/ping").To(router.pingCloud).
 		Doc("Ping the cloud to check its health").
 		Param(ws.PathParameter("cloud", "name of the cloud").DataType("string")))
+
+	// GET /api/v1/clouds/{cloud}/workers
+	ws.Route(ws.GET("/clouds/{cloud}/workers").To(router.listWorkers).
+		Doc("Get all cyclone workers in the cloud").
+		Param(ws.PathParameter(cloudPathParameterName, "name of the cloud").DataType("string")).
+		Param(ws.QueryParameter(namespaceQueryParameterName, "namespace of kubernetes cluster").DataType("string")))
 }
 
 // registerHealthCheckAPI registers health check API.
