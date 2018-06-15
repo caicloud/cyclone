@@ -99,6 +99,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
+
 		log.Info("Triggered by Github release event")
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
@@ -117,8 +118,15 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Description: "Triggered by pull request",
 			Stages:      scmTrigger.PullRequest.Stages,
 		}
+
 		log.Info("Triggered by Github pull request event")
-	case *github.PullRequestReviewCommentEvent:
+	case *github.IssueCommentEvent:
+		if event.Issue.PullRequestLinks == nil {
+			log.Infof("Only handle when issues type is pull request")
+			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when issues type is pull request")
+			return
+		}
+
 		// Only handle when the pull request comments are created.
 		if *event.Action != "created" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when pull request comment is created")
@@ -143,15 +151,28 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 
 		if trigger {
 			performParams = &api.PipelinePerformParams{
-				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
+				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.Issue.Number),
 				Description: "Triggered by pull request comments",
 				Stages:      scmTrigger.PullRequestComment.Stages,
 			}
 			log.Info("Triggered by Github pull request review comment event")
 		}
+	case *github.PushEvent:
+		if scmTrigger.Push == nil {
+			response.WriteHeaderAndEntity(http.StatusOK, "Push trigger is not enabled")
+			return
+		}
 
+		performParams = &api.PipelinePerformParams{
+			Ref:         fmt.Sprintf(*event.Ref),
+			Description: "Triggered by push",
+			Stages:      scmTrigger.Push.Stages,
+		}
+
+		log.Info("Triggered by Github push event")
 	default:
 		log.Errorf("event type not support.")
+
 	}
 
 	if performParams != nil {
@@ -217,6 +238,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			Description: "Triggered by tag release",
 			Stages:      scmTrigger.TagRelease.Stages,
 		}
+
 		log.Info("Triggered by Gitlab tag event")
 	case *gitlab.MergeEvent:
 		// Only handle when the pull request are created.
@@ -238,7 +260,13 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		}
 
 		log.Info("Triggered by Gitlab merge event")
-	case *gitlab.MergeCommentEvent:
+	case *gitlabuitl.MergeCommentEvent:
+		if event.MergeRequest == nil {
+			log.Infof("Only handle comments on merge request")
+			response.WriteHeaderAndEntity(http.StatusOK, "Only handle comments on merge request")
+			return
+		}
+
 		if scmTrigger.PullRequestComment == nil {
 			response.WriteHeaderAndEntity(http.StatusOK, "Pull request comment trigger is not enabled")
 			return
@@ -262,6 +290,21 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			}
 			log.Info("Triggered by Gitlab merge comment event")
 		}
+	case *gitlab.PushEvent:
+		if scmTrigger.Push == nil {
+			response.WriteHeaderAndEntity(http.StatusOK, "Push trigger is not enabled")
+			return
+		}
+
+		performParams = &api.PipelinePerformParams{
+			Ref:         event.Ref,
+			Description: "Triggered by push",
+			Stages:      scmTrigger.Push.Stages,
+		}
+
+		log.Info("Triggered by Gitlab push event")
+	default:
+		log.Errorf("event type not support.")
 	}
 
 	if performParams != nil {
