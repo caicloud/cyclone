@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package provider
+package github
 
 import (
 	"fmt"
@@ -29,40 +29,53 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
+	"github.com/caicloud/cyclone/pkg/scm/provider"
 )
-
-const (
-	// listPerPageOpt represents the value for PerPage in list options.
-	listPerPageOpt = 30
-)
-
-// Github represents the SCM provider of Github.
-type Github struct{}
 
 func init() {
-	if err := scm.RegisterProvider(api.Github, new(Github)); err != nil {
+	if err := scm.RegisterProvider(api.Github, NewGithub); err != nil {
 		log.Errorln(err)
 	}
 }
 
-// GetToken gets the token by the username and password of SCM config.
-func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
-	if len(scm.Username) == 0 || len(scm.Password) == 0 {
-		return "", fmt.Errorf("Github username or password is missing")
+// Github represents the SCM provider of Github.
+type Github struct {
+	scmCfg *api.SCMConfig
+	client *github.Client
+}
+
+func NewGithub(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
+	var client *github.Client
+	var err error
+	if scmCfg.Token == "" {
+		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Password)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Token)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	client, err := newClientByBasicAuth(scm.Username, scm.Password)
-	if err != nil {
-		return "", err
+	return &Github{scmCfg, client}, nil
+}
+
+// GetToken gets the token by the username and password of SCM config.
+func (g *Github) GetToken() (string, error) {
+	scmCfg := g.scmCfg
+	if len(scmCfg.Username) == 0 || len(scmCfg.Password) == 0 {
+		return "", fmt.Errorf("Github username or password is missing")
 	}
 
 	// oauthAppName represents the oauth app name for Cyclone.
 	oauthAppName := "Caicloud"
 	opt := &github.ListOptions{
-		PerPage: listPerPageOpt,
+		PerPage: provider.ListPerPageOpt,
 	}
 	for {
-		auths, resp, err := client.Authorizations.List(opt)
+		auths, resp, err := g.client.Authorizations.List(opt)
 		if err != nil {
 			return "", err
 		}
@@ -70,7 +83,7 @@ func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
 		for _, auth := range auths {
 			if *auth.App.Name == oauthAppName {
 				// The token of existed authorization can not be got, so delete it and recreate a new one.
-				if _, err := client.Authorizations.Delete(*auth.ID); err != nil {
+				if _, err := g.client.Authorizations.Delete(*auth.ID); err != nil {
 					log.Errorf("Fail to delete the token for %s as %s", oauthAppName, err.Error())
 					return "", err
 				}
@@ -90,7 +103,7 @@ func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
 		Scopes: []github.Scope{github.ScopeRepo},
 		Note:   &oauthAppName,
 	}
-	auth, _, err := client.Authorizations.Create(authReq)
+	auth, _, err := g.client.Authorizations.Create(authReq)
 	if err != nil {
 		return "", err
 	}
@@ -99,37 +112,32 @@ func (g *Github) GetToken(scm *api.SCMConfig) (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
-func (g *Github) CheckToken(scm *api.SCMConfig) bool {
-	if _, err := g.listReposInner(scm, false); err != nil {
+func (g *Github) CheckToken() bool {
+	if _, err := g.listReposInner(false); err != nil {
 		return false
 	}
 	return true
 }
 
 // ListRepos lists the repos by the SCM config.
-func (g *Github) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
-	return g.listReposInner(scm, true)
+func (g *Github) ListRepos() ([]api.Repository, error) {
+	return g.listReposInner(true)
 }
 
 // listReposInner lists the repos by the SCM config,
 // list all repos while the parameter 'listAll' is true,
 // otherwise, list repos by default 'listPerPageOpt' number.
-func (g *Github) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Repository, error) {
-	client, err := newClientByBasicAuth(scm.Username, scm.Token)
-	if err != nil {
-		return nil, err
-	}
-
+func (g *Github) listReposInner(listAll bool) ([]api.Repository, error) {
 	// List all repositories for the authenticated user.
 	opt := &github.RepositoryListOptions{
 		ListOptions: github.ListOptions{
-			PerPage: listPerPageOpt,
+			PerPage: provider.ListPerPageOpt,
 		},
 	}
 	// Get all pages of results.
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := client.Repositories.List("", opt)
+		repos, resp, err := g.client.Repositories.List("", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -150,17 +158,12 @@ func (g *Github) listReposInner(scm *api.SCMConfig, listAll bool) ([]api.Reposit
 }
 
 // ListBranches lists the branches for specified repo.
-func (g *Github) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newClientByBasicAuth(scm.Username, scm.Token)
-	if err != nil {
-		return nil, err
-	}
-
+func (g *Github) ListBranches(repo string) ([]string, error) {
 	opt := &github.ListOptions{
-		PerPage: listPerPageOpt,
+		PerPage: provider.ListPerPageOpt,
 	}
 
-	owner := scm.Username
+	owner := g.scmCfg.Username
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")
 		if len(parts) != 2 {
@@ -173,7 +176,7 @@ func (g *Github) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 
 	var allBranches []*github.Branch
 	for {
-		branches, resp, err := client.Repositories.ListBranches(owner, repo, opt)
+		branches, resp, err := g.client.Repositories.ListBranches(owner, repo, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -193,17 +196,12 @@ func (g *Github) ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
 }
 
 // ListTags lists the tags for specified repo.
-func (g *Github) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
-	client, err := newClientByBasicAuth(scm.Username, scm.Token)
-	if err != nil {
-		return nil, err
-	}
-
+func (g *Github) ListTags(repo string) ([]string, error) {
 	opt := &github.ListOptions{
-		PerPage: listPerPageOpt,
+		PerPage: provider.ListPerPageOpt,
 	}
 
-	owner := scm.Username
+	owner := g.scmCfg.Username
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")
 		if len(parts) != 2 {
@@ -216,7 +214,7 @@ func (g *Github) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 
 	var allTags []*github.RepositoryTag
 	for {
-		tags, resp, err := client.Repositories.ListTags(owner, repo, opt)
+		tags, resp, err := g.client.Repositories.ListTags(owner, repo, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -236,14 +234,9 @@ func (g *Github) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
 }
 
 // CreateWebHook creates webhook for specified repo.
-func (g *Github) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+func (g *Github) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webHook)
-	}
-
-	client, err := newClientByBasicAuth(scm.Username, scm.Token)
-	if err != nil {
-		return err
 	}
 
 	// Hook name must be passed as "web".
@@ -257,20 +250,15 @@ func (g *Github) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.
 			"content_type": "json",
 		},
 	}
-	owner, name := parseURL(repoURL)
-	_, _, err = client.Repositories.CreateHook(owner, name, &hook)
+	owner, name := provider.ParseRepoURL(repoURL)
+	_, _, err := g.client.Repositories.CreateHook(owner, name, &hook)
 	return err
 }
 
 // DeleteWebHook deletes webhook from specified repo.
-func (g *Github) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
-	client, err := newClientByBasicAuth(scm.Username, scm.Token)
-	if err != nil {
-		return err
-	}
-
-	owner, name := parseURL(repoURL)
-	hooks, _, err := client.Repositories.ListHooks(owner, name, nil)
+func (g *Github) DeleteWebHook(repoURL string, webHookUrl string) error {
+	owner, name := provider.ParseRepoURL(repoURL)
+	hooks, _, err := g.client.Repositories.ListHooks(owner, name, nil)
 	if err != nil {
 		return err
 	}
@@ -278,7 +266,7 @@ func (g *Github) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl st
 	for _, hook := range hooks {
 		if hookurl, ok := hook.Config["url"].(string); ok {
 			if strings.HasPrefix(hookurl, webHookUrl) {
-				_, err = client.Repositories.DeleteHook(owner, name, *hook.ID)
+				_, err = g.client.Repositories.DeleteHook(owner, name, *hook.ID)
 				return nil
 			}
 		}
@@ -314,9 +302,9 @@ func newClientByToken(token string) *github.Client {
 	return github.NewClient(httpClient)
 }
 
-// NewTagFromLatest generate a new tag
-func (g *Github) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, commitID, url string) error {
-	client := newClientByToken(cfg.Token)
+// NewTagFromLatest generate a new tag.
+func (g *Github) NewTagFromLatest(tagName, description, commitID, url string) error {
+	client := newClientByToken(g.scmCfg.Token)
 
 	objecttype := "commit"
 	curtime := time.Now()
@@ -337,7 +325,7 @@ func (g *Github) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, comm
 		},
 	}
 
-	owner, repo := parseURL(url)
+	owner, repo := provider.ParseRepoURL(url)
 	_, _, err := client.Git.CreateTag(owner, repo, tag)
 	if err != nil {
 		return err

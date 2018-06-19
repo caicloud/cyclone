@@ -14,25 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package provider
+package svn
 
 import (
 	"fmt"
 	"strings"
 
+	log "github.com/golang/glog"
+
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/scm"
-	log "github.com/golang/glog"
 )
 
-// SVN represents the SCM provider of SVN.
-type SVN struct{}
-
 func init() {
-	if err := scm.RegisterProvider(api.SVN, new(SVN)); err != nil {
+	if err := scm.RegisterProvider(api.SVN, NewSVN); err != nil {
 		log.Errorln(err)
 	}
+}
+
+// SVN represents the SCM provider of SVN.
+type SVN struct {
+	scmCfg *api.SCMConfig
+}
+
+func NewSVN(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
+	return &SVN{scmCfg}, nil
 }
 
 func (s *SVN) spilitToken(token string) (string, string, error) {
@@ -45,23 +52,23 @@ func (s *SVN) spilitToken(token string) (string, string, error) {
 	return userPwd[0], userPwd[1], nil
 }
 
-func (s *SVN) GetToken(scm *api.SCMConfig) (string, error) {
-	return scm.Username + api.SVNUsernPwdSep + scm.Password, nil
+func (s *SVN) GetToken() (string, error) {
+	return s.scmCfg.Username + api.SVNUsernPwdSep + s.scmCfg.Password, nil
 }
 
-func (s *SVN) ListRepos(scm *api.SCMConfig) ([]api.Repository, error) {
+func (s *SVN) ListRepos() ([]api.Repository, error) {
 	return nil, nil
 }
 
-func (s *SVN) ListBranches(scm *api.SCMConfig, repo string) ([]string, error) {
+func (s *SVN) ListBranches(repo string) ([]string, error) {
 	return nil, nil
 }
 
-func (s *SVN) ListTags(scm *api.SCMConfig, repo string) ([]string, error) {
+func (s *SVN) ListTags(repo string) ([]string, error) {
 	return nil, nil
 }
 
-func (s *SVN) CheckToken(scm *api.SCMConfig) bool {
+func (s *SVN) CheckToken() bool {
 	//username, password, err := s.spilitToken(scm.Token)
 	//if err != nil {
 	//	return false
@@ -80,8 +87,8 @@ func (s *SVN) CheckToken(scm *api.SCMConfig) bool {
 	return true
 }
 
-func (s *SVN) NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error {
-	username, password, err := s.spilitToken(scm.Token)
+func (s *SVN) NewTagFromLatest(tagName, description, commitID, url string) error {
+	username, password, err := s.spilitToken(s.scmCfg.Token)
 	if err != nil {
 		return err
 	}
@@ -104,9 +111,9 @@ func (s *SVN) NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitI
 	return err
 }
 
-func (s *SVN) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.WebHook) error {
+func (s *SVN) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	return nil
 }
-func (s *SVN) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
+func (s *SVN) DeleteWebHook(repoURL string, webHookUrl string) error {
 	return nil
 }
