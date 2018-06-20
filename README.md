@@ -2,7 +2,7 @@ English | [中文](README_zh-CN.md)
 
 <h1 align="center">
 	<br>
-	<img width="400" src="docs/logo.jpeg" alt="cyclone">
+	<img width="400" src="docs/images/logo.jpeg" alt="cyclone">
 	<br>
 	<br>
 </h1>
@@ -40,10 +40,6 @@ To set up a cyclone instance, check out the [setup guide](./docs/setup.md) in th
 
 You could read the [quick start to start a tour of cyclone.](./docs/quick-start.md)
 
-### Caicloud.yml Introduction
-
-When `caicloud.yml` is given, version creation would include what you defined in the configuration file. you could find the [introduction to caicloud.yml](./docs/caicloud-yml-introduction.md) in the documentation.
-
 ### Developer Guide
 
 Feel free to hack on cyclone! We have [instructions to help you get started contributing.](./docs/developer-guide.md)
@@ -52,11 +48,7 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 
 ### Dependency Management
 
-<div align="center">
-	<img src="./docs/dependency.png" alt="Dependency Management" width="500">
-</div>
-
-Please watch the [Fuctions Introduction](./docs/functions.md) for more features.
+Please watch the [Fuctions Introduction](./docs/functions.md) for our features.
 
 ## Roadmap
 

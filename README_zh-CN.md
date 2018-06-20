@@ -2,7 +2,7 @@
 
 <h1 align="center">
 	<br>
-	<img width="400" src="docs/logo.jpeg" alt="cyclone">
+	<img width="400" src="docs/images/logo.jpeg" alt="cyclone">
 	<br>
 	<br>
 </h1>
@@ -29,7 +29,6 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 - **依赖关系**: 定义依赖规则或简单的组件关系，确保执行顺序依照既定策略。
 - **版本控制**: 基于版本控制构建，检索镜像/流水线历史就像查询版本管理接口一样简单。
 - **双向绑定**: 记录每次 CI/CD 操作用于回答类似问题：“各容器镜像部署在集群哪个角落？”
-- **安全第一**: 安全是基本要素，有效阻拦不安全镜像进入生产环境。
 
 ## 相关文档
 
@@ -41,29 +40,13 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 
 [快速开始](./docs/quick-start_zh-CN.md)体验 Cyclone 的构建过程。
 
-### Caicloud.yml 配置文件介绍
-
-当给定 `caicloud.yml` 作为配置文件后，Cyclone 会根据配置文件来执行创建版本的过程。你可以在 [caicloud.yml 配置文件介绍](./docs/caicloud-yml-introduction_zh-CN.md)中看到对配置文件的具体介绍。
-
 ### 开发者指南
 
 欢迎为 Cyclone 提供更多特性，让它变得更好用，我们有一份[开发者指南](./docs/developer-guide_zh-CN.md)可以帮助你了解如何向 Cyclone 项目贡献代码或者文档。
 
 ## 特性预览
 
-### 依赖管理
-
-<div align="center">
-	<img src="./docs/dependency.png" alt="依赖管理" width="500">
-</div>
-
-### 安全扫描
-
-<div align="center">
-	<img src="./docs/security.png" alt="安全扫描" width="500">
-</div>
-
-更多特性详见[功能介绍](./docs/functions_zh-CN.md)。
+详见[功能介绍](./docs/functions_zh-CN.md)。
 
 ## Roadmap
 
