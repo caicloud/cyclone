@@ -36,7 +36,7 @@ type GitlabV3 struct {
 
 // GetToken gets the token by the username and password of SCM config.
 func (g *GitlabV3) GetToken() (string, error) {
-	return getGitlabOauthToken(g.scmCfg)
+	return getOauthToken(g.scmCfg)
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.

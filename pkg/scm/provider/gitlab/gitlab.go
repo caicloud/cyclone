@@ -54,16 +54,16 @@ func init() {
 }
 
 func NewGitlab(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
-	version, err := getGitlabAPIVersion(scmCfg)
+	version, err := getAPIVersion(scmCfg)
 	if err != nil {
 		log.Errorf("Fail to get API version for server %s as %v", scmCfg.Server, err)
 		return nil, err
 	}
-	log.Infof("Gitlab version is %s", version)
+	log.Infof("New Gitlab %s client", version)
 
 	switch version {
 	case v3APIVersion:
-		client, err := newGitlabClient(scmCfg.Server, scmCfg.Username, scmCfg.Token)
+		client, err := newGitlabV3Client(scmCfg.Server, scmCfg.Username, scmCfg.Token)
 		if err != nil {
 			log.Error("fail to new Gitlab v3 client as %v", err)
 			return nil, err
@@ -88,7 +88,6 @@ func NewGitlab(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 // newGitlabV4Client news Gitlab v4 client by token. If username is empty, use private-token instead of oauth2.0 token.
 func newGitlabV4Client(server, username, token string) (*gitlabv4.Client, error) {
 	var client *gitlabv4.Client
-
 	if len(username) == 0 {
 		client = gitlabv4.NewClient(nil, token)
 	} else {
@@ -103,8 +102,8 @@ func newGitlabV4Client(server, username, token string) (*gitlabv4.Client, error)
 	return client, nil
 }
 
-// newGitlabClient news Gitlab v3 client by token. If username is empty, use private-token instead of oauth2.0 token.
-func newGitlabClient(server, username, token string) (*gitlab.Client, error) {
+// newGitlabV3Client news Gitlab v3 client by token. If username is empty, use private-token instead of oauth2.0 token.
+func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
 
 	if len(username) == 0 {
@@ -121,7 +120,7 @@ func newGitlabClient(server, username, token string) (*gitlab.Client, error) {
 	return client, nil
 }
 
-func getGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
+func getAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 	// Directly get API version if it has been recorded.
 	server := provider.ParseServerURL(scmCfg.Server)
 	if v, ok := gitlabServerAPIVersions[server]; ok {
@@ -129,7 +128,7 @@ func getGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 	}
 
 	// Dynamically detect API version if it has not been recorded, and record it for later use.
-	version, err := detectGitlabAPIVersion(scmCfg)
+	version, err := detectAPIVersion(scmCfg)
 	if err != nil {
 		return "", err
 	}
@@ -139,15 +138,15 @@ func getGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 	return version, nil
 }
 
-// gitlabVersionResponse represents the response of Gitlab version API.
-type gitlabVersionResponse struct {
+// versionResponse represents the response of Gitlab version API.
+type versionResponse struct {
 	Version   string `json:"version"`
 	Reversion string `json:"reversion"`
 }
 
-func detectGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
+func detectAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 	if scmCfg.Token == "" {
-		token, err := getGitlabOauthToken(scmCfg)
+		token, err := getOauthToken(scmCfg)
 		if err != nil {
 			log.Error(err)
 			return "", err
@@ -172,7 +171,14 @@ func detectGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 		req.Header.Set("Authorization", "Bearer "+scmCfg.Token)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	// Use client with redirect disabled, then status code will be 302
+	// if Gitlab server does not support /api/v4/version request.
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
 		return "", err
@@ -180,27 +186,22 @@ func detectGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		// body, err := ioutil.ReadAll(resp.Body)
-		// if err != nil {
-		// 	return "", err
-		// }
-		// defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
 
-		// gv := &GitlabVersionResponse{}
-		// err = json.Unmarshal(body, gv)
-		// if err != nil {
-		// 	log.Error(err)
-		// 	return "", err
-		// }
-
-		// TODO (robin) Remove this workround, and judge version by status code.
-		log.Infof("Header of response: %v", resp.Header)
-		if resp.Header.Get("Content-Type") != "application/json" {
-			return v3APIVersion, nil
+		gv := &versionResponse{}
+		err = json.Unmarshal(body, gv)
+		if err != nil {
+			log.Error(err)
+			return "", err
 		}
 
+		log.Infof("Gitlab version is %s, will use %s API", gv.Version, v4APIVersion)
 		return v4APIVersion, nil
-	case http.StatusNotFound:
+	case http.StatusNotFound, http.StatusFound:
 		return v3APIVersion, nil
 	default:
 		log.Warningf("Status code of Gitlab API version request is %d, use v3 in default", resp.StatusCode)
@@ -208,7 +209,7 @@ func detectGitlabAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 	}
 }
 
-func getGitlabOauthToken(scm *api.SCMConfig) (string, error) {
+func getOauthToken(scm *api.SCMConfig) (string, error) {
 	if len(scm.Username) == 0 || len(scm.Password) == 0 {
 		return "", fmt.Errorf("GitHub username or password is missing")
 	}
