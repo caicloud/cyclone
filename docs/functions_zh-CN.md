@@ -31,7 +31,7 @@ Cyclone 支持通过创建项目关联多种软件配置管理系统（GitHub、
 
 ## 持续集成
 
-全过程可视化的工作流水线："codeCheckout"从指定仓库拉去代码，"package" 编译可执行文件，"imageBuild" 构建发布镜像， "integration" 集成测试，"imageRelease" 发布镜像。所有过程均以容器为载体，消除环境差异。
+全过程可视化的工作流水线："codeCheckout" 从指定仓库拉去代码；"package" 编译可执行文件；"imageBuild" 构建发布镜像；"integration" 集成测试；"imageRelease" 发布镜像。所有过程均以容器为载体，消除环境差异。
 
 - 检出代码
 
@@ -77,6 +77,8 @@ Cyclone 支持通过创建项目关联多种软件配置管理系统（GitHub、
 ## 实时日志
 
 触发流水线执行后，支持查看各阶段实时日志。
+
+- 获取实时日志
 
 <div align="center">
 	<img src="./images/logStream.png" alt="logStream" width="500">
