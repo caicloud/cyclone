@@ -14,10 +14,11 @@ limitations under the License.
 package notify
 
 import (
+	log "github.com/golang/glog"
+
 	"github.com/caicloud/cyclone/api"
 	"github.com/caicloud/cyclone/notify/provider"
-	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 )
 
 const (
@@ -68,11 +69,11 @@ func Notify(service *api.Service, version *api.Version, versionLog string) {
 	nManager, err := newManager(smtpServerConfig.SMTPServer, smtpServerConfig.SMTPPort,
 		smtpServerConfig.SMTPUsername, smtpServerConfig.SMTPPassword)
 	if err != nil {
-		log.Warnf("NotifyManager init error: %v", err)
+		log.Infof("NotifyManager init error: %v", err)
 		return
 	}
 	if err := nManager.emailNotifier.Notify(service, version, versionLog); err != nil {
-		log.Warnf("NotifyManager notify error: %v", err)
+		log.Infof("NotifyManager notify error: %v", err)
 		return
 	}
 }

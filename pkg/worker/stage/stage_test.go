@@ -29,7 +29,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
 	. "github.com/caicloud/cyclone/pkg/worker/stage"
