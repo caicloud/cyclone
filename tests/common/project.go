@@ -19,234 +19,193 @@ package common
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/caicloud/cyclone/api"
+	"github.com/caicloud/cyclone/pkg/api"
 )
 
+type Metadata struct {
+	Total int `bson:"total,omitempty" json:"total,omitempty"`
+}
+
+type ListResponse struct {
+	Metadata Metadata      `bson:"metadata,omitempty" json:"metadata,omitempty"`
+	Items    []api.Project `bson:"items,omitempty" json:"items,omitempty"`
+}
+
 // CreateProject creates a project with given configurations.
-func CreateProject(userID string, project *api.Project, response *api.ProjectCreationResponse) error {
+func CreateProject(project *api.Project, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	buf, err := json.Marshal(project)
 	if err != nil {
-		return err
+		return 500, err
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s/projects", BaseURL, userID), bytes.NewBuffer(buf))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/projects", BaseURL), bytes.NewBuffer(buf))
 	if err != nil {
-		return err
+		return 500, err
 	}
 	generateRequestWithToken(req, "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return resp.StatusCode, err
 	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
+
+	if resp.StatusCode/100 == 2 {
+		err = json.Unmarshal(respBody, response)
+		if err != nil {
+			fmt.Println("unmarshl error :", err)
+			return resp.StatusCode, err
+		}
+	} else {
+		err = json.Unmarshal(respBody, errResp)
+		if err != nil {
+			fmt.Println("unmarshl p error :", err)
+			return resp.StatusCode, err
+		}
 	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
+
+	return resp.StatusCode, nil
 }
 
 // SetProject set a project with given configurations.
-func SetProject(userID string, projectID string, project *api.Project, response *api.ProjectSetResponse) error {
+func SetProject(project *api.Project, response *api.Project, errResp *api.ErrorResponse) (int, error) {
 	buf, err := json.Marshal(project)
 	if err != nil {
-		return err
+		return 500, err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s/projects/%s", BaseURL, userID, projectID),
-		bytes.NewBuffer(buf))
+
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/projects/%s", BaseURL, project.Name), bytes.NewBuffer(buf))
 	if err != nil {
-		return err
+		return 500, err
 	}
 	generateRequestWithToken(req, "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return resp.StatusCode, err
 	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
+
+	if resp.StatusCode/100 == 2 {
+		err = json.Unmarshal(respBody, response)
+		if err != nil {
+			fmt.Println("unmarshl error :", err)
+			return resp.StatusCode, err
+		}
+	} else {
+		err = json.Unmarshal(respBody, errResp)
+		if err != nil {
+			fmt.Println("unmarshl p error :", err)
+			return resp.StatusCode, err
+		}
 	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
+
+	return resp.StatusCode, nil
 }
 
 // GetProject retrieves a project from user ID and project ID.
-func GetProject(userID, projectID string, response *api.ProjectGetResponse) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/projects/%s", BaseURL, userID, projectID), nil)
+func GetProject(name string, response *api.Project, errResp *api.ErrorResponse) (int, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/projects/%s", BaseURL, name), nil)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	generateRequestWithToken(req, "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return resp.StatusCode, err
 	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
+
+	if resp.StatusCode/100 == 2 {
+		err = json.Unmarshal(respBody, response)
+		if err != nil {
+			fmt.Println("unmarshl error :", err)
+			return resp.StatusCode, err
+		}
+	} else {
+		err = json.Unmarshal(respBody, errResp)
+		if err != nil {
+			fmt.Println("unmarshl p error :", err)
+			return resp.StatusCode, err
+		}
 	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
+
+	return resp.StatusCode, nil
 }
 
-// ListProjects list projects by user ID.
-func ListProjects(userID string, response *api.ProjectListResponse) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/projects", BaseURL, userID), nil)
+//// ListProjects list projects by user ID.
+func ListProjects(response *ListResponse, errResp *api.ErrorResponse) (int, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/projects", BaseURL), nil)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	generateRequestWithToken(req, "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return resp.StatusCode, err
 	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
+
+	if resp.StatusCode/100 == 2 {
+		err = json.Unmarshal(respBody, response)
+		if err != nil {
+			fmt.Println("unmarshl error :", err)
+			return resp.StatusCode, err
+		}
+	} else {
+		err = json.Unmarshal(respBody, errResp)
+		if err != nil {
+			fmt.Println("unmarshl p error :", err)
+			return resp.StatusCode, err
+		}
 	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
+
+	return resp.StatusCode, nil
 }
 
 // DeleteProject delete a project from user ID and project ID.
-func DeleteProject(userID, projectID string, response *api.ProjectDelResponse) error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s/projects/%s", BaseURL, userID, projectID), nil)
+func DeleteProject(name string, response *api.Project, errResp *api.ErrorResponse) (int, error) {
+	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/projects/%s", BaseURL, name), nil)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	generateRequestWithToken(req, "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 500, err
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
-	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
-}
-
-// CreateProjectVersion creates a project version with given configurations.
-func CreateProjectVersion(userID string, projectVersion *api.ProjectVersion,
-	response *api.ProjectVersionCreationResponse) error {
-	buf, err := json.Marshal(projectVersion)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s/versions_project", BaseURL, userID),
-		bytes.NewBuffer(buf))
-	if err != nil {
-		return err
-	}
-	generateRequestWithToken(req, "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+		return resp.StatusCode, err
 	}
 
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
+	if resp.StatusCode/100 == 2 {
+		return resp.StatusCode, nil
+	} else {
+		err = json.Unmarshal(respBody, errResp)
+		if err != nil {
+			fmt.Println("unmarshl p error :", err)
+			return resp.StatusCode, err
+		}
 	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
-}
 
-// GetProjectVersion retrieves a project version from user ID and project version ID.
-func GetProjectVersion(userID, projectVersionID string, response *api.ProjectVersionGetResponse) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/projectversions/%s", BaseURL, userID, projectVersionID), nil)
-	if err != nil {
-		return err
-	}
-	generateRequestWithToken(req, "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
-	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
-}
-
-// ListProjectVersions list project versions by user ID.
-func ListProjectVersions(userID, projectID string, response *api.ProjectVersionListResponse) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/projects/%s/versions", BaseURL, userID, projectID), nil)
-	if err != nil {
-		return err
-	}
-	generateRequestWithToken(req, "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(respBody, response)
-	if err != nil {
-		return err
-	}
-	if response.ErrorMessage != "" {
-		return errors.New(response.ErrorMessage)
-	}
-	return nil
+	return resp.StatusCode, nil
 }

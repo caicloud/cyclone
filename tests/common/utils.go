@@ -17,14 +17,7 @@ limitations under the License.
 package common
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
-	"strings"
-
-	"github.com/caicloud/cyclone/docker"
-	"github.com/caicloud/cyclone/worker/helper"
-	docker_client "github.com/fsouza/go-dockerclient"
 )
 
 const (
@@ -38,31 +31,5 @@ const (
 func generateRequestWithToken(request *http.Request, contentType string) error {
 	request.Header.Add("content-type", contentType)
 	request.Header.Add("token", fakeToken)
-	return nil
-}
-
-// PushImageToLocalRegistry pushes the image to local registry.
-func PushImageToLocalRegistry(dm *docker.Manager, image string) error {
-	if strings.Index(image, ":") == -1 {
-		return errors.New("Invalid image name.")
-	}
-	parts := strings.Split(image, ":")
-	return dm.Client.PushImage(docker_client.PushImageOptions{
-		Name:     fmt.Sprintf("%s/%s", dm.Registry, parts[0]),
-		Tag:      parts[1],
-		Registry: dm.Registry,
-	}, docker_client.AuthConfiguration{
-		Username: dm.AuthConfig.Username,
-		Password: dm.AuthConfig.Password,
-	})
-}
-
-// CallUpdateImageAPI invokes update image API.
-func CallUpdateImageAPI(userID, applicationName, clusterName, partitionName, containerName, imageName string) error {
-	endpoint := defaultConsoleWebEndpoint + "/api/application/updateImage"
-	if err := helper.InvokeUpdateImageAPI(userID, applicationName, clusterName, partitionName, containerName,
-		imageName, endpoint); err != nil {
-		return err
-	}
 	return nil
 }
