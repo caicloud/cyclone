@@ -181,12 +181,12 @@ func (m *projectManager) ListRepos(projectName string) ([]api.Repository, error)
 	}
 
 	scmConfig := project.SCM
-	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	sp, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return sp.ListRepos(scmConfig)
+	return sp.ListRepos()
 }
 
 // ListBranches lists the branches of the SCM repos authorized for the project.
@@ -197,12 +197,12 @@ func (m *projectManager) ListBranches(projectName string, repo string) ([]string
 	}
 
 	scmConfig := project.SCM
-	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	sp, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return sp.ListBranches(scmConfig, repo)
+	return sp.ListBranches(repo)
 }
 
 // ListBranches lists the tags of the SCM repos authorized for the project.
@@ -213,12 +213,12 @@ func (m *projectManager) ListTags(projectName string, repo string) ([]string, er
 	}
 
 	scmConfig := project.SCM
-	sp, err := scm.GetSCMProvider(scmConfig.Type)
+	sp, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return sp.ListTags(scmConfig, repo)
+	return sp.ListTags(repo)
 }
 
 // GetStatistics gets the statistic by project name.

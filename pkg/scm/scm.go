@@ -27,34 +27,35 @@ import (
 	wscm "github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
+type newSCMProviderFunc func(*api.SCMConfig) (SCMProvider, error)
+
 // scmProviders represents the set of SCM providers.
-var scmProviders map[api.SCMType]SCMProvider
+var scmProviders map[api.SCMType]newSCMProviderFunc
 
 func init() {
-	scmProviders = make(map[api.SCMType]SCMProvider)
+	scmProviders = make(map[api.SCMType]newSCMProviderFunc)
 }
 
 // RegisterProvider registers SCM providers.
-func RegisterProvider(scmType api.SCMType, provider SCMProvider) error {
+func RegisterProvider(scmType api.SCMType, pFunc newSCMProviderFunc) error {
 	if _, ok := scmProviders[scmType]; ok {
 		return fmt.Errorf("SCM provider %s already exists.", scmType)
 	}
 
-	scmProviders[scmType] = provider
+	scmProviders[scmType] = pFunc
 	return nil
 }
 
 // SCMProvider represents the interface of SCM provider.
-// TODO(robin) Refactor this interface to avoid the SCM config param for each method.
 type SCMProvider interface {
-	GetToken(scm *api.SCMConfig) (string, error)
-	ListRepos(scm *api.SCMConfig) ([]api.Repository, error)
-	ListBranches(scm *api.SCMConfig, repo string) ([]string, error)
-	ListTags(scm *api.SCMConfig, repo string) ([]string, error)
-	CheckToken(scm *api.SCMConfig) bool
-	NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error
-	CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *WebHook) error
-	DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error
+	GetToken() (string, error)
+	ListRepos() ([]api.Repository, error)
+	ListBranches(repo string) ([]string, error)
+	ListTags(repo string) ([]string, error)
+	CheckToken() bool
+	NewTagFromLatest(tagName, description, commitID, url string) error
+	CreateWebHook(repoURL string, webHook *WebHook) error
+	DeleteWebHook(repoURL string, webHookUrl string) error
 }
 
 // WebHook represents the params for SCM webhook.
@@ -73,13 +74,20 @@ const (
 )
 
 // GetSCMProvider gets the SCM provider by the type.
-func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
-	provider, ok := scmProviders[scmType]
+func GetSCMProvider(scm *api.SCMConfig) (SCMProvider, error) {
+	if scm == nil {
+		err := fmt.Errorf("SCM config is nil")
+		log.Error(err)
+		return nil, err
+	}
+
+	scmType := scm.Type
+	pFunc, ok := scmProviders[scmType]
 	if !ok {
 		return nil, fmt.Errorf("unsupported SCM type %s", scmType)
 	}
 
-	return provider, nil
+	return pFunc(scm)
 }
 
 // GenerateSCMToken generates the SCM token according to the config.
@@ -99,7 +107,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	config.Server = strings.TrimSuffix(config.Server, "/")
 
 	scmType := config.Type
-	provider, err := GetSCMProvider(scmType)
+	provider, err := GetSCMProvider(config)
 	if err != nil {
 		return err
 	}
@@ -115,7 +123,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 
 		// If Github password is provided, generate the new token.
 		if len(config.Password) != 0 {
-			generatedToken, err = provider.GetToken(config)
+			generatedToken, err = provider.GetToken()
 			if err != nil {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
@@ -124,21 +132,21 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	case api.Gitlab:
 		// If username and password is provided, generate the new token.
 		if len(config.Username) != 0 && len(config.Password) != 0 {
-			generatedToken, err = provider.GetToken(config)
+			generatedToken, err = provider.GetToken()
 			if err != nil {
 				log.Errorf("fail to get SCM token for user %s as %s", config.Username, err.Error())
 				return err
 			}
 		}
 	case api.SVN:
-		generatedToken, _ = provider.GetToken(config)
+		generatedToken, _ = provider.GetToken()
 	default:
 		return httperror.ErrorValidationFailed.Format("SCM type %s is unknow", scmType)
 	}
 
 	if generatedToken != "" {
 		config.Token = generatedToken
-	} else if !provider.CheckToken(config) {
+	} else if !provider.CheckToken() {
 		return httperror.ErrorValidationFailed.Format("token is unauthorized to repos")
 	}
 
@@ -153,7 +161,6 @@ func NewTagFromLatest(codeSource *api.CodeSource, scm *api.SCMConfig, tagName, d
 	if err != nil {
 		return err
 	}
-	scmType := codeSource.Type
 
 	gitSource, err := api.GetGitSource(codeSource)
 	if err != nil {
@@ -162,12 +169,12 @@ func NewTagFromLatest(codeSource *api.CodeSource, scm *api.SCMConfig, tagName, d
 
 	url := gitSource.Url
 
-	p, err := GetSCMProvider(scmType)
+	p, err := GetSCMProvider(scm)
 	if err != nil {
 		return err
 	}
 
-	err = p.NewTagFromLatest(scm, tagName, description, commitID, url)
+	err = p.NewTagFromLatest(tagName, description, commitID, url)
 	if err != nil {
 		return err
 	}

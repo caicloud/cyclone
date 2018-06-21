@@ -106,7 +106,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		return nil, err
 	}
 
-	provider, err := scm.GetSCMProvider(scmConfig.Type)
+	provider, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
 		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
 	}
@@ -125,7 +125,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
 			Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
 		}
-		if err := provider.CreateWebHook(scmConfig, gitSource.Url, webHook); err != nil {
+		if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
 			return nil, err
 		}
 		pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
@@ -134,7 +134,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	// Remove the webhook if there is error.
 	defer func() {
 		if err != nil && gitSource != nil && webHook != nil {
-			if err = provider.DeleteWebHook(scmConfig, gitSource.Url, webHook.Url); err != nil {
+			if err = provider.DeleteWebHook(gitSource.Url, webHook.Url); err != nil {
 				logdog.Errorf("Fail to delete the pipeline %s", pipeline.Name)
 			}
 		}
@@ -273,7 +273,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM config")
 	}
 
-	provider, err := scm.GetSCMProvider(scmConfig.Type)
+	provider, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
 		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
 	}
@@ -287,7 +287,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 				return nil, err
 			}
 
-			if err := provider.DeleteWebHook(scmConfig, gitSource.Url, scmTrigger.Webhook); err != nil {
+			if err := provider.DeleteWebHook(gitSource.Url, scmTrigger.Webhook); err != nil {
 				return nil, err
 			}
 		}
@@ -305,7 +305,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
 			Events: collectSCMEvents(scmTrigger),
 		}
-		if err := provider.CreateWebHook(scmConfig, gitSource.Url, webHook); err != nil {
+		if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
 			logdog.Errorf("create webhook failed: %v", err)
 			return nil, httperror.ErrorInternalTypeError.Format("Can not create webhook")
 		}
@@ -399,12 +399,12 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 			return err
 		}
 
-		provider, err := scm.GetSCMProvider(scmConfig.Type)
+		provider, err := scm.GetSCMProvider(scmConfig)
 		if err != nil {
 			return fmt.Errorf("Can not get provider for SCM %s", scmConfig.Type)
 		}
 
-		if err := provider.DeleteWebHook(scmConfig, gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
+		if err := provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
 			logdog.Errorf("Fail to delete webhook for pipeline %s", pipeline.Name)
 		}
 	}

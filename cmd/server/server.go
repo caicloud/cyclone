@@ -27,7 +27,10 @@ import (
 
 	_ "github.com/caicloud/cyclone/pkg/cloud/docker"
 	_ "github.com/caicloud/cyclone/pkg/cloud/kubernetes"
-	_ "github.com/caicloud/cyclone/pkg/scm/provider"
+
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/github"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/gitlab"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/svn"
 )
 
 // NeverStop may be passed to Until to make it never stop.
