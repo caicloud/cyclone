@@ -26,7 +26,7 @@ import (
 	log "github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/pkg/executil"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
 

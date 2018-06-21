@@ -25,13 +25,12 @@ import (
 
 	restful "github.com/emicklei/go-restful"
 	swagger "github.com/emicklei/go-restful-swagger12"
+	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
-	loghttp "github.com/caicloud/cyclone/http"
 	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/event"
-	"github.com/caicloud/cyclone/pkg/log"
 	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/pkg/store"
 )
@@ -44,14 +43,11 @@ type APIServer struct {
 
 // PrepareRun prepare for apiserver running
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
-
-	s.InitLog()
-
 	// init api doc
 	if s.Config.ShowAPIDoc {
 		// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
 		config := swagger.Config{
-			WebServices:    restful.RegisteredWebServices(), // you control what services are visible.
+			WebServices:    restful.DefaultContainer.RegisteredWebServices(), // you control what services are visible.
 			WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
 			ApiPath:        "/apidocs.json",
 
@@ -63,6 +59,7 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	}
 
 	closing := make(chan struct{})
+
 	// init database
 	mclosed, err := store.Init(s.Config.MongoDBHost, s.Config.MongoGracePeriod, closing, s.Config.SaltKey)
 	if err != nil {
@@ -72,10 +69,7 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	go background(closing, mclosed)
 
 	// init event manager
-	err = s.initEventManager()
-	if err != nil {
-		return nil, err
-	}
+	event.Init(s.WorkerOptions)
 
 	if err = cloud.InitCloud(s.Config.CloudAutoDiscovery); err != nil {
 		log.Error(err)
@@ -85,28 +79,6 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	return &PreparedAPIServer{s}, nil
 }
 
-// InitLog initializes log
-func (s *APIServer) InitLog() {
-	if s.Config.LogForceColor {
-		logdog.ForceColor = s.Config.LogForceColor
-	}
-
-	// init debug log
-	if s.Config.Debug {
-		logdog.ApplyOptions(logdog.DebugLevel)
-		log.SetLogLevel(log.DebugLevel)
-	} else {
-		logdog.ApplyOptions(logdog.InfoLevel)
-	}
-}
-
-// FIXME
-func (s *APIServer) initEventManager() error {
-	event.Init(s.WorkerOptions)
-
-	return nil
-}
-
 // PreparedAPIServer is a prepared api server
 type PreparedAPIServer struct {
 	*APIServer
@@ -114,9 +86,6 @@ type PreparedAPIServer struct {
 
 // Run start a api server
 func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
-	// FIXME: start loghttp server
-	go loghttp.Server()
-
 	dataStore := store.NewStore()
 	defer dataStore.Close()
 

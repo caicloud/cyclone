@@ -21,9 +21,10 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/golang/glog"
+
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/pkg/executil"
-	"github.com/caicloud/cyclone/pkg/log"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
@@ -49,7 +50,7 @@ func (s *Svn) spilitToken(token string) (string, string, error) {
 
 // Clone implements SCMProvider interface.
 func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
-	log.InfoWithFields("About to svn checkout repository.", log.Fields{"url": url, "destPath": destPath, "ref": ref})
+	log.Infof("About to svn checkout repository, url: %s, dest path: %s, ref: %s", url, destPath, ref)
 
 	url = strings.TrimSuffix(url, "/") + "/" + ref
 
@@ -62,21 +63,21 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 		"--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache", url, destPath}
 	output, err := executil.RunInDir("./", "svn", args...)
 	if err != nil {
-		log.ErrorWithFields("Error when clone", log.Fields{"error": err, "args": args})
+		log.Errorf("fail to clone as %v", err)
 		return "", err
 	}
-	log.InfoWithFields("Successfully svn checkout repository.", log.Fields{"url": url, "destPath": destPath})
+	log.Infof("Successfully svn checkout repository, url: %s, dest path: %s", url, destPath)
 
 	return string(output), err
 }
 
 // GetCommitID implements SCMProvider interface. returns latest commit id.
 func (s *Svn) GetCommitID(repoPath string) (string, error) {
-	log.InfoWithFields("About to get commit info.", log.Fields{"repoPath": repoPath})
+	log.Infof("About to get commit info in repo path", repoPath)
 	args := []string{"info", "--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	if err != nil {
-		log.InfoWithFields("failed get commit reversion.", log.Fields{"repoPath": repoPath})
+		log.Infof("failed get commit reversion in repo path", repoPath)
 	}
 
 	var id string
@@ -93,7 +94,7 @@ func (s *Svn) GetCommitID(repoPath string) (string, error) {
 // GetCommitLog implements SCMProvider interface.
 func (s *Svn) GetCommitLog(repoPath string) api.CommitLog {
 	commitLog := api.CommitLog{}
-	log.InfoWithFields("About to get commit log.", log.Fields{"repoPath": repoPath})
+	log.Infof("About to get commit log in repo path %s", repoPath)
 	args := []string{"info", "--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	if err != nil {
@@ -129,7 +130,7 @@ func (s *Svn) GetCommitLog(repoPath string) api.CommitLog {
 // getCommitMessage get the latest commit message.
 func (s *Svn) getCommitMessage(repoPath string) (string, error) {
 	var message string
-	log.InfoWithFields("About to get commit message.", log.Fields{"repoPath": repoPath})
+	log.Infof("About to get commit message in repo path", repoPath)
 	args := []string{"log", "-r", "COMMITTED", "--xml", "--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	if err != nil {
