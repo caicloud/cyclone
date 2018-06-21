@@ -44,6 +44,7 @@ type Github struct {
 	client *github.Client
 }
 
+// NewGithub new Github client.
 func NewGithub(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	var client *github.Client
 	var err error

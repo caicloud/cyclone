@@ -53,6 +53,7 @@ func init() {
 	}
 }
 
+// NewGitlab news Gitlab v3 or v4 client according to the API version detected from Gitlab server,
 func NewGitlab(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	version, err := getAPIVersion(scmCfg)
 	if err != nil {
