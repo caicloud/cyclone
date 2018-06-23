@@ -31,7 +31,6 @@ import (
 
 const (
 	// cloneDir represents the dir which the repo clone to.
-	// cloneDir = "/root/code"
 	cloneDir = "/tmp/code"
 
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
@@ -53,7 +52,7 @@ func init() {
 // RegisterProvider registers SCM providers.
 func RegisterProvider(scmType api.SCMType, provider SCMProvider) error {
 	if _, ok := scmProviders[scmType]; ok {
-		return fmt.Errorf("SCM provider %s already exists", scmType)
+		return fmt.Errorf("SCM provider %s already exists.", scmType)
 	}
 
 	scmProviders[scmType] = provider
