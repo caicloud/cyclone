@@ -28,7 +28,7 @@ import (
 	mgo "gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/api/server"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	log "github.com/zoumo/logdog"
 )
 

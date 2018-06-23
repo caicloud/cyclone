@@ -41,7 +41,6 @@ function cleanup {
 function run_e2e {
     cleanup
 
-
     # for worker to connect server
     export HOST_IP="$(ifconfig | grep "inet " | grep -v 127.0.0.1 | tail -1 | cut -d " " -f 2 )"
 
@@ -59,11 +58,11 @@ function run_e2e {
     docker run -d --name mongo -p 27017:27017 mongo:3.0.5 mongod --smallfiles
 
     echo "buiding server"
-    go build -i -v -o bin/server github.com/caicloud/cyclone/cmd/server
+    go build -v -o bin/server github.com/caicloud/cyclone/cmd/server
 
     echo "buiding worker"
     # worker run in linux, so need cross compiling
-    GOOS=linux GOARCH=amd64 go build -i -v -o bin/worker github.com/caicloud/cyclone/cmd/worker
+    GOOS=linux GOARCH=amd64 go build -v -o bin/worker github.com/caicloud/cyclone/cmd/worker
     docker build -t ${WORKER_IMAGE} -f build/worker/Dockerfile .
 
     docker push ${WORKER_IMAGE}

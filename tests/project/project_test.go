@@ -20,9 +20,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	log "github.com/golang/glog"
+
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/pkg/log"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 
 	. "github.com/caicloud/cyclone/tests/common"
 )
