@@ -25,12 +25,11 @@ import (
 
 	docker_client "github.com/fsouza/go-dockerclient"
 	log "github.com/golang/glog"
-	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
-	"github.com/caicloud/cyclone/pkg/osutil"
-	"github.com/caicloud/cyclone/pkg/pathutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
+	pathutil "github.com/caicloud/cyclone/pkg/util/path"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
@@ -107,13 +106,13 @@ func (sm *stageManager) ExecCodeCheckout(token string, stage *api.CodeCheckoutSt
 
 	logFile, err := sm.startWatchLogs(api.CodeCheckoutStageName, "", errChan)
 	if err != nil {
-		logdog.Error(err.Error())
+		log.Error(err.Error())
 		return err
 	}
 
 	logs, err := scm.CloneRepos(token, stage, sm.performParams.Ref)
 	if err != nil {
-		logdog.Error(err.Error())
+		log.Error(err.Error())
 		logFile.WriteString(err.Error())
 		return err
 	} else {
@@ -574,7 +573,7 @@ func (sm *stageManager) updateEventAfterStage(stage api.PipelineStageName, err e
 
 func (sm *stageManager) startWatchLogs(stage api.PipelineStageName, task string, errChan chan error) (*os.File, error) {
 	if err := updateEvent(sm.cycloneClient, event, stage, api.Running, nil); err != nil {
-		logdog.Errorf("fail to update event for stage %s as %v", stage, err)
+		log.Errorf("fail to update event for stage %s as %v", stage, err)
 		return nil, err
 	}
 
@@ -670,7 +669,7 @@ func formatImageName(namein string) string {
 	case 2:
 		nameout = tname
 	default:
-		logdog.Error("image name error", logdog.Fields{"imageName": namein})
+		log.Errorf("image name %s has error", namein)
 		nameout = tname
 	}
 

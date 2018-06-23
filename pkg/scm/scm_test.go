@@ -53,7 +53,7 @@ func TestRegisterProvider(t *testing.T) {
 	for d, tc := range testCases {
 		err := RegisterProvider(tc.scmType, testProviderFunc)
 		if err != tc.err {
-			if err != nil && err.Error() != tc.err.Error() {
+			if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 				t.Errorf("%s failed: expect %v, but got %v", d, tc.err, err)
 			}
 		}

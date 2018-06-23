@@ -31,10 +31,10 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
-	"github.com/caicloud/cyclone/pkg/osutil"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
 

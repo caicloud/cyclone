@@ -24,8 +24,6 @@ import (
 
 // api server env
 const (
-	// Debug mode
-	Debug = "DEBUG"
 	// MongoDBHost ...
 	MongoDBHost = "MONGODB_HOST"
 	// SaltKey ...
@@ -44,9 +42,7 @@ type APIServerOptions struct {
 	CyclonePort             int
 	CycloneAddrTemplate     string
 	ShowAPIDoc              bool
-	Debug                   bool
 	CloudAutoDiscovery      bool
-	LogForceColor           bool
 	RecordRotationThreshold int
 }
 
@@ -82,22 +78,11 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "show the api doc at http://<cyclone instance>/apidocs/#/api/v0.1",
 			Destination: &opts.ShowAPIDoc,
 		},
-		cli.BoolFlag{
-			Name:        "debug",
-			Usage:       "Debug mode, default to false",
-			EnvVar:      Debug,
-			Destination: &opts.Debug,
-		},
 		cli.BoolTFlag{
 			Name:        "cloud-auto-discovery",
 			Usage:       "auto discovery cloud by k8s serviceAccount, default to true",
 			EnvVar:      CloudAutoDiscovery,
 			Destination: &opts.CloudAutoDiscovery,
-		},
-		cli.BoolFlag{
-			Name:        "log-force-color",
-			Usage:       "force log use color output",
-			Destination: &opts.LogForceColor,
 		},
 		cli.IntFlag{
 			Name:        "record-rotation-threshold",

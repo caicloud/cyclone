@@ -22,16 +22,15 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/zoumo/logdog"
+	"github.com/emicklei/go-restful"
+	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
-	"github.com/caicloud/cyclone/pkg/log"
 
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -132,7 +131,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 	}
 
 	if pipelineRecord.Status != api.Running {
-		logdog.Warnf("The pipeline record %s is not running, can not be aborted, will do no action", pipelineRecord.Name)
+		log.Infof("The pipeline record %s is not running, can not be aborted, will do no action", pipelineRecord.Name)
 		response.WriteHeaderAndEntity(http.StatusOK, pipelineRecord)
 		return
 	}
@@ -156,7 +155,7 @@ func (router *router) updatePipelineRecordStatus(request *restful.Request, respo
 	e, err := event.GetEvent(pipelineRecord.ID)
 	if err != nil {
 		err := fmt.Errorf("Unable to find event by versonID %v", pipelineRecord.ID)
-		logdog.Error(err)
+		log.Error(err)
 		httputil.ResponseWithError(response, err)
 		return
 	}

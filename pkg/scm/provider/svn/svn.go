@@ -23,8 +23,8 @@ import (
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
-	"github.com/caicloud/cyclone/pkg/executil"
 	"github.com/caicloud/cyclone/pkg/scm"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 )
 
 func init() {
