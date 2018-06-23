@@ -20,7 +20,7 @@ import (
 
 	"github.com/buildkite/terminal"
 	"github.com/caicloud/cyclone/api"
-	"github.com/caicloud/cyclone/pkg/osutil"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	"gopkg.in/gomail.v2"
 )
 
