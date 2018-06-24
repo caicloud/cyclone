@@ -18,6 +18,7 @@ package docker
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	docker_client "github.com/fsouza/go-dockerclient"
@@ -78,6 +79,181 @@ func TestIsImagePresent(t *testing.T) {
 
 		if result != tc.present {
 			t.Errorf("Fail to judge %s: expect %t, but got %t", d, tc.present, result)
+		}
+	}
+}
+
+func TestPullImage(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	mockClient := mock_docker.NewMockClientInterface(ctl)
+	defaultAuth := docker_client.AuthConfiguration{
+		ServerAddress: "registry.caicloud.io",
+		Username:      "caicloud",
+		Password:      "123456",
+	}
+	opts1 := docker_client.PullImageOptions{
+		Repository: "image1",
+	}
+	mockClient.EXPECT().PullImage(opts1, defaultAuth).Return(nil)
+
+	opts2 := docker_client.PullImageOptions{
+		Repository: "image2",
+	}
+	auth2 := docker_client.AuthConfiguration{
+		ServerAddress: "registry2.caicloud.io",
+		Username:      "caicloud",
+		Password:      "111111",
+	}
+	mockClient.EXPECT().PullImage(opts2, docker_client.AuthConfiguration{}).Return(nil)
+
+	opts3 := docker_client.PullImageOptions{
+		Repository: "registry3.caicloud.io/caicloud/image3",
+	}
+	auth3 := docker_client.AuthConfiguration{
+		ServerAddress: "registry3.caicloud.io",
+		Username:      "caicloud",
+		Password:      "111111",
+	}
+	mockClient.EXPECT().PullImage(opts3, auth3).Return(nil)
+
+	dm := &DockerManager{
+		Client:     mockClient,
+		AuthConfig: &defaultAuth,
+	}
+
+	testCases := map[string]struct {
+		image string
+		auth  docker_client.AuthConfiguration
+	}{
+		"image1 using manager auth": {
+			"image1",
+			docker_client.AuthConfiguration{},
+		},
+		"image2 without auth": {
+			"image2",
+			auth2,
+		},
+		"image3 using provided auth": {
+			"registry3.caicloud.io/caicloud/image3",
+			auth3,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := dm.PullImage(tc.image, tc.auth)
+		if err != nil {
+			t.Errorf("Fail to pull image %s as %v", d, err)
+		}
+	}
+}
+
+func TestPushImage(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	mockClient := mock_docker.NewMockClientInterface(ctl)
+	defaultAuth := docker_client.AuthConfiguration{
+		ServerAddress: "registry.caicloud.io",
+		Username:      "caicloud",
+		Password:      "123456",
+	}
+	opts1 := docker_client.PushImageOptions{
+		Name: "image1",
+	}
+	mockClient.EXPECT().PushImage(opts1, defaultAuth).Return(nil)
+
+	opts2 := docker_client.PushImageOptions{
+		Name: "image2",
+		Tag:  "v3",
+	}
+	auth2 := docker_client.AuthConfiguration{
+		ServerAddress: "registry2.caicloud.io",
+		Username:      "caicloud",
+		Password:      "111111",
+	}
+	mockClient.EXPECT().PushImage(opts2, auth2).Return(nil)
+
+	opts3 := docker_client.PushImageOptions{
+		Registry: "registry3.caicloud.io",
+		Name:     "image3",
+		Tag:      "v3",
+	}
+	auth3 := docker_client.AuthConfiguration{
+		ServerAddress: "registry3.caicloud.io",
+		Username:      "caicloud",
+		Password:      "111111",
+	}
+	mockClient.EXPECT().PushImage(opts3, auth3).Return(nil)
+
+	dm := &DockerManager{
+		Client:     mockClient,
+		AuthConfig: &defaultAuth,
+	}
+
+	testCases := map[string]struct {
+		image docker_client.PushImageOptions
+		auth  docker_client.AuthConfiguration
+	}{
+		"image1 using manager auth": {
+			opts1,
+			docker_client.AuthConfiguration{},
+		},
+		"image2 using provided auth": {
+			opts2,
+			auth2,
+		},
+		"image3 using provided auth": {
+			opts3,
+			auth3,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := dm.PushImage(tc.image, tc.auth)
+		if err != nil {
+			t.Errorf("Fail to push image %s as %v", d, err)
+		}
+	}
+}
+
+func TestRemoveContainer(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	mockClient := mock_docker.NewMockClientInterface(ctl)
+	mockClient.EXPECT().RemoveContainer(docker_client.RemoveContainerOptions{
+		ID:    "c1",
+		Force: true,
+	}).Return(nil)
+	mockClient.EXPECT().RemoveContainer(docker_client.RemoveContainerOptions{
+		ID:    "c2",
+		Force: true,
+	}).Return(&docker_client.NoSuchContainer{"c2", nil})
+
+	dm := &DockerManager{
+		Client: mockClient,
+	}
+
+	testCases := map[string]struct {
+		cid string
+		err error
+	}{
+		"c1": {
+			"c1",
+			nil,
+		},
+		"c2": {
+			"c2",
+			&docker_client.NoSuchContainer{"c2", nil},
+		},
+	}
+
+	for d, tc := range testCases {
+		err := dm.RemoveContainer(tc.cid)
+		if !reflect.DeepEqual(err, tc.err) {
+			t.Errorf("Fail to remove container %d: expect err as %v, but got %v", d, tc.err, err)
 		}
 	}
 }

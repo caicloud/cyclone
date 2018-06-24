@@ -94,6 +94,10 @@ func (dm *DockerManager) IsImagePresent(image string) (bool, error) {
 }
 
 // PullImage pulls an image by its name.
+// Need to cover 3 cases：
+// 1. Use auth of manager when not provided auth;
+// 2. Use provided auth when image has prefix of server;
+// 3. Use empty auth when image don't have prefix of server, this case is for Docker hub.
 func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfiguration) error {
 	opts := docker_client.PullImageOptions{
 		Repository: image,
@@ -105,10 +109,10 @@ func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfigur
 			Username:      dm.AuthConfig.Username,
 			Password:      dm.AuthConfig.Password,
 		}
-	}
-
-	if auth.ServerAddress == "" || !strings.HasPrefix(image, auth.ServerAddress) {
-		auth = docker_client.AuthConfiguration{}
+	} else {
+		if auth.ServerAddress != "" && !strings.HasPrefix(image, auth.ServerAddress) {
+			auth = docker_client.AuthConfiguration{}
+		}
 	}
 
 	log.Infof("image(%s) does not exist, pulling ...", image)
@@ -123,8 +127,9 @@ func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfigur
 func (dm *DockerManager) PushImage(options docker_client.PushImageOptions, auth docker_client.AuthConfiguration) error {
 	if auth.ServerAddress == "" || auth.Username == "" {
 		auth = docker_client.AuthConfiguration{
-			Username: dm.AuthConfig.Username,
-			Password: dm.AuthConfig.Password,
+			ServerAddress: dm.AuthConfig.ServerAddress,
+			Username:      dm.AuthConfig.Username,
+			Password:      dm.AuthConfig.Password,
 		}
 	}
 
