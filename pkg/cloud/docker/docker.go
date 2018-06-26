@@ -72,7 +72,7 @@ func NewDockerCloud(c *api.Cloud) (cloud.Provider, error) {
 			CAFile:             filepath.Join(cd.CertPath, "ca.pem"),
 			CertFile:           filepath.Join(cd.CertPath, "cert.pem"),
 			KeyFile:            filepath.Join(cd.CertPath, "key.pem"),
-			InsecureSkipVerify: c.Insecure,
+			InsecureSkipVerify: cd.Insecure,
 		}
 
 		tlsc, err := tlsconfig.Client(opts)

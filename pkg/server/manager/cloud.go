@@ -49,18 +49,29 @@ func NewCloudManager(dataStore *store.DataStore) (CloudManager, error) {
 }
 
 // CreateCloud creates a cloud.
-func (m *cloudManager) CreateCloud(cloud *api.Cloud) (*api.Cloud, error) {
-	cloudName := cloud.Name
+func (m *cloudManager) CreateCloud(c *api.Cloud) (*api.Cloud, error) {
+	cloudName := c.Name
 
 	if _, err := m.ds.FindCloudByName(cloudName); err == nil {
 		return nil, httperror.ErrorAlreadyExist.Format(cloudName)
 	}
 
-	if err := m.ds.InsertCloud(cloud); err != nil {
+	// check auth info
+	cp, err := cloud.NewCloudProvider(c)
+	if err != nil {
+		return nil, httperror.ErrorValidationFailed.Format("cloud body", err)
+	}
+
+	err = cp.Ping()
+	if err != nil {
+		return nil, httperror.ErrorValidationFailed.Format("cloud body", err)
+	}
+
+	if err := m.ds.InsertCloud(c); err != nil {
 		return nil, err
 	}
 
-	return cloud, nil
+	return c, nil
 }
 
 // ListClouds lists all clouds.
@@ -80,7 +91,9 @@ func (m *cloudManager) PingCloud(name string) error {
 		return httperror.ErrorContentNotFound.Format(name)
 	}
 	cp, err := cloud.NewCloudProvider(c)
-
+	if err != nil {
+		return err
+	}
 	return cp.Ping()
 }
 
@@ -107,6 +120,8 @@ func (m *cloudManager) ListWorkers(name string, extendInfo string) ([]api.Worker
 	}
 
 	cp, err := cloud.NewCloudProvider(c)
-
+	if err != nil {
+		return nil, httperror.ErrorUnknownInternal.Format(err)
+	}
 	return cp.ListWorkers()
 }

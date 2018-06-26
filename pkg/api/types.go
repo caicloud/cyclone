@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+	"k8s.io/client-go/rest"
 )
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
@@ -566,14 +567,18 @@ const (
 
 type CloudDocker struct {
 	Host     string `json:"host,omitempty" bson:"host,omitempty"`
+	Insecure bool   `json:"insecure,omitempty" bson:"insecure,omitempty"`
 	CertPath string `json:"certPath,omitempty" bson:"certPath,omitempty"`
 }
 
 type CloudKubernetes struct {
-	Host        string `json:"host,omitempty" bson:"host,omitempty"`
-	InCluster   bool   `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
-	BearerToken string `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
-	Namespace   string `json:"namespace,omitempty" bson:"-"`
+	Host            string                `json:"host,omitempty" bson:"host,omitempty"`
+	InCluster       bool                  `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
+	Namespace       string                `json:"namespace,omitempty" bson:"-"`
+	BearerToken     string                `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
+	Username        string                `json:"username,omitempty" bson:"username"`
+	Password        string                `json:"password,omitempty" bson:"password"`
+	TLSClientConfig *rest.TLSClientConfig `json:"tlsClientConfig,omitempty" bson:"tlsClientConfig"`
 }
 
 // Cloud represents clouds for workers.
@@ -581,7 +586,6 @@ type Cloud struct {
 	ID         string           `bson:"_id,omitempty" json:"id,omitempty"`
 	Type       CloudType        `bson:"type,omitempty" json:"type,omitempty"`
 	Name       string           `json:"name,omitempty" bson:"name,omitempty"`
-	Insecure   bool             `json:"insecure,omitempty" bson:"insecure,omitempty"`
 	Docker     *CloudDocker     `json:"docker,omitempty" bson:"docker,omitempty"`
 	Kubernetes *CloudKubernetes `json:"kubernetes,omitempty" bson:"kubernetes,omitempty"`
 }

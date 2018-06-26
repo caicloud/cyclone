@@ -63,17 +63,21 @@ func NewK8sCloud(c *api.Cloud) (cloud.Provider, error) {
 	if ck.InCluster {
 		return newInclusterK8sCloud(ck)
 	} else {
-		return newK8sCloud(ck, c.Insecure)
+		return newK8sCloud(ck)
 	}
 }
 
-func newK8sCloud(c *api.CloudKubernetes, insecure bool) (cloud.Provider, error) {
+func newK8sCloud(c *api.CloudKubernetes) (cloud.Provider, error) {
+	if c.TLSClientConfig == nil {
+		c.TLSClientConfig = &rest.TLSClientConfig{Insecure: true}
+	}
+
 	config := &rest.Config{
-		Host:        c.Host,
-		BearerToken: c.BearerToken,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: insecure,
-		},
+		Host:            c.Host,
+		BearerToken:     c.BearerToken,
+		Username:        c.Username,
+		Password:        c.Password,
+		TLSClientConfig: *c.TLSClientConfig,
 	}
 
 	client, err := kubernetes.NewForConfig(config)
@@ -130,6 +134,7 @@ func (c *k8sCloud) CanProvision(quota options.Quota) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if resource.Limit.IsZero() {
 		return true, nil
 	}
