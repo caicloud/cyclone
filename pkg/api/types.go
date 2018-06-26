@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
-	"k8s.io/client-go/rest"
 )
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
@@ -572,13 +571,27 @@ type CloudDocker struct {
 }
 
 type CloudKubernetes struct {
-	Host            string                `json:"host,omitempty" bson:"host,omitempty"`
-	InCluster       bool                  `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
-	Namespace       string                `json:"namespace,omitempty" bson:"-"`
-	BearerToken     string                `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
-	Username        string                `json:"username,omitempty" bson:"username"`
-	Password        string                `json:"password,omitempty" bson:"password"`
-	TLSClientConfig *rest.TLSClientConfig `json:"tlsClientConfig,omitempty" bson:"tlsClientConfig"`
+	Host            string           `json:"host,omitempty" bson:"host,omitempty"`
+	InCluster       bool             `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
+	Namespace       string           `json:"namespace,omitempty" bson:"-"`
+	BearerToken     string           `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
+	Username        string           `json:"username,omitempty" bson:"username"`
+	Password        string           `json:"password,omitempty" bson:"password"`
+	TLSClientConfig *TLSClientConfig `json:"TLSClientConfig,omitempty" bson:"TLSClientConfig"`
+}
+
+// +k8s:deepcopy-gen=true
+// TLSClientConfig contains settings to enable transport layer security
+type TLSClientConfig struct {
+	// Server should be accessed without verifying the TLS certificate. For testing only.
+	Insecure bool `json:"insecure,omitempty" bson:"insecure"`
+
+	// Trusted root certificates for server
+	CAFile string `json:"CAFile,omitempty" bson:"CAFile"`
+
+	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
+	// CAData takes precedence over CAFile
+	CAData []byte `json:"CAData,omitempty" bson:"CAData"`
 }
 
 // Cloud represents clouds for workers.
