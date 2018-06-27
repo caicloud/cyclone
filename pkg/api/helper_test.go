@@ -52,7 +52,7 @@ func TestGetGitSource(t *testing.T) {
 	for _, tc := range testCases {
 		_, err := GetGitSource(tc.codesource)
 		if err != nil {
-			t.Error("%s failed as error Expect error to be nil")
+			t.Errorf("failed as %v Expect error to be nil", err)
 		}
 	}
 }
@@ -75,7 +75,7 @@ func TestGetGitSourceError(t *testing.T) {
 	for _, tc := range testCases {
 		_, err := GetGitSource(tc.codesource)
 		if err.Error() != tc.error {
-			t.Error("%s failed as error Expect error to be nil")
+			t.Errorf("failed as %v Expect error to be nil", err)
 		}
 	}
 }

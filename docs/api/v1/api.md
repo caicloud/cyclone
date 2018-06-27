@@ -12,6 +12,7 @@
     - [SCM API](#scm-api)
     - [Webhook API](#webhook-api)
     - [Stats API](#stats-api)
+    - [Cloud API](#cloud-api)
   - [API Common](#api-common)
     - [Path Parameter Explanation](#path-parameter-explanation)
   - [API Details](#api-details)
@@ -46,6 +47,13 @@
     - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
     - [Get Project Stats](#get-project-stats)
     - [Get Pipeline Stats](#get-pipeline-stats)
+    - [CloudObject](#cloudobject)
+    - [Create cloud](#create-cloud)
+    - [List clouds](#list-clouds)
+    - [Get cloud](#get-cloud)
+    - [Update cloud](#update-cloud)
+    - [Delete cloud](#delete-cloud)
+    - [List cyclone workers](#list-cyclone-workers)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1321,7 +1329,7 @@ Success:
 
 ```
 {
-    "id": "123",                                              // string, required.
+    "id": "123",                                              // string, optional.
     "type": "Docker",                                         // string, required.
     "name": "cluster1",                                       // string, required.
     "docker": {
@@ -1336,7 +1344,11 @@ Success:
         "username": "root",                                   // string, optional.
         "password": "123456",                                 // string, optional.
         "inCluster": true,                                    // bool, optional.
-        "insecure": false                                     // bool, optional.
+        "tlsClientConfig": {                                  // optional.
+            "insecure": false,                                // bool, optional.
+            "caFile":"/var/run/secrets/ca.crt",               // string, optional.
+            "caData":""                                       // []byte, optional.
+        }
     }
     "creationTime": "2016-04-26T05:21:13.140Z",               // string, required
     "lastUpdateTime": "2016-04-26T05:21:13.140Z"              // string, required
@@ -1463,4 +1475,41 @@ Success:
 
 ```
 204 No Content
+```
+
+### List cyclone workers
+
+List all cyclone workers.
+
+**Request**
+
+URL: `GET /api/v1/clouds/{cloud}/workers[namespace=nsvalue]`
+
+Args:
+
+| Name | Type | Detail |
+| --- | --- | --- |
+| namespace | string, required when cloud type is `Kubernetes` | Specify k8s namespace. |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+[
+    {
+        "name": "cyclone-worker-5b30a4e5488571000107261f",
+        "status": "Running",
+        "creationTime": "2018-06-25T16:16:37+08:00",
+        "lastUpdateTime": "2018-06-25T16:16:37+08:00"
+    },
+    {
+        "name": "cyclone-worker-5b31e3f1a482aa0001ae96ef",
+        "status": "Running",
+        "creationTime": "2018-06-26T14:57:53+08:00",
+        "lastUpdateTime": "2018-06-26T14:57:53+08:00"
+    }
+]
 ```

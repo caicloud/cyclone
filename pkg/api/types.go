@@ -566,14 +566,32 @@ const (
 
 type CloudDocker struct {
 	Host     string `json:"host,omitempty" bson:"host,omitempty"`
+	Insecure bool   `json:"insecure,omitempty" bson:"insecure,omitempty"`
 	CertPath string `json:"certPath,omitempty" bson:"certPath,omitempty"`
 }
 
 type CloudKubernetes struct {
-	Host        string `json:"host,omitempty" bson:"host,omitempty"`
-	InCluster   bool   `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
-	BearerToken string `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
-	Namespace   string `json:"namespace,omitempty" bson:"-"`
+	Host            string           `json:"host,omitempty" bson:"host,omitempty"`
+	InCluster       bool             `json:"inCluster,omitempty" bson:"inCluster,omitempty"`
+	Namespace       string           `json:"namespace,omitempty" bson:"-"`
+	BearerToken     string           `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
+	Username        string           `json:"username,omitempty" bson:"username"`
+	Password        string           `json:"password,omitempty" bson:"password"`
+	TLSClientConfig *TLSClientConfig `json:"tlsClientConfig,omitempty" bson:"tlsClientConfig"`
+}
+
+// +k8s:deepcopy-gen=true
+// TLSClientConfig contains settings to enable transport layer security
+type TLSClientConfig struct {
+	// Server should be accessed without verifying the TLS certificate. For testing only.
+	Insecure bool `json:"insecure,omitempty" bson:"insecure"`
+
+	// Trusted root certificates for server
+	CAFile string `json:"caFile,omitempty" bson:"caFile"`
+
+	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
+	// CAData takes precedence over CAFile
+	CAData []byte `json:"caData,omitempty" bson:"caData"`
 }
 
 // Cloud represents clouds for workers.
@@ -581,7 +599,6 @@ type Cloud struct {
 	ID         string           `bson:"_id,omitempty" json:"id,omitempty"`
 	Type       CloudType        `bson:"type,omitempty" json:"type,omitempty"`
 	Name       string           `json:"name,omitempty" bson:"name,omitempty"`
-	Insecure   bool             `json:"insecure,omitempty" bson:"insecure,omitempty"`
 	Docker     *CloudDocker     `json:"docker,omitempty" bson:"docker,omitempty"`
 	Kubernetes *CloudKubernetes `json:"kubernetes,omitempty" bson:"kubernetes,omitempty"`
 }
