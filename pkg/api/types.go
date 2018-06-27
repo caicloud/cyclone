@@ -577,7 +577,7 @@ type CloudKubernetes struct {
 	BearerToken     string           `json:"bearerToken,omitempty" bson:"bearerToken,omitempty"`
 	Username        string           `json:"username,omitempty" bson:"username"`
 	Password        string           `json:"password,omitempty" bson:"password"`
-	TLSClientConfig *TLSClientConfig `json:"TLSClientConfig,omitempty" bson:"TLSClientConfig"`
+	TLSClientConfig *TLSClientConfig `json:"tlsClientConfig,omitempty" bson:"tlsClientConfig"`
 }
 
 // +k8s:deepcopy-gen=true
@@ -587,11 +587,11 @@ type TLSClientConfig struct {
 	Insecure bool `json:"insecure,omitempty" bson:"insecure"`
 
 	// Trusted root certificates for server
-	CAFile string `json:"CAFile,omitempty" bson:"CAFile"`
+	CAFile string `json:"caFile,omitempty" bson:"caFile"`
 
 	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
 	// CAData takes precedence over CAFile
-	CAData []byte `json:"CAData,omitempty" bson:"CAData"`
+	CAData []byte `json:"caData,omitempty" bson:"caData"`
 }
 
 // Cloud represents clouds for workers.

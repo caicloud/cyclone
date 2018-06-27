@@ -1344,10 +1344,10 @@ Success:
         "username": "root",                                   // string, optional.
         "password": "123456",                                 // string, optional.
         "inCluster": true,                                    // bool, optional.
-        "TLSClientConfig": {                                  // optional.
+        "tlsClientConfig": {                                  // optional.
             "insecure": false,                                // bool, optional.
-            "CAFile":"/var/run/secrets//ca.crt",              // string, optional.
-            "CAData":""                                       // []byte, optional.
+            "caFile":"/var/run/secrets/ca.crt",               // string, optional.
+            "caData":""                                       // []byte, optional.
         }
     }
     "creationTime": "2016-04-26T05:21:13.140Z",               // string, required
