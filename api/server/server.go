@@ -24,7 +24,6 @@ import (
 	"syscall"
 
 	restful "github.com/emicklei/go-restful"
-	swagger "github.com/emicklei/go-restful-swagger12"
 	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
 
@@ -43,21 +42,6 @@ type APIServer struct {
 
 // PrepareRun prepare for apiserver running
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
-	// init api doc
-	if s.Config.ShowAPIDoc {
-		// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
-		config := swagger.Config{
-			WebServices:    restful.DefaultContainer.RegisteredWebServices(), // you control what services are visible.
-			WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
-			ApiPath:        "/apidocs.json",
-
-			// Optionally, specify where the UI is located.
-			SwaggerPath:     "/apidocs/",
-			SwaggerFilePath: "./node_modules/swagger-ui/dist",
-		}
-		swagger.InstallSwaggerService(config)
-	}
-
 	closing := make(chan struct{})
 
 	// init database
