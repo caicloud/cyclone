@@ -62,7 +62,7 @@ func (g *Git) Clone(url, destPath string, event *api.Event) error {
 
 	base := path.Base(destPath)
 	dir := path.Dir(destPath)
-	args := []string{"clone", url, base}
+	args := []string{"clone", "--recursive", url, base}
 
 	output, err := executil.RunInDir(dir, "git", args...)
 	if event.Version.VersionID != "" {
