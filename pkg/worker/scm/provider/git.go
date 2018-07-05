@@ -86,7 +86,7 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 	}
 	cmds := []cmd{
 		// --single-branch only checkout the direct branch, it makes the process faster.
-		cmd{dir, []string{"clone", "-b", "master", "--single-branch", url, base}},
+		cmd{dir, []string{"clone", "-b", "master", "--single-branch", "--recursive", url, base}},
 		cmd{destPath, []string{"fetch", "origin", ref}},
 		cmd{destPath, []string{"checkout", "-qf", "FETCH_HEAD"}},
 	}
@@ -101,7 +101,7 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		}
 
 		cmds = []cmd{
-			cmd{dir, []string{"clone", "-b", targetRef, "--single-branch", url, base}},
+			cmd{dir, []string{"clone", "-b", targetRef, "--single-branch", "--recursive", url, base}},
 			cmd{destPath, []string{"fetch", "origin", sourceRef}},
 			cmd{destPath, []string{"config", "user.email", "devops@caicloud.com"}},
 			cmd{destPath, []string{"config", "user.name", "caicloud-devops"}},
