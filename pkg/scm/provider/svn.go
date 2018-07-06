@@ -110,3 +110,11 @@ func (s *SVN) CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *scm.Web
 func (s *SVN) DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error {
 	return nil
 }
+
+// TODO: oauth by SVN
+func (s *SVN) GetAuthCodeURL(state string, scmType string) (string, error) {
+	return "", nil
+}
+func (s *SVN) Authcallback(code string, state string) (string,error) {
+	return "", nil
+}

@@ -376,3 +376,10 @@ func convertToGithubEvents(events []scm.EventType) []string {
 
 	return ge
 }
+// TODO: oauth by github
+func (g *Github) GetAuthCodeURL(state string, scmType string) (string, error) {
+	return "", nil
+}
+func (g *Github) Authcallback(code string, state string) (string,error) {
+	return "", nil
+}

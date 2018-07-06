@@ -55,6 +55,9 @@ type SCMProvider interface {
 	NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error
 	CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *WebHook) error
 	DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error
+	// gitlib oauth function
+	GetAuthCodeURL(state string, scmType string) (string, error)
+	Authcallback(code, state string)(string,error)
 }
 
 // WebHook represents the params for SCM webhook.
@@ -91,7 +94,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 		return httperror.ErrorContentNotFound.Format("SCM config")
 	}
 
-	if config.AuthType != api.Password && config.AuthType != api.Token {
+	if config.AuthType != api.Password && config.AuthType != api.Token && config.AuthType != api.OAuth {
 		return httperror.ErrorValidationFailed.Format("SCM authType %s is unknow", config.AuthType)
 	}
 
