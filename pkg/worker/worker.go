@@ -18,6 +18,7 @@ package worker
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/golang/glog"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/docker"
 	"github.com/caicloud/cyclone/pkg/scm"
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/stage"
@@ -126,11 +128,15 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		}
 	}
 
+	removeImagesChan := make(chan string)
+	go removeImages(builtImages, removeImagesChan)
+
 	// Execute the integration test stage if necessary.
 	if _, ok := stageSet[api.IntegrationTestStageName]; ok {
 		err = stageManager.ExecIntegrationTest(builtImages, build.Stages.IntegrationTest)
 		if err != nil {
 			log.Error(err.Error())
+			removeImagesChan <- "remove"
 			return
 		}
 	}
@@ -140,7 +146,20 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecImageRelease(builtImages, build.Stages.ImageRelease)
 		if err != nil {
 			log.Error(err.Error())
+			removeImagesChan <- "remove"
 			return
+		}
+	}
+
+	removeImagesChan <- "remove"
+
+	// wait for removing images, otherwise cyclone-sever will terminate worker after received event.
+	for i := 0; i < 3600; i++ {
+		c := <-removeImagesChan
+		if c == "done" {
+			break
+		} else {
+			time.Sleep(1 * time.Second)
 		}
 	}
 
@@ -181,4 +200,21 @@ func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStag
 	}
 
 	return stageSet
+}
+
+func removeImages(images []string, c chan string) {
+	removeChan := <-c
+	if removeChan == "remove" {
+		log.Infof("remove images:%v", images)
+		for _, image := range images {
+			output, err := executil.RunInDir("/", "docker", "rmi", "-f", image)
+			if err != nil {
+				log.Errorf("Error when remove image:%v , error:%v , output:%v", image, err, string(output))
+				continue
+			} else {
+				log.Errorf("remove image:%v success, output:%v", image, string(output))
+			}
+		}
+	}
+	c <- "done"
 }

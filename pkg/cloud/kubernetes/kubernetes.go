@@ -191,6 +191,25 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 		},
 	}
 
+	volumeDockerName := "docker-images"
+	pod.Spec.Containers[0].VolumeMounts = []apiv1.VolumeMount{
+		apiv1.VolumeMount{
+			Name:      volumeDockerName,
+			MountPath: "/var/lib/docker",
+		},
+	}
+
+	pod.Spec.Volumes = []apiv1.Volume{
+		apiv1.Volume{
+			Name: volumeDockerName,
+			VolumeSource: apiv1.VolumeSource{
+				HostPath: &apiv1.HostPathVolumeSource{
+					Path: "/var/lib/cyclone-docker",
+				},
+			},
+		},
+	}
+
 	// Mount the cache volume to the worker.
 	cacheVolume := info.CacheVolume
 	mountPath := info.MountPath
@@ -199,22 +218,23 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 		if pvc, err := c.client.CoreV1().PersistentVolumeClaims(namespace).Get(cacheVolume, meta_v1.GetOptions{}); err == nil {
 			if pvc.Status.Phase == apiv1.ClaimBound {
 				volumeName := "cache-dependency"
-				pod.Spec.Containers[0].VolumeMounts = []apiv1.VolumeMount{
-					apiv1.VolumeMount{
-						Name:      volumeName,
-						MountPath: mountPath,
+
+				cVolumeMount := apiv1.VolumeMount{
+					Name:      volumeName,
+					MountPath: mountPath,
+				}
+				pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, cVolumeMount)
+
+				cVolume := apiv1.Volume{
+					Name: volumeName,
+					VolumeSource: apiv1.VolumeSource{
+						PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+							ClaimName: cacheVolume,
+						},
 					},
 				}
+				pod.Spec.Volumes = append(pod.Spec.Volumes, cVolume)
 
-				pod.Spec.Volumes = []apiv1.Volume{
-					apiv1.Volume{
-						Name: volumeName,
-					},
-				}
-
-				pod.Spec.Volumes[0].PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
-					ClaimName: cacheVolume,
-				}
 			} else {
 				// Just log error and let the pipeline to run in non-cache mode.
 				log.Errorf("Can not use cache volume %s as its status is %v", cacheVolume, pvc.Status.Phase)
