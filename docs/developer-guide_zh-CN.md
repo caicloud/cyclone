@@ -1,3 +1,20 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [开发者指南](#%E5%BC%80%E5%8F%91%E8%80%85%E6%8C%87%E5%8D%97)
+  - [向 Cyclone 进行贡献的工作流](#%E5%90%91-cyclone-%E8%BF%9B%E8%A1%8C%E8%B4%A1%E7%8C%AE%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81)
+  - [搭建你的开发环境](#%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83)
+  - [测试 Cyclone](#%E6%B5%8B%E8%AF%95-cyclone)
+    - [单元测试](#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95)
+    - [端到端测试](#%E7%AB%AF%E5%88%B0%E7%AB%AF%E6%B5%8B%E8%AF%95)
+  - [API 文档](#api-%E6%96%87%E6%A1%A3)
+  - [Cyclone 架构以及工作流](#cyclone-%E6%9E%B6%E6%9E%84%E4%BB%A5%E5%8F%8A%E5%B7%A5%E4%BD%9C%E6%B5%81)
+    - [工作流](#%E5%B7%A5%E4%BD%9C%E6%B5%81)
+    - [软件架构](#%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 开发者指南
 
 这份文档提供给想为 Cyclone 贡献代码或者文档的用户。
@@ -57,28 +74,34 @@
 
 ### 工作流
 
-![flow](flow.png)
+![flow](./images/work-flow-2.7.png)
 
-- Cyclone提供了丰富的[API](http://118.193.142.27:7099/apidocs/)供web应用调用（详见API说明）
-- 通过API建立版本控制系统中代码库与Cyclone服务关联关系后，版本控制系统的提交、发布等动作会通过webhook通知到Cyclone-Server
-- Cyclone-Server启动一个基于Docker in Docker技术的Cyclone-Worker容器，在该容器中从代码库中拉取源码，按照源码中caicloud.yml配置文件，依次执行：
-  - PreBuild：在指定编译环境中编译可执行文件
-  - Build：将可执行文件拷到运行环境容器中，打成镜像发布到镜像仓库中
-  - Integration：运行持续集成所依赖的微服务，启动一个容器执行集成测试，如果微服务镜像名配置为“BUILT_IAMGE”，则使用Build阶段新构建的镜像
-  - PostBuild：启动一个容器执行一些脚本命令，实现镜像发布后的一些关联操作
-  - Deploy：使用发布的镜像部署应用到kubernetes等容器集群Paas平台
+ 虚线框表示规划中的特性
+
+ Cyclone提供了丰富的[API](http://118.193.142.27:7099/apidocs/)供web应用调用（详见API说明）
+
+- 通过调用cyclone-serser的API创建一个基于软件配置管理（SCM）系统中某代码库的流水线，在流水线中定义要执行的各个阶段的操作
+- 直接手动触发，或者通过SCM的提交、发布等动作以webhook的形式触发Cyclone-Server
+- Cyclone-Server启动一个基于Docker in Docker技术的Cyclone-Worker容器，在该容器中，按照pipeline的配置，依次执行：
+  - codeCheckout：从指定代码库中拉取源码
+  - package：启动用户配置的镜像，执行用户配置命令构建代码
+  - imageBuild：根据用户指定的Dockerfile制作镜像
+  - integrationTest：运行持续集成所依赖的微服务，启动一个容器对`imageBuild`阶段构建成功的镜像执行集成测试
+  - imageRelease：将构建成功的镜像发布到镜像仓库中
+  - deploy：使用发布的镜像部署应用到kubernetes等容器集群Paas平台（敬请期待）
 - 构建过程日志可以通过Websocket从Cyclone-Server拉取
-- 构建结束后Cyclone-Server将构建结果和完整构建日志通过邮件通知用户
+- 构建结束后Cyclone-Server将构建结果和完整构建日志通过邮件通知用户（敬请期待）
+
+工作流示例可参考[快速开始](./quick-start_zh-CN.md)
 
 ### 软件架构
 
-![architecture](architecture.png)
+![architecture](./images/architecture-2.7.png)
 
 每个立方体代表一个容器
 
-- Cyclone-Server中Api-Server组件提供Restful API服务，被调用后需要较长时间处理的任务生成一个待处理事件写入etcd
-- EventManager加载etcd中未完成事件，监视事件变化，发送新增待处理事件到WorkerManager中
-- WorkerManager调用Docker API启一个Cyclone－Worker容器，通过环境变量传入需要处理的事件ID等信息
-- Cyclone-Worker使用事件ID作为token（有效期2小时）调用API，拉取事件信息依次启容器执行integration、prebuild、build、post build，完成后反馈事件执行结果，构建过程日志推送到Log-Server，转存到Kafka
-- Log-Server组件从Kafka拉取日志推送给用户
+- Cyclone-Server中Api-Server组件提供Restful API服务，被调用后需要较长时间处理的任务生成一个待处理事件写入mongoDB
+- Scheduler定期从mongoDB任务队列中获取任务，然后调度worker运行
+- Cyclone-Worker启动后，从server获取任务信息，然后执行pipeline的各个stage，在执行的同时，将日志实时输出到server
+- Log-Server负责收集Worker发送过来的实时日志，并持久化到日志文件中
 - 需要持久化的数据存入mongo
