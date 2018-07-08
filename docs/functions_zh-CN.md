@@ -1,67 +1,85 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [功能介绍](#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D)
+  - [统一管理](#%E7%BB%9F%E4%B8%80%E7%AE%A1%E7%90%86)
+  - [持续集成](#%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90)
+  - [自动触发](#%E8%87%AA%E5%8A%A8%E8%A7%A6%E5%8F%91)
+  - [实时日志](#%E5%AE%9E%E6%97%B6%E6%97%A5%E5%BF%97)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 功能介绍
 
-## 关联版本管理工具
+## 统一管理
+<!--## 关联软件配置管理系统 -->
 
-Cyclone 可以关联多种常用版本管理工具（git、svn等），通过 OAuth 授权后，拉取代码，建立 webhook。当用户向代码库中提交 commit、pull request 和 release 版本时自动触发 CI/CD 工作流水线。
+Cyclone 支持通过创建项目关联多种软件配置管理系统（GitHub、GitLab、SVN）来统一管理一组流水线。
 
-- 创建与版本管理工具关联的服务
+- 创建与软件配置管理系统关联的项目
 
 <div align="center">
-	<img src="./create_service.png" alt="create_service" width="500">
+	<img src="./images/create_project.png" alt="create_project" width="500">
 </div>
 
-- 列出所有服务
+- 列出所有项目
 
 <div align="center">
-	<img src="./list_services.png" alt="list_services" width="500">
+	<img src="./images/list_projects.png" alt="list_projects" width="500">
 </div>
 
 ## 持续集成
 
-全过程可视化的工作流水线："prebuild" 编译可执行文件，"build" 构建发布镜像， "integration" 集成测试，"publish" 发布镜像，"post build" 镜像发布后的关联操作，"deploy" 使用发布镜像部署应用。构建结果邮件通知。所有过程均以容器为载体，消除环境差异。
+全过程可视化的工作流水线："codeCheckout" 从指定仓库拉去代码；"package" 编译可执行文件；"imageBuild" 构建发布镜像；"integration" 集成测试；"imageRelease" 发布镜像。所有过程均以容器为载体，消除环境差异。
 
-- 工作流水线日志
+- 检出代码
 
 <div align="center">
-	<img src="./logs.png" alt="logs" width="500">
+	<img src="./images/codeCheckout.png" alt="codeCheckout" width="500">
 </div>
 
-- 邮件通知
+- 构建代码
 
 <div align="center">
-	<img src="./pagging.png" alt="pagging" width="500">
+	<img src="./images/package.png" alt="package" width="500">
 </div>
 
-## 资源管理
-
-任务调度逻辑与构建任务分离。支持添加用户工作节点，多样化的构建配额方案。
-
-- 用户资源设置
+- 镜像构建
 
 <div align="center">
-	<img src="./quota.png" alt="quota" width="500">
+	<img src="./images/imageBuild.png" alt="imageBuild" width="500">
 </div>
 
-- 单次构建资源限制
+- 集成测试
 
 <div align="center">
-	<img src="./create_version.png" alt="create_version" width="500">
+	<img src="./images/integration.png" alt="integration" width="500">
 </div>
 
-## 联合发布与依赖管理
-
-管理组件支持微服务多组件联合发布，使用图形化界面展示组件的依赖关系及联合发布的过程和状态，应用拓扑关系图形化。
+- 发布仓库
 
 <div align="center">
-	<img src="./dependency.png" alt="dependency" width="500">
+	<img src="./images/imageRelease.png" alt="imageRelease" width="500">
 </div>
 
-## 持续交付
 
-基于发布策略和角色控制功能，提供灵活的持续部署方式。基于容器和镜像的版本控制，提供多种升级回滚策略。
+## 自动触发
 
-- 多种部署方案
+支持在创建流水线时设置GitHub/GitLab的webhook，当用户向代码库中提交 commit、release 版本等操作时自动触发 CI/CD 工作流水线。
+
+- 创建webhook
 
 <div align="center">
-	<img src="./deployment.png" alt="deployment" width="500">
+	<img src="./images/webhook.png" alt="webhook" width="500">
+</div>
+
+## 实时日志
+
+触发流水线执行后，支持查看各阶段实时日志。
+
+- 获取实时日志
+
+<div align="center">
+	<img src="./images/logStream.png" alt="logStream" width="500">
 </div>
