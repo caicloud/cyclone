@@ -30,6 +30,9 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
+
+	"github.com/caicloud/cyclone/cmd/worker/options"
+	"github.com/caicloud/cyclone/pkg/osutil"
 )
 
 // gitLabServer represents the server address for public Gitlab.
@@ -295,4 +298,72 @@ func (g *Gitlab) NewTagFromLatest(cfg *api.SCMConfig, tagName, description, comm
 
 	_, _, err = client.Tags.CreateTag(owner+"/"+name, tag)
 	return err
+}
+
+// GetAuthCodeURL gets the URL for token request.
+func (g *Gitlab) GetAuthCodeURL(state string, scmType api.SCMType) (string, error) {
+	return getAuthCodeURL(state, scmType)
+}
+
+func (g *Gitlab) Authcallback(code string, state string) (string, error) {
+	if code == "" || state == "" {
+		return "", fmt.Errorf("code: %s or state: %s is nil", code, state)
+	}
+
+	uiPath := osutil.GetStringEnv(options.ConsoleWebEndpoint, "")
+	redirectURL := fmt.Sprintf("%s/devops/workspace/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
+	token, err := g.getToken(code, state)
+	if err != nil {
+		return "", err
+	}
+	// add token, username, server to redirectURL
+	userName, server, err := g.getUserInfo(token)
+	redirectURL = redirectURL + fmt.Sprintf("&token=%s&username=%s&server=%s",
+		token.AccessToken, userName, server)
+	return redirectURL, nil
+}
+
+func (g *Gitlab) getToken(code, state string) (*oauth2.Token, error) {
+	config, err := getConfig(api.Gitlab)
+	if err != nil {
+		return nil, err
+	}
+
+	var token *oauth2.Token
+	token, err = config.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid() {
+		return nil, fmt.Errorf("token invalid. Got: %v", token)
+	}
+	return token, nil
+}
+
+func (g *Gitlab) getUserInfo(token *oauth2.Token) (string, string, error) {
+	accessToken := token.AccessToken
+	gitlabServer := osutil.GetStringEnv(options.GitlabURL, "http://192.168.21.100:10080")
+	userApi := fmt.Sprintf("%s/api/v3/user?access_token=%s", gitlabServer, accessToken)
+	if req, err := http.NewRequest(http.MethodGet, userApi, nil); err != nil {
+		log.Error(err.Error())
+		return "", "", nil
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		var userInfo = &api.GitlabUserInfo{}
+		json.Unmarshal(body, &userInfo)
+		userName := userInfo.Username
+		fmt.Println(userInfo)
+		server := gitlabServer
+		return userName, server, nil
+	}
 }

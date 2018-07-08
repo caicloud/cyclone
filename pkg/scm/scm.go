@@ -55,6 +55,9 @@ type SCMProvider interface {
 	NewTagFromLatest(scm *api.SCMConfig, tagName, description, commitID, url string) error
 	CreateWebHook(scm *api.SCMConfig, repoURL string, webHook *WebHook) error
 	DeleteWebHook(scm *api.SCMConfig, repoURL string, webHookUrl string) error
+	// gitlib oauth function
+	GetAuthCodeURL(state string, scmType api.SCMType) (string, error)
+	Authcallback(code, state string) (string, error)
 }
 
 // WebHook represents the params for SCM webhook.
