@@ -60,7 +60,7 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 	}
 
 	args := []string{"checkout", "--username", username, "--password", password,
-		"--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache", url, destPath}
+		"--non-interactive", "--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url, destPath}
 	output, err := executil.RunInDir("./", "svn", args...)
 	if err != nil {
 		log.Errorf("fail to clone as %v", err)
