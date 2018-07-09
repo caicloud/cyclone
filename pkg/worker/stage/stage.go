@@ -76,7 +76,9 @@ func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cyclones
 		log.Errorf(err.Error())
 	}
 
-	imageNamePrefix = getImagePrifix(registry.Server, registry.Repository)
+	if registry != nil {
+		imageNamePrefix = getImagePrifix(registry.Server, registry.Repository)
+	}
 
 	return &stageManager{
 		dockerManager: dockerManager,
