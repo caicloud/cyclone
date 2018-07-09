@@ -41,7 +41,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 ## 创建项目
 
-一个 project（项目）可以管理基于同一个软件配置管理（SCM,Software Configuration Management）系统中的repo（代码库）所创建的一系列流水线，project必须包含SCM的认证信息。Cyclone支持三种SCM：GitHub，GitLab和SVN。
+一个 project（项目）可以管理基于同一个源码管理系统（SCM,Source Code Management）中的repo（代码库）所创建的一系列流水线，project必须包含SCM的认证信息。Cyclone支持三种SCM：GitHub，GitLab和SVN。
 
 ```shell
 # create a project.

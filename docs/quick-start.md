@@ -37,11 +37,11 @@
  }' ''$HOST_URL'/api/v1/clouds'
  ```
 
- The command above would create a cloud at your local computer, then you could set up the project.
+ The command above would registry your local computer as a cloud, then you could set up the project.
 
  ## Create a project
 
- A project represents a group to manage a set of related pipelines. project must have a credential to access your SCM(Software Configuration Management) repository, and now Cyclone supports three types of SCM: GitHub, GitLab and SVN.
+ A project represents a group to manage a set of related pipelines. project must have a credential to access your SCM(Source Code Management) repository, and now Cyclone supports three types of SCM: GitHub, GitLab and SVN.
 
  you can create a project by:
 
