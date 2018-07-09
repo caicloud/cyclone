@@ -107,6 +107,9 @@ const (
 
 	// MavenTool represents the NPM tool.
 	NPMBuildTool BuildToolName = "NPM"
+
+	// GradleBuildTool represents the Gradle tool.
+	GradleBuildTool BuildToolName = "Gradle"
 )
 
 // BuildTool represents the build tool for CI.

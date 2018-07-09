@@ -152,8 +152,11 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 			bindVolume = "/root/.m2:/root/.m2"
 		case api.NPMBuildTool:
 			bindVolume = "/root/.npm:/root/.npm"
+		case api.GradleBuildTool:
+			bindVolume = "/root/.gradle:/root/.gradle"
 		default:
-			return fmt.Errorf("Not support build tool %s, only supports: %s, %s", buildInfo.BuildTool.Name, api.MavenBuildTool, api.NPMBuildTool)
+			return fmt.Errorf("Not support build tool %s, only supports: %s, %s, %s",
+				buildInfo.BuildTool.Name, api.MavenBuildTool, api.NPMBuildTool, api.GradleBuildTool)
 		}
 
 		hostConfig.Binds = append(hostConfig.Binds, bindVolume)

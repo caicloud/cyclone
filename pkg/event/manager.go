@@ -146,9 +146,12 @@ func createWorkerForEvent(event *api.Event) error {
 					workerInfo.MountPath = "/root/.m2"
 				case api.NPMBuildTool:
 					workerInfo.MountPath = "/root/.npm"
+				case api.GradleBuildTool:
+					workerInfo.MountPath = "/root/.gradle"
 				default:
 					// Just log error and let the pipeline to run in non-cache mode.
-					return fmt.Errorf("Build tool %s is not supported, only supports: %s, %s", tool, api.MavenBuildTool, api.NPMBuildTool)
+					return fmt.Errorf("Build tool %s is not supported, only supports: %s, %s, %s",
+						tool, api.MavenBuildTool, api.NPMBuildTool, api.GradleBuildTool)
 				}
 
 				workerInfo.CacheVolume = cache.Name
