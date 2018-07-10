@@ -60,11 +60,6 @@ type WorkerQuota struct {
 	RequestsMemory string `bson:"requestsMemory,omitempty" json:"requestsMemory,omitempty"`
 }
 
-// type WorkerCloudOptions struct {
-// 	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cluster to create the worker"`
-// 	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
-// }
-
 type WorkerLocation struct {
 	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cloud to create the worker"`
 	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
