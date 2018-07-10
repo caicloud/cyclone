@@ -153,7 +153,7 @@ func (c *k8sCloud) CanProvision(quota options.Quota) (bool, error) {
 func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) (*api.WorkerInfo, error) {
 	log.Infof("create worker with info: %v; opts: %v", info, opts)
 
-	can, err := c.CanProvision(opts.Quota)
+	can, err := c.CanProvision(info.Quota)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 					Image:           opts.WorkerImage,
 					Env:             buildK8SEnv(eventID, *opts),
 					WorkingDir:      scm.GetCloneDir(),
-					Resources:       opts.Quota.ToK8SQuota(),
+					Resources:       info.Quota.ToK8SQuota(),
 					SecurityContext: &apiv1.SecurityContext{Privileged: &Privileged},
 					ImagePullPolicy: apiv1.PullAlways,
 				},
