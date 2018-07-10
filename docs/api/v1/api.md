@@ -176,36 +176,36 @@ In path parameter, both `{project}` and `{pipiline}` are `name`, and only `{reco
   "name": "string",                             // name of the project, if not provided, will be generated from alias.
   "alias": "string",                            // alias of the project
   "description": "string",                      // description of the project
-  "owner": "string"                             // owner of the project
+  "owner": "string",                            // owner of the project
   "scm": {                                      // required
-    "type": "",                                 // string, required. Only support "Gitlab" and "Github".
+    "type": "",                                 // string, required. Only support "Gitlab","Github" and "SVN".
     "server": "",                               // string, required
     "username": "",                             // string, optional
     "password": "",                             // string, optional
-    "token": "",                                // string, optional
+    "token": ""                                 // string, optional
   },
   "registry": {                                 // optional
     "server": "",                               // string, required
     "repository": "",                           // string, required
     "username": "",                             // string, optional
-    "password": "",                             // string, optional
+    "password": ""                              // string, optional
   },
   "worker": {                                   // optional
-    "cloudOptions": {
-        "cloudName": "k8s",                            // string, required
-        "namespace": "cyclone-worker",                 // string, optional
-        "quota": {                                     // map, optional
-            "requests.cpu": "0.5",                     // string, optional
-            "requests.memory": "1G",                   // string, optional
-            "limits.cpu": "1",                         // string, optional
-            "limits.memory": "2G"                      // string, optional
-        }
+    "location": {
+        "cloudName": "k8s",                     // string, required
+        "namespace": "cyclone-worker"           // string, optional
     },
     "dependencyCaches": {                       // map, optional
         "Maven": {
             "name": "devops-maven-cache"        // string, required
         },
     },
+    "quota": {
+        "requests.cpu": "0.5",                  // string, optional
+        "requests.memory": "1G",                // string, optional
+        "limits.cpu": "1",                      // string, optional
+        "limits.memory": "2G"                   // string, optional
+    }
   },
   "creationTime": "2017-08-23T09:44:08.653Z",   // created time of the project
   "lastUpdateTime": "2017-08-23T09:44:08.653Z", // updated time of the project

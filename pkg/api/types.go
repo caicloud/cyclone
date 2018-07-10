@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+
+	"github.com/caicloud/cyclone/cmd/worker/options"
 )
 
 // Project represents a group to manage a set of related applications. It maybe a real project, which contains several or many applications.
@@ -48,20 +50,19 @@ type Registry struct {
 type WorkerConfig struct {
 	Location         *WorkerLocation                    `bson:"location,omitempty" json:"location,omitempty"`
 	DependencyCaches map[BuildToolName]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
+	Quota            WorkerQuota                        `bson:"quota,omitempty" json:"quota,omitempty" description:"quota for cyclone worker"`
 }
 
-// type WorkerCloudOptions struct {
-// 	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cluster to create the worker"`
-// 	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
-// }
+type WorkerQuota struct {
+	LimitsCPU      string `bson:"limitsCPU,omitempty" json:"limitsCPU,omitempty"`
+	LimitsMemory   string `bson:"limitsMemory,omitempty" json:"limitsMemory,omitempty"`
+	RequestsCPU    string `bson:"requestsCPU,omitempty" json:"requestsCPU,omitempty"`
+	RequestsMemory string `bson:"requestsMemory,omitempty" json:"requestsMemory,omitempty"`
+}
 
 type WorkerLocation struct {
 	CloudName string `bson:"cloudName,omitempty" json:"cloudName,omitempty" description:"name of cloud to create the worker"`
 	Namespace string `bson:"namespace,omitempty" json:"namespace,omitempty" description:"k8s namespace to create the worker"`
-}
-
-type WorkerQuota struct {
-	Request string
 }
 
 // DependencyCache represents the cache volume of dependency for CI.
@@ -637,6 +638,9 @@ type WorkerInfo struct {
 
 	// MountPath represents the mount path for the cache volume.
 	MountPath string
+
+	// quota represents the resource quota for worker.
+	Quota options.Quota
 
 	Name string
 
