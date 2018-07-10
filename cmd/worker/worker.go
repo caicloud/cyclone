@@ -22,10 +22,14 @@ import (
 	"os"
 	"sort"
 
-	"github.com/caicloud/cyclone/cmd/worker/options"
-	"github.com/caicloud/cyclone/pkg/worker"
 	"github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
+
+	"github.com/caicloud/cyclone/cmd/worker/options"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/github"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/gitlab"
+	_ "github.com/caicloud/cyclone/pkg/scm/provider/svn"
+	"github.com/caicloud/cyclone/pkg/worker"
 )
 
 // newCliApp create a new server cli app
