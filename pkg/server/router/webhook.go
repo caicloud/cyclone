@@ -163,13 +163,24 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			return
 		}
 
-		performParams = &api.PipelinePerformParams{
-			Ref:         fmt.Sprintf(*event.Ref),
-			Description: "Triggered by push",
-			Stages:      scmTrigger.Push.Stages,
+		ref := *event.Ref
+		trigger := false
+		for _, b := range scmTrigger.Push.Branches {
+			if strings.HasSuffix(ref, b) || strings.HasSuffix(ref, "master") {
+				trigger = true
+				break
+			}
 		}
 
-		log.Info("Triggered by Github push event")
+		if trigger {
+			performParams = &api.PipelinePerformParams{
+				Ref:         ref,
+				Description: "Triggered by push",
+				Stages:      scmTrigger.Push.Stages,
+			}
+
+			log.Info("Triggered by Github push event")
+		}
 	default:
 		log.Errorf("event type not support.")
 
@@ -296,13 +307,24 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			return
 		}
 
-		performParams = &api.PipelinePerformParams{
-			Ref:         event.Ref,
-			Description: "Triggered by push",
-			Stages:      scmTrigger.Push.Stages,
+		ref := event.Ref
+		trigger := false
+		for _, b := range scmTrigger.Push.Branches {
+			if strings.HasSuffix(ref, b) || strings.HasSuffix(ref, "master") {
+				trigger = true
+				break
+			}
 		}
 
-		log.Info("Triggered by Gitlab push event")
+		if trigger {
+			performParams = &api.PipelinePerformParams{
+				Ref:         ref,
+				Description: "Triggered by push",
+				Stages:      scmTrigger.Push.Stages,
+			}
+
+			log.Info("Triggered by Gitlab push event")
+		}
 	default:
 		log.Errorf("event type not support.")
 	}
