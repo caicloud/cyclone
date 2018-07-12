@@ -196,23 +196,25 @@ func createWorkerForEvent(event *api.Event) error {
 	return nil
 }
 
-func getWorkerQuota(defaultQuota options.Quota, workerQuota api.WorkerQuota) options.Quota {
+func getWorkerQuota(defaultQuota options.Quota, workerQuota *api.WorkerQuota) options.Quota {
 	quota := defaultQuota.DeepCopy()
 
-	if workerQuota.LimitsCPU != "" {
-		quota[options.ResourceLimitsCPU].Set(workerQuota.LimitsCPU)
-	}
+	if workerQuota != nil {
+		if workerQuota.LimitsCPU != "" {
+			quota[options.ResourceLimitsCPU].Set(workerQuota.LimitsCPU)
+		}
 
-	if workerQuota.LimitsMemory != "" {
-		quota[options.ResourceLimitsMemory].Set(workerQuota.LimitsMemory)
-	}
+		if workerQuota.LimitsMemory != "" {
+			quota[options.ResourceLimitsMemory].Set(workerQuota.LimitsMemory)
+		}
 
-	if workerQuota.RequestsCPU != "" {
-		quota[options.ResourceRequestsCPU].Set(workerQuota.RequestsCPU)
-	}
+		if workerQuota.RequestsCPU != "" {
+			quota[options.ResourceRequestsCPU].Set(workerQuota.RequestsCPU)
+		}
 
-	if workerQuota.RequestsMemory != "" {
-		quota[options.ResourceRequestsMemory].Set(workerQuota.RequestsMemory)
+		if workerQuota.RequestsMemory != "" {
+			quota[options.ResourceRequestsMemory].Set(workerQuota.RequestsMemory)
+		}
 	}
 
 	return quota

@@ -50,7 +50,7 @@ type Registry struct {
 type WorkerConfig struct {
 	Location         *WorkerLocation                    `bson:"location,omitempty" json:"location,omitempty"`
 	DependencyCaches map[BuildToolName]*DependencyCache `bson:"dependencyCaches,omitempty" json:"dependencyCaches,omitempty" description:"dependency caches for worker to speed up"`
-	Quota            WorkerQuota                        `bson:"quota,omitempty" json:"quota,omitempty" description:"quota for cyclone worker"`
+	Quota            *WorkerQuota                       `bson:"quota,omitempty" json:"quota,omitempty" description:"quota for cyclone worker"`
 }
 
 type WorkerQuota struct {
