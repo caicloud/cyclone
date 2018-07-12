@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	docker_client "github.com/fsouza/go-dockerclient"
 	log "github.com/golang/glog"
@@ -111,11 +112,13 @@ func (dm *DockerManager) PullImage(image string, auth docker_client.AuthConfigur
 		auth = docker_client.AuthConfiguration{}
 	}
 
+	t := time.Now()
 	log.Infof("image(%s) does not exist, pulling ...", image)
 	if err := dm.Client.PullImage(opts, auth); err != nil {
 		return fmt.Errorf("Fail to pull image %s as %v", image, err)
 	}
 
+	log.Infof("image(%s) pulled, total time:%v", image, time.Since(t).Seconds())
 	return nil
 }
 

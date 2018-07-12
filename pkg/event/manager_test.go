@@ -15,7 +15,7 @@ func TestGetWorkerQuota(t *testing.T) {
 		RequestsCPU:    "1",
 		RequestsMemory: "2Gi",
 	}
-	quota := getWorkerQuota(options.DefaultQuota, workerQuota)
+	quota := getWorkerQuota(options.DefaultQuota, &workerQuota)
 
 	if quota[options.ResourceLimitsCPU].String() != "2" {
 		t.Error("error:", options.ResourceLimitsCPU)
