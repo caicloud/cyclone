@@ -101,6 +101,12 @@ type Provider interface {
 }
 
 func NewCloudProvider(c *api.Cloud) (Provider, error) {
+	if c == nil {
+		err := fmt.Errorf("Cloud config is nil")
+		log.Error(err)
+		return nil, err
+	}
+
 	ncf, ok := cloudProviderFactory[c.Type]
 	if !ok {
 		err := fmt.Errorf("cloud type %s is not supported", c.Type)
