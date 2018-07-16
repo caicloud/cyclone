@@ -166,7 +166,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		ref := *event.Ref
 		trigger := false
 		for _, b := range scmTrigger.Push.Branches {
-			if strings.HasSuffix(ref, b) || strings.HasSuffix(ref, "master") {
+			if strings.HasSuffix(ref, b) {
 				trigger = true
 				break
 			}
@@ -310,7 +310,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 		ref := event.Ref
 		trigger := false
 		for _, b := range scmTrigger.Push.Branches {
-			if strings.HasSuffix(ref, b) || strings.HasSuffix(ref, "master") {
+			if strings.HasSuffix(ref, b) {
 				trigger = true
 				break
 			}
