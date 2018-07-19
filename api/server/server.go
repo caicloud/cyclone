@@ -24,7 +24,6 @@ import (
 	"syscall"
 
 	restful "github.com/emicklei/go-restful"
-	swagger "github.com/emicklei/go-restful-swagger12"
 	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
 

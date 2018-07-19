@@ -38,7 +38,7 @@ install:
 
 script:
   - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/' | grep -v '/notify')
-  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api,notify
+  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,docs,api,notify
   # - ./scripts/e2e-docker.sh
 
 after_success:
