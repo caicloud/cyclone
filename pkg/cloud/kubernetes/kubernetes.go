@@ -252,6 +252,10 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 	err = wait.Poll(7*time.Second, 2*time.Minute, check)
 	if err != nil {
 		log.Errorf("timeout to wait worker pod to be running as %v", err)
+		errd := c.client.CoreV1().Pods(namespace).Delete(pod.Name, &meta_v1.DeleteOptions{})
+		if errd != nil {
+			log.Errorf("wait worker pod to be running timeout, delete pod error:%v", errd)
+		}
 		return nil, err
 	}
 
