@@ -198,3 +198,24 @@ func (g *GitlabV4) NewTagFromLatest(tagName, description, commitID, url string) 
 	log.Error(err)
 	return err
 }
+
+// CreateStatuses generate a new status for repository.
+func (g *GitlabV4) CreateStatuses(state, description, targetURL, statusesURL string) error {
+	owner, project, commitSha, err := splitStatusesURL(statusesURL)
+	if err != nil {
+		return err
+	}
+
+	context := "continuous-integration/cyclone"
+
+	status := &gitlab.SetCommitStatusOptions{
+		State:       gitlab.BuildStateValue(state),
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+	}
+
+	_, _, err = g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, status)
+	log.Error(err)
+	return nil
+}

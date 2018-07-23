@@ -356,6 +356,7 @@ type PipelineRecord struct {
 	StageStatus   *StageStatus           `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
 	Status        Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
 	ErrorMessage  string                 `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
+	StatusesURL   string                 `bson:"statusesURL,omitempty" json:"StatusesURL,omitempty" description:"scm Statuses URL"`
 	StartTime     time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
 	EndTime       time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
 }
@@ -682,8 +683,9 @@ const (
 
 // pipeline record trigger type.
 const (
-	TriggerSCM  string = "webhook"
-	TriggerCron string = "timer"
+	TriggerSCM   string = "webhook"
+	TriggerSCMPR string = "webhook-pr"
+	TriggerCron  string = "timer"
 )
 
 // WorkerInstance represents some infomation of cyclone worker instance, e.g. pod of k8s, container of docker.

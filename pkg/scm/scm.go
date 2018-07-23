@@ -56,6 +56,7 @@ type SCMProvider interface {
 	NewTagFromLatest(tagName, description, commitID, url string) error
 	CreateWebHook(repoURL string, webHook *WebHook) error
 	DeleteWebHook(repoURL string, webHookUrl string) error
+	CreateStatuses(state, description, targetURL, statusesURL string) error
 }
 
 // WebHook represents the params for SCM webhook.
