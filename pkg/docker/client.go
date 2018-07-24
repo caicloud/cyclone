@@ -160,7 +160,7 @@ func (dm *DockerManager) BuildImage(options docker_client.BuildImageOptions) err
 }
 
 func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOptions,
-	auth docker_client.AuthConfiguration, logFile io.Writer) (string, error) {
+	auth docker_client.AuthConfiguration, logFile io.Writer, useDefaultStartCommand bool) (string, error) {
 
 	// make sure there will be only one version(latest) image pulled,
 	// instead of all version images.
@@ -178,9 +178,16 @@ func (dm *DockerManager) StartContainer(options docker_client.CreateContainerOpt
 	}
 
 	cmds := options.Config.Cmd
-	// keep the container running after starts
-	options.Config.Entrypoint = entrypoint
-	options.Config.Cmd = startCmds
+
+	if useDefaultStartCommand {
+		// use Entrypoint and Cmd written in Dockerfile, default.
+		options.Config.Entrypoint = nil
+		options.Config.Cmd = nil
+	} else {
+		// keep the container running after starts.
+		options.Config.Entrypoint = entrypoint
+		options.Config.Cmd = startCmds
+	}
 
 	// Create the container
 	container, err := dm.Client.CreateContainer(options)

@@ -197,7 +197,7 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 	}()
 
-	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
+	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile, false)
 	if err != nil {
 		return err
 	}
@@ -419,7 +419,7 @@ func (sm *stageManager) ExecIntegrationTest(builtImages []string, stage *api.Int
 		}
 	}()
 
-	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile)
+	cid, err = sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), logFile, true)
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func (sm *stageManager) StartServicesForIntegrationTest(builtImages []string, se
 			// HostConfig: hostConfig,
 		}
 
-		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), nil)
+		cid, err := sm.dockerManager.StartContainer(cco, generateAuthConfig(sm.registry), nil, false)
 		if err != nil {
 			return nil, err
 		}
