@@ -331,9 +331,11 @@ func (sm *stageManager) buildImage(buildInfo *api.ImageBuildInfo, status *api.Im
 
 	opt.Dockerfile = "Dockerfile"
 	if buildInfo.Dockerfile != "" {
-		if err = osutil.ReplaceFile(opt.ContextDir+"/Dockerfile", strings.NewReader(buildInfo.Dockerfile)); err != nil {
+		dfName := fmt.Sprintf("%s-%s", "Dockerfile", buildInfo.TaskName)
+		if err = osutil.ReplaceFile(opt.ContextDir+"/"+dfName, strings.NewReader(buildInfo.Dockerfile)); err != nil {
 			return
 		}
+		opt.Dockerfile = dfName
 	} else {
 		if buildInfo.DockerfilePath != "" {
 			opt.Dockerfile = strings.TrimPrefix(strings.TrimPrefix(buildInfo.DockerfilePath, buildInfo.ContextDir), "/")
