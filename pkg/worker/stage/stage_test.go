@@ -215,14 +215,14 @@ func TestExecImageBuild(t *testing.T) {
 		"multiple image build": {
 			[]*api.ImageBuildInfo{
 				&api.ImageBuildInfo{
-					TaskName:       "v1",
-					ImageName:      "cargo.caicloud.io/caicloud/test:v1",
-					DockerfilePath: "Dockerfile",
+					TaskName:   "v1",
+					ImageName:  "cargo.caicloud.io/caicloud/test:v1",
+					Dockerfile: "FROM alpine \nADD README.md /README.md",
 				},
 				&api.ImageBuildInfo{
-					TaskName:       "v2",
-					ImageName:      "cargo.caicloud.io/caicloud/test:v2",
-					DockerfilePath: "Dockerfile",
+					TaskName:   "v2",
+					ImageName:  "cargo.caicloud.io/caicloud/test:v2",
+					Dockerfile: "FROM alpine \nADD Dockerfile /Dockerfile",
 				},
 			},
 			true,
