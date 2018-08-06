@@ -30,6 +30,7 @@ import (
 	"gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/event"
 	"github.com/caicloud/cyclone/pkg/store"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
@@ -204,6 +205,9 @@ func (m *pipelineRecordManager) DeletePipelineRecord(pipelineRecordID string) er
 	// delete related pipeline record log.
 	m.DeletePipelineRecordLogs(pipelineRecordID)
 
+	// delete related event and cyclone-worker pod.
+	event.DeleteEventByRecordID(pipelineRecordID)
+
 	// delete record in mongodb.
 	return m.dataStore.DeletePipelineRecordByID(pipelineRecordID)
 }
@@ -219,6 +223,11 @@ func (m *pipelineRecordManager) ClearPipelineRecordsOfPipeline(pipelineID string
 	}
 
 	for _, record := range records {
+		if record.Status == api.Running || record.Status == api.Pending {
+			// delete related event and cyclone-worker pod.
+			event.DeleteEventByRecordID(record.ID)
+		}
+
 		if err := ds.DeletePipelineRecordByID(record.ID); err != nil {
 			return fmt.Errorf("Fail to delete the record %s as %s", record.ID, err.Error())
 		}

@@ -268,16 +268,16 @@ func IsEventFinished(event *api.Event) bool {
 	return false
 }
 
-// DeleteEvent deletes the event. If it is running, delete its worker at the same time.
-func DeleteEvent(id string) error {
-
-	event, err := GetEvent(id)
-	if err != nil {
-		log.Errorf("fail to get the event %s as %s", id, err.Error())
-		return err
-	}
+// DeleteEventByRecordID deletes the event. If it is running, delete its worker at the same time.
+func DeleteEventByRecordID(id string) error {
 	ds := store.NewStore()
 	defer ds.Close()
+
+	event, err := ds.GetEventByRecordID(id)
+	if err != nil {
+		log.Errorf("fail to get the event by record %s as %s", id, err.Error())
+		return err
+	}
 
 	// Delete the event in event queue.
 	if err := ds.DeleteEvent(id); err != nil {
