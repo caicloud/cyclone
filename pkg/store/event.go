@@ -141,3 +141,14 @@ func (d *DataStore) ResetEvent(event *api.Event) error {
 
 	return nil
 }
+
+// GetEventByRecordID gets the event by pipeline record id.
+func (d *DataStore) GetEventByRecordID(id string) (*api.Event, error) {
+	event := &api.Event{}
+	query := bson.M{"pipelineRecord._id": id}
+	if err := d.eventCollection.Find(query).One(event); err != nil {
+		return nil, err
+	}
+
+	return event, nil
+}
