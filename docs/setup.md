@@ -12,7 +12,7 @@ kubernetes：1.2+
 
 There are two ways to set up Cyclone, either via Docker Compose or kubectl.
 
-At first, you need to build Cyclone-server and Cyclone-worker docker images, by following these instructions: 
+At first, you need to build Cyclone-server and Cyclone-worker docker images, by following these instructions:
 
 ```
 git clone https://github.com/caicloud/cyclone
@@ -27,7 +27,7 @@ cd cyclone
 docker-compose -f docker-compose.yml up -d
 ```
 
-- Using Kubectl: this approach requires a few yaml files. You can read related files in cyclone/scripts/k8s for more detial, and adjust the parameters before executing these instructions:
+- Using Kubectl: this approach requires a few yaml files. You can read related files in cyclone/scripts/k8s for more details, and adjust the parameters before executing these instructions:
 
 ```
 git clone https://github.com/caicloud/cyclone
@@ -43,7 +43,7 @@ Then Cyclone is started.
 
 ## Other
 
-Environment variables: 
+Environment variables:
 
 | ENV                       | Description                              |
 | ------------------------- | ---------------------------------------- |
@@ -56,6 +56,6 @@ Environment variables:
 | REQUEST_MEMORY            | Same concept as [kubernetes requests.memory](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 0.5Gi |
 | REQUEST_CPU               | Same concept as [kubernetes requests.cpu](https://kubernetes.io/docs/concepts/policy/resource-quotas), used for cyclone-worker, default is 0.5      |
 | RECORD_ROTATION_THRESHOLD | The number of pipeline records cyclone preserved, default is 50      |
-| CALLBACK_URL              | Tth URL used for webhook to callback, default is http://127.0.0.1:7099/v1/pipelines       |
+| CALLBACK_URL              | The URL used for webhook to callback, default is http://127.0.0.1:7099/v1/pipelines       |
 | CYCLONE_SERVER            | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE              | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
