@@ -64,16 +64,16 @@
  ## Create a pipeline
 
  Pipeline is a workflow that consists of a series of CI/CD stages. Cyclone supports `5` stages, among which
- two of them are mandatory:
+ one of them are mandatory:
  - codeCheckout
- - package
 
 others are optional:
+ - package
  - imageBuild
  - integrationTest
  - imageRelease
 
-Here we will create a pipeline includes mandatory stages. Please see [Pipelines  APIs](./api/v1/api.md#pipeline-apis) for more details.
+Here we will create a pipeline includes `codeCheckout` and `package` stages. Please see [Pipelines  APIs](./api/v1/api.md#pipeline-apis) for more details.
 
  ```
  # create a pipeline including CodeCheckout and Package.
