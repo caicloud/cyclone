@@ -86,6 +86,8 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
+	var statusesURL string
+	trigger := api.TriggerSCM
 	switch event := event.(type) {
 	case *github.ReleaseEvent:
 		if scmTrigger.TagRelease == nil {
@@ -103,7 +105,7 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 		log.Info("Triggered by Github release event")
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
-		if *event.Action != "opened" {
+		if *event.Action != "opened" && *event.Action != "synchronize" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when pull request is created")
 			return
 		}
@@ -113,6 +115,9 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			return
 		}
 
+		statusesURL = *event.PullRequest.StatusesURL
+
+		trigger = api.TriggerSCMPR
 		performParams = &api.PipelinePerformParams{
 			Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
 			Description: "Triggered by pull request",
@@ -191,7 +196,8 @@ func (router *router) handleGithubWebhook(request *restful.Request, response *re
 			Name:          performParams.Name,
 			PipelineID:    pipeline.ID,
 			PerformParams: performParams,
-			Trigger:       api.TriggerSCM,
+			Trigger:       trigger,
+			StatusesURL:   statusesURL,
 		}
 		if _, err = router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			httputil.ResponseWithError(response, err)
@@ -236,6 +242,8 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
+	var statusesURL string
+	trigger := api.TriggerSCM
 	switch event := event.(type) {
 	case *gitlab.TagEvent:
 		if scmTrigger.TagRelease == nil {
@@ -254,7 +262,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 	case *gitlab.MergeEvent:
 		// Only handle when the pull request are created.
 		objectAttributes := event.ObjectAttributes
-		if objectAttributes.Action != "open" {
+		if objectAttributes.Action != "open" && objectAttributes.Action != "update" {
 			response.WriteHeaderAndEntity(http.StatusOK, "Only handle when merge request is created")
 			return
 		}
@@ -263,6 +271,11 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			response.WriteHeaderAndEntity(http.StatusOK, "Pull request trigger is not enabled")
 			return
 		}
+
+		trigger = api.TriggerSCMPR
+
+		// gitlab does not have statusesURL , so use last commit URL.
+		statusesURL = objectAttributes.LastCommit.URL
 
 		performParams = &api.PipelinePerformParams{
 			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.Iid, objectAttributes.TargetBranch),
@@ -282,6 +295,7 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			response.WriteHeaderAndEntity(http.StatusOK, "Pull request comment trigger is not enabled")
 			return
 		}
+
 		objectAttributes := event.ObjectAttributes
 		trigger := false
 		if objectAttributes.Note != "" {
@@ -334,7 +348,8 @@ func (router *router) handleGitlabWebhook(request *restful.Request, response *re
 			Name:          performParams.Name,
 			PipelineID:    pipeline.ID,
 			PerformParams: performParams,
-			Trigger:       api.TriggerSCM,
+			Trigger:       trigger,
+			StatusesURL:   statusesURL,
 		}
 		if _, err = router.pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			httputil.ResponseWithError(response, err)

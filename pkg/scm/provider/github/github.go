@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -364,4 +365,49 @@ func convertToGithubEvents(events []scm.EventType) []string {
 	}
 
 	return ge
+}
+
+// CreateStatuses generate a new status for repository.
+func (g *Github) CreateStatuses(state, description, targetURL, statusesURL string) error {
+	owner, repo, ref, err := splitStatusesURL(statusesURL)
+	if err != nil {
+		return err
+	}
+
+	client := newClientByToken(g.scmCfg.Token)
+
+	email := "cyclone@caicloud.io"
+	name := "cyclone"
+
+	context := "continuous-integration/cyclone"
+	creator := github.User{
+		Name:  &name,
+		Email: &email,
+	}
+	status := &github.RepoStatus{
+		State:       &state,
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+		Creator:     &creator,
+	}
+
+	//var owner, repo, ref string
+	_, _, err = client.Repositories.CreateStatus(owner, repo, ref, status)
+	log.Error(err)
+	return err
+}
+
+// input   : `https://api.github.com/repos/aaa/bbb/statuses/ccc`
+// output  : aaa bbb ccc
+func splitStatusesURL(url string) (string, string, string, error) {
+	repoNameRegexp := `^https://api.github.com/repos/([\S]+)/([\S]+)/statuses/([\w]+)$`
+	r := regexp.MustCompile(repoNameRegexp)
+
+	results := r.FindStringSubmatch(url)
+	if len(results) < 4 {
+		return "", "", "", fmt.Errorf("statusesURL is invalid")
+	}
+
+	return results[1], results[2], results[3], nil
 }

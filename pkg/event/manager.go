@@ -22,12 +22,15 @@ import (
 
 	log "github.com/golang/glog"
 	"github.com/zoumo/logdog"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/cloud"
+	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
+	osutil "github.com/caicloud/cyclone/pkg/util/os"
+	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
 // maxRetry represents the max number of retry for event when cloud is busy.
@@ -36,6 +39,7 @@ const maxRetry = 60
 
 var (
 	defaultWorkerOptions *options.WorkerOptions
+	consoleWebUrl        string
 )
 
 // Init init event manager
@@ -46,7 +50,7 @@ func Init(opts *options.WorkerOptions) {
 	em := NewEventManager(ds)
 
 	defaultWorkerOptions = opts
-
+	consoleWebUrl = osutil.GetStringEnv(options.ConsoleWebEndpoint, "http://127.0.0.1:7099")
 	go em.WatchEvent()
 }
 
@@ -74,7 +78,7 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 	err := createWorkerForEvent(event)
 	if err != nil {
 		if cloud.IsAllCloudsBusyErr(err) && event.Retry < maxRetry {
-			log.Info("All system worker are busy, wait for 10 seconds")
+			log.Info("All system worker are busy, wait for 10 seconds, error:%v", err)
 			event.Retry++
 			em.ds.ResetEvent(event)
 			return nil
@@ -96,6 +100,9 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 			log.Errorf("fail to update event %s as err: %s", eventID, err.Error())
 			return err
 		}
+
+		// if trigger is webhook pr, update SCM statuses.
+		postScmStatuses(event)
 	}
 
 	if err := em.ds.UpdatePipelineRecord(pipelineRecord); err != nil {
@@ -241,6 +248,8 @@ func UpdateEvent(event *api.Event) error {
 		}
 		event.PipelineRecord.EndTime = time.Now()
 		postHookEvent(event)
+
+		postScmStatuses(event)
 	} else {
 		if err := ds.UpdateEvent(event); err != nil {
 			log.Errorf("fail to update the event %s", eventID)
@@ -265,6 +274,7 @@ func IsEventFinished(event *api.Event) bool {
 		status == api.Aborted {
 		return true
 	}
+
 	return false
 }
 
@@ -304,6 +314,7 @@ func GetEvent(id string) (*api.Event, error) {
 // CheckWorkerTimeout ...
 func CheckWorkerTimeout(event *api.Event) {
 	if IsEventFinished(event) {
+		postScmStatuses(event)
 		return
 	}
 	// worker, err := CloudController.LoadWorker(event.Worker)
@@ -390,4 +401,55 @@ func getCloudProvider(w *api.WorkerConfig) (cloud.Provider, error) {
 	}
 
 	return cloud.NewCloudProvider(c)
+}
+
+func postScmStatuses(event *api.Event) error {
+	if event.PipelineRecord.Trigger != api.TriggerSCMPR {
+		return nil
+	}
+
+	p, err := scm.GetSCMProvider(event.Project.SCM)
+	if err != nil {
+		return err
+	}
+
+	// GitHub : error, failure, pending, or success.
+	// GitLab : pending, running, success, failed, canceled.
+	state := "pending"
+	description := ""
+	statusesURL := event.PipelineRecord.StatusesURL
+
+	// fixme : targetURL should be customized.
+	targetURL := fmt.Sprintf("%s/devops/pipeline/%s/record/%s?workspace=%s",
+		consoleWebUrl, event.Pipeline.Name, event.PipelineRecord.ID, slug.Slugify(event.Project.Alias, false, -1))
+
+	scmType := event.Project.SCM.Type
+	switch event.PipelineRecord.Status {
+	case api.Running:
+		state = "pending"
+		description = "The Cyclone CI build is in progress."
+		if scmType == api.Gitlab {
+			state = "running"
+		}
+	case api.Success:
+		state = "success"
+		description = "The Cyclone CI build passed."
+	case api.Failed:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+		if scmType == api.Gitlab {
+			state = "failed"
+		}
+	case api.Aborted:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+		if scmType == api.Gitlab {
+			state = "canceled"
+		}
+	default:
+		log.Errorf("not supported state:%s", event.PipelineRecord.Status)
+	}
+	p.CreateStatuses(state, description, targetURL, statusesURL)
+
+	return nil
 }

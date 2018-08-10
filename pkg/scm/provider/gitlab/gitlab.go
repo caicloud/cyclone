@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	log "github.com/golang/glog"
@@ -268,4 +269,18 @@ func getOauthToken(scm *api.SCMConfig) (string, error) {
 
 	err = fmt.Errorf("Fail to request for token as %s", body)
 	return "", err
+}
+
+// input   : `https://gitlab.com/aaa/bbb/commit/ccc`
+// output  : aaa bbb ccc
+func splitStatusesURL(url string) (string, string, string, error) {
+	repoNameRegexp := `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]+)/([\S]+)/commit/([\w]+)$`
+	r := regexp.MustCompile(repoNameRegexp)
+
+	results := r.FindStringSubmatch(url)
+	if len(results) < 4 {
+		return "", "", "", fmt.Errorf("statusesURL is invalid")
+	}
+
+	return results[1], results[2], results[3], nil
 }
