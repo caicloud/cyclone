@@ -74,8 +74,9 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 	err := createWorkerForEvent(event)
 	if err != nil {
 		if cloud.IsAllCloudsBusyErr(err) && event.Retry < maxRetry {
-			log.Info("All system worker are busy, wait for 10 seconds")
-			event.Retry++
+			log.Infof("All system worker are busy, wait for 10 seconds, event id:%v retry times:%v",
+				event.ID, event.Retry)
+			time.Sleep(time.Second * 10)
 			em.ds.ResetEvent(event)
 			return nil
 		}
