@@ -101,7 +101,9 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	if config == nil {
 		return httperror.ErrorContentNotFound.Format("SCM config")
 	}
-
+	
+	// when you choose the way that is gitlab oauth, the frontend go back the config which contains the AuthType.
+	// the AuthType that is "OAuth" means that you choose gitlab oauth.
 	if config.AuthType != api.Password && config.AuthType != api.Token && config.AuthType != "OAuth" {
 		return httperror.ErrorValidationFailed.Format("SCM authType %s is unknow", config.AuthType)
 	}
