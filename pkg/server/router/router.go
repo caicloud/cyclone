@@ -131,6 +131,7 @@ func InitRouters(dataStore *store.DataStore, recordRotationThreshold int) error 
 	router.registerCloudAPIs(ws)
 	router.registerHealthCheckAPI(ws)
 	router.registerWebhookAPIs(ws)
+	router.registerOauthAPIs(ws)
 
 	restful.Add(ws)
 
@@ -395,4 +396,20 @@ func (router *router) registerHealthCheckAPI(ws *restful.WebService) {
 	// GET /api/v1/healthcheck
 	ws.Route(ws.GET("/healthcheck").To(router.healthCheck).
 		Doc("Health check for Cyclone server"))
+}
+
+// registerOauthAPI registers gitlab oauth API.
+func (router *router) registerOauthAPIs(ws *restful.WebService) {
+	log.Info("Register gitlab oauth API")
+	ws.Path(APIVersion).Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	// GET /api/v1/scm/{type}/code
+	ws.Route(ws.GET("/scm/{type}/code").To(router.getOauthCode).
+		Doc("Get gitlab oauth code").
+		Param(ws.PathParameter("type", "type of scm").DataType("string")))
+	// GET /api/v1/scm/{type}/callback
+	ws.Route(ws.GET("/scm/{type}/callback").To(router.getOauthToken).
+		Doc("Oauth callback to access token").
+		Param(ws.PathParameter("type", "type of scm").DataType("string")).
+		Param(ws.QueryParameter("code", "result of first oauth request")).
+		Param(ws.QueryParameter("state", "the random string to avoid csrf")))
 }

@@ -56,6 +56,9 @@ type SCMProvider interface {
 	NewTagFromLatest(tagName, description, commitID, url string) error
 	CreateWebHook(repoURL string, webHook *WebHook) error
 	DeleteWebHook(repoURL string, webHookUrl string) error
+	//Gitlab Oauth
+	GetAuthCodeURL(state string, scmType api.SCMType) (string, error)
+	Authcallback(code, state string) (string, error)
 }
 
 // WebHook represents the params for SCM webhook.
@@ -99,7 +102,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 		return httperror.ErrorContentNotFound.Format("SCM config")
 	}
 
-	if config.AuthType != api.Password && config.AuthType != api.Token {
+	if config.AuthType != api.Password && config.AuthType != api.Token && config.AuthType != "OAuth" {
 		return httperror.ErrorValidationFailed.Format("SCM authType %s is unknow", config.AuthType)
 	}
 
@@ -107,6 +110,12 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 	config.Server = strings.TrimSuffix(config.Server, "/")
 
 	scmType := config.Type
+	// when you choose the way that gitlab oauth ,the frontend go back the config which contains the token and the AuthType.
+	// the way that you have token, so you dont execute the get token with provider.
+	if config.AuthType == "OAuth" && len(config.Token) != 0 {
+		return nil
+	}
+
 	provider, err := GetSCMProvider(config)
 	if err != nil {
 		return err

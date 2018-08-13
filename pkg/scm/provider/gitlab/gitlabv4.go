@@ -198,3 +198,11 @@ func (g *GitlabV4) NewTagFromLatest(tagName, description, commitID, url string) 
 	log.Error(err)
 	return err
 }
+
+// TODO: Get oauth token by GitlabV4
+func (g *GitlabV4) GetAuthCodeURL(state string, scmType api.SCMType) (string, error) {
+	return "", fmt.Errorf("Not implemented")
+}
+func (g *GitlabV4) Authcallback(code string, state string) (string, error) {
+	return "", fmt.Errorf("Not implemented")
+}
