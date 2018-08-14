@@ -23,9 +23,11 @@ import (
 	log "github.com/golang/glog"
 	gitlabv3 "github.com/xanzy/go-gitlab"
 
+	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/scm/provider"
+	"github.com/caicloud/cyclone/pkg/util/os"
 )
 
 // GitlabV3 represents the SCM provider of GitlabV3 with API V3.
@@ -183,4 +185,28 @@ func (g *GitlabV3) NewTagFromLatest(tagName, description, commitID, url string) 
 	_, _, err := g.client.Tags.CreateTag(owner+"/"+name, tag)
 	log.Error(err)
 	return err
+}
+
+// GetAuthCodeURL gets the URL for token request.
+func (g *GitlabV3) GetAuthCodeURL(state string, scmType api.SCMType) (string, error) {
+	return getAuthCodeURL(state, scmType)
+}
+
+// Authcallback  get Token by oauth code and state
+// return userInfo by oauth2
+func (g *GitlabV3) Authcallback(code string, state string) (string, error) {
+	if code == "" || state == "" {
+		return "", fmt.Errorf("code: %s or state: %s is nil", code, state)
+	}
+	uiPath := os.GetStringEnv(options.ConsoleWebEndpoint, "")
+	redirectURL := fmt.Sprintf("%s/devops/workspace/add?type=gitlab&code=%s&state=%s", uiPath, code, state)
+	token, err := getToken(code, state)
+	if err != nil {
+		return "", err
+	}
+	// add token, username, server to redirectURL
+	userName, server, err := getUserInfo(token)
+	redirectURL = redirectURL + fmt.Sprintf("&token=%s&username=%s&server=%s",
+		token.AccessToken, userName, server)
+	return redirectURL, nil
 }
