@@ -117,3 +117,11 @@ func (s *SVN) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 func (s *SVN) DeleteWebHook(repoURL string, webHookUrl string) error {
 	return nil
 }
+
+// TODO: oauth by SVN
+func (s *SVN) GetAuthCodeURL(state string, scmType api.SCMType) (string, error) {
+	return "", fmt.Errorf("Not implemented")
+}
+func (s *SVN) Authcallback(code string, state string) (string, error) {
+	return "", fmt.Errorf("Not implemented")
+}

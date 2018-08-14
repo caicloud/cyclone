@@ -168,6 +168,7 @@ type SCMAuthType string
 const (
 	Password SCMAuthType = "Password"
 	Token                = "Token"
+	GitLabOAuth          = "OAuth"
 )
 
 // SVN username and password seperator, because SVN username can not contain ":".
@@ -692,4 +693,23 @@ type WorkerInstance struct {
 	Status         string    `bson:"status,omitempty" json:"status,omitempty" description:"status of the worker pod"`
 	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the worker pod"`
 	LastUpdateTime time.Time `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of worker pod"`
+}
+
+// Gitlab Oauth UserInfo
+type GitlabUserInfo struct {
+	Name             string `json:"name,omitempty"`
+	Username         string `json:"username,omitempty"`
+	Id               int    `json:"id,omitempty"`
+	State            string `json:"state,omitempty"`
+	AvatarUrl        string `json:"avatar_url,omitempty"`
+	WebUrl           string `json:"web_url,omitempty"`
+	CreatedAt        string `json:"created_at,omitempty"`
+	IsAdmin          bool   `json:"is_admin,omitempty"`
+	Email            string `json:"email,omitempty"`
+	ProjectsLimits   int    `json:"projects_limit,omitempty"`
+	CurrentSignInAt  string `json:"current_sign_in_at,omitempty"`
+	CanCreateGroup   bool   `json:"can_create_group,omitempty"`
+	CanCreateProject bool   `json:"can_create_project,omitempty"`
+	TwoFactorEnabled bool   `json:"two_factor_enabled,omitempty"`
+	PrivateToken     string `json:"private_token,omitempty"`
 }
