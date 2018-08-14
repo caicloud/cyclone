@@ -95,6 +95,9 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 		pipelineRecord.StartTime = time.Now()
 		if err = em.ds.UpdateEvent(event); err != nil {
 			log.Errorf("fail to update event %s as err: %s", eventID, err.Error())
+			log.Infof("terminate the worker for event %s", eventID)
+			// terminate the worker pod while updated event failed(e.g. event Not Found, deleted by deleting records).
+			terminateEventWorker(event)
 			return err
 		}
 	}
@@ -280,15 +283,14 @@ func DeleteEventByRecordID(id string) error {
 		return err
 	}
 
+	// Delete the related worker pod
+	log.Infof("terminate the worker for event %s", id)
+	terminateEventWorker(event)
+
 	// Delete the event in event queue.
 	if err := ds.DeleteEvent(id); err != nil {
 		log.Errorf("fail to delete the event %s", id)
 		return err
-	}
-
-	if event.QueueStatus == api.Handling {
-		log.Infof("terminate the worker for handling event %s", id)
-		terminateEventWorker(event)
 	}
 
 	return nil
