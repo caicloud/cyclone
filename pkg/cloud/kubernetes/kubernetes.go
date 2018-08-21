@@ -174,6 +174,11 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 				"cyclone":    "worker",
 				"cyclone/id": eventID,
 			},
+			Annotations: map[string]string{
+				"cyclone/projectName":  opts.ProjectName,
+				"cyclone/pipelineName": opts.PipelineName,
+				"cyclone/recordID":     eventID,
+			},
 		},
 		Spec: apiv1.PodSpec{
 			Containers: []apiv1.Container{
@@ -351,6 +356,9 @@ func (c *k8sCloud) ListWorkers() ([]api.WorkerInstance, error) {
 			Status:         string(item.Status.Phase),
 			CreationTime:   item.CreationTimestamp.Time,
 			LastUpdateTime: item.CreationTimestamp.Time,
+			ProjectName:    item.Annotations["cyclone/projectName"],
+			PipelineName:   item.Annotations["cyclone/pipelineName"],
+			RecordID:       item.Annotations["cyclone/recordID"],
 		}
 		pods = append(pods, pod)
 	}

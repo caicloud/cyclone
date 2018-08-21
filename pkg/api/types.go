@@ -692,4 +692,7 @@ type WorkerInstance struct {
 	Status         string    `bson:"status,omitempty" json:"status,omitempty" description:"status of the worker pod"`
 	CreationTime   time.Time `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the worker pod"`
 	LastUpdateTime time.Time `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of worker pod"`
+	ProjectName    string    `bson:"projectName,omitempty" json:"projectName,omitempty" description:"name of the cyclone project"`
+	PipelineName   string    `bson:"pipelineName,omitempty" json:"pipelineName,omitempty" description:"name of the pipeline"`
+	RecordID       string    `bson:"recordID,omitempty" json:"recordID,omitempty" description:"id of the pipeline record"`
 }
