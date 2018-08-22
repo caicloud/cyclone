@@ -107,12 +107,16 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		return
 	}
 
-	// Execute the package stage, this stage is required and can not be skipped.
-	err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
-	if err != nil {
-		log.Error(err.Error())
-		return
+	// Execute the package stage if necessary.
+	// eg: python don't need to compile
+	if _, ok := stageSet[api.PackageStageName]; ok {
+		err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
 	}
+	
 
 	// The built images from image build stage.
 	var builtImages []string
