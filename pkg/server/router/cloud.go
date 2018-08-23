@@ -19,10 +19,11 @@ package router
 import (
 	"net/http"
 
-	"github.com/caicloud/cyclone/pkg/api"
-	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	"github.com/emicklei/go-restful"
 	log "github.com/golang/glog"
+
+	"github.com/caicloud/cyclone/pkg/api"
+	httputil "github.com/caicloud/cyclone/pkg/util/http"
 )
 
 // createCloud handles the request to create a cloud.
@@ -50,7 +51,7 @@ func (router *router) listClouds(request *restful.Request, response *restful.Res
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, clouds)
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(clouds, len(clouds)))
 }
 
 // deleteCloud handles the request to delete the cloud.
@@ -92,5 +93,5 @@ func (router *router) listWorkers(request *restful.Request, response *restful.Re
 		return
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, workers)
+	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(workers, len(workers)))
 }

@@ -87,9 +87,11 @@ type WorkerOptions struct {
 	GitlabClient string
 	GitlabSecret string
 
-	WorkerImage string
-	EventID     string
-	DockerHost  string
+	WorkerImage  string
+	EventID      string
+	ProjectName  string
+	PipelineName string
+	DockerHost   string
 
 	Quota Quota
 }

@@ -173,6 +173,8 @@ func createWorkerForEvent(event *api.Event) error {
 
 	opts := defaultWorkerOptions
 	opts.EventID = event.ID
+	opts.ProjectName = event.Project.Name
+	opts.PipelineName = event.Pipeline.Name
 	workerInfo, err = cp.Provision(workerInfo, opts)
 	if err != nil {
 		return err

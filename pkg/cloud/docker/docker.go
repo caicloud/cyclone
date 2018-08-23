@@ -171,8 +171,11 @@ func (c *dockerCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOption
 		Env:        buildDockerEnv(eventID, *opts),
 		WorkingDir: scm.GetCloneDir(),
 		Labels: map[string]string{
-			"cyclone":    "worker",
-			"cyclone/id": eventID,
+			"cyclone":              "worker",
+			"cyclone/id":           eventID,
+			"cyclone/projectName":  opts.ProjectName,
+			"cyclone/pipelineName": opts.PipelineName,
+			"cyclone/recordID":     eventID,
 		},
 	}
 
@@ -272,11 +275,15 @@ func (c *dockerCloud) ListWorkers() ([]api.WorkerInstance, error) {
 		t := time.Unix(worker.Created, 0)
 		// the origial name has extra forward slash in name
 		name := strings.TrimSuffix(strings.TrimPrefix(worker.Names[0], "/"), "/")
+
 		pod := api.WorkerInstance{
 			Name:           name,
 			Status:         worker.Status,
 			CreationTime:   t,
 			LastUpdateTime: t,
+			ProjectName:    worker.Labels["cyclone/projectName"],
+			PipelineName:   worker.Labels["cyclone/pipelineName"],
+			RecordID:       worker.Labels["cyclone/recordID"],
 		}
 		pods = append(pods, pod)
 	}
