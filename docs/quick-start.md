@@ -64,7 +64,7 @@
  ## Create a pipeline
 
  Pipeline is a workflow that consists of a series of CI/CD stages. Cyclone supports `5` stages, among which
- one of them are mandatory:
+ one of them is mandatory:
  - codeCheckout
 
 others are optional:
