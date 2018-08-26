@@ -572,14 +572,14 @@ func (sm *stageManager) releaseImage(image string, status *api.ImageReleaseTaskS
 
 func (sm *stageManager) updateEventAfterStage(stage api.PipelineStageName, err error) {
 	if err != nil {
-		updateEvent(sm.cycloneClient, event, stage, api.Failed, err)
+		UpdateEvent(sm.cycloneClient, event, stage, api.Failed, err)
 	} else {
-		updateEvent(sm.cycloneClient, event, stage, api.Success, nil)
+		UpdateEvent(sm.cycloneClient, event, stage, api.Success, nil)
 	}
 }
 
 func (sm *stageManager) startWatchLogs(stage api.PipelineStageName, task string, errChan chan error) (*os.File, error) {
-	if err := updateEvent(sm.cycloneClient, event, stage, api.Running, nil); err != nil {
+	if err := UpdateEvent(sm.cycloneClient, event, stage, api.Running, nil); err != nil {
 		log.Errorf("fail to update event for stage %s as %v", stage, err)
 		return nil, err
 	}

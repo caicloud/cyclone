@@ -525,6 +525,9 @@ const (
 
 	// ImageReleaseStageName represents the name of image release stage.
 	ImageReleaseStageName PipelineStageName = "imageRelease"
+
+	// CreateScmTagStageName represents the name of create scm tag stage.
+	CreateScmTagStageName PipelineStageName = "createScmTag"
 )
 
 // PipelinePerformParams the params to perform the pipeline.
