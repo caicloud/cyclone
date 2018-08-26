@@ -17,8 +17,6 @@ limitations under the License.
 package worker
 
 import (
-	"fmt"
-
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
@@ -149,11 +147,9 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = scm.NewTagFromLatest(codesource, project.SCM, event.PipelineRecord.Name, event.PipelineRecord.PerformParams.Description)
 		if err != nil {
 			log.Errorf("new tag from latest fail : %v", err)
-			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("generate tag fail: %v", err)
-			err = worker.Client.SendEvent(event)
+			err = stage.UpdateEvent(worker.Client, event, api.CreateScmTagStageName, api.Failed, err)
 			if err != nil {
-				log.Errorf("set event result err: %v", err)
+				log.Errorf("fail to update event for stage %s as %v", api.CreateScmTagStageName, err)
 				return
 			}
 			return

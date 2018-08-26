@@ -38,6 +38,7 @@ var stageDesps = map[api.PipelineStageName]string{
 	api.ImageBuildStageName:      "Build image",
 	api.IntegrationTestStageName: "Integration test",
 	api.ImageReleaseStageName:    "Push image",
+	api.CreateScmTagStageName:    "Create SCM tag",
 }
 
 func generateStageStartLog(stage api.PipelineStageName) string {
@@ -98,6 +99,8 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 			}
 		}
 		gss = &stageStatus.ImageRelease.GeneralStageStatus
+	case api.CreateScmTagStageName:
+		gss = &api.GeneralStageStatus{}
 	default:
 		err := fmt.Errorf("stage %s is not supported", stage)
 		log.Error(err)
@@ -140,7 +143,7 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 	return nil
 }
 
-func updateEvent(c cycloneserver.CycloneServerClient, event *api.Event, stage api.PipelineStageName, status api.Status, failErr error) error {
+func UpdateEvent(c cycloneserver.CycloneServerClient, event *api.Event, stage api.PipelineStageName, status api.Status, failErr error) error {
 	if err := updateRecordStageStatus(event.PipelineRecord, stage, status, failErr); err != nil {
 		return err
 	}
