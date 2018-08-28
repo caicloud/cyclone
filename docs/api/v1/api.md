@@ -13,6 +13,7 @@
     - [Webhook API](#webhook-api)
     - [Stats API](#stats-api)
     - [Cloud API](#cloud-api)
+    - [Template API](#template-api)
   - [API Common](#api-common)
     - [Path Parameter Explanation](#path-parameter-explanation)
   - [API Details](#api-details)
@@ -42,6 +43,7 @@
     - [List SCM Repos](#list-scm-repos)
     - [List SCM Branches](#list-scm-branches)
     - [List SCM Tags](#list-scm-tags)
+    - [Get SCM Repotype](#get-scm-repotype)
     - [Github webhook](#github-webhook)
     - [Gitlab webhook](#gitlab-webhook)
     - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
@@ -53,7 +55,10 @@
     - [Get cloud](#get-cloud)
     - [Update cloud](#update-cloud)
     - [Delete cloud](#delete-cloud)
+    - [WorkerInstance](#workerinstance)
     - [List cyclone workers](#list-cyclone-workers)
+    - [TemplateObject](#templateobject)
+    - [List templates](#list-templates)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -125,13 +130,14 @@
 
 ### SCM API
 
-- [Repo Object Object](#RepoObjectObject)
+- [Repo Object](#RepoObject)
 
 | API | Path | Detail |
 | --- | --- | --- |
 | List | GET `/api/v1/projects/{project}/repos` | [link](#list-scm-repos) |
 | List | GET `/api/v1/projects/{project}/branches?repo=` | [link](#list-scm-branches) |
 | List | GET `/api/v1/projects/{project}/tags?repo=` | WIP, [link](#list-scm-tags) |
+| Get  | GET `/api/v1/projects/{project}/type?repo=` | WIP, [link](#get-scm-repotype) |
 
 ### Webhook API
 
@@ -161,6 +167,13 @@
 | Update | PUT `/api/v1/clouds/{cloud}` | WIP, [link](#update-cloud) |
 | Delete | DELETE `/api/v1/clouds/{cloud}` | WIP, [link](#delete-cloud) |
 
+### Template API
+
+- [TemplateObject](#templateobject)
+
+| API | Path | Detail |
+| --- | --- | --- |
+| List | GET `/api/v1/templates` | WIP, [link](#list-templates) |
 ## API Common
 
 ### Path Parameter Explanation
@@ -1184,6 +1197,33 @@ Success:
 }
 ```
 
+### Get SCM Repotype
+
+Get the repository type of the specific repo.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/type?repo=`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| repo | Required, repo for which the tags will be listed |
+
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "type": <type>
+}
+```
+
 ### Github webhook
 
 Trigger pipeline by Github webhook.
@@ -1477,6 +1517,19 @@ Success:
 204 No Content
 ```
 
+### WorkerInstance
+```
+{
+    "name": "cyclone-worker-5b30a4e5488571000107261f",
+    "status": "Running",
+    "creationTime": "2018-06-25T16:16:37+08:00",
+    "lastUpdateTime": "2018-06-25T16:16:37+08:00",
+    "projectName": "project1",
+    "pipelineName" "pipeline1",
+    "recordID": "abcdef"
+}
+```
+
 ### List cyclone workers
 
 List all cyclone workers.
@@ -1498,18 +1551,53 @@ Success:
 ```
 200 OK
 
-[
-    {
-        "name": "cyclone-worker-5b30a4e5488571000107261f",
-        "status": "Running",
-        "creationTime": "2018-06-25T16:16:37+08:00",
-        "lastUpdateTime": "2018-06-25T16:16:37+08:00"
+{
+    "metadata": {
+        "total": 0,            // number, always
     },
-    {
-        "name": "cyclone-worker-5b31e3f1a482aa0001ae96ef",
-        "status": "Running",
-        "creationTime": "2018-06-26T14:57:53+08:00",
-        "lastUpdateTime": "2018-06-26T14:57:53+08:00"
-    }
-]
+    "items": [ <WorkerInstance>, ... ]
+}
+```
+
+### TemplateObject
+
+```
+{
+    "name": "python2.7",                                      // string, required.
+    "type": "maven",                                          // string, required.
+    "builderImage": "python:2.7-alpine",                      // string, required.
+    "testCommands": "",                                       // string
+    "packageCommands": "2016-04-26T05:21:13.140Z",            // string
+    "customizedDockerfile": "Dockerfile contents"             // string
+}
+```
+
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| type | Required, template type, golang, maven, gradle, node, python and php. |
+
+### List templates
+
+List all cyclone templates.
+
+**Request**
+
+URL: `GET /api/v1/templates`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": {
+        "total": 0,            // number, always
+    },
+    "items": [ <TemplateObject>, ... ]
+}
 ```
