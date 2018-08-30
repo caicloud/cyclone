@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	log "github.com/golang/glog"
@@ -268,4 +269,105 @@ func getOauthToken(scm *api.SCMConfig) (string, error) {
 
 	err = fmt.Errorf("Fail to request for token as %s", body)
 	return "", err
+}
+
+func getLanguages(scm *api.SCMConfig, version, project string) (map[string]float32, error) {
+	languages := make(map[string]float32)
+	path := fmt.Sprintf("%s/api/%s/projects/%s/languages", strings.TrimSuffix(scm.Server, "/"), version, url.QueryEscape(project))
+	req, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return languages, err
+	}
+
+	if len(scm.Username) == 0 {
+		req.Header.Set("PRIVATE-TOKEN", scm.Token)
+	} else {
+		log.Error(scm.Username)
+		req.Header.Set("Authorization", "Bearer "+scm.Token)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to get project languages as %s", err.Error())
+		return languages, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to get project languages as %s", err.Error())
+		return languages, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 == 2 {
+		err := json.Unmarshal(body, &languages)
+		if err != nil {
+			return languages, err
+		}
+		return languages, nil
+	}
+
+	err = fmt.Errorf("Fail to get project languages as %s", body)
+	return languages, err
+}
+
+func getTopLanguage(languages map[string]float32) string {
+	var language string
+	var max float32
+	for l, value := range languages {
+		if value > max {
+			max = value
+			language = l
+		}
+	}
+	return language
+}
+
+func getContents(scm *api.SCMConfig, version, project string) ([]RepoFile, error) {
+	var files []RepoFile
+	path := fmt.Sprintf("%s/api/%s/projects/%s/repository/tree", strings.TrimSuffix(scm.Server, "/"), version, url.QueryEscape(project))
+	req, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return files, err
+	}
+
+	if len(scm.Username) == 0 {
+		req.Header.Set("PRIVATE-TOKEN", scm.Token)
+	} else {
+		req.Header.Set("Authorization", "Bearer "+scm.Token)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to get project contents as %s", err.Error())
+		return files, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to get project contents as %s", err.Error())
+		return files, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 == 2 {
+		err := json.Unmarshal(body, &files)
+		if err != nil {
+			return files, err
+		}
+		return files, nil
+	}
+
+	err = fmt.Errorf("Fail to get project contents as %s", body)
+	return files, err
+}
+
+type RepoFile struct {
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
+	Path string `json:"path,omitempty"`
 }

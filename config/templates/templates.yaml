@@ -1,0 +1,114 @@
+- name: maven-3
+  type: Maven
+  builderImage: maven:3
+  testCommands: |
+    mvn test
+  packageCommands: |
+    mvn clean package -Dmaven.test.skip
+  customizedDockerfile: |
+    FROM jboss/base-jdk:8
+
+    MAINTAINER cyclone "cyclone@caicloud.io"
+
+    # Copy your file from source to destination.
+    COPY target/<app>.jar  /test-app.jar
+
+    # Expose ports.
+    EXPOSE 8081
+
+    # Run your app or exec your start scripts.
+    CMD ["java", "-jar", "/test-app.jar"]
+
+- name: gradle-3.4.1
+  type: Gradle
+  builderImage: gradle:3.4.1
+  testCommands: |
+  packageCommands: |
+    gradle build -x test
+  customizedDockerfile: |
+    FROM jboss/base-jdk:8
+
+    MAINTAINER cyclone "cyclone@caicloud.io"
+
+    # Copy your file from source to destination.
+    COPY build/<app>.jar  /test-app.jar
+
+    # Expose ports.
+    EXPOSE 8081
+
+    # Run your app or exec your start scripts.
+    CMD ["java", "-jar", "/test-app.jar"]
+
+- name: golang-1.9.2
+  type: Go
+  builderImage: golang:1.9.2
+  testCommands: |
+    echo $GOPATH
+    # Replace the {repo-name} with your own repository name.
+    export REPO_NAME={repo-name}
+    export WORKDIR=$GOPATH/src/github.com/caicloud/$REPO_NAME
+    mkdir -p $GOPATH/src/github.com/caicloud/
+    ln -s `pwd` $WORKDIR
+    cd $WORKDIR
+    ls -la
+    go test -cover $(go list ./...)
+  packageCommands: |
+    cd $WORKDIR/{main-method-path}
+    go build -i -v
+  customizedDockerfile: |
+    FROM alpine:3.6
+
+    # change path to your work dir.
+    WORKDIR /root
+
+    # Copy your file from source to destination.
+    COPY <app> /test-app
+
+    # Expose ports.
+    EXPOSE 7099
+
+    # Run your app or exec your start scripts.
+    ENTRYPOINT ["/test-app"]
+
+- name: python-2.7
+  type: Python
+  builderImage: python:2.7-alpine
+  testCommands: |
+    # Run all the test*.py modules inside the test package.
+    python -m unittest discover -s test -p 'test*.py'
+  packageCommands: |
+  customizedDockerfile: |
+    FROM python:2.7-alpine
+
+    RUN mkdir -p /usr/src/app
+
+    # Create working directory
+    WORKDIR /usr/src/app
+
+    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+    # it will be unpacked and added to worksapce.
+    ADD <uploaded-file> .
+
+    # Make sure the requirements.txt file exists and then install dependencies using it.
+    RUN touch requirements.txt
+    RUN pip install --no-cache-dir -r requirements.txt
+
+    CMD [ "python", "./<entrypoint>.py" ]
+
+- name: node-8.9.0
+  type: NodeJS
+  builderImage: node:8.9.0-slim
+  testCommands: |
+  packageCommands: |
+    npm run build
+  customizedDockerfile: |
+
+
+- name: php
+  type: PHP
+  builderImage: php
+  testCommands: |
+  packageCommands: |
+    npm run build
+  customizedDockerfile: |
+

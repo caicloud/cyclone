@@ -128,7 +128,7 @@ func TestGetRepoNameByURL(t *testing.T) {
 	for d, tc := range testCases {
 		repoName, err := getRepoNameByURL(tc.url)
 		if err != nil {
-			t.Error("%s failed as error Expect error to be nil")
+			t.Error("%s failed as error Expect error to be nil", err)
 		}
 		if repoName != tc.pass {
 			t.Errorf("%s failed as error : Expect result %s equals to %s", d, repoName, tc.pass)

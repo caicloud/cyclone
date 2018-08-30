@@ -365,3 +365,72 @@ func convertToGithubEvents(events []scm.EventType) []string {
 
 	return ge
 }
+
+func (g *Github) GetRepoType(repo string) (string, error) {
+	owner := g.scmCfg.Username
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			log.Error(err.Error())
+			return "", err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
+	languages, r, err := g.client.Repositories.ListLanguages(owner, repo)
+	log.Error(r, err)
+	if err != nil {
+		log.Error("list language failed:%v", err)
+		return "", err
+	}
+
+	language := getTopLanguage(languages)
+
+	switch language {
+	case api.JavaRepoType:
+		opt := &github.RepositoryContentGetOptions{}
+		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
+		if err != nil {
+			log.Error("get contents failed:%v", err)
+			return language, nil
+		}
+
+		for _, d := range directories {
+			if strings.Contains(*d.Name, "pom.xml") {
+				return api.MavenRepoType, nil
+			}
+			if strings.Contains(*d.Name, "build.gradle") {
+				return api.GradleRepoType, nil
+			}
+		}
+	case api.JavaScriptRepoType:
+		opt := &github.RepositoryContentGetOptions{}
+		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
+		if err != nil {
+			log.Error("get contents failed:%v", err)
+			return language, nil
+		}
+
+		for _, d := range directories {
+			if strings.Contains(*d.Name, "package.json") {
+				return api.MavenRepoType, nil
+			}
+		}
+	}
+
+	return language, nil
+}
+
+// getTopLanguage get the top usage language name.
+func getTopLanguage(languages map[string]int) string {
+	var language string
+	var max int
+	for l, value := range languages {
+		if value > max {
+			max = value
+			language = l
+		}
+	}
+	return language
+}

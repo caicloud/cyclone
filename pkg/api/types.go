@@ -696,3 +696,30 @@ type WorkerInstance struct {
 	PipelineName   string    `bson:"pipelineName,omitempty" json:"pipelineName,omitempty" description:"name of the pipeline"`
 	RecordID       string    `bson:"recordID,omitempty" json:"recordID,omitempty" description:"id of the pipeline record"`
 }
+
+// Template contains some configurations of creating pipeline.
+type Template struct {
+	Name                 string `yaml:"name,omitempty" json:"name,omitempty" description:"name of the template, should be unique"`
+	Type                 string `yaml:"type,omitempty" json:"type,omitempty" description:"type of the template"`
+	BuilderImage         string `yaml:"builderImage,omitempty" json:"builderImage,omitempty" description:"image information of the builder"`
+	TestCommands         string `yaml:"testCommands,omitempty" json:"testCommands,omitempty" description:"sample commands of unit test stage"`
+	PackageCommands      string `yaml:"packageCommands,omitempty" json:"packageCommands,omitempty" description:"sample commands of package stage"`
+	CustomizedDockerfile string `yaml:"customizedDockerfile,omitempty" json:"customizedDockerfile,omitempty" description:"sample Dockerfile"`
+}
+
+const (
+	// JavaScriptRepoType represents the language type JavaScript.
+	JavaScriptRepoType string = "JavaScript"
+
+	// JavaRepoType represents the language type Java.
+	JavaRepoType string = "Java"
+
+	// MavenRepoType represents the repository type Maven.
+	MavenRepoType string = "Maven"
+
+	// GradleRepoType represents the repository type Gradle.
+	GradleRepoType string = "Gradle"
+
+	// NodeRepoType represents the repository type NodeJS.
+	NodeRepoType string = "NodeJS"
+)
