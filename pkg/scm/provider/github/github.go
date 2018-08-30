@@ -388,7 +388,7 @@ func (g *Github) GetRepoType(repo string) (string, error) {
 	language := getTopLanguage(languages)
 
 	switch language {
-	case api.JavaRepoType:
+	case api.JavaRepoType, api.JavaScriptRepoType:
 		opt := &github.RepositoryContentGetOptions{}
 		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
 		if err != nil {
@@ -397,23 +397,13 @@ func (g *Github) GetRepoType(repo string) (string, error) {
 		}
 
 		for _, d := range directories {
-			if strings.Contains(*d.Name, "pom.xml") {
+			if language == api.JavaRepoType && strings.Contains(*d.Name, "pom.xml") {
 				return api.MavenRepoType, nil
 			}
-			if strings.Contains(*d.Name, "build.gradle") {
+			if language == api.JavaRepoType && strings.Contains(*d.Name, "build.gradle") {
 				return api.GradleRepoType, nil
 			}
-		}
-	case api.JavaScriptRepoType:
-		opt := &github.RepositoryContentGetOptions{}
-		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
-		if err != nil {
-			log.Error("get contents failed:%v", err)
-			return language, nil
-		}
-
-		for _, d := range directories {
-			if strings.Contains(*d.Name, "package.json") {
+			if language == api.JavaScriptRepoType && strings.Contains(*d.Name, "package.json") {
 				return api.MavenRepoType, nil
 			}
 		}

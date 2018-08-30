@@ -194,7 +194,7 @@ func (g *GitlabV3) GetRepoType(repo string) (string, error) {
 	language := getTopLanguage(languages)
 
 	switch language {
-	case api.JavaRepoType:
+	case api.JavaRepoType, api.JavaScriptRepoType:
 		files, err := getContents(g.scmCfg, v3APIVersion, repo)
 		if err != nil {
 			log.Error("get contents failed:%v", err)
@@ -202,25 +202,17 @@ func (g *GitlabV3) GetRepoType(repo string) (string, error) {
 		}
 
 		for _, f := range files {
-			if strings.Contains(f.Name, "pom.xml") {
+			if language == api.JavaRepoType && strings.Contains(f.Name, "pom.xml") {
 				return api.MavenRepoType, nil
 			}
-			if strings.Contains(f.Name, "build.gradle") {
+			if language == api.JavaRepoType && strings.Contains(f.Name, "build.gradle") {
 				return api.GradleRepoType, nil
 			}
-		}
-	case api.JavaScriptRepoType:
-		files, err := getContents(g.scmCfg, v3APIVersion, repo)
-		if err != nil {
-			log.Error("get contents failed:%v", err)
-			return language, nil
-		}
-
-		for _, f := range files {
-			if strings.Contains(f.Name, "package.json") {
+			if language == api.JavaScriptRepoType && strings.Contains(f.Name, "package.json") {
 				return api.NodeRepoType, nil
 			}
 		}
+
 	}
 
 	return language, nil

@@ -409,6 +409,6 @@ func (router *router) registerTemplateAPI(ws *restful.WebService) {
 	log.Info("Register template APIs")
 
 	// GET /api/v1/templates
-	ws.Route(ws.GET("/templates").To(router.listTemplates).
+	ws.Route(ws.GET("/pipelinetemplates").To(router.listTemplates).
 		Doc("Get all cyclone built-in pipeline templates."))
 }

@@ -57,8 +57,8 @@
     - [Delete cloud](#delete-cloud)
     - [WorkerInstance](#workerinstance)
     - [List cyclone workers](#list-cyclone-workers)
-    - [TemplateObject](#templateobject)
-    - [List templates](#list-templates)
+    - [PipelineTemplateObject](#pipelinetemplateobject)
+    - [List pipeline templates](#list-pipeline-templates)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -169,11 +169,11 @@
 
 ### Template API
 
-- [TemplateObject](#templateobject)
+- [PipelineTemplateObject](#pipelinetemplateobject)
 
 | API | Path | Detail |
 | --- | --- | --- |
-| List | GET `/api/v1/templates` | WIP, [link](#list-templates) |
+| List | GET `/api/v1/pipelinetemplates` | WIP, [link](#list-pipeline-templates) |
 ## API Common
 
 ### Path Parameter Explanation
@@ -1209,7 +1209,7 @@ Note:
 
 | Field | Note |
 | --- | --- |
-| repo | Required, repo for which the tags will be listed |
+| repo | Required, repo for which the type will be get |
 
 
 **Response**
@@ -1559,7 +1559,7 @@ Success:
 }
 ```
 
-### TemplateObject
+### PipelineTemplateObject
 
 ```
 {
@@ -1577,15 +1577,15 @@ Note:
 
 | Field | Note |
 | --- | --- |
-| type | Required, template type, golang, maven, gradle, node, python and php. |
+| type | Required, pipeline template type, Go, Maven, Gradle, NodeJS, Python and PHP. |
 
-### List templates
+### List pipeline templates
 
-List all cyclone templates.
+List all cyclone pipeline templates.
 
 **Request**
 
-URL: `GET /api/v1/templates`
+URL: `GET /api/v1/pipelinetemplates`
 
 **Response**
 
@@ -1598,6 +1598,6 @@ Success:
     "metadata": {
         "total": 0,            // number, always
     },
-    "items": [ <TemplateObject>, ... ]
+    "items": [ <PipelineTemplateObject>, ... ]
 }
 ```

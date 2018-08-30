@@ -8,8 +8,6 @@
   customizedDockerfile: |
     FROM jboss/base-jdk:8
 
-    MAINTAINER cyclone "cyclone@caicloud.io"
-
     # Copy your file from source to destination.
     COPY target/<app>.jar  /test-app.jar
 
@@ -23,12 +21,11 @@
   type: Gradle
   builderImage: gradle:3.4.1
   testCommands: |
+    gradle clean test
   packageCommands: |
     gradle build -x test
   customizedDockerfile: |
     FROM jboss/base-jdk:8
-
-    MAINTAINER cyclone "cyclone@caicloud.io"
 
     # Copy your file from source to destination.
     COPY build/<app>.jar  /test-app.jar
@@ -44,15 +41,17 @@
   builderImage: golang:1.9.2
   testCommands: |
     echo $GOPATH
-    # Replace the {repo-name} with your own repository name.
-    export REPO_NAME={repo-name}
-    export WORKDIR=$GOPATH/src/github.com/caicloud/$REPO_NAME
-    mkdir -p $GOPATH/src/github.com/caicloud/
+    # Replace the {repo-path} with your own repository path, e.g. "github.com/caicloud/cyclone".
+    REPO_PATH={repo-path}
+    WORKDIR=$GOPATH/src/$REPO_PATH
+    PARENT_PATH="$(dirname "$WORKDIR")"
+    mkdir -p $PARENT_PATH
     ln -s `pwd` $WORKDIR
     cd $WORKDIR
     ls -la
     go test -cover $(go list ./...)
   packageCommands: |
+    # Replace the {main-method-path} with the path of directory which contains a main() function.
     cd $WORKDIR/{main-method-path}
     go build -i -v
   customizedDockerfile: |
@@ -103,12 +102,10 @@
     npm run build
   customizedDockerfile: |
 
-
-- name: php
+- name: php-7.1.9
   type: PHP
-  builderImage: php
+  builderImage: php:7.1.9
   testCommands: |
   packageCommands: |
-    npm run build
   customizedDockerfile: |
 

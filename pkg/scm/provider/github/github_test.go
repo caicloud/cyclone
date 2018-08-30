@@ -16,10 +16,6 @@ func TestGetTopLanguage(t *testing.T) {
 			map[string]int{"Java": 59, "Go": 41},
 			"Java",
 		},
-		"same value": {
-			map[string]int{"Java": 50.0, "Go": 50.0},
-			"Java",
-		},
 	}
 
 	for d, tc := range testCases {
