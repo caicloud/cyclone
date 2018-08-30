@@ -1,0 +1,98 @@
+def adminImage = "release/cargo-admin:${params.imageTag}"
+def tokenImage = "release/cargo-token:${params.imageTag}"
+
+podTemplate(
+    cloud: 'dev-cluster',
+    namespace: 'kube-system',
+    name: 'cargo-admin',
+    label: 'cargo-admin',
+    containers: [
+        // jnlp with kubectl
+        containerTemplate(
+            name: 'jnlp',
+            alwaysPullImage: true,
+            image: 'cargo.caicloudprivatetest.com/caicloud/jnlp-slave:3.14-1-alpine',
+            command: '',
+            args: '${computer.jnlpmac} ${computer.name}',
+        ),
+        // docker in docker
+        containerTemplate(
+            name: 'dind',
+            image: 'cargo.caicloudprivatetest.com/caicloud/docker:17.09-dind',
+            ttyEnabled: true,
+            command: '',
+            args: '--host=unix:///home/jenkins/docker.sock',
+            privileged: true,
+        ),
+        // golang with docker client
+        containerTemplate(
+            name: 'golang',
+            image: 'cargo.caicloudprivatetest.com/caicloud/golang-docker:1.9-17.09',
+            ttyEnabled: true,
+            command: '',
+            args: '',
+            envVars: [
+                containerEnvVar(key: 'DOCKER_HOST', value: 'unix:///home/jenkins/docker.sock'),
+                containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/cargo-admin')
+            ],
+        ),
+    ]
+) {
+    node('cargo-admin') {
+        stage('Checkout') {
+           checkout scm
+        }
+
+        container('golang') {
+            ansiColor('xterm') {
+                stage("Complie Cargo-Admin") {
+                    sh('''
+                        set -e
+                        mkdir -p $(dirname ${WORKDIR})
+                        rm -rf ${WORKDIR}
+                        ln -sfv $(pwd) ${WORKDIR}
+                        cd ${WORKDIR}
+                        GOOS=linux GOARCH=amd64 go build -v -o ./bin/cargo-admin ./cmd/admin
+                    ''')
+                }
+
+                stage("Complie Cargo-Token") {
+                    sh('''
+                        set -e
+                        mkdir -p $(dirname ${WORKDIR})
+                        rm -rf ${WORKDIR}
+                        ln -sfv $(pwd) ${WORKDIR}
+                        cd ${WORKDIR}
+                        GOOS=linux GOARCH=amd64 go build -v  -o ./bin/cargo-token ./cmd/token
+                    ''')
+                }
+
+                stage('Unit test') {
+                    sh('''
+                        set -e
+                        cd ${WORKDIR}
+                        make test
+                    ''')
+                }
+
+                stage('Build and push cargo-admin image') {
+                    sh("docker build -t ${adminImage} -f build/admin/Dockerfile .")
+                    if (params.publish) {
+                        docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
+                            docker.image(adminImage).push()
+                        }
+                    }
+                }
+
+                stage('Build and push cargo-token image') {
+                    sh("docker build -t ${tokenImage} -f build/token/Dockerfile .")
+                    if (params.publish) {
+                        docker.withRegistry("https://cargo.caicloudprivatetest.com", "cargo-private-admin") {
+                            docker.image(tokenImage).push()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

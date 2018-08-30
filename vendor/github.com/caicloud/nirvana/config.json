@@ -1,0 +1,30 @@
+{
+  "Vendor": true,
+  "DisableAll": true,
+  "Enable": [
+    "vet",
+    "gotype",
+    "safesql",
+    "errcheck",
+    "goconst",
+    "goimports",
+    "varcheck",
+    "megacheck",
+    "lll",
+    "unconvert",
+    "misspell",
+    "golint",
+    "deadcode",
+    "unconvert"
+  ],
+  "Aggregate": true,
+  "WarnUnmatchedNolint": true,
+  "LineLength": 160,
+  "Exclude": [
+    "comment or be unexported",
+    "Use of unsafe calls should be audited",
+    "Subprocess launching with variable"
+  ],
+  "Deadline": "300s",
+  "Skip": ["examples", "docs", "website"]
+}

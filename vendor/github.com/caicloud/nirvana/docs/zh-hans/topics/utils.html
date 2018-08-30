@@ -1,0 +1,1056 @@
+
+<!DOCTYPE HTML>
+<html lang="zh-hans" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>utils · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="command.html" />
+    
+    
+    <link rel="prev" href="rest.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="输入并搜索" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    概览
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" >
+            
+                <span>
+            
+                    
+                    快速入门
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../guides/project.html">
+            
+                <a href="../guides/project.html">
+            
+                    
+                    项目结构和初始化
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../guides/api.html">
+            
+                <a href="../guides/api.html">
+            
+                    
+                    API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../guides/doc.html">
+            
+                <a href="../guides/doc.html">
+            
+                    
+                    生成 API 文档
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../guides/client.html">
+            
+                <a href="../guides/client.html">
+            
+                    
+                    生成客户端
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" >
+            
+                <span>
+            
+                    
+                    概念
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../concepts/cp.html">
+            
+                <a href="../concepts/cp.html">
+            
+                    
+                    Consumer && Producer
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../concepts/operator.html">
+            
+                <a href="../concepts/operator.html">
+            
+                    
+                    Operator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../concepts/filter.html">
+            
+                <a href="../concepts/filter.html">
+            
+                    
+                    Filter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../concepts/prefab.html">
+            
+                <a href="../concepts/prefab.html">
+            
+                    
+                    Prefab
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../concepts/modifier.html">
+            
+                <a href="../concepts/modifier.html">
+            
+                    
+                    Modifier
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.6" data-path="../concepts/middleware.html">
+            
+                <a href="../concepts/middleware.html">
+            
+                    
+                    Middleware
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.7" data-path="../concepts/context.html">
+            
+                <a href="../concepts/context.html">
+            
+                    
+                    Context
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.8" data-path="../concepts/source.html">
+            
+                <a href="../concepts/source.html">
+            
+                    
+                    Parameter Generator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.9" data-path="../concepts/destination.html">
+            
+                <a href="../concepts/destination.html">
+            
+                    
+                    Destination Handler
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.10" data-path="../concepts/error.html">
+            
+                <a href="../concepts/error.html">
+            
+                    
+                    错误包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.11" data-path="../concepts/method.html">
+            
+                <a href="../concepts/method.html">
+            
+                    
+                    方法包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.12" data-path="../concepts/configurer.html">
+            
+                <a href="../concepts/configurer.html">
+            
+                    
+                    配置器机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.13" data-path="../concepts/plugin.html">
+            
+                <a href="../concepts/plugin.html">
+            
+                    
+                    插件机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.14" data-path="../concepts/clients.html">
+            
+                <a href="../concepts/clients.html">
+            
+                    
+                    多客户端整合
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" >
+            
+                <span>
+            
+                    
+                    插件
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../plugins/logger.html">
+            
+                <a href="../plugins/logger.html">
+            
+                    
+                    系统日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../plugins/reqlog.html">
+            
+                <a href="../plugins/reqlog.html">
+            
+                    
+                    请求日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../plugins/metrics.html">
+            
+                <a href="../plugins/metrics.html">
+            
+                    
+                    监控指标插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../plugins/tracing.html">
+            
+                <a href="../plugins/tracing.html">
+            
+                    
+                    请求追踪插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../plugins/profiling.html">
+            
+                <a href="../plugins/profiling.html">
+            
+                    
+                    性能分析插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../plugins/version.html">
+            
+                <a href="../plugins/version.html">
+            
+                    
+                    版本信息插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../plugins/healthcheck.html">
+            
+                <a href="../plugins/healthcheck.html">
+            
+                    
+                    健康检查插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" >
+            
+                <span>
+            
+                    
+                    框架开发者指南
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="start.html">
+            
+                <a href="start.html">
+            
+                    
+                    准备工作
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="log.html">
+            
+                <a href="log.html">
+            
+                    
+                    log
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.3" data-path="errors.html">
+            
+                <a href="errors.html">
+            
+                    
+                    errors
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.4" data-path="definition.html">
+            
+                <a href="definition.html">
+            
+                    
+                    definition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.5" data-path="method.html">
+            
+                <a href="method.html">
+            
+                    
+                    definition/method
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.6" data-path="converter.html">
+            
+                <a href="converter.html">
+            
+                    
+                    operators/converter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.7" data-path="validator.html">
+            
+                <a href="validator.html">
+            
+                    
+                    operators/validator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.8" data-path="router.html">
+            
+                <a href="router.html">
+            
+                    
+                    service/router
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.9" data-path="service.html">
+            
+                <a href="service.html">
+            
+                    
+                    service
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.10" data-path="nirvana.html">
+            
+                <a href="nirvana.html">
+            
+                    
+                    nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.11" data-path="config.html">
+            
+                <a href="config.html">
+            
+                    
+                    config
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.12" data-path="rest.html">
+            
+                <a href="rest.html">
+            
+                    
+                    rest
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.5.13" data-path="utils.html">
+            
+                <a href="utils.html">
+            
+                    
+                    utils
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.14" data-path="command.html">
+            
+                <a href="command.html">
+            
+                    
+                    cmd/nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            本书使用 GitBook 发布
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >utils</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="utils-&#x7CFB;&#x5217;&#x5305;">utils &#x7CFB;&#x5217;&#x5305;</h1>
+<p>utils &#x7CFB;&#x5217;&#x5305;&#x5305;&#x542B;&#xFF1A;</p>
+<ol>
+<li>api &#x5305;&#xFF0C;&#x7528;&#x4E8E;&#x8BFB;&#x53D6;&#x9879;&#x76EE;&#x6E90;&#x7801;&#xFF0C;&#x5E76;&#x751F;&#x6210;&#x4E0E; API &#x6709;&#x5173;&#x7684;&#x6240;&#x6709;&#x6570;&#x636E;&#x7ED3;&#x6784;&#xFF0C;&#x4EA7;&#x51FA;&#x7684;&#x7ED3;&#x6784;&#x53EF;&#x7528;&#x4E8E;&#x751F;&#x6210;&#x6587;&#x6863;&#x548C;&#x5BA2;&#x6237;&#x7AEF;&#x3002;</li>
+<li>builder &#x5305;&#xFF0C;&#x5229;&#x7528; api &#x5305;&#x8BFB;&#x53D6;&#x6E90;&#x7801;&#x5E76;&#x751F;&#x6210; API &#x6570;&#x636E;&#x3002;</li>
+<li>generators/golang &#x5305;&#xFF0C;&#x5229;&#x7528; api &#x5305;&#x63D0;&#x4F9B;&#x7684;&#x6570;&#x636E;&#x7ED3;&#x6784;&#x751F;&#x6210; golang &#x5BA2;&#x6237;&#x7AEF;&#x3002;</li>
+<li>generators/swagger &#x5305;&#xFF0C;&#x5229;&#x7528; api &#x5305;&#x63D0;&#x4F9B;&#x7684;&#x6570;&#x636E;&#x7ED3;&#x6784;&#x751F;&#x6210; API &#x6587;&#x6863;&#x3002;</li>
+<li>generators/utils &#x5305;&#xFF0C;&#x63D0;&#x4F9B;&#x516C;&#x5171;&#x5DE5;&#x5177;&#x7ED9;&#x5176;&#x4ED6;&#x751F;&#x6210;&#x5668;&#x4F7F;&#x7528;&#x3002;</li>
+<li>printer &#x5305;&#xFF0C;&#x63D0;&#x4F9B;&#x4E86;&#x4E00;&#x4E2A;&#x5728; Terminal &#x4E2D;&#x6253;&#x5370;&#x8868;&#x683C;&#x7684;&#x529F;&#x80FD;&#x3002;</li>
+<li>project &#x5305;&#xFF0C;&#x63D0;&#x4F9B;&#x4E86;&#x57FA;&#x7840;&#x5DE5;&#x5177;&#x7528;&#x4E8E;&#x8BFB;&#x53D6;&#x9879;&#x76EE;&#x914D;&#x7F6E;&#x6587;&#x4EF6;&#xFF0C;&#x901A;&#x5E38;&#x662F; nirvana.yaml&#x3002;</li>
+</ol>
+<p>&#x9664;&#x4E86; printer &#x5305;&#x4EE5;&#x5916;&#xFF0C;&#x5176;&#x4ED6;&#x5305;&#x90FD;&#x662F;&#x7528;&#x4E8E;&#x751F;&#x6210;&#x6587;&#x6863;&#x548C;&#x5BA2;&#x6237;&#x7AEF;&#x7528;&#x7684;&#x3002;</p>
+<p>&#x5728; api &#x5305;&#x4E2D;&#xFF0C;&#x63D0;&#x4F9B;&#x4E86;&#x5982;&#x4E0B;&#x529F;&#x80FD;&#xFF1A;</p>
+<ol>
+<li><p>&#x5BF9;&#x5E94; golang type &#x7684; Type<br>&#x4E3A;&#x4E86;&#x80FD;&#x8BA9; golang type &#x80FD;&#x8F6C;&#x6362;&#x4E3A;&#x53EF;&#x8BFB;&#x7684;&#x6570;&#x636E;&#x7ED3;&#x6784;&#xFF0C;&#x6784;&#x5EFA;&#x4E86; Type &#x76F8;&#x5173;&#x7C7B;&#x578B;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// TypeName is unique name for go types.</span>
+<span class="hljs-keyword">type</span> TypeName <span class="hljs-keyword">string</span>
+
+<span class="hljs-comment">// TypeNameInvalid indicates an invalid type name.</span>
+<span class="hljs-keyword">const</span> TypeNameInvalid = <span class="hljs-string">&quot;&quot;</span>
+
+<span class="hljs-comment">// StructField describes a field of a struct.</span>
+<span class="hljs-keyword">type</span> StructField <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Name is the field name.</span>
+   Name <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Comments of the type.</span>
+   Comments <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// PkgPath is the package path that qualifies a lower case (unexported)</span>
+   <span class="hljs-comment">// field name. It is empty for upper case (exported) field names.</span>
+   PkgPath <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Type is field type name.</span>
+   Type TypeName
+   <span class="hljs-comment">// Tag is field tag.</span>
+   Tag reflect.StructTag
+   <span class="hljs-comment">// Offset within struct, in bytes.</span>
+   Offset <span class="hljs-keyword">uintptr</span>
+   <span class="hljs-comment">// Index sequence for Type.FieldByIndex.</span>
+   Index []<span class="hljs-keyword">int</span>
+   <span class="hljs-comment">// Anonymous shows whether the field is an embedded field.</span>
+   Anonymous <span class="hljs-keyword">bool</span>
+}
+
+<span class="hljs-comment">// FuncField describes a field of function.</span>
+<span class="hljs-keyword">type</span> FuncField <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Name is the field name.</span>
+   Name <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Type is field type name.</span>
+   Type TypeName
+}
+
+<span class="hljs-comment">// Type describes an go type.</span>
+<span class="hljs-keyword">type</span> Type <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Name is short type name.</span>
+   Name <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Comments of the type.</span>
+   Comments <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// PkgPath is the package for this type.</span>
+   PkgPath <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Kind is type kind.</span>
+   Kind reflect.Kind
+   <span class="hljs-comment">// Key is map key type. Only used in map.</span>
+   Key TypeName
+   <span class="hljs-comment">// Elem is the element type of map, slice, array, pointer.</span>
+   Elem TypeName
+   <span class="hljs-comment">// Fields contains all struct fields of a struct.</span>
+   Fields []StructField
+   <span class="hljs-comment">// In presents fields of function input parameters.</span>
+   In []FuncField
+   <span class="hljs-comment">// Out presents fields of function output results.</span>
+   Out []FuncField
+   <span class="hljs-comment">// Conflict identifies the index of current type in a list of</span>
+   <span class="hljs-comment">// types which have same type names. In most cases, this field is 0.</span>
+   Conflict <span class="hljs-keyword">int</span>
+}
+</code></pre>
+</li>
+<li><p>&#x5BF9;&#x5E94; Nirvana API &#x7684; Definition<br>&#x6B64;&#x5904;&#x7684; Definition &#x5927;&#x90E8;&#x5206;&#x5B57;&#x6BB5;&#x4E0E; definition &#x5305;&#x4E2D;&#x7684;&#x76F8;&#x540C;&#xFF0C;&#x4E4B;&#x6240;&#x4EE5;&#x4E0D;&#x590D;&#x7528;&#x4E4B;&#x524D;&#x7684;&#x7ED3;&#x6784;&#xFF0C;&#x662F;&#x56E0;&#x4E3A;&#x6709;&#x90E8;&#x5206;&#x7C7B;&#x578B;&#x76F8;&#x5173;&#x7684;&#x5B57;&#x6BB5;&#x7A0D;&#x6709;&#x4E0D;&#x540C;&#x3002;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// Parameter describes a function parameter.</span>
+<span class="hljs-keyword">type</span> Parameter <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Source is the parameter value generated from.</span>
+   Source definition.Source
+   <span class="hljs-comment">// Name is the name to get value from a request.</span>
+   Name <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Description describes the parameter.</span>
+   Description <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Type is parameter object type.</span>
+   Type TypeName
+   <span class="hljs-comment">// Default is encoded default value.</span>
+   Default []<span class="hljs-keyword">byte</span>
+}
+
+<span class="hljs-comment">// Result describes a function result.</span>
+<span class="hljs-keyword">type</span> Result <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Destination is the target for the result.</span>
+   Destination definition.Destination
+   <span class="hljs-comment">// Description describes the result.</span>
+   Description <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Type is result object type.</span>
+   Type TypeName
+}
+
+<span class="hljs-comment">// Example is just an example.</span>
+<span class="hljs-keyword">type</span> Example <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Description describes the example.</span>
+   Description <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Type is result object type.</span>
+   Type TypeName
+   <span class="hljs-comment">// Instance is encoded instance data.</span>
+   Instance []<span class="hljs-keyword">byte</span>
+}
+
+<span class="hljs-comment">// Definition is complete version of def.Definition.</span>
+<span class="hljs-keyword">type</span> Definition <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Method is definition method.</span>
+   Method definition.Method
+   <span class="hljs-comment">// HTTPMethod is http method.</span>
+   HTTPMethod <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// HTTPCode is http success code.</span>
+   HTTPCode <span class="hljs-keyword">int</span>
+   <span class="hljs-comment">// Summary is a brief of this definition.</span>
+   Summary <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Description describes the API handler.</span>
+   Description <span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Consumes indicates how many content types the handler can consume.</span>
+   <span class="hljs-comment">// It will override parent descriptor&apos;s consumes.</span>
+   Consumes []<span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Produces indicates how many content types the handler can produce.</span>
+   <span class="hljs-comment">// It will override parent descriptor&apos;s produces.</span>
+   Produces []<span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// ErrorProduces is used to generate data for error. If this field is empty,</span>
+   <span class="hljs-comment">// it means that this field equals to Produces.</span>
+   <span class="hljs-comment">// In some cases, succeessful data and error data should be generated in</span>
+   <span class="hljs-comment">// different ways.</span>
+   ErrorProduces []<span class="hljs-keyword">string</span>
+   <span class="hljs-comment">// Function is a function handler. It must be func type.</span>
+   Function TypeName
+   <span class="hljs-comment">// Parameters describes function parameters.</span>
+   Parameters []Parameter
+   <span class="hljs-comment">// Results describes function retrun values.</span>
+   Results []Result
+   <span class="hljs-comment">// Examples contains many examples for the API handler.</span>
+   Examples []Example
+}
+</code></pre>
+</li>
+<li><p>&#x7528;&#x4E8E;&#x8868;&#x793A;&#x4EE3;&#x7801;&#x6CE8;&#x91CA;&#x7684; Comments<br>&#x5728;&#x6E90;&#x7801;&#x89E3;&#x6790;&#x7684;&#x65F6;&#x5019;&#xFF0C;&#x901A;&#x5E38;&#x9700;&#x8981;&#x901A;&#x8FC7;&#x6CE8;&#x91CA;&#x5B9E;&#x73B0;&#x4E00;&#x4E9B;&#x7279;&#x6B8A;&#x529F;&#x80FD;&#xFF0C;&#x56E0;&#x6B64;&#x8981;&#x5BF9;&#x6CE8;&#x91CA;&#x8FDB;&#x884C;&#x5206;&#x6790;&#x3002;&#x76EE;&#x524D;&#x6CE8;&#x91CA;&#x7279;&#x6B8A;&#x683C;&#x5F0F;&#x662F; <code>+nirvana:api=option:&quot;value&quot;</code>&#x3002;</p>
+<pre><code class="lang-go"><span class="hljs-keyword">const</span> (
+   <span class="hljs-comment">// CommentsOptionDescriptors is the option name of descriptors.</span>
+   CommentsOptionDescriptors = <span class="hljs-string">&quot;descriptors&quot;</span>
+   <span class="hljs-comment">// CommentsOptionModifiers is the option name of modifiers.</span>
+   CommentsOptionModifiers = <span class="hljs-string">&quot;modifiers&quot;</span>
+   <span class="hljs-comment">// CommentsOptionAlias is the option name of alias.</span>
+   CommentsOptionAlias = <span class="hljs-string">&quot;alias&quot;</span>
+   <span class="hljs-comment">// CommentsOptionOrigin is the option name of original name.</span>
+   CommentsOptionOrigin = <span class="hljs-string">&quot;origin&quot;</span>
+)
+
+<span class="hljs-comment">// Comments is parsed from go comments.</span>
+<span class="hljs-keyword">type</span> Comments <span class="hljs-keyword">struct</span> {
+   lines   []<span class="hljs-keyword">string</span>
+   options <span class="hljs-keyword">map</span>[<span class="hljs-keyword">string</span>][]<span class="hljs-keyword">string</span>
+}
+
+<span class="hljs-keyword">var</span> optionsRegexp = regexp.MustCompile(<span class="hljs-string">`^[ \t]*\+nirvana:api[ \t]*=(.*)$`</span>)
+<span class="hljs-keyword">var</span> options = []<span class="hljs-keyword">string</span>{CommentsOptionDescriptors, CommentsOptionModifiers, CommentsOptionAlias}
+
+<span class="hljs-comment">// ParseComments parses comments and extracts nirvana options.</span>
+<span class="hljs-keyword">func</span> ParseComments(comments <span class="hljs-keyword">string</span>) *Comments
+</code></pre>
+</li>
+<li><p>&#x7528;&#x4E8E;&#x5206;&#x6790;&#x6E90;&#x7801;&#x7684; Analyzer<br>Analyzer &#x53EF;&#x4EE5;&#x8BFB;&#x53D6;&#x6E90;&#x7801;&#xFF0C;&#x83B7;&#x53D6;&#x7ED3;&#x6784;&#x5BF9;&#x8C61;&#x548C;&#x6CE8;&#x91CA;&#x4FE1;&#x606F;&#x3002;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// Analyzer analyzes go packages.</span>
+<span class="hljs-keyword">type</span> Analyzer <span class="hljs-keyword">struct</span> {
+   ...
+}
+
+<span class="hljs-comment">// NewAnalyzer creates a code ananlyzer.</span>
+<span class="hljs-keyword">func</span> NewAnalyzer(root <span class="hljs-keyword">string</span>) *Analyzer
+
+<span class="hljs-comment">// Import imports a package and all packages it depends on.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) Import(path <span class="hljs-keyword">string</span>) (*types.Package, error)
+
+<span class="hljs-comment">// PackageComments returns comments above package keyword.</span>
+<span class="hljs-comment">// Import package before calling this method.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) PackageComments(path <span class="hljs-keyword">string</span>) []*ast.CommentGroup
+
+<span class="hljs-comment">// Packages returns packages under specified directory (including itself).</span>
+<span class="hljs-comment">// Import package before calling this method.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) Packages(parent <span class="hljs-keyword">string</span>, vendor <span class="hljs-keyword">bool</span>) []<span class="hljs-keyword">string</span>
+
+<span class="hljs-comment">// FindPackages returns packages which contain target.</span>
+<span class="hljs-comment">// Import package before calling this method.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) FindPackages(target <span class="hljs-keyword">string</span>) []<span class="hljs-keyword">string</span>
+
+<span class="hljs-comment">// Comments returns immediate comments above pos.</span>
+<span class="hljs-comment">// Import package before calling this method.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) Comments(pos token.Pos) *ast.CommentGroup
+
+<span class="hljs-comment">// ObjectOf returns declaration object of target.</span>
+<span class="hljs-keyword">func</span> (a *Analyzer) ObjectOf(pkg, name <span class="hljs-keyword">string</span>) (types.Object, error)
+</code></pre>
+</li>
+<li><p>&#x96C6;&#x5408;&#x4E0A;&#x8FF0;&#x6240;&#x6709;&#x529F;&#x80FD;&#x7684; Container<br>Container &#x8BFB;&#x53D6;&#x6E90;&#x7801;&#x5E76;&#x8FDB;&#x884C;&#x5206;&#x6790;&#xFF0C;&#x4EA7;&#x51FA; API &#x76F8;&#x5173;&#x7684;&#x6240;&#x6709;&#x5B9A;&#x4E49;&#x548C;&#x7C7B;&#x578B;&#x4FE1;&#x606F;&#x3002;API &#x5B9A;&#x4E49;&#x548C;&#x7C7B;&#x578B;&#x4FE1;&#x606F;&#x53EF;&#x4EE5;&#x7528;&#x6765;&#x751F;&#x6210; API &#x6587;&#x6863;&#x548C;&#x5BA2;&#x6237;&#x7AEF;&#x3002;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// Definitions describes all APIs and its related object types.</span>
+<span class="hljs-keyword">type</span> Definitions <span class="hljs-keyword">struct</span> {
+   <span class="hljs-comment">// Definitions holds mappings between path and API descriptions.</span>
+   Definitions <span class="hljs-keyword">map</span>[<span class="hljs-keyword">string</span>][]Definition
+   <span class="hljs-comment">// Types contains all types used by definitions.</span>
+   Types <span class="hljs-keyword">map</span>[TypeName]*Type
+}
+
+<span class="hljs-comment">// Container contains informations to generate APIs.</span>
+<span class="hljs-keyword">type</span> Container <span class="hljs-keyword">struct</span> {
+   ...
+}
+
+<span class="hljs-comment">// NewContainer creates API container.</span>
+<span class="hljs-keyword">func</span> NewContainer(root <span class="hljs-keyword">string</span>) *Container
+
+<span class="hljs-comment">// AddModifier add definition modifiers to container.</span>
+<span class="hljs-keyword">func</span> (ac *Container) AddModifier(modifiers ...service.DefinitionModifier)
+
+<span class="hljs-comment">// AddDescriptor add descriptors to container.</span>
+<span class="hljs-keyword">func</span> (ac *Container) AddDescriptor(descriptors ...definition.Descriptor)
+
+<span class="hljs-comment">// Generate generates API definitions.</span>
+<span class="hljs-keyword">func</span> (ac *Container) Generate() (*Definitions, error)
+</code></pre>
+</li>
+</ol>
+<p>builder &#x5305;&#x76F8;&#x5BF9; api &#x5305;&#x6765;&#x8BF4;&#x5C31;&#x7B80;&#x5355;&#x5F88;&#x591A;&#x4E86;&#xFF0C;&#x8FD9;&#x4E2A;&#x5305;&#x91CC;&#x5305;&#x542B;&#x4E00;&#x4E2A; API Builder&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// APIBuilder builds api definitions by specified package.</span>
+<span class="hljs-keyword">type</span> APIBuilder <span class="hljs-keyword">struct</span> {
+    ...
+}
+
+<span class="hljs-comment">// NewAPIBuilder creates an api builder.</span>
+<span class="hljs-keyword">func</span> NewAPIBuilder(root <span class="hljs-keyword">string</span>, paths ...<span class="hljs-keyword">string</span>) *APIBuilder
+
+<span class="hljs-comment">// Build build api definitions.</span>
+<span class="hljs-keyword">func</span> (b *APIBuilder) Build() (*api.Definitions, error)
+</code></pre>
+<p>API Builder &#x9996;&#x5148;&#x4F1A;&#x5229;&#x7528; Analyzer &#x53BB;&#x8BFB;&#x53D6;&#x6307;&#x5B9A;&#x8DEF;&#x5F84;&#x7684;&#x6E90;&#x7801;&#xFF0C;&#x7136;&#x540E;&#x4ECE;&#x4E2D;&#x627E;&#x5230;&#x6807;&#x8BB0;&#x4E86; modifiers &#x548C; descriptors &#x9009;&#x9879;&#x7684;&#x6CE8;&#x91CA;&#x3002;&#x4E24;&#x4E2A;&#x9009;&#x9879;&#x7684;&#x503C;&#x5BF9;&#x5E94;&#x4E24;&#x4E2A;&#x51FD;&#x6570;&#xFF0C;&#x5206;&#x522B;&#x8FD4;&#x56DE; Modifier &#x548C; Descriptor&#x3002;&#x7136;&#x540E;&#x52A8;&#x6001;&#x751F;&#x6210;&#x4E00;&#x4E2A; main.go &#x6587;&#x4EF6; import &#x8FD9;&#x4E24;&#x4E2A;&#x51FD;&#x6570;&#x5BF9;&#x5E94;&#x5305;&#xFF0C;&#x7136;&#x540E;&#x8C03;&#x7528;&#x8FD9;&#x4E24;&#x4E2A;&#x51FD;&#x6570;&#xFF0C;&#x53D6;&#x5F97;&#x8FD4;&#x56DE;&#x503C;&#x3002;&#x5F97;&#x5230;&#x8FD4;&#x56DE;&#x503C;&#x4E4B;&#x540E;&#x5219;&#x5229;&#x7528; api &#x5305;&#x7684; Container &#x6765;&#x751F;&#x6210; API &#x5B9A;&#x4E49;&#x548C;&#x7C7B;&#x578B;&#x4FE1;&#x606F;&#x3002;API Builder &#x6267;&#x884C; main.go &#x540E;&#x901A;&#x8FC7; stdout &#x53D6;&#x5F97;&#x8FD4;&#x56DE;&#x503C;&#xFF0C;&#x53CD;&#x5E8F;&#x5217;&#x5316;&#x6210; Definitions &#x7ED3;&#x6784;&#xFF0C;&#x7136;&#x540E;&#x518D;&#x8FD4;&#x56DE;&#x7ED9; API Builder &#x7684;&#x8C03;&#x7528;&#x8005;&#x3002;&#x8FD9;&#x6837;&#x5C31;&#x5B8C;&#x6210;&#x4E86;&#x5BF9;&#x4E00;&#x4E2A;&#x9879;&#x76EE;&#x7684; API &#x4FE1;&#x606F;&#x7684;&#x63D0;&#x53D6;&#x3002;</p>
+<p>golang &#x5305;&#x548C; swagger &#x5305;&#x5B9E;&#x9645;&#x4E0A;&#x90FD;&#x662F;&#x5229;&#x7528;&#x4E86; API Builder &#x7684;&#x8FD4;&#x56DE;&#x7ED3;&#x679C;&#xFF0C;&#x6784;&#x5EFA;&#x51FA;&#x76F8;&#x5E94;&#x7684;&#x5BA2;&#x6237;&#x7AEF;&#x548C;&#x6587;&#x6863;&#x3002;golang &#x5305;&#x4F1A;&#x4E3A;&#x6BCF;&#x4E00;&#x4E2A; API &#x751F;&#x6210;&#x4E00;&#x4E2A;&#x5BA2;&#x6237;&#x7AEF;&#x51FD;&#x6570;&#xFF0C;&#x8FD9;&#x4E2A;&#x51FD;&#x6570;&#x7684;&#x7ED3;&#x6784;&#x548C;&#x670D;&#x52A1;&#x8BFB;&#x57FA;&#x672C;&#x4E00;&#x81F4;&#x3002;&#x51FD;&#x6570;&#x4F53;&#x7684;&#x5B9E;&#x73B0;&#x5219;&#x662F;&#x76F4;&#x63A5;&#x4F7F;&#x7528;&#x4E86; rest &#x5305; Client &#x63A5;&#x53E3;&#x3002;swagger &#x5305;&#x5219;&#x662F;&#x5229;&#x7528;&#x4E86; <code>github.com/go-openapi/spec</code> &#x5C06; API &#x5B9A;&#x4E49;&#x548C;&#x7C7B;&#x578B;&#x8F6C;&#x6362;&#x6210;&#x4E86; openapi &#x7684;&#x5B9A;&#x4E49;&#x3002;</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="rest.html" class="navigation navigation-prev " aria-label="Previous page: rest">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="command.html" class="navigation navigation-next " aria-label="Next page: cmd/nirvana">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"utils","level":"1.5.13","depth":2,"next":{"title":"cmd/nirvana","level":"1.5.14","depth":2,"path":"topics/command.md","ref":"topics/command.md","articles":[]},"previous":{"title":"rest","level":"1.5.12","depth":2,"path":"topics/rest.md","ref":"topics/rest.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"language":"zh-hans","gitbook":"*"},"file":{"path":"topics/utils.md","mtime":"2018-08-01T07:58:21.208Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-08-01T08:21:08.987Z"},"basePath":"..","book":{"language":"zh-hans"}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

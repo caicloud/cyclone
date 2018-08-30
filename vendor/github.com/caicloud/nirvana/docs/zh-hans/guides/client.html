@@ -1,0 +1,953 @@
+
+<!DOCTYPE HTML>
+<html lang="zh-hans" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>生成客户端 · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    
+    <link rel="prev" href="doc.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="输入并搜索" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    概览
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" >
+            
+                <span>
+            
+                    
+                    快速入门
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="project.html">
+            
+                <a href="project.html">
+            
+                    
+                    项目结构和初始化
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="api.html">
+            
+                <a href="api.html">
+            
+                    
+                    API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="doc.html">
+            
+                <a href="doc.html">
+            
+                    
+                    生成 API 文档
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2.4" data-path="client.html">
+            
+                <a href="client.html">
+            
+                    
+                    生成客户端
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" >
+            
+                <span>
+            
+                    
+                    概念
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../concepts/cp.html">
+            
+                <a href="../concepts/cp.html">
+            
+                    
+                    Consumer && Producer
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../concepts/operator.html">
+            
+                <a href="../concepts/operator.html">
+            
+                    
+                    Operator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../concepts/filter.html">
+            
+                <a href="../concepts/filter.html">
+            
+                    
+                    Filter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../concepts/prefab.html">
+            
+                <a href="../concepts/prefab.html">
+            
+                    
+                    Prefab
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../concepts/modifier.html">
+            
+                <a href="../concepts/modifier.html">
+            
+                    
+                    Modifier
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.6" data-path="../concepts/middleware.html">
+            
+                <a href="../concepts/middleware.html">
+            
+                    
+                    Middleware
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.7" data-path="../concepts/context.html">
+            
+                <a href="../concepts/context.html">
+            
+                    
+                    Context
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.8" data-path="../concepts/source.html">
+            
+                <a href="../concepts/source.html">
+            
+                    
+                    Parameter Generator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.9" data-path="../concepts/destination.html">
+            
+                <a href="../concepts/destination.html">
+            
+                    
+                    Destination Handler
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.10" data-path="../concepts/error.html">
+            
+                <a href="../concepts/error.html">
+            
+                    
+                    错误包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.11" data-path="../concepts/method.html">
+            
+                <a href="../concepts/method.html">
+            
+                    
+                    方法包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.12" data-path="../concepts/configurer.html">
+            
+                <a href="../concepts/configurer.html">
+            
+                    
+                    配置器机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.13" data-path="../concepts/plugin.html">
+            
+                <a href="../concepts/plugin.html">
+            
+                    
+                    插件机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.14" data-path="../concepts/clients.html">
+            
+                <a href="../concepts/clients.html">
+            
+                    
+                    多客户端整合
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" >
+            
+                <span>
+            
+                    
+                    插件
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../plugins/logger.html">
+            
+                <a href="../plugins/logger.html">
+            
+                    
+                    系统日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../plugins/reqlog.html">
+            
+                <a href="../plugins/reqlog.html">
+            
+                    
+                    请求日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../plugins/metrics.html">
+            
+                <a href="../plugins/metrics.html">
+            
+                    
+                    监控指标插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../plugins/tracing.html">
+            
+                <a href="../plugins/tracing.html">
+            
+                    
+                    请求追踪插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../plugins/profiling.html">
+            
+                <a href="../plugins/profiling.html">
+            
+                    
+                    性能分析插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../plugins/version.html">
+            
+                <a href="../plugins/version.html">
+            
+                    
+                    版本信息插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../plugins/healthcheck.html">
+            
+                <a href="../plugins/healthcheck.html">
+            
+                    
+                    健康检查插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" >
+            
+                <span>
+            
+                    
+                    框架开发者指南
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../topics/start.html">
+            
+                <a href="../topics/start.html">
+            
+                    
+                    准备工作
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../topics/log.html">
+            
+                <a href="../topics/log.html">
+            
+                    
+                    log
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.3" data-path="../topics/errors.html">
+            
+                <a href="../topics/errors.html">
+            
+                    
+                    errors
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.4" data-path="../topics/definition.html">
+            
+                <a href="../topics/definition.html">
+            
+                    
+                    definition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.5" data-path="../topics/method.html">
+            
+                <a href="../topics/method.html">
+            
+                    
+                    definition/method
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.6" data-path="../topics/converter.html">
+            
+                <a href="../topics/converter.html">
+            
+                    
+                    operators/converter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.7" data-path="../topics/validator.html">
+            
+                <a href="../topics/validator.html">
+            
+                    
+                    operators/validator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.8" data-path="../topics/router.html">
+            
+                <a href="../topics/router.html">
+            
+                    
+                    service/router
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.9" data-path="../topics/service.html">
+            
+                <a href="../topics/service.html">
+            
+                    
+                    service
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.10" data-path="../topics/nirvana.html">
+            
+                <a href="../topics/nirvana.html">
+            
+                    
+                    nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.11" data-path="../topics/config.html">
+            
+                <a href="../topics/config.html">
+            
+                    
+                    config
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.12" data-path="../topics/rest.html">
+            
+                <a href="../topics/rest.html">
+            
+                    
+                    rest
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.13" data-path="../topics/utils.html">
+            
+                <a href="../topics/utils.html">
+            
+                    
+                    utils
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.14" data-path="../topics/command.html">
+            
+                <a href="../topics/command.html">
+            
+                    
+                    cmd/nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            本书使用 GitBook 发布
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >生成客户端</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="&#x751F;&#x6210;&#x5BA2;&#x6237;&#x7AEF;">&#x751F;&#x6210;&#x5BA2;&#x6237;&#x7AEF;</h1>
+<h2 id="&#x751F;&#x6210;&#x4EE3;&#x7801;">&#x751F;&#x6210;&#x4EE3;&#x7801;</h2>
+<p>API &#x6587;&#x6863;&#x901A;&#x5E38;&#x8DB3;&#x591F;&#x4F7F;&#x7528;&#x8005;&#x4F7F;&#x7528;&#x3002;&#x4F46;&#x662F;&#x5728;&#x5FAE;&#x670D;&#x52A1;&#x573A;&#x666F;&#x4E0B;&#xFF0C;&#x670D;&#x52A1;&#x4E4B;&#x95F4;&#x4E5F;&#x4F1A;&#x5B58;&#x5728;&#x8C03;&#x7528;&#x5173;&#x7CFB;&#x3002;&#x56E0;&#x6B64;&#x9700;&#x8981;&#x4F7F;&#x8C03;&#x7528;&#x8005;&#x65B9;&#x4FBF;&#x5FEB;&#x901F;&#x7684;&#x8FDB;&#x884C; API &#x8C03;&#x7528;&#xFF0C;&#x53EF;&#x4EE5;&#x751F;&#x6210;&#x5BA2;&#x6237;&#x7AEF;&#x4EE5;&#x4F9B;&#x4F7F;&#x7528;&#xFF1A;</p>
+<pre><code>$ nirvana client
+</code></pre><p>&#x8BE5;&#x547D;&#x4EE4;&#x9ED8;&#x8BA4;&#x4F1A;&#x5728; <code>./client</code> &#x76EE;&#x5F55;&#x4E0B;&#x751F;&#x6210; golang &#x5BA2;&#x6237;&#x7AEF;&#x4EE3;&#x7801;&#xFF0C;&#x53EF;&#x4EE5;&#x901A;&#x8FC7; <code>--output</code> &#x6307;&#x5B9A;&#x5176;&#x4ED6;&#x8F93;&#x51FA;&#x76EE;&#x5F55;&#xFF08;&#x76EE;&#x524D;&#x4EC5;&#x652F;&#x6301;&#x751F;&#x6210; golang &#x5BA2;&#x6237;&#x7AEF;&#xFF0C;&#x5176;&#x4ED6;&#x8BED;&#x8A00;&#x5BA2;&#x6237;&#x7AEF;&#x5C1A;&#x4E0D;&#x652F;&#x6301;&#xFF09;&#x3002;</p>
+<p>&#x8F93;&#x51FA;&#x65E5;&#x5FD7;&#x5982;&#x4E0B;&#xFF08;&#x9879;&#x76EE;&#x8DEF;&#x5F84;&#x548C;&#x65E5;&#x5FD7;&#x65F6;&#x95F4;&#x4F1A;&#x6709;&#x6240;&#x4E0D;&#x540C;&#xFF09;&#xFF1A;</p>
+<pre><code>INFO  0702-15:50:54.156+08 client.go:73 | No packages are specified, defaults to pkg/apis
+INFO  0702-15:50:55.609+08 client.go:81 | Project root directory is /home/go/src/myproject
+INFO  0702-15:50:55.610+08 client.go:106 | Generated golang client package myproject/client
+</code></pre><p>&#x751F;&#x6210;&#x7684;&#x5BA2;&#x6237;&#x7AEF;&#x4EE3;&#x7801;&#x5982;&#x4E0B;&#xFF1A;</p>
+<pre><code>client
+&#x251C;&#x2500;&#x2500; client.go
+&#x2514;&#x2500;&#x2500; v1
+    &#x251C;&#x2500;&#x2500; client.go
+    &#x2514;&#x2500;&#x2500; types.go
+</code></pre><p><code>./client.go</code> &#x751F;&#x6210;&#x4EE3;&#x7801;:</p>
+<pre><code class="lang-go"><span class="hljs-keyword">package</span> client
+
+<span class="hljs-keyword">import</span> (
+    v1 <span class="hljs-string">&quot;myproject/client/v1&quot;</span>
+
+    rest <span class="hljs-string">&quot;github.com/caicloud/nirvana/rest&quot;</span>
+)
+
+<span class="hljs-comment">// Interface describes a versioned client.</span>
+<span class="hljs-keyword">type</span> Interface <span class="hljs-keyword">interface</span> {
+    <span class="hljs-comment">// V1 returns v1 client.</span>
+    V1() v1.Interface
+}
+
+<span class="hljs-comment">// Client contains versioned clients.</span>
+<span class="hljs-keyword">type</span> Client <span class="hljs-keyword">struct</span> {
+    v1 *v1.Client
+}
+
+<span class="hljs-comment">// NewClient creates a new client.</span>
+<span class="hljs-keyword">func</span> NewClient(cfg *rest.Config) (Interface, error) {
+    c := &amp;Client{}
+    <span class="hljs-keyword">var</span> err error
+
+    c.v1, err = v1.NewClient(cfg)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>, err
+    }
+
+    <span class="hljs-keyword">return</span> c, <span class="hljs-literal">nil</span>
+}
+
+<span class="hljs-comment">// MustNewClient creates a new client or panic if an error occurs.</span>
+<span class="hljs-keyword">func</span> MustNewClient(cfg *rest.Config) Interface {
+    <span class="hljs-keyword">return</span> &amp;Client{
+        v1: v1.MustNewClient(cfg),
+    }
+}
+
+<span class="hljs-comment">// V1 returns a versioned client.</span>
+<span class="hljs-keyword">func</span> (c *Client) V1() v1.Interface {
+    <span class="hljs-keyword">return</span> c.v1
+}
+</code></pre>
+<p><code>./v1/client.go</code> &#x751F;&#x6210;&#x4EE3;&#x7801;</p>
+<pre><code class="lang-go"><span class="hljs-keyword">package</span> v1
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">&quot;context&quot;</span>
+
+    rest <span class="hljs-string">&quot;github.com/caicloud/nirvana/rest&quot;</span>
+)
+
+<span class="hljs-comment">// Interface describes v1 client.</span>
+<span class="hljs-keyword">type</span> Interface <span class="hljs-keyword">interface</span> {
+    <span class="hljs-comment">// GetMessage return a message by id.</span>
+    GetMessage(ctx context.Context, message <span class="hljs-keyword">int</span>) (message1 *Message, err error)
+    <span class="hljs-comment">// ListMessages returns all messages.</span>
+    ListMessages(ctx context.Context, count <span class="hljs-keyword">int</span>) (messages []Message, err error)
+}
+
+<span class="hljs-comment">// Client for version v1.</span>
+<span class="hljs-keyword">type</span> Client <span class="hljs-keyword">struct</span> {
+    rest *rest.Client
+}
+
+<span class="hljs-comment">// NewClient creates a new client.</span>
+<span class="hljs-keyword">func</span> NewClient(cfg *rest.Config) (*Client, error) {
+    client, err := rest.NewClient(cfg)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>, err
+    }
+    <span class="hljs-keyword">return</span> &amp;Client{client}, <span class="hljs-literal">nil</span>
+}
+
+<span class="hljs-comment">// MustNewClient creates a new client or panic if an error occurs.</span>
+<span class="hljs-keyword">func</span> MustNewClient(cfg *rest.Config) *Client {
+    client, err := NewClient(cfg)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-built_in">panic</span>(err)
+    }
+    <span class="hljs-keyword">return</span> client
+}
+
+<span class="hljs-comment">// GetMessage return a message by id.</span>
+<span class="hljs-keyword">func</span> (c *Client) GetMessage(ctx context.Context, message <span class="hljs-keyword">int</span>) (message1 *Message, err error) {
+    message1 = <span class="hljs-built_in">new</span>(Message)
+    err = c.rest.Request(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-number">200</span>, <span class="hljs-string">&quot;/apis/v1/messages/{message}&quot;</span>).
+        Path(<span class="hljs-string">&quot;message&quot;</span>, message).
+        Data(message1).
+        Do(ctx)
+    <span class="hljs-keyword">return</span>
+}
+
+<span class="hljs-comment">// ListMessages returns all messages.</span>
+<span class="hljs-keyword">func</span> (c *Client) ListMessages(ctx context.Context, count <span class="hljs-keyword">int</span>) (messages []Message, err error) {
+    err = c.rest.Request(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-number">200</span>, <span class="hljs-string">&quot;/apis/v1/messages&quot;</span>).
+        Query(<span class="hljs-string">&quot;count&quot;</span>, count).
+        Data(&amp;messages).
+        Do(ctx)
+    <span class="hljs-keyword">return</span>
+}
+</code></pre>
+<p><code>./v1/types.go</code> &#x751F;&#x6210;&#x4EE3;&#x7801;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-keyword">package</span> v1
+
+<span class="hljs-comment">// Message describes a message entry.</span>
+<span class="hljs-keyword">type</span> Message <span class="hljs-keyword">struct</span> {
+    ID      <span class="hljs-keyword">int</span>    <span class="hljs-string">`json:&quot;id&quot;`</span>
+    Title   <span class="hljs-keyword">string</span> <span class="hljs-string">`json:&quot;title&quot;`</span>
+    Content <span class="hljs-keyword">string</span> <span class="hljs-string">`json:&quot;content&quot;`</span>
+}
+</code></pre>
+<p>&#x751F;&#x6210;&#x7684;&#x5BA2;&#x6237;&#x7AEF;&#x662F;&#x7248;&#x672C;&#x5316;&#x7684;&#xFF0C;&#x7248;&#x672C;&#x5728; nirvana.yaml &#x4E2D;&#x5B9A;&#x4E49;&#x3002;API &#x4F9D;&#x8D56;&#x7684;&#x7ED3;&#x6784;&#x4F53;&#x90FD;&#x4F1A;&#x88AB;&#x63D0;&#x53D6;&#x51FA;&#x6765;&#x5E76;&#x751F;&#x6210;&#x5230; <code>types.go</code> &#x6587;&#x4EF6;&#x4E2D;&#xFF0C;&#x65B9;&#x4FBF;&#x5BA2;&#x6237;&#x7AEF;&#x4F7F;&#x7528;&#x3002;</p>
+<p>&#x6BCF;&#x4E2A;&#x670D;&#x52A1;&#x90FD;&#x53EF;&#x4EE5;&#x751F;&#x6210;&#x4E00;&#x4EFD;&#x5BA2;&#x6237;&#x7AEF;&#xFF0C;&#x4E3A;&#x4E86;&#x65B9;&#x4FBF;&#x4F7F;&#x7528;&#xFF0C;&#x53EF;&#x4EE5;&#x5C06;&#x5BA2;&#x6237;&#x7AEF;&#x6574;&#x5408;&#x5728;&#x4E00;&#x8D77;&#x3002;&#x5177;&#x4F53;&#x5185;&#x5BB9;&#x8BF7;&#x53C2;&#x8003; <a href="../concepts/clients.html">&#x591A;&#x5BA2;&#x6237;&#x7AEF;&#x6574;&#x5408;</a>&#x3002;</p>
+<h2 id="&#x4F7F;&#x7528;&#x5BA2;&#x6237;&#x7AEF;">&#x4F7F;&#x7528;&#x5BA2;&#x6237;&#x7AEF;</h2>
+<p>&#x5BA2;&#x6237;&#x7AEF;&#x7684;&#x4F7F;&#x7528;&#x975E;&#x5E38;&#x7B80;&#x5355;&#xFF0C;&#x53EA;&#x9700;&#x8981;&#x521B;&#x5EFA;&#x5BA2;&#x6237;&#x7AEF;&#xFF0C;&#x7136;&#x540E;&#x8C03;&#x7528;&#x76F8;&#x5E94;&#x7684; API &#x51FD;&#x6570;&#x5373;&#x53EF;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-keyword">func</span> main() {
+    cli := client.MustNewClient(&amp;rest.Config{
+        Scheme: <span class="hljs-string">&quot;http&quot;</span>,
+        Host:   <span class="hljs-string">&quot;localhost:8080&quot;</span>,
+    })
+    msgs, err := cli.V1().ListMessages(context.Background(), <span class="hljs-number">10</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+    log.Info(msgs)
+}
+</code></pre>
+<h2 id="&#x9650;&#x5236;">&#x9650;&#x5236;</h2>
+<p>&#x76EE;&#x524D;&#x5BA2;&#x6237;&#x7AEF;&#x751F;&#x6210;&#x5BF9;&#x63A5;&#x53E3;&#x7684;&#x652F;&#x6301;&#x8FD8;&#x4E0D;&#x5B8C;&#x5584;&#xFF0C;&#x4EC5;&#x4EC5;&#x5BF9; <code>io.Reader</code> &#x548C; <code>io.ReadCloser</code> &#x652F;&#x6301;&#x826F;&#x597D;&#xFF0C;&#x56E0;&#x6B64;&#x5728; API &#x7684;&#x53C2;&#x6570;&#x548C;&#x8FD4;&#x56DE;&#x503C;&#x4E2D;&#xFF0C;&#x5C3D;&#x91CF;&#x907F;&#x514D;&#x4F7F;&#x7528;&#x5176;&#x4ED6;&#x63A5;&#x53E3;&#x3002;</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="doc.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: 生成 API 文档">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"生成客户端","level":"1.2.4","depth":2,"next":{"title":"概念","level":"1.3","depth":1,"ref":"","articles":[{"title":"Consumer && Producer","level":"1.3.1","depth":2,"path":"concepts/cp.md","ref":"concepts/cp.md","articles":[]},{"title":"Operator","level":"1.3.2","depth":2,"path":"concepts/operator.md","ref":"concepts/operator.md","articles":[]},{"title":"Filter","level":"1.3.3","depth":2,"path":"concepts/filter.md","ref":"concepts/filter.md","articles":[]},{"title":"Prefab","level":"1.3.4","depth":2,"path":"concepts/prefab.md","ref":"concepts/prefab.md","articles":[]},{"title":"Modifier","level":"1.3.5","depth":2,"path":"concepts/modifier.md","ref":"concepts/modifier.md","articles":[]},{"title":"Middleware","level":"1.3.6","depth":2,"path":"concepts/middleware.md","ref":"concepts/middleware.md","articles":[]},{"title":"Context","level":"1.3.7","depth":2,"path":"concepts/context.md","ref":"concepts/context.md","articles":[]},{"title":"Parameter Generator","level":"1.3.8","depth":2,"path":"concepts/source.md","ref":"concepts/source.md","articles":[]},{"title":"Destination Handler","level":"1.3.9","depth":2,"path":"concepts/destination.md","ref":"concepts/destination.md","articles":[]},{"title":"错误包","level":"1.3.10","depth":2,"path":"concepts/error.md","ref":"concepts/error.md","articles":[]},{"title":"方法包","level":"1.3.11","depth":2,"path":"concepts/method.md","ref":"concepts/method.md","articles":[]},{"title":"配置器机制","level":"1.3.12","depth":2,"path":"concepts/configurer.md","ref":"concepts/configurer.md","articles":[]},{"title":"插件机制","level":"1.3.13","depth":2,"path":"concepts/plugin.md","ref":"concepts/plugin.md","articles":[]},{"title":"多客户端整合","level":"1.3.14","depth":2,"path":"concepts/clients.md","ref":"concepts/clients.md","articles":[]}]},"previous":{"title":"生成 API 文档","level":"1.2.3","depth":2,"path":"guides/doc.md","ref":"guides/doc.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"language":"zh-hans","gitbook":"*"},"file":{"path":"guides/client.md","mtime":"2018-07-06T02:41:38.866Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-08-01T08:21:08.987Z"},"basePath":"..","book":{"language":"zh-hans"}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
