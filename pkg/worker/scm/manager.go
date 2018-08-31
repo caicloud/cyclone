@@ -22,6 +22,7 @@ import (
 	neturl "net/url"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/zoumo/logdog"
 
@@ -34,6 +35,9 @@ const (
 	cloneDir = "/tmp/code"
 
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
+
+	// maxRetry represents the max number of retry for git clone.
+	maxRetry = 5
 )
 
 // scmProviders represents the set of SCM providers.
@@ -206,7 +210,18 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 		}
 	}
 
-	return p.Clone(token, url, reference, destPath)
+	var logs string
+	for i := 0; i < maxRetry; i++ {
+		logs, err = p.Clone(token, url, reference, destPath)
+		if err == nil {
+			return logs, nil
+		}
+
+		logdog.Infof("checkout code as error %v, retry times: %v", err, i+1)
+		time.Sleep(time.Second * 1)
+	}
+
+	return logs, err
 }
 
 // rebuildToken rebuilds token username and password if token is empty.
