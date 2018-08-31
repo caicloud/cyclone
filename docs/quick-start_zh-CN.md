@@ -62,16 +62,16 @@ curl -X POST -H "Content-Type: application/json" -d '{
 ## 创建流水线
 
 Pipeline（流水线）是真正定义CI/CD如何运行的工作流。Cyclone支持5个阶段的配置来定义流水线，
-两个必选阶段：
+一个必选阶段：
  - 检出代码（codeCheckout）
- - 构建代码（package）
 
-三个可选:
+四个可选:
+ - 构建代码（package）
  - 镜像构建（imageBuild）
  - 集成测试（integrationTest）
  - 发布仓库（imageRelease）
 
-我们将创建一个包含两个必选阶段的流水线作为示例，更多信息请参考[Pipeline APIs](./api/v1/api.md#pipeline-apis)。
+我们将创建一个包含`检出代码`和`构建代码`阶段的流水线作为示例，更多信息请参考[Pipeline APIs](./api/v1/api.md#pipeline-apis)。
 ```shell
 # create a pipeline including CodeCheckout and Package.
 curl -X POST -H "Content-Type: application/json" -d '{
