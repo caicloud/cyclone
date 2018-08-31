@@ -366,7 +366,7 @@ func convertToGithubEvents(events []scm.EventType) []string {
 	return ge
 }
 
-func (g *Github) GetRepoType(repo string) (string, error) {
+func (g *Github) GetTemplateType(repo string) (string, error) {
 	owner := g.scmCfg.Username
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")

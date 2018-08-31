@@ -163,8 +163,8 @@ func (router *router) listTags(request *restful.Request, response *restful.Respo
 	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(tags, len(tags)))
 }
 
-// getRepoType handles the request to get project type for SCM repositories.
-func (router *router) getRepoType(request *restful.Request, response *restful.Response) {
+// getTemplateType handles the request to get project type for SCM repositories.
+func (router *router) getTemplateType(request *restful.Request, response *restful.Response) {
 	name := request.PathParameter(projectPathParameterName)
 	repo := request.QueryParameter(api.Repo)
 
@@ -174,19 +174,17 @@ func (router *router) getRepoType(request *restful.Request, response *restful.Re
 		return
 	}
 
-	repotype, err := router.projectManager.GetRepoType(name, repo)
+	tt, err := router.projectManager.GetTemplateType(name, repo)
 	if err != nil {
 		httputil.ResponseWithError(response, err)
 		return
 	}
 
-	repoType := struct {
-		Type string `json:"type"`
-	}{
-		Type: repotype,
+	templateType := api.TemplateType{
+		Type: tt,
 	}
 
-	response.WriteHeaderAndEntity(http.StatusOK, repoType)
+	response.WriteHeaderAndEntity(http.StatusOK, templateType)
 }
 
 // getProjectStatistics handles the request to get a project's statistics.

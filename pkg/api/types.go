@@ -707,6 +707,11 @@ type Template struct {
 	CustomizedDockerfile string `yaml:"customizedDockerfile,omitempty" json:"customizedDockerfile,omitempty" description:"sample Dockerfile"`
 }
 
+// TemplateType represents the type of the template
+type TemplateType struct {
+	Type string `yaml:"type,omitempty" json:"type,omitempty" description:"type of the template"`
+}
+
 const (
 	// JavaScriptRepoType represents the language type JavaScript.
 	JavaScriptRepoType string = "JavaScript"

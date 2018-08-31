@@ -137,7 +137,7 @@
 | List | GET `/api/v1/projects/{project}/repos` | [link](#list-scm-repos) |
 | List | GET `/api/v1/projects/{project}/branches?repo=` | [link](#list-scm-branches) |
 | List | GET `/api/v1/projects/{project}/tags?repo=` | WIP, [link](#list-scm-tags) |
-| Get  | GET `/api/v1/projects/{project}/type?repo=` | WIP, [link](#get-scm-repotype) |
+| Get  | GET `/api/v1/projects/{project}/templatetype?repo=` | WIP, [link](#get-scm-templatetype) |
 
 ### Webhook API
 
@@ -1197,19 +1197,19 @@ Success:
 }
 ```
 
-### Get SCM Repotype
+### Get SCM Templatetype
 
-Get the repository type of the specific repo.
+Get the template type of the specific repo.
 
 **Request**
 
-URL: `GET /api/v1/projects/{project}/type?repo=`
+URL: `GET /api/v1/projects/{project}/templatetype?repo=`
 
 Note:
 
 | Field | Note |
 | --- | --- |
-| repo | Required, repo for which the type will be get |
+| repo | Required, repo for which the template type will be get |
 
 
 **Response**

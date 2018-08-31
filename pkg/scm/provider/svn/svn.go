@@ -118,6 +118,6 @@ func (s *SVN) DeleteWebHook(repoURL string, webHookUrl string) error {
 	return nil
 }
 
-func (s *SVN) GetRepoType(repo string) (string, error) {
+func (s *SVN) GetTemplateType(repo string) (string, error) {
 	return "", nil
 }

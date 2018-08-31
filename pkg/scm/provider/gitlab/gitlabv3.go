@@ -185,7 +185,7 @@ func (g *GitlabV3) NewTagFromLatest(tagName, description, commitID, url string) 
 	return err
 }
 
-func (g *GitlabV3) GetRepoType(repo string) (string, error) {
+func (g *GitlabV3) GetTemplateType(repo string) (string, error) {
 	languages, err := getLanguages(g.scmCfg, v3APIVersion, repo)
 	if err != nil {
 		log.Error("list language failed:%v", err)

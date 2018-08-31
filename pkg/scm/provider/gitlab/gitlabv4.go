@@ -199,8 +199,8 @@ func (g *GitlabV4) NewTagFromLatest(tagName, description, commitID, url string) 
 	return err
 }
 
-// GetRepoType get type of repo
-func (g *GitlabV4) GetRepoType(repo string) (string, error) {
+// GetTemplateType get template type of repo
+func (g *GitlabV4) GetTemplateType(repo string) (string, error) {
 	languages, err := getLanguages(g.scmCfg, v4APIVersion, repo)
 	if err != nil {
 		log.Error("list language failed:%v", err)

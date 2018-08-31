@@ -42,7 +42,7 @@ type ProjectManager interface {
 	ListRepos(projectName string) ([]api.Repository, error)
 	ListBranches(projectName string, repo string) ([]string, error)
 	ListTags(projectName string, repo string) ([]string, error)
-	GetRepoType(projectName string, repo string) (string, error)
+	GetTemplateType(projectName string, repo string) (string, error)
 	GetStatistics(projectName string, start, end time.Time) (*api.PipelineStatusStats, error)
 }
 
@@ -222,8 +222,8 @@ func (m *projectManager) ListTags(projectName string, repo string) ([]string, er
 	return sp.ListTags(repo)
 }
 
-// GetRepoType get the type of the SCM repos authorized for the project.
-func (m *projectManager) GetRepoType(projectName string, repo string) (string, error) {
+// GetTemplateType get the template type of the SCM repos authorized for the project.
+func (m *projectManager) GetTemplateType(projectName string, repo string) (string, error) {
 	project, err := m.GetProject(projectName)
 	if err != nil {
 		return "", err
@@ -235,7 +235,7 @@ func (m *projectManager) GetRepoType(projectName string, repo string) (string, e
 		return "", err
 	}
 
-	return sp.GetRepoType(repo)
+	return sp.GetTemplateType(repo)
 }
 
 // GetStatistics gets the statistic by project name.

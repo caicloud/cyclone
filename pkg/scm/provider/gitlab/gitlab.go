@@ -282,7 +282,6 @@ func getLanguages(scm *api.SCMConfig, version, project string) (map[string]float
 	if len(scm.Username) == 0 {
 		req.Header.Set("PRIVATE-TOKEN", scm.Token)
 	} else {
-		log.Error(scm.Username)
 		req.Header.Set("Authorization", "Bearer "+scm.Token)
 	}
 

@@ -52,7 +52,7 @@ type SCMProvider interface {
 	ListRepos() ([]api.Repository, error)
 	ListBranches(repo string) ([]string, error)
 	ListTags(repo string) ([]string, error)
-	GetRepoType(repo string) (string, error)
+	GetTemplateType(repo string) (string, error)
 	CheckToken() bool
 	NewTagFromLatest(tagName, description, commitID, url string) error
 	CreateWebHook(repoURL string, webHook *WebHook) error

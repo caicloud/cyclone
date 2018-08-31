@@ -205,11 +205,11 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
 		Param(ws.QueryParameter("repo", "the repo to list tags for").Required(true)))
 
-	// GET /api/v1/projects/{project}/repos/{repo}/type
-	ws.Route(ws.GET("/projects/{project}/type").To(router.getRepoType).
-		Doc("get project type of the repo for the project").
+	// GET /api/v1/projects/{project}/templatetype
+	ws.Route(ws.GET("/projects/{project}/templatetype").To(router.getTemplateType).
+		Doc("get template type of the repo for the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.QueryParameter("repo", "the repo to get type for").Required(true)))
+		Param(ws.QueryParameter("repo", "the repo to get template for").Required(true)))
 
 	// GET /api/v1/projects/{project}/stats
 	ws.Route(ws.GET("/projects/{project}/stats").To(router.getProjectStatistics).
