@@ -184,3 +184,36 @@ func (g *GitlabV3) NewTagFromLatest(tagName, description, commitID, url string) 
 	log.Error(err)
 	return err
 }
+
+func (g *GitlabV3) GetTemplateType(repo string) (string, error) {
+	languages, err := getLanguages(g.scmCfg, v3APIVersion, repo)
+	if err != nil {
+		log.Error("list language failed:%v", err)
+		return "", err
+	}
+	language := getTopLanguage(languages)
+
+	switch language {
+	case api.JavaRepoType, api.JavaScriptRepoType:
+		files, err := getContents(g.scmCfg, v3APIVersion, repo)
+		if err != nil {
+			log.Error("get contents failed:%v", err)
+			return language, nil
+		}
+
+		for _, f := range files {
+			if language == api.JavaRepoType && strings.Contains(f.Name, "pom.xml") {
+				return api.MavenRepoType, nil
+			}
+			if language == api.JavaRepoType && strings.Contains(f.Name, "build.gradle") {
+				return api.GradleRepoType, nil
+			}
+			if language == api.JavaScriptRepoType && strings.Contains(f.Name, "package.json") {
+				return api.NodeRepoType, nil
+			}
+		}
+
+	}
+
+	return language, nil
+}

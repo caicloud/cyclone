@@ -253,7 +253,7 @@ func TestRemoveContainer(t *testing.T) {
 	for d, tc := range testCases {
 		err := dm.RemoveContainer(tc.cid)
 		if !reflect.DeepEqual(err, tc.err) {
-			t.Errorf("Fail to remove container %d: expect err as %v, but got %v", d, tc.err, err)
+			t.Errorf("Fail to remove container %s: expect err as %v, but got %v", d, tc.err, err)
 		}
 	}
 }

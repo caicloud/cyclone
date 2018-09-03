@@ -131,6 +131,7 @@ func InitRouters(dataStore *store.DataStore, recordRotationThreshold int) error 
 	router.registerCloudAPIs(ws)
 	router.registerHealthCheckAPI(ws)
 	router.registerWebhookAPIs(ws)
+	router.registerTemplateAPI(ws)
 
 	restful.Add(ws)
 
@@ -202,7 +203,13 @@ func (router *router) registerProjectAPIs(ws *restful.WebService) {
 	ws.Route(ws.GET("/projects/{project}/tags").To(router.listTags).
 		Doc("List tags of the repo for the project").
 		Param(ws.PathParameter("project", "name of the project").DataType("string")).
-		Param(ws.QueryParameter("repo", "the repo to list branches for").Required(true)))
+		Param(ws.QueryParameter("repo", "the repo to list tags for").Required(true)))
+
+	// GET /api/v1/projects/{project}/templatetype
+	ws.Route(ws.GET("/projects/{project}/templatetype").To(router.getTemplateType).
+		Doc("get template type of the repo for the project").
+		Param(ws.PathParameter("project", "name of the project").DataType("string")).
+		Param(ws.QueryParameter("repo", "the repo to get template for").Required(true)))
 
 	// GET /api/v1/projects/{project}/stats
 	ws.Route(ws.GET("/projects/{project}/stats").To(router.getProjectStatistics).
@@ -395,4 +402,13 @@ func (router *router) registerHealthCheckAPI(ws *restful.WebService) {
 	// GET /api/v1/healthcheck
 	ws.Route(ws.GET("/healthcheck").To(router.healthCheck).
 		Doc("Health check for Cyclone server"))
+}
+
+// registerTemplateAPI registers template related endpoints.
+func (router *router) registerTemplateAPI(ws *restful.WebService) {
+	log.Info("Register template APIs")
+
+	// GET /api/v1/templates
+	ws.Route(ws.GET("/pipelinetemplates").To(router.listTemplates).
+		Doc("Get all cyclone built-in pipeline templates."))
 }

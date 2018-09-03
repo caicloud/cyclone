@@ -1,0 +1,12 @@
+{
+	"address": "0.0.0.0:8081",
+	"system_tenant": "system-tenant",
+	"private_key": "./private_key.pem",
+	"cauth_addr": "http://dex-cauth:8080",
+	"token_expiration": 30,
+	"mongo": {
+		"addrs": "127.0.0.1:27017",
+		"db": "cargo_admin",
+		"mode": "strong"
+	}
+}

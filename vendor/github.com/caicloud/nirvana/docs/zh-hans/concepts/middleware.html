@@ -1,0 +1,842 @@
+
+<!DOCTYPE HTML>
+<html lang="zh-hans" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Middleware · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="context.html" />
+    
+    
+    <link rel="prev" href="modifier.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="输入并搜索" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    概览
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" >
+            
+                <span>
+            
+                    
+                    快速入门
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../guides/project.html">
+            
+                <a href="../guides/project.html">
+            
+                    
+                    项目结构和初始化
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../guides/api.html">
+            
+                <a href="../guides/api.html">
+            
+                    
+                    API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../guides/doc.html">
+            
+                <a href="../guides/doc.html">
+            
+                    
+                    生成 API 文档
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../guides/client.html">
+            
+                <a href="../guides/client.html">
+            
+                    
+                    生成客户端
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" >
+            
+                <span>
+            
+                    
+                    概念
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="cp.html">
+            
+                <a href="cp.html">
+            
+                    
+                    Consumer && Producer
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="operator.html">
+            
+                <a href="operator.html">
+            
+                    
+                    Operator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="filter.html">
+            
+                <a href="filter.html">
+            
+                    
+                    Filter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="prefab.html">
+            
+                <a href="prefab.html">
+            
+                    
+                    Prefab
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="modifier.html">
+            
+                <a href="modifier.html">
+            
+                    
+                    Modifier
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3.6" data-path="middleware.html">
+            
+                <a href="middleware.html">
+            
+                    
+                    Middleware
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.7" data-path="context.html">
+            
+                <a href="context.html">
+            
+                    
+                    Context
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.8" data-path="source.html">
+            
+                <a href="source.html">
+            
+                    
+                    Parameter Generator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.9" data-path="destination.html">
+            
+                <a href="destination.html">
+            
+                    
+                    Destination Handler
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.10" data-path="error.html">
+            
+                <a href="error.html">
+            
+                    
+                    错误包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.11" data-path="method.html">
+            
+                <a href="method.html">
+            
+                    
+                    方法包
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.12" data-path="configurer.html">
+            
+                <a href="configurer.html">
+            
+                    
+                    配置器机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.13" data-path="plugin.html">
+            
+                <a href="plugin.html">
+            
+                    
+                    插件机制
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.14" data-path="clients.html">
+            
+                <a href="clients.html">
+            
+                    
+                    多客户端整合
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" >
+            
+                <span>
+            
+                    
+                    插件
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../plugins/logger.html">
+            
+                <a href="../plugins/logger.html">
+            
+                    
+                    系统日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../plugins/reqlog.html">
+            
+                <a href="../plugins/reqlog.html">
+            
+                    
+                    请求日志插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../plugins/metrics.html">
+            
+                <a href="../plugins/metrics.html">
+            
+                    
+                    监控指标插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../plugins/tracing.html">
+            
+                <a href="../plugins/tracing.html">
+            
+                    
+                    请求追踪插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../plugins/profiling.html">
+            
+                <a href="../plugins/profiling.html">
+            
+                    
+                    性能分析插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../plugins/version.html">
+            
+                <a href="../plugins/version.html">
+            
+                    
+                    版本信息插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../plugins/healthcheck.html">
+            
+                <a href="../plugins/healthcheck.html">
+            
+                    
+                    健康检查插件
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" >
+            
+                <span>
+            
+                    
+                    框架开发者指南
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../topics/start.html">
+            
+                <a href="../topics/start.html">
+            
+                    
+                    准备工作
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../topics/log.html">
+            
+                <a href="../topics/log.html">
+            
+                    
+                    log
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.3" data-path="../topics/errors.html">
+            
+                <a href="../topics/errors.html">
+            
+                    
+                    errors
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.4" data-path="../topics/definition.html">
+            
+                <a href="../topics/definition.html">
+            
+                    
+                    definition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.5" data-path="../topics/method.html">
+            
+                <a href="../topics/method.html">
+            
+                    
+                    definition/method
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.6" data-path="../topics/converter.html">
+            
+                <a href="../topics/converter.html">
+            
+                    
+                    operators/converter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.7" data-path="../topics/validator.html">
+            
+                <a href="../topics/validator.html">
+            
+                    
+                    operators/validator
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.8" data-path="../topics/router.html">
+            
+                <a href="../topics/router.html">
+            
+                    
+                    service/router
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.9" data-path="../topics/service.html">
+            
+                <a href="../topics/service.html">
+            
+                    
+                    service
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.10" data-path="../topics/nirvana.html">
+            
+                <a href="../topics/nirvana.html">
+            
+                    
+                    nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.11" data-path="../topics/config.html">
+            
+                <a href="../topics/config.html">
+            
+                    
+                    config
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.12" data-path="../topics/rest.html">
+            
+                <a href="../topics/rest.html">
+            
+                    
+                    rest
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.13" data-path="../topics/utils.html">
+            
+                <a href="../topics/utils.html">
+            
+                    
+                    utils
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.14" data-path="../topics/command.html">
+            
+                <a href="../topics/command.html">
+            
+                    
+                    cmd/nirvana
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            本书使用 GitBook 发布
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Middleware</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="&#x4E2D;&#x95F4;&#x4EF6;">&#x4E2D;&#x95F4;&#x4EF6;</h1>
+<p>&#x5305;&#x8DEF;&#x5F84;: <code>github.com/caicloud/nirvana/definition</code></p>
+<p>Nirvana &#x4E2D;&#x95F4;&#x4EF6;&#x4F4D;&#x4E8E;&#x8DEF;&#x7531;&#x4E4B;&#x540E;&#xFF0C;&#x4E1A;&#x52A1;&#x51FD;&#x6570;&#x6267;&#x884C;&#x4E4B;&#x524D;&#x3002;&#x56E0;&#x6B64;&#x4E2D;&#x95F4;&#x4EF6;&#x53EF;&#x4EE5;&#x5BF9;&#x5408;&#x6CD5;&#x7684;&#x8BF7;&#x6C42;&#x8FDB;&#x884C;&#x4E00;&#x4E9B;&#x989D;&#x5916;&#x7684;&#x5904;&#x7406;&#x3002;&#x4E2D;&#x95F4;&#x4EF6;&#x7684;&#x63A5;&#x53E3;&#x5982;&#x4E0B;&#xFF1A; </p>
+<pre><code class="lang-go"><span class="hljs-comment">// Chain contains all subsequent actions.</span>
+<span class="hljs-keyword">type</span> Chain <span class="hljs-keyword">interface</span> {
+    <span class="hljs-comment">// Continue continues to execute the next subsequent actions.</span>
+    Continue(context.Context) error
+}
+
+<span class="hljs-comment">// Middleware describes the form of middlewares. If you want to</span>
+<span class="hljs-comment">// carry on, call Chain.Continue() and pass the context.</span>
+<span class="hljs-keyword">type</span> Middleware <span class="hljs-keyword">func</span>(context.Context, Chain) error
+</code></pre>
+<p>&#x4E00;&#x4E2A;&#x8BF7;&#x6C42;&#x5728;&#x8DEF;&#x7531;&#x5339;&#x914D;&#x6210;&#x529F;&#x540E;&#xFF0C;&#x5C31;&#x4F1A;&#x8FDB;&#x5165;&#x6267;&#x884C;&#x8FC7;&#x7A0B;&#x3002;&#x6267;&#x884C;&#x65F6;&#x4F1A;&#x5148;&#x6267;&#x884C;&#x5339;&#x914D;&#x5230;&#x7684;&#x6240;&#x6709;&#x4E2D;&#x95F4;&#x4EF6;&#xFF0C;&#x5E76;&#x7531;&#x4E2D;&#x95F4;&#x4EF6;&#x901A;&#x8FC7; Chain &#x8FDB;&#x884C;&#x94FE;&#x5F0F;&#x8C03;&#x7528;&#x3002;&#x4E5F;&#x5C31;&#x662F;&#x8BF4;&#x4EFB;&#x4F55;&#x4E00;&#x4E2A;&#x4E2D;&#x95F4;&#x4EF6;&#x90FD;&#x53EF;&#x4EE5;&#x51B3;&#x5B9A;&#x8BF7;&#x6C42;&#x662F;&#x5426;&#x7EE7;&#x7EED;&#x6267;&#x884C;&#x3002;</p>
+<p>&#x4E2D;&#x95F4;&#x4EF6;&#x6DFB;&#x52A0;&#x5728; Descriptor &#x4E2D;&#xFF1A;</p>
+<pre><code class="lang-go">def.Descriptor{
+    Path:        <span class="hljs-string">&quot;/path&quot;</span>,
+    Middlewares: []def.Middleware{SomeMiddleware},
+}
+</code></pre>
+<p>&#x6DFB;&#x52A0;&#x6210;&#x529F;&#x540E;&#xFF0C;&#x6240;&#x6709;&#x524D;&#x7F00;&#x5339;&#x914D; <code>/path</code> &#x7684;&#x8BF7;&#x6C42;&#x90FD;&#x4F1A;&#x6267;&#x884C;&#x8FD9;&#x4E2A;&#x4E2D;&#x95F4;&#x4EF6;&#x3002;</p>
+<p><strong>&#x6CE8;&#x610F;&#xFF1A;&#x53EA;&#x6709;&#x5728;&#x8DEF;&#x7531;&#x627E;&#x5230;&#x4E86;&#x8BF7;&#x6C42;&#x7684;&#x4E1A;&#x52A1;&#x51FD;&#x6570;&#x7684;&#x60C5;&#x51B5;&#x4E0B;&#xFF0C;&#x624D;&#x7B97;&#x5339;&#x914D;&#x6210;&#x529F;&#x3002;&#x6CA1;&#x6709;&#x5339;&#x914D;&#x6210;&#x529F;&#x7684;&#x60C5;&#x51B5;&#x4E0B;&#xFF0C;&#x4E2D;&#x95F4;&#x4EF6;&#x4E0D;&#x4F1A;&#x6267;&#x884C;&#x3002;</strong></p>
+<h2 id="&#x4E2D;&#x95F4;&#x4EF6;&#x6267;&#x884C;&#x987A;&#x5E8F;">&#x4E2D;&#x95F4;&#x4EF6;&#x6267;&#x884C;&#x987A;&#x5E8F;</h2>
+<p>&#x5982;&#x679C;&#x4EE5;&#x4E0B;&#x8DEF;&#x5F84;&#x90FD;&#x6DFB;&#x52A0;&#x4E86;&#x4E2D;&#x95F4;&#x4EF6;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-number">1.</span> /
+<span class="hljs-number">2.</span> /path
+<span class="hljs-number">3.</span> /path/path2
+</code></pre>
+<p>&#x90A3;&#x4E48;&#x5982;&#x679C;&#x5B58;&#x5728;&#x8BF7;&#x6C42; <code>/path/path2/others</code> &#x4E14;&#x6210;&#x529F;&#x5339;&#x914D;&#x7684;&#x60C5;&#x51B5;&#x4E0B;&#xFF0C;&#x4E2D;&#x95F4;&#x4EF6;&#x7684;&#x6267;&#x884C;&#x6309;&#x7167; 1 -&gt; 2 -&gt; 3 &#x7684;&#x987A;&#x5E8F;&#x3002;</p>
+<p>&#x4E2D;&#x95F4;&#x4EF6;&#x53EA;&#x4E0E; URL Path &#x6709;&#x5173;&#xFF0C;&#x56E0;&#x6B64;&#x5982;&#x679C;&#x591A;&#x4E2A; Descriptor &#x4E2D;&#x4E3A;&#x76F8;&#x540C;&#x7684;&#x8DEF;&#x5F84;&#x6DFB;&#x52A0;&#x4E86;&#x591A;&#x4E2A;&#x4E2D;&#x95F4;&#x4EF6;&#xFF0C;&#x5728;&#x8DEF;&#x5F84;&#x5339;&#x914D;&#x7684;&#x60C5;&#x51B5;&#x4E0B;&#xFF0C;&#x8FD9;&#x4E9B;&#x4E2D;&#x95F4;&#x4EF6;&#x90FD;&#x4F1A;&#x88AB;&#x6267;&#x884C;&#xFF0C;&#x4F46;&#x662F;&#x6267;&#x884C;&#x987A;&#x5E8F;&#x4E0D;&#x80FD;&#x786E;&#x5B9A;&#x3002;&#x56E0;&#x6B64;&#x5F00;&#x53D1;&#x4E2D;&#x95F4;&#x4EF6;&#x65F6;&#x4E0D;&#x8981;&#x4F9D;&#x8D56;&#x4E2D;&#x95F4;&#x4EF6;&#x7684;&#x6267;&#x884C;&#x987A;&#x5E8F;&#x3002;</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="modifier.html" class="navigation navigation-prev " aria-label="Previous page: Modifier">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="context.html" class="navigation navigation-next " aria-label="Next page: Context">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Middleware","level":"1.3.6","depth":2,"next":{"title":"Context","level":"1.3.7","depth":2,"path":"concepts/context.md","ref":"concepts/context.md","articles":[]},"previous":{"title":"Modifier","level":"1.3.5","depth":2,"path":"concepts/modifier.md","ref":"concepts/modifier.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"language":"zh-hans","gitbook":"*"},"file":{"path":"concepts/middleware.md","mtime":"2018-07-06T02:41:38.865Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-08-01T08:21:08.987Z"},"basePath":"..","book":{"language":"zh-hans"}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

@@ -19,9 +19,10 @@ package router
 import (
 	"net/http"
 
+	"github.com/emicklei/go-restful"
+
 	"github.com/caicloud/cyclone/pkg/api"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/emicklei/go-restful"
 )
 
 // createProject handles the request to create a project.
@@ -160,6 +161,30 @@ func (router *router) listTags(request *restful.Request, response *restful.Respo
 	}
 
 	response.WriteHeaderAndEntity(http.StatusOK, httputil.ResponseWithList(tags, len(tags)))
+}
+
+// getTemplateType handles the request to get project type for SCM repositories.
+func (router *router) getTemplateType(request *restful.Request, response *restful.Response) {
+	name := request.PathParameter(projectPathParameterName)
+	repo := request.QueryParameter(api.Repo)
+
+	_, err := router.projectManager.GetProject(name)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	tt, err := router.projectManager.GetTemplateType(name, repo)
+	if err != nil {
+		httputil.ResponseWithError(response, err)
+		return
+	}
+
+	templateType := api.TemplateType{
+		Type: tt,
+	}
+
+	response.WriteHeaderAndEntity(http.StatusOK, templateType)
 }
 
 // getProjectStatistics handles the request to get a project's statistics.

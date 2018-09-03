@@ -1,0 +1,162 @@
+- group: Python
+  dockerfiles:
+    - image: python:2.7-alpine
+      group: Python
+      content: |
+        FROM python:2.7-alpine
+
+        # Create working directory
+        WORKDIR /usr/src/app
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> .
+
+        # Make sure the requirements.txt file exists and then install dependencies using it.
+        RUN touch requirements.txt
+        RUN pip install --no-cache-dir -r requirements.txt
+
+        CMD [ "python", "./<entrypoint>.py" ]
+    - image: python:3.5-alpine
+      group: Python
+      content: |
+        FROM python:3.5-alpine
+
+        # Create working directory
+        WORKDIR /usr/src/app
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> .
+
+        # Make sure the requirements.txt file exists and then install dependencies using it.
+        RUN touch requirements.txt
+        RUN pip install --no-cache-dir -r requirements.txt
+
+        CMD [ "python", "./<entrypoint>.py" ]
+- group: NodeJS
+  dockerfiles:
+    - image: node:8-alpine
+      group: NodeJS
+      content: |
+        FROM node:8-alpine
+
+        # Create working directory
+        WORKDIR /usr/src/app
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> .
+
+        # Install app dependencies, if you are building your code for production
+        # RUN npm install --only=production
+        RUN npm install
+
+        EXPOSE 8080
+        CMD [ "npm", "start" ]
+    - image: node:9-alpine
+      group: NodeJS
+      content: |
+        FROM node:9-alpine
+
+        # Create working directory
+        WORKDIR /usr/src/app
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> .
+
+        # Install app dependencies, if you are building your code for production
+        # RUN npm install --only=production
+        RUN npm install
+
+        EXPOSE 8080
+        CMD [ "npm", "start" ]
+    - image: node:10-alpine
+      group: NodeJS
+      content: |
+        FROM node:10-alpine
+
+        # Create working directory
+        WORKDIR /usr/src/app
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> .
+
+        # Install app dependencies, if you are building your code for production
+        # RUN npm install --only=production
+        RUN npm install
+
+        EXPOSE 8080
+        CMD [ "npm", "start" ]
+- group: Tomcat
+  dockerfiles:
+    - image: tomcat:7.0-alpine
+      group: Tomcat
+      content: |
+        FROM tomcat:7.0-alpine
+
+        # openjdk:7-jre-alpine
+        # tomcat: 7.0.90
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce. So you can pack multiple war files and upload here
+        ADD <uploaded-file> ${CATALINA_HOME}/webapps
+
+        EXPOSE 8080
+
+        WORKDIR $CATALINA_HOME
+    - image: tomcat:8.0-alpine
+      group: Tomcat
+      content: |
+        FROM tomcat:8.0-alpine
+
+        # openjdk:8-jre-alpine
+        # tomcat: 8.0.53
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce. So you can pack multiple war files and upload here
+        ADD <uploaded-file> ${CATALINA_HOME}/webapps
+
+        EXPOSE 8080
+
+        WORKDIR $CATALINA_HOME
+    - image: tomcat:9.0-alpine
+      group: Tomcat
+      content: |
+        FROM tomcat:9.0-alpine
+
+        # openjdk:9-jre-alpine
+        # tomcat: 9.0.10
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce. So you can pack multiple war files and upload here
+        ADD <uploaded-file> ${CATALINA_HOME}/webapps
+
+        EXPOSE 8080
+
+        WORKDIR $CATALINA_HOME
+- group: PHP
+  dockerfiles:
+    - image: php:5.6-apache
+      group: PHP
+      content: |
+        FROM php:5.6-apache
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> /var/www/html/
+
+        EXPOSE 80
+
+    - image: php:7.1-apache
+      group: PHP
+      content: |
+        FROM php:7.1-apache
+
+        # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+        # it will be unpacked and added to worksapce.
+        ADD <uploaded-file> /var/www/html/
+
+        EXPOSE 80
