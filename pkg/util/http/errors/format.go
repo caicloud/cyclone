@@ -65,6 +65,10 @@ var (
 	ErrorGetFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to get %s: %s")
 	// ErrorListFailed defines error that failed listing of something.
 	ErrorListFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to list %s: %s")
+
+	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
+	ErrorCreateWebhookPermissionDenied = NewFormatError(http.StatusInternalServerError,
+		"ReasonCreateWebhookPermissionDenied", "failed to create webhook of pipeline %s, please check your account permissions.")
 )
 
 func NewCreateError(name, errorMessage string) error {
