@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 	"reflect"
-	"strings"
 
 	"github.com/caicloud/nirvana/definition"
 )
@@ -165,7 +164,6 @@ func writeError(ctx context.Context, producers []Producer, err interface{}) erro
 	}
 	resp := httpCtx.ResponseWriter()
 	if resp.HeaderWritable() {
-		// Error always has highest priority. So it can override "Content-Type".
 		resp.Header().Set("Content-Type", producer.ContentType())
 		resp.WriteHeader(code)
 	}
@@ -189,11 +187,7 @@ func WriteData(ctx context.Context, producers []Producer, code int, data interfa
 	}
 	resp := httpCtx.ResponseWriter()
 	if resp.HeaderWritable() {
-		// If "Content-Type" has been set, ignore producer's.
-		ctype := resp.Header().Get("Content-Type")
-		if strings.TrimSpace(ctype) == "" {
-			resp.Header().Set("Content-Type", producer.ContentType())
-		}
+		resp.Header().Set("Content-Type", producer.ContentType())
 		resp.WriteHeader(code)
 	}
 	return producer.Produce(resp, data)

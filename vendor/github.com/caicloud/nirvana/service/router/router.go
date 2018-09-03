@@ -119,7 +119,7 @@ const (
 //  /segments/{segment}/resources/{resource}
 //  /segments/{segment:[a-z]{1,2}}.log/paths/{path:*}
 func Parse(path string) (Router, Router, error) {
-	paths, err := Split(path)
+	paths, err := split(path)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -203,13 +203,13 @@ func segmentToRouter(seg *segment) (Router, error) {
 	return nil, UnknownSegment.Error(seg)
 }
 
-// Split splits string segments and regexp segments.
+// split splits string segments and regexp segments.
 //
 // For instance:
 //  /segments/{segment:[a-z]{1,2}}.log/paths/{path:*}
 // TO:
 //  /segments/ {segment:[a-z]{1,2}} .log/paths/ {path:*}
-func Split(path string) ([]string, error) {
+func split(path string) ([]string, error) {
 	result := make([]string, 0, 5)
 	lastElementPos := 0
 	braceCounter := 0

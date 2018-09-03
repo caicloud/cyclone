@@ -29,8 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/caicloud/nirvana/cmd/nirvana/utils"
 	"github.com/caicloud/nirvana/log"
-	"github.com/caicloud/nirvana/utils/project"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -130,7 +130,7 @@ func (o *initOptions) Run(cmd *cobra.Command, args []string) error {
 		BuildImage:    o.BuildImage,
 		RuntimeImage:  o.RuntimeImage,
 	}
-	td.ProjectPackage, err = project.PackageForPath(pathToProject)
+	td.ProjectPackage, err = utils.PackageForPath(pathToProject)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,6 @@ func (o *initOptions) Run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("can't write file %s: %v", file, err)
 		}
 	}
-	log.Infof("Created project at %s", pathToProject)
 	return nil
 }
 
@@ -201,35 +200,35 @@ func (o *initOptions) directories(project string) []string {
 		"bin",
 		fmt.Sprintf("cmd/%s", project),
 		fmt.Sprintf("build/%s", project),
-		"pkg/apis/filters",
-		"pkg/apis/middlewares",
-		"pkg/apis/modifiers",
-		"pkg/apis/v1/descriptors",
-		"pkg/apis/v1/converters",
-		"pkg/apis/v1/middlewares",
+		"pkg/api/filters",
+		"pkg/api/middlewares",
+		"pkg/api/modifiers",
+		"pkg/api/v1/descriptors",
+		"pkg/api/v1/converters",
+		"pkg/api/v1/middlewares",
 		"pkg/message",
 		"pkg/version",
 		"vendor",
 	}
 }
 
-func (o *initOptions) templates(proj string) map[string]string {
+func (o *initOptions) templates(project string) map[string]string {
 	return map[string]string{
-		fmt.Sprintf("cmd/%s/main.go", proj):      o.templateMain(),
-		fmt.Sprintf("build/%s/Dockerfile", proj): o.templateDockerfile(),
-		"pkg/apis/filters/filters.go":            o.templateFilters(),
-		"pkg/apis/middlewares/middlewares.go":    o.templateMiddlewares(),
-		"pkg/apis/modifiers/modifiers.go":        o.templateModifiers(),
-		"pkg/apis/v1/descriptors/descriptors.go": o.templateDescriptors(),
-		"pkg/apis/v1/descriptors/message.go":     o.templateMessageAPI(),
-		"pkg/apis/v1/middlewares/middlewares.go": o.templateMiddlewares(),
-		"pkg/apis/api.go":                        o.templateAPI(),
-		"pkg/message/message.go":                 o.templateMessage(),
-		"pkg/version/version.go":                 o.templateVersion(),
-		"Gopkg.toml":                             o.templateGopkg(),
-		"Makefile":                               o.templateMakefile(),
-		project.DefaultProjectFileName:           o.templateProject(),
-		"README.md":                              o.templateReadme(),
+		fmt.Sprintf("cmd/%s/main.go", project):      o.templateMain(),
+		fmt.Sprintf("build/%s/Dockerfile", project): o.templateDockerfile(),
+		"pkg/api/filters/filters.go":                o.templateFilters(),
+		"pkg/api/middlewares/middlewares.go":        o.templateMiddlewares(),
+		"pkg/api/modifiers/modifiers.go":            o.templateModifiers(),
+		"pkg/api/v1/descriptors/descriptors.go":     o.templateDescriptors(),
+		"pkg/api/v1/descriptors/message.go":         o.templateMessageAPI(),
+		"pkg/api/v1/middlewares/middlewares.go":     o.templateMiddlewares(),
+		"pkg/api/api.go":                            o.templateAPI(),
+		"pkg/message/message.go":                    o.templateMessage(),
+		"pkg/version/version.go":                    o.templateVersion(),
+		"Gopkg.toml":                                o.templateGopkg(),
+		"Makefile":                                  o.templateMakefile(),
+		"nirvana.yaml":                              o.templateProject(),
+		"README.md":                                 o.templateReadme(),
 	}
 }
 
@@ -244,9 +243,9 @@ package main
 import (
 	"fmt"
 
-	"{{ .ProjectPackage }}/pkg/apis"
-	"{{ .ProjectPackage }}/pkg/apis/filters"
-	"{{ .ProjectPackage }}/pkg/apis/modifiers"
+	"{{ .ProjectPackage }}/pkg/api"
+	"{{ .ProjectPackage }}/pkg/api/filters"
+	"{{ .ProjectPackage }}/pkg/api/modifiers"
 	"{{ .ProjectPackage }}/pkg/version"
 
 	"github.com/caicloud/nirvana"
@@ -255,7 +254,6 @@ import (
 	"github.com/caicloud/nirvana/plugins/logger"
 	"github.com/caicloud/nirvana/plugins/metrics"
 	"github.com/caicloud/nirvana/plugins/reqlog"
-	pversion "github.com/caicloud/nirvana/plugins/version"
 )
 
 func main() {
@@ -269,15 +267,9 @@ func main() {
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
 	loggerOption := logger.NewDefaultOption()   // Logger plugin.
 	reqlogOption := reqlog.NewDefaultOption()   // Request log plugin.
-	versionOption := pversion.NewOption(        // Version plugin.
-		"{{ .ProjectName }}",
-		version.Version,
-		version.Commit,
-		version.Package,
-	)
 
 	// Enable plugins.
-	cmd.EnablePlugin(metricsOption, loggerOption, reqlogOption, versionOption)
+	cmd.EnablePlugin(metricsOption, loggerOption, reqlogOption)
 
 	// Create server config.
 	serverConfig := nirvana.NewConfig()
@@ -287,7 +279,7 @@ func main() {
 		nirvana.Logger(log.DefaultLogger()), // Will be changed by logger plugin.
 		nirvana.Filter(filters.Filters()...),
 		nirvana.Modifier(modifiers.Modifiers()...),
-		nirvana.Descriptor(apis.Descriptor()),
+		nirvana.Descriptor(api.Descriptor()),
 	)
 
 	// Set nirvana command hooks.
@@ -316,7 +308,7 @@ func (o *initOptions) templateDescriptors() string {
 package descriptors
 
 import (
-	"{{ .ProjectPackage }}/pkg/apis/v1/middlewares"
+	"{{ .ProjectPackage }}/pkg/api/v1/middlewares"
 
 	def "github.com/caicloud/nirvana/definition"
 )
@@ -413,11 +405,11 @@ func (o *initOptions) templateAPI() string {
 
 // +nirvana:api=descriptors:"Descriptor"
 
-package apis
+package api
 
 import (
-	"{{ .ProjectPackage }}/pkg/apis/middlewares"
-	v1 "{{ .ProjectPackage }}/pkg/apis/v1/descriptors"
+	"{{ .ProjectPackage }}/pkg/api/middlewares"
+	v1 "{{ .ProjectPackage }}/pkg/api/v1/descriptors"
 
 	def "github.com/caicloud/nirvana/definition"
 )
@@ -426,7 +418,7 @@ import (
 func Descriptor() def.Descriptor {
 	return def.Descriptor{
 		Description: "APIs",
-		Path:        "/apis",
+		Path:        "/api",
 		Middlewares: middlewares.Middlewares(),
 		Consumes:    []string{def.MIMEJSON},
 		Produces:    []string{def.MIMEJSON},
@@ -464,7 +456,7 @@ func init() {
 }
 
 var listMessages = def.Definition{
-	Method:   def.List,
+	Method:   def.Get,
 	Summary: "List Messages",
 	Description: "Query a specified number of messages and returns an array",
 	Function: message.ListMessages,
@@ -584,9 +576,7 @@ ARG TARGET={{ .ProjectName }}
 
 COPY --from=0 /tmp/${TARGET} /${TARGET}
 
-RUN ln -s /${TARGET} /entrypoint
-
-ENTRYPOINT ["/entrypoint"]
+ENTRYPOINT [/${TARGET}]
 `
 }
 
@@ -754,7 +744,7 @@ versions:
 - name: v1
   description: The v1 version is the first version of this project
   rules:
-  - prefix: /apis/v1/
+  - "^/api/v1.*"
 `
 }
 

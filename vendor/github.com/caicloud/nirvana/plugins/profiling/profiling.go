@@ -21,6 +21,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"runtime"
 	rpprof "runtime/pprof"
 
 	"github.com/caicloud/nirvana"
@@ -37,7 +38,8 @@ const ExternalConfigName = "profiling"
 
 // config is profiling config.
 type config struct {
-	path string
+	path       string
+	contention bool
 }
 
 type profilingInstaller struct{}
@@ -50,9 +52,12 @@ func (i *profilingInstaller) Name() string {
 // Install installs config to builder.
 func (i *profilingInstaller) Install(builder service.Builder, cfg *nirvana.Config) error {
 	var err error
-	wrapper(cfg, func(c *config) {
+	wapper(cfg, func(c *config) {
 		if err = builder.AddDescriptor(descriptor(c.path)); err != nil {
 			return
+		}
+		if c.contention {
+			runtime.SetBlockProfileRate(1)
 		}
 	})
 	return err
@@ -71,7 +76,7 @@ func Disable() nirvana.Configurer {
 	}
 }
 
-func wrapper(c *nirvana.Config, f func(c *config)) {
+func wapper(c *nirvana.Config, f func(c *config)) {
 	conf := c.Config(ExternalConfigName)
 	var cfg *config
 	if conf == nil {
@@ -98,8 +103,20 @@ func Path(path string) nirvana.Configurer {
 		path = "/debug/pprof/"
 	}
 	return func(c *nirvana.Config) error {
-		wrapper(c, func(c *config) {
+		wapper(c, func(c *config) {
 			c.path = path
+		})
+		return nil
+	}
+}
+
+// Contention returns a configurer to enable or
+// disable contention profiling.
+// Defaults to false.
+func Contention(enable bool) nirvana.Configurer {
+	return func(c *nirvana.Config) error {
+		wapper(c, func(c *config) {
+			c.contention = enable
 		})
 		return nil
 	}
@@ -172,6 +189,8 @@ var indexTmpl = template.Must(template.New("index").Parse(`<html>
 
 // Option contains basic configurations of profiling.
 type Option struct {
+	// Contention enables contention profiling.
+	Contention bool `desc:"Enable contention profiling"`
 	// Path is profiling path.
 	Path string `desc:"Profiling path"`
 }
@@ -179,7 +198,8 @@ type Option struct {
 // NewDefaultOption creates default option.
 func NewDefaultOption() *Option {
 	return &Option{
-		Path: "/debug/pprof/",
+		Contention: false,
+		Path:       "/debug/pprof/",
 	}
 }
 
@@ -191,6 +211,7 @@ func (p *Option) Name() string {
 // Configure configures nirvana config via current options.
 func (p *Option) Configure(cfg *nirvana.Config) error {
 	cfg.Configure(
+		Contention(p.Contention),
 		Path(p.Path),
 	)
 	return nil

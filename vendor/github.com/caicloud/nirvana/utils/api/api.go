@@ -17,9 +17,6 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
-	"reflect"
-
 	"github.com/caicloud/nirvana/definition"
 	"github.com/caicloud/nirvana/service"
 )
@@ -32,76 +29,6 @@ type Definitions struct {
 	Types map[TypeName]*Type
 }
 
-// Subset returns a subset required by a definition filter.
-func (d *Definitions) Subset(require func(path string, def *Definition) bool) *Definitions {
-	definitions := map[string][]Definition{}
-	for path, defs := range d.Definitions {
-		for _, def := range defs {
-			if require(path, &def) {
-				definitions[path] = append(definitions[path], def)
-			}
-		}
-	}
-	if len(definitions) > 0 {
-		result := &Definitions{definitions, map[TypeName]*Type{}}
-		d.complete(result)
-		return result
-	}
-	return nil
-}
-
-// complete fills types for a new definitions. target definitions must be a subset of this definitions.
-func (d *Definitions) complete(definitions *Definitions) {
-	for _, defs := range definitions.Definitions {
-		for _, def := range defs {
-			d.fillTypes(definitions.Types, def.Function)
-			for _, parameter := range def.Parameters {
-				d.fillTypes(definitions.Types, parameter.Type)
-			}
-			for _, result := range def.Results {
-				d.fillTypes(definitions.Types, result.Type)
-			}
-		}
-	}
-}
-
-// fillTypes puts a type into a map. The type must be in this definitions.
-func (d *Definitions) fillTypes(types map[TypeName]*Type, name TypeName) {
-	if types[name] != nil {
-		return
-	}
-	typ, ok := d.Types[name]
-	if !ok {
-		panic(fmt.Errorf("no type named %s", name))
-	}
-	types[name] = typ
-	switch typ.Kind {
-	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32, reflect.Float64, reflect.String, reflect.Interface:
-		// For basic data types, there are no related types need to handle.
-		// For interfaces, there are no concrete entities to handle.
-	case reflect.Array, reflect.Slice, reflect.Ptr:
-		d.fillTypes(types, typ.Elem)
-	case reflect.Map:
-		d.fillTypes(types, typ.Key)
-		d.fillTypes(types, typ.Elem)
-	case reflect.Struct:
-		for _, field := range typ.Fields {
-			d.fillTypes(types, field.Type)
-		}
-	case reflect.Func:
-		for _, param := range typ.In {
-			d.fillTypes(types, param.Type)
-		}
-		for _, result := range typ.Out {
-			d.fillTypes(types, result.Type)
-		}
-	default:
-		panic(fmt.Errorf("can't recognize type %s with kind %s", name, typ.Kind.String()))
-	}
-}
-
 // Container contains informations to generate APIs.
 type Container struct {
 	modifiers     service.DefinitionModifiers
@@ -111,10 +38,10 @@ type Container struct {
 }
 
 // NewContainer creates API container.
-func NewContainer(root string) *Container {
+func NewContainer() *Container {
 	return &Container{
 		typeContainer: NewTypeContainer(),
-		analyzer:      NewAnalyzer(root),
+		analyzer:      NewAnalyzer(),
 	}
 }
 

@@ -57,7 +57,7 @@ func (i *tracingInstaller) Name() string {
 // Install installs config to builder.
 func (i *tracingInstaller) Install(builder service.Builder, cfg *nirvana.Config) error {
 	var err error
-	wrapper(cfg, func(c *config) {
+	wapper(cfg, func(c *config) {
 		if c.tracer == nil {
 			tcfg := tconfig.Configuration{
 				ServiceName: c.serviceName,
@@ -87,7 +87,7 @@ func (i *tracingInstaller) Install(builder service.Builder, cfg *nirvana.Config)
 // Uninstall uninstalls stuffs after server terminating.
 func (i *tracingInstaller) Uninstall(builder service.Builder, cfg *nirvana.Config) error {
 	var err error
-	wrapper(cfg, func(c *config) {
+	wapper(cfg, func(c *config) {
 		if c.closer != nil {
 			err = c.closer.Close()
 		}
@@ -103,7 +103,7 @@ func Disable() nirvana.Configurer {
 	}
 }
 
-func wrapper(c *nirvana.Config, f func(c *config)) {
+func wapper(c *nirvana.Config, f func(c *config)) {
 	conf := c.Config(ExternalConfigName)
 	var cfg *config
 	if conf == nil {
@@ -120,7 +120,7 @@ func wrapper(c *nirvana.Config, f func(c *config)) {
 // CustomTracer returns a configurer to set custom tracer.
 func CustomTracer(tracer opentracing.Tracer) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wrapper(c, func(c *config) {
+		wapper(c, func(c *config) {
 			c.tracer = tracer
 		})
 		return nil
@@ -130,7 +130,7 @@ func CustomTracer(tracer opentracing.Tracer) nirvana.Configurer {
 // DefaultTracer returns a configurer to create default tracer by service and port.
 func DefaultTracer(serviceName string, agentHostPort string) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wrapper(c, func(c *config) {
+		wapper(c, func(c *config) {
 			c.serviceName = serviceName
 			c.agentHostPort = agentHostPort
 		})
@@ -141,7 +141,7 @@ func DefaultTracer(serviceName string, agentHostPort string) nirvana.Configurer 
 // AddHook returns a configurer to set request hook.
 func AddHook(hook Hook) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wrapper(c, func(c *config) {
+		wapper(c, func(c *config) {
 			c.hook = hook
 		})
 		return nil

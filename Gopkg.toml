@@ -140,3 +140,11 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
+
+[[constraint]]
+  name = "github.com/caicloud/nirvana"
+  revision = "0cd8f02a9807e0ee3f738525d1b0c53457a77975"
+
+[[override]]
+  name = "github.com/prometheus/client_model"
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"

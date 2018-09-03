@@ -8,22 +8,45 @@
   version = "v0.4.7"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
   name = "github.com/buildkite/terminal"
   packages = ["."]
   revision = "05a77905c468b9150cac41298fdb8a0735024d42"
   version = "v3.1.0"
 
 [[projects]]
-  name = "github.com/caicloud/cargo-admin"
-  packages = ["pkg/api/admin/types"]
-  revision = "bb24f2ce282c2e288a02fca625725ee8f5fda939"
-  version = "v0.4.5"
+  name = "github.com/caicloud/devops-admin"
+  packages = [
+    "pkg/api/definition",
+    "pkg/api/middleware",
+    "pkg/api/models",
+    "pkg/api/v1",
+    "pkg/api/v1/descriptor",
+    "pkg/errors",
+    "pkg/util/http"
+  ]
+  revision = "da3c48c540a35e22618207918e9bb2342fa72483"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/caicloud/nirvana"
-  packages = ["log"]
-  revision = "35f5d634795a3a804c2937abb6cb2c249fe88e46"
-  version = "v0.2.0"
+  packages = [
+    ".",
+    "definition",
+    "errors",
+    "log",
+    "operators/validator",
+    "plugins/metrics",
+    "plugins/profiling",
+    "service",
+    "service/router"
+  ]
+  revision = "0cd8f02a9807e0ee3f738525d1b0c53457a77975"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -89,12 +112,6 @@
   version = "v2.4.0"
 
 [[projects]]
-  name = "github.com/emicklei/go-restful-swagger12"
-  packages = ["."]
-  revision = "dcef7f55730566d41eae5db10e7d6981829720f6"
-  version = "1.0.1"
-
-[[projects]]
   name = "github.com/fsouza/go-dockerclient"
   packages = [
     ".",
@@ -124,6 +141,21 @@
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/go-playground/locales"
+  packages = [
+    ".",
+    "currency"
+  ]
+  revision = "f63010822830b6fe52288ee52d5a1151088ce039"
+  version = "v0.12.1"
+
+[[projects]]
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -219,6 +251,12 @@
   version = "1.0.1"
 
 [[projects]]
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/modern-go/concurrent"
   packages = ["."]
   revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
@@ -312,6 +350,41 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/promhttp"
+  ]
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs"
+  ]
+  revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -441,6 +514,12 @@
   name = "gopkg.in/alexcesaro/quotedprintable.v3"
   packages = ["."]
   revision = "2caba252f4dc53eaf6b553000885530023f54623"
+
+[[projects]]
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  revision = "e69e9a28bb62b977fdc58d051f1bb477b7cbe486"
+  version = "v9.21.0"
 
 [[projects]]
   name = "gopkg.in/gomail.v2"
@@ -612,6 +691,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f0b0278e37c887e8f5ce9478d1c455d788050bb134d94c7911a530ae82c256e5"
+  inputs-digest = "702689d62b7357e554b40ec0c276d8deeee7d6d386999d4f2d2c349080c37890"
   solver-name = "gps-cdcl"
   solver-version = 1

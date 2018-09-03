@@ -168,9 +168,7 @@ func (l *stdLogger) write(data string) {
 	if data[len(data)-1] != '\n' {
 		data += "\n"
 	}
-	_, err := fmt.Fprint(l.stream, data)
-	// Ignore output error.
-	_ = err
+	fmt.Fprint(l.stream, data)
 }
 
 func prefix(severity Severity, depth int) string {
