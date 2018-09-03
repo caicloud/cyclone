@@ -211,13 +211,13 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 	}
 
 	var logs string
-	for i := 0; i < maxRetry; i++ {
+	for i := 1; i <= maxRetry; i++ {
 		logs, err = p.Clone(token, url, reference, destPath)
 		if err == nil {
 			return logs, nil
 		}
 
-		logdog.Infof("checkout code as error %v, retry times: %v", err, i+1)
+		logdog.Infof("checkout code as error %v, retry times: %v", err, i)
 		time.Sleep(time.Second * 1)
 	}
 
