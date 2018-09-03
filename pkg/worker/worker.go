@@ -18,6 +18,7 @@ package worker
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/golang/glog"
 
@@ -152,7 +153,14 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		if err != nil {
 			log.Errorf("new tag from latest fail : %v", err)
 			event.PipelineRecord.Status = api.Failed
-			event.PipelineRecord.ErrorMessage = fmt.Sprintf("generate tag fail: %v", err)
+			scmType := event.Pipeline.Build.Stages.CodeCheckout.MainRepo.Type
+			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
+				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
+				event.PipelineRecord.ErrorMessage = "Create SCM tag fails, please check your account permissions."
+			} else {
+				event.PipelineRecord.ErrorMessage = fmt.Sprintf("Create SCM tag fails : %v", err)
+			}
+
 			err = worker.Client.SendEvent(event)
 			if err != nil {
 				log.Errorf("set event result err: %v", err)
