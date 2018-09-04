@@ -1,0 +1,91 @@
+_config:
+  _metadata:
+    description: cyclone-server
+    name: cyclone-server
+    namespace: default
+    template:
+      type: template.caicloud.io/application
+      version: 1.0.0
+    version: "[[ imageTagFromGitTag ]]"
+  controllers:
+  - containers:
+    - command:
+      - /cyclone-server
+      env:
+      - name: MONGODB_HOST
+        value: '[[ platform_mongo_host ]]'
+      - name: REGISTRY_LOCATION
+        value: '[[ cargo_registry ]]'
+      - name: REGISTRY_USERNAME
+        value: admin
+      - name: REGISTRY_PASSWORD
+        value: Pwd123456
+      - name: CLIENTID
+        value: clientid
+      - name: CLIENTIDSECRET
+        value: clientidsecret
+      - name: CONSOLE_WEB_ENDPOINT
+        value: http://[[ kube_apiserver_endpoint_ip ]]:30000
+      - name: CLIENTID_GITLAB
+        value: clientid_gitlab
+      - name: CLIENTIDSECRET_GITLAB
+        value: clientidsecret_gitlab
+      - name: SERVER_GITLAB
+        value: https://gitlab.com
+      - name: CYCLONE_SERVER
+        value: http://[[ kube_apiserver_endpoint_ip ]]:30010
+      - name: WORKER_IMAGE
+        value: '[[ registry_release ]]/cyclone-worker:[[ imageTagFromGitTag ]]'
+      - name: CLOUD_AUTO_DISCOVERY
+        value: 'true'
+      - name: LIMIT_MEMORY
+        value: 4Gi
+      - name: LIMIT_CPU
+        value: '2'
+      - name: REQUEST_MEMORY
+        value: 1Gi
+      - name: REQUEST_CPU
+        value: '0.5'
+      - name: SMTP_PASSWORD
+        value: smtp_password
+      - name: SMTP_PORT
+        value: smtp_port
+      - name: SMTP_SERVER
+        value: smtp_server
+      - name: SMTP_USERNAME
+        value: smtp_username
+      - name: RECORD_ROTATION_THRESHOLD
+        value: "50"
+      - name: CALLBACK_URL
+        value: http://[[ kube_apiserver_endpoint_ip ]]:30069/apis/admin.devops.caicloud.io/v1/pipelines
+      image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
+      imagePullPolicy: IfNotPresent
+      mounts:
+      - name: cyclone-data
+        path: /var/lib/cyclone
+      ports:
+      - port: 7099
+        protocol: TCP
+    controller:
+      replica: 1
+    pod:
+      serviceAccountName: admin
+    services:
+    - name: cyclone-server
+      ports:
+      - nodePort: 30010
+        port: 7099
+        protocol: TCP
+      type: NodePort
+    type: Deployment
+    volumes:
+    - name: cyclone-data
+      type: Dynamic
+      source:
+        class: heketi-storageclass
+        modes:
+        - ReadWriteMany
+      storage:
+        request: 500Gi
+        limit: 500Gi
+
