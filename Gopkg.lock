@@ -20,20 +20,6 @@
   version = "v3.1.0"
 
 [[projects]]
-  name = "github.com/caicloud/devops-admin"
-  packages = [
-    "pkg/api/definition",
-    "pkg/api/middleware",
-    "pkg/api/models",
-    "pkg/api/v1",
-    "pkg/api/v1/descriptor",
-    "pkg/errors",
-    "pkg/util/http"
-  ]
-  revision = "da3c48c540a35e22618207918e9bb2342fa72483"
-  version = "v0.1.0"
-
-[[projects]]
   name = "github.com/caicloud/nirvana"
   packages = [
     ".",
@@ -101,15 +87,6 @@
   packages = ["."]
   revision = "0dadbb0345b35ec7ef35e228dabb8de89a65bf52"
   version = "v0.3.2"
-
-[[projects]]
-  name = "github.com/emicklei/go-restful"
-  packages = [
-    ".",
-    "log"
-  ]
-  revision = "5741799b275a3c4a5a9623a993576d7545cf7b5c"
-  version = "v2.4.0"
 
 [[projects]]
   name = "github.com/fsouza/go-dockerclient"
@@ -691,6 +668,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "702689d62b7357e554b40ec0c276d8deeee7d6d386999d4f2d2c349080c37890"
+  inputs-digest = "8dc3a32fdbebcb47fa7c81ab9a418b8ff54daeb7baf27733dc0d56176ed9103b"
   solver-name = "gps-cdcl"
   solver-version = 1
