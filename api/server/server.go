@@ -21,8 +21,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	//restful "github.com/emicklei/go-restful"
-	//swagger "github.com/emicklei/go-restful-swagger12"
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
@@ -87,33 +85,6 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 		return err
 	}
 
-	//// Initialize the V1 API.
-	//if err := router.InitRouters(dataStore, s.Config.RecordRotationThreshold); err != nil {
-	//	logdog.Fatal(err)
-	//	return err
-	//}
-	//
-	//// init api doc
-	//if s.Config.ShowAPIDoc {
-	//	// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
-	//	config := swagger.Config{
-	//		WebServices:    restful.DefaultContainer.RegisteredWebServices(), // you control what services are visible.
-	//		WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
-	//		ApiPath:        "/apidocs.json",
-	//
-	//		// Optionally, specify where the UI is located.
-	//		SwaggerPath:     "/apidocs/",
-	//		SwaggerFilePath: "./node_modules/swagger-ui/dist",
-	//	}
-	//	swagger.InstallSwaggerService(config)
-	//}
-	//
-	//// start server
-	//server := &http.Server{Addr: fmt.Sprintf(":%d", s.Config.CyclonePort), Handler: restful.DefaultContainer}
-	//logdog.Infof("cyclone server listening on %d", s.Config.CyclonePort)
-	//logdog.Fatal(server.ListenAndServe())
-	// <-stopCh
-
 	port := DefaultPort
 	if s.Config.CyclonePort != 0 {
 		port = s.Config.CyclonePort
@@ -139,6 +110,7 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	}
 
 	log.Error("Server stopped")
+	<-stopCh
 	return nil
 }
 
