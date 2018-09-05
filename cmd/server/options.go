@@ -22,8 +22,8 @@ import (
 	log "github.com/golang/glog"
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/caicloud/cyclone/api/server"
 	"github.com/caicloud/cyclone/cmd/worker/options"
+	"github.com/caicloud/cyclone/pkg/server"
 )
 
 // ServerOptions ...
