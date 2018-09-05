@@ -17,10 +17,12 @@ limitations under the License.
 package http
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/caicloud/nirvana/service"
 	"github.com/emicklei/go-restful"
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2/bson"
@@ -30,9 +32,59 @@ import (
 )
 
 const (
+
+	// APIVersion is the version of API.
+	APIVersion = "/api/v1"
+
+	// ProjectPathParameterName represents the name of the path parameter for project.
+	ProjectPathParameterName = "project"
+
+	// PipelinePathParameterName represents the name of the path parameter for pipeline.
+	PipelinePathParameterName = "pipeline"
+
+	// PipelineIDPathParameterName represents the name of the path parameter for pipeline id.
+	PipelineIDPathParameterName = "pipelineid"
+
+	// PipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
+	PipelineRecordPathParameterName = "recordid"
+
+	// PipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
+	PipelineRecordStageQueryParameterName = "stage"
+
+	// PipelineRecordTaskQueryParameterName represents the name of the query parameter for pipeline record task.
+	PipelineRecordTaskQueryParameterName = "task"
+
+	// PipelineRecordDownloadQueryParameter represents a download flag of the query parameter for pipeline record task.
+	PipelineRecordDownloadQueryParameter = "download"
+
+	// EventPathParameterName represents the name of the path parameter for event.
+	EventPathParameterName = "eventid"
+
+	// CloudPathParameterName represents the name of the path parameter for cloud.
+	CloudPathParameterName = "cloud"
+
+	// NamespaceQueryParameterName represents the k8s cluster namespce of the query parameter for cloud.
+	NamespaceQueryParameter = "namespace"
+
+	// RepoQueryParameterName represents the repo name of the query parameter.
+	RepoQueryParameter = "repo"
+
+	// StartTimeQueryParameter represents the query param start time.
+	StartTimeQueryParameter string = "startTime"
+
+	// EndTimeQueryParameter represents the query param end time.
+	EndTimeQueryParameter string = "endTime"
+
 	// HeaderUser represents the the key of user in request header.
 	HeaderUser = "X-User"
+
+	HEADER_ContentType = "Content-Type"
 )
+
+// GetHttpRequest gets request from context.
+func GetHttpRequest(ctx context.Context) *http.Request {
+	return service.HTTPContextFrom(ctx).Request()
+}
 
 // ReadEntityFromRequest reads the entity from request body.
 func ReadEntityFromRequest(request *restful.Request, entityPointer interface{}) error {
@@ -78,6 +130,53 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 	limitStr := request.QueryParameter(api.Limit)
 	startStr := request.QueryParameter(api.Start)
 	filterStr := request.QueryParameter(api.Filter)
+
+	if limitStr != "" {
+		qp.Limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Limit, "number", "string")
+		}
+	}
+	if startStr != "" {
+		qp.Start, err = strconv.Atoi(startStr)
+		if err != nil {
+			return qp, httperror.ErrorParamTypeError.Format(api.Start, "number", "string")
+		}
+	}
+	if filterStr != "" {
+		// Support multiple conditions to filter, they are seperated with comma.
+		conditions := strings.Split(filterStr, ",")
+		filter := make(map[string]interface{})
+		for _, c := range conditions {
+			filterParts := strings.Split(c, "=")
+			if len(filterParts) != 2 {
+				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+			}
+
+			if _, ok := filter[filterParts[0]]; ok {
+				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+			}
+
+			filter[filterParts[0]] = bson.M{"$regex": filterParts[1]}
+		}
+
+		qp.Filter = filter
+	}
+
+	return qp, nil
+}
+
+// QueryParamsFromContext reads the query params from context.
+func QueryParamsFromContext(ctx context.Context) (qp api.QueryParams, err error) {
+	request := GetHttpRequest(ctx)
+	err = request.ParseForm()
+	if err != nil {
+		return
+	}
+
+	limitStr := request.Form.Get(api.Limit)
+	startStr := request.Form.Get(api.Start)
+	filterStr := request.Form.Get(api.Filter)
 
 	if limitStr != "" {
 		qp.Limit, err = strconv.Atoi(limitStr)

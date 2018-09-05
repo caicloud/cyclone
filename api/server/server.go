@@ -17,22 +17,29 @@ limitations under the License.
 package server
 
 import (
-	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	restful "github.com/emicklei/go-restful"
-	swagger "github.com/emicklei/go-restful-swagger12"
+	//restful "github.com/emicklei/go-restful"
+	//swagger "github.com/emicklei/go-restful-swagger12"
 	log "github.com/golang/glog"
-	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
+	"github.com/caicloud/cyclone/pkg/api/v1/descriptor"
 	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/event"
-	"github.com/caicloud/cyclone/pkg/server/router"
 	"github.com/caicloud/cyclone/pkg/store"
+	"github.com/caicloud/nirvana"
+	"github.com/caicloud/nirvana/plugins/metrics"
+	"github.com/caicloud/nirvana/plugins/profiling"
+	"github.com/zoumo/logdog"
+
+	"github.com/caicloud/cyclone/pkg/api/v1/handler"
+)
+
+const (
+	DefaultPort = 7099
 )
 
 // APIServer ...
@@ -74,32 +81,64 @@ func (s *PreparedAPIServer) Run(stopCh <-chan struct{}) error {
 	dataStore := store.NewStore()
 	defer dataStore.Close()
 
-	// Initialize the V1 API.
-	if err := router.InitRouters(dataStore, s.Config.RecordRotationThreshold); err != nil {
+	// Initialize the V1 API Handler.
+	if err := handler.InitHandler(dataStore, s.Config.RecordRotationThreshold); err != nil {
 		logdog.Fatal(err)
 		return err
 	}
 
-	// init api doc
-	if s.Config.ShowAPIDoc {
-		// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
-		config := swagger.Config{
-			WebServices:    restful.DefaultContainer.RegisteredWebServices(), // you control what services are visible.
-			WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
-			ApiPath:        "/apidocs.json",
+	//// Initialize the V1 API.
+	//if err := router.InitRouters(dataStore, s.Config.RecordRotationThreshold); err != nil {
+	//	logdog.Fatal(err)
+	//	return err
+	//}
+	//
+	//// init api doc
+	//if s.Config.ShowAPIDoc {
+	//	// Open http://localhost:7099/apidocs and enter http://localhost:7099/apidocs.json in the api input field.
+	//	config := swagger.Config{
+	//		WebServices:    restful.DefaultContainer.RegisteredWebServices(), // you control what services are visible.
+	//		WebServicesUrl: fmt.Sprintf(s.Config.CycloneAddrTemplate, s.Config.CyclonePort),
+	//		ApiPath:        "/apidocs.json",
+	//
+	//		// Optionally, specify where the UI is located.
+	//		SwaggerPath:     "/apidocs/",
+	//		SwaggerFilePath: "./node_modules/swagger-ui/dist",
+	//	}
+	//	swagger.InstallSwaggerService(config)
+	//}
+	//
+	//// start server
+	//server := &http.Server{Addr: fmt.Sprintf(":%d", s.Config.CyclonePort), Handler: restful.DefaultContainer}
+	//logdog.Infof("cyclone server listening on %d", s.Config.CyclonePort)
+	//logdog.Fatal(server.ListenAndServe())
+	// <-stopCh
 
-			// Optionally, specify where the UI is located.
-			SwaggerPath:     "/apidocs/",
-			SwaggerFilePath: "./node_modules/swagger-ui/dist",
-		}
-		swagger.InstallSwaggerService(config)
+	port := DefaultPort
+	if s.Config.CyclonePort != 0 {
+		port = s.Config.CyclonePort
 	}
 
-	// start server
-	server := &http.Server{Addr: fmt.Sprintf(":%d", s.Config.CyclonePort), Handler: restful.DefaultContainer}
-	logdog.Infof("cyclone server listening on %d", s.Config.CyclonePort)
-	logdog.Fatal(server.ListenAndServe())
-	// <-stopCh
+	log.Infof("cyclone starts listening on %v", port)
+	log.Infof("cyclone starts listening on %v", s.Config.CycloneAddrTemplate)
+
+	config := nirvana.NewDefaultConfig()
+	//nirvana.IP(f.Address)(config)
+	nirvana.Port(uint16(port))(config)
+	config.Configure(
+		metrics.Path("/metrics"),
+		profiling.Path("/debug/pprof/"),
+		profiling.Contention(true),
+	)
+
+	config.Configure(nirvana.Descriptor(descriptor.Descriptor()))
+
+	log.Infof("API service listening on %s:%d", s.Config.CycloneAddrTemplate, port)
+	if err := nirvana.NewServer(config).Serve(); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Error("Server stopped")
 	return nil
 }
 
