@@ -103,11 +103,12 @@ func (c *client) SendEvent(event *api.Event) error {
 	if err != nil {
 		return ErrorUnknownInternal.Format(err)
 	}
+	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return ErrorUnknownInternal.Format(err)
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
 		return nil
@@ -127,11 +128,12 @@ func (c *client) GetEvent(id string) (*api.Event, error) {
 	if err != nil {
 		return nil, ErrorUnknownInternal.Format(err)
 	}
+	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, ErrorUnknownInternal.Format(err)
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
 		log.Infof("Event %s is got from Cyclone server", id)
