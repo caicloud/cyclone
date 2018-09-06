@@ -109,7 +109,7 @@ func NewDefinition(tc *TypeContainer, d *definition.Definition) (*Definition, er
 			Source:      p.Source,
 			Name:        p.Name,
 			Description: p.Description,
-			Type:        functionType.In[i].Type,
+			Type:        functionType.In[i],
 		}
 		if p.Default != nil {
 			data, err := encode(p.Default)
@@ -127,7 +127,7 @@ func NewDefinition(tc *TypeContainer, d *definition.Definition) (*Definition, er
 		result := Result{
 			Destination: r.Destination,
 			Description: r.Description,
-			Type:        functionType.Out[i].Type,
+			Type:        functionType.Out[i],
 		}
 		if len(r.Operators) > 0 {
 			result.Type = tc.NameOf(r.Operators[len(r.Operators)-1].Out())

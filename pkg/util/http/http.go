@@ -17,12 +17,12 @@ limitations under the License.
 package http
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/emicklei/go-restful"
-	"github.com/zoumo/logdog"
+	"github.com/caicloud/nirvana/service"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -30,37 +30,58 @@ import (
 )
 
 const (
+
+	// APIVersion is the version of API.
+	APIVersion = "/api/v1"
+
+	// ProjectPathParameterName represents the name of the path parameter for project.
+	ProjectPathParameterName = "project"
+
+	// PipelinePathParameterName represents the name of the path parameter for pipeline.
+	PipelinePathParameterName = "pipeline"
+
+	// PipelineIDPathParameterName represents the name of the path parameter for pipeline id.
+	PipelineIDPathParameterName = "pipelineid"
+
+	// PipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
+	PipelineRecordPathParameterName = "recordid"
+
+	// PipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
+	PipelineRecordStageQueryParameterName = "stage"
+
+	// PipelineRecordTaskQueryParameterName represents the name of the query parameter for pipeline record task.
+	PipelineRecordTaskQueryParameterName = "task"
+
+	// PipelineRecordDownloadQueryParameter represents a download flag of the query parameter for pipeline record task.
+	PipelineRecordDownloadQueryParameter = "download"
+
+	// EventPathParameterName represents the name of the path parameter for event.
+	EventPathParameterName = "eventid"
+
+	// CloudPathParameterName represents the name of the path parameter for cloud.
+	CloudPathParameterName = "cloud"
+
+	// NamespaceQueryParameterName represents the k8s cluster namespce of the query parameter for cloud.
+	NamespaceQueryParameter = "namespace"
+
+	// RepoQueryParameterName represents the repo name of the query parameter.
+	RepoQueryParameter = "repo"
+
+	// StartTimeQueryParameter represents the query param start time.
+	StartTimeQueryParameter string = "startTime"
+
+	// EndTimeQueryParameter represents the query param end time.
+	EndTimeQueryParameter string = "endTime"
+
 	// HeaderUser represents the the key of user in request header.
 	HeaderUser = "X-User"
+
+	HEADER_ContentType = "Content-Type"
 )
 
-// ReadEntityFromRequest reads the entity from request body.
-func ReadEntityFromRequest(request *restful.Request, entityPointer interface{}) error {
-	if err := request.ReadEntity(entityPointer); err != nil {
-		logdog.Errorf("Fail to read request entity as %s", err.Error())
-		return httperror.ErrorUnknownRequest.Format(err.Error())
-	}
-
-	return nil
-}
-
-// ResponseWithError responses the request with error.
-func ResponseWithError(response *restful.Response, err error) {
-	switch err := err.(type) {
-	case *httperror.Error:
-		response.WriteHeaderAndEntity(err.Code, api.ErrorResponse{
-			Message: err.Error(),
-			Reason:  err.Reason,
-		})
-	case error:
-		response.WriteHeaderAndEntity(http.StatusInternalServerError, api.ErrorResponse{
-			Message: err.Error(),
-			Reason:  httperror.ReasonInternal,
-		})
-	default:
-		// should not come here
-		logdog.Fatalf("%s is an unknown error type", err)
-	}
+// GetHttpRequest gets request from context.
+func GetHttpRequest(ctx context.Context) *http.Request {
+	return service.HTTPContextFrom(ctx).Request()
 }
 
 // ResponseWithList responses list with metadata.
@@ -73,11 +94,17 @@ func ResponseWithList(list interface{}, total int) api.ListResponse {
 	}
 }
 
-// QueryParamsFromRequest reads the query params from request.
-func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err error) {
-	limitStr := request.QueryParameter(api.Limit)
-	startStr := request.QueryParameter(api.Start)
-	filterStr := request.QueryParameter(api.Filter)
+// QueryParamsFromContext reads the query params from context.
+func QueryParamsFromContext(ctx context.Context) (qp api.QueryParams, err error) {
+	request := GetHttpRequest(ctx)
+	err = request.ParseForm()
+	if err != nil {
+		return
+	}
+
+	limitStr := request.Form.Get(api.Limit)
+	startStr := request.Form.Get(api.Start)
+	filterStr := request.Form.Get(api.Filter)
 
 	if limitStr != "" {
 		qp.Limit, err = strconv.Atoi(limitStr)
@@ -112,49 +139,4 @@ func QueryParamsFromRequest(request *restful.Request) (qp api.QueryParams, err e
 	}
 
 	return qp, nil
-}
-
-// RecordCountQueryParamsFromRequest reads the query params of pipeline record count from request.
-func RecordCountQueryParamsFromRequest(request *restful.Request) (recentCount, recentSuccessCount, recentFailedCount int, err error) {
-	recentCountStr := request.QueryParameter(api.RecentPipelineRecordCount)
-	recentSuccessCountStr := request.QueryParameter(api.RecentSuccessPipelineRecordCount)
-	recentFailedCountStr := request.QueryParameter(api.RecentFailedPipelineRecordCount)
-
-	if recentCountStr != "" {
-		recentCount, err = strconv.Atoi(recentCountStr)
-		if err != nil {
-			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentPipelineRecordCount, "number", "string")
-		}
-	}
-	if recentSuccessCountStr != "" {
-		recentSuccessCount, err = strconv.Atoi(recentSuccessCountStr)
-		if err != nil {
-			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentSuccessPipelineRecordCount, "number", "string")
-		}
-	}
-	if recentFailedCountStr != "" {
-		recentFailedCount, err = strconv.Atoi(recentFailedCountStr)
-		if err != nil {
-			return 0, 0, 0, httperror.ErrorParamTypeError.Format(api.RecentFailedPipelineRecordCount, "number", "string")
-		}
-	}
-
-	return
-}
-
-// DownloadQueryParamsFromRequest reads the query param whether download pipeline record logs from request.
-func DownloadQueryParamsFromRequest(request *restful.Request) (bool, error) {
-	downloadStr := request.QueryParameter(api.Download)
-
-	if downloadStr != "" {
-		download, err := strconv.ParseBool(downloadStr)
-		if err != nil {
-			logdog.Errorf("Download param's value is %s", downloadStr)
-			return false, httperror.ErrorParamTypeError.Format(api.Download, "bool", "string")
-		}
-
-		return download, nil
-	}
-
-	return false, nil
 }

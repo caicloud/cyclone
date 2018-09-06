@@ -118,16 +118,6 @@ type factory struct {
 	format string
 }
 
-// Code returns code of current factory.
-func (f *factory) Code() int {
-	return f.code
-}
-
-// Reason returns reason of current factory.
-func (f *factory) Reason() Reason {
-	return f.reason
-}
-
 // Error generates an error from v.
 func (f *factory) Error(v ...interface{}) error {
 	msg := message{Reason: f.reason}
@@ -139,17 +129,9 @@ func (f *factory) Error(v ...interface{}) error {
 }
 
 // Derived checks if an error was derived from current factory.
-// If an error is not derived by current factory but implements
-// ExternalError as well as code and reason are matched,
-// this method also returns true.
 func (f *factory) Derived(e error) bool {
 	origin, ok := e.(*err)
-	if ok {
-		return origin.factory == f
-	}
-	external, ok := e.(ExternalError)
-	return ok && external.Code() == f.code &&
-		external.Reason() == string(f.reason)
+	return ok && origin.factory == f
 }
 
 // expand expands a format string like "name ${name} is too short" to "name japari is too short"

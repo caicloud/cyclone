@@ -29,7 +29,6 @@ import (
 
 // Analyzer analyzes go packages.
 type Analyzer struct {
-	root         string
 	files        map[string]*ast.File
 	packageFiles map[string][]*ast.File
 	packages     map[string]*types.Package
@@ -37,9 +36,8 @@ type Analyzer struct {
 }
 
 // NewAnalyzer creates a code ananlyzer.
-func NewAnalyzer(root string) *Analyzer {
+func NewAnalyzer() *Analyzer {
 	return &Analyzer{
-		root:         root,
 		files:        map[string]*ast.File{},
 		packageFiles: map[string][]*ast.File{},
 		packages:     map[string]*types.Package{},
@@ -49,7 +47,7 @@ func NewAnalyzer(root string) *Analyzer {
 
 // Import imports a package and all packages it depends on.
 func (a *Analyzer) Import(path string) (*types.Package, error) {
-	pkg, err := build.Import(path, a.root, 0)
+	pkg, err := build.Import(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +144,6 @@ func (a *Analyzer) Comments(pos token.Pos) *ast.CommentGroup {
 // ObjectOf returns declaration object of target.
 func (a *Analyzer) ObjectOf(pkg, name string) (types.Object, error) {
 	p, err := a.Import(pkg)
-	// Ignore the error if p is not nil.
-	// We need to rewrite analyzer with go/parser rather than go/types.
 	if p == nil && err != nil {
 		return nil, err
 	}

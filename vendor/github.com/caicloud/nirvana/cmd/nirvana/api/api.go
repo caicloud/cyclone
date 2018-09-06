@@ -29,7 +29,7 @@ import (
 	"strings"
 
 	"github.com/caicloud/nirvana"
-	"github.com/caicloud/nirvana/cmd/nirvana/buildutils"
+	"github.com/caicloud/nirvana/cmd/nirvana/utils"
 	"github.com/caicloud/nirvana/definition"
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
@@ -81,19 +81,27 @@ func (o *apiOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *apiOptions) Run(cmd *cobra.Command, args []string) error {
-	if len(args) <= 0 {
-		defaultAPIsPath := "pkg/apis"
-		args = append(args, defaultAPIsPath)
-		log.Infof("No packages are specified, defaults to %s", defaultAPIsPath)
-	}
-
-	config, definitions, err := buildutils.Build(args...)
+	builder := utils.NewAPIBuilder(o.findAllChildernPaths(args...)...)
+	definitions, err := builder.Build()
 	if err != nil {
 		return err
 	}
-
-	log.Infof("Project root directory is %s", config.Root)
-
+	file := ""
+	for _, path := range args {
+		file, err = o.findProjectFile(path)
+		if err == nil {
+			break
+		}
+	}
+	config := &swagger.Config{}
+	if file == "" {
+		log.Warning("can't find nirvana.yaml, use empty config as instead")
+	} else {
+		config, err = swagger.LoadConfig(file)
+		if err != nil {
+			return err
+		}
+	}
 	generator := swagger.NewDefaultGenerator(config, definitions)
 	swaggers, err := generator.Generate()
 	if err != nil {
@@ -106,14 +114,11 @@ func (o *apiOptions) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
 		files[s.Info.Version] = data
 	}
 
 	if o.Output != "" {
-		if err = o.write(files); err != nil {
-			return err
-		}
+		err = o.write(files)
 	}
 
 	if o.Serve != "" {
@@ -122,22 +127,61 @@ func (o *apiOptions) Run(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+// findAllChildernPaths walkthroughs all child directories but ignore vendors.
+func (o *apiOptions) findAllChildernPaths(paths ...string) []string {
+	walked := map[string]bool{}
+	goDir := map[string]bool{}
+	for _, path := range paths {
+		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				if info.Name() == "vendor" || walked[path] {
+					return filepath.SkipDir
+				}
+				walked[path] = true
+				return nil
+			}
+			if strings.HasSuffix(path, ".go") {
+				dir := filepath.Dir(path)
+				goDir[dir] = true
+			}
+			return nil
+		})
+		_ = err
+	}
+	results := []string{}
+	for path := range goDir {
+		results = append(results, path)
+	}
+	return results
+}
+
+// findProjectFile find the path of nirvana.yaml.
+// It will find the path itself and its parents recursively.
+func (o *apiOptions) findProjectFile(path string) (string, error) {
+	goPath, absPath, err := utils.GoPath(path)
+	if err != nil {
+		return "", err
+	}
+	fileName := "nirvana.yaml"
+	for len(absPath) > len(goPath) {
+		path = filepath.Join(absPath, fileName)
+		info, err := os.Stat(path)
+		if err == nil && !info.IsDir() {
+			return path, nil
+		}
+		absPath = filepath.Dir(absPath)
+	}
+	return "", fmt.Errorf("can't find nirvana.yaml")
+}
+
 func (o *apiOptions) write(apis map[string][]byte) error {
 	dir := o.Output
-	dir, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(dir, 0775); err != nil {
-		return err
-	}
 	for version, data := range apis {
 		file := filepath.Join(dir, o.pathForVersion(version))
 		if err := ioutil.WriteFile(file, data, 0664); err != nil {
 			return err
 		}
 	}
-	log.Infof("Generated openapi schemes to %s", dir)
 	return nil
 }
 

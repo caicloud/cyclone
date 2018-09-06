@@ -64,10 +64,6 @@ type Option struct {
 	IP string `desc:"Nirvana server listening IP"`
 	// Port is the port to listen.
 	Port uint16 `desc:"Nirvana server listening Port"`
-	// Key is private key for HTTPS.
-	Key string `desc:"TLS private key (PEM format) for HTTPS"`
-	// Cert is certificate for HTTPS.
-	Cert string `desc:"TLS certificate (PEM format) for HTTPS"`
 }
 
 // NewDefaultOption creates a default option.
@@ -88,7 +84,6 @@ func (p *Option) Configure(cfg *nirvana.Config) error {
 	cfg.Configure(
 		nirvana.IP(p.IP),
 		nirvana.Port(p.Port),
-		nirvana.TLS(p.Key, p.Cert),
 	)
 	return nil
 }
@@ -184,9 +179,7 @@ func walkthrough(index []int, typ reflect.Type, f func(index []int, field reflec
 		if field.Anonymous {
 			walkthrough(append(index, i), field.Type, f)
 		} else {
-			if field.Name != "" && field.Name[0] >= 'A' && field.Name[0] <= 'Z' {
-				f(append(index, i), field)
-			}
+			f(append(index, i), field)
 		}
 	}
 }

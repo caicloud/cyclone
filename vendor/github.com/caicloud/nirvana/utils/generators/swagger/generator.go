@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/caicloud/nirvana/definition"
 	"github.com/caicloud/nirvana/service"
 	"github.com/caicloud/nirvana/utils/api"
-	"github.com/caicloud/nirvana/utils/project"
 	"github.com/go-openapi/spec"
 )
 
@@ -47,7 +47,7 @@ var defaultDestinationMapping = map[definition.Destination]string{
 
 // Generator is for generating swagger specifications.
 type Generator struct {
-	config             *project.Config
+	config             *Config
 	apis               *api.Definitions
 	schemas            map[string]*spec.Schema
 	schemaMappings     map[api.TypeName]*spec.Schema
@@ -58,7 +58,7 @@ type Generator struct {
 
 // NewDefaultGenerator creates a swagger generator with default mappings.
 func NewDefaultGenerator(
-	config *project.Config,
+	config *Config,
 	apis *api.Definitions,
 ) *Generator {
 	return NewGenerator(config, apis, nil, nil)
@@ -66,7 +66,7 @@ func NewDefaultGenerator(
 
 // NewGenerator creates a swagger generator.
 func NewGenerator(
-	config *project.Config,
+	config *Config,
 	apis *api.Definitions,
 	sourceMapping map[definition.Source]string,
 	destinationMapping map[definition.Destination]string,
@@ -134,8 +134,8 @@ func (g *Generator) buildSwaggerInfo(
 	title, version, description string,
 	schemes []string,
 	hosts []string,
-	contacts []project.Contact,
-	rules []project.PathRule,
+	contacts []Contact,
+	rules []string,
 ) *spec.Swagger {
 	swagger := &spec.Swagger{}
 	swagger.Swagger = "2.0"
@@ -161,10 +161,13 @@ func (g *Generator) buildSwaggerInfo(
 		swagger.Definitions[path] = *definition
 	}
 	if len(rules) > 0 {
+		regexps := make([]*regexp.Regexp, 0, len(rules))
+		for _, rule := range rules {
+			regexps = append(regexps, regexp.MustCompile(rule))
+		}
 		for path, item := range g.paths {
-			for _, rule := range rules {
-				path = rule.Replace(path)
-				if path != "" {
+			for _, rule := range regexps {
+				if rule.FindString(path) != "" {
 					swagger.Paths.Paths[path] = *item
 					break
 				}
@@ -206,7 +209,7 @@ func (g *Generator) schemaForType(typ *api.Type) *spec.Schema {
 			if elemSchema == nil {
 				break
 			}
-			schema = spec.MapProperty(elemSchema)
+			schema := spec.MapProperty(elemSchema)
 			schema.Title = fmt.Sprintf("map[%s]%s", keySchema.Title, elemSchema.Title)
 			schema.Items = &spec.SchemaOrArray{
 				Schema: keySchema,
@@ -221,7 +224,7 @@ func (g *Generator) schemaForType(typ *api.Type) *spec.Schema {
 		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16,
 			reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 			reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
-			reflect.Float32, reflect.Float64, reflect.String, reflect.Interface:
+			reflect.Float32, reflect.Float64, reflect.String:
 			schema = g.schemaForBasicType(typ)
 		}
 		if schema != nil {
@@ -256,15 +259,23 @@ func (g *Generator) schemaForStruct(typ *api.Type) *spec.Schema {
 			// Ignore invalid field.
 			continue
 		}
-		name := jsontag
-		if comma := strings.Index(jsontag, ","); comma > 0 {
-			name = strings.TrimSpace(jsontag[:comma])
+		raw, ok := fieldSchema.ExtraProps[rawSchemaKey]
+		if field.Anonymous && ok {
+			rawSchema := raw.(*spec.Schema)
+			for name, property := range rawSchema.Properties {
+				schema.SetProperty(name, property)
+			}
+		} else {
+			name := jsontag
+			if comma := strings.Index(jsontag, ","); comma > 0 {
+				name = strings.TrimSpace(jsontag[:comma])
+			}
+			if name == "" {
+				name = field.Name
+			}
+			fieldSchema.Description = g.escapeNewline(field.Comments)
+			schema.SetProperty(name, *fieldSchema)
 		}
-		if name == "" {
-			name = field.Name
-		}
-		fieldSchema.Description = g.escapeNewline(field.Comments)
-		schema.SetProperty(name, *fieldSchema)
 	}
 	g.schemas[key] = schema
 	ref.ExtraProps = map[string]interface{}{rawSchemaKey: schema}
@@ -288,9 +299,6 @@ func (g *Generator) schemaForBasicType(typ *api.Type) *spec.Schema {
 		reflect.Float32: {"number", "float32"},
 		reflect.Float64: {"number", "float64"},
 		reflect.String:  {"string", "string"},
-
-		// Interface is special. It can be anything.
-		reflect.Interface: {"undefined", "interface{}"},
 	}
 	formats, ok := types[typ.Kind]
 	if !ok {
@@ -440,19 +448,8 @@ func (g *Generator) generateParameter(param *api.Parameter) []spec.Parameter {
 		parameter.Required = true
 	}
 	if parameter.In != "body" {
-		// Only body parameter can hold a schema. Other parameters uses type
-		// and format.
 		parameter.Type = schema.Type[0]
 		parameter.Format = schema.Format
-		if parameter.Type == "array" {
-			// Array is a special type. It needs additional configs.
-			// CollectionFormat has two valid valus: csv, multi.
-			// But we don't known which one should be used. So unknown.
-			parameter.CollectionFormat = "unknown"
-			parameter.Items = &spec.Items{}
-			parameter.Items.Type = schema.Items.Schema.Type[0]
-			parameter.Items.Format = schema.Items.Schema.Format
-		}
 		parameter.Schema = nil
 	}
 
@@ -520,9 +517,6 @@ func (g *Generator) generateResponse(results []api.Result, examples []api.Exampl
 			response.AddExample("application/json", &r)
 			break
 		}
-	}
-	if response.Schema == nil && response.Description == "" {
-		response.Description = "No Content"
 	}
 	return response
 }
