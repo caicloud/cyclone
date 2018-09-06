@@ -11,7 +11,6 @@ RUN apk update && apk add ca-certificates && \
 COPY bin/server /cyclone-server
 COPY ./notify/provider /template
 COPY ./node_modules /root/node_modules
-COPY ./api/templates /templates
 COPY ./config /config
 
 EXPOSE 7099
