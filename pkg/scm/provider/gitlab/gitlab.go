@@ -185,6 +185,7 @@ func detectAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 		log.Error(err)
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK:
@@ -192,7 +193,6 @@ func detectAPIVersion(scmCfg *api.SCMConfig) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer resp.Body.Close()
 
 		gv := &versionResponse{}
 		err = json.Unmarshal(body, gv)
@@ -250,13 +250,13 @@ func getOauthToken(scm *api.SCMConfig) (string, error) {
 		log.Errorf("Fail to request for token as %s", err.Error())
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
 		return "", err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
 		var token oauth2.Token
@@ -292,13 +292,13 @@ func getLanguages(scm *api.SCMConfig, version, project string) (map[string]float
 		log.Errorf("Fail to get project languages as %s", err.Error())
 		return languages, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("Fail to get project languages as %s", err.Error())
 		return languages, err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
 		err := json.Unmarshal(body, &languages)
@@ -345,13 +345,13 @@ func getContents(scm *api.SCMConfig, version, project string) ([]RepoFile, error
 		log.Errorf("Fail to get project contents as %s", err.Error())
 		return files, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("Fail to get project contents as %s", err.Error())
 		return files, err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode/100 == 2 {
 		err := json.Unmarshal(body, &files)
