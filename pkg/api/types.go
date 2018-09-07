@@ -79,12 +79,26 @@ type Pipeline struct {
 	Owner                string           `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
 	ProjectID            string           `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
 	Build                *Build           `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	Notification         *Notification    `bson:"notification,omitempty" json:"notification,omitempty" description:"notification config of the pipeline"`
 	AutoTrigger          *AutoTrigger     `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
 	CreationTime         time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
 	LastUpdateTime       time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
 	RecentRecords        []PipelineRecord `bson:"-" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
 	RecentSuccessRecords []PipelineRecord `bson:"-" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
 	RecentFailedRecords  []PipelineRecord `bson:"-" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
+}
+
+// Notification represents the notification config and stages of CI.
+type Notification struct {
+	Policy    string      `bson:"policy" json:"policy" description:"notification policy, always,succuss,failure"`
+	Receivers []*Receiver `bson:"receivers" json:"receivers" description:"notification receivers' config"`
+}
+
+// Receiver represents the config of notification receiver.
+type Receiver struct {
+	Type      string   `bson:"type" json:"type" description:"receiver type, email,webhook,slack"`
+	Addresses []string `bson:"addresses,omitempty" json:"addresses,omitempty" description:"receiver addresses"`
+	Groups    []string `bson:"groups,omitempty" json:"groups,omitempty" description:"receiver groups"`
 }
 
 // Build represents the build config and stages of CI.
@@ -728,3 +742,17 @@ const (
 	// NodeRepoType represents the repository type NodeJS.
 	NodeRepoType string = "NodeJS"
 )
+
+// NotificationContent contains some pipeline record infomation.
+type NotificationContent struct {
+	ProjectName  string    `yaml:"projectName,omitempty" json:"projectName,omitempty" `
+	PipelineName string    `yaml:"pipelineName,omitempty" json:"pipelineName,omitempty" `
+	RecordName   string    `yaml:"recordName,omitempty" json:"recordName,omitempty" `
+	RecordID     string    `yaml:"recordID,omitempty" json:"recordID,omitempty" `
+	Trigger      string    `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
+	Status       Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	ErrorMessage string    `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
+	StartTime    time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
+	EndTime      time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+	TimeCost     float64   `bson:"timeCost,omitempty" json:"timeCost,omitempty" description:"time cost, unit(second), endTime - startTime"`
+}

@@ -32,6 +32,8 @@ const (
 	CloudAutoDiscovery = "CLOUD_AUTO_DISCOVERY"
 	// RecordLogRotationThreshold ...
 	RecordRotationThreshold = "RECORD_ROTATION_THRESHOLD"
+	// NotificationURL ...
+	NotificationURL = "NOTIFICATION_URL"
 )
 
 // APIServerOptions contains all options(config) for api server
@@ -44,6 +46,7 @@ type APIServerOptions struct {
 	ShowAPIDoc              bool
 	CloudAutoDiscovery      bool
 	RecordRotationThreshold int
+	NotificationURL         string
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -89,6 +92,12 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "pipeline record rotation threshold",
 			EnvVar:      RecordRotationThreshold,
 			Destination: &opts.RecordRotationThreshold,
+		},
+		cli.StringFlag{
+			Name:        "notification-url",
+			Usage:       "Notification URL",
+			EnvVar:      NotificationURL,
+			Destination: &opts.NotificationURL,
 		},
 	}
 

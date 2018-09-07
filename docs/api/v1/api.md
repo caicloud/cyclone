@@ -407,14 +407,32 @@ Success:
     "description": "string", 
     "owner": "string", 
     "projectID": "string", 
-    "notification": {                       // not implemented
-        "emailNotification": {
-            "emails": [
-                "string"
-            ]
-        }, 
-        "notificationPolicy": "string"
-    }, 
+    "notification": {                 // not implemented
+      "policy": "always",             // string  always,success,failure
+      "receivers": [
+        {
+          "type": "email",            // string  email,webhook,slack
+          "addresses": [
+            "abc@caicloud.io",
+            "def@caicloud.io"
+          ],
+          "groups": [
+            "group1",
+            "group2"
+          ]
+        },
+        {
+          "type": "webhook",
+          "addresses": [
+            "http://remote/call"
+          ],
+          "groups": [
+            "group1",
+            "group2"
+          ]
+        }
+      ]
+    }
     "autoTrigger": {
         "cronTrigger": {                    // not implemented
             "crons": [
