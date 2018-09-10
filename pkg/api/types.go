@@ -90,8 +90,8 @@ type Pipeline struct {
 
 // Notification represents the notification config and stages of CI.
 type Notification struct {
-	Policy    string      `bson:"policy" json:"policy" description:"notification policy, always,succuss,failure"`
-	Receivers []*Receiver `bson:"receivers" json:"receivers" description:"notification receivers' config"`
+	Policy    NotificationPolicyType `bson:"policy" json:"policy" description:"notification policy, always,succuss,failure"`
+	Receivers []*Receiver            `bson:"receivers" json:"receivers" description:"notification receivers' config"`
 }
 
 // Receiver represents the config of notification receiver.
@@ -754,5 +754,19 @@ type NotificationContent struct {
 	ErrorMessage string    `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
 	StartTime    time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
 	EndTime      time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
-	TimeCost     float64   `bson:"timeCost,omitempty" json:"timeCost,omitempty" description:"time cost, unit(second), endTime - startTime"`
 }
+
+// NotificationPolicyType represents the type of notification
+type NotificationPolicyType string
+
+const (
+
+	// AlwaysNotify represents always send notification regardless of the pipeline record result.
+	AlwaysNotify NotificationPolicyType = "always"
+
+	// SuccessNotify represents send notification when pipeline record execute successfully.
+	SuccessNotify NotificationPolicyType = "success"
+
+	// FailureNotify represents send notification when pipeline record execute failed.
+	FailureNotify NotificationPolicyType = "failure"
+)

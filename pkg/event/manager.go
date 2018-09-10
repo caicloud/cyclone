@@ -245,21 +245,19 @@ func postHookEvent(event *api.Event) {
 		policy := pipeline.Notification.Policy
 
 		sendFlag := false
-		switch record.Status {
-		case api.Success:
-			if policy == "always" || policy == "success" {
+		if policy == api.AlwaysNotify {
+			sendFlag = true
+		} else {
+			if policy == api.SuccessNotify && record.Status == api.Success {
 				sendFlag = true
 			}
-		default:
-			if policy == "always" || policy == "failure" {
+			if policy == api.FailureNotify && record.Status != api.Success {
 				sendFlag = true
 			}
 		}
 
 		if sendFlag {
-			endTime := record.EndTime
-			startTime := record.StartTime
-
+			log.Infof("start to send notification for %v/%v/%v", event.Project.Name, pipeline.Name, record.Name)
 			content := &api.NotificationContent{
 				ProjectName:  event.Project.Name,
 				PipelineName: pipeline.Name,
@@ -268,11 +266,15 @@ func postHookEvent(event *api.Event) {
 				Trigger:      record.Trigger,
 				Status:       record.Status,
 				ErrorMessage: record.ErrorMessage,
-				StartTime:    startTime,
-				TimeCost:     endTime.Sub(startTime).Seconds(),
+				StartTime:    record.StartTime,
+				EndTime:      record.EndTime,
 			}
 
-			sendNotification(content)
+			err := sendNotification(content)
+			if err != nil {
+				log.Errorf("Fail to send notification for %v/%v/%v as %s",
+					event.Project.Name, pipeline.Name, record.Name, err.Error())
+			}
 		}
 
 	}
@@ -294,14 +296,12 @@ func sendNotification(content *api.NotificationContent) error {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Errorf("Fail to send notification as %s", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("Fail to send notification as %s", err.Error())
 		return err
 	}
 
