@@ -56,6 +56,8 @@ _config:
         value: smtp_username
       - name: RECORD_ROTATION_THRESHOLD
         value: "50"
+      - name: NOTIFICATION_URL
+        value: http://devops-admin:7088/api/v1/notification
       - name: CALLBACK_URL
         value: http://[[ kube_apiserver_endpoint_ip ]]:30069/apis/admin.devops.caicloud.io/v1/pipelines
       image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'

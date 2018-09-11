@@ -17,12 +17,16 @@ limitations under the License.
 package event
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/zoumo/logdog"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
@@ -36,17 +40,18 @@ const maxRetry = 60
 
 var (
 	defaultWorkerOptions *options.WorkerOptions
+	notificationURL      string
 )
 
 // Init init event manager
 // Step1: new event manager
 // Step2: create a goroutine to watch events
-func Init(opts *options.WorkerOptions) {
+func Init(opts *options.WorkerOptions, url string) {
 	ds := store.NewStore()
 	em := NewEventManager(ds)
 
 	defaultWorkerOptions = opts
-
+	notificationURL = url
 	go em.WatchEvent()
 }
 
@@ -230,6 +235,82 @@ func postHookEvent(event *api.Event) {
 	log.Info("posthook of event")
 	log.Infof("worker： %s", event.Project.Worker)
 	terminateEventWorker(event)
+
+	pipeline := event.Pipeline
+	record := event.PipelineRecord
+
+	// post hooks
+	if pipeline != nil && pipeline.Notification != nil {
+
+		policy := pipeline.Notification.Policy
+
+		sendFlag := false
+		if policy == api.AlwaysNotify {
+			sendFlag = true
+		} else {
+			if policy == api.SuccessNotify && record.Status == api.Success {
+				sendFlag = true
+			}
+			if policy == api.FailureNotify && record.Status != api.Success {
+				sendFlag = true
+			}
+		}
+
+		if sendFlag {
+			log.Infof("start to send notification for %v/%v/%v", event.Project.Name, pipeline.Name, record.Name)
+			content := &api.NotificationContent{
+				ProjectName:  event.Project.Name,
+				PipelineName: pipeline.Name,
+				RecordName:   record.Name,
+				RecordID:     record.ID,
+				Trigger:      record.Trigger,
+				Status:       record.Status,
+				ErrorMessage: record.ErrorMessage,
+				StartTime:    record.StartTime,
+				EndTime:      record.EndTime,
+			}
+
+			err := sendNotification(content)
+			if err != nil {
+				log.Errorf("Fail to send notification for %v/%v/%v as %s",
+					event.Project.Name, pipeline.Name, record.Name, err.Error())
+			}
+		}
+
+	}
+}
+
+func sendNotification(content *api.NotificationContent) error {
+	bodyBytes, err := json.Marshal(content)
+	if err != nil {
+		return err
+	}
+	reqBody := bytes.NewReader(bodyBytes)
+
+	req, err := http.NewRequest(http.MethodPost, notificationURL, reqBody)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode/100 == 2 {
+		return nil
+	}
+
+	err = fmt.Errorf("Fail to send notification as %s, response code:%v", body, resp.StatusCode)
+	return err
 }
 
 // UpdateEvent updates the event. If it is finished, delete it and trigger the post hook.

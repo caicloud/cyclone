@@ -345,6 +345,10 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		pipeline.Build = newPipeline.Build
 	}
 
+	if newPipeline.Notification != nil {
+		pipeline.Notification = newPipeline.Notification
+	}
+
 	if err = m.dataStore.UpdatePipeline(pipeline); err != nil {
 		return nil, err
 	}
