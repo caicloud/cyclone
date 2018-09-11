@@ -43,7 +43,7 @@
     - [List SCM Repos](#list-scm-repos)
     - [List SCM Branches](#list-scm-branches)
     - [List SCM Tags](#list-scm-tags)
-    - [Get SCM Repotype](#get-scm-repotype)
+    - [Get SCM Templatetype](#get-scm-templatetype)
     - [Github webhook](#github-webhook)
     - [Gitlab webhook](#gitlab-webhook)
     - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
@@ -57,8 +57,8 @@
     - [Delete cloud](#delete-cloud)
     - [WorkerInstance](#workerinstance)
     - [List cyclone workers](#list-cyclone-workers)
-    - [PipelineTemplateObject](#pipelinetemplateobject)
-    - [List pipeline templates](#list-pipeline-templates)
+    - [ConfigTemplateObject](#configtemplateobject)
+    - [List config templates](#list-config-templates)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -173,7 +173,7 @@
 
 | API | Path | Detail |
 | --- | --- | --- |
-| List | GET `/api/v1/pipelinetemplates` | WIP, [link](#list-pipeline-templates) |
+| List | GET `/api/v1/configtemplates` | WIP, [link](#list-config-templates) |
 ## API Common
 
 ### Path Parameter Explanation
@@ -1559,7 +1559,7 @@ Success:
 }
 ```
 
-### PipelineTemplateObject
+### ConfigTemplateObject
 
 ```
 {
@@ -1577,15 +1577,15 @@ Note:
 
 | Field | Note |
 | --- | --- |
-| type | Required, pipeline template type, Go, Maven, Gradle, NodeJS, Python and PHP. |
+| type | Required, pipeline config template type, Go, Maven, Gradle, NodeJS, Python and PHP. |
 
-### List pipeline templates
+### List config templates
 
-List all cyclone pipeline templates.
+List all cyclone pipeline config templates.
 
 **Request**
 
-URL: `GET /api/v1/pipelinetemplates`
+URL: `GET /api/v1/configtemplates`
 
 **Response**
 
@@ -1598,6 +1598,6 @@ Success:
     "metadata": {
         "total": 0,            // number, always
     },
-    "items": [ <PipelineTemplateObject>, ... ]
+    "items": [ <ConfigTemplateObject>, ... ]
 }
 ```

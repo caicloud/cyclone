@@ -5,9 +5,9 @@ import (
 )
 
 func TestGetTemplates(t *testing.T) {
-	_, err := getTemplates("../../../../config/templates/templates.yaml")
+	_, err := getConfigTemplates("../../../../config/templates/templates.yaml")
 
 	if err != nil {
-		t.Fatalf("get templates error:%v", err)
+		t.Fatalf("get config templates error:%v", err)
 	}
 }

@@ -12,17 +12,17 @@ func init() {
 
 var templates = []definition.Descriptor{
 	{
-		Path:        "/pipelinetemplates",
-		Description: "Template API",
+		Path:        "/configtemplates",
+		Description: "Pipeline Config Template API",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
-				Function:    handler.ListTemplates,
-				Description: "Get all cyclone built-in pipeline templates",
+				Function:    handler.ListConfigTemplates,
+				Description: "Get all cyclone built-in pipeline config templates",
 				Results: []definition.Result{
 					{
 						Destination: definition.Data,
-						Description: "templates",
+						Description: "config templates",
 					},
 				},
 			},
