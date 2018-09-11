@@ -760,13 +760,12 @@ type NotificationContent struct {
 type NotificationPolicyType string
 
 const (
-
 	// AlwaysNotify represents always send notification regardless of the pipeline record result.
-	AlwaysNotify NotificationPolicyType = "always"
+	AlwaysNotify NotificationPolicyType = "Always"
 
 	// SuccessNotify represents send notification when pipeline record execute successfully.
-	SuccessNotify NotificationPolicyType = "success"
+	SuccessNotify NotificationPolicyType = "Success"
 
 	// FailureNotify represents send notification when pipeline record execute failed.
-	FailureNotify NotificationPolicyType = "failure"
+	FailureNotify NotificationPolicyType = "Failure"
 )

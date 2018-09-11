@@ -408,7 +408,7 @@ Success:
     "owner": "string", 
     "projectID": "string", 
     "notification": {                 // not implemented
-      "policy": "always",             // string  always,success,failure
+      "policy": "Always",             // string  Always,Success,Failure
       "receivers": [
         {
           "type": "email",            // string  email,webhook,slack
