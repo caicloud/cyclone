@@ -17,7 +17,7 @@ var templates = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
-				Function:    handler.ListTemplates,
+				Function:    handler.ListConfigTemplates,
 				Description: "Get all cyclone built-in pipeline config templates",
 				Results: []definition.Result{
 					{

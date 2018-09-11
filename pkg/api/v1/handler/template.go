@@ -33,18 +33,18 @@ const TemplatePath = "/config/templates/templates.yaml"
 var templates []*api.Template
 var once sync.Once
 
-// ListTemplates handles the request to list all cyclone built-in pipeline templates.
-func ListTemplates(ctx context.Context) api.ListResponse {
+// ListConfigTemplates handles the request to list all cyclone built-in pipeline config templates.
+func ListConfigTemplates(ctx context.Context) api.ListResponse {
 	once.Do(
 		func() {
-			log.Infof("read pipeline templates from %s", TemplatePath)
-			result, err := getTemplates(TemplatePath)
+			log.Infof("read pipeline config templates from %s", TemplatePath)
+			result, err := getConfigTemplates(TemplatePath)
 			if err != nil {
-				log.Errorf("unmarshal yaml template file %s error: %v", TemplatePath, err)
+				log.Errorf("unmarshal yaml config template file %s error: %v", TemplatePath, err)
 				return
 			}
 			templates = result
-			log.Info("read dockerfile templates succeed")
+			log.Info("read pipeline config templates succeed")
 		},
 	)
 
@@ -52,17 +52,17 @@ func ListTemplates(ctx context.Context) api.ListResponse {
 
 }
 
-func getTemplates(templatePath string) ([]*api.Template, error) {
+func getConfigTemplates(templatePath string) ([]*api.Template, error) {
 	data, err := ioutil.ReadFile(templatePath)
 	if err != nil {
-		log.Errorf("read template file %s error: %v", templatePath, err)
+		log.Errorf("read config template file %s error: %v", templatePath, err)
 		return nil, err
 	}
 
 	templates := make([]*api.Template, 0)
 	err = yaml.Unmarshal(data, &templates)
 	if err != nil {
-		log.Errorf("unmarshal yaml template file %s error: %v", templatePath, err)
+		log.Errorf("unmarshal yaml config template file %s error: %v", templatePath, err)
 		return nil, err
 	}
 
