@@ -33,7 +33,7 @@ _config:
       - name: SERVER_GITLAB
         value: https://gitlab.com
       - name: CYCLONE_SERVER
-        value: http://[[ kube_apiserver_endpoint_ip ]]:30010
+        value: http://[[ kube_apiserver_endpoint_ip ]]:6008
       - name: WORKER_IMAGE
         value: '[[ registry_release ]]/cyclone-worker:[[ imageTagFromGitTag ]]'
       - name: CLOUD_AUTO_DISCOVERY
@@ -75,10 +75,10 @@ _config:
     services:
     - name: cyclone-server
       ports:
-      - nodePort: 30010
-        port: 7099
+      - port: 7099
         protocol: TCP
-      type: NodePort
+        targetPort: 7099
+      type: ClusterIP
     type: Deployment
     volumes:
     - name: cyclone-data
