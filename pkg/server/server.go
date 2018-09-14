@@ -59,7 +59,7 @@ func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
 	go background(closing, mclosed)
 
 	// init event manager
-	event.Init(s.WorkerOptions, s.Config.NotificationURL)
+	event.Init(s.WorkerOptions, s.Config.NotificationURL, s.Config.RecordWebURLTemplate)
 
 	if err = cloud.InitCloud(s.Config.CloudAutoDiscovery); err != nil {
 		log.Error(err)

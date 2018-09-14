@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"text/template"
 	"time"
 
 	"github.com/caicloud/nirvana/log"
@@ -31,6 +32,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/cloud"
+	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 )
 
@@ -41,17 +43,19 @@ const maxRetry = 60
 var (
 	defaultWorkerOptions *options.WorkerOptions
 	notificationURL      string
+	recordWebURLTemplate string
 )
 
 // Init init event manager
 // Step1: new event manager
 // Step2: create a goroutine to watch events
-func Init(opts *options.WorkerOptions, url string) {
+func Init(opts *options.WorkerOptions, notifyURL, recordURLTemplate string) {
 	ds := store.NewStore()
 	em := NewEventManager(ds)
 
 	defaultWorkerOptions = opts
-	notificationURL = url
+	notificationURL = notifyURL
+	recordWebURLTemplate = recordURLTemplate
 	go em.WatchEvent()
 }
 
@@ -104,6 +108,12 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 			// terminate the worker pod while updated event failed(e.g. event Not Found, deleted by deleting records).
 			terminateEventWorker(event)
 			return err
+		}
+
+		// start to run pipeline. if trigger is webhook pr, update SCM statuses.
+		errScm := sendScmStatuses(event)
+		if errScm != nil {
+			log.Warningf("fail to send scm statuses:%v", errScm)
 		}
 	}
 
@@ -236,6 +246,11 @@ func postHookEvent(event *api.Event) {
 	log.Infof("worker： %s", event.Project.Worker)
 	terminateEventWorker(event)
 
+	errScm := sendScmStatuses(event)
+	if errScm != nil {
+		log.Warningf("fail to send scm statuses:%v", errScm)
+	}
+
 	pipeline := event.Pipeline
 	record := event.PipelineRecord
 
@@ -311,6 +326,78 @@ func sendNotification(content *api.NotificationContent) error {
 
 	err = fmt.Errorf("Fail to send notification as %s, response code:%v", body, resp.StatusCode)
 	return err
+}
+
+func sendScmStatuses(event *api.Event) error {
+	if event.PipelineRecord.Trigger != api.TriggerWebhookPullRequest {
+		return nil
+	}
+	p, err := scm.GetSCMProvider(event.Project.SCM)
+	if err != nil {
+		return err
+	}
+	// GitHub : error, failure, pending, or success.
+	// GitLab : pending, running, success, failed, canceled.
+	state := "pending"
+	description := ""
+
+	targetURL, err := getStatusesTargetURL(recordWebURLTemplate, event)
+	if err != nil {
+		return err
+	}
+
+	gitSource, err := api.GetGitSource(event.Pipeline.Build.Stages.CodeCheckout.MainRepo)
+	if err != nil {
+		return err
+	}
+
+	scmType := event.Project.SCM.Type
+	switch event.PipelineRecord.Status {
+	case api.Running:
+		state = "pending"
+		description = "The Cyclone CI build is in progress."
+		if scmType == api.Gitlab {
+			state = "running"
+		}
+	case api.Success:
+		state = "success"
+		description = "The Cyclone CI build passed."
+	case api.Failed:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+		if scmType == api.Gitlab {
+			state = "failed"
+		}
+	case api.Aborted:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+		if scmType == api.Gitlab {
+			state = "canceled"
+		}
+	default:
+		log.Errorf("not supported state:%s", event.PipelineRecord.Status)
+	}
+
+	err = p.CreateStatuses(state, description, targetURL, gitSource.Url, event.PipelineRecord.PRLastCommitSHA)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getStatusesTargetURL(urlTemplate string, event *api.Event) (string, error) {
+	// Create a new template and parse the url template into it.
+	t := template.Must(template.New("target url template").Parse(urlTemplate))
+
+	var buf bytes.Buffer
+	err := t.Execute(&buf, event)
+	// Execute the template.
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), err
+
 }
 
 // UpdateEvent updates the event. If it is finished, delete it and trigger the post hook.

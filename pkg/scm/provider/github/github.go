@@ -424,3 +424,27 @@ func getTopLanguage(languages map[string]int) string {
 	}
 	return language
 }
+
+// CreateStatuses generate a new status for repository.
+func (g *Github) CreateStatuses(state, description, targetURL, repoURL, commitSHA string) error {
+	owner, repo := provider.ParseRepoURL(repoURL)
+	client := newClientByToken(g.scmCfg.Token)
+	email := "cyclone@caicloud.io"
+	name := "cyclone"
+	context := "continuous-integration/cyclone"
+	creator := github.User{
+		Name:  &name,
+		Email: &email,
+	}
+	status := &github.RepoStatus{
+		State:       &state,
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+		Creator:     &creator,
+	}
+	//var owner, repo, ref string
+	_, _, err := client.Repositories.CreateStatus(owner, repo, commitSHA, status)
+	log.Error(err)
+	return err
+}

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strings"
 
 	log "github.com/golang/glog"
@@ -81,11 +82,15 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
+	var commitSHA string
+	trigger := api.TriggerSCM
+
 	switch event := event.(type) {
 	case *github.ReleaseEvent:
 		if scmTrigger.TagRelease == nil {
 			return "Release trigger is not enabled", nil
 		}
+		trigger = api.TriggerWebhookTagRelease
 
 		performParams = &api.PipelinePerformParams{
 			Name:        *event.Release.TagName,
@@ -97,13 +102,19 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 		log.Info("Triggered by Github release event")
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
-		if *event.Action != "opened" {
-			return "Only handle when pull request is created", nil
+		if *event.Action != "opened" && *event.Action != "synchronize" {
+			return "Only handle when pull request is created or synchronized", nil
 		}
 
 		if scmTrigger.PullRequest == nil {
 			return "Pull request trigger is not enabled", nil
 		}
+
+		_, _, commitSHA, err = splitStatusesURL(*event.PullRequest.StatusesURL)
+		if err != nil {
+			return "get last commit sha failed", err
+		}
+		trigger = api.TriggerWebhookPullRequest
 
 		performParams = &api.PipelinePerformParams{
 			Ref:         fmt.Sprintf(githubPullRefTemplate, *event.PullRequest.Number),
@@ -128,17 +139,18 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 		}
 
 		comment := event.Comment
-		trigger := false
+		match := false
 		if comment != nil {
 			for _, c := range scmTrigger.PullRequestComment.Comments {
 				if *comment.Body == c {
-					trigger = true
+					match = true
 					break
 				}
 			}
 		}
 
-		if trigger {
+		if match {
+			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.Issue.Number),
 				Description: "Triggered by pull request comments",
@@ -152,15 +164,16 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 		}
 
 		ref := *event.Ref
-		trigger := false
+		match := false
 		for _, b := range scmTrigger.Push.Branches {
 			if strings.HasSuffix(ref, b) {
-				trigger = true
+				match = true
 				break
 			}
 		}
 
-		if trigger {
+		if match {
+			trigger = api.TriggerWebhookPush
 			performParams = &api.PipelinePerformParams{
 				Ref:         ref,
 				Description: "Triggered by push",
@@ -176,10 +189,11 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 
 	if performParams != nil {
 		pipelineRecord := &api.PipelineRecord{
-			Name:          performParams.Name,
-			PipelineID:    pipeline.ID,
-			PerformParams: performParams,
-			Trigger:       api.TriggerSCM,
+			Name:            performParams.Name,
+			PipelineID:      pipeline.ID,
+			PerformParams:   performParams,
+			Trigger:         trigger,
+			PRLastCommitSHA: commitSHA,
 		}
 		if _, err = pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			return "", err
@@ -189,6 +203,18 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	} else {
 		return "Is ignored", nil
 	}
+}
+
+// input   : `https://api.github.com/repos/aaa/bbb/statuses/ccc`
+// output  : aaa bbb ccc
+func splitStatusesURL(url string) (string, string, string, error) {
+	repoNameRegexp := `^https://api.github.com/repos/([\S]+)/([\S]+)/statuses/([\w]+)$`
+	r := regexp.MustCompile(repoNameRegexp)
+	results := r.FindStringSubmatch(url)
+	if len(results) < 4 {
+		return "", "", "", fmt.Errorf("statusesURL is invalid")
+	}
+	return results[1], results[2], results[3], nil
 }
 
 // HandleGitlabWebhook handles the webhook request from Gitlab.
@@ -220,12 +246,16 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 
 	// Handle the event.
 	var performParams *api.PipelinePerformParams
+	var commitSHA string
+	trigger := api.TriggerSCM
+
 	switch event := event.(type) {
 	case *gitlab.TagEvent:
 		if scmTrigger.TagRelease == nil {
 			return "Release trigger is not enabled", nil
 		}
 
+		trigger = api.TriggerWebhookTagRelease
 		performParams = &api.PipelinePerformParams{
 			Name:        strings.Split(event.Ref, "/")[2],
 			Ref:         event.Ref,
@@ -237,14 +267,16 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 	case *gitlab.MergeEvent:
 		// Only handle when the pull request are created.
 		objectAttributes := event.ObjectAttributes
-		if objectAttributes.Action != "open" {
-			return "Only handle when merge request is created", nil
+		if objectAttributes.Action != "open" && objectAttributes.Action != "update" {
+			return "Only handle when merge request is created or updated", nil
 		}
 
 		if scmTrigger.PullRequest == nil {
 			return "Pull request trigger is not enabled", nil
 		}
 
+		commitSHA = objectAttributes.LastCommit.ID
+		trigger = api.TriggerWebhookPullRequest
 		performParams = &api.PipelinePerformParams{
 			Ref:         fmt.Sprintf(gitlabMergeRefTemplate, objectAttributes.Iid, objectAttributes.TargetBranch),
 			Description: objectAttributes.Title,
@@ -262,17 +294,18 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 			return "Pull request comment trigger is not enabled", nil
 		}
 		objectAttributes := event.ObjectAttributes
-		trigger := false
+		match := false
 		if objectAttributes.Note != "" {
 			for _, c := range scmTrigger.PullRequestComment.Comments {
 				if objectAttributes.Note == c {
-					trigger = true
+					match = true
 					break
 				}
 			}
 		}
 
-		if trigger {
+		if match {
+			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
 				Description: "Triggered by pull request comments",
@@ -286,15 +319,16 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 		}
 
 		ref := event.Ref
-		trigger := false
+		match := false
 		for _, b := range scmTrigger.Push.Branches {
 			if strings.HasSuffix(ref, b) {
-				trigger = true
+				match = true
 				break
 			}
 		}
 
-		if trigger {
+		if match {
+			trigger = api.TriggerWebhookPush
 			performParams = &api.PipelinePerformParams{
 				Ref:         ref,
 				Description: "Triggered by push",
@@ -309,10 +343,11 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 
 	if performParams != nil {
 		pipelineRecord := &api.PipelineRecord{
-			Name:          performParams.Name,
-			PipelineID:    pipeline.ID,
-			PerformParams: performParams,
-			Trigger:       api.TriggerSCM,
+			Name:            performParams.Name,
+			PipelineID:      pipeline.ID,
+			PerformParams:   performParams,
+			Trigger:         trigger,
+			PRLastCommitSHA: commitSHA,
 		}
 		if _, err = pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
 			return "", err

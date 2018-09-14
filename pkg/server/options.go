@@ -34,6 +34,8 @@ const (
 	RecordRotationThreshold = "RECORD_ROTATION_THRESHOLD"
 	// NotificationURL ...
 	NotificationURL = "NOTIFICATION_URL"
+	// RecordWebURLTemplate is a customer's pipeline record website URL address template.
+	RecordWebURLTemplate = "RECORD_WEB_URL_TEMPLATE"
 )
 
 // APIServerOptions contains all options(config) for api server
@@ -47,6 +49,7 @@ type APIServerOptions struct {
 	CloudAutoDiscovery      bool
 	RecordRotationThreshold int
 	NotificationURL         string
+	RecordWebURLTemplate    string
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -98,6 +101,12 @@ func (opts *APIServerOptions) AddFlags(app *cli.App) {
 			Usage:       "Notification URL",
 			EnvVar:      NotificationURL,
 			Destination: &opts.NotificationURL,
+		},
+		cli.StringFlag{
+			Name:        "record-web-url-template",
+			Usage:       "Record web URL template",
+			EnvVar:      RecordWebURLTemplate,
+			Destination: &opts.RecordWebURLTemplate,
 		},
 	}
 

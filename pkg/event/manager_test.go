@@ -33,3 +33,31 @@ func TestGetWorkerQuota(t *testing.T) {
 		t.Error("error:", options.ResourceRequestsMemory)
 	}
 }
+
+func TestGetTargetURL(t *testing.T) {
+	event := &api.Event{
+		Project: &api.Project{
+			Name:  "dd-p1",
+			Alias: "p1",
+		},
+
+		Pipeline: &api.Pipeline{
+			Name: "pipeline1",
+		},
+
+		PipelineRecord: &api.PipelineRecord{
+			ID: "123456",
+		},
+	}
+
+	template := "http://192.168.19.96:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}"
+	url, err := getStatusesTargetURL(template, event)
+	if err != nil {
+		t.Fatalf("expect %v to nil", err)
+	}
+	expectURL := "http://192.168.19.96:30000/devops/pipeline/pipeline1/record/123456?workspace=dd-p1"
+	if url != expectURL {
+		t.Fatalf("expect %v to %v", url, expectURL)
+	}
+
+}

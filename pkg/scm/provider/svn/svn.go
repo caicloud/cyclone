@@ -121,3 +121,8 @@ func (s *SVN) DeleteWebHook(repoURL string, webHookUrl string) error {
 func (s *SVN) GetTemplateType(repo string) (string, error) {
 	return "", nil
 }
+
+// CreateStatuses generate a new status for repository.
+func (g *SVN) CreateStatuses(state, description, targetURL, repoURL, statusesURL string) error {
+	return nil
+}
