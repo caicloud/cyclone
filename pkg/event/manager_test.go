@@ -37,12 +37,13 @@ func TestGetWorkerQuota(t *testing.T) {
 func TestGetTargetURL(t *testing.T) {
 	event := &api.Event{
 		Project: &api.Project{
-			Name:  "dd-p1",
+			Name:  "devops-dd-p1",
 			Alias: "p1",
 		},
 
 		Pipeline: &api.Pipeline{
-			Name: "pipeline1",
+			Name:        "pipeline1",
+			Annotations: map[string]string{"tenant": "devops"},
 		},
 
 		PipelineRecord: &api.PipelineRecord{
@@ -50,12 +51,12 @@ func TestGetTargetURL(t *testing.T) {
 		},
 	}
 
-	template := "http://192.168.19.96:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}"
+	template := "http://192.168.19.96:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations \"tenant\"}}"
 	url, err := getStatusesTargetURL(template, event)
 	if err != nil {
 		t.Fatalf("expect %v to nil", err)
 	}
-	expectURL := "http://192.168.19.96:30000/devops/pipeline/pipeline1/record/123456?workspace=dd-p1"
+	expectURL := "http://192.168.19.96:30000/devops/pipeline/pipeline1/record/123456?workspace=devops-dd-p1&tenant=devops"
 	if url != expectURL {
 		t.Fatalf("expect %v to %v", url, expectURL)
 	}

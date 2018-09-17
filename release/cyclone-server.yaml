@@ -59,7 +59,7 @@ _config:
       - name: NOTIFICATION_URL
         value: http://devops-admin:7088/api/v1/notification
       - name: RECORD_WEB_URL_TEMPLATE:
-        value: http://[[ kube_apiserver_endpoint_ip ]]:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}
+        value: http://[[ kube_apiserver_endpoint_ip ]]:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations "tenant"}}
       - name: CALLBACK_URL
         value: http://[[ kube_apiserver_endpoint_ip ]]:30069/apis/admin.devops.caicloud.io/v1/pipelines
       image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
