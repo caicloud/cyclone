@@ -59,8 +59,8 @@ Environment variables:
 | CALLBACK_URL              | The URL used for webhook to callback, default is http://127.0.0.1:7099/v1/pipelines       |
 | CYCLONE_SERVER            | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE              | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
-|NOTIFICATION_URL|URL of notification, we will send notification after pipeline execution if the notification policy had been defined.|
-|RECORD_WEB_URL_TEMPLATE|RECORD_WEB_URL_TEMPLATE is a customer's pipeline record website URL address template.|
+|NOTIFICATION_URL           | URL of notification, we will send notification after pipeline execution if the notification policy had been defined. |
+|RECORD_WEB_URL_TEMPLATE    | URL template of pipeline record web page. Cyclone doesn't provide web UI component currently. |
 
 PS:
 ### More About `RECORD_WEB_URL_TEMPLATE`

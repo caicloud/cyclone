@@ -49,6 +49,14 @@ const (
 	gitlabEventTypeHeader = "X-Gitlab-Event"
 )
 
+// githubRepoNameRegexp represents the regexp of github status url.
+var githubStatusURLRegexp *regexp.Regexp
+
+func init() {
+	var statusURLRegexp = `^https://api.github.com/repos/[\S]+/[\S]+/statuses/([\w]+)$`
+	githubStatusURLRegexp = regexp.MustCompile(statusURLRegexp)
+}
+
 // HandleGithubWebhook handles the webhook request from Github.
 // 1. Parse the pipeline id from request path;
 // 2. Get the pipeline by id;
@@ -110,7 +118,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 			return "Pull request trigger is not enabled", nil
 		}
 
-		_, _, commitSHA, err = splitStatusesURL(*event.PullRequest.StatusesURL)
+		commitSHA, err = extractCommitSha(*event.PullRequest.StatusesURL)
 		if err != nil {
 			return "get last commit sha failed", err
 		}
@@ -205,16 +213,17 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	}
 }
 
+type GitHubStatusURL struct {
+}
+
 // input   : `https://api.github.com/repos/aaa/bbb/statuses/ccc`
-// output  : aaa bbb ccc
-func splitStatusesURL(url string) (string, string, string, error) {
-	repoNameRegexp := `^https://api.github.com/repos/([\S]+)/([\S]+)/statuses/([\w]+)$`
-	r := regexp.MustCompile(repoNameRegexp)
-	results := r.FindStringSubmatch(url)
-	if len(results) < 4 {
-		return "", "", "", fmt.Errorf("statusesURL is invalid")
+// output  : ccc
+func extractCommitSha(url string) (string, error) {
+	results := githubStatusURLRegexp.FindStringSubmatch(url)
+	if len(results) < 2 {
+		return "", fmt.Errorf("statusesURL is invalid")
 	}
-	return results[1], results[2], results[3], nil
+	return results[1], nil
 }
 
 // HandleGitlabWebhook handles the webhook request from Gitlab.

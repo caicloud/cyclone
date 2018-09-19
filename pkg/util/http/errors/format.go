@@ -18,6 +18,8 @@ package errors
 
 import (
 	"net/http"
+
+	nerror "github.com/caicloud/nirvana/errors"
 )
 
 // defines reason types
@@ -69,6 +71,9 @@ var (
 	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
 	ErrorCreateWebhookPermissionDenied = NewFormatError(http.StatusInternalServerError,
 		"ReasonCreateWebhookPermissionDenied", "failed to create webhook of pipeline %s, please check your account permissions.")
+
+	// ErrorNotImplemented defines some feature not implemented yet.
+	ErrorNotImplemented = nerror.InternalServerError.Build("ReasonNotImplemented", "not implement: ${feature}")
 )
 
 func NewCreateError(name, errorMessage string) error {

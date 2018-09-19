@@ -25,6 +25,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
 	executil "github.com/caicloud/cyclone/pkg/util/exec"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 func init() {
@@ -57,15 +58,15 @@ func (s *SVN) GetToken() (string, error) {
 }
 
 func (s *SVN) ListRepos() ([]api.Repository, error) {
-	return nil, nil
+	return nil, errors.ErrorNotImplemented.Error("list svn repos")
 }
 
 func (s *SVN) ListBranches(repo string) ([]string, error) {
-	return nil, nil
+	return nil, errors.ErrorNotImplemented.Error("list svn branches")
 }
 
 func (s *SVN) ListTags(repo string) ([]string, error) {
-	return nil, nil
+	return nil, errors.ErrorNotImplemented.Error("list svn tags")
 }
 
 func (s *SVN) CheckToken() bool {
@@ -112,17 +113,17 @@ func (s *SVN) NewTagFromLatest(tagName, description, commitID, url string) error
 }
 
 func (s *SVN) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
-	return nil
+	return errors.ErrorNotImplemented.Error("create svn webhook")
 }
 func (s *SVN) DeleteWebHook(repoURL string, webHookUrl string) error {
-	return nil
+	return errors.ErrorNotImplemented.Error("delete svn webhook")
 }
 
 func (s *SVN) GetTemplateType(repo string) (string, error) {
-	return "", nil
+	return "", errors.ErrorNotImplemented.Error("get svn template type")
 }
 
-// CreateStatuses generate a new status for repository.
-func (g *SVN) CreateStatuses(state, description, targetURL, repoURL, statusesURL string) error {
-	return nil
+// CreateStatus generate a new status for repository.
+func (g *SVN) CreateStatus(recordStatus api.Status, targetURL, repoURL, statusesURL string) error {
+	return errors.ErrorNotImplemented.Error("create svn status")
 }

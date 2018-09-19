@@ -370,3 +370,29 @@ type RepoFile struct {
 	Type string `json:"type,omitempty"`
 	Path string `json:"path,omitempty"`
 }
+
+// transStatus trans api.Status to state and description of gitlab statuses.
+func transStatus(recordStatus api.Status) (string, string) {
+	// GitLab : pending, running, success, failed, canceled.
+	state := "pending"
+	description := ""
+
+	switch recordStatus {
+	case api.Running:
+		state = "running"
+		description = "The Cyclone CI build is in progress."
+	case api.Success:
+		state = "success"
+		description = "The Cyclone CI build passed."
+	case api.Failed:
+		state = "failed"
+		description = "The Cyclone CI build failed."
+	case api.Aborted:
+		state = "canceled"
+		description = "The Cyclone CI build failed."
+	default:
+		log.Errorf("not supported state:%s", recordStatus)
+	}
+
+	return state, description
+}

@@ -336,10 +336,6 @@ func sendScmStatuses(event *api.Event) error {
 	if err != nil {
 		return err
 	}
-	// GitHub : error, failure, pending, or success.
-	// GitLab : pending, running, success, failed, canceled.
-	state := "pending"
-	description := ""
 
 	targetURL, err := getStatusesTargetURL(recordWebURLTemplate, event)
 	if err != nil {
@@ -351,34 +347,7 @@ func sendScmStatuses(event *api.Event) error {
 		return err
 	}
 
-	scmType := event.Project.SCM.Type
-	switch event.PipelineRecord.Status {
-	case api.Running:
-		state = "pending"
-		description = "The Cyclone CI build is in progress."
-		if scmType == api.Gitlab {
-			state = "running"
-		}
-	case api.Success:
-		state = "success"
-		description = "The Cyclone CI build passed."
-	case api.Failed:
-		state = "failure"
-		description = "The Cyclone CI build failed."
-		if scmType == api.Gitlab {
-			state = "failed"
-		}
-	case api.Aborted:
-		state = "failure"
-		description = "The Cyclone CI build failed."
-		if scmType == api.Gitlab {
-			state = "canceled"
-		}
-	default:
-		log.Errorf("not supported state:%s", event.PipelineRecord.Status)
-	}
-
-	err = p.CreateStatuses(state, description, targetURL, gitSource.Url, event.PipelineRecord.PRLastCommitSHA)
+	err = p.CreateStatus(event.PipelineRecord.Status, targetURL, gitSource.Url, event.PipelineRecord.PRLastCommitSHA)
 	if err != nil {
 		return err
 	}
@@ -390,8 +359,8 @@ func getStatusesTargetURL(urlTemplate string, event *api.Event) (string, error) 
 	t := template.Must(template.New("target url template").Parse(urlTemplate))
 
 	var buf bytes.Buffer
-	err := t.Execute(&buf, event)
 	// Execute the template.
+	err := t.Execute(&buf, event)
 	if err != nil {
 		return "", err
 	}
