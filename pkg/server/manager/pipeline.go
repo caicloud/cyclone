@@ -415,11 +415,13 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 
 		provider, err := scm.GetSCMProvider(scmConfig)
 		if err != nil {
-			return fmt.Errorf("Can not get provider for SCM %s", scmConfig.Type)
+			log.Warningf("Delete pipeline %s, can not get provider for SCM %s", pipeline.Name, scmConfig.Type)
+			return nil
 		}
 
 		if err := provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
-			logdog.Errorf("Fail to delete webhook for pipeline %s", pipeline.Name)
+			logdog.Warningf("Fail to delete webhook for pipeline %s", pipeline.Name)
+			return nil
 		}
 	}
 
