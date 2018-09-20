@@ -23,13 +23,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/gorilla/websocket"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -40,14 +42,16 @@ import (
 const (
 	cycloneAPIVersion = "/api/v1"
 
-	apiPathForEvent     = "/events/%s"
-	apiPathForLogStream = "/projects/%s/pipelines/%s/records/%s/stagelogstream"
+	apiPathForEvent       = "/events/%s"
+	apiPathForLogStream   = "/projects/%s/pipelines/%s/records/%s/stagelogstream"
+	apiPathForTestResults = "/projects/%s/pipelines/%s/records/%s/testresults"
 )
 
 type CycloneServerClient interface {
 	GetEvent(id string) (*api.Event, error)
 	SendEvent(event *api.Event) error
 	PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error
+	SendJUnitFile(project, pipeline, recordID string, path string) error
 }
 
 type client struct {
@@ -218,4 +222,55 @@ func watchLogs(ws *websocket.Conn, filePath string, close chan struct{}) error {
 			return nil
 		}
 	}
+}
+
+func (c *client) SendJUnitFile(project, pipeline, recordID string, path string) error {
+	_, fileName := filepath.Split(path)
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+	fileWriter, err := bodyWriter.CreateFormFile("Upload-File", fileName)
+	if err != nil {
+		return err
+	}
+
+	fh, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+
+	io.Copy(fileWriter, fh)
+	if err != nil {
+		return err
+	}
+	bodyWriter.Close()
+
+	urlPath := c.baseURL + cycloneAPIVersion + fmt.Sprintf(apiPathForTestResults, project, pipeline, recordID)
+	req, err := http.NewRequest(http.MethodPost, urlPath, bodyBuf)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode/100 == 2 {
+		log.Infof("Send test result %s to cyclone server success.", fileName)
+
+		return nil
+	}
+
+	log.Errorf("Send test result %s to cyclone server with code %d error %s, response code:%v", fileName, resp.StatusCode, body)
+
+	return nil
 }

@@ -195,10 +195,34 @@ func GetPipelineRecordLogs(ctx context.Context, projectName, pipelineName, pipel
 	return []byte(logs), headers, nil
 }
 
+// GetPipelineRecordTestResults handles the request to get pipeline record test results.
+func ListPipelineRecordTestResults(ctx context.Context, projectName, pipelineName, pipelineRecordID string) (api.ListResponse, error) {
+	results, count, err := pipelineRecordManager.ListPipelineRecordTestResults(pipelineRecordID)
+	return httputil.ResponseWithList(results, count), err
+}
+
+// GetPipelineRecordTestResult handles the request to get pipeline record test result.
+func GetPipelineRecordTestResult(ctx context.Context, projectName, pipelineName, pipelineRecordID, fileName string, download bool) ([]byte, map[string]string, error) {
+	result, err := pipelineRecordManager.GetPipelineRecordTestResult(pipelineRecordID, fileName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	headers := make(map[string]string)
+	headers[httputil.HEADER_ContentType] = "text/plain"
+	if download {
+		resultFileName := fmt.Sprintf("%s-%s-%s-%s", projectName, pipelineName, pipelineRecordID, fileName)
+		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", resultFileName)
+	}
+
+	return []byte(result), headers, nil
+}
+
 // ReceivePipelineRecordLogStream receives real-time log of pipeline record.
 func ReceivePipelineRecordLogStream(ctx context.Context, recordID, stage, task string) error {
 	request := contextutil.GetHttpRequest(ctx)
 	writer := contextutil.GetHttpResponseWriter(ctx)
+
 	_, err := pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
@@ -219,6 +243,25 @@ func ReceivePipelineRecordLogStream(ctx context.Context, recordID, stage, task s
 	}
 
 	return nil
+}
+
+// ReceivePipelineRecordTestResult receives test result file from cyclone worker.
+func ReceivePipelineRecordTestResult(ctx context.Context, recordID string) error {
+	request := contextutil.GetHttpRequest(ctx)
+	file, handler, err := request.FormFile("Upload-File")
+	if err != nil {
+		log.Error(fmt.Sprintf("form file err: %s", err))
+		return err
+	}
+	defer file.Close()
+
+	if err := pipelineRecordManager.ReceivePipelineRecordTestResult(recordID, handler.Filename, file); err != nil {
+		log.Error(fmt.Sprintf("Fail to receive log stream for pipeline record %s: %s", recordID, err.Error()))
+		return httperror.ErrorUnknownInternal.Format(err.Error())
+	}
+
+	return nil
+
 }
 
 // GetPipelineRecordLogStream gets real-time log of pipeline record refering to recordID

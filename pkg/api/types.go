@@ -752,10 +752,10 @@ const (
 
 // NotificationContent contains some pipeline record infomation.
 type NotificationContent struct {
-	ProjectName  string    `yaml:"projectName,omitempty" json:"projectName,omitempty" `
-	PipelineName string    `yaml:"pipelineName,omitempty" json:"pipelineName,omitempty" `
-	RecordName   string    `yaml:"recordName,omitempty" json:"recordName,omitempty" `
-	RecordID     string    `yaml:"recordID,omitempty" json:"recordID,omitempty" `
+	ProjectName  string    `bson:"projectName,omitempty" json:"projectName,omitempty" `
+	PipelineName string    `bson:"pipelineName,omitempty" json:"pipelineName,omitempty" `
+	RecordName   string    `bson:"recordName,omitempty" json:"recordName,omitempty" `
+	RecordID     string    `bson:"recordID,omitempty" json:"recordID,omitempty" `
 	Trigger      string    `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
 	Status       Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
 	ErrorMessage string    `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
@@ -776,3 +776,8 @@ const (
 	// FailureNotify represents send notification when pipeline record execute failed.
 	FailureNotify NotificationPolicyType = "Failure"
 )
+
+// TestResult contains some pipeline record test result.
+type TestResult struct {
+	FileName string `bson:"fileName,omitempty" json:"fileName,omitempty" `
+}

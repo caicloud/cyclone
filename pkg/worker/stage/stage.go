@@ -31,6 +31,7 @@ import (
 	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	pathutil "github.com/caicloud/cyclone/pkg/util/path"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
+	"github.com/caicloud/cyclone/pkg/worker/junit"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
@@ -67,6 +68,7 @@ type stageManager struct {
 	cycloneClient cycloneserver.CycloneServerClient
 	performParams *api.PipelinePerformParams
 	registry      *api.Registry
+	junit         junit.ReportInterface
 }
 
 func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cycloneserver.CycloneServerClient,
@@ -80,11 +82,13 @@ func NewStageManager(dockerManager *docker.DockerManager, cycloneClient cyclones
 		imageNamePrefix = getImagePrifix(registry.Server, registry.Repository)
 	}
 
+	report := junit.NewReport(scm.GetCloneDir())
 	return &stageManager{
 		dockerManager: dockerManager,
 		cycloneClient: cycloneClient,
 		performParams: performParams,
 		registry:      registry,
+		junit:         report,
 	}
 }
 
@@ -130,6 +134,13 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 	errChan := make(chan error)
 	defer func() {
 		errChan <- err
+
+		// Try to collect all JUnit test xml files.
+		files := sm.junit.FindReportFiles()
+		for _, f := range files {
+			sm.cycloneClient.SendJUnitFile(event.Project.Name, event.Pipeline.Name, event.PipelineRecord.ID, f)
+		}
+
 		sm.updateEventAfterStage(api.PackageStageName, err)
 	}()
 
