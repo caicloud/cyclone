@@ -43,6 +43,9 @@ const (
 
 	// logsFolderName is the folder name for logs files.
 	logsFolderName = "logs"
+
+	// testresultsFolderName is the folder name for test result files.
+	testresultsFolderName = "test-results"
 )
 
 // recordsRotationThreshold is the threshold of records rotation.
@@ -60,8 +63,11 @@ type PipelineRecordManager interface {
 	DeletePipelineRecord(pipelineRecordID string) error
 	ClearPipelineRecordsOfPipeline(pipelineID string) error
 	GetPipelineRecordLogs(pipelineRecordID, stage, task string) (string, error)
+	GetPipelineRecordTestResult(pipelineRecordID, fileName string) (string, error)
+	ListPipelineRecordTestResults(pipelineRecordID string) ([]*api.TestResult, int, error)
 	GetPipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error
 	ReceivePipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error
+	ReceivePipelineRecordTestResult(pipelineRecordID, fileName string, reader io.Reader) error
 }
 
 // pipelineRecordManager represents the manager for pipeline record.
@@ -105,6 +111,15 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 	if !fileutil.DirExists(logsFolder) {
 		if err := os.MkdirAll(logsFolder, os.ModePerm); err != nil {
 			log.Errorf("fail to make the folder %s as %s", logsFolder, err.Error())
+			return nil, err
+		}
+	}
+
+	// Create the build outputs for pipelie record, such test reports, etc.
+	testResultFolder := strings.Join([]string{cycloneHome, pipeline.ProjectID, pipeline.ID, createdPipelineRecord.ID, testresultsFolderName}, string(os.PathSeparator))
+	if !fileutil.DirExists(testResultFolder) {
+		if err := os.MkdirAll(testResultFolder, os.ModePerm); err != nil {
+			log.Errorf("fail to make the folder %s as %s", testResultFolder, err.Error())
 			return nil, err
 		}
 	}
@@ -269,6 +284,56 @@ func (m *pipelineRecordManager) GetPipelineRecordLogs(pipelineRecordID, stage, t
 	return string(log), nil
 }
 
+// GetPipelineRecordLogs gets the pipeline record test result by id.
+func (m *pipelineRecordManager) GetPipelineRecordTestResult(pipelineRecordID, fileName string) (string, error) {
+	// Check the existence of record folder.
+	testResultPath, err := m.getTestResultsPath(pipelineRecordID, fileName)
+	if err != nil {
+		return "", err
+	}
+
+	// Check the existence of the test result file. If does not exist, return error,
+	// otherwise directly return the got test results.
+	if !fileutil.FileExists(testResultPath) {
+		return "", fmt.Errorf("test results file %s does not exist", testResultPath)
+	}
+
+	// TODO (robin) Read the whole file, need to consider the memory consumption when the log file is too huge.
+	result, err := ioutil.ReadFile(testResultPath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
+}
+
+// ListPipelineRecordTestResults gets the pipeline record test results by id.
+func (m *pipelineRecordManager) ListPipelineRecordTestResults(pipelineRecordID string) ([]*api.TestResult, int, error) {
+	// Check the existence of record folder.
+	testResultsFolder, err := m.getTestResultsFolder(pipelineRecordID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if !fileutil.DirExists(testResultsFolder) {
+		return nil, 0, fmt.Errorf("test results folder %s does not exist", testResultsFolder)
+	}
+
+	files, err := ioutil.ReadDir(testResultsFolder)
+	if err != nil {
+		log.Fatal(err)
+		return nil, 0, fmt.Errorf("test results read dir error %v", err)
+	}
+
+	var results []*api.TestResult
+	for _, f := range files {
+		fmt.Println(f.Name())
+		results = append(results, &api.TestResult{FileName: f.Name()})
+	}
+
+	return results, len(results), nil
+}
+
 // GetPipelineRecordLogStream watches the log files and sends the content to the log stream.
 func (m *pipelineRecordManager) GetPipelineRecordLogStream(pipelineRecordID, stage, task string, ws *websocket.Conn) error {
 	logFilePath, err := m.getLogFilePath(pipelineRecordID, stage, task)
@@ -362,6 +427,32 @@ func (m *pipelineRecordManager) ReceivePipelineRecordLogStream(pipelineRecordID,
 	}
 }
 
+// ReceivePipelineRecordTestResult receives the log for one stage of the pipeline record, and stores it into log files.
+func (m *pipelineRecordManager) ReceivePipelineRecordTestResult(pipelineRecordID, fileName string, reader io.Reader) error {
+	testResultPath, err := m.getTestResultsPath(pipelineRecordID, fileName)
+	if err != nil {
+		return err
+	}
+
+	if fileutil.FileExists(testResultPath) {
+		return fmt.Errorf("log file %s already exists", testResultPath)
+	}
+
+	file, err := os.OpenFile(testResultPath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		log.Errorf("fail to open the log file %s as %s", testResultPath, err.Error())
+		return err
+	}
+	defer file.Close()
+
+	io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // getLogFilePath gets the log file path for one stage of the pipeline record.
 func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage, task string) (string, error) {
 	if stage == "" {
@@ -380,6 +471,28 @@ func (m *pipelineRecordManager) getLogFilePath(pipelineRecordID, stage, task str
 
 	logFilePath := strings.Join([]string{recordFolder, logsFolderName, logFile}, string(os.PathSeparator))
 	return logFilePath, nil
+}
+
+// getTestResultsPath gets the test result path.
+func (m *pipelineRecordManager) getTestResultsPath(pipelineRecordID, fileName string) (string, error) {
+	recordFolder, err := m.getRecordFolder(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
+	logFilePath := strings.Join([]string{recordFolder, testresultsFolderName, fileName}, string(os.PathSeparator))
+	return logFilePath, nil
+}
+
+// getTestResultsPath gets the test result path.
+func (m *pipelineRecordManager) getTestResultsFolder(pipelineRecordID string) (string, error) {
+	recordFolder, err := m.getRecordFolder(pipelineRecordID)
+	if err != nil {
+		return "", err
+	}
+
+	testresultsFolderPath := strings.Join([]string{recordFolder, testresultsFolderName}, string(os.PathSeparator))
+	return testresultsFolderPath, nil
 }
 
 // getRecordFolder gets the folder path for the pipeline record.

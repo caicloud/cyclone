@@ -49,3 +49,7 @@ func (c *fakeClient) GetEvent(id string) (*api.Event, error) {
 func (c *fakeClient) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error {
 	return nil
 }
+
+func (c *fakeClient) SendJUnitFile(project, pipeline, recordID string, path string) error {
+	return nil
+}

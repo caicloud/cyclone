@@ -46,6 +46,9 @@ const (
 	// PipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
 	PipelineRecordPathParameterName = "recordid"
 
+	// FileNamePathParameterName represents the name of the path parameter for file name.
+	FileNamePathParameterName = "filename"
+
 	// PipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
 	PipelineRecordStageQueryParameterName = "stage"
 
