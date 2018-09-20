@@ -347,6 +347,8 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 
 	pipeline.Notification = newPipeline.Notification
 
+	pipeline.Annotations = newPipeline.Annotations
+
 	if err = m.dataStore.UpdatePipeline(pipeline); err != nil {
 		return nil, err
 	}

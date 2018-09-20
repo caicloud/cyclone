@@ -424,3 +424,48 @@ func getTopLanguage(languages map[string]int) string {
 	}
 	return language
 }
+
+// CreateStatus generate a new status for repository.
+func (g *Github) CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSHA string) error {
+	// GitHub : error, failure, pending, or success.
+	state := "pending"
+	description := ""
+
+	switch recordStatus {
+	case api.Running:
+		state = "pending"
+		description = "The Cyclone CI build is in progress."
+	case api.Success:
+		state = "success"
+		description = "The Cyclone CI build passed."
+	case api.Failed:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+	case api.Aborted:
+		state = "failure"
+		description = "The Cyclone CI build failed."
+	default:
+		log.Errorf("not supported state:%s", recordStatus)
+	}
+
+	owner, repo := provider.ParseRepoURL(repoURL)
+	client := newClientByToken(g.scmCfg.Token)
+	email := "cyclone@caicloud.io"
+	name := "cyclone"
+	context := "continuous-integration/cyclone"
+	creator := github.User{
+		Name:  &name,
+		Email: &email,
+	}
+	status := &github.RepoStatus{
+		State:       &state,
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+		Creator:     &creator,
+	}
+	//var owner, repo, ref string
+	_, _, err := client.Repositories.CreateStatus(owner, repo, commitSHA, status)
+	log.Error(err)
+	return err
+}

@@ -566,7 +566,10 @@ Success:
                 ]
             }
         }
-    }, 
+    },
+    "annotations": {       // map[string]string, optional
+        "key1": "value1",
+    },
     "creationTime": "2017-08-23T08:40:33.764Z", 
     "lastUpdateTime": "2017-08-23T08:40:33.764Z"
 }

@@ -72,20 +72,21 @@ type DependencyCache struct {
 
 // Pipeline represents a set of configs to describe the workflow of CI/CD.
 type Pipeline struct {
-	ID                   string           `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline"`
-	Name                 string           `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline，unique in one project"`
-	Alias                string           `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the pipeline"`
-	Description          string           `bson:"description,omitempty" json:"description,omitempty" description:"description of the pipeline"`
-	Owner                string           `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
-	ProjectID            string           `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
-	Build                *Build           `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
-	Notification         *Notification    `bson:"notification,omitempty" json:"notification,omitempty" description:"notification config of the pipeline"`
-	AutoTrigger          *AutoTrigger     `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
-	CreationTime         time.Time        `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
-	LastUpdateTime       time.Time        `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
-	RecentRecords        []PipelineRecord `bson:"-" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
-	RecentSuccessRecords []PipelineRecord `bson:"-" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
-	RecentFailedRecords  []PipelineRecord `bson:"-" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
+	ID                   string            `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline"`
+	Name                 string            `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline，unique in one project"`
+	Alias                string            `bson:"alias,omitempty" json:"alias,omitempty" description:"alias of the pipeline"`
+	Description          string            `bson:"description,omitempty" json:"description,omitempty" description:"description of the pipeline"`
+	Owner                string            `bson:"owner,omitempty" json:"owner,omitempty" description:"owner of the pipeline"`
+	ProjectID            string            `bson:"projectID,omitempty" json:"projectID,omitempty" description:"id of the project which the pipeline belongs to"`
+	Build                *Build            `bson:"build,omitempty" json:"build,omitempty" description:"build spec of the pipeline"`
+	Notification         *Notification     `bson:"notification,omitempty" json:"notification,omitempty" description:"notification config of the pipeline"`
+	AutoTrigger          *AutoTrigger      `bson:"autoTrigger,omitempty" json:"autoTrigger,omitempty" description:"auto trigger strategy of the pipeline"`
+	CreationTime         time.Time         `bson:"creationTime,omitempty" json:"creationTime,omitempty" description:"creation time of the pipeline"`
+	LastUpdateTime       time.Time         `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty" description:"last update time of the pipeline"`
+	Annotations          map[string]string `bson:"annotations,omitempty" json:"annotations,omitempty" description:"pipeline annotations"`
+	RecentRecords        []PipelineRecord  `bson:"-" json:"recentRecords,omitempty" description:"recent records of the pipeline"`
+	RecentSuccessRecords []PipelineRecord  `bson:"-" json:"recentSuccessRecords,omitempty" description:"recent success records of the pipeline"`
+	RecentFailedRecords  []PipelineRecord  `bson:"-" json:"recentFailedRecords,omitempty" description:"recent failed records of the pipeline"`
 }
 
 // Notification represents the notification config and stages of CI.
@@ -362,16 +363,17 @@ type CronTrigger struct {
 
 // PipelineRecord represents the running record of pipeline.
 type PipelineRecord struct {
-	ID            string                 `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
-	Name          string                 `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
-	PipelineID    string                 `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
-	Trigger       string                 `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
-	PerformParams *PipelinePerformParams `bson:"performParams,omitempty" json:"performParams,omitempty" description:"perform params of the pipeline record"`
-	StageStatus   *StageStatus           `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
-	Status        Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
-	ErrorMessage  string                 `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
-	StartTime     time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
-	EndTime       time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+	ID              string                 `bson:"_id,omitempty" json:"id,omitempty" description:"id of the pipeline record"`
+	Name            string                 `bson:"name,omitempty" json:"name,omitempty" description:"name of the pipeline record"`
+	PipelineID      string                 `bson:"pipelineID,omitempty" json:"pipelineID,omitempty" description:"id of the related pipeline which the pipeline record belongs to"`
+	Trigger         string                 `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
+	PerformParams   *PipelinePerformParams `bson:"performParams,omitempty" json:"performParams,omitempty" description:"perform params of the pipeline record"`
+	StageStatus     *StageStatus           `bson:"stageStatus,omitempty" json:"stageStatus,omitempty" description:"status of each pipeline stage"`
+	Status          Status                 `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	ErrorMessage    string                 `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
+	PRLastCommitSHA string                 `bson:"prLastCommitSHA,omitempty" json:"prLastCommitSHA,omitempty" description:"last commit sha of PR"`
+	StartTime       time.Time              `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
+	EndTime         time.Time              `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
 }
 
 // Status can be the status of some pipeline record or some stage
@@ -698,6 +700,11 @@ const (
 const (
 	TriggerSCM  string = "webhook"
 	TriggerCron string = "timer"
+
+	TriggerWebhookPush               string = "webhook-push"
+	TriggerWebhookTagRelease         string = "webhook-tag-release"
+	TriggerWebhookPullRequest        string = "webhook-pull-request"
+	TriggerWebhookPullRequestComment string = "webhook-pull-request-comment"
 )
 
 // WorkerInstance represents some infomation of cyclone worker instance, e.g. pod of k8s, container of docker.

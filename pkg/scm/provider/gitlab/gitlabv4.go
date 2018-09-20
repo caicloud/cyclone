@@ -232,3 +232,20 @@ func (g *GitlabV4) GetTemplateType(repo string) (string, error) {
 
 	return language, nil
 }
+
+// CreateStatus generate a new status for repository.
+func (g *GitlabV4) CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSha string) error {
+	state, description := transStatus(recordStatus)
+
+	owner, project := provider.ParseRepoURL(repoURL)
+	context := "continuous-integration/cyclone"
+	status := &gitlab.SetCommitStatusOptions{
+		State:       gitlab.BuildStateValue(state),
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+	}
+	_, _, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, status)
+	log.Error(err)
+	return nil
+}

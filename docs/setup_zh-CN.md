@@ -59,3 +59,33 @@ kubectl --namespace=cyclone create -f cyclone-svc.yaml
 | CALLBACK_URL              | webhook回调地址，默认是http://127.0.0.1:7099/v1/pipelines       |
 | CYCLONE_SERVER            | Cyclone-Server的访问地址，默认是http://localhost:7099 |
 | WORKER_IMAGE              | Cyclone-Worker容器的镜像名，默认是cargo.caicloud.io/caicloud/cyclone-worker:latest |
+|NOTIFICATION_URL           | 通知URL，如果流水线配置了通知策略，流水线执行完会发送通知到改URL |
+|RECORD_WEB_URL_TEMPLATE    | 客户自定义的流水线执行记录前端页面URL地址模板，cyclone目前没有自己的前端组件 |
+
+PS:
+### 关于 `RECORD_WEB_URL_TEMPLATE`
+使用 golang text/template 风格, 将 `Event` 作为text/template 的 `Execute` 方法的入参，所以你可以在模板里定义 `{{.Pipeline.Name}}` , `{{.PipelineRecord.ID}}` , `{{.Project.Name}}` 等参数。
+
+`.` 表示 [`Event`](#EventObject) 结构体, `Pipeline` `PipelineRecord` `Project` 是`Event`结构体的成员。
+
+例如：
+
+如果
+- `RECORD_WEB_URL_TEMPLATE`=http://127.0.0.1:30000/devops/projects/{{.Project.Name}}/pipelines/{{.Pipeline.Name}}/records/{{.PipelineRecord.ID}}
+
+并且
+- `event.Pipeline.Name`=project-test-1,
+- `event.Pipeline.Name`=pipeline-1,
+- `event.PipelineRecord.ID`=5b98850a1d74bd0001c17dcf,
+
+那么targetURL替换后的结果将是:
+http://127.0.0.1:30000/devops/projects/project-test-1/pipelines/pipeline-1/records/5b98850a1d74bd0001c17dcf|
+
+#### EventObject
+```
+type Event struct {
+	Project        *Project
+	Pipeline       *Pipeline
+	PipelineRecord *PipelineRecord
+}
+```

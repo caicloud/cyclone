@@ -59,3 +59,33 @@ Environment variables:
 | CALLBACK_URL              | The URL used for webhook to callback, default is http://127.0.0.1:7099/v1/pipelines       |
 | CYCLONE_SERVER            | The host of Cyclone-Server, default is http://localhost:7099. |
 | WORKER_IMAGE              | The image name of Cyclone-Worker container, default is cargo.caicloud.io/caicloud/cyclone-worker:latest. |
+|NOTIFICATION_URL           | URL of notification, we will send notification after pipeline execution if the notification policy had been defined. |
+|RECORD_WEB_URL_TEMPLATE    | URL template of pipeline record web page. Cyclone doesn't provide web UI component currently. |
+
+PS:
+### More About `RECORD_WEB_URL_TEMPLATE`
+It usees go text/template style, we will use `Event` as the input parameter of the text/template's `Execute` func,so you can define `{{.Pipeline.Name}}` , `{{.PipelineRecord.ID}}` , `{{.Project.Name}}` and etc in your template.
+
+`.` represents [`Event`](#EventObject) struct, `Pipeline` `PipelineRecord` `Project` are its fileds.
+
+e.g. :
+
+if
+- `RECORD_WEB_URL_TEMPLATE`=http://127.0.0.1:30000/devops/projects/{{.Project.Name}}/pipelines/{{.Pipeline.Name}}/records/{{.PipelineRecord.ID}}
+
+and
+- `event.Pipeline.Name`=project-test-1,
+- `event.Pipeline.Name`=pipeline-1,
+- `event.PipelineRecord.ID`=5b98850a1d74bd0001c17dcf,
+
+the targetURL result will be:
+http://127.0.0.1:30000/devops/projects/project-test-1/pipelines/pipeline-1/records/5b98850a1d74bd0001c17dcf|
+
+#### EventObject
+```
+type Event struct {
+	Project        *Project
+	Pipeline       *Pipeline
+	PipelineRecord *PipelineRecord
+}
+```
