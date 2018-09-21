@@ -752,15 +752,16 @@ const (
 
 // NotificationContent contains some pipeline record infomation.
 type NotificationContent struct {
-	ProjectName  string    `bson:"projectName,omitempty" json:"projectName,omitempty" `
-	PipelineName string    `bson:"pipelineName,omitempty" json:"pipelineName,omitempty" `
-	RecordName   string    `bson:"recordName,omitempty" json:"recordName,omitempty" `
-	RecordID     string    `bson:"recordID,omitempty" json:"recordID,omitempty" `
-	Trigger      string    `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
-	Status       Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
-	ErrorMessage string    `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
-	StartTime    time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
-	EndTime      time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
+	ProjectName      string    `bson:"projectName,omitempty" json:"projectName,omitempty" `
+	PipelineName     string    `bson:"pipelineName,omitempty" json:"pipelineName,omitempty" `
+	RecordName       string    `bson:"recordName,omitempty" json:"recordName,omitempty" `
+	RecordID         string    `bson:"recordID,omitempty" json:"recordID,omitempty" `
+	Trigger          string    `bson:"trigger,omitempty" json:"trigger,omitempty" description:"trigger of the pipeline record"`
+	Status           Status    `bson:"status,omitempty" json:"status,omitempty" description:"status of the pipeline record"`
+	ErrorMessage     string    `bson:"errorMessage,omitempty" json:"errorMessage,omitempty" description:"error message for the pipeline failure"`
+	PipelinRecordURL string    `bson:"pipelinRecordURL,omitempty" json:"pipelinRecordURL,omitempty" description:"URL of the pipeline record"`
+	StartTime        time.Time `bson:"startTime,omitempty" json:"startTime,omitempty" description:"start time of the pipeline record"`
+	EndTime          time.Time `bson:"endTime,omitempty" json:"endTime,omitempty" description:"end time of the pipeline record"`
 }
 
 // NotificationPolicyType represents the type of notification
