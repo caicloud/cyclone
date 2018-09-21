@@ -81,7 +81,7 @@ func NewPipelineManager(dataStore *store.DataStore, pipelineRecordManager Pipeli
 // CreatePipeline creates a pipeline.
 func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipeline) (*api.Pipeline, error) {
 	if pipeline.Name == "" && pipeline.Alias == "" {
-		return nil, httperror.ErrorValidationFailed.Format("pipeline name and alias", "can not neither be empty")
+		return nil, httperror.ErrorValidationFailed.Error("pipeline name and alias", "can not neither be empty")
 	}
 
 	nameEmpty := false
@@ -97,7 +97,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		if nameEmpty {
 			pipeline.Name = slug.Slugify(pipeline.Name, true, -1)
 		} else {
-			return nil, httperror.ErrorAlreadyExist.Format(pipeline.Name)
+			return nil, httperror.ErrorAlreadyExist.Error(pipeline.Name)
 		}
 	}
 
@@ -108,7 +108,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 
 	provider, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
-		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
+		return nil, err
 	}
 
 	// Create SCM webhook if enable SCM trigger.
@@ -130,7 +130,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 			scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
 			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
 				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				return nil, httperror.ErrorCreateWebhookPermissionDenied.Format(pipeline.Name)
+				return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
 			}
 
 			return nil, err
@@ -160,7 +160,7 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string, r
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, httperror.ErrorContentNotFound.Error(projectName)
 		}
 
 		return nil, err
@@ -169,7 +169,7 @@ func (m *pipelineManager) GetPipeline(projectName string, pipelineName string, r
 	pipeline, err := m.dataStore.FindPipelineByName(project.ID, pipelineName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format(pipelineName)
+			return nil, httperror.ErrorContentNotFound.Error(pipelineName)
 		}
 
 		return nil, err
@@ -185,7 +185,7 @@ func (m *pipelineManager) GetPipelineByID(id string) (*api.Pipeline, error) {
 	pipeline, err := m.dataStore.FindPipelineByID(id)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format("pipeline with id %s", id)
+			return nil, httperror.ErrorContentNotFound.Error(fmt.Sprintf("pipeline with id %s", id))
 		}
 
 		return nil, err
@@ -202,7 +202,7 @@ func (m *pipelineManager) ListPipelines(projectName string, queryParams api.Quer
 	project, err := ds.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, 0, httperror.ErrorContentNotFound.Error(projectName)
 		}
 		return nil, 0, err
 	}
@@ -277,12 +277,12 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 
 	scmConfig, err := m.GetSCMConfigFromProject(projectName)
 	if err != nil {
-		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM config")
+		return nil, err
 	}
 
 	provider, err := scm.GetSCMProvider(scmConfig)
 	if err != nil {
-		return nil, httperror.ErrorInternalTypeError.Format("Can not get the SCM provider")
+		return nil, err
 	}
 
 	// Remove the old webhook if exists.
@@ -317,7 +317,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 			scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
 			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
 				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				return nil, httperror.ErrorCreateWebhookPermissionDenied.Format(pipeline.Name)
+				return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
 			}
 			return nil, err
 		}
@@ -464,7 +464,7 @@ func (m *pipelineManager) GetSCMConfigFromProject(projectName string) (*api.SCMC
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, httperror.ErrorContentNotFound.Error(projectName)
 		}
 
 		return nil, err
@@ -478,7 +478,7 @@ func (m *pipelineManager) GetStatistics(projectName, pipelineName string, start,
 	pipeline, err := m.GetPipeline(projectName, pipelineName, 0, 0, 0)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, httperror.ErrorContentNotFound.Error(projectName)
 		}
 
 		return nil, err

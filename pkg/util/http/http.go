@@ -112,13 +112,13 @@ func QueryParamsFromContext(ctx context.Context) (qp api.QueryParams, err error)
 	if limitStr != "" {
 		qp.Limit, err = strconv.Atoi(limitStr)
 		if err != nil {
-			return qp, httperror.ErrorParamTypeError.Format(api.Limit, "number", "string")
+			return qp, httperror.ErrorParamTypeError.Error(api.Limit, "number", "string")
 		}
 	}
 	if startStr != "" {
 		qp.Start, err = strconv.Atoi(startStr)
 		if err != nil {
-			return qp, httperror.ErrorParamTypeError.Format(api.Start, "number", "string")
+			return qp, httperror.ErrorParamTypeError.Error(api.Start, "number", "string")
 		}
 	}
 	if filterStr != "" {
@@ -128,11 +128,11 @@ func QueryParamsFromContext(ctx context.Context) (qp api.QueryParams, err error)
 		for _, c := range conditions {
 			filterParts := strings.Split(c, "=")
 			if len(filterParts) != 2 {
-				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+				return qp, httperror.ErrorValidationFailed.Error(api.Filter, "filter pattern is not correct")
 			}
 
 			if _, ok := filter[filterParts[0]]; ok {
-				return qp, httperror.ErrorValidationFailed.Format(api.Filter, "filter pattern is not correct")
+				return qp, httperror.ErrorValidationFailed.Error(api.Filter, "filter pattern is not correct")
 			}
 
 			filter[filterParts[0]] = bson.M{"$regex": filterParts[1]}

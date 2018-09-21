@@ -17,8 +17,6 @@ limitations under the License.
 package errors
 
 import (
-	"net/http"
-
 	nerror "github.com/caicloud/nirvana/errors"
 )
 
@@ -31,76 +29,81 @@ const (
 )
 
 var (
-	// ErrorUnknownRequest defines unknown error when failed to handle a request
-	ErrorUnknownRequest = NewFormatError(http.StatusBadRequest, ReasonRequest, "%s")
 	// ErrorParamTypeError defines param type error
-	ErrorParamTypeError = NewFormatError(http.StatusBadRequest, ReasonRequest, "param %s should be %s, but got %s")
+	ErrorParamTypeError = nerror.BadRequest.Build(ReasonRequest, "parameter ${parameter} should be ${expect}, but got ${real}")
 	// ErrorParamNotFound defines request param error
-	ErrorParamNotFound = NewFormatError(http.StatusBadRequest, ReasonRequest, "can't find param %s in request")
+	ErrorParamNotFound = nerror.BadRequest.Build(ReasonRequest, "can't find parameter ${parameter} in request")
 	// ErrorUrlParamNotFound defines request url query param error
-	ErrorUrlParamNotFound = NewFormatError(http.StatusBadRequest, ReasonRequest, "can't find param %s in request url query")
+	ErrorUrlParamNotFound = nerror.BadRequest.Build(ReasonRequest, "can't find parameter ${parameter} in request url query")
 	// ErrorHeaderNotFound defines request header error
-	ErrorHeaderParamNotFound = NewFormatError(http.StatusBadRequest, ReasonRequest, "can't find param %s in request header")
+	ErrorHeaderParamNotFound = nerror.BadRequest.Build(ReasonRequest, "can't find parameter ${parameter} in request header")
+
 	// ErrorValidationFailed defines validation failed error
-	ErrorValidationFailed = NewFormatError(http.StatusBadRequest, ReasonRequest, "failed to validate %s: %s")
+	ErrorValidationFailed = nerror.BadRequest.Build(ReasonRequest, "failed to validate ${field}: ${error}")
 	// ErrorContentNotFound defines not found error
-	ErrorContentNotFound = NewFormatError(http.StatusNotFound, ReasonRequest, "content %s not found")
+	ErrorContentNotFound = nerror.NotFound.Build(ReasonRequest, "content ${content} not found")
 	// ErrorQuotaExceeded defines quota exceeded error, creating or updating was not allowed
-	ErrorQuotaExceeded          = NewFormatError(http.StatusForbidden, ReasonRequest, "%s quota exceeded")
-	ErrorAlreadyExist           = NewFormatError(http.StatusConflict, ReasonRequest, "conflict: %s already exist")
-	ErrorAuthenticationRequired = NewFormatError(http.StatusProxyAuthRequired, ReasonRequest, "authentication required")
+	ErrorQuotaExceeded = nerror.Forbidden.Build(ReasonRequest, "${resource} quota exceeded")
+	// ErrorAlreadyExist defines conflict error.
+	ErrorAlreadyExist = nerror.Conflict.Build(ReasonRequest, "conflict: ${resource} already exist")
+
+	// ErrorAuthenticationRequired defines error that authentication not provided.
+	ErrorAuthenticationRequired = nerror.Unauthorized.Build(ReasonRequest, "authentication required")
 
 	// ErrorInternalTypeError defines internal type error
-	ErrorInternalTypeError = NewFormatError(http.StatusInternalServerError, ReasonInternal, "type of %s should be %s, but got %s")
+	//ErrorInternalTypeError = nerror.InternalServerError.Build(ReasonInternal, "type of ${resource} should be ${expect}, but got ${real}")
+
 	// ErrorUnknownNotFoundError defines not found error that we can't find a reason
-	ErrorUnknownNotFoundError = NewFormatError(http.StatusInternalServerError, ReasonInternal, "content %s not found, may be it's a serious error")
+	ErrorUnknownNotFoundError = nerror.InternalServerError.Build(ReasonInternal, "content ${content} not found, may be it's a serious error")
 	// ErrorUnknownInternal defines any internal error and not one of above errors
-	ErrorUnknownInternal = NewFormatError(http.StatusInternalServerError, ReasonInternal, "unknown error: %s")
+	ErrorUnknownInternal = nerror.InternalServerError.Build(ReasonInternal, "unknown error: ${error}")
 
 	// ErrorCreateFailed defines error that failed creating of something.
-	ErrorCreateFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to create %s: %s")
+	ErrorCreateFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to create ${name}: ${error}")
 	// ErrorUpdateFailed defines error that failed updating of something.
-	ErrorUpdateFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to update %s: %s")
+	ErrorUpdateFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to update ${name}: ${error}")
 	// ErrorDeleteFailed defines error that failed deleting of something.
-	ErrorDeleteFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to delete %s: %s")
+	ErrorDeleteFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to delete ${name}: ${error}")
 	// ErrorGetFailed defines error that failed geting of something.
-	ErrorGetFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to get %s: %s")
+	ErrorGetFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to get ${name}: ${error}")
 	// ErrorListFailed defines error that failed listing of something.
-	ErrorListFailed = NewFormatError(http.StatusBadRequest, ReasonInternal, "failed to list %s: %s")
+	ErrorListFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to list ${name}: ${error}")
 
 	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
-	ErrorCreateWebhookPermissionDenied = NewFormatError(http.StatusInternalServerError,
-		"ReasonCreateWebhookPermissionDenied", "failed to create webhook of pipeline %s, please check your account permissions.")
+	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build("ReasonCreateWebhookPermissionDenied",
+		"failed to create webhook of pipeline ${pipeline}, please check your account permissions.")
 
+	// ErrorUnsupported defines some feature/field not supported yet.
+	ErrorUnsupported = nerror.BadRequest.Build("ReasonUnsupported", "unsupported ${resource}: ${type}")
 	// ErrorNotImplemented defines some feature not implemented yet.
 	ErrorNotImplemented = nerror.InternalServerError.Build("ReasonNotImplemented", "not implement: ${feature}")
 )
 
 func NewCreateError(name, errorMessage string) error {
-	return ErrorCreateFailed.Format(name, errorMessage)
+	return ErrorCreateFailed.Error(name, errorMessage)
 }
 
 func NewUpdateError(name, errorMessage string) error {
-	return ErrorUpdateFailed.Format(name, errorMessage)
+	return ErrorUpdateFailed.Error(name, errorMessage)
 }
 
 func NewDeleteError(name, errorMessage string) error {
-	return ErrorDeleteFailed.Format(name, errorMessage)
+	return ErrorDeleteFailed.Error(name, errorMessage)
 }
 
 func NewListError(name, errorMessage string) error {
-	return ErrorListFailed.Format(name, errorMessage)
+	return ErrorListFailed.Error(name, errorMessage)
 }
 
 func NewGetError(name, errorMessage string) error {
-	return ErrorGetFailed.Format(name, errorMessage)
+	return ErrorGetFailed.Error(name, errorMessage)
 }
 
 // NewValidateError creates new ErrorValidationFailed
 func NewValidateError(name, reason string) error {
-	return ErrorValidationFailed.Format(name, reason)
+	return ErrorValidationFailed.Error(name, reason)
 }
 
 func NewNotFoundError(name string) error {
-	return ErrorContentNotFound.Format(name)
+	return ErrorContentNotFound.Error(name)
 }

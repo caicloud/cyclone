@@ -32,13 +32,13 @@ func GetJsonPayload(ctx context.Context, entity interface{}) error {
 
 	content, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Error(err)
 	}
 
 	err = json.Unmarshal(content, entity)
 	if err != nil {
 		log.Errorf("Failed to unmarshal request body: %v\n %s", err, string(content))
-		return ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Error(err)
 	}
 	return nil
 }
