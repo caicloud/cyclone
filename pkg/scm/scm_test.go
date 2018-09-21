@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 func testProviderFunc(*api.SCMConfig) (SCMProvider, error) {
@@ -85,7 +86,7 @@ func TestGetSCMProvider(t *testing.T) {
 			&api.SCMConfig{
 				Type: api.Github,
 			},
-			fmt.Errorf("unsupported SCM type %s", api.Github),
+			errors.ErrorUnsupported.Error("SCM type", api.Github),
 		},
 	}
 
@@ -93,7 +94,7 @@ func TestGetSCMProvider(t *testing.T) {
 		_, err := GetSCMProvider(tc.scmCfg)
 		if err != tc.err {
 			if err != nil && err.Error() != tc.err.Error() {
-				t.Errorf("%s failed: expect %v, but got %v", d, err, tc.err)
+				t.Errorf("%s failed: expect %v, but got %v", d, tc.err, err)
 			}
 		}
 	}

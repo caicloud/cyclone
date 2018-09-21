@@ -22,12 +22,13 @@ import (
 	"time"
 
 	log "github.com/golang/glog"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	apiv1 "k8s.io/api/core/v1"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/store"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 const (
@@ -109,7 +110,7 @@ func NewCloudProvider(c *api.Cloud) (Provider, error) {
 
 	ncf, ok := cloudProviderFactory[c.Type]
 	if !ok {
-		err := fmt.Errorf("cloud type %s is not supported", c.Type)
+		err := errors.ErrorUnsupported.Error("cloud type", c.Type)
 		log.Error(err)
 		return nil, err
 	}

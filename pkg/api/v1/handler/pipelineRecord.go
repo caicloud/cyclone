@@ -126,7 +126,7 @@ func UpdatePipelineRecordStatus(ctx context.Context, pipelineRecordID string) (*
 	}
 
 	if recordStatus.Status != api.Aborted {
-		err = httperror.ErrorValidationFailed.Format("status", "only support Aborted")
+		err = httperror.ErrorValidationFailed.Error("status", "only support Aborted")
 		return nil, err
 	}
 
@@ -226,20 +226,20 @@ func ReceivePipelineRecordLogStream(ctx context.Context, recordID, stage, task s
 	_, err := pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
-		return httperror.ErrorContentNotFound.Format(recordID)
+		return httperror.ErrorContentNotFound.Error(recordID)
 	}
 
 	//upgrade HTTP rest API --> socket connection
 	ws, err := websocketutil.Upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
-		return httperror.ErrorUnknownInternal.Format(err.Error())
+		return httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 	defer ws.Close()
 
 	if err := pipelineRecordManager.ReceivePipelineRecordLogStream(recordID, stage, task, ws); err != nil {
 		log.Error(fmt.Sprintf("Fail to receive log stream for pipeline record %s: %s", recordID, err.Error()))
-		return httperror.ErrorUnknownInternal.Format(err.Error())
+		return httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 
 	return nil
@@ -257,7 +257,7 @@ func ReceivePipelineRecordTestResult(ctx context.Context, recordID string) error
 
 	if err := pipelineRecordManager.ReceivePipelineRecordTestResult(recordID, handler.Filename, file); err != nil {
 		log.Error(fmt.Sprintf("Fail to receive log stream for pipeline record %s: %s", recordID, err.Error()))
-		return httperror.ErrorUnknownInternal.Format(err.Error())
+		return httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 
 	return nil
@@ -271,20 +271,20 @@ func GetPipelineRecordLogStream(ctx context.Context, recordID, stage, task strin
 	_, err := pipelineRecordManager.GetPipelineRecord(recordID)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to find pipeline record %s for err: %s", recordID, err.Error()))
-		return httperror.ErrorContentNotFound.Format(recordID)
+		return httperror.ErrorContentNotFound.Error(recordID)
 	}
 
 	//upgrade HTTP rest API --> socket connection
 	ws, err := websocketutil.Upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
-		return httperror.ErrorUnknownInternal.Format(err.Error())
+		return httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 	defer ws.Close()
 
 	if err := pipelineRecordManager.GetPipelineRecordLogStream(recordID, stage, task, ws); err != nil {
 		log.Error(fmt.Sprintf("Unable to get logstream for pipeline record %s for err: %s", recordID, err.Error()))
-		return httperror.ErrorUnknownInternal.Format(err.Error())
+		return httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 
 	return nil

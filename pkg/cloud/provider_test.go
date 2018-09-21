@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 func testProviderFunc(*api.Cloud) (Provider, error) {
@@ -81,7 +82,7 @@ func TestNewCloudProvider(t *testing.T) {
 			&api.Cloud{
 				Type: api.CloudTypeDocker,
 			},
-			fmt.Errorf("cloud type %s is not supported", api.CloudTypeDocker),
+			errors.ErrorUnsupported.Error("cloud type", api.CloudTypeDocker),
 		},
 	}
 

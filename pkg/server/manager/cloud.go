@@ -53,18 +53,18 @@ func (m *cloudManager) CreateCloud(c *api.Cloud) (*api.Cloud, error) {
 	cloudName := c.Name
 
 	if _, err := m.ds.FindCloudByName(cloudName); err == nil {
-		return nil, httperror.ErrorAlreadyExist.Format(cloudName)
+		return nil, httperror.ErrorAlreadyExist.Error(cloudName)
 	}
 
 	// check auth info
 	cp, err := cloud.NewCloudProvider(c)
 	if err != nil {
-		return nil, httperror.ErrorValidationFailed.Format("cloud body", err)
+		return nil, httperror.ErrorValidationFailed.Error("cloud body", err)
 	}
 
 	err = cp.Ping()
 	if err != nil {
-		return nil, httperror.ErrorValidationFailed.Format("cloud body", err)
+		return nil, httperror.ErrorUnknownInternal.Error(err.Error())
 	}
 
 	if err := m.ds.InsertCloud(c); err != nil {
@@ -88,7 +88,7 @@ func (m *cloudManager) DeleteCloud(name string) error {
 func (m *cloudManager) PingCloud(name string) error {
 	c, err := m.ds.FindCloudByName(name)
 	if err != nil {
-		return httperror.ErrorContentNotFound.Format(name)
+		return httperror.ErrorContentNotFound.Error(name)
 	}
 	cp, err := cloud.NewCloudProvider(c)
 	if err != nil {
@@ -101,7 +101,7 @@ func (m *cloudManager) PingCloud(name string) error {
 func (m *cloudManager) ListWorkers(name string, extendInfo string) ([]api.WorkerInstance, error) {
 	c, err := m.ds.FindCloudByName(name)
 	if err != nil {
-		return nil, httperror.ErrorContentNotFound.Format(name)
+		return nil, httperror.ErrorContentNotFound.Error(name)
 	}
 
 	if c.Type == api.CloudTypeKubernetes && extendInfo == "" {
@@ -121,7 +121,7 @@ func (m *cloudManager) ListWorkers(name string, extendInfo string) ([]api.Worker
 
 	cp, err := cloud.NewCloudProvider(c)
 	if err != nil {
-		return nil, httperror.ErrorUnknownInternal.Format(err)
+		return nil, httperror.ErrorUnknownInternal.Error(err)
 	}
 	return cp.ListWorkers()
 }

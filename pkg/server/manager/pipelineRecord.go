@@ -160,7 +160,7 @@ func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipeline
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, 0, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, 0, httperror.ErrorContentNotFound.Error(projectName)
 		}
 		return nil, 0, err
 	}
@@ -168,7 +168,7 @@ func (m *pipelineRecordManager) ListPipelineRecords(projectName string, pipeline
 	pipeline, err := m.dataStore.FindPipelineByName(project.ID, pipelineName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, 0, httperror.ErrorContentNotFound.Format(pipelineName)
+			return nil, 0, httperror.ErrorContentNotFound.Error(pipelineName)
 		}
 		return nil, 0, err
 	}

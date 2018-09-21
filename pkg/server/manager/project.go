@@ -68,7 +68,7 @@ func NewProjectManager(dataStore *store.DataStore, pipelineManager PipelineManag
 // CreateProject creates a project.
 func (m *projectManager) CreateProject(project *api.Project) (*api.Project, error) {
 	if project.Name == "" && project.Alias == "" {
-		return nil, httperror.ErrorValidationFailed.Format("project name and alias", "can not neither be empty")
+		return nil, httperror.ErrorValidationFailed.Error("project name and alias", "can not neither be empty")
 	}
 
 	nameEmpty := false
@@ -83,7 +83,7 @@ func (m *projectManager) CreateProject(project *api.Project) (*api.Project, erro
 		if nameEmpty {
 			project.Name = slug.Slugify(project.Name, true, -1)
 		} else {
-			return nil, httperror.ErrorAlreadyExist.Format(project.Name)
+			return nil, httperror.ErrorAlreadyExist.Error(project.Name)
 		}
 
 	}
@@ -100,7 +100,7 @@ func (m *projectManager) GetProject(projectName string) (*api.Project, error) {
 	project, err := m.dataStore.FindProjectByName(projectName)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, httperror.ErrorContentNotFound.Format(projectName)
+			return nil, httperror.ErrorContentNotFound.Error(projectName)
 		}
 
 		return nil, err

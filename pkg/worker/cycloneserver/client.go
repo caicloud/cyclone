@@ -105,13 +105,13 @@ func (c *client) SendEvent(event *api.Event) error {
 	path := fmt.Sprintf(apiPathForEvent, id)
 	resp, err := c.do(http.MethodPut, path, event)
 	if err != nil {
-		return ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Error(err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ErrorUnknownInternal.Format(err)
+		return ErrorUnknownInternal.Error(err)
 	}
 
 	if resp.StatusCode/100 == 2 {
@@ -119,24 +119,24 @@ func (c *client) SendEvent(event *api.Event) error {
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
+		return ErrorContentNotFound.Error(fmt.Sprintf("event %s", id))
 	}
 
 	log.Errorf("Set event %s from Cyclone server with error %s", id, string(body))
-	return ErrorUnknownInternal.Format(body)
+	return ErrorUnknownInternal.Error(body)
 }
 
 func (c *client) GetEvent(id string) (*api.Event, error) {
 	path := fmt.Sprintf(apiPathForEvent, id)
 	resp, err := c.do(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, ErrorUnknownInternal.Format(err)
+		return nil, ErrorUnknownInternal.Error(err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, ErrorUnknownInternal.Format(err)
+		return nil, ErrorUnknownInternal.Error(err)
 	}
 
 	if resp.StatusCode/100 == 2 {
@@ -151,11 +151,11 @@ func (c *client) GetEvent(id string) (*api.Event, error) {
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrorContentNotFound.Format(fmt.Sprintf("event %s", id))
+		return nil, ErrorContentNotFound.Error(fmt.Sprintf("event %s", id))
 	}
 
 	log.Errorf("Get event %s from Cyclone server with error %s", id, body)
-	return nil, ErrorUnknownInternal.Format(body)
+	return nil, ErrorUnknownInternal.Error(body)
 }
 
 func (c *client) PushLogStream(project, pipeline, recordID string, stage api.PipelineStageName, task string, filePath string, close chan struct{}) error {
