@@ -273,19 +273,28 @@ func postHookEvent(event *api.Event) {
 
 		if sendFlag {
 			log.Infof("start to send notification for %v/%v/%v", event.Project.Name, pipeline.Name, record.Name)
-			content := &api.NotificationContent{
-				ProjectName:  event.Project.Name,
-				PipelineName: pipeline.Name,
-				RecordName:   record.Name,
-				RecordID:     record.ID,
-				Trigger:      record.Trigger,
-				Status:       record.Status,
-				ErrorMessage: record.ErrorMessage,
-				StartTime:    record.StartTime,
-				EndTime:      record.EndTime,
+
+			webURL, err := getPipelineRecordWebURL(recordWebURLTemplate, event)
+			if err != nil {
+				log.Errorf("Fail to get web url for %v/%v/%v as %s",
+					event.Project.Name, pipeline.Name, record.Name, err.Error())
+				return
 			}
 
-			err := sendNotification(content)
+			content := &api.NotificationContent{
+				ProjectName:      event.Project.Name,
+				PipelineName:     pipeline.Name,
+				RecordName:       record.Name,
+				RecordID:         record.ID,
+				Trigger:          record.Trigger,
+				Status:           record.Status,
+				ErrorMessage:     record.ErrorMessage,
+				PipelinRecordURL: webURL,
+				StartTime:        record.StartTime,
+				EndTime:          record.EndTime,
+			}
+
+			err = sendNotification(content)
 			if err != nil {
 				log.Errorf("Fail to send notification for %v/%v/%v as %s",
 					event.Project.Name, pipeline.Name, record.Name, err.Error())
@@ -337,7 +346,7 @@ func sendScmStatuses(event *api.Event) error {
 		return err
 	}
 
-	targetURL, err := getStatusesTargetURL(recordWebURLTemplate, event)
+	targetURL, err := getPipelineRecordWebURL(recordWebURLTemplate, event)
 	if err != nil {
 		return err
 	}
@@ -354,7 +363,7 @@ func sendScmStatuses(event *api.Event) error {
 	return nil
 }
 
-func getStatusesTargetURL(urlTemplate string, event *api.Event) (string, error) {
+func getPipelineRecordWebURL(urlTemplate string, event *api.Event) (string, error) {
 	// Create a new template and parse the url template into it.
 	t := template.Must(template.New("target url template").Parse(urlTemplate))
 

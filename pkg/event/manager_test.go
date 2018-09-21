@@ -52,7 +52,7 @@ func TestGetTargetURL(t *testing.T) {
 	}
 
 	template := "http://192.168.19.96:30000/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations \"tenant\"}}"
-	url, err := getStatusesTargetURL(template, event)
+	url, err := getPipelineRecordWebURL(template, event)
 	if err != nil {
 		t.Fatalf("expect %v to nil", err)
 	}
