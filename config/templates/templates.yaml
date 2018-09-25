@@ -1,6 +1,6 @@
-- name: maven-3
+- name: maven-3.5.3-jdk-8-alpine
   type: Maven
-  builderImage: maven:3
+  builderImage: maven:3.5.3-jdk-8-alpine
   testCommands: |
     mvn test
   packageCommands: |
@@ -36,9 +36,9 @@
     # Run your app or exec your start scripts.
     CMD ["java", "-jar", "/test-app.jar"]
 
-- name: golang-1.9.2
+- name: golang-1.9.5-alpine3.7
   type: Go
-  builderImage: golang:1.9.2
+  builderImage: golang:1.9.5-alpine3.7
   testCommands: |
     echo $GOPATH
     # Replace the {repo-path} with your own repository path, e.g. "github.com/caicloud/cyclone".
@@ -49,7 +49,14 @@
     ln -s `pwd` $WORKDIR
     cd $WORKDIR
     ls -la
-    go test -cover $(go list ./...)
+    # if you need test reports, please install go-junit-report(optional, you do not have to install it if there already is go-junit-report in your builder image):
+    apk add --no-cache git
+    go get -u github.com/jstemmer/go-junit-report
+    # and then execute:
+    go test -v -cover $(go list ./...) 2>&1 | tee output.tmp
+    cat output.tmp| go-junit-report > report.xml
+    # otherwise if you do not need test reports, you can execute:
+    # go test -v -cover $(go list ./...)
   packageCommands: |
     # Replace the {main-method-path} with the path of directory which contains a main() function.
     cd $WORKDIR/{main-method-path}
@@ -69,19 +76,18 @@
     # Run your app or exec your start scripts.
     ENTRYPOINT ["/test-app"]
 
-- name: python-2.7
+- name: python-3.6.5-alpine3.6
   type: Python
-  builderImage: python:2.7-alpine
+  builderImage: python:3.6.5-alpine3.6
   testCommands: |
     # Run all the test*.py modules inside the test package.
     python -m unittest discover -s test -p 'test*.py'
   packageCommands: |
   customizedDockerfile: |
-    FROM python:2.7-alpine
-
-    RUN mkdir -p /usr/src/app
+    FROM python:3.6.5-alpine3.6
 
     # Create working directory
+    RUN mkdir -p /usr/src/app
     WORKDIR /usr/src/app
 
     # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
@@ -94,18 +100,39 @@
 
     CMD [ "python", "./<entrypoint>.py" ]
 
-- name: node-8.9.0
+- name: node-9-alpine
   type: NodeJS
-  builderImage: node:8.9.0-slim
+  builderImage: node:9-alpine
   testCommands: |
   packageCommands: |
     npm run build
   customizedDockerfile: |
+    FROM node:9-alpine
 
-- name: php-7.1.9
+    # Create working directory
+    WORKDIR /usr/src/app
+
+    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+    # it will be unpacked and added to worksapce.
+    ADD <uploaded-file> .
+
+    # Install app dependencies, if you are building your code for production
+    # RUN npm install --only=production
+    RUN npm install
+
+    EXPOSE 8080
+    CMD [ "npm", "start" ]
+
+- name: php-7.1-apache
   type: PHP
-  builderImage: php:7.1.9
+  builderImage: php:7.1-apache
   testCommands: |
   packageCommands: |
   customizedDockerfile: |
+    FROM php:7.1-apache
 
+    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+    # it will be unpacked and added to worksapce.
+    ADD <uploaded-file> /var/www/html/
+
+    EXPOSE 80
