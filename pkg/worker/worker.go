@@ -19,6 +19,7 @@ package worker
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/golang/glog"
 
@@ -174,6 +175,10 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 
 	// update event.PipelineRecord.Status from running to success
 	event.PipelineRecord.Status = api.Success
+
+	// Wait for a while to ensure that stage logs are reported to server.
+	// The worker will be terminated as soon as the Success status is reported to server.
+	time.Sleep(stage.WaitTime)
 
 	// Sent event for cyclone server
 	err = worker.Client.SendEvent(event)

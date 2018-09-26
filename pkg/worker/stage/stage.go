@@ -39,8 +39,8 @@ import (
 const (
 	logFileNameTemplate = "/tmp/logs/%s.log"
 
-	// waitTime represents the wait time for log pushing.
-	waitTime = 3 * time.Second
+	// WaitTime represents the wait time for log pushing.
+	WaitTime = 3 * time.Second
 )
 
 var event *api.Event
@@ -618,7 +618,7 @@ func (sm *stageManager) startWatchLogs(stage api.PipelineStageName, task string,
 		logFile.WriteString(generateStageFinishLog(stage, err))
 
 		// Wait for a while to ensure finish log of stages are reported.
-		time.Sleep(waitTime)
+		time.Sleep(WaitTime)
 
 		close(closeLog)
 		logFile.Close()

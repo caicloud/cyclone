@@ -129,8 +129,8 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 		}
 
 		// Wait for a while to ensure that stage logs are reported to server.
-		// The worker will be terminated as soon as the failed status is reported to server.
-		time.Sleep(waitTime)
+		// The worker will be terminated as soon as the Failed status is reported to server.
+		time.Sleep(WaitTime)
 	default:
 		err := fmt.Errorf("stage status %s is not supported", status)
 		log.Error(err)
