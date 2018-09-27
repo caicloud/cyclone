@@ -6,7 +6,7 @@ _config:
     template:
       type: template.caicloud.io/application
       version: 1.0.0
-    version: "[[ imageTagFromGitTag ]]"
+    version: '[[ imageTagFromGitTag ]]'
   controllers:
   - containers:
     - command:
@@ -25,7 +25,7 @@ _config:
       - name: CLIENTIDSECRET
         value: clientidsecret
       - name: CONSOLE_WEB_ENDPOINT
-        value: [[ compassWebEndpoint ]]
+        value: '[[ compassWebEndpoint ]]'
       - name: CLIENTID_GITLAB
         value: clientid_gitlab
       - name: CLIENTIDSECRET_GITLAB
@@ -33,7 +33,7 @@ _config:
       - name: SERVER_GITLAB
         value: https://gitlab.com
       - name: CYCLONE_SERVER
-        value: http://[[ kube_apiserver_endpoint_ip ]]:6008
+        value: 'http://[[ kube_apiserver_endpoint_ip ]]:6008'
       - name: WORKER_IMAGE
         value: '[[ registry_release ]]/cyclone-worker:[[ imageTagFromGitTag ]]'
       - name: CLOUD_AUTO_DISCOVERY
@@ -55,13 +55,13 @@ _config:
       - name: SMTP_USERNAME
         value: smtp_username
       - name: RECORD_ROTATION_THRESHOLD
-        value: "50"
+        value: '50'
       - name: NOTIFICATION_URL
         value: http://devops-admin:7088/api/v1/notification
       - name: RECORD_WEB_URL_TEMPLATE
-        value: [[ compassWebEndpoint ]]/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations "tenant"}}
+        value: '[[ compassWebEndpoint ]]/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations "tenant"}}'
       - name: CALLBACK_URL
-        value: [[ hodorEndpoint ]]/apis/admin.devops.caicloud.io/v1/pipelines
+        value: '[[ hodorEndpoint ]]/apis/admin.devops.caicloud.io/v1/pipelines'
       image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
       imagePullPolicy: IfNotPresent
       mounts:
