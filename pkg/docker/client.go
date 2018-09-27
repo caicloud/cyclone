@@ -267,18 +267,18 @@ func (dm *DockerManager) ExecInContainer(options ExecOptions) error {
 
 	err = dm.Client.StartExec(exec.ID, seo)
 	if err != nil {
-		return fmt.Errorf("start command %s in container %s with error %s", ceo.Cmd, ceo.Container, err.Error())
+		return fmt.Errorf("start command in container %s with error %s", ceo.Container, err.Error())
 	}
 
 	// Check the exit code of the exec instance
 	execInspect, err := dm.Client.InspectExec(exec.ID)
 	if err != nil {
-		return fmt.Errorf("inspect command %s in container %s with error %s", ceo.Cmd, ceo.Container, err.Error())
+		return fmt.Errorf("inspect command in container %s with error %s", ceo.Container, err.Error())
 	}
 
 	if execInspect.ExitCode != 0 {
-		return fmt.Errorf("command %s failed in container %s, inspect exit code:%v",
-			ceo.Cmd, ceo.Container, execInspect.ExitCode)
+		return fmt.Errorf("command failed in container %s, inspect exit code:%v",
+			ceo.Container, execInspect.ExitCode)
 	}
 
 	return nil
