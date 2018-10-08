@@ -35,9 +35,11 @@ const (
 	cloneDir = "/tmp/code"
 
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
+)
 
-	// maxRetry represents the max number of retry for git clone.
-	maxRetry = 5
+var (
+	maxRetries   = 8
+	initialDelay = 2 * time.Second
 )
 
 // scmProviders represents the set of SCM providers.
@@ -211,14 +213,16 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 	}
 
 	var logs string
-	for i := 1; i <= maxRetry; i++ {
+	backoff := initialDelay
+	for retries := 0; retries < maxRetries; retries++ {
 		logs, err = p.Clone(token, url, reference, destPath)
 		if err == nil {
 			return logs, nil
 		}
 
-		logdog.Infof("checkout code as error %v, retry times: %v", err, i)
-		time.Sleep(time.Second * 1)
+		logdog.Infof("failed to checkout, will retry after %d seconds, due to error: %v", backoff, err)
+		time.Sleep(backoff)
+		backoff *= 2
 	}
 
 	return logs, err
