@@ -63,14 +63,16 @@ func init() {
 // 3. Parse the payload from request header;
 // 4. Parse the payload from request body;
 // 5. First get the event type, and handle it according to its type.
-func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error) {
+func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookResponse, error) {
+	response := webhookResponse{}
 	pipeline, err := pipelineManager.GetPipelineByID(pipelineID)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
 	if pipeline.AutoTrigger == nil || pipeline.AutoTrigger.SCMTrigger == nil {
-		return "SCM auto trigger is not set", nil
+		response.Message = "SCM auto trigger is not set"
+		return response, nil
 	}
 	scmTrigger := pipeline.AutoTrigger.SCMTrigger
 
@@ -80,11 +82,11 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	request := contextutil.GetHttpRequest(ctx)
 	payload, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return "", fmt.Errorf("Fail to read the request body")
+		return response, fmt.Errorf("Fail to read the request body")
 	}
 	event, err := github.ParseWebHook(github.WebHookType(request), payload)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	log.Infof("Github webhook event: %v", event)
 
@@ -96,7 +98,8 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	switch event := event.(type) {
 	case *github.ReleaseEvent:
 		if scmTrigger.TagRelease == nil {
-			return "Release trigger is not enabled", nil
+			response.Message = "Release trigger is not enabled"
+			return response, nil
 		}
 		trigger = api.TriggerWebhookTagRelease
 
@@ -111,16 +114,19 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
 		if *event.Action != "opened" && *event.Action != "synchronize" {
-			return "Only handle when pull request is created or synchronized", nil
+			response.Message = "Only handle when pull request is created or synchronized"
+			return response, nil
 		}
 
 		if scmTrigger.PullRequest == nil {
-			return "Pull request trigger is not enabled", nil
+			response.Message = "Pull request trigger is not enabled"
+			return response, nil
 		}
 
 		commitSHA, err = extractCommitSha(*event.PullRequest.StatusesURL)
 		if err != nil {
-			return "get last commit sha failed", err
+			response.Message = "Get last commit sha failed"
+			return response, err
 		}
 		trigger = api.TriggerWebhookPullRequest
 
@@ -134,16 +140,19 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
 			log.Infof("Only handle when issues type is pull request")
-			return "Only handle when issues type is pull request", nil
+			response.Message = "Only handle when issues type is pull request"
+			return response, nil
 		}
 
 		// Only handle when the pull request comments are created.
 		if *event.Action != "created" {
-			return "Only handle when pull request comment is created", nil
+			response.Message = "Only handle when pull request comment is created"
+			return response, nil
 		}
 
 		if scmTrigger.PullRequestComment == nil {
-			return "Pull request comment trigger is not enabled", nil
+			response.Message = "Pull request comment trigger is not enabled"
+			return response, nil
 		}
 
 		comment := event.Comment
@@ -168,7 +177,8 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 		}
 	case *github.PushEvent:
 		if scmTrigger.Push == nil {
-			return "Push trigger is not enabled", nil
+			response.Message = "Push trigger is not enabled"
+			return response, nil
 		}
 
 		ref := *event.Ref
@@ -204,12 +214,14 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (string, error)
 			PRLastCommitSHA: commitSHA,
 		}
 		if _, err = pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
-			return "", err
+			return response, err
 		}
 
-		return "Successfully triggered", nil
+		response.Message = "Successfully triggered"
+		return response, nil
 	} else {
-		return "Is ignored", nil
+		response.Message = "Is ignored"
+		return response, nil
 	}
 }
 
@@ -232,14 +244,16 @@ func extractCommitSha(url string) (string, error) {
 // 3. Parse the payload from request header;
 // 4. Parse the payload from request body;
 // 5. First get the event type, and handle it according to its type.
-func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error) {
+func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookResponse, error) {
+	response := webhookResponse{}
 	pipeline, err := pipelineManager.GetPipelineByID(pipelineID)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
 	if pipeline.AutoTrigger == nil || pipeline.AutoTrigger.SCMTrigger == nil {
-		return "SCM auto trigger is not set", nil
+		response.Message = "SCM auto trigger is not set"
+		return response, nil
 	}
 	scmTrigger := pipeline.AutoTrigger.SCMTrigger
 
@@ -249,7 +263,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 	request := contextutil.GetHttpRequest(ctx)
 	event, err := gitlabuitl.ParseWebHook(request)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	log.Infof("Gitlab webhook event: %v", event)
 
@@ -261,7 +275,8 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 	switch event := event.(type) {
 	case *gitlab.TagEvent:
 		if scmTrigger.TagRelease == nil {
-			return "Release trigger is not enabled", nil
+			response.Message = "Release trigger is not enabled"
+			return response, nil
 		}
 
 		trigger = api.TriggerWebhookTagRelease
@@ -277,11 +292,13 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 		// Only handle when the pull request are created.
 		objectAttributes := event.ObjectAttributes
 		if objectAttributes.Action != "open" && objectAttributes.Action != "update" {
-			return "Only handle when merge request is created or updated", nil
+			response.Message = "Only handle when merge request is created or updated"
+			return response, nil
 		}
 
 		if scmTrigger.PullRequest == nil {
-			return "Pull request trigger is not enabled", nil
+			response.Message = "Pull request trigger is not enabled"
+			return response, nil
 		}
 
 		commitSHA = objectAttributes.LastCommit.ID
@@ -296,11 +313,13 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 	case *gitlabuitl.MergeCommentEvent:
 		if event.MergeRequest == nil {
 			log.Infof("Only handle comments on merge request")
-			return "Only handle comments on merge request", nil
+			response.Message = "Only handle comments on merge request"
+			return response, nil
 		}
 
 		if scmTrigger.PullRequestComment == nil {
-			return "Pull request comment trigger is not enabled", nil
+			response.Message = "Pull request comment trigger is not enabled"
+			return response, nil
 		}
 		objectAttributes := event.ObjectAttributes
 		match := false
@@ -324,7 +343,8 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 		}
 	case *gitlab.PushEvent:
 		if scmTrigger.Push == nil {
-			return "Push trigger is not enabled", nil
+			response.Message = "Push trigger is not enabled"
+			return response, nil
 		}
 
 		ref := event.Ref
@@ -359,11 +379,16 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (string, error)
 			PRLastCommitSHA: commitSHA,
 		}
 		if _, err = pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
-			return "", err
+			return response, err
 		}
-
-		return "Successfully triggered", nil
+		response.Message = "Successfully triggered"
+		return response, nil
 	} else {
-		return "Is ignored", nil
+		response.Message = "Is ignored"
+		return response, nil
 	}
+}
+
+type webhookResponse struct {
+	Message string `json:"message,omitempty"`
 }
