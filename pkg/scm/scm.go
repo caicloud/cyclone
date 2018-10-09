@@ -58,6 +58,7 @@ type SCMProvider interface {
 	CreateWebHook(repoURL string, webHook *WebHook) error
 	DeleteWebHook(repoURL string, webHookUrl string) error
 	CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSha string) error
+	GetPullRequestSHA(repoURL string, number int) (string, error)
 }
 
 // WebHook represents the params for SCM webhook.

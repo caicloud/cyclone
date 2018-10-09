@@ -469,3 +469,14 @@ func (g *Github) CreateStatus(recordStatus api.Status, targetURL, repoURL, commi
 	log.Error(err)
 	return err
 }
+
+// GetPullRequestSHA get the commit sha for specified pr.
+func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	owner, repo := provider.ParseRepoURL(repoURL)
+	pr, _, err := g.client.PullRequests.Get(owner, repo, number)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return *pr.Head.SHA, nil
+}

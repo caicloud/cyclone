@@ -28,6 +28,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/scm"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	gitlabuitl "github.com/caicloud/cyclone/pkg/util/gitlab"
 )
@@ -150,6 +151,11 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			return response, nil
 		}
 
+		if *event.Issue.State != "open" {
+			response.Message = "Only handle open pull request comment"
+			return response, nil
+		}
+
 		if scmTrigger.PullRequestComment == nil {
 			response.Message = "Pull request comment trigger is not enabled"
 			return response, nil
@@ -167,6 +173,13 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		}
 
 		if match {
+			commitSHA, err = getGitHubLastCommitID(*event.Issue.Number, pipeline)
+			if err != nil {
+				log.Warning("get github pr last commit id failed:", err)
+				response.Message = "get github pr last commit id failed"
+				return response, nil
+			}
+
 			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.Issue.Number),
@@ -321,6 +334,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			response.Message = "Pull request comment trigger is not enabled"
 			return response, nil
 		}
+
 		objectAttributes := event.ObjectAttributes
 		match := false
 		if objectAttributes.Note != "" {
@@ -333,6 +347,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		}
 
 		if match {
+			commitSHA = event.MergeRequest.LastCommit.ID
 			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
@@ -391,4 +406,24 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 
 type webhookResponse struct {
 	Message string `json:"message,omitempty"`
+}
+
+// getGitHubLastCommitID get the github last commit id by specified pull request number.
+func getGitHubLastCommitID(number int, pipeline *api.Pipeline) (string, error) {
+	project, err := projectManager.GetProjectByID(pipeline.ProjectID)
+	if err != nil {
+		return "", err
+	}
+
+	p, err := scm.GetSCMProvider(project.SCM)
+	if err != nil {
+		return "", err
+	}
+
+	sha, err := p.GetPullRequestSHA(pipeline.Build.Stages.CodeCheckout.MainRepo.Github.Url, number)
+	if err != nil {
+		return "", err
+	}
+
+	return sha, nil
 }

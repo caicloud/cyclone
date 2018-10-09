@@ -36,6 +36,7 @@ import (
 type ProjectManager interface {
 	CreateProject(project *api.Project) (*api.Project, error)
 	GetProject(projectName string) (*api.Project, error)
+	GetProjectByID(id string) (*api.Project, error)
 	ListProjects(queryParams api.QueryParams) ([]api.Project, int, error)
 	UpdateProject(projectName string, newProject *api.Project) (*api.Project, error)
 	DeleteProject(projectName string) error
@@ -101,6 +102,20 @@ func (m *projectManager) GetProject(projectName string) (*api.Project, error) {
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, httperror.ErrorContentNotFound.Error(projectName)
+		}
+
+		return nil, err
+	}
+
+	return project, nil
+}
+
+// GetProjectByID gets the project by id.
+func (m *projectManager) GetProjectByID(id string) (*api.Project, error) {
+	project, err := m.dataStore.FindProjectByID(id)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Error(id)
 		}
 
 		return nil, err

@@ -338,9 +338,11 @@ func sendNotification(content *api.NotificationContent) error {
 }
 
 func sendScmStatuses(event *api.Event) error {
-	if event.PipelineRecord.Trigger != api.TriggerWebhookPullRequest {
+	if event.PipelineRecord.Trigger != api.TriggerWebhookPullRequest &&
+		event.PipelineRecord.Trigger != api.TriggerWebhookPullRequestComment {
 		return nil
 	}
+
 	p, err := scm.GetSCMProvider(event.Project.SCM)
 	if err != nil {
 		return err

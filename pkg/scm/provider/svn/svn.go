@@ -127,3 +127,7 @@ func (s *SVN) GetTemplateType(repo string) (string, error) {
 func (g *SVN) CreateStatus(recordStatus api.Status, targetURL, repoURL, statusesURL string) error {
 	return errors.ErrorNotImplemented.Error("create svn status")
 }
+
+func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	return "", errors.ErrorNotImplemented.Error("get pull request sha")
+}

@@ -102,5 +102,9 @@ type MergeRequest struct {
 		RenamedFile bool   `json:"renamed_file"`
 		DeletedFile bool   `json:"deleted_file"`
 	} `json:"changes"`
-	WebURL string `json:"web_url"`
+	WebURL     string `json:"web_url"`
+	LastCommit struct {
+		ID      string `json:"id"`
+		Message string `json:"message"`
+	} `json:"last_commit"`
 }
