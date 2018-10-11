@@ -175,7 +175,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		if match {
 			commitSHA, err = getGitHubLastCommitID(*event.Issue.Number, pipeline)
 			if err != nil {
-				log.Warning("get github pr last commit id failed:", err)
+				log.Error("get github pr last commit id failed:", err)
 				response.Message = "get github pr last commit id failed"
 				return response, nil
 			}
