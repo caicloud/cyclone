@@ -60,7 +60,7 @@ func findAllJUnitXmlFiles(root string) []string {
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		return nil
 	}
-	log.Error("--- root:", root)
+
 	var files []string
 	filepath.Walk(root, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
