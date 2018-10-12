@@ -404,7 +404,7 @@ func (g *Github) GetTemplateType(repo string) (string, error) {
 				return api.GradleRepoType, nil
 			}
 			if language == api.JavaScriptRepoType && strings.Contains(*d.Name, "package.json") {
-				return api.MavenRepoType, nil
+				return api.NodeRepoType, nil
 			}
 		}
 	}
