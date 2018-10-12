@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/google/go-github/github"
 	"github.com/xanzy/go-gitlab"
 
@@ -140,7 +140,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Info("Triggered by Github pull request event")
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
-			log.Infof("Only handle when issues type is pull request")
+			log.Info("Only handle when issues type is pull request")
 			response.Message = "Only handle when issues type is pull request"
 			return response, nil
 		}
@@ -175,7 +175,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		if match {
 			commitSHA, err = getGitHubLastCommitID(*event.Issue.Number, pipeline)
 			if err != nil {
-				log.Error("get github pr last commit id failed:", err)
+				log.Errorf("get github pr last commit id failed: %v", err)
 				response.Message = "get github pr last commit id failed"
 				return response, nil
 			}
@@ -214,7 +214,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			log.Info("Triggered by Github push event")
 		}
 	default:
-		log.Errorf("event type not support.")
+		log.Error("event type not support.")
 
 	}
 
@@ -325,7 +325,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Info("Triggered by Gitlab merge event")
 	case *gitlabuitl.MergeCommentEvent:
 		if event.MergeRequest == nil {
-			log.Infof("Only handle comments on merge request")
+			log.Info("Only handle comments on merge request")
 			response.Message = "Only handle comments on merge request"
 			return response, nil
 		}
@@ -382,7 +382,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			log.Info("Triggered by Gitlab push event")
 		}
 	default:
-		log.Errorf("event type not support.")
+		log.Error("event type not support.")
 	}
 
 	if performParams != nil {
