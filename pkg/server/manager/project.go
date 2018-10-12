@@ -143,13 +143,8 @@ func (m *projectManager) UpdateProject(projectName string, newProject *api.Proje
 
 	// Update the properties of the project.
 	// TODO (robin) Whether need a method for this merge?
-	if len(newProject.Alias) > 0 {
-		project.Alias = newProject.Alias
-	}
-
-	if len(newProject.Description) > 0 {
-		project.Description = newProject.Description
-	}
+	project.Alias = newProject.Alias
+	project.Description = newProject.Description
 
 	if len(newProject.Owner) > 0 {
 		project.Owner = newProject.Owner

@@ -329,13 +329,8 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 
 	// Update the properties of the pipeline.
 	// TODO (robin) Whether need a method for this merge?
-	if len(newPipeline.Alias) > 0 {
-		pipeline.Alias = newPipeline.Alias
-	}
-
-	if len(newPipeline.Description) > 0 {
-		pipeline.Description = newPipeline.Description
-	}
+	pipeline.Alias = newPipeline.Alias
+	pipeline.Description = newPipeline.Description
 
 	if len(newPipeline.Owner) > 0 {
 		pipeline.Owner = newPipeline.Owner
@@ -346,7 +341,6 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	}
 
 	pipeline.Notification = newPipeline.Notification
-
 	pipeline.Annotations = newPipeline.Annotations
 
 	if err = m.dataStore.UpdatePipeline(pipeline); err != nil {
