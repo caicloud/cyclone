@@ -61,7 +61,10 @@ _config:
       - name: RECORD_WEB_URL_TEMPLATE
         value: '[[ compassWebEndpoint ]]/devops/pipeline/{{.Pipeline.Name}}/record/{{.PipelineRecord.ID}}?workspace={{.Project.Name}}&tenant={{index .Pipeline.Annotations "tenant"}}'
       - name: CALLBACK_URL
-        value: '[[ hodorEndpoint ]]/apis/admin.devops.caicloud.io/v1/pipelines'
+        from:
+          type: Config
+          name: platform-config
+          key: "devopsWebhookURL"
       image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
       imagePullPolicy: IfNotPresent
       mounts:
