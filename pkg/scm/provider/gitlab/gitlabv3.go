@@ -26,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/scm/provider"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // GitlabV3 represents the SCM provider of GitlabV3 with API V3.
@@ -233,4 +234,8 @@ func (g *GitlabV3) CreateStatus(recordStatus api.Status, targetURL, repoURL, com
 	_, _, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, status)
 	log.Error(err)
 	return nil
+}
+
+func (g *GitlabV3) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	return "", errors.ErrorNotImplemented.Error("get pull request sha")
 }

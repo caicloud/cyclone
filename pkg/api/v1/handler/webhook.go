@@ -23,11 +23,12 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/google/go-github/github"
 	"github.com/xanzy/go-gitlab"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/scm"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	gitlabuitl "github.com/caicloud/cyclone/pkg/util/gitlab"
 )
@@ -139,7 +140,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Info("Triggered by Github pull request event")
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
-			log.Infof("Only handle when issues type is pull request")
+			log.Info("Only handle when issues type is pull request")
 			response.Message = "Only handle when issues type is pull request"
 			return response, nil
 		}
@@ -147,6 +148,11 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		// Only handle when the pull request comments are created.
 		if *event.Action != "created" {
 			response.Message = "Only handle when pull request comment is created"
+			return response, nil
+		}
+
+		if *event.Issue.State != "open" {
+			response.Message = "Only handle open pull request comment"
 			return response, nil
 		}
 
@@ -167,6 +173,13 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		}
 
 		if match {
+			commitSHA, err = getGitHubLastCommitID(*event.Issue.Number, pipeline)
+			if err != nil {
+				log.Errorf("get github pr last commit id failed: %v", err)
+				response.Message = "get github pr last commit id failed"
+				return response, nil
+			}
+
 			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(githubPullRefTemplate, *event.Issue.Number),
@@ -201,7 +214,7 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			log.Info("Triggered by Github push event")
 		}
 	default:
-		log.Errorf("event type not support.")
+		log.Error("event type not support.")
 
 	}
 
@@ -312,7 +325,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Info("Triggered by Gitlab merge event")
 	case *gitlabuitl.MergeCommentEvent:
 		if event.MergeRequest == nil {
-			log.Infof("Only handle comments on merge request")
+			log.Info("Only handle comments on merge request")
 			response.Message = "Only handle comments on merge request"
 			return response, nil
 		}
@@ -321,6 +334,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			response.Message = "Pull request comment trigger is not enabled"
 			return response, nil
 		}
+
 		objectAttributes := event.ObjectAttributes
 		match := false
 		if objectAttributes.Note != "" {
@@ -333,6 +347,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		}
 
 		if match {
+			commitSHA = event.MergeRequest.LastCommit.ID
 			trigger = api.TriggerWebhookPullRequestComment
 			performParams = &api.PipelinePerformParams{
 				Ref:         fmt.Sprintf(gitlabMergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
@@ -367,7 +382,7 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 			log.Info("Triggered by Gitlab push event")
 		}
 	default:
-		log.Errorf("event type not support.")
+		log.Error("event type not support.")
 	}
 
 	if performParams != nil {
@@ -391,4 +406,24 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 
 type webhookResponse struct {
 	Message string `json:"message,omitempty"`
+}
+
+// getGitHubLastCommitID get the github last commit id by specified pull request number.
+func getGitHubLastCommitID(number int, pipeline *api.Pipeline) (string, error) {
+	project, err := projectManager.GetProjectByID(pipeline.ProjectID)
+	if err != nil {
+		return "", err
+	}
+
+	p, err := scm.GetSCMProvider(project.SCM)
+	if err != nil {
+		return "", err
+	}
+
+	sha, err := p.GetPullRequestSHA(pipeline.Build.Stages.CodeCheckout.MainRepo.Github.Url, number)
+	if err != nil {
+		return "", err
+	}
+
+	return sha, nil
 }
