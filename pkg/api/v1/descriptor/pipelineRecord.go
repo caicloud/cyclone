@@ -109,6 +109,7 @@ var records = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
+				Produces:    []string{definition.MIMEText},
 				Function:    handler.GetPipelineRecordLogs,
 				Description: "Get the pipeline record log",
 				Parameters: []definition.Parameter{
