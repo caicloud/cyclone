@@ -48,6 +48,12 @@ Cyclone 主要致力于将代码从本地开发环境用任意容器引擎封装
 
 详见[功能介绍](./docs/functions_zh-CN.md)。
 
+## 沟通交流
+
+欢迎通过以下方式联系我们讨论 cyclone 相关问题：
+- Slack: caicloud-cyclone.slack.com, 可以使用[链接](https://caicloud-cyclone.slack.com/join/signup)注册登录。
+- Email: zhujian@caicloud.io
+
 ## Roadmap
 
 请到 [Github milestones](https://github.com/caicloud/cyclone/milestones) 查阅我们今后的计划。
