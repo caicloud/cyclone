@@ -141,6 +141,13 @@ push: container
 	  done                                                                             \
 	done
 
+gen: clean-generated
+	bash tools/generator/autogenerate.sh
+
 .PHONY: clean
 clean:
 	-rm -vrf ${OUTPUT_DIR}
+clean-generated:
+	-rm -rf ./pkg/k8s/informers
+	-rm -rf ./pkg/k8s/clientset
+	-rm -rf ./pkg/k8s/listers
