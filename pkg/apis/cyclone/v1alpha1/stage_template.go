@@ -30,7 +30,7 @@ type Inputs struct {
 	// Resources used as input
 	Resources []ResourceItem `json:"resource,omitempty"`
 	// Parameters used as input
-	Arguments []ArgumentItem `json:"arguments,omitempty"`
+	Arguments []ArgumentValue `json:"arguments,omitempty"`
 }
 
 // Outputs defines stage output.
@@ -50,7 +50,7 @@ type StatusRef struct {
 // CRDSpec defines CRD workload specification.
 type CRDSpec struct {
 	// Specification of the CRD
-	YML string `json:"yaml"`
+	Manifest string `json:"manifest"`
 	// How to judge CRD workload is completed
 	StatusRef StatusRef `json:"statusRef"`
 }
@@ -79,5 +79,14 @@ type StageTemplateSpec struct {
 	// Pod kind workload
 	Pod PodWorkload `json:"pod,omitempty"`
 	// CRD kind workload
-	CRD CRDWorkload `json:"crd:omitempty"`
+	CRD CRDWorkload `json:"crd,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// StageTemplateList describes an array of StageTemplate instances.
+type StageTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []StageTemplate `json:"items""`
 }

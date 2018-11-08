@@ -18,7 +18,7 @@ type Workflow struct {
 
 // WorkflowSpec defines workflow specification.
 type WorkflowSpec struct {
-	Stages StageItem `json:"stageItem"`
+	Stages []StageItem `json:"stages"`
 }
 
 // StageItem describes a stage in a workflow.
@@ -27,4 +27,13 @@ type StageItem struct {
 	Name string `json:"name"`
 	// Stages that this stage depends on
 	Depends []string `json:"depends"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// WorkflowList describes an array of Workflow instances.
+type WorkflowList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []Workflow `json:"items""`
 }
