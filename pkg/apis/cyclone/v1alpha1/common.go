@@ -18,3 +18,9 @@ type ParameterItem struct {
 
 // ArgumentValue defines a argument value
 type ArgumentItem ParameterItem
+
+// KeyValue defines a key-value pair
+type KeyValue struct {
+	Key   string `json:"key"`
+	Value string `json:"key"`
+}

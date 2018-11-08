@@ -28,3 +28,10 @@ type StageItem struct {
 	// Stages that this stage depends on
 	Depends []string `json:"depends"`
 }
+
+// WorkflowList describes an array of Workflow instances.
+type WorkflowList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []Workflow `json:"items""`
+}

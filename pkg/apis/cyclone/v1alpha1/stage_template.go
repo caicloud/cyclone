@@ -50,7 +50,7 @@ type StatusRef struct {
 // CRDSpec defines CRD workload specification.
 type CRDSpec struct {
 	// Specification of the CRD
-	YML string `json:"yaml"`
+	Manifest string `json:"manifest"`
 	// How to judge CRD workload is completed
 	StatusRef StatusRef `json:"statusRef"`
 }
@@ -79,5 +79,12 @@ type StageTemplateSpec struct {
 	// Pod kind workload
 	Pod PodWorkload `json:"pod,omitempty"`
 	// CRD kind workload
-	CRD CRDWorkload `json:"crd:omitempty"`
+	CRD CRDWorkload `json:"crd,omitempty"`
+}
+
+// StageTemplateList describes an array of StageTemplate instances.
+type StageTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []StageTemplate `json:"items""`
 }

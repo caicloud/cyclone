@@ -15,7 +15,7 @@ import (
 
 type CycloneV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	ResourcesGetter
+	CycloneResourcesGetter
 	StagesGetter
 	StageTemplatesGetter
 	WorkflowsGetter
@@ -29,8 +29,8 @@ type CycloneV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *CycloneV1alpha1Client) Resources(namespace string) ResourceInterface {
-	return newResources(c, namespace)
+func (c *CycloneV1alpha1Client) CycloneResources(namespace string) CycloneResourceInterface {
+	return newCycloneResources(c, namespace)
 }
 
 func (c *CycloneV1alpha1Client) Stages(namespace string) StageInterface {

@@ -6,13 +6,13 @@ Copyright 2018 caicloud authors. All rights reserved.
 
 package v1alpha1
 
-// ResourceListerExpansion allows custom methods to be added to
-// ResourceLister.
-type ResourceListerExpansion interface{}
+// CycloneResourceListerExpansion allows custom methods to be added to
+// CycloneResourceLister.
+type CycloneResourceListerExpansion interface{}
 
-// ResourceNamespaceListerExpansion allows custom methods to be added to
-// ResourceNamespaceLister.
-type ResourceNamespaceListerExpansion interface{}
+// CycloneResourceNamespaceListerExpansion allows custom methods to be added to
+// CycloneResourceNamespaceLister.
+type CycloneResourceNamespaceListerExpansion interface{}
 
 // StageListerExpansion allows custom methods to be added to
 // StageLister.

@@ -12,8 +12,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// Resources returns a ResourceInformer.
-	Resources() ResourceInformer
+	// CycloneResources returns a CycloneResourceInformer.
+	CycloneResources() CycloneResourceInformer
 	// Stages returns a StageInformer.
 	Stages() StageInformer
 	// StageTemplates returns a StageTemplateInformer.
@@ -39,9 +39,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// Resources returns a ResourceInformer.
-func (v *version) Resources() ResourceInformer {
-	return &resourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// CycloneResources returns a CycloneResourceInformer.
+func (v *version) CycloneResources() CycloneResourceInformer {
+	return &cycloneResourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Stages returns a StageInformer.

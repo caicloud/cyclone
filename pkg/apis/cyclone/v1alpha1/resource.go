@@ -7,7 +7,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Resource represents a resource used in workflow
-type Resource struct {
+type CycloneResource struct {
 	// Metadata for the resource, like kind and apiversion
 	metav1.TypeMeta `json:",inline"`
 	// Metadata for the particular object, including name, namespace, labels, etc
@@ -31,7 +31,10 @@ const (
 type ResourcePullPolicy string
 
 const (
-	PullAlways     = "Always"
+	// Always pull resource. Old data would be removed if exist.
+	PullAlways = "Always"
+	// If old data exists, take advantage of it when pull resource,
+	// incremental pull is performed.
 	PullIfNotExist = "IfNotExist"
 )
 
@@ -47,4 +50,11 @@ type ResourceSpec struct {
 	PullPolicy ResourcePullPolicy `json:"pullPolicy"`
 	// Parameters of the resource
 	Parameters []ParameterItem `json:"parameters"`
+}
+
+// CargoList describes an array of CycloneResource instances.
+type CycloneResourceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []CycloneResource `json:"items""`
 }
