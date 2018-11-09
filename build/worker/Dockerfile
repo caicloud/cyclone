@@ -1,4 +1,5 @@
-FROM docker:17.03.1-ce-dind
+FROM docker:18.03.1-ce-dind
+
 
 RUN apk add --no-cache git subversion ca-certificates tzdata && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
