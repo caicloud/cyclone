@@ -70,21 +70,6 @@ func (s *SVN) ListTags(repo string) ([]string, error) {
 }
 
 func (s *SVN) CheckToken() bool {
-	//username, password, err := s.spilitToken(scm.Token)
-	//if err != nil {
-	//	return false
-	//}
-	//fmt.Println(username)
-	//fmt.Println(password)
-	//
-	//url := scm.Server
-	//args := []string{"list", "--username", username, "--password", password,
-	//	"--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache", url}
-	//_, err = executil.RunInDir("./", "svn", args...)
-	//if err != nil {
-	//	log.Errorf("Error when list repos as : %v", err)
-	//	return false
-	//}
 	return true
 }
 
@@ -130,4 +115,46 @@ func (g *SVN) CreateStatus(recordStatus api.Status, targetURL, repoURL, statuses
 
 func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return "", errors.ErrorNotImplemented.Error("get pull request sha")
+}
+
+// RetrieveRepoInfo retrive svn repository uuid/root-url by command:
+//
+// 'svn info --show-item repos-uuid(or repos-root-url) --username {user} --password {password}
+// --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+// --no-auth-cache {remote-svn-address}'
+func (s *SVN) RetrieveRepoInfo() (*api.RepoInfo, error) {
+	repoInfo := &api.RepoInfo{}
+	username, password, err := s.spilitToken(s.scmCfg.Token)
+	if err != nil {
+		return repoInfo, errors.ErrorUnknownInternal.Error("get svn credential failed")
+	}
+
+	url := s.scmCfg.Server
+
+	repoInfo.ID, err = retrieveSVNRepoInfo(url, username, password, "repos-uuid")
+	if err != nil {
+		return repoInfo, err
+	}
+
+	repoInfo.RootURL, err = retrieveSVNRepoInfo(url, username, password, "repos-root-url")
+	if err != nil {
+		return repoInfo, err
+	}
+
+	return repoInfo, nil
+}
+
+func retrieveSVNRepoInfo(url, username, password, item string) (string, error) {
+
+	args := []string{"info", "--show-item", item, "--username", username, "--password", password, "--non-interactive",
+		"--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url}
+
+	output, err := executil.RunInDir("./", "svn", args...)
+	log.Infof("Command output: %+v", string(output))
+	if err != nil {
+		log.Errorf("Error when retrive repo %s as : %v", item, err)
+		return strings.TrimSpace(string(output)), errors.ErrorUnknownInternal.Error(err)
+	}
+
+	return strings.TrimSpace(string(output)), nil
 }
