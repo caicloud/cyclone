@@ -304,6 +304,7 @@ type AutoTrigger struct {
 
 // SCMTrigger represents the auto trigger strategy from SCM.
 type SCMTrigger struct {
+	PostCommit         *PostCommitTrigger         `bson:"postCommit,omitempty" json:"postCommit,omitempty" description:"post commit trigger strategy"`
 	Push               *PushTrigger               `bson:"push,omitempty" json:"push,omitempty" description:"push trigger strategy"`
 	TagRelease         *TagReleaseTrigger         `bson:"tagRelease,omitempty" json:"tagRelease,omitempty" description:"commit trigger strategy"`
 	PullRequest        *PullRequestTrigger        `bson:"pullRequest,omitempty" json:"pullRequest,omitempty" description:"pull request trigger strategy"`
@@ -337,6 +338,32 @@ type PullRequestCommentTrigger struct {
 type PushTrigger struct {
 	GeneralTrigger `bson:",inline"`
 	Branches       []string `bson:"branches" json:"branches" description:"branches with new commit to trigger"`
+}
+
+// PostCommitTrigger represents the SCM auto trigger from SVN post_commit.
+type PostCommitTrigger struct {
+	GeneralTrigger `bson:",inline"`
+
+	RepoInfo *RepoInfo `bson:"repoInfo" json:"repoInfo" description:"svn repository information"`
+}
+
+// RepoInfo contains svn repository information, id and root-url.
+type RepoInfo struct {
+	// ID represents SVN repository UUID, this ID is retrieved by cyclone-server by
+	//
+	// 'svn info --show-item repos-uuid --username {user} --password {password} --non-interactive
+	// --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+	// --no-auth-cache {remote-svn-address}'
+	//
+	ID string `bson:"id" json:"id" description:"svn repository UUID"`
+
+	// RootURL represents SVN repository root url, this root is retrieved by cyclone-server by
+	//
+	// 'svn info --show-item repos-root-url --username {user} --password {password} --non-interactive
+	// --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+	// --no-auth-cache {remote-svn-address}'
+	//
+	RootURL string `bson:"rootURL" json:"rootURL" description:"svn repository root url"`
 }
 
 // TagReleaseTrigger represents the SCM auto trigger from tag release.
@@ -701,6 +728,12 @@ const (
 	TriggerSCM  string = "webhook"
 	TriggerCron string = "timer"
 
+	// Fixme, this is a litter tricky.
+	// SVNPostCommitRefPrefix is a flag used by svn code checkout;
+	// If 'ref' with this prefix, we will checkout code frome a specific revision,
+	// otherwise, apped ref to clone url, then do checkout.
+	SVNPostCommitRefPrefix           string = "hook-post-commit-"
+	TriggerSVNHookPostCommit         string = "hook-post-commit"
 	TriggerWebhookPush               string = "webhook-push"
 	TriggerWebhookTagRelease         string = "webhook-tag-release"
 	TriggerWebhookPullRequest        string = "webhook-pull-request"

@@ -145,6 +145,7 @@
 | --- | --- | --- |
 | Create | POST `/api/v1/pipelines/{pipelineid}/githubwebhook` | WIP, [link](#github-webhook) |
 | Create | POST `/api/v1/pipelines/{pipelineid}/gitlabwebhook` | WIP, [link](#gitlab-webhook) |
+| Create | POST `/api/v1/subversion/{svnrepoid}/postcommithook` | [link](#svn-hooks) |
 
 ### Stats API
 
@@ -457,6 +458,9 @@ Success:
                 "stages": ["string", ...],
                 "comments": ["string", ...]
             },
+            "postCommit":{
+                "stages": ["string", ...]
+            }
         }
     }, 
     "build": {
@@ -1286,6 +1290,39 @@ X-GitHub-Event: Push Hook|Tag Push Hook|Merge Request Hook
 Body:
 
 Refer to: https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
+
+**Response**
+
+Success:
+
+```
+200 OK
+```
+
+### SVN hooks
+
+Trigger pipeline by SVN post-commit hooks.
+
+**Request**
+
+URL: `POST /api/v1/subversion/{svnrepoid}/postcommithook`
+
+Header:
+```
+Content-Type:text/plain;charset=UTF-8
+```
+
+Query:
+```
+revision: 27 // {revision-id}
+```
+
+Body:
+Output of `svnlook changed --revision $REV $REPOS`, for example:
+```
+U   cyclone/test.go
+U   cyclone/README.md
+```
 
 **Response**
 

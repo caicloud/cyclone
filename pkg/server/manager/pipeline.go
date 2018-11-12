@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -48,6 +48,7 @@ type PipelineManager interface {
 	DeletePipeline(projectName string, pipelineName string) error
 	ClearPipelinesOfProject(projectName string) error
 	GetStatistics(projectName, pipelineName string, start, end time.Time) (*api.PipelineStatusStats, error)
+	FindSVNHooksPipelines(repoid string) ([]api.Pipeline, error)
 }
 
 // pipelineManager represents the manager for pipeline.
@@ -120,29 +121,41 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 			return nil, err
 		}
 
-		pipeline.ID = bson.NewObjectId().Hex()
-		webHook = &scm.WebHook{
-			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
-			Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
-		}
-		if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
-			logdog.Errorf("create webhook failed: %v", err)
-			scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
-			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
-				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
+		if scmConfig.Type == api.SVN && pipeline.AutoTrigger.SCMTrigger.PostCommit != nil {
+			// SVN post commit hooks
+			repoInfo, err := provider.RetrieveRepoInfo()
+			if err != nil {
+				return nil, err
 			}
 
-			return nil, err
+			pipeline.AutoTrigger.SCMTrigger.PostCommit.RepoInfo = repoInfo
+		} else {
+			// GitHub and GitLab webhook
+			pipeline.ID = bson.NewObjectId().Hex()
+			webHook = &scm.WebHook{
+				Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
+				Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
+			}
+			if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
+				logdog.Errorf("create webhook failed: %v", err)
+				scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
+				if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
+					(scmType == api.Github && strings.Contains(err.Error(), "404")) {
+					return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
+				}
+
+				return nil, err
+			}
+			pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
 		}
-		pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
+
 	}
 
 	// Remove the webhook if there is error.
 	defer func() {
 		if err != nil && gitSource != nil && webHook != nil {
 			if err = provider.DeleteWebHook(gitSource.Url, webHook.Url); err != nil {
-				logdog.Errorf("Fail to delete the pipeline %s", pipeline.Name)
+				logdog.Errorf("Fail to delete the webhook %s", pipeline.Name)
 			}
 		}
 	}()
@@ -192,6 +205,20 @@ func (m *pipelineManager) GetPipelineByID(id string) (*api.Pipeline, error) {
 	}
 
 	return pipeline, nil
+}
+
+// FindSVNHooksPipelines finds the pipeline configured svn hooks.
+func (m *pipelineManager) FindSVNHooksPipelines(repoid string) ([]api.Pipeline, error) {
+	pipelines, _, err := m.dataStore.FindSVNHooksPipelines(repoid)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, httperror.ErrorContentNotFound.Error(fmt.Sprintf("pipeline with svn repo id %s", repoid))
+		}
+
+		return nil, err
+	}
+
+	return pipelines, nil
 }
 
 // ListPipelines lists all pipelines in one project.

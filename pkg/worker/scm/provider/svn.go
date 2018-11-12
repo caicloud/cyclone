@@ -52,15 +52,27 @@ func (s *Svn) spilitToken(token string) (string, string, error) {
 func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 	log.Infof("About to svn checkout repository, url: %s, dest path: %s, ref: %s", url, destPath, ref)
 
-	url = strings.TrimSuffix(url, "/") + "/" + ref
+	var revision string
+	if strings.HasPrefix(ref, api.SVNPostCommitRefPrefix) {
+		revision = strings.TrimPrefix(ref, api.SVNPostCommitRefPrefix)
+	} else {
+		url = strings.TrimSuffix(url, "/") + "/" + ref
+	}
 
 	username, password, err := s.spilitToken(token)
 	if err != nil {
 		return "", err
 	}
 
-	args := []string{"checkout", "--username", username, "--password", password,
-		"--non-interactive", "--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url, destPath}
+	var args []string
+	if revision == "" {
+		args = []string{"checkout", "--username", username, "--password", password,
+			"--non-interactive", "--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url, destPath}
+	} else {
+		args = []string{"checkout", "--username", username, "--password", password, "--revision", revision,
+			"--non-interactive", "--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url, destPath}
+	}
+
 	output, err := executil.RunInDir("./", "svn", args...)
 	if err != nil {
 		log.Errorf("fail to clone as %v", err)
