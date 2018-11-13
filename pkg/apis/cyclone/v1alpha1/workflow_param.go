@@ -23,3 +23,12 @@ type WorkflowParamSpec struct {
 	// Cluster where the workflow will run on
 	Cluster string `json:"cluster"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// WorkflowParamList describes an array of WorkflowParam instances.
+type WorkflowParamList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []WorkflowParam `json:"items""`
+}

@@ -12,19 +12,19 @@ type Stage struct {
 	metav1.TypeMeta `json:",inline"`
 	// Metadata for the particular object, including name, namespace, labels, etc
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Stage specification without using template
+	// Stage specification
 	Spec StageSpec `json:"spec,omitempty"`
-	// Use stage template
-	Template TemplateRef `json:"template,omitempty"`
 }
 
 // StageSpec defines stage specification.
 // Exact one workload should be specified.
 type StageSpec struct {
+	// Use stage template
+	Template TemplateRef `json:"template,omitempty"`
 	// Pod kind workload
 	Pod PodWorkload `json:"pod,omitempty"`
 	// CRD kind workload
-	CRD CRDWorkload `json:"crd:omitempty"`
+	CRD CRDWorkload `json:"crd,omitempty"`
 }
 
 // TemplateRef refers to a stage template and defines necessary arguments.
@@ -32,5 +32,14 @@ type TemplateRef struct {
 	// Template name
 	Name string `json:"name"`
 	// Arguments passed to the template
-	Arguments []ArgumentItem `json:"arguments"`
+	Arguments []ArgumentValue `json:"arguments"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// StageList describes an array of Stage instances.
+type StageList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []Stage `json:"items""`
 }
