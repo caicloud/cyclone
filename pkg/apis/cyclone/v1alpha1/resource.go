@@ -31,7 +31,10 @@ const (
 type ResourcePullPolicy string
 
 const (
-	PullAlways     = "Always"
+	// Always pull resource. Old data would be removed if exist.
+	PullAlways = "Always"
+	// If old data exists, take advantage of it when pull resource,
+	// incremental pull is performed.
 	PullIfNotExist = "IfNotExist"
 )
 
@@ -47,4 +50,13 @@ type ResourceSpec struct {
 	PullPolicy ResourcePullPolicy `json:"pullPolicy"`
 	// Parameters of the resource
 	Parameters []ParameterItem `json:"parameters"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ResourceList describes an array of Resource instances.
+type ResourceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []Resource `json:"items""`
 }
