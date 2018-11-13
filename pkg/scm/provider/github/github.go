@@ -30,6 +30,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/scm/provider"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 func init() {
@@ -479,4 +480,8 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	}
 
 	return *pr.Head.SHA, nil
+}
+
+func (g *Github) RetrieveRepoInfo() (*api.RepoInfo, error) {
+	return nil, errors.ErrorNotImplemented.Error("retrive GitHub repo id")
 }

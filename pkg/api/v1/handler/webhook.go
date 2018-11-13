@@ -31,6 +31,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	gitlabuitl "github.com/caicloud/cyclone/pkg/util/gitlab"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 const (
@@ -426,4 +427,96 @@ func getGitHubLastCommitID(number int, pipeline *api.Pipeline) (string, error) {
 	}
 
 	return sha, nil
+}
+
+// HandleSVNHooks handles SVN post_commit hooks.
+// 1. Find svn pipelines with the repoid;
+// 2. Then filter svn pipelines by file path that this commit contains;
+// 3. Trigger these pipelines
+func HandleSVNHooks(ctx context.Context, repoid, revision string) error {
+	//response := webhookResponse{}
+
+	request := contextutil.GetHttpRequest(ctx)
+	payload, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return errors.ErrorUnknownInternal.Error("Fail to read the request body")
+	}
+
+	pipelines, err := pipelineManager.FindSVNHooksPipelines(repoid)
+	if err != nil {
+		return err
+	}
+
+	files := getSVNChangedFiles(string(payload))
+
+	// Record the id of the pipeline that has been triggered,
+	// prevent from the same pipeline triggered again.
+	triggeredPipelines := map[string]struct{}{}
+	for _, pipeline := range pipelines {
+		url := pipeline.Build.Stages.CodeCheckout.MainRepo.SVN.Url
+		repoinfo := pipeline.AutoTrigger.SCMTrigger.PostCommit.RepoInfo
+
+		if pipeline.AutoTrigger == nil || pipeline.AutoTrigger.SCMTrigger == nil || pipeline.AutoTrigger.SCMTrigger.PostCommit == nil {
+			continue
+		}
+		pc := pipeline.AutoTrigger.SCMTrigger.PostCommit
+
+		for _, file := range files {
+			fullPath := repoinfo.RootURL + "/" + file
+			_, isAlreadyTriggered := triggeredPipelines[pipeline.ID]
+			// Changed file's full path contains pipeline main repo url
+			// and the pipeline has not been triggered
+			if strings.Contains(fullPath, url) && !isAlreadyTriggered {
+				triggeredPipelines[pipeline.ID] = struct{}{}
+				log.Info("SVN hooks triggered pipeline: %s, id: %s", pipeline.Name, pipeline.ID)
+				// Trigger the pipeline
+				errt := triggerSVNPipelines(pc, pipeline, revision)
+				if errt != nil {
+					log.Error("svn hook trigger pipeline failed as %v", errt)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// getSVNChangedFiles gets svn changed file frome message.
+// eg:
+// input message:`
+// U   cyclone/README.txt
+// U   cyclone/test.go
+// `
+// output will be: [cyclone/README.txt, cyclone/test.go]
+func getSVNChangedFiles(message string) []string {
+	fs := []string{}
+	lineinfos := strings.Split(message, "\n")
+	for _, lineinfo := range lineinfos {
+		words := strings.Fields(lineinfo)
+		if len(words) == 2 {
+			fs = append(fs, words[1])
+		}
+
+	}
+
+	return fs
+}
+
+func triggerSVNPipelines(trigger *api.PostCommitTrigger, pipeline api.Pipeline, revision string) error {
+	name := pipeline.Name + "-hook-revision-" + revision
+	pipelineRecord := &api.PipelineRecord{
+		Name:       name,
+		PipelineID: pipeline.ID,
+		PerformParams: &api.PipelinePerformParams{
+			Name:   name,
+			Ref:    api.SVNPostCommitRefPrefix + revision,
+			Stages: trigger.Stages,
+		},
+		Trigger: api.TriggerSVNHookPostCommit,
+	}
+	if _, err := pipelineRecordManager.CreatePipelineRecord(pipelineRecord); err != nil {
+		return err
+	}
+
+	return nil
+
 }

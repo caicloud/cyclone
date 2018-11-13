@@ -239,3 +239,7 @@ func (g *GitlabV3) CreateStatus(recordStatus api.Status, targetURL, repoURL, com
 func (g *GitlabV3) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return "", errors.ErrorNotImplemented.Error("get pull request sha")
 }
+
+func (g *GitlabV3) RetrieveRepoInfo() (*api.RepoInfo, error) {
+	return nil, errors.ErrorNotImplemented.Error("retrive GitLab repo id")
+}

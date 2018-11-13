@@ -101,6 +101,22 @@ func (d *DataStore) FindPipelinesByProjectID(projectID string, queryParams api.Q
 	return pipelines, total, err
 }
 
+// FindSVNHooksPipelines finds the pipelines configured svn hooks.
+func (d *DataStore) FindSVNHooksPipelines(repoid string) ([]api.Pipeline, int, error) {
+	pipelines := []api.Pipeline{}
+	query := d.pipelineCollection.Find(bson.M{"autoTrigger.scmTrigger.postCommit.repoInfo.id": repoid})
+	total, err := query.Count()
+	if err != nil {
+		return pipelines, 0, err
+	}
+
+	if err = query.Sort("-creationTime").All(&pipelines); err != nil {
+		return pipelines, 0, err
+	}
+
+	return pipelines, total, err
+}
+
 // UpdatePipeline updates the pipeline, please make sure the pipeline id is provided before call this method.
 func (d *DataStore) UpdatePipeline(pipeline *api.Pipeline) error {
 	if pipeline.Name == "" && pipeline.Alias != "" {
