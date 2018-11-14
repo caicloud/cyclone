@@ -59,6 +59,7 @@ type SCMProvider interface {
 	DeleteWebHook(repoURL string, webHookUrl string) error
 	CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSha string) error
 	GetPullRequestSHA(repoURL string, number int) (string, error)
+	GetMergeRequestTargetBranch(repoURL string, number int) (string, error)
 	RetrieveRepoInfo() (*api.RepoInfo, error)
 }
 

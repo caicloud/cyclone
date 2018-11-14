@@ -17,10 +17,14 @@ limitations under the License.
 package gitlab
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strings"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	gitlabv3 "github.com/xanzy/go-gitlab"
 
 	"github.com/caicloud/cyclone/pkg/api"
@@ -237,9 +241,69 @@ func (g *GitlabV3) CreateStatus(recordStatus api.Status, targetURL, repoURL, com
 }
 
 func (g *GitlabV3) GetPullRequestSHA(repoURL string, number int) (string, error) {
-	return "", errors.ErrorNotImplemented.Error("get pull request sha")
+	owner, name := provider.ParseRepoURL(repoURL)
+	path := fmt.Sprintf("%s/api/%s/projects/%s/merge_requests?iid=%d",
+		strings.TrimSuffix(g.scmCfg.Server, "/"), v3APIVersion, url.QueryEscape(owner+"/"+name), number)
+	req, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if len(g.scmCfg.Username) == 0 {
+		req.Header.Set("PRIVATE-TOKEN", g.scmCfg.Token)
+	} else {
+		req.Header.Set("Authorization", "Bearer "+g.scmCfg.Token)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to get project merge request as %s", err.Error())
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to get project merge request as %s", err.Error())
+		return "", err
+	}
+
+	if resp.StatusCode/100 == 2 {
+		mr := []mergeRequestResponse{}
+		err := json.Unmarshal(body, &mr)
+		if err != nil {
+			return "", err
+		}
+		if len(mr) > 0 {
+			return mr[0].SHA, nil
+		}
+		return "", fmt.Errorf("Merge request %d not found ", number)
+	}
+
+	err = fmt.Errorf("Fail to get merge request %d as %s ", number, body)
+	return "", err
+}
+
+// mergeRequestResponse represents the response of Gitlab merge request API.
+type mergeRequestResponse struct {
+	ID           int    `json:"id"`
+	IID          int    `json:"iid"`
+	TargetBranch string `json:"target_branch"`
+	SHA          string `json:"sha"`
+}
+
+func (g *GitlabV3) GetMergeRequestTargetBranch(repoURL string, number int) (string, error) {
+	owner, name := provider.ParseRepoURL(repoURL)
+	mr, _, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number)
+	if err != nil {
+		return "", err
+	}
+
+	return mr.TargetBranch, nil
 }
 
 func (g *GitlabV3) RetrieveRepoInfo() (*api.RepoInfo, error) {
-	return nil, errors.ErrorNotImplemented.Error("retrive GitLab repo id")
+	return nil, errors.ErrorNotImplemented.Error("retrieve GitLab repo info")
 }

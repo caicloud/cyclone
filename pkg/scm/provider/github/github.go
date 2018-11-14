@@ -482,6 +482,10 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return *pr.Head.SHA, nil
 }
 
+func (g *Github) GetMergeRequestTargetBranch(repoURL string, number int) (string, error) {
+	return "", errors.ErrorNotImplemented.Error("get pull request target branch")
+}
+
 func (g *Github) RetrieveRepoInfo() (*api.RepoInfo, error) {
-	return nil, errors.ErrorNotImplemented.Error("retrive GitHub repo id")
+	return nil, errors.ErrorNotImplemented.Error("retrieve GitHub repo info")
 }

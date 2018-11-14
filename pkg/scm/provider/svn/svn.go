@@ -117,6 +117,10 @@ func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return "", errors.ErrorNotImplemented.Error("get pull request sha")
 }
 
+func (s *SVN) GetMergeRequestTargetBranch(repoURL string, number int) (string, error) {
+	return "", errors.ErrorNotImplemented.Error("get pull request target branch")
+}
+
 // RetrieveRepoInfo retrive svn repository uuid/root-url by command:
 //
 // 'svn info --show-item repos-uuid(or repos-root-url) --username {user} --password {password}

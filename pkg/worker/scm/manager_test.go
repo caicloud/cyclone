@@ -128,7 +128,7 @@ func TestGetRepoNameByURL(t *testing.T) {
 	for d, tc := range testCases {
 		repoName, err := getRepoNameByURL(tc.url)
 		if err != nil {
-			t.Error("%s failed as error Expect error to be nil", err)
+			t.Errorf("%s failed as error Expect error %s to be nil", d, err)
 		}
 		if repoName != tc.pass {
 			t.Errorf("%s failed as error : Expect result %s equals to %s", d, repoName, tc.pass)
@@ -230,71 +230,6 @@ func TestRebuildToken(t *testing.T) {
 		_, err := rebuildToken(tc.input.token, tc.input.codeSource)
 		if err == nil {
 			t.Errorf("Fail to rebuild %s as err %v", d, err)
-		}
-	}
-}
-
-func TestGetURL(t *testing.T) {
-	testCases := map[string]struct {
-		codeSource  *api.CodeSource
-		expectedURL string
-	}{
-		"empty gitlab": {
-			&api.CodeSource{
-				Type:   api.Gitlab,
-				Gitlab: &api.GitSource{},
-			},
-			"",
-		},
-		"gitlab": {
-			&api.CodeSource{
-				Type: api.Gitlab,
-				Gitlab: &api.GitSource{
-					Url: "https://gitlab.com",
-				},
-			},
-			"https://gitlab.com",
-		},
-		"gitlab with github": {
-			&api.CodeSource{
-				Type: api.Gitlab,
-				Gitlab: &api.GitSource{
-					Url: "https://gitlab.com",
-				},
-				Github: &api.GitSource{
-					Url: "https://github.com",
-				},
-			},
-			"https://gitlab.com",
-		},
-		"github": {
-			&api.CodeSource{
-				Type: api.Github,
-				Github: &api.GitSource{
-					Url: "https://github.com",
-				},
-			},
-			"https://github.com",
-		},
-		"svn": {
-			&api.CodeSource{
-				Type: api.SVN,
-				SVN: &api.GitSource{
-					Url: "https://svn.com",
-				},
-			},
-			"https://svn.com",
-		},
-	}
-
-	for d, tc := range testCases {
-		result, err := getURL(tc.codeSource)
-		if err != nil {
-			t.Errorf("Fail to get URL from %s as %v", d, err)
-		}
-
-		if result != tc.expectedURL {
-			t.Errorf("Fail to get URL from %s: expect %s, but got %s", d, tc.expectedURL, result)
 		}
 	}
 }
