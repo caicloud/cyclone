@@ -1,10 +1,6 @@
 [[constraint]]
-  name = "github.com/Sirupsen/logrus"
-  version = "1.0.5"
-
-[[constraint]]
-  name = "github.com/golang/glog"
-  revision = "44145f04b68cf362d9c4df2182967c2275eaefed"
+  name = "github.com/sirupsen/logrus"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/google/go-github"

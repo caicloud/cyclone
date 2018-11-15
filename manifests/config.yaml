@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-config
+  namespace: default
+data:
+  workflow-controller.json: |
+    {
+      "logging": {
+        "level": "debug"
+      }
+    }
