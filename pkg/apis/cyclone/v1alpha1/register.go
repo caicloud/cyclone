@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"github.com/caicloud/cyclone/pkg/common/crd/apis/cyclone/v1alpha1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,7 +25,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&WorkflowRun{},
 		&StageTemplate{},
 		&Stage{},
-		&WorkflowRun{},
+		&WorkflowParam{},
 		&WorkflowTrigger{},
 	)
 	// Add the watch version that applies

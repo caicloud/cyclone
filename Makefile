@@ -26,30 +26,30 @@
 #
 
 # Current version of the project.
-VERSION ?= v0.4.0
+VERSION ?= v1.0.0-alpha
 
 # This repo's root import path (under GOPATH).
 ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
-TARGETS := server worker
+TARGETS := workflow/controller
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
 #   $[REGISTRY]/$[IMAGE_PREFIX]$[TARGET]$[IMAGE_SUFFIX]:$[VERSION]
 # $[REGISTRY] is an item from $[REGISTRIES], $[TARGET] is an item from $[TARGETS].
-IMAGE_PREFIX ?= $(strip cyclone-)
+IMAGE_PREFIX ?= $(strip )
 IMAGE_SUFFIX ?= $(strip )
 
 # Container registries.
-REGISTRIES ?= cargo.caicloud.io/caicloud
+REGISTRIES ?= docker.io/library
 
 #
 # These variables should not need tweaking.
 #
 
 # A list of all packages.
-PKGS := $(shell go list ./... | grep -v /vendor | grep -v /test | grep -v /notify)
+PKGS := $(shell go list ./... | grep -v /vendor | grep -v /test)
 
 # Project main package location (can be multiple ones).
 CMD_DIR := ./cmd
@@ -106,7 +106,7 @@ build-linux:
 	      -e GOARCH=amd64                                                              \
 	      -e GOPATH=/go                                                                \
 	      -e CGO_ENABLED=0                                                             \
-	        $${registry}/golang:1.9.2-alpine3.6                                        \
+	        $${registry}/golang:1.10-alpine3.8                                         \
 	          go build -i -v -o $(OUTPUT_DIR)/$${target}                               \
 	            -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)              \
 	            -X $(ROOT)/pkg/version.COMMIT=$(COMMIT)                                \
@@ -115,10 +115,10 @@ build-linux:
 	  done                                                                             \
 	done
 
-container: build-linux
+container:
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
-	    image=$(IMAGE_PREFIX)$${target}$(IMAGE_SUFFIX);                                \
+	    image=$(IMAGE_PREFIX)$${target/\//-}$(IMAGE_SUFFIX);                           \
 	    docker build -t $${registry}/$${image}:$(VERSION)                              \
 	      -f $(BUILD_DIR)/$${target}/Dockerfile .;                                     \
 	  done                                                                             \
