@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/configmap"
+	"github.com/caicloud/cyclone/pkg/workflow"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
 
-	"fmt"
 	log "github.com/sirupsen/logrus"
-	api_v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -14,21 +14,21 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-func NewConfigMapController(client clientset.Interface, namespace string, cm string) *Controller {
+func NewPodController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
 	informer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
-				return client.CoreV1().ConfigMaps(namespace).List(options)
+				options.LabelSelector = workflow.PodLabelSelector
+				return client.CoreV1().Pods("").List(options)
 			},
 			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
-				return client.CoreV1().ConfigMaps(namespace).Watch(options)
+				options.LabelSelector = workflow.PodLabelSelector
+				return client.CoreV1().Pods("").Watch(options)
 			},
 		},
-		&api_v1.ConfigMap{},
+		&corev1.Pod{},
 		0,
 		cache.Indexers{},
 	)
@@ -39,11 +39,11 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("new configMap observed")
+			log.WithField("name", key).Debug("new workflow pod observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    CREATE,
-				ResourceType: "cm",
+				ResourceType: "pod",
 				Object:       obj,
 			})
 		},
@@ -52,21 +52,36 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("configMap update observed")
+			log.WithField("name", key).Debug("workflow pod update observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    UPDATE,
-				ResourceType: "cm",
+				ResourceType: "pod",
 				Object:       new,
+			})
+		},
+		DeleteFunc: func(obj interface{}) {
+			key, err := cache.MetaNamespaceKeyFunc(obj)
+			if err != nil {
+				return
+			}
+			log.WithField("name", key).Debug("workflow pod deleted")
+			queue.Add(Event{
+				Key:          key,
+				EventType:    DELETE,
+				ResourceType: "pod",
+				Object:       obj,
 			})
 		},
 	})
 
 	return &Controller{
-		name:         "ConfigMap Controller",
-		clientSet:    client,
-		informer:     informer,
-		queue:        queue,
-		eventHandler: &configmap.Handler{},
+		name:      "Workflow Pod Controller",
+		clientSet: client,
+		informer:  informer,
+		queue:     queue,
+		eventHandler: &pod.Handler{
+			Client: client,
+		},
 	}
 }

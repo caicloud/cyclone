@@ -13,7 +13,6 @@ func InitLogger(logging *LoggingConfig) {
 	switch strings.ToLower(logging.Level) {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
-		log.SetReportCaller(true)
 	case "info":
 		log.SetLevel(log.InfoLevel)
 	case "warn":

@@ -115,7 +115,7 @@ build-linux:
 	  done                                                                             \
 	done
 
-container:
+container: build-linux
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
 	    image=$(IMAGE_PREFIX)$${target/\//-}$(IMAGE_SUFFIX);                           \

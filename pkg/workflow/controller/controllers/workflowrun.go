@@ -65,7 +65,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		informer:  informer,
 		queue:     queue,
 		eventHandler: &workflowrun.Handler{
-			Selectors: []workflowrun.Selector{},
+			Client: client,
 		},
 	}
 }

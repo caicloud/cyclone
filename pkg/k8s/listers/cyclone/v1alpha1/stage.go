@@ -76,7 +76,7 @@ func (s stageNamespaceLister) Get(name string) (*v1alpha1.Stage, error) {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("stage"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("stage"), name)
 	}
 	return obj.(*v1alpha1.Stage), nil
 }

@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/apis/core"
 )
 
 // +genclient
@@ -28,15 +28,19 @@ type Argument struct {
 // Inputs defines stage inputs.
 type Inputs struct {
 	// Resources used as input
-	Resources []ResourceItem `json:"resource,omitempty"`
+	Resources []ResourceItem `json:"resources,omitempty"`
 	// Parameters used as input
 	Arguments []ArgumentValue `json:"arguments,omitempty"`
+	// Artifacts to output
+	Artifacts []ArtifactItem `json:"artifacts,omitempty"`
 }
 
 // Outputs defines stage output.
 type Outputs struct {
 	// Resources used as output
 	Resources []ResourceItem `json:"resource,omitempty"`
+	// Artifacts to output
+	Artifacts []ArtifactItem `json:"artifacts,omitempty"`
 }
 
 // StatusRef defines how to judge CRD status completion.
@@ -62,7 +66,7 @@ type PodWorkload struct {
 	// Stage outputs
 	Outputs Outputs `json:"outputs,omitempty"`
 	// Stage workload specification
-	Spec core.PodSpec `json:"spec"`
+	Spec corev1.PodSpec `json:"spec"`
 }
 
 // CRDWorkload describes crd type workload.
