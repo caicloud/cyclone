@@ -34,6 +34,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
+	regexutil "github.com/caicloud/cyclone/pkg/util/regex"
 )
 
 // maxRetry represents the max number of retry for event when cloud is busy.
@@ -338,8 +339,10 @@ func sendNotification(content *api.NotificationContent) error {
 }
 
 func sendScmStatuses(event *api.Event) error {
-	if event.PipelineRecord.Trigger != api.TriggerWebhookPullRequest &&
-		event.PipelineRecord.Trigger != api.TriggerWebhookPullRequestComment {
+	// If this event is not related to GitHub PR or GitLab MR, will return.
+	_, isGitlabMR := regexutil.GetGitlabMRID(event.PipelineRecord.PerformParams.Ref, false)
+	_, isGithubPR := regexutil.GetGithubPRID(event.PipelineRecord.PerformParams.Ref)
+	if !isGitlabMR && !isGithubPR {
 		return nil
 	}
 

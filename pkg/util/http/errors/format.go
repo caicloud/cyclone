@@ -73,6 +73,10 @@ var (
 	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build("ReasonCreateWebhookPermissionDenied",
 		"failed to create webhook of pipeline ${pipeline}, please check your account permissions.")
 
+	// ErrorPRNotFound defines error that failed getting GitHub/GitLab pr as permission denied or not exist.
+	ErrorPRNotFound = nerror.InternalServerError.Build("ReasonPRNotFound",
+		"failed to get pull request ${id} of project ${project}, please check if it exists.")
+
 	// ErrorUnsupported defines some feature/field not supported yet.
 	ErrorUnsupported = nerror.BadRequest.Build("ReasonUnsupported", "unsupported ${resource}: ${type}")
 	// ErrorNotImplemented defines some feature not implemented yet.

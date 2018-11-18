@@ -193,7 +193,7 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 		return "", err
 	}
 
-	url, err := getURL(codeSource)
+	url, err := api.GetURL(codeSource)
 	if err != nil {
 		return "", err
 	}
@@ -245,17 +245,6 @@ func rebuildToken(token string, codeSource *api.CodeSource) (string, error) {
 	}
 
 	return token, nil
-}
-
-// getURL provide the URL of the code.
-func getURL(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := api.GetGitSource(codeSource)
-	if err != nil {
-		logdog.Errorf(err.Error())
-		return "", err
-	}
-
-	return gitSource.Url, nil
 }
 
 // getRef provide the ref(branch or tag) of the code.

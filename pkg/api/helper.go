@@ -37,3 +37,13 @@ func GetGitSource(codeSource *CodeSource) (*GitSource, error) {
 
 	return gitSource, nil
 }
+
+// GetURL provide the URL of the code.
+func GetURL(codeSource *CodeSource) (string, error) {
+	gitSource, err := GetGitSource(codeSource)
+	if err != nil {
+		return "", err
+	}
+
+	return gitSource.Url, nil
+}

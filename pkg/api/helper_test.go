@@ -79,3 +79,68 @@ func TestGetGitSourceError(t *testing.T) {
 		}
 	}
 }
+
+func TestGetURL(t *testing.T) {
+	testCases := map[string]struct {
+		codeSource  *CodeSource
+		expectedURL string
+	}{
+		"empty gitlab": {
+			&CodeSource{
+				Type:   Gitlab,
+				Gitlab: &GitSource{},
+			},
+			"",
+		},
+		"gitlab": {
+			&CodeSource{
+				Type: Gitlab,
+				Gitlab: &GitSource{
+					Url: "https://gitlab.com",
+				},
+			},
+			"https://gitlab.com",
+		},
+		"gitlab with github": {
+			&CodeSource{
+				Type: Gitlab,
+				Gitlab: &GitSource{
+					Url: "https://gitlab.com",
+				},
+				Github: &GitSource{
+					Url: "https://github.com",
+				},
+			},
+			"https://gitlab.com",
+		},
+		"github": {
+			&CodeSource{
+				Type: Github,
+				Github: &GitSource{
+					Url: "https://github.com",
+				},
+			},
+			"https://github.com",
+		},
+		"svn": {
+			&CodeSource{
+				Type: SVN,
+				SVN: &GitSource{
+					Url: "https://svn.com",
+				},
+			},
+			"https://svn.com",
+		},
+	}
+
+	for d, tc := range testCases {
+		result, err := GetURL(tc.codeSource)
+		if err != nil {
+			t.Errorf("Fail to get URL from %s as %v", d, err)
+		}
+
+		if result != tc.expectedURL {
+			t.Errorf("Fail to get URL from %s: expect %s, but got %s", d, tc.expectedURL, result)
+		}
+	}
+}
