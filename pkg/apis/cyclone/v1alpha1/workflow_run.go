@@ -29,6 +29,8 @@ type WorkflowRunSpec struct {
 	StartStages []string `json:"startStages"`
 	// Stages in the workflow to end execution
 	EndStages []string `json:"endStages"`
+	// Maximum time this workflow should run
+	Timeout string `json:"timeout"`
 	// ServiceAccount used in the workflow execution
 	ServiceAccount string `json:"serviceAccount"`
 	// Resource parameters
@@ -55,6 +57,8 @@ type WorkflowRunStatus struct {
 
 // StageStatus describes status of a stage execution.
 type StageStatus struct {
+	// Information of the pod
+	Pod *PodInfo `json:"pod"`
 	// Conditions of a stage
 	Status Status `json:"status"`
 	// Key-value outputs of this stage
@@ -67,6 +71,12 @@ const (
 	StatusCompleted = "Completed"
 	StatusError     = "Error"
 )
+
+// PodInfo describes the pod a stage created.
+type PodInfo struct {
+	Name string `json:"name"`
+	Namespace string `json:"namespace"`
+}
 
 // Status of a Stage in a WorkflowRun or the whole WorkflowRun.
 // +k8s:deepcopy-gen=true

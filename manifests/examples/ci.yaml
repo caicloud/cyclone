@@ -89,6 +89,7 @@ spec:
   workflowRef:
     kind: workflow.cyclone.io
     name: ci-workflow
+  timeout: 300s
   stages:
   - name: unit-test-stage
     parameters:

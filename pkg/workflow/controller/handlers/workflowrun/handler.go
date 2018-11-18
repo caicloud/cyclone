@@ -11,27 +11,35 @@ import (
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
 	Client clientset.Interface
+	TimeoutManager *TimeoutManager
+	Operator *Operator
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
 func (h *Handler) ObjectCreated(obj interface{}) {
-	// TODO(ChenDe): Handle timeout and GC.
+	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+	if !ok {
+		log.Warning("unknown resource type")
+		return
+	}
+	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
 
-	h.process(obj)
+	// Add this WorkflowRun to timeout manager, so that it would be cleaned up when time exipred.
+	h.TimeoutManager.Add(originWfr)
+
+	// If the WorkflowRun has already been finished, skip it.
+	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||
+		originWfr.Status.Overall.Status == v1alpha1.StatusError {
+		return
+	}
+
+	wfr := originWfr.DeepCopy()
+	h.Operator.Reconcile(wfr)
 }
 
 func (h *Handler) ObjectUpdated(obj interface{}) {
-	h.process(obj)
-}
-
-func (h *Handler) ObjectDeleted(obj interface{}) {
-	// TODO(ChenDe)
-	return
-}
-
-func (h *Handler) process(obj interface{}) {
 	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
 	if !ok {
 		log.Warning("unknown resource type")
@@ -46,6 +54,9 @@ func (h *Handler) process(obj interface{}) {
 	}
 
 	wfr := originWfr.DeepCopy()
-	operator := NewOperator(h.Client)
-	operator.Reconcile(wfr)
+	h.Operator.Reconcile(wfr)
+}
+
+func (h *Handler) ObjectDeleted(obj interface{}) {
+	return
 }

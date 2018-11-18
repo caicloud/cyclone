@@ -5,7 +5,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 
-	log "github.com/sirupsen/logrus"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -36,7 +35,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("new WorkflowRun observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    CREATE,
@@ -49,7 +47,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("WorkflowRun update observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    UPDATE,
@@ -59,6 +56,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		},
 	})
 
+	operator := workflowrun.NewOperator(client)
 	return &Controller{
 		name:      "WorkflowRun Controller",
 		clientSet: client,
@@ -66,6 +64,8 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		queue:     queue,
 		eventHandler: &workflowrun.Handler{
 			Client: client,
+			TimeoutManager: workflowrun.NewTimeoutManager(client, operator),
+			Operator: operator,
 		},
 	}
 }

@@ -77,6 +77,10 @@ func (p *Operator) OnUpdated() error {
 	switch p.pod.Status.Phase {
 	case corev1.PodFailed:
 		if !ok || status.Status.Status != v1alpha1.StatusError {
+			log.WithField("workflowrun", wfr.Name).
+				WithField("stage", p.stage).
+				WithField("status", v1alpha1.StatusError).
+				Info("To update stage status")
 			p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				LastTransitionTime: metav1.Time{time.Now()},
@@ -85,6 +89,10 @@ func (p *Operator) OnUpdated() error {
 		}
 	case corev1.PodSucceeded:
 		if !ok || status.Status.Status != v1alpha1.StatusCompleted {
+			log.WithField("workflowrun", wfr.Name).
+				WithField("stage", p.stage).
+				WithField("status", v1alpha1.StatusCompleted).
+				Info("To update stage status")
 			p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 				Status:             v1alpha1.StatusCompleted,
 				LastTransitionTime: metav1.Time{time.Now()},
@@ -127,7 +135,10 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 	// - TODO(ChenDe): Stop containers or delete pod
 
 	if anyError {
-		log.WithField("stage", p.stage).Debug("Pod status judged to be error")
+		log.WithField("workflowrun", wfr.Name).
+			WithField("stage", p.stage).
+			WithField("status", v1alpha1.StatusError).
+			Info("To update stage status")
 		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{time.Now()},
@@ -135,7 +146,10 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 			Message:            "Some workload containers failed",
 		})
 	} else {
-		log.WithField("stage", p.stage).Debug("Pod status judged to be completed")
+		log.WithField("workflowrun", wfr.Name).
+			WithField("stage", p.stage).
+			WithField("status", v1alpha1.StatusCompleted).
+			Info("To update stage status")
 		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusCompleted,
 			LastTransitionTime: metav1.Time{time.Now()},

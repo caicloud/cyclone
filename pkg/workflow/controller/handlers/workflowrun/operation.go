@@ -3,6 +3,7 @@ package workflowrun
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -11,6 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var lock sync.Mutex
 
 type Operator struct {
 	client clientset.Interface
@@ -22,15 +25,52 @@ func NewOperator(client clientset.Interface) *Operator {
 	}
 }
 
+// TODO(ChenDe): Need a more decent way to handle this.
+func combineStatus(origin, modifed *v1alpha1.WorkflowRun) *v1alpha1.WorkflowRun {
+	combined := origin.DeepCopy()
+	if combined.Status.Overall.Status != v1alpha1.StatusError && combined.Status.Overall.Status != v1alpha1.StatusCompleted {
+		combined.Status.Overall = modifed.Status.Overall
+	}
+	if combined.Status.Stages == nil {
+		combined.Status.Stages = modifed.Status.Stages
+	} else if modifed.Status.Stages == nil {
+		return combined
+	}
+
+	modifedStages := modifed.Status.Stages
+	for stage, status := range modifedStages {
+		s, ok := combined.Status.Stages[stage]
+		if !ok {
+			combined.Status.Stages[stage] = status
+			continue
+		}
+		if s.Pod == nil {
+			combined.Status.Stages[stage].Pod = status.Pod
+		}
+
+		if s.Status.Status != v1alpha1.StatusError && s.Status.Status != v1alpha1.StatusCompleted {
+			combined.Status.Stages[stage].Status = status.Status
+		}
+
+		combined.Status.Stages[stage].Outputs = status.Outputs
+	}
+
+	return combined
+}
+
 func (p *Operator) UpdateStatus(wfr *v1alpha1.WorkflowRun) error {
+	lock.Lock()
+	defer lock.Unlock()
+
 	latest, err := p.client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
+	combined := combineStatus(latest, wfr)
 
-	if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&wfr.Status)) {
-		latest.Status = wfr.Status
-		_, err := p.client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
+	log.WithField("workflowrun", wfr.Name).Info("Update WorkflowRun status")
+	if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) {
+		_, err = p.client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(combined)
 		return err
 	}
 
@@ -46,6 +86,52 @@ func (p *Operator) SetStageStatus(wfr *v1alpha1.WorkflowRun, stage string, statu
 		wfr.Status.Stages[stage] = &v1alpha1.StageStatus{}
 	}
 	wfr.Status.Stages[stage].Status = status
+}
+
+func (p *Operator) OverallStatus(wfr *v1alpha1.WorkflowRun, stageNum int) string {
+	if wfr.Status.Stages == nil || len(wfr.Status.Stages) != stageNum {
+		return v1alpha1.StatusRunning
+	}
+
+	var running, waiting, err bool
+	for _, stage := range wfr.Status.Stages {
+		if stage.Status.Status == "" {
+			log.Error("Empty status")
+			return v1alpha1.StatusRunning
+		}
+
+		switch stage.Status.Status {
+		case v1alpha1.StatusRunning:
+			running = true
+		case v1alpha1.StatusWaiting:
+			waiting = true
+		case v1alpha1.StatusError:
+			err = true
+		}
+	}
+
+	if running {
+		return v1alpha1.StatusRunning
+	}
+
+	if waiting {
+		return v1alpha1.StatusWaiting
+	}
+
+	if err {
+		return v1alpha1.StatusError
+	}
+
+	return v1alpha1.StatusCompleted
+}
+
+
+func (p *Operator) SetStagePodInfo(wfr *v1alpha1.WorkflowRun, stage string, podInfo *v1alpha1.PodInfo) {
+	_, ok := wfr.Status.Stages[stage]
+	if !ok {
+		wfr.Status.Stages[stage] = &v1alpha1.StageStatus{}
+	}
+	wfr.Status.Stages[stage].Pod = podInfo
 }
 
 // staticStatus masks timestamp in status, safe for comparision of status.
@@ -80,13 +166,13 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 	}
 
 	for _, stage := range nextStages {
-		SetStageStatus(wfr, stage, v1alpha1.Status{
+		p.SetStageStatus(wfr, stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			Reason:             "StageInitialized",
 			LastTransitionTime: metav1.Time{time.Now()},
 		})
 	}
-	wfr.Status.Overall.Status = OverallStatus(wfr)
+	wfr.Status.Overall.Status = p.OverallStatus(wfr, len(wf.Spec.Stages))
 	err = p.UpdateStatus(wfr)
 	if err != nil {
 		log.WithField("WorkflowRun", wfr.Name).Error("Update status error: ", err)
@@ -94,7 +180,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 	}
 
 	// Return if no stages need to run.
-	if len(nextStages) <= 0 {
+	if len(nextStages) == 0 {
 		return nil
 	}
 
@@ -106,7 +192,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 		pod, err := NewPodMaker(p.client, wf, wfr, stage).MakePod()
 		if err != nil {
 			log.WithField("WorkflowRun", wfr.Name).WithField("Stage", stage).Error("Create pod manifest for stage error: ", err)
-			SetStageStatus(wfr, stage, v1alpha1.Status{
+			p.SetStageStatus(wfr, stage, v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "GeneratePodError",
 				LastTransitionTime: metav1.Time{time.Now()},
@@ -117,10 +203,10 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 		log.WithField("Stage", stage).Debug("Pod manifest created")
 
 		// Create the generated pod.
-		_, err = p.client.CoreV1().Pods(wfr.Namespace).Create(pod)
+		pod, err = p.client.CoreV1().Pods(wfr.Namespace).Create(pod)
 		if err != nil {
 			log.WithField("WorkflowRun", wfr.Name).WithField("Stage", stage).Error("Create pod for stage error: ", err)
-			SetStageStatus(wfr, stage, v1alpha1.Status{
+			p.SetStageStatus(wfr, stage, v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "CreatePodError",
 				LastTransitionTime: metav1.Time{time.Now()},
@@ -129,14 +215,19 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 			continue
 		}
 
-		SetStageStatus(wfr, stage, v1alpha1.Status{
+		p.SetStageStatus(wfr, stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{time.Now()},
 			Reason:             "StageInitialized",
 		})
+
+		p.SetStagePodInfo(wfr, stage, &v1alpha1.PodInfo{
+			Name: pod.Name,
+			Namespace: pod.Namespace,
+		})
 	}
 
-	wfr.Status.Overall.Status = OverallStatus(wfr)
+	wfr.Status.Overall.Status = p.OverallStatus(wfr, len(wf.Spec.Stages))
 	err = p.UpdateStatus(wfr)
 	if err != nil {
 		log.WithField("WorkflowRun", wfr.Name).Error("Update status error: ", err)
