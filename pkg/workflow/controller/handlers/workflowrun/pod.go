@@ -8,6 +8,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 
 	"github.com/cbroglie/mustache"
@@ -88,6 +89,24 @@ func (m *PodMaker) MakePod() (*corev1.Pod, error) {
 		})
 	}
 
+	// Add emptyDir volume to be shared between coordinator and workload containers.
+	renderedSpec.Volumes = append(renderedSpec.Volumes, corev1.Volume{
+		Name: workflow.CoordinatorVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
+	// Add PVC volume to pod
+	renderedSpec.Volumes = append(renderedSpec.Volumes, corev1.Volume{
+		Name: workflow.DefaultPvVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: controller.Config.PVC,
+			},
+		},
+	})
+
 	// Add init containers for each input resource and also bind resource to workload containers.
 	for _, r := range stage.Spec.Pod.Inputs.Resources {
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
@@ -140,6 +159,75 @@ func (m *PodMaker) MakePod() (*corev1.Pod, error) {
 		renderedSpec.Containers = containers
 	}
 
+	// Bind input artifacts to workload containers.
+	// 1. First find StageItem from Workflow spec, we will get artifacts binding info from it.
+	var wfStage *v1alpha1.StageItem
+	for _, s := range m.wf.Spec.Stages {
+		if s.Name == stage.Name {
+			wfStage = &s
+			break
+		}
+	}
+	if wfStage == nil {
+		log.WithField("stage", stage.Name).WithField("workflow", m.wf.Name).Error("Stage not found in Workflow")
+		return nil, fmt.Errorf("stage %s not found in workflow %s", stage.Name, m.wf.Name)
+	}
+
+	// 2. For each input artifact, mount data from PVC.
+	for _, artifact := range stage.Spec.Pod.Inputs.Artifacts {
+		// Get source of this input artifact from Workflow StageItem
+		// It has format: <stage name>/<artifact name>
+		var source string
+		for _, art := range wfStage.Artifacts {
+			if art.Name == artifact.Name {
+				source = art.Source
+			}
+		}
+		if source == "" {
+			log.WithField("stage", stage.Name).
+				WithField("workflow", m.wf.Name).
+				WithField("artifact", artifact.Name).
+				Error("Input artifact not bind in workflow")
+			return nil, fmt.Errorf("input artifact %s not binded in workflow %s", stage.Name, m.wf.Name)
+		}
+		parts := strings.Split(source, "/")
+		log.WithField("source", source).
+			WithField("artifact", artifact.Name).
+			Info("To mount artifact")
+
+		// Mount artifacts to each workload container.
+		var containers []corev1.Container
+		for _, c := range renderedSpec.Containers {
+			fileName, err := m.ArtifactFileName(parts[0], parts[1])
+			if err != nil {
+				return nil, err
+			}
+			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+				Name:      workflow.DefaultPvVolumeName,
+				MountPath: artifact.Path,
+				SubPath:   common.ArtifactPath(m.wfr.Name, parts[0], parts[1]) + "/" + fileName,
+			})
+			containers = append(containers, c)
+		}
+		renderedSpec.Containers = containers
+	}
+
+	// Bind common PVC and coordinator emptyDir to workload containers
+	var containers []corev1.Container
+	for _, c := range renderedSpec.Containers {
+		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+			Name:      workflow.DefaultPvVolumeName,
+			MountPath: common.StageMountPath,
+			SubPath:   common.StagePath(m.wfr.Name, stage.Name),
+		}, corev1.VolumeMount{
+			Name:      workflow.CoordinatorVolumeName,
+			MountPath: common.StageEmptyDirMounthPath,
+		})
+		containers = append(containers, c)
+	}
+	renderedSpec.Containers = containers
+
+	// Generate pod using based on UUID.
 	id := uuid.NewV1()
 	if err != nil {
 		return nil, err
@@ -168,6 +256,10 @@ func (m *PodMaker) MakePod() (*corev1.Pod, error) {
 					Name: "STAGE_NAME",
 					Value: stageName,
 				},
+				{
+					Name: "WORKLOAD_CONTAINER",
+					Value: "",
+				},
 			},
 		}
 		renderedSpec.Containers = append(renderedSpec.Containers, coordinator)*/
@@ -189,4 +281,21 @@ func (m *PodMaker) MakePod() (*corev1.Pod, error) {
 	}
 
 	return pod, nil
+}
+
+func (m *PodMaker) ArtifactFileName(stageName, artifactName string) (string, error) {
+	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("stage", stageName).Error("Get stage error: ", err)
+		return "", err
+	}
+
+	for _, artifact := range stage.Spec.Pod.Outputs.Artifacts {
+		if artifact.Name == artifactName {
+			parts := strings.Split(strings.TrimSuffix(artifact.Path, "/"), "/")
+			return parts[len(parts)-1], nil
+		}
+	}
+
+	return "", fmt.Errorf("output artifact '%s' not found in stage '%s'", artifactName, stageName)
 }

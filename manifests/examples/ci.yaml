@@ -24,8 +24,6 @@ spec:
       resources:
       - name: test-git
         path: /go/src/github.com/zjfqxa
-      arguments:
-      - name: message
     outputs:
       artifacts:
       - name: message
@@ -53,8 +51,8 @@ spec:
         path: /go/src/github.com/zjfqxa
     outputs:
       artifacts:
-      - name: message
-        path: /go/test
+      - name: outbin
+        path: /go/bin/test
     spec:
       containers:
       - name: main
@@ -63,8 +61,46 @@ spec:
         - go
         - build
         - -o
-        - /go/test
+        - /go/bin/test
         - github.com/zjfqxa/Test
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: image-build-stage
+spec:
+  pod:
+    inputs:
+      artifacts:
+      - name: binary
+        path: /go/test
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
+        command:
+        - /go/test
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: echo-stage
+spec:
+  pod:
+    inputs:
+      arguments:
+      - name: message
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/{{ image }}
+        command:
+        - echo
+        - "{{ message }}"
 
 ---
 
@@ -78,6 +114,13 @@ spec:
   - name: build-stage
     depends:
     - unit-test-stage
+  - name: image-build-stage
+    depends:
+    - build-stage
+    artifacts:
+    - name: binary
+      source: build-stage/outbin
+  - name: echo-stage
 
 ---
 
@@ -89,9 +132,11 @@ spec:
   workflowRef:
     kind: workflow.cyclone.io
     name: ci-workflow
-  timeout: 300s
+  timeout: 5h
   stages:
-  - name: unit-test-stage
+  - name: echo-stage
     parameters:
     - name: message
       value: Hello, World~
+    - name: image
+      value: golang:1.10-alpine3.8

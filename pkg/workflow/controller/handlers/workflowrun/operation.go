@@ -88,8 +88,8 @@ func (p *Operator) SetStageStatus(wfr *v1alpha1.WorkflowRun, stage string, statu
 	wfr.Status.Stages[stage].Status = status
 }
 
-func (p *Operator) OverallStatus(wfr *v1alpha1.WorkflowRun, stageNum int) string {
-	if wfr.Status.Stages == nil || len(wfr.Status.Stages) != stageNum {
+func (p *Operator) OverallStatus(wfr *v1alpha1.WorkflowRun, wf *v1alpha1.Workflow) string {
+	if wfr.Status.Stages == nil || len(wfr.Status.Stages) == 0 {
 		return v1alpha1.StatusRunning
 	}
 
@@ -122,9 +122,12 @@ func (p *Operator) OverallStatus(wfr *v1alpha1.WorkflowRun, stageNum int) string
 		return v1alpha1.StatusError
 	}
 
+	next := len(NextStages(wf, wfr))
+	if next > 0 {
+		return v1alpha1.StatusRunning
+	}
 	return v1alpha1.StatusCompleted
 }
-
 
 func (p *Operator) SetStagePodInfo(wfr *v1alpha1.WorkflowRun, stage string, podInfo *v1alpha1.PodInfo) {
 	_, ok := wfr.Status.Stages[stage]
@@ -222,7 +225,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 		})
 
 		p.SetStagePodInfo(wfr, stage, &v1alpha1.PodInfo{
-			Name: pod.Name,
+			Name:      pod.Name,
 			Namespace: pod.Namespace,
 		})
 	}

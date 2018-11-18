@@ -26,6 +26,8 @@ type ControllerConfig struct {
 	Images map[string]string `json:"images"`
 	// Logging configuration, such as log level.
 	Logging LoggingConfig `json:"logging"`
+	// The PVC used to transfer artifacts in WorkflowRun
+	PVC string `json:"pvc"`
 }
 
 type LoggingConfig struct {

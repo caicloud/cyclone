@@ -14,5 +14,6 @@ data:
       },
       "logging": {
         "level": "debug"
-      }
+      },
+      "pvc": "cyclone-server-server-v1-0-cyclone-data"
     }
