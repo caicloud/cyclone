@@ -35,7 +35,8 @@ func createDirectory(dirName string) bool {
 	if os.IsNotExist(err) {
 		errDir := os.MkdirAll(dirName, 0755)
 		if errDir != nil {
-			panic(err)
+			log.Errorf("mkdir %s failed: %v", dirName, errDir)
+			panic(errDir)
 		}
 		return true
 	}

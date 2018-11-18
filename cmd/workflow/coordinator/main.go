@@ -2,12 +2,11 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	k8sclient "github.com/caicloud/cyclone/pkg/util/k8s-client"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
 )
 
@@ -18,7 +17,11 @@ func main() {
 	flag.Parse()
 
 	// Create k8s clientset and registry system signals for exit.
-	client := getClients(*kubeConfigPath)
+	client, err := k8sclient.GetClient("", *kubeConfigPath)
+	if err != nil {
+		log.Error("Get k8s client error: %v", err)
+		os.Exit(1)
+	}
 
 	// New workflow stage coordinator.
 	c := coordinator.NewCoordinator(120, client)
@@ -37,40 +40,20 @@ func main() {
 
 	// 4. Notify output resolver to start working.
 	log.Info("Start to notify resolver.")
-	err := c.NotifyResolver()
+	err = c.NotifyResolver()
 	if err != nil {
 		log.Error("Notify resolver failed, error:%v", err)
 		return
 	}
 
-	// 5. Wait all others container completion. Coordinator will be the last one
+	// 5. Collect all artifacts
+	c.CollectArtifacts()
+
+	// 6. Wait all others container completion. Coordinator will be the last one
 	// to quit since it need to collect other containers' logs.
 	log.Info("Wait output resolver containers completion ... ")
 	c.WaitAllOthersTerminate()
 
 	log.Info("Coordinator finished.")
 	return
-}
-
-func getClients(kubeConfigPath string) clientset.Interface {
-	var config *rest.Config
-	var err error
-	if kubeConfigPath != "" {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
-		if err != nil {
-			log.Fatalf("create config error: %v", err)
-		}
-	} else {
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			log.Fatalf("create config error: %v", err)
-		}
-	}
-
-	client, err := clientset.NewForConfig(config)
-	if err != nil {
-		log.Fatalf("create client error: %v", err)
-	}
-
-	return client
 }

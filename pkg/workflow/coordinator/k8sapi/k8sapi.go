@@ -45,12 +45,12 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 			}
 
 			containerNum := len(pod.Spec.Containers)
-			expectTerminatedNum := containerNum
+			expectNum := containerNum
 			actualNum := 0
 			for _, cs := range pod.Status.ContainerStatuses {
 				for _, except := range excepts {
 					if cs.Name == except {
-						expectTerminatedNum--
+						expectNum--
 						continue
 					}
 				}
@@ -71,7 +71,7 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 				}
 			}
 
-			if expectTerminatedNum == actualNum {
+			if expectNum == actualNum {
 				log.Infof("End of waiting for containers of pod %s to be %s.", k.podName, expectState)
 				return nil
 			}

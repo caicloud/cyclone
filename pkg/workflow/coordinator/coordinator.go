@@ -22,14 +22,14 @@ func init() {
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
 	timeoutWait     time.Duration
-	runtimeExec     RuntimeExector
+	runtimeExec     RuntimeExecutor
 	workflowrunName string
 	stageName       string
 }
 
-// RuntimeExector is an interface defined some methods
+// RuntimeExecutor is an interface defined some methods
 // to communicate with k8s container runtime.
-type RuntimeExector interface {
+type RuntimeExecutor interface {
 	WaitContainers(timeout time.Duration, state common.ContainerState, excepts []string) error
 	GetAllContainers() ([]string, error)
 	KillContainer(containerName string) error
@@ -69,7 +69,22 @@ func (co *Coordinator) CollectLogs() {
 
 }
 
-// WaitWorkloadTerminate waits all containers to start run.
+// CollectArtifacts collects workload artifacts.
+func (co *Coordinator) CollectArtifacts() {
+	// TODO
+	//artNames, err := file.GetSubFolders(constants.StageEmptyDirMounthPath)
+	//if err != nil {
+	//	log.Error("Get artifacts names failed: %v", err)
+	//	return
+	//}
+	//
+	//for _, art := range artNames {
+	//	dir := path.Join(constants.StageEmptyDirMounthPath, art)
+	//}
+
+}
+
+// WaitRunning waits all containers to start run.
 func (co *Coordinator) WaitRunning() {
 	excepts := []string{}
 
