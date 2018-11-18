@@ -4,6 +4,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/configmap"
 
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,9 +20,11 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 	informer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
+				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
 				return client.CoreV1().ConfigMaps(namespace).List(options)
 			},
 			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
+				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
 				return client.CoreV1().ConfigMaps(namespace).Watch(options)
 			},
 		},
@@ -60,14 +63,10 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 	})
 
 	return &Controller{
-		name:      "ConfigMap Controller",
-		clientSet: client,
-		informer:  informer,
-		queue:     queue,
-		eventHandler: &configmap.Handler{
-			Selectors: []configmap.Selector{
-				configmap.Name(cm),
-				configmap.Namespace(namespace)},
-		},
+		name:         "ConfigMap Controller",
+		clientSet:    client,
+		informer:     informer,
+		queue:        queue,
+		eventHandler: &configmap.Handler{},
 	}
 }

@@ -6,6 +6,12 @@ metadata:
 data:
   workflow-controller.json: |
     {
+      "images": {
+        "git-resolver": "cargo.caicloudprivatetest.com/release/git-resource-resolver:v0.1",
+        "image-resolver": "cargo.caicloudprivatetest.com/release/image-resource-resolver:v0.1",
+        "kv-resolver": "cargo.caicloudprivatetest.com/release/kv-resource-resolver:v0.1",
+        "coordinator": "cargo.caicloudprivatetest.com/release/stage-coordinator:v0.1"
+      },
       "logging": {
         "level": "debug"
       }

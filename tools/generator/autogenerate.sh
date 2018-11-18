@@ -87,12 +87,11 @@ echo "Generated listers"
 $TEMPBIN/informer-gen \
   --single-directory \
   -p ${CLIENT_PATH}/pkg/k8s/informers \
-  --versioned-clientset-package $CLIENT_PATH/kubernetes \
-  --listers-package $CLIENT_PATH/listers \
+  --versioned-clientset-package $CLIENT_PATH/pkg/k8s/clientset \
+  --listers-package $CLIENT_PATH/pkg/k8s/listers \
   -i $FULL_PKGS
 
 echo "Generated informers"
-
 
 rm -rf $TEMPBIN
 

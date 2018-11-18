@@ -76,7 +76,7 @@ func (s stageTemplateNamespaceLister) Get(name string) (*v1alpha1.StageTemplate,
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("stagetemplate"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("stagetemplate"), name)
 	}
 	return obj.(*v1alpha1.StageTemplate), nil
 }

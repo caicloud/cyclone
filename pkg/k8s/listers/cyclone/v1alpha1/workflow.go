@@ -76,7 +76,7 @@ func (s workflowNamespaceLister) Get(name string) (*v1alpha1.Workflow, error) {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("workflow"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("workflow"), name)
 	}
 	return obj.(*v1alpha1.Workflow), nil
 }

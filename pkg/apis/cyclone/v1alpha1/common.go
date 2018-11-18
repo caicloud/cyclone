@@ -4,8 +4,16 @@ package v1alpha1
 type ResourceItem struct {
 	// Resource name
 	Name string `json:"name"`
-	// Resource type
-	Type ResourceType
+	// Path that this resource should be mounted in container.
+	Path string `json:"path"`
+}
+
+// ArtifactItem defines an artifact
+type ArtifactItem struct {
+	// Artifact name
+	Name string `json:"name"`
+	// Path of the artifact
+	Path string `json:"path"`
 }
 
 // ParameterItem defines a parameter
