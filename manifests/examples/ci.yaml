@@ -1,0 +1,97 @@
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: test-git
+spec:
+  type: Git
+  persistent: false
+  pullPolicy: Always
+  parameters:
+  - name: GIT_URL
+    value: https://github.com/zjfqxa/Test.git
+  - name: GIT_REVISION
+    value: master
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: unit-test-stage
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: test-git
+        path: /go/src/github.com/zjfqxa
+      arguments:
+      - name: message
+    outputs:
+      artifacts:
+      - name: message
+        path: /go/message.txt
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
+        command:
+        - go
+        - test
+        - github.com/zjfqxa/Test
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: build-stage
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: test-git
+        path: /go/src/github.com/zjfqxa
+    outputs:
+      artifacts:
+      - name: message
+        path: /go/test
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
+        command:
+        - go
+        - build
+        - -o
+        - /go/test
+        - github.com/zjfqxa/Test
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Workflow
+metadata:
+  name: ci-workflow
+spec:
+  stages:
+  - name: unit-test-stage
+  - name: build-stage
+    depends:
+    - unit-test-stage
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-workflowrun
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci-workflow
+  timeout: 300s
+  stages:
+  - name: unit-test-stage
+    parameters:
+    - name: message
+      value: Hello, World~

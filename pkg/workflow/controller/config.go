@@ -10,10 +10,21 @@ import (
 	api_v1 "k8s.io/api/core/v1"
 )
 
-// The key of config file in ConfigMap
-const ConfigFileKey = "workflow-controller.json"
+const (
+	// The key of config file in ConfigMap
+	ConfigFileKey = "workflow-controller.json"
+
+	// Keys of resources images and coordinator image in config file
+	GitResolverImage   = "git-resolver"
+	ImageResolverImage = "image-resolver"
+	KvResolverImage    = "kv-resolver"
+	CoordinatorImage   = "coordinator"
+)
 
 type ControllerConfig struct {
+	// Images that used in controller, such as resource resolvers.
+	Images map[string]string `json:"images"`
+	// Logging configuration, such as log level.
 	Logging LoggingConfig `json:"logging"`
 }
 
@@ -34,11 +45,15 @@ func ReloadConfig(cm *api_v1.ConfigMap) error {
 		return err
 	}
 
+	if !validate(&Config) {
+		return fmt.Errorf("validate config failed")
+	}
+
 	InitLogger(&Config.Logging)
 	return nil
 }
 
-func LoadConfig(configPath *string, config interface{}) error {
+func LoadConfig(configPath *string, config *ControllerConfig) error {
 	log.WithField("file", *configPath).Info("Start load configure file")
 
 	data, err := ioutil.ReadFile(*configPath)
@@ -51,9 +66,14 @@ func LoadConfig(configPath *string, config interface{}) error {
 	err = json.Unmarshal(data, config)
 	if err != nil {
 		log.Errorf("Parse config error: ", err)
+		return err
 	}
 
-	return err
+	if !validate(&Config) {
+		return fmt.Errorf("validate config failed")
+	}
+
+	return nil
 }
 
 func trimComments(data []byte) (data1 []byte) {
@@ -94,4 +114,16 @@ func trimCommentsLine(line []byte) []byte {
 		}
 	}
 	return line
+}
+
+// validate validates some required configurations.
+func validate(config *ControllerConfig) bool {
+	for _, k := range []string{GitResolverImage, ImageResolverImage, KvResolverImage, CoordinatorImage} {
+		_, ok := config.Images[k]
+		if !ok {
+			return false
+		}
+	}
+
+	return true
 }

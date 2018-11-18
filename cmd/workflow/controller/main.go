@@ -43,6 +43,10 @@ func main() {
 	wfrController := controllers.NewWorkflowRunController(client)
 	go wfrController.Run(ctx.Done())
 
+	// Create and start Pod controller.
+	podController := controllers.NewPodController(client)
+	go podController.Run(ctx.Done())
+
 	// Wait forever.
 	select {}
 }

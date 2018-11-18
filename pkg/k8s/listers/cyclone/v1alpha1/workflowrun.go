@@ -76,7 +76,7 @@ func (s workflowRunNamespaceLister) Get(name string) (*v1alpha1.WorkflowRun, err
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("workflowrun"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("workflowrun"), name)
 	}
 	return obj.(*v1alpha1.WorkflowRun), nil
 }

@@ -20,11 +20,9 @@ type Stage struct {
 // Exact one workload should be specified.
 type StageSpec struct {
 	// Use stage template
-	Template TemplateRef `json:"template,omitempty"`
+	Template *TemplateRef `json:"template,omitempty"`
 	// Pod kind workload
-	Pod PodWorkload `json:"pod,omitempty"`
-	// CRD kind workload
-	CRD CRDWorkload `json:"crd,omitempty"`
+	Pod *PodWorkload `json:"pod,omitempty"`
 }
 
 // TemplateRef refers to a stage template and defines necessary arguments.

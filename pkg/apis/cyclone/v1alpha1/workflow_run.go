@@ -18,15 +18,19 @@ type WorkflowRun struct {
 	// Workflow run specification
 	Spec WorkflowRunSpec `json:"spec"`
 	// Status of workflow execution
-	Status WorkflowRunStatus `json:"status"`
+	Status WorkflowRunStatus `json:"status,omitempty"`
 }
 
 // WorkflowRunSpec defines workflow run specification.
 type WorkflowRunSpec struct {
+	// Reference to a Workflow
+	WorkflowRef *corev1.ObjectReference `json:"workflowRef"`
 	// Stages in the workflow to start execution
 	StartStages []string `json:"startStages"`
 	// Stages in the workflow to end execution
 	EndStages []string `json:"endStages"`
+	// Maximum time this workflow should run
+	Timeout string `json:"timeout"`
 	// ServiceAccount used in the workflow execution
 	ServiceAccount string `json:"serviceAccount"`
 	// Resource parameters
@@ -46,39 +50,45 @@ type ParameterConfig struct {
 // WorkflowRunStatus records workflow running status.
 type WorkflowRunStatus struct {
 	// Status of all stages
-	Stages map[string]StageStatus
-	// Overall conditions
-	Conditions []Condition
+	Stages map[string]*StageStatus `json:"stages"`
+	// Overall status
+	Overall Status `json:"overall"`
 }
 
 // StageStatus describes status of a stage execution.
 type StageStatus struct {
+	// Information of the pod
+	Pod *PodInfo `json:"pod"`
 	// Conditions of a stage
-	Conditions []Condition
+	Status Status `json:"status"`
 	// Key-value outputs of this stage
-	Outputs []KeyValue
+	Outputs []KeyValue `json:"outputs"`
 }
 
-// ConditionType is a camel-cased condition type.
-type ConditionType string
+const (
+	StatusRunning   = "Running"
+	StatusWaiting   = "Waiting"
+	StatusCompleted = "Completed"
+	StatusError     = "Error"
+)
 
-// Conditions defines a readiness condition for Cyclone resource.
-// See: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#typical-status-properties
+// PodInfo describes the pod a stage created.
+type PodInfo struct {
+	Name string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
+// Status of a Stage in a WorkflowRun or the whole WorkflowRun.
 // +k8s:deepcopy-gen=true
-type Condition struct {
-	// Type of condition.
-	// +required
-	Type ConditionType `json:"type"`
+type Status struct {
+	// Status with value: Running, Waiting, Completed, Error
+	Status string `json:"status"`
 
-	// Status of the condition, one of True, False, Unknown.
-	// +required
-	Status corev1.ConditionStatus `json:"status"`
-
-	// LastTransitionTime is the last time the condition transitioned from one status to another.
+	// LastTransitionTime is the last time the status transitioned from one status to another.
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 
-	// The reason for the condition's last transition.
+	// The reason for the status's last transition.
 	// +optional
 	Reason string `json:"reason,omitempty"`
 
