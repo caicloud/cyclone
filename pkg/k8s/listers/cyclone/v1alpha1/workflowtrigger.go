@@ -76,7 +76,7 @@ func (s workflowTriggerNamespaceLister) Get(name string) (*v1alpha1.WorkflowTrig
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("workflowtrigger"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("workflowtrigger"), name)
 	}
 	return obj.(*v1alpha1.WorkflowTrigger), nil
 }

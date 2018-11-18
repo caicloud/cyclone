@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/cbroglie/mustache"
+  packages = ["."]
+  revision = "eb931a9d20042e51d8a3a9ad5a9ba9bc8282c564"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = ""
@@ -156,6 +162,12 @@
   pruneopts = ""
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
+
+[[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -505,15 +517,9 @@
   packages = ["."]
   revision = "b9b56d5dfc9208f60ea747056670942d8b0afdc8"
 
-[[projects]]
-  name = "k8s.io/kubernetes"
-  packages = ["pkg/apis/core"]
-  revision = "17c77c7898218073f14c8d573582e8d2313dc740"
-  version = "v1.12.2"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b0c8253dcf56ee55439437cce52ba9ab60913d2248acb0d151157d44322758a8"
+  inputs-digest = "dd20ff814958997fffd9ee9a3619668a4da098b9a2a3167d0362068a454ecdea"
   solver-name = "gps-cdcl"
   solver-version = 1

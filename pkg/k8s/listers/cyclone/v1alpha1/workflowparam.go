@@ -76,7 +76,7 @@ func (s workflowParamNamespaceLister) Get(name string) (*v1alpha1.WorkflowParam,
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("workflowparam"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("workflowparam"), name)
 	}
 	return obj.(*v1alpha1.WorkflowParam), nil
 }

@@ -76,7 +76,7 @@ func (s resourceNamespaceLister) Get(name string) (*v1alpha1.Resource, error) {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("resource"), name)
+		return nil, errors.NewNotFound(v1alpha1.GroupResource("resource"), name)
 	}
 	return obj.(*v1alpha1.Resource), nil
 }
