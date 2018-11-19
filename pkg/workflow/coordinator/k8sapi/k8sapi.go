@@ -35,11 +35,9 @@ func NewK8sapiExector(n string, pod string, client clientset.Interface, kubecfg 
 
 // WaitContainersTerminate waits containers except for
 // those whose name has prefix 'exceptsPrefix' to be 'expectState' status.
-func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common.ContainerState, exceptsPrefix []string) error {
+func (k *K8sapiExector) WaitContainers(expectState common.ContainerState, exceptsPrefix []string) error {
 	ticker := time.NewTicker(time.Second * 1)
 	defer ticker.Stop()
-	//timer := time.NewTimer(timeout)
-	//defer timer.Stop()
 
 	log.Infof("Starting to wait for containers of pod %s to be %s ...", k.podName, expectState)
 	for {
@@ -68,7 +66,7 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 						log.Debugf("Container %s is terminated: %v", cs.Name, cs.State.Terminated)
 						actualNum++
 					}
-				case common.ContainerStateNotWaiting:
+				case common.ContainerStateInitialized:
 					// Check if container is not waiting
 					if cs.State.Running != nil || cs.State.Terminated != nil {
 						log.Debugf("Container %s is started: %v", cs.Name, cs.State.Terminated)
@@ -82,9 +80,6 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 				return nil
 			}
 
-			// Timeout will controlled by cyclone controller, so make this commented out temporary.
-			//case <-timer.C:
-			//	return fmt.Errorf("Timeout after %s", timeout.String())
 		}
 	}
 

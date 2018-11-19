@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// New workflow stage coordinator.
-	c := coordinator.NewCoordinator(120, client, *kubeConfigPath)
+	c := coordinator.NewCoordinator(client, *kubeConfigPath)
 
 	// Wait all containers running, so we can start to collect logs.
 	log.Info("Wait all containers running ... ")
@@ -34,16 +34,16 @@ func main() {
 	log.Info("Start to collect logs.")
 	c.CollectLogs()
 
-	// Wait customized containers completion, so we can notify output resolver.
+	// Wait workload containers completion, so we can notify output resolvers.
 	//
 	// Users need to control ALL their workload containers to quit after work done,
 	// otherwise, the coordinator container will wait forever.
-	log.Info("Wait customized containers completion ... ")
+	log.Info("Wait workload containers completion ... ")
 	c.WaitWorkloadTerminate()
 
 	// Notify output resolver to start working.
-	log.Info("Start to notify resolver.")
-	err = c.NotifyResolver()
+	log.Info("Start to notify resolvers.")
+	err = c.NotifyResolvers()
 	if err != nil {
 		log.Errorf("Notify resolver failed, error: %v", err)
 		os.Exit(1)
@@ -65,7 +65,7 @@ func main() {
 
 	// Wait all others container completion. Coordinator will be the last one
 	// to quit since it need to collect other containers' logs.
-	log.Info("Wait output resolver containers completion ... ")
+	log.Info("Wait for all other containers completion ... ")
 	c.WaitAllOthersTerminate()
 
 	// Check if the workload is succeeded.

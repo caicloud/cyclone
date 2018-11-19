@@ -7,6 +7,6 @@ const (
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"
 
-	// ContainerStateNotWaiting represents container is Running or Stopped, not Init or Creating.
-	ContainerStateNotWaiting ContainerState = "NotWaiting"
+	// ContainerStateInitialized represents container is Running or Stopped, not Init or Creating.
+	ContainerStateInitialized ContainerState = "Initialized"
 )

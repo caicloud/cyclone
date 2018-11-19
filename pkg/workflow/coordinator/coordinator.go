@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
@@ -28,7 +27,6 @@ func init() {
 // Coordinator is a struct which contains infomations
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
-	timeoutWait       time.Duration
 	runtimeExec       RuntimeExecutor
 	workflowrunName   string
 	stageName         string
@@ -38,7 +36,7 @@ type Coordinator struct {
 // RuntimeExecutor is an interface defined some methods
 // to communicate with k8s container runtime.
 type RuntimeExecutor interface {
-	WaitContainers(timeout time.Duration, state common.ContainerState, excepts []string) error
+	WaitContainers(state common.ContainerState, excepts []string) error
 	KillContainer(containerName string) error
 	CollectLog(containerName string, path string) error
 	GetStageOutputs(name string) (v1alpha1.Outputs, error)
@@ -46,10 +44,9 @@ type RuntimeExecutor interface {
 	GetPod() (*core_v1.Pod, error)
 }
 
-// NewCoordinator create an assistant instance.
-func NewCoordinator(timeout int, client clientset.Interface, kubecfg string) *Coordinator {
+// NewCoordinator create a coordinator instance.
+func NewCoordinator(client clientset.Interface, kubecfg string) *Coordinator {
 	return &Coordinator{
-		timeoutWait:       time.Duration(timeout) * time.Minute,
 		runtimeExec:       k8sapi.NewK8sapiExector(getNamespace(), getPodName(), client, kubecfg),
 		workflowrunName:   getWorkflowrunName(),
 		stageName:         getStageName(),
@@ -84,11 +81,9 @@ func (co *Coordinator) CollectLogs() {
 func (co *Coordinator) WaitRunning() {
 	excepts := []string{}
 
-	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateNotWaiting, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateInitialized, excepts)
 	if err != nil {
 		log.Errorf("Wait containers to running error: %v", err)
-
-		//co.killAllOthers()
 		return
 	}
 
@@ -98,11 +93,9 @@ func (co *Coordinator) WaitRunning() {
 func (co *Coordinator) WaitWorkloadTerminate() {
 	excepts := []string{constants.ContainerSidecarPrefix}
 
-	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateTerminated, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, excepts)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
-
-		//co.killAllOthers()
 		return
 	}
 
@@ -113,11 +106,9 @@ func (co *Coordinator) WaitWorkloadTerminate() {
 func (co *Coordinator) WaitAllOthersTerminate() {
 	excepts := []string{constants.ContainerCoordinatorName}
 
-	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateTerminated, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, excepts)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
-
-		//co.killAllOthers()
 		return
 	}
 
@@ -236,8 +227,8 @@ func (co *Coordinator) CollectResources() error {
 
 }
 
-// NotifyResolver create a file to notify output resolver to start working.
-func (co *Coordinator) NotifyResolver() error {
+// NotifyResolvers create a file to notify output resolvers to start working.
+func (co *Coordinator) NotifyResolvers() error {
 	_, err := os.Create(constants.OutputResolverStartFlagPath)
 	if err != nil {
 		return err
