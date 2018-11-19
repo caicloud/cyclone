@@ -73,6 +73,14 @@ func (m *PodBuilder) Prepare() error {
 			workflow.WorkflowRunAnnotationName: m.wfr.Name,
 			workflow.StageAnnotationName:       m.stage,
 		},
+		OwnerReferences: []metav1.OwnerReference{
+			{
+				APIVersion: v1alpha1.APIVersion,
+				Kind:       "WorkflowRun",
+				Name:       m.wfr.Name,
+				UID:        m.wfr.UID,
+			},
+		},
 	}
 
 	return nil
@@ -131,9 +139,9 @@ func (m *PodBuilder) CreateVolumes() error {
 		})
 	}
 
-	// Add emptyDir volume to be shared between coordinator and workload containers.
+	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: workflow.CoordinatorVolumeName,
+		Name: workflow.CoordinatorSidecarVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
@@ -164,12 +172,14 @@ func (m *PodBuilder) CreateVolumes() error {
 	return nil
 }
 
-// ResolveInputResource creates init containers for each input resource and also mount
+// ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
-func (m *PodBuilder) ResolveInputResource() error {
+func (m *PodBuilder) ResolveInputResources() error {
 	for _, r := range m.stg.Spec.Pod.Inputs.Resources {
+		log.WithField("stage", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
 		if err != nil {
+			log.WithField("resource", r.Name).Error("Get resource error: ", err)
 			return err
 		}
 
@@ -199,7 +209,7 @@ func (m *PodBuilder) ResolveInputResource() error {
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      r.Name,
-					MountPath: workflow.ResolverDataPath,
+					MountPath: workflow.ResolverDefaultDataPath,
 				},
 			},
 		}
@@ -215,6 +225,61 @@ func (m *PodBuilder) ResolveInputResource() error {
 			containers = append(containers, c)
 		}
 		m.pod.Spec.Containers = containers
+	}
+
+	return nil
+}
+
+// ResolveOutputResources add resource resolvers to pod spec.
+func (m *PodBuilder) ResolveOutputResources() error {
+	for _, r := range m.stg.Spec.Pod.Outputs.Resources {
+		log.WithField("stage", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
+		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
+		if err != nil {
+			log.WithField("resource", r.Name).Error("Get resource error: ", err)
+			return err
+		}
+
+		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
+		// the images configured, otherwise use images given in the resource spec.
+		var image string
+		if key, ok := controller.ResolverImageKeys[resource.Spec.Type]; ok {
+			image = controller.Config.Images[key]
+		} else {
+			image = resource.Spec.Resolver
+		}
+
+		// Create container for each output resource and project all parameters into the
+		// container through environment variables. Also mount volumes shared between resolver
+		// and coordinator container.
+		var envs []corev1.EnvVar
+		for _, p := range resource.Spec.Parameters {
+			envs = append(envs, corev1.EnvVar{
+				Name:  p.Name,
+				Value: p.Value,
+			})
+		}
+		container := corev1.Container{
+			Name:  workflow.SidecarContainerPrefix + r.Name,
+			Image: image,
+			Args:  []string{workflow.ResourcePushCommand},
+			Env:   envs,
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      workflow.CoordinatorSidecarVolumeName,
+					MountPath: workflow.ResolverNotifyDirPath,
+					SubPath:   workflow.ResolverNotifyDir,
+				},
+				{
+					Name:      workflow.CoordinatorSidecarVolumeName,
+					MountPath: workflow.ResolverDefaultDataPath,
+					SubPath:   fmt.Sprintf("resources/%s", resource.Name),
+				},
+			},
+			// TODO(ChenDe): Used for develop purpose only, remove it.
+			ImagePullPolicy: corev1.PullAlways,
+		}
+		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
 	}
 
 	return nil
@@ -286,9 +351,6 @@ func (m *PodBuilder) AddVolumeMounts() error {
 			Name:      workflow.DefaultPvVolumeName,
 			MountPath: common.StageMountPath,
 			SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
-		}, corev1.VolumeMount{
-			Name:      workflow.CoordinatorVolumeName,
-			MountPath: common.StageEmptyDirMounthPath,
 		})
 		containers = append(containers, c)
 	}
@@ -334,13 +396,17 @@ func (m *PodBuilder) AddCoordinator() error {
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name: workflow.DefaultPvVolumeName,
+				Name:      workflow.DefaultPvVolumeName,
 				MountPath: common.CoordinatorWorkspacePath + "artifacts",
-				SubPath: common.ArtifactsPath(m.wfr.Name, m.stage),
+				SubPath:   common.ArtifactsPath(m.wfr.Name, m.stage),
 			},
 			{
-				Name: workflow.DockerSockVolume,
+				Name:      workflow.DockerSockVolume,
 				MountPath: workflow.DockerSockPath,
+			},
+			{
+				Name:      workflow.CoordinatorSidecarVolumeName,
+				MountPath: workflow.ResolverPath,
 			},
 		},
 		// TODO(ChenDe): Used for develop purpose only, remove it.
@@ -372,7 +438,12 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 		return nil, err
 	}
 
-	err = m.ResolveInputResource()
+	err = m.ResolveInputResources()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ResolveOutputResources()
 	if err != nil {
 		return nil, err
 	}

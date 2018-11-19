@@ -4,7 +4,12 @@ package v1alpha1
 type ResourceItem struct {
 	// Resource name
 	Name string `json:"name"`
-	// Path that this resource should be mounted in container.
+	// For input resource, this is the path that resource will be mounted in workload container.
+	// Resolver would resolve resources and mount it in this path.
+	// For output resource, this is the path in the workload container specify output data, for
+	// the moment, only one path can be given. In the resolver container, data specified here would
+	// be mounted in /workspace/data by default. Resolver will then push resource to remote server.
+	// TODO(ChenDe): For output resource, need support multiple paths.
 	Path string `json:"path"`
 }
 

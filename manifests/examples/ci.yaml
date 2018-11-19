@@ -15,6 +15,20 @@ spec:
 ---
 
 apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: awesome-image
+spec:
+  type: Image
+  parameters:
+  - name: IMAGE
+    value: test.caicloudprivatetest.com/release/cyclone-workflow-test:v1.0
+  - name: IMAGE_FILE
+    value: image.tar.gz
+
+---
+
+apiVersion: cyclone.io/v1alpha1
 kind: Stage
 metadata:
   name: unit-test-stage
@@ -78,14 +92,18 @@ spec:
       artifacts:
       - name: binary
         path: /go/test
+    outputs:
+      resources:
+      - name: awesome-image
+        path: /go/image.tar.gz
     spec:
       containers:
       - name: main
         image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
         command:
-        - tail
-        - -f
-        - /dev/null
+        - /bin/sh
+        - -c
+        - "/go/test && cp /go/test /go/image.tar.gz"
 
 ---
 

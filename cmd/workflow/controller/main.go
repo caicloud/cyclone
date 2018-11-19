@@ -51,7 +51,7 @@ func main() {
 	select {}
 }
 
-func getClients(kubeConfigPath string) (clientset.Interface) {
+func getClients(kubeConfigPath string) clientset.Interface {
 	var config *rest.Config
 	var err error
 	if kubeConfigPath != "" {
