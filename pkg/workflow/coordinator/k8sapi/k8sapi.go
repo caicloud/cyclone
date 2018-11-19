@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -32,8 +33,9 @@ func NewK8sapiExector(n string, pod string, client clientset.Interface, kubecfg 
 	}
 }
 
-// WaitContainersTerminate waits containers except for 'excepts' to be 'expectState' status.
-func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common.ContainerState, excepts []string) error {
+// WaitContainersTerminate waits containers except for
+// those whose name has prefix 'exceptsPrefix' to be 'expectState' status.
+func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common.ContainerState, exceptsPrefix []string) error {
 	ticker := time.NewTicker(time.Second * 1)
 	defer ticker.Stop()
 	//timer := time.NewTimer(timeout)
@@ -52,8 +54,8 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 			expectNum := containerNum
 			actualNum := 0
 			for _, cs := range pod.Status.ContainerStatuses {
-				for _, except := range excepts {
-					if cs.Name == except {
+				for _, except := range exceptsPrefix {
+					if strings.HasPrefix(cs.Name, except) {
 						expectNum--
 						continue
 					}

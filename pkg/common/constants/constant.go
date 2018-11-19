@@ -6,9 +6,8 @@ const (
 	// to start working.
 	ContainerCoordinatorName = "cyclone-sidecar-coordinator"
 
-	// ContainerOutputResolverName is the container name of the workload sidecar
-	// which is designed to process outputs.
-	ContainerOutputResolverName = "cyclone-sidecar-output-resolver"
+	// ContainerSidecarPrefix is the prefix of the sidecar containers' name.
+	ContainerSidecarPrefix = "cyclone-sidecar-"
 
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"

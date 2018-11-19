@@ -86,7 +86,7 @@ func (co *Coordinator) WaitRunning() {
 
 	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateNotWaiting, excepts)
 	if err != nil {
-		log.Error("Wait containers to running error: %v", err)
+		log.Errorf("Wait containers to running error: %v", err)
 
 		//co.killAllOthers()
 		return
@@ -96,13 +96,13 @@ func (co *Coordinator) WaitRunning() {
 
 // WaitWorkloadTerminate waits all customized containers to be Terminated status.
 func (co *Coordinator) WaitWorkloadTerminate() {
-	excepts := []string{constants.ContainerCoordinatorName, constants.ContainerOutputResolverName}
+	excepts := []string{constants.ContainerSidecarPrefix}
 
 	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateTerminated, excepts)
 	if err != nil {
-		log.Error("Wait containers to completion error: %v", err)
+		log.Errorf("Wait containers to completion error: %v", err)
 
-		co.killAllOthers()
+		//co.killAllOthers()
 		return
 	}
 
@@ -115,9 +115,9 @@ func (co *Coordinator) WaitAllOthersTerminate() {
 
 	err := co.runtimeExec.WaitContainers(co.timeoutWait, common.ContainerStateTerminated, excepts)
 	if err != nil {
-		log.Error("Wait containers to completion error: %v", err)
+		log.Errorf("Wait containers to completion error: %v", err)
 
-		co.killAllOthers()
+		//co.killAllOthers()
 		return
 	}
 
