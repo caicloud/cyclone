@@ -4,27 +4,31 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/common"
 )
 
 type K8sapiExector struct {
-	client    clientset.Interface
-	namespace string
-	podName   string
+	client     clientset.Interface
+	kubeconfig string
+	namespace  string
+	podName    string
 }
 
-func NewK8sapiExector(n string, pod string, client clientset.Interface) *K8sapiExector {
+func NewK8sapiExector(n string, pod string, client clientset.Interface, kubecfg string) *K8sapiExector {
 	return &K8sapiExector{
-		namespace: n,
-		podName:   pod,
-		client:    client,
+		namespace:  n,
+		podName:    pod,
+		client:     client,
+		kubeconfig: kubecfg,
 	}
 }
 
@@ -32,8 +36,8 @@ func NewK8sapiExector(n string, pod string, client clientset.Interface) *K8sapiE
 func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common.ContainerState, excepts []string) error {
 	ticker := time.NewTicker(time.Second * 1)
 	defer ticker.Stop()
-	timer := time.NewTimer(timeout)
-	defer timer.Stop()
+	//timer := time.NewTimer(timeout)
+	//defer timer.Stop()
 
 	log.Infof("Starting to wait for containers of pod %s to be %s ...", k.podName, expectState)
 	for {
@@ -59,13 +63,13 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 				case common.ContainerStateTerminated:
 					// Check if container is terminated
 					if cs.State.Terminated != nil {
-						log.Infof("Container %s is terminated: %v", cs.Name, cs.State.Terminated)
+						log.Debugf("Container %s is terminated: %v", cs.Name, cs.State.Terminated)
 						actualNum++
 					}
 				case common.ContainerStateNotWaiting:
 					// Check if container is not waiting
 					if cs.State.Running != nil || cs.State.Terminated != nil {
-						log.Infof("Container %s is started: %v", cs.Name, cs.State.Terminated)
+						log.Debugf("Container %s is started: %v", cs.Name, cs.State.Terminated)
 						actualNum++
 					}
 				}
@@ -76,27 +80,19 @@ func (k *K8sapiExector) WaitContainers(timeout time.Duration, expectState common
 				return nil
 			}
 
-		case <-timer.C:
-			return fmt.Errorf("Timeout after %s", timeout.String())
+			// Timeout will controlled by cyclone controller, so make this commented out temporary.
+			//case <-timer.C:
+			//	return fmt.Errorf("Timeout after %s", timeout.String())
 		}
 	}
 
 	return nil
 }
 
-// GetAllContainers get all containers within a pod.
-func (k *K8sapiExector) GetAllContainers() ([]string, error) {
-	var cs []string
-	pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
-	if err != nil {
-		return cs, err
-	}
+// GetPod get the stage pod.
+func (k *K8sapiExector) GetPod() (*core_v1.Pod, error) {
+	return k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
 
-	for _, c := range pod.Spec.Containers {
-		cs = append(cs, c.Name)
-	}
-
-	return cs, nil
 }
 
 // KillContainer kills a container of a pod.
@@ -128,5 +124,31 @@ func (k *K8sapiExector) CollectLog(name, path string) error {
 		return err
 	}
 	return nil
+}
 
+// GetStageOutputs get outputs of a stage.
+func (k *K8sapiExector) GetStageOutputs(name string) (v1alpha1.Outputs, error) {
+	stage, err := k.client.CycloneV1alpha1().Stages(k.namespace).Get(name, meta_v1.GetOptions{})
+	if err != nil {
+		return v1alpha1.Outputs{}, err
+	}
+
+	return stage.Spec.Pod.Outputs, nil
+}
+
+func (k *K8sapiExector) CopyArtifact(container, path, dst string) error {
+	//args := []string{"--kubeconfig", k.kubeconfig, "cp", fmt.Sprintf("%s/%s:%s", k.namespace, k.podName, path), "-c", container, dst}
+	//
+	//cmd := exec.Command("kubectl", args...)
+	//return cmd.Run()
+
+	// Fixme, use docker instead of kubectl since
+	// kubectl can not cp a file from a stopped container.
+	args := []string{"cp", fmt.Sprintf("%s:%s", container, path), dst}
+
+	cmd := exec.Command("docker", args...)
+	log.WithField("args", args).Info()
+	ret, err := cmd.CombinedOutput()
+	log.WithField("message", string(ret)).WithField("error", err).Info()
+	return err
 }

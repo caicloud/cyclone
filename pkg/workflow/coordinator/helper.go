@@ -2,6 +2,7 @@ package coordinator
 
 import (
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -18,6 +19,10 @@ func getWorkflowrunName() string {
 
 func getStageName() string {
 	return os.Getenv(constants.EnvStageName)
+}
+
+func getWorkloadContainer() string {
+	return os.Getenv(constants.EnvWorkloadContainerName)
 }
 
 func getNamespace() string {
@@ -47,4 +52,13 @@ func createDirectory(dirName string) bool {
 	}
 
 	return false
+}
+
+// refineContainerID strips the 'docker://' prefix from k8s ContainerID string
+func refineContainerID(id string) string {
+	schemeIndex := strings.Index(id, "://")
+	if schemeIndex == -1 {
+		return id
+	}
+	return id[schemeIndex+3:]
 }

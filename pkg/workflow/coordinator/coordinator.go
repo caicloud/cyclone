@@ -3,15 +3,22 @@ package coordinator
 import (
 	"fmt"
 	"os"
+	"path"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	core_v1 "k8s.io/api/core/v1"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common/constants"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
+
+// GetExitCodeRetry defined the max retry times for
+// get containers exit code.
+var GetExitCodeRetry = 10
 
 func init() {
 	// create container directory if not exist.
@@ -21,28 +28,32 @@ func init() {
 // Coordinator is a struct which contains infomations
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
-	timeoutWait     time.Duration
-	runtimeExec     RuntimeExecutor
-	workflowrunName string
-	stageName       string
+	timeoutWait       time.Duration
+	runtimeExec       RuntimeExecutor
+	workflowrunName   string
+	stageName         string
+	workloadContainer string
 }
 
 // RuntimeExecutor is an interface defined some methods
 // to communicate with k8s container runtime.
 type RuntimeExecutor interface {
 	WaitContainers(timeout time.Duration, state common.ContainerState, excepts []string) error
-	GetAllContainers() ([]string, error)
 	KillContainer(containerName string) error
 	CollectLog(containerName string, path string) error
+	GetStageOutputs(name string) (v1alpha1.Outputs, error)
+	CopyArtifact(container, path, dst string) error
+	GetPod() (*core_v1.Pod, error)
 }
 
 // NewCoordinator create an assistant instance.
-func NewCoordinator(timeout int, client clientset.Interface) *Coordinator {
+func NewCoordinator(timeout int, client clientset.Interface, kubecfg string) *Coordinator {
 	return &Coordinator{
-		timeoutWait:     time.Duration(timeout) * time.Minute,
-		runtimeExec:     k8sapi.NewK8sapiExector(getNamespace(), getPodName(), client),
-		workflowrunName: getWorkflowrunName(),
-		stageName:       getStageName(),
+		timeoutWait:       time.Duration(timeout) * time.Minute,
+		runtimeExec:       k8sapi.NewK8sapiExector(getNamespace(), getPodName(), client, kubecfg),
+		workflowrunName:   getWorkflowrunName(),
+		stageName:         getStageName(),
+		workloadContainer: getWorkloadContainer(),
 	}
 }
 
@@ -66,21 +77,6 @@ func (co *Coordinator) CollectLogs() {
 			// TODO websocket send logs to cyclone-server
 		}()
 	}
-
-}
-
-// CollectArtifacts collects workload artifacts.
-func (co *Coordinator) CollectArtifacts() {
-	// TODO
-	//artNames, err := file.GetSubFolders(constants.StageEmptyDirMounthPath)
-	//if err != nil {
-	//	log.Error("Get artifacts names failed: %v", err)
-	//	return
-	//}
-	//
-	//for _, art := range artNames {
-	//	dir := path.Join(constants.StageEmptyDirMounthPath, art)
-	//}
 
 }
 
@@ -127,6 +123,119 @@ func (co *Coordinator) WaitAllOthersTerminate() {
 
 }
 
+// Check if the workload is succeeded.
+func (co *Coordinator) IsWorkloadSuccess() bool {
+	ws, err := co.GetExitCodes()
+	if err != nil {
+		log.Errorf("Get Exit Codes failed: %v", err)
+		return false
+	}
+
+	log.WithField("codes", ws).Debug()
+
+	for _, code := range ws {
+		if code != 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Get all other containers exit code.
+// Try 'GetExitCodeRetry' times if the exit code not exist.
+func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
+	ws := make(map[string]int32)
+
+	pod, err := co.runtimeExec.GetPod()
+	if err != nil {
+		return ws, err
+	}
+
+	log.WithField("container statuses", pod.Status.ContainerStatuses).Debug()
+
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name != constants.ContainerCoordinatorName {
+			if cs.State.Terminated == nil {
+				log.Warningf("container %s not terminated.", cs.Name)
+				continue
+			}
+			ws[cs.Name] = cs.State.Terminated.ExitCode
+		}
+	}
+
+	return ws, nil
+}
+
+// CollectArtifacts collects workload artifacts.
+func (co *Coordinator) CollectArtifacts() error {
+	outputs, err := co.runtimeExec.GetStageOutputs(co.stageName)
+
+	if err != nil {
+		log.Errorf("Get stage %s output artifacts spec failed", co.stageName)
+		return err
+	}
+
+	// Create the artifacts directory if not exist.
+	createDirectory(constants.ArtifactsDir)
+
+	for _, artifact := range outputs.Artifacts {
+		dst := path.Join(constants.ArtifactsDir, artifact.Name)
+		createDirectory(dst)
+		if artifact.Container == "" {
+			artifact.Container = co.workloadContainer
+		}
+
+		id, err := co.getContainerID(artifact.Container)
+		if err != nil {
+			log.Errorf("get container %s's id failed: %v", artifact.Container, err)
+			return err
+		}
+
+		erra := co.runtimeExec.CopyArtifact(id, artifact.Path, dst)
+		if erra != nil {
+			log.Errorf("Copy container %s artifact %s failed: %v", artifact.Container, artifact.Name, erra)
+			return err
+		}
+
+	}
+	return nil
+
+}
+
+// CollectResources collects workload resources.
+func (co *Coordinator) CollectResources() error {
+	outputs, err := co.runtimeExec.GetStageOutputs(co.stageName)
+
+	if err != nil {
+		log.Errorf("Get stage %s output artifacts spec failed", co.stageName)
+		return err
+	}
+
+	// Create the resources directory if not exist.
+	createDirectory(constants.ResourcesDir)
+
+	for _, resource := range outputs.Resources {
+		dst := path.Join(constants.ResourcesDir, resource.Name)
+		createDirectory(dst)
+
+		id, err := co.getContainerID(co.workloadContainer)
+		if err != nil {
+			log.Errorf("get container %s's id failed: %v", co.workloadContainer, err)
+			return err
+		}
+
+		erra := co.runtimeExec.CopyArtifact(id, resource.Path, dst)
+		if erra != nil {
+			log.Errorf("Copy container %s resources %s failed: %v", co.workloadContainer, resource.Name, erra)
+			return err
+		}
+
+	}
+	return nil
+
+}
+
 // NotifyResolver create a file to notify output resolver to start working.
 func (co *Coordinator) NotifyResolver() error {
 	_, err := os.Create(constants.OutputResolverStartFlagPath)
@@ -153,16 +262,31 @@ func (co *Coordinator) killAllOthers() error {
 
 func (co *Coordinator) getAllOtherContainers() ([]string, error) {
 	var cs []string
-	allContainers, err := co.runtimeExec.GetAllContainers()
+	pod, err := co.runtimeExec.GetPod()
 	if err != nil {
-
+		return cs, err
 	}
 
-	for _, c := range allContainers {
-		if c != constants.ContainerCoordinatorName {
-			cs = append(cs, c)
+	for _, c := range pod.Spec.Containers {
+		if c.Name != constants.ContainerCoordinatorName {
+			cs = append(cs, c.Name)
 		}
 	}
 
 	return cs, nil
+}
+
+func (co *Coordinator) getContainerID(name string) (string, error) {
+	pod, err := co.runtimeExec.GetPod()
+	if err != nil {
+		return "", err
+	}
+
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name == name {
+			return refineContainerID(cs.ContainerID), nil
+		}
+	}
+
+	return "", fmt.Errorf("Container %s not found", name)
 }
