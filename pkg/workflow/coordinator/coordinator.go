@@ -40,7 +40,7 @@ type RuntimeExecutor interface {
 	KillContainer(containerName string) error
 	CollectLog(containerName string, path string) error
 	GetStageOutputs(name string) (v1alpha1.Outputs, error)
-	CopyArtifact(container, path, dst string) error
+	CopyFromContainer(container, path, dst string) error
 	GetPod() (*core_v1.Pod, error)
 }
 
@@ -170,6 +170,7 @@ func (co *Coordinator) CollectArtifacts() error {
 	// Create the artifacts directory if not exist.
 	createDirectory(constants.ArtifactsDir)
 
+	log.WithField("artifacts", outputs.Artifacts).Info("start to collect.")
 	for _, artifact := range outputs.Artifacts {
 		dst := path.Join(constants.ArtifactsDir, artifact.Name)
 		createDirectory(dst)
@@ -183,7 +184,7 @@ func (co *Coordinator) CollectArtifacts() error {
 			return err
 		}
 
-		erra := co.runtimeExec.CopyArtifact(id, artifact.Path, dst)
+		erra := co.runtimeExec.CopyFromContainer(id, artifact.Path, dst)
 		if erra != nil {
 			log.Errorf("Copy container %s artifact %s failed: %v", artifact.Container, artifact.Name, erra)
 			return err
@@ -206,6 +207,7 @@ func (co *Coordinator) CollectResources() error {
 	// Create the resources directory if not exist.
 	createDirectory(constants.ResourcesDir)
 
+	log.WithField("resources", outputs.Resources).Info("start to collect.")
 	for _, resource := range outputs.Resources {
 		dst := path.Join(constants.ResourcesDir, resource.Name)
 		createDirectory(dst)
@@ -216,7 +218,7 @@ func (co *Coordinator) CollectResources() error {
 			return err
 		}
 
-		erra := co.runtimeExec.CopyArtifact(id, resource.Path, dst)
+		erra := co.runtimeExec.CopyFromContainer(id, resource.Path, dst)
 		if erra != nil {
 			log.Errorf("Copy container %s resources %s failed: %v", co.workloadContainer, resource.Name, erra)
 			return err
@@ -229,7 +231,12 @@ func (co *Coordinator) CollectResources() error {
 
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
-	_, err := os.Create(constants.OutputResolverStartFlagPath)
+	// Create the notify directory if not exist.
+	exist := createDirectory(constants.OutputResolverNotifyDir)
+	log.WithField("exist", exist).WithField("notifydir", constants.OutputResolverNotifyDir).Info()
+
+	_, err := os.Create(constants.OutputResolverNotifyPath)
+	log.WithField("notifypath", constants.OutputResolverNotifyPath).WithField("error", err).Info()
 	if err != nil {
 		return err
 	}

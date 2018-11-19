@@ -36,9 +36,12 @@ const (
 	// ResourcesDir is the resources directory.
 	ResourcesDir = "/workspace/resolvers/resources"
 
-	// OutputResolverStartFlagPath is the path of the file which is watched
+	// OutputResolverNotifyDir is the resolver notify directory.
+	OutputResolverNotifyDir = "/workspace/resolvers/notify"
+
+	// OutputResolverNotifyPath is the path of the file which is watched
 	// by output resolver container, once the file exists, resolver starts to work.
 	// And the file will created by coordinator container after all
-	// customized containers completion.
-	OutputResolverStartFlagPath = "/workspace/resolvers/ok"
+	// workload containers completion.
+	OutputResolverNotifyPath = OutputResolverNotifyDir + "/ok"
 )

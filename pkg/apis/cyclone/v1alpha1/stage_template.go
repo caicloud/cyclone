@@ -38,7 +38,7 @@ type Inputs struct {
 // Outputs defines stage output.
 type Outputs struct {
 	// Resources used as output
-	Resources []ResourceItem `json:"resource,omitempty"`
+	Resources []ResourceItem `json:"resources,omitempty"`
 	// Artifacts to output
 	Artifacts []ArtifactItem `json:"artifacts,omitempty"`
 }

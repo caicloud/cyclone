@@ -133,7 +133,8 @@ func (k *K8sapiExector) GetStageOutputs(name string) (v1alpha1.Outputs, error) {
 	return stage.Spec.Pod.Outputs, nil
 }
 
-func (k *K8sapiExector) CopyArtifact(container, path, dst string) error {
+// CopyFromContainer copy a file/directory frome container:path to dst.
+func (k *K8sapiExector) CopyFromContainer(container, path, dst string) error {
 	//args := []string{"--kubeconfig", k.kubeconfig, "cp", fmt.Sprintf("%s/%s:%s", k.namespace, k.podName, path), "-c", container, dst}
 	//
 	//cmd := exec.Command("kubectl", args...)

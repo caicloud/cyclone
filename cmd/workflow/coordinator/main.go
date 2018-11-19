@@ -41,6 +41,14 @@ func main() {
 	log.Info("Wait workload containers completion ... ")
 	c.WaitWorkloadTerminate()
 
+	// Collect all resources
+	log.Info("Start to collect resources.")
+	err = c.CollectResources()
+	if err != nil {
+		log.Errorf("Collect resources error: %v", err)
+		os.Exit(1)
+	}
+
 	// Notify output resolver to start working.
 	log.Info("Start to notify resolvers.")
 	err = c.NotifyResolvers()
@@ -50,16 +58,10 @@ func main() {
 	}
 
 	// Collect all artifacts
+	log.Info("Start to collect artifacts.")
 	err = c.CollectArtifacts()
 	if err != nil {
 		log.Errorf("Collect artifacts error: %v", err)
-		os.Exit(1)
-	}
-
-	// Collect all resources
-	err = c.CollectResources()
-	if err != nil {
-		log.Errorf("Collect resources error: %v", err)
 		os.Exit(1)
 	}
 
