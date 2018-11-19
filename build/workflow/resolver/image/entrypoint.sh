@@ -10,7 +10,7 @@ USAGE=$(cat <<-END
             -e IMAGE=docker.io/library/alpine:3.6 \\
             -e IMAGE_FILE=image.tar.gz \\
             -v /var/run/docker.sock:/var/run/docker.sock \\
-            -v `PWD`/config.json:/root/.docker/config.json \\
+            -v /config.json:/root/.docker/config.json \\
             image-resource-resolver:latest <COMMAND>
 
      Supported commands are:
@@ -36,15 +36,24 @@ COMMAND=$1
 if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${IMAGE+x} ]; then echo "IMAGE is unset"; exit 1; fi
 
+# Wait until resource data is ready.
+wait_ok() {
+    while [ ! -f ${WORKDIR}/ok ]
+    do
+        sleep 3
+    done
+}
+
 case $COMMAND in
     pull )
+        docker pull $IMAGE
+        ;;
+    push )
+        wait_ok
         if [ -e ${WORKDIR}/data/${IMAGE_FILE} ]; then
             echo "Load images from file ${IMAGE_FILE}"
             docker load -i ${WORKDIR}/data/${IMAGE_FILE}
         fi
-        docker pull $IMAGE
-        ;;
-    push )
         docker push $IMAGE
         ;;
     * )

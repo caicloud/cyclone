@@ -67,11 +67,20 @@ push() {
         ${CYCLONE_SERVER_URL:=http://cyclone-server}/workflowruns/${WORKFLOWRUN}/stages/${STAGE}/kv
 }
 
+# Wait until resource data is ready.
+wait_ok() {
+    while [ ! -f ${WORKDIR}/ok ]
+    do
+        sleep 3
+    done
+}
+
 case $COMMAND in
     pull )
         echo "Command pull is not used."
         ;;
     push )
+        wait_ok
         push
         ;;
     * )
