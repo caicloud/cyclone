@@ -44,14 +44,42 @@ func (m *PodBuilder) Prepare() error {
 	}
 	m.stg = stage
 
+	// TODO(ChenDe): Support template.
+	if stage.Spec.Template != nil {
+		return fmt.Errorf("Stage template not support yet, stage: %s", m.stage)
+	}
+	if stage.Spec.Pod == nil {
+		return fmt.Errorf("pod must be defined in stage spec, stage: %s", m.stage)
+	}
+
+	// TODO(ChenDe): Support multiple containers in pod workload.
+	if len(stage.Spec.Pod.Spec.Containers) != 1 {
+		return fmt.Errorf("only one container in pod spec supported, stage: %s", m.stage)
+	}
+
+	// Generate pod name using UUID.
+	id := uuid.NewV1()
+	if err != nil {
+		return err
+	}
+	podName := fmt.Sprintf("%s-%s-%s", m.wf.Name, m.stage, strings.Replace(id.String(), "-", "", -1))
+	m.pod.ObjectMeta = metav1.ObjectMeta{
+		Name:      podName,
+		Namespace: m.wfr.Namespace,
+		Labels: map[string]string{
+			workflow.WorkflowLabelName: "true",
+		},
+		Annotations: map[string]string{
+			workflow.WorkflowRunAnnotationName: m.wfr.Name,
+			workflow.StageAnnotationName:       m.stage,
+		},
+	}
+
 	return nil
 }
 
+// TODO(ChenDe): Implement stage template.
 func (m *PodBuilder) ApplyTemplate() error {
-	if m.stg.Spec.Template != nil {
-		// TODO(ChenDe): Implement stage template
-		return fmt.Errorf("stage template not supported yet")
-	}
 	return nil
 }
 
@@ -87,6 +115,7 @@ func (m *PodBuilder) ResolveArguments() error {
 	renderedSpec := corev1.PodSpec{}
 	json.Unmarshal([]byte(rendered), &renderedSpec)
 	m.pod.Spec = renderedSpec
+	m.pod.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	return nil
 }
@@ -116,6 +145,18 @@ func (m *PodBuilder) CreateVolumes() error {
 		VolumeSource: corev1.VolumeSource{
 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 				ClaimName: controller.Config.PVC,
+			},
+		},
+	})
+
+	// Create hostPath volume for /var/run/docker.sock
+	var hostPathSocket = corev1.HostPathSocket
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: workflow.DockerSockVolume,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: workflow.DockerSockPath,
+				Type: &hostPathSocket,
 			},
 		},
 	})
@@ -256,6 +297,60 @@ func (m *PodBuilder) AddVolumeMounts() error {
 	return nil
 }
 
+// AddCoordinator adds coordinator container as sidecar to pod. Coordinator is used
+// to collect logs, artifacts and notify resource resolvers to push resources.
+func (m *PodBuilder) AddCoordinator() error {
+	// Get workload container name, for the moment, we support only one workload container.
+	var workloadContainer string
+	for _, c := range m.stg.Spec.Pod.Spec.Containers {
+		workloadContainer = c.Name
+		break
+	}
+
+	coordinator := corev1.Container{
+		Name:  workflow.CoordinatorContainerName,
+		Image: controller.Config.Images[controller.CoordinatorImage],
+		Env: []corev1.EnvVar{
+			{
+				Name:  "POD_NAME",
+				Value: m.pod.Name,
+			},
+			{
+				Name:  "NAMESPACE",
+				Value: m.wfr.Namespace,
+			},
+			{
+				Name:  "WORKFLOWRUN_NAME",
+				Value: m.wfr.Name,
+			},
+			{
+				Name:  "STAGE_NAME",
+				Value: m.stage,
+			},
+			{
+				Name:  "WORKLOAD_CONTAINER_NAME",
+				Value: workloadContainer,
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name: workflow.DefaultPvVolumeName,
+				MountPath: common.CoordinatorWorkspacePath + "artifacts",
+				SubPath: common.ArtifactsPath(m.wfr.Name, m.stage),
+			},
+			{
+				Name: workflow.DockerSockVolume,
+				MountPath: workflow.DockerSockPath,
+			},
+		},
+		// TODO(ChenDe): Used for develop purpose only, remove it.
+		ImagePullPolicy: corev1.PullAlways,
+	}
+	m.pod.Spec.Containers = append(m.pod.Spec.Containers, coordinator)
+
+	return nil
+}
+
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
@@ -292,54 +387,9 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 		return nil, err
 	}
 
-	// Generate pod name using based on UUID.
-	id := uuid.NewV1()
+	err = m.AddCoordinator()
 	if err != nil {
 		return nil, err
-	}
-	podName := fmt.Sprintf("%s-%s-%s", m.wf.Name, m.stage, strings.Replace(id.String(), "-", "", -1))
-
-	// Add coordinator container to containers.
-	/*
-		coordinator := corev1.Container{
-			Name: workflow.SidecarContainerPrefix + workflow.CoordinatorContainerName,
-			Image: controller.Config.Images[controller.CoordinatorImage],
-			Env: []corev1.EnvVar{
-				{
-					Name: "POD_NAME",
-					Value: podName,
-				},
-				{
-					Name: "NAMESPACE",
-					Value: wfr.Namespace,
-				},
-				{
-					Name: "WORKFLOWRUN_NAME",
-					Value: wfr.Name,
-				},
-				{
-					Name: "STAGE_NAME",
-					Value: stageName,
-				},
-				{
-					Name: "WORKLOAD_CONTAINER",
-					Value: "",
-				},
-			},
-		}
-		renderedSpec.Containers = append(renderedSpec.Containers, coordinator)*/
-
-	m.pod.Spec.RestartPolicy = corev1.RestartPolicyNever
-	m.pod.ObjectMeta = metav1.ObjectMeta{
-		Name:      podName,
-		Namespace: m.wfr.Namespace,
-		Labels: map[string]string{
-			workflow.WorkflowLabelName: "true",
-		},
-		Annotations: map[string]string{
-			workflow.WorkflowRunAnnotationName: m.wfr.Name,
-			workflow.StageAnnotationName:       m.stage,
-		},
 	}
 
 	return m.pod, nil

@@ -9,11 +9,19 @@ const (
 	// The mount path of the emptyDir shared by workload containers and coordinate container.
 	// It's used to transfer output artifacts.
 	StageEmptyDirMounthPath = "/__cyclone__emptydir"
+
+	// Path of artifacts in coordinator container
+	CoordinatorWorkspacePath = "/workspace/"
 )
 
 // StagePath gets the path of a stage in PV
 func StagePath(wfr, stage string) string {
 	return fmt.Sprintf("workflowruns/%s/stages/%s", wfr, stage)
+}
+
+// ArtifactsPath gets the path of artifacts in PV
+func ArtifactsPath(wfr, stage string) string {
+	return fmt.Sprintf("workflowruns/%s/stages/%s/artifacts/", wfr, stage)
 }
 
 // ArtifactPath gets the path of a artifact in PV.

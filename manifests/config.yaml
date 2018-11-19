@@ -7,10 +7,10 @@ data:
   workflow-controller.json: |
     {
       "images": {
-        "git-resolver": "cargo.caicloudprivatetest.com/release/git-resource-resolver:v0.1",
-        "image-resolver": "cargo.caicloudprivatetest.com/release/image-resource-resolver:v0.1",
-        "kv-resolver": "cargo.caicloudprivatetest.com/release/kv-resource-resolver:v0.1",
-        "coordinator": "cargo.caicloudprivatetest.com/release/stage-coordinator:v0.1"
+        "git-resolver": "test.caicloudprivatetest.com/release/git-resource-resolver:v0.1",
+        "image-resolver": "test.caicloudprivatetest.com/release/image-resource-resolver:v0.1",
+        "kv-resolver": "test.caicloudprivatetest.com/release/kv-resource-resolver:v0.1",
+        "coordinator": "test.caicloudprivatetest.com/release/workflow-coordinator:zj-v1"
       },
       "logging": {
         "level": "debug"

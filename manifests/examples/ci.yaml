@@ -53,6 +53,8 @@ spec:
       artifacts:
       - name: outbin
         path: /go/bin/test
+      - name: myhosts
+        path: /etc/hosts
     spec:
       containers:
       - name: main
@@ -81,7 +83,9 @@ spec:
       - name: main
         image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
         command:
-        - /go/test
+        - tail
+        - -f
+        - /dev/null
 
 ---
 

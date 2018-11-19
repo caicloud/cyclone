@@ -25,6 +25,7 @@ func InitLogger(logging *LoggingConfig) {
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,
+		ForceColors: true,
 		FullTimestamp: true,
 	})
 	log.SetOutput(os.Stdout)
