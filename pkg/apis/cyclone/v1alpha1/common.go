@@ -14,6 +14,8 @@ type ArtifactItem struct {
 	Name string `json:"name"`
 	// Path of the artifact
 	Path string `json:"path"`
+	// Optional, used for output artifacts to specify which container containers the artifact.
+	Container string `json:"container"`
 }
 
 // ParameterItem defines a parameter

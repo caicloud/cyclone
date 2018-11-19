@@ -32,7 +32,7 @@ VERSION ?= v1.0.0-alpha
 ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
-TARGETS := workflow/controller
+TARGETS := workflow/controller workflow/coordinator
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
