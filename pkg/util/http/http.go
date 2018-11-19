@@ -80,6 +80,12 @@ const (
 	HeaderUser = "X-User"
 
 	HEADER_ContentType = "Content-Type"
+
+	// SVNRepoIDPathParameterName represents a svn repository's uuid.
+	SVNRepoIDPathParameterName = "svnrepoid"
+
+	// SVNRevisionQueryParameterName represents the svn commit revision.
+	SVNRevisionQueryParameterName = "revision"
 )
 
 // GetHttpRequest gets request from context.

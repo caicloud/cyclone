@@ -145,6 +145,7 @@
 | --- | --- | --- |
 | Create | POST `/api/v1/pipelines/{pipelineid}/githubwebhook` | WIP, [link](#github-webhook) |
 | Create | POST `/api/v1/pipelines/{pipelineid}/gitlabwebhook` | WIP, [link](#gitlab-webhook) |
+| Create | POST `/api/v1/subversion/{svnrepoid}/postcommithook` | [link](#svn-hooks) |
 
 ### Stats API
 
@@ -457,6 +458,9 @@ Success:
                 "stages": ["string", ...],
                 "comments": ["string", ...]
             },
+            "postCommit":{
+                "stages": ["string", ...]
+            }
         }
     }, 
     "build": {
@@ -1294,6 +1298,59 @@ Success:
 ```
 200 OK
 ```
+
+### SVN hooks
+
+Trigger pipeline by SVN post-commit hooks.
+
+**Request**
+
+URL: `POST /api/v1/subversion/{svnrepoid}/postcommithook`
+
+Header:
+```
+Content-Type:text/plain;charset=UTF-8
+```
+
+Query:
+```
+revision: 27 // {revision-id}
+```
+
+Body:
+Output of `svnlook changed --revision $REV $REPOS`, for example:
+```
+U   cyclone/test.go
+U   cyclone/README.md
+```
+
+**Response**
+
+Success:
+
+```
+200 OK
+```
+
+To make post-commit hooks effective, you should [config your svn repository](#Config-your-svn-repository).
+
+#### Config your svn repository
+You can set up a post commit hook so the Subversion repository can notify cyclone whenever a change is made to that repository. To do this, put the following script in your post-commit file (in the $REPOSITORY/hooks directory):
+```
+REPOS="$1"
+REV="$2"
+TXN_NAME="$3"
+
+UUID=`svnlook uuid $REPOS`
+
+/usr/bin/curl --request POST --header "Content-Type:text/plain;charset=UTF-8" \
+  --data "`svnlook changed --revision $REV $REPOS`" \
+  {cyclone-server-address}/api/v1/subversion/$UUID/postcommithook?revision=$REV
+```
+
+Notes:
+
+Replace `{cyclone-server-address}` by the actural cyclone server address value.
 
 ### PipelineStatusStatsObject
 
