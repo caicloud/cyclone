@@ -1,13 +1,15 @@
 package workflow
 
 const (
+	ResourcePullCommand      = "pull"
+	ResourcePushCommand      = "push"
 	SidecarContainerPrefix   = "sidecar.cyclone.io/"
 	ResolverDataPath         = "/workspace/data"
 	CoordinatorContainerName = "coordinator"
 
 	WorkflowLabelName         = "cyclone.io/workflow"
 	PodLabelSelector          = "cyclone.io/workflow==true"
-	WorkflowrunAnnotationName = "cyclone.io/workflowrun"
+	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
 	StageAnnotationName       = "cyclone.io/stage"
 
 	// Name of the default PV used by all workflow stages.

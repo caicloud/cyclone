@@ -81,8 +81,8 @@ func (p *Operator) SetStageStatus(wfr *v1alpha1.WorkflowRun, stage string, statu
 	if wfr.Status.Stages == nil {
 		wfr.Status.Stages = make(map[string]*v1alpha1.StageStatus)
 	}
-	_, ok := wfr.Status.Stages[stage]
-	if !ok {
+
+	if _, ok := wfr.Status.Stages[stage]; !ok {
 		wfr.Status.Stages[stage] = &v1alpha1.StageStatus{}
 	}
 	wfr.Status.Stages[stage].Status = status
@@ -130,8 +130,7 @@ func (p *Operator) OverallStatus(wfr *v1alpha1.WorkflowRun, wf *v1alpha1.Workflo
 }
 
 func (p *Operator) SetStagePodInfo(wfr *v1alpha1.WorkflowRun, stage string, podInfo *v1alpha1.PodInfo) {
-	_, ok := wfr.Status.Stages[stage]
-	if !ok {
+	if _, ok := wfr.Status.Stages[stage]; !ok {
 		wfr.Status.Stages[stage] = &v1alpha1.StageStatus{}
 	}
 	wfr.Status.Stages[stage].Pod = podInfo
@@ -175,7 +174,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 			LastTransitionTime: metav1.Time{time.Now()},
 		})
 	}
-	wfr.Status.Overall.Status = p.OverallStatus(wfr, len(wf.Spec.Stages))
+	wfr.Status.Overall.Status = p.OverallStatus(wfr, wf)
 	err = p.UpdateStatus(wfr)
 	if err != nil {
 		log.WithField("WorkflowRun", wfr.Name).Error("Update status error: ", err)
@@ -192,7 +191,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 		log.WithField("stage", stage).Info("Start to run stage")
 
 		// Generate pod for this stage.
-		pod, err := NewPodMaker(p.client, wf, wfr, stage).MakePod()
+		pod, err := NewPodBuilder(p.client, wf, wfr, stage).Build()
 		if err != nil {
 			log.WithField("WorkflowRun", wfr.Name).WithField("Stage", stage).Error("Create pod manifest for stage error: ", err)
 			p.SetStageStatus(wfr, stage, v1alpha1.Status{
@@ -230,7 +229,7 @@ func (p *Operator) Reconcile(wfr *v1alpha1.WorkflowRun) error {
 		})
 	}
 
-	wfr.Status.Overall.Status = p.OverallStatus(wfr, len(wf.Spec.Stages))
+	wfr.Status.Overall.Status = p.OverallStatus(wfr, wf)
 	err = p.UpdateStatus(wfr)
 	if err != nil {
 		log.WithField("WorkflowRun", wfr.Name).Error("Update status error: ", err)

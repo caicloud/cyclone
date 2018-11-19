@@ -24,9 +24,9 @@ type Operator struct {
 
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
-	wfr, ok := annotations[workflow.WorkflowrunAnnotationName]
+	wfr, ok := annotations[workflow.WorkflowRunAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.WorkflowrunAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.WorkflowRunAnnotationName)
 	}
 	stage, ok := annotations[workflow.StageAnnotationName]
 	if !ok {

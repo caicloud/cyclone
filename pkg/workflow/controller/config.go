@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+
 	log "github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
 )
@@ -20,6 +22,12 @@ const (
 	KvResolverImage    = "kv-resolver"
 	CoordinatorImage   = "coordinator"
 )
+
+var ResolverImageKeys = map[v1alpha1.ResourceType]string{
+	v1alpha1.GitResourceType:   GitResolverImage,
+	v1alpha1.ImageResourceType: ImageResolverImage,
+	v1alpha1.KVResourceType:    KvResolverImage,
+}
 
 type ControllerConfig struct {
 	// Images that used in controller, such as resource resolvers.

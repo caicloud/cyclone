@@ -10,8 +10,7 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 	var nextStages []string
 	for _, stage := range wf.Spec.Stages {
 		// If this stage already have status set, it means it's already been started, skip it.
-		_, ok := wfr.Status.Stages[stage.Name]
-		if ok {
+		if _, ok := wfr.Status.Stages[stage.Name]; ok {
 			continue
 		}
 
