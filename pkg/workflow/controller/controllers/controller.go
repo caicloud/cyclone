@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 
 	log "github.com/sirupsen/logrus"
@@ -41,6 +42,7 @@ func (c *Controller) Run(stopCh <-chan struct{}) {
 	defer c.queue.ShutDown()
 
 	log.WithField("name", c.name).Info("Start controller.")
+	controller.Client = c.clientSet
 
 	go c.informer.Run(stopCh)
 
