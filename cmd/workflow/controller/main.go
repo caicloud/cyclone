@@ -12,7 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
 )
 
-var kubeConfigPath = flag.String("kubeconfig", "/Users/caicloud/.kube/config", "Path to a kubeconfig. Only required if out-of-cluster.")
+var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 var configPath = flag.String("config", "workflow-controller.json", "Path to workflow controller config.")
 var cm = flag.String("cm", "workflow-controller-config", "ConfigMap that configures workflow controller")
 var namespace = flag.String("namespace", "default", "Namespace that workflow controller will run in")
@@ -40,7 +40,7 @@ func main() {
 	cmController := controllers.NewConfigMapController(client, *namespace, *cm)
 	go cmController.Run(ctx.Done())
 
-	// Watch configure changes in ConfigMap.
+	// Watch workflowTrigger who will start workflowRun on schedule
 	wftController := controllers.NewWorkflowTriggerController(client)
 	go wftController.Run(ctx.Done())
 

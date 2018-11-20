@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowTrigger"
 	log "github.com/sirupsen/logrus"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowTrigger"
 )
 
 func NewWorkflowTriggerController(client clientset.Interface) *Controller {
@@ -71,13 +72,12 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 		},
 	})
 
+	workflowTrigger.Client = client
 	return &Controller{
-		name:      "WorkflowTrigger Controller",
-		clientSet: client,
-		informer:  informer,
-		queue:     queue,
-		eventHandler: &workflowTrigger.Handler{
-			Selectors: []workflowTrigger.Selector{},
-		},
+		name:         "WorkflowTrigger Controller",
+		clientSet:    client,
+		informer:     informer,
+		queue:        queue,
+		eventHandler: &workflowTrigger.Handler{},
 	}
 }

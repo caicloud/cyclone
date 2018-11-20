@@ -1,31 +1,18 @@
 package workflowTrigger
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
-
-	log "github.com/sirupsen/logrus"
 )
 
-// Selector is a selector of WorkflowTrigger, it defines the logic
-// to judge whether a WorkflowTrigger meet some conditions.
-type Selector func(wfr *v1alpha1.WorkflowTrigger) bool
+type Handler struct{}
 
-// Name defines a ConfigMapSelector who selects ConfigMap namespace.
-func Namespace(namespace string) Selector {
-	return func(wfr *v1alpha1.WorkflowTrigger) bool {
-		return wfr.Namespace == namespace
-	}
-}
-
-type Handler struct {
-	// Selectors of WorkflowTrigger, only those passed all the selectors
-	// would be processed by this handler.
-	Selectors []Selector
-}
-
-// Check whether *Handler has implemented handlers.Interface interface.
-var _ handlers.Interface = (*Handler)(nil)
+var (
+	// Check whether *Handler has implemented handlers.Interface interface.
+	_ handlers.Interface = (*Handler)(nil)
+)
 
 func (h *Handler) ObjectCreated(obj interface{}) {
 	// h.process(obj)
@@ -62,10 +49,5 @@ func (h *Handler) process(obj interface{}) {
 }
 
 func (h *Handler) pass(wft *v1alpha1.WorkflowTrigger) bool {
-	for _, selector := range h.Selectors {
-		if !selector(wft) {
-			return false
-		}
-	}
 	return true
 }
