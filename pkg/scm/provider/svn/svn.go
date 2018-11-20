@@ -122,14 +122,12 @@ func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
 // 'svn info --show-item repos-uuid(or repos-root-url) --username {user} --password {password}
 // --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
 // --no-auth-cache {remote-svn-address}'
-func (s *SVN) RetrieveRepoInfo() (*api.RepoInfo, error) {
+func (s *SVN) RetrieveRepoInfo(url string) (*api.RepoInfo, error) {
 	repoInfo := &api.RepoInfo{}
 	username, password, err := s.spilitToken(s.scmCfg.Token)
 	if err != nil {
 		return repoInfo, errors.ErrorUnknownInternal.Error("get svn credential failed")
 	}
-
-	url := s.scmCfg.Server
 
 	repoInfo.ID, err = retrieveSVNRepoInfo(url, username, password, "repos-uuid")
 	if err != nil {

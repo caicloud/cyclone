@@ -468,11 +468,11 @@ func HandleSVNHooks(ctx context.Context, repoid, revision string) error {
 			// and the pipeline has not been triggered
 			if strings.Contains(fullPath, url) && !isAlreadyTriggered {
 				triggeredPipelines[pipeline.ID] = struct{}{}
-				log.Info("SVN hooks triggered pipeline: %s, id: %s", pipeline.Name, pipeline.ID)
+				log.Infof("SVN hooks triggered pipeline: %s, id: %s", pipeline.Name, pipeline.ID)
 				// Trigger the pipeline
 				errt := triggerSVNPipelines(pc, pipeline, revision)
 				if errt != nil {
-					log.Error("svn hook trigger pipeline failed as %v", errt)
+					log.Errorf("svn hook trigger pipeline failed as %v", errt)
 				}
 			}
 		}

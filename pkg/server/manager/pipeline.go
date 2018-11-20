@@ -112,49 +112,18 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		return nil, err
 	}
 
-	// Create SCM webhook if enable SCM trigger.
-	var webHook *scm.WebHook
-	var gitSource *api.GitSource
-	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
-		gitSource, err = api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
-		if err != nil {
-			return nil, err
-		}
-
-		if scmConfig.Type == api.SVN && pipeline.AutoTrigger.SCMTrigger.PostCommit != nil {
-			// SVN post commit hooks
-			repoInfo, err := provider.RetrieveRepoInfo()
-			if err != nil {
-				return nil, err
-			}
-
-			pipeline.AutoTrigger.SCMTrigger.PostCommit.RepoInfo = repoInfo
-		} else {
-			// GitHub and GitLab webhook
-			pipeline.ID = bson.NewObjectId().Hex()
-			webHook = &scm.WebHook{
-				Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
-				Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
-			}
-			if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
-				logdog.Errorf("create webhook failed: %v", err)
-				scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
-				if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
-					(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-					return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
-				}
-
-				return nil, err
-			}
-			pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
-		}
-
+	gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
+	if err != nil {
+		return nil, err
 	}
 
+	// Create SCM webhook if enable SCM trigger.
+	createWebhook(pipeline, provider, scmConfig.Type, gitSource.Url, "")
 	// Remove the webhook if there is error.
 	defer func() {
-		if err != nil && gitSource != nil && webHook != nil {
-			if err = provider.DeleteWebHook(gitSource.Url, webHook.Url); err != nil {
+		if err != nil && gitSource != nil && pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
+			//if err != nil && gitSource != nil && webHook != nil {
+			if err = provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
 				logdog.Errorf("Fail to delete the webhook %s", pipeline.Name)
 			}
 		}
@@ -166,6 +135,48 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	}
 
 	return createdPipeline, nil
+}
+
+func createWebhook(pipeline *api.Pipeline, provider scm.SCMProvider, scmType api.SCMType, mainRepoUrl, pipelineID string) error {
+	// Create SCM webhook if enable SCM trigger.
+	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
+
+		if scmType == api.SVN && pipeline.AutoTrigger.SCMTrigger.PostCommit != nil {
+			// SVN post commit hooks
+			repoInfo, err := provider.RetrieveRepoInfo(mainRepoUrl)
+			if err != nil {
+				return err
+			}
+
+			pipeline.AutoTrigger.SCMTrigger.PostCommit.RepoInfo = repoInfo
+		} else {
+			// GitHub and GitLab webhook
+			if pipelineID == "" {
+				pipeline.ID = bson.NewObjectId().Hex()
+			} else {
+				pipeline.ID = pipelineID
+			}
+
+			webHook := &scm.WebHook{
+				Url:    generateWebhookURL(scmType, pipeline.ID),
+				Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
+			}
+			if err := provider.CreateWebHook(mainRepoUrl, webHook); err != nil {
+				logdog.Errorf("create webhook failed: %v", err)
+				scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
+				if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
+					(scmType == api.Github && strings.Contains(err.Error(), "404")) {
+					return httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
+				}
+
+				return err
+			}
+			pipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
+		}
+
+	}
+
+	return nil
 }
 
 // GetPipeline gets the pipeline by name in one project.
@@ -312,15 +323,15 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		return nil, err
 	}
 
+	gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
+	if err != nil {
+		return nil, err
+	}
+
 	// Remove the old webhook if exists.
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
 		scmTrigger := pipeline.AutoTrigger.SCMTrigger
 		if scmTrigger.Webhook != "" {
-			gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
-			if err != nil {
-				return nil, err
-			}
-
 			if err := provider.DeleteWebHook(gitSource.Url, scmTrigger.Webhook); err != nil {
 				return nil, err
 			}
@@ -328,28 +339,10 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	}
 
 	// Create the new webhook if necessary.
-	if newPipeline.AutoTrigger != nil && newPipeline.AutoTrigger.SCMTrigger != nil {
-		scmTrigger := newPipeline.AutoTrigger.SCMTrigger
-		gitSource, err := api.GetGitSource(newPipeline.Build.Stages.CodeCheckout.MainRepo)
-		if err != nil {
-			return nil, err
-		}
-
-		webHook := &scm.WebHook{
-			Url:    generateWebhookURL(scmConfig.Type, pipeline.ID),
-			Events: collectSCMEvents(scmTrigger),
-		}
-		if err := provider.CreateWebHook(gitSource.Url, webHook); err != nil {
-			logdog.Errorf("create webhook failed: %v", err)
-			scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
-			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
-				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				return nil, httperror.ErrorCreateWebhookPermissionDenied.Error(pipeline.Name)
-			}
-			return nil, err
-		}
-
-		newPipeline.AutoTrigger.SCMTrigger.Webhook = webHook.Url
+	err = createWebhook(newPipeline, provider, scmConfig.Type, gitSource.Url, pipeline.ID)
+	if err != nil {
+		logdog.Errorf("create webhook failed: %v", err)
+		return nil, err
 	}
 
 	pipeline.AutoTrigger = newPipeline.AutoTrigger
