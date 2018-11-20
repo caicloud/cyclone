@@ -482,6 +482,6 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return *pr.Head.SHA, nil
 }
 
-func (g *Github) RetrieveRepoInfo() (*api.RepoInfo, error) {
+func (g *Github) RetrieveRepoInfo(url string) (*api.RepoInfo, error) {
 	return nil, errors.ErrorNotImplemented.Error("retrive GitHub repo id")
 }
