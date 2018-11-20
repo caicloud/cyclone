@@ -56,9 +56,17 @@ const (
 	CoordinatorSidecarVolumeName = "coordinator-sidecar-volume"
 	// Volume name to mount host /var/run/docker.sock to container, it's used by coordinator.
 	DockerSockVolume = "docker-sock"
+	// Volume for config.json in secret.
+	DockerConfigJsonVolume = "cyclone-docker-secret-volume"
 
 	// Path of docker socket file
 	DockerSockPath = "/var/run/docker.sock"
+
+	// Name of the secret used by workflow.
+	DefaultSecretName = "cyclone-secrets"
+
+	DockerConfigPath = "/root/.docker"
+	DockerConfigJsonFile = "config.json"
 
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"

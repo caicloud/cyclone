@@ -168,6 +168,22 @@ func (m *PodBuilder) CreateVolumes() error {
 		},
 	})
 
+	// Create secret volume for use in resource resolvers.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.DockerConfigJsonVolume,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: common.DefaultSecretName,
+				Items: []corev1.KeyToPath{
+					{
+						Key: common.DockerConfigJsonFile,
+						Path: common.DockerConfigJsonFile,
+					},
+				},
+			},
+		},
+	})
+
 	return nil
 }
 
@@ -286,6 +302,9 @@ func (m *PodBuilder) ResolveOutputResources() error {
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
 				Name: common.DockerSockVolume,
 				MountPath: common.DockerSockPath,
+			}, corev1.VolumeMount{
+				Name: common.DockerConfigJsonVolume,
+				MountPath: common.DockerConfigPath,
 			})
 		}
 
