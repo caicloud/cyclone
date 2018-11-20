@@ -1,17 +1,17 @@
 package pod
 
 import (
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-
 	"fmt"
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/workflow"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
-	"time"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 )
 
 type Operator struct {
@@ -24,13 +24,13 @@ type Operator struct {
 
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
-	wfr, ok := annotations[workflow.WorkflowrunAnnotationName]
+	wfr, ok := annotations[common.WorkflowRunAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.WorkflowrunAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.WorkflowRunAnnotationName)
 	}
-	stage, ok := annotations[workflow.StageAnnotationName]
+	stage, ok := annotations[common.StageAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.StageAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.StageAnnotationName)
 	}
 
 	return &Operator{
@@ -107,20 +107,22 @@ func (p *Operator) OnUpdated() error {
 }
 
 // DetermineStatus determines status of a stage and update WorkflowRun status accordingly.
-// When the main working containers have been finished (no matter Succeed or Failed), we need
-// to update stage status, and take necessary actions to stop the pod.
+// Because coordinator container is the last container running in the pod (it performs collect
+// logs, artifacts, notify resource resolver to push resource), when the coordinator container
+// have been finished (no matter Succeed or Failed), we need to update stage status, and take
+// necessary actions to stop the pod.
 func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 	// If there are containers that haven't report status, no need to judge pod status.
 	if len(p.pod.Status.ContainerStatuses) != len(p.pod.Spec.Containers) {
 		return
 	}
 
-	// If any workload containers (non-sidecars) not terminated, we regard the pod not completed.
+	// Check coordinator container's status, if it's terminated, we regard the pod completed.
 	anyError := false
 	for _, containerStatus := range p.pod.Status.ContainerStatuses {
-		if !strings.HasPrefix(containerStatus.Name, workflow.SidecarContainerPrefix) {
+		if containerStatus.Name == common.CoordinatorSidecarName {
 			if containerStatus.State.Terminated == nil {
-				log.WithField("container", containerStatus.Name).Debug("Container not terminated")
+				log.WithField("container", containerStatus.Name).Debug("Coordinator not terminated")
 				return
 			}
 			if containerStatus.State.Terminated.ExitCode != 0 {
@@ -129,10 +131,9 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 		}
 	}
 
-	// Now the workload containers have all been finished. We then:
-	// - Update the stage status in WorkflowRun
-	// - TODO(ChenDe): Notify sidecar to process artifacts or output resoruces
-	// - TODO(ChenDe): Stop containers or delete pod
+	// Now the workload containers and coordinator container have all been finished. We then:
+	// - Update the stage status in WorkflowRun based on coordinator's exit code.
+	// - TODO(ChenDe): Delete pod
 
 	if anyError {
 		log.WithField("workflowrun", wfr.Name).
@@ -142,8 +143,8 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{time.Now()},
-			Reason:             "PayloadContainersError",
-			Message:            "Some workload containers failed",
+			Reason:             "CoordinatorError",
+			Message:            "Coordinator exit with error",
 		})
 	} else {
 		log.WithField("workflowrun", wfr.Name).
@@ -153,8 +154,8 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
 			Status:             v1alpha1.StatusCompleted,
 			LastTransitionTime: metav1.Time{time.Now()},
-			Reason:             "PayloadContainersCompleted",
-			Message:            "All workload containers succeeded",
+			Reason:             "CoordinatorCompleted",
+			Message:            "Coordinator completed",
 		})
 	}
 }

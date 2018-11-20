@@ -74,7 +74,7 @@ const (
 
 // PodInfo describes the pod a stage created.
 type PodInfo struct {
-	Name string `json:"name"`
+	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 }
 

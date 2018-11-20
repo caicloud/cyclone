@@ -6,27 +6,27 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/caicloud/cyclone/pkg/common/constants"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
 func getPodName() string {
-	return os.Getenv(constants.EnvStagePodName)
+	return os.Getenv(common.EnvStagePodName)
 }
 
 func getWorkflowrunName() string {
-	return os.Getenv(constants.EnvWorkflowrunName)
+	return os.Getenv(common.EnvWorkflowrunName)
 }
 
 func getStageName() string {
-	return os.Getenv(constants.EnvStageName)
+	return os.Getenv(common.EnvStageName)
 }
 
 func getWorkloadContainer() string {
-	return os.Getenv(constants.EnvWorkloadContainerName)
+	return os.Getenv(common.EnvWorkloadContainerName)
 }
 
 func getNamespace() string {
-	n := os.Getenv(constants.EnvNamespace)
+	n := os.Getenv(common.EnvNamespace)
 	if n == "" {
 		return "default"
 	}

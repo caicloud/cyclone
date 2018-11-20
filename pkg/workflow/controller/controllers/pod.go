@@ -1,17 +1,16 @@
 package controllers
 
 import (
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
-
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
 )
 
 func NewPodController(client clientset.Interface) *Controller {
@@ -20,11 +19,11 @@ func NewPodController(client clientset.Interface) *Controller {
 	informer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-				options.LabelSelector = workflow.PodLabelSelector
+				options.LabelSelector = common.PodLabelSelector
 				return client.CoreV1().Pods("").List(options)
 			},
 			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-				options.LabelSelector = workflow.PodLabelSelector
+				options.LabelSelector = common.PodLabelSelector
 				return client.CoreV1().Pods("").Watch(options)
 			},
 		},
@@ -39,7 +38,6 @@ func NewPodController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("new workflow pod observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    CREATE,
@@ -52,7 +50,6 @@ func NewPodController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("workflow pod update observed")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    UPDATE,
@@ -65,7 +62,6 @@ func NewPodController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			log.WithField("name", key).Debug("workflow pod deleted")
 			queue.Add(Event{
 				Key:          key,
 				EventType:    DELETE,
