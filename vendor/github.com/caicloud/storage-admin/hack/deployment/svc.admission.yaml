@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-admission
+  namespace: kube-system
+spec:
+  clusterIP: 10.254.0.131
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 2333
+  selector:
+    caicloud-app: storage-admission
+  sessionAffinity: None
+  type: ClusterIP

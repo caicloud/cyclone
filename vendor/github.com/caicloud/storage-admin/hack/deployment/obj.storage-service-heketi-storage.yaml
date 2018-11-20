@@ -1,0 +1,7 @@
+apiVersion: storage.resource.caicloud.io/v1alpha1
+kind: StorageService
+metadata:
+  name: heketi-storage-service
+parameters:
+  resturl: http://192.168.16.31:30066
+typeName: glusterfs

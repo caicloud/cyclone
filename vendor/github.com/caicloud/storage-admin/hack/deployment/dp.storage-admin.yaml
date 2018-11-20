@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: storage-admin
+  namespace: caas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      caicloud-app: storage-admin
+      version: v0.1.9
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        caicloud-app: storage-admin
+        caicloud.io/cluster-service: "true"
+        kubernetes-admin.caicloud.io/application: storage-admin-v0.1.9
+        kubernetes-admin.caicloud.io/type: application
+        version: v0.1.9
+    spec:
+      containers:
+      - image: cargo.caicloudprivatetest.com/caicloud/storage-admin:v0.1.9
+        imagePullPolicy: Always
+        name: storage-admin
+        env:
+        - name: ENV_CLUSTER_ADMIN_HOST
+          value: "http://cds-server:9000"
+        - name: ENV_CTRL_CLUSTER_NAME
+          value: ""
+        - name: ENV_LISTEN_PORT
+          value: "2333"
+        - name: ENV_LOG_LEVEL
+          value: "info"
+        ports:
+        - containerPort: 2333
+          name: saport
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 300Mi
+          requests:
+            cpu: 200m
+            memory: 120Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: default
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30

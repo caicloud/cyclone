@@ -1,0 +1,15 @@
+apiVersion: storage.resource.caicloud.io/v1alpha1
+kind: StorageType
+metadata:
+  name: nas-netapp
+provisioner: netapp.io/trident
+requiredParameters:
+  backendType: Backend specified, values ontap-nas, ontap-nas-economy, ontap-san, solidfire-san, eseries-iscsi
+optionalParameters:
+  IOPS: Volume guaranteed these IOPS, values true, false
+  clones: Volume with clones enabled, values true, false
+  encryption: Volume with encryption enabled, values true, false
+  media: Media type specified, values hdd, hybrid, ssd
+  provisioningType: Provisioning method specified, values thin, thick
+  requiredStorage: Map of backend names to lists of storage pools within
+  snapshots: Volume with snapshots enabled, values true, false

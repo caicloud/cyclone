@@ -2,6 +2,38 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:c0bec5f9b98d0bc872ff5e834fac186b807b656683bd29cb82fb207a1513fabb"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  pruneopts = ""
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  digest = "1:adc598c9be3072d09a9b1537284e74824de3e300133378f635a99fff2d967213"
+  name = "github.com/caicloud/nirvana"
+  packages = [
+    ".",
+    "definition",
+    "errors",
+    "log",
+    "plugins/metrics",
+    "plugins/profiling",
+    "service",
+    "service/router",
+  ]
+  pruneopts = ""
+  revision = "0cd8f02a9807e0ee3f738525d1b0c53457a77975"
+
+[[projects]]
+  digest = "1:de6ba9010e48508fb7bbcd6241984b0a02ff611326a5b10bfb1d18288072e0bb"
+  name = "github.com/caicloud/storage-admin"
+  packages = ["pkg/constants"]
+  pruneopts = ""
+  revision = "90bde1ac21faec4dfa85bbb6ba9dc301894a6eb3"
+  version = "v0.1.10"
+
+[[projects]]
   digest = "1:7589cb4f91d684fad3e467fa1d33013c1078fe98a692a19e5c38a57c35d884de"
   name = "github.com/cbroglie/mustache"
   packages = ["."]
@@ -78,6 +110,14 @@
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:09aa5dd1332b93c96bde671bafb053249dc813febf7d5ca84e8f382ba255d67d"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = ""
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:3313a63031ae281e5f6fd7b0bbca733dfa04d2429df86519e3b4d4c016ccb836"
   name = "github.com/hashicorp/golang-lru"
   packages = [
@@ -121,6 +161,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:63722a4b1e1717be7b98fc686e0b30d5e7f734b9e93d7dee86293b6deab7ea28"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = ""
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:0c0ff2a89c1bb0d01887e1dac043ad7efbf3ec77482ef058ac423d13497e16fd"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -135,6 +183,50 @@
   pruneopts = ""
   revision = "1df9eeb2bb81f327b96228865c5687bc2194af3f"
   version = "1.0.0"
+
+[[projects]]
+  digest = "1:8b2082f564fe20dbb43a621ee0d57ae2777656ab14111d100d3d92d1b5b958b9"
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/internal",
+    "prometheus/promhttp",
+  ]
+  pruneopts = ""
+  revision = "abad2d1bd44235a26707c172eab6bca5bf2dbad3"
+  version = "v0.9.1"
+
+[[projects]]
+  digest = "1:60aca47f4eeeb972f1b9da7e7db51dee15ff6c59f7b401c1588b8e6771ba15ef"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = ""
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ff7ffa45e012b4776d11cbb7d75c19931f75d0a191144c53a2aaf3e9bd7e805f"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = ""
+  revision = "aeab699e26f4d4089dba5e522e5d9babd2adbaf7"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1f62ed2c173c42c1edad2e94e127318ea11b0d28c62590c82a8d2d3cde189afe"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs",
+  ]
+  pruneopts = ""
+  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
 
 [[projects]]
   digest = "1:7f569d906bdd20d906b606415b7d794f798f91a62fcfb6a4daa6d50690fb7a3f"
@@ -524,8 +616,17 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/caicloud/nirvana",
+    "github.com/caicloud/nirvana/definition",
+    "github.com/caicloud/nirvana/errors",
+    "github.com/caicloud/nirvana/log",
+    "github.com/caicloud/nirvana/plugins/metrics",
+    "github.com/caicloud/nirvana/plugins/profiling",
+    "github.com/caicloud/nirvana/service",
+    "github.com/caicloud/storage-admin/pkg/constants",
     "github.com/cbroglie/mustache",
     "github.com/golang/glog",
+    "github.com/gorilla/websocket",
     "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
     "github.com/spf13/pflag",

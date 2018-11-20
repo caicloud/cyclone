@@ -1,0 +1,99 @@
+// Change the image name as needed, the image tag is from params.
+
+podTemplate(
+    cloud: 'dev-cluster',
+    namespace: 'kube-system',
+    // change the label to your component name.
+    label: 'storage-admin',
+    containers: [
+        // a Jenkins agent (FKA "slave") using JNLP to establish connection.
+        containerTemplate(
+            name: 'jnlp',
+            // alwaysPullImage: true,
+            image: 'cargo.caicloudprivatetest.com/caicloud/jenkins/jnlp-slave:3.14-1-alpine',
+            command: '',
+            args: '${computer.jnlpmac} ${computer.name}',
+        ),
+        // golang with docker client and tools
+        containerTemplate(
+            name: 'golang',
+            image: 'cargo.caicloudprivatetest.com/caicloud/golang-docker:1.9-17.09',
+            ttyEnabled: true,
+            command: '',
+            args: '',
+            envVars: [
+                containerEnvVar(key: 'DOCKER_HOST', value: 'unix:///home/jenkins/docker.sock'),
+                // Change the environment variable WORKDIR as needed.
+                containerEnvVar(key: 'GOPATH', value: '/go'),
+                containerEnvVar(key: 'WORKDIR', value: '/go/src/github.com/caicloud/storage-admin')
+            ],
+        ),
+        // docker in docker
+        containerTemplate(
+            name: 'dind',
+            image: 'cargo.caicloudprivatetest.com/caicloud/docker:17.09-dind',
+            ttyEnabled: true,
+            command: '',
+            args: '--host=unix:///home/jenkins/docker.sock',
+            privileged: true,
+        )
+    ]
+) {
+    node('storage-admin') {
+        stage('checkout') {
+            checkout scm
+        }
+
+        // load config file
+        load 'jenkins/config.groovy'
+
+        // Change the container name as the container you use for compiling.
+        container('golang') {
+            // You can define and adjust the stage as you need.
+            stage('Compile') {
+                sh('''
+                    set -e
+                    mkdir -p $(dirname ${WORKDIR})
+
+                    # if you do not remove target dir manually
+                    # ln will not work according to what you want
+                    # ln link /home/jenkins/workspace/xxxx to /go/src/github.com/caicloud/storage-admin at first time
+                    # ln will link /home/jenkins/workspace/xxxx to /go/src/github.com/caicloud/storage-admin at second time
+                    # so remove the target workdir before you link
+                    rm -rf ${WORKDIR}
+                    ln -sfv $(pwd) ${WORKDIR}
+                    cd ${WORKDIR}
+
+                    make clean
+                    make build
+                ''')
+            }
+
+            stage('Test') {
+                sh('''
+                   set -e
+                   cd ${WORKDIR}
+                   make test
+                ''')
+            }
+        }
+
+        container('dind') {
+            stage('Build and push image') {
+                sh "docker build -t ${env.IMAGE_NAME_ADMIN}:${env.IMAGE_TAG} -f ${env.DOCKERFILE_ADMIN} ."
+                sh "docker build -t ${env.IMAGE_NAME_ADMIN_CONTROLLER}:${env.IMAGE_TAG} -f ${env.DOCKERFILE_ADMIN_CONTROLLER} ."
+                sh "docker build -t ${env.IMAGE_NAME_ADMISSION}:${env.IMAGE_TAG} -f ${env.DOCKERFILE_ADMISSION} ."
+                sh "docker build -t ${env.IMAGE_NAME_CONTROLLER}:${env.IMAGE_TAG} -f ${env.DOCKERFILE_CONTROLLER} ."
+
+                if (params.publish) {
+                    docker.withRegistry("https://${env.PRIVATE_CARGO_REGISTRY}", "cargo-private-admin") {
+                        docker.image("${env.IMAGE_NAME_ADMIN}:${env.IMAGE_TAG}").push()
+                        docker.image("${env.IMAGE_NAME_ADMIN_CONTROLLER}:${env.IMAGE_TAG}").push()
+                        docker.image("${env.IMAGE_NAME_ADMISSION}:${env.IMAGE_TAG}").push()
+                        docker.image("${env.IMAGE_NAME_CONTROLLER}:${env.IMAGE_TAG}").push()
+                    }
+                }
+            }
+        }
+    }
+}

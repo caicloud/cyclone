@@ -1,0 +1,17 @@
+apiVersion: storage.resource.caicloud.io/v1alpha1
+kind: StorageType
+metadata:
+  name: glusterfs
+provisioner: kubernetes.io/glusterfs
+requiredParameters:
+  restauthenabled: "true"
+  resturl: http://1.2.3.4:5
+  restuser: admin
+  restuserkey: admin:MxqrRIoe4ZP0ZwSeK+tK/48C
+  secretName: heketi-secret
+  secretNamespace: default
+optionalParameters:
+  clusterid: 630372ccdc720a92c681fb928f27b53f
+  gidMax: "50000"
+  gidMin: "40000"
+  volumetype: replicate:3
