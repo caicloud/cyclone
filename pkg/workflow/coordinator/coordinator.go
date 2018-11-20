@@ -9,9 +9,8 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/common/constants"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/coordinator/common"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
 
@@ -21,7 +20,7 @@ var GetExitCodeRetry = 10
 
 func init() {
 	// create container directory if not exist.
-	createDirectory(constants.ContainerLogDir)
+	createDirectory(common.CoordinatorLogsPath)
 }
 
 // Coordinator is a struct which contains infomations
@@ -36,8 +35,7 @@ type Coordinator struct {
 // RuntimeExecutor is an interface defined some methods
 // to communicate with k8s container runtime.
 type RuntimeExecutor interface {
-	WaitContainers(state common.ContainerState, excepts []string) error
-	KillContainer(containerName string) error
+	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
 	CollectLog(containerName string, path string) error
 	GetStageOutputs(name string) (v1alpha1.Outputs, error)
 	CopyFromContainer(container, path, dst string) error
@@ -47,7 +45,7 @@ type RuntimeExecutor interface {
 // NewCoordinator create a coordinator instance.
 func NewCoordinator(client clientset.Interface, kubecfg string) *Coordinator {
 	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExector(getNamespace(), getPodName(), client, kubecfg),
+		runtimeExec:       k8sapi.NewK8sapiExecutor(getNamespace(), getPodName(), client, kubecfg),
 		workflowrunName:   getWorkflowrunName(),
 		stageName:         getStageName(),
 		workloadContainer: getWorkloadContainer(),
@@ -62,7 +60,7 @@ func (co *Coordinator) CollectLogs() {
 	}
 
 	for _, c := range cs {
-		path := fmt.Sprintf(constants.FmtContainerLogPath, c)
+		path := common.ContainerLogPath(c)
 		go func(containerName string, logPath string) {
 			errl := co.runtimeExec.CollectLog(containerName, logPath)
 			if errl != nil {
@@ -79,39 +77,30 @@ func (co *Coordinator) CollectLogs() {
 
 // WaitRunning waits all containers to start run.
 func (co *Coordinator) WaitRunning() {
-	excepts := []string{}
-
-	err := co.runtimeExec.WaitContainers(common.ContainerStateInitialized, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateInitialized)
 	if err != nil {
 		log.Errorf("Wait containers to running error: %v", err)
 		return
 	}
-
 }
 
-// WaitWorkloadTerminate waits all customized containers to be Terminated status.
+// WaitWorkloadTerminate waits all workload containers to be Terminated status.
 func (co *Coordinator) WaitWorkloadTerminate() {
-	excepts := []string{constants.ContainerSidecarPrefix}
-
-	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.WorkloadContainersSelector)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
 		return
 	}
-
 }
 
 // WaitAllOthersTerminate waits all containers except for
 // the coordinator container itself to become Terminated status.
 func (co *Coordinator) WaitAllOthersTerminate() {
-	excepts := []string{constants.ContainerCoordinatorName}
-
-	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, excepts)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.WorkloadContainersSelector)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
 		return
 	}
-
 }
 
 // Check if the workload is succeeded.
@@ -146,7 +135,7 @@ func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
 	log.WithField("container statuses", pod.Status.ContainerStatuses).Debug()
 
 	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name != constants.ContainerCoordinatorName {
+		if cs.Name != common.CoordinatorSidecarName {
 			if cs.State.Terminated == nil {
 				log.Warningf("container %s not terminated.", cs.Name)
 				continue
@@ -168,25 +157,22 @@ func (co *Coordinator) CollectArtifacts() error {
 	}
 
 	// Create the artifacts directory if not exist.
-	createDirectory(constants.ArtifactsDir)
+	createDirectory(common.CoordinatorArtifactsPath)
 
 	log.WithField("artifacts", outputs.Artifacts).Info("start to collect.")
 	for _, artifact := range outputs.Artifacts {
-		dst := path.Join(constants.ArtifactsDir, artifact.Name)
+		dst := path.Join(common.CoordinatorArtifactsPath, artifact.Name)
 		createDirectory(dst)
-		if artifact.Container == "" {
-			artifact.Container = co.workloadContainer
-		}
 
-		id, err := co.getContainerID(artifact.Container)
+		id, err := co.getContainerID(co.workloadContainer)
 		if err != nil {
-			log.Errorf("get container %s's id failed: %v", artifact.Container, err)
+			log.Errorf("get container %s's id failed: %v", co.workloadContainer, err)
 			return err
 		}
 
 		erra := co.runtimeExec.CopyFromContainer(id, artifact.Path, dst)
 		if erra != nil {
-			log.Errorf("Copy container %s artifact %s failed: %v", artifact.Container, artifact.Name, erra)
+			log.Errorf("Copy container %s artifact %s failed: %v", co.workloadContainer, artifact.Name, erra)
 			return err
 		}
 
@@ -205,11 +191,11 @@ func (co *Coordinator) CollectResources() error {
 	}
 
 	// Create the resources directory if not exist.
-	createDirectory(constants.ResourcesDir)
+	createDirectory(common.CoordinatorResourcesPath)
 
 	log.WithField("resources", outputs.Resources).Info("start to collect.")
 	for _, resource := range outputs.Resources {
-		dst := path.Join(constants.ResourcesDir, resource.Name)
+		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
 		createDirectory(dst)
 
 		id, err := co.getContainerID(co.workloadContainer)
@@ -231,28 +217,13 @@ func (co *Coordinator) CollectResources() error {
 
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
-	// Create the notify directory if not exist.
-	exist := createDirectory(constants.OutputResolverNotifyDir)
-	log.WithField("exist", exist).WithField("notifydir", constants.OutputResolverNotifyDir).Info()
+	exist := createDirectory(common.CoordinatorResolverNotifyPath)
+	log.WithField("exist", exist).WithField("notifydir", common.CoordinatorResolverNotifyPath).Info()
 
-	_, err := os.Create(constants.OutputResolverNotifyPath)
-	log.WithField("notifypath", constants.OutputResolverNotifyPath).WithField("error", err).Info()
+	_, err := os.Create(common.CoordinatorResolverNotifyOkPath)
 	if err != nil {
+		log.WithField("file", common.CoordinatorResolverNotifyOkPath).Error("Create ok file error: ", err)
 		return err
-	}
-	return nil
-
-}
-
-// killAllOthers kill all containers except for the coordinator container itself.
-func (co *Coordinator) killAllOthers() error {
-	cs, err := co.getAllOtherContainers()
-	if err != nil {
-		return err
-	}
-
-	for _, c := range cs {
-		co.runtimeExec.KillContainer(c)
 	}
 
 	return nil
@@ -266,7 +237,7 @@ func (co *Coordinator) getAllOtherContainers() ([]string, error) {
 	}
 
 	for _, c := range pod.Spec.Containers {
-		if c.Name != constants.ContainerCoordinatorName {
+		if c.Name != common.CoordinatorSidecarName {
 			cs = append(cs, c.Name)
 		}
 	}
@@ -286,5 +257,5 @@ func (co *Coordinator) getContainerID(name string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Container %s not found", name)
+	return "", fmt.Errorf("container %s not found", name)
 }

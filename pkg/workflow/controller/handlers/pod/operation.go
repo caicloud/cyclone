@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
-
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 )
 
 type Operator struct {
@@ -24,13 +24,13 @@ type Operator struct {
 
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
-	wfr, ok := annotations[workflow.WorkflowRunAnnotationName]
+	wfr, ok := annotations[common.WorkflowRunAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.WorkflowRunAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.WorkflowRunAnnotationName)
 	}
-	stage, ok := annotations[workflow.StageAnnotationName]
+	stage, ok := annotations[common.StageAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", workflow.StageAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.StageAnnotationName)
 	}
 
 	return &Operator{
@@ -120,7 +120,7 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 	// Check coordinator container's status, if it's terminated, we regard the pod completed.
 	anyError := false
 	for _, containerStatus := range p.pod.Status.ContainerStatuses {
-		if containerStatus.Name == workflow.CoordinatorContainerName {
+		if containerStatus.Name == common.CoordinatorSidecarName {
 			if containerStatus.State.Terminated == nil {
 				log.WithField("container", containerStatus.Name).Debug("Coordinator not terminated")
 				return

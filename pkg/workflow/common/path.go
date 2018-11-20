@@ -28,3 +28,8 @@ func ArtifactsPath(wfr, stage string) string {
 func ArtifactPath(wfr, stage, artifact string) string {
 	return fmt.Sprintf("workflowruns/%s/stages/%s/artifacts/%s", wfr, stage, artifact)
 }
+
+// ContainerLogPath gets path of log file in coordinator container.
+func ContainerLogPath(container string) string {
+	return fmt.Sprintf("%s/%s.log", CoordinatorLogsPath, container)
+}

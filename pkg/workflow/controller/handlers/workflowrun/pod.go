@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
-
 	"github.com/cbroglie/mustache"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 type PodBuilder struct {
@@ -67,11 +66,11 @@ func (m *PodBuilder) Prepare() error {
 		Name:      podName,
 		Namespace: m.wfr.Namespace,
 		Labels: map[string]string{
-			workflow.WorkflowLabelName: "true",
+			common.WorkflowLabelName: "true",
 		},
 		Annotations: map[string]string{
-			workflow.WorkflowRunAnnotationName: m.wfr.Name,
-			workflow.StageAnnotationName:       m.stage,
+			common.WorkflowRunAnnotationName: m.wfr.Name,
+			common.StageAnnotationName:       m.stage,
 		},
 		OwnerReferences: []metav1.OwnerReference{
 			{
@@ -141,7 +140,7 @@ func (m *PodBuilder) CreateVolumes() error {
 
 	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: workflow.CoordinatorSidecarVolumeName,
+		Name: common.CoordinatorSidecarVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
@@ -149,7 +148,7 @@ func (m *PodBuilder) CreateVolumes() error {
 
 	// Add PVC volume to pod
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: workflow.DefaultPvVolumeName,
+		Name: common.DefaultPvVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 				ClaimName: controller.Config.PVC,
@@ -160,10 +159,10 @@ func (m *PodBuilder) CreateVolumes() error {
 	// Create hostPath volume for /var/run/docker.sock
 	var hostPathSocket = corev1.HostPathSocket
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: workflow.DockerSockVolume,
+		Name: common.DockerSockVolume,
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: workflow.DockerSockPath,
+				Path: common.DockerSockPath,
 				Type: &hostPathSocket,
 			},
 		},
@@ -204,12 +203,12 @@ func (m *PodBuilder) ResolveInputResources() error {
 		container := corev1.Container{
 			Name:  r.Name,
 			Image: image,
-			Args:  []string{workflow.ResourcePullCommand},
+			Args:  []string{common.ResourcePullCommand},
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      r.Name,
-					MountPath: workflow.ResolverDefaultDataPath,
+					MountPath: common.ResolverDefaultDataPath,
 				},
 			},
 		}
@@ -218,10 +217,13 @@ func (m *PodBuilder) ResolveInputResources() error {
 		// Mount the resource to all workload containers.
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
-			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-				Name:      r.Name,
-				MountPath: r.Path,
-			})
+			// We only mount resource to workload containers, sidecars are excluded.
+			if common.WorkloadContainersSelector(c.Name) {
+				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+					Name:      r.Name,
+					MountPath: r.Path,
+				})
+			}
 			containers = append(containers, c)
 		}
 		m.pod.Spec.Containers = containers
@@ -260,19 +262,19 @@ func (m *PodBuilder) ResolveOutputResources() error {
 			})
 		}
 		container := corev1.Container{
-			Name:  workflow.SidecarContainerPrefix + r.Name,
+			Name:  common.CycloneSidecarPrefix + r.Name,
 			Image: image,
-			Args:  []string{workflow.ResourcePushCommand},
+			Args:  []string{common.ResourcePushCommand},
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{
 				{
-					Name:      workflow.CoordinatorSidecarVolumeName,
-					MountPath: workflow.ResolverNotifyDirPath,
-					SubPath:   workflow.ResolverNotifyDir,
+					Name:      common.CoordinatorSidecarVolumeName,
+					MountPath: common.ResolverNotifyDirPath,
+					SubPath:   common.ResolverNotifyDir,
 				},
 				{
-					Name:      workflow.CoordinatorSidecarVolumeName,
-					MountPath: workflow.ResolverDefaultDataPath,
+					Name:      common.CoordinatorSidecarVolumeName,
+					MountPath: common.ResolverDefaultDataPath,
 					SubPath:   fmt.Sprintf("resources/%s", resource.Name),
 				},
 			},
@@ -330,11 +332,15 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 			if err != nil {
 				return err
 			}
-			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-				Name:      workflow.DefaultPvVolumeName,
-				MountPath: artifact.Path,
-				SubPath:   common.ArtifactPath(m.wfr.Name, parts[0], parts[1]) + "/" + fileName,
-			})
+
+			// Mount artifacts only to workload containers, with sidecars excluded.
+			if common.WorkloadContainersSelector(c.Name) {
+				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+					Name:      common.DefaultPvVolumeName,
+					MountPath: artifact.Path,
+					SubPath:   common.ArtifactPath(m.wfr.Name, parts[0], parts[1]) + "/" + fileName,
+				})
+			}
 			containers = append(containers, c)
 		}
 		m.pod.Spec.Containers = containers
@@ -348,7 +354,7 @@ func (m *PodBuilder) AddVolumeMounts() error {
 	var containers []corev1.Container
 	for _, c := range m.pod.Spec.Containers {
 		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-			Name:      workflow.DefaultPvVolumeName,
+			Name:      common.DefaultPvVolumeName,
 			MountPath: common.StageMountPath,
 			SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
 		})
@@ -370,43 +376,43 @@ func (m *PodBuilder) AddCoordinator() error {
 	}
 
 	coordinator := corev1.Container{
-		Name:  workflow.CoordinatorContainerName,
+		Name:  common.CoordinatorSidecarName,
 		Image: controller.Config.Images[controller.CoordinatorImage],
 		Env: []corev1.EnvVar{
 			{
-				Name:  "POD_NAME",
+				Name:  common.EnvStagePodName,
 				Value: m.pod.Name,
 			},
 			{
-				Name:  "NAMESPACE",
+				Name:  common.EnvNamespace,
 				Value: m.wfr.Namespace,
 			},
 			{
-				Name:  "WORKFLOWRUN_NAME",
+				Name:  common.EnvWorkflowrunName,
 				Value: m.wfr.Name,
 			},
 			{
-				Name:  "STAGE_NAME",
+				Name:  common.EnvStageName,
 				Value: m.stage,
 			},
 			{
-				Name:  "WORKLOAD_CONTAINER_NAME",
+				Name:  common.EnvWorkloadContainerName,
 				Value: workloadContainer,
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name:      workflow.DefaultPvVolumeName,
+				Name:      common.DefaultPvVolumeName,
 				MountPath: common.CoordinatorWorkspacePath + "artifacts",
 				SubPath:   common.ArtifactsPath(m.wfr.Name, m.stage),
 			},
 			{
-				Name:      workflow.DockerSockVolume,
-				MountPath: workflow.DockerSockPath,
+				Name:      common.DockerSockVolume,
+				MountPath: common.DockerSockPath,
 			},
 			{
-				Name:      workflow.CoordinatorSidecarVolumeName,
-				MountPath: workflow.ResolverPath,
+				Name:      common.CoordinatorSidecarVolumeName,
+				MountPath: common.CoordinatorResolverPath,
 			},
 		},
 		// TODO(ChenDe): Used for develop purpose only, remove it.

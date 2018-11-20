@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	k8sclient "github.com/caicloud/cyclone/pkg/util/k8s-client"
+	k8sclient "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
 )
 
@@ -35,9 +35,6 @@ func main() {
 	c.CollectLogs()
 
 	// Wait workload containers completion, so we can notify output resolvers.
-	//
-	// Users need to control ALL their workload containers to quit after work done,
-	// otherwise, the coordinator container will wait forever.
 	log.Info("Wait workload containers completion ... ")
 	c.WaitWorkloadTerminate()
 

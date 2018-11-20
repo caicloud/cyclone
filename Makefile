@@ -19,14 +19,11 @@
 #
 # The makefile is also responsible to populate project version information.
 #
-# TODO: implement 'make push'
-
-#
 # Tweak the variables based on your project.
 #
 
 # Current version of the project.
-VERSION ?= v1.0.0-alpha
+VERSION ?= v0.9.0
 
 # This repo's root import path (under GOPATH).
 ROOT := github.com/caicloud/cyclone
