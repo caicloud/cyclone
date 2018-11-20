@@ -15,9 +15,10 @@ import (
 )
 
 const regString = "(\\d+h)(our)?|(\\d+m)(in)?|(\\d+s)(econd)?"
+
 var timeParser = regexp.MustCompile(regString)
 var matcherReg = regexp.MustCompile(fmt.Sprintf("^(%s)+$", regString))
-var timeMap = map[string]time.Duration {
+var timeMap = map[string]time.Duration{
 	"h": time.Hour,
 	"m": time.Minute,
 	"s": time.Second,
@@ -37,7 +38,7 @@ func ParseTime(t string) (time.Duration, error) {
 	for _, m := range matches {
 		part := m[1] + m[3] + m[5]
 		l := len(part)
-		n, err := strconv.Atoi(part[0:l-1])
+		n, err := strconv.Atoi(part[0 : l-1])
 		if err != nil {
 			return 0, err
 		}
@@ -48,8 +49,8 @@ func ParseTime(t string) (time.Duration, error) {
 }
 
 type workflowRunItem struct {
-	name string
-	namespace string
+	name       string
+	namespace  string
 	expireTime time.Time
 }
 
@@ -60,25 +61,25 @@ func (i *workflowRunItem) String() string {
 func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	timeout, _ := ParseTime(wfr.Spec.Timeout)
 	return &workflowRunItem{
-		name: wfr.Name,
-		namespace: wfr.Namespace,
+		name:       wfr.Name,
+		namespace:  wfr.Namespace,
 		expireTime: time.Now().Add(timeout),
 	}
 }
 
 // TimeoutManager manages timeout of WorkflowRun.
 type TimeoutManager struct {
-	client clientset.Interface
+	client   clientset.Interface
 	operator *Operator
-	items map[string]*workflowRunItem
+	items    map[string]*workflowRunItem
 }
 
 // NewTimeoutManager creates a timeout manager and run it.
 func NewTimeoutManager(client clientset.Interface, operator *Operator) *TimeoutManager {
-	manager := &TimeoutManager {
-		client: client,
+	manager := &TimeoutManager{
+		client:   client,
 		operator: operator,
-		items: make(map[string]*workflowRunItem),
+		items:    make(map[string]*workflowRunItem),
 	}
 	go manager.Run()
 	return manager
@@ -124,10 +125,10 @@ func (m *TimeoutManager) process() {
 			continue
 		}
 
-		if wfr.Status.Overall.Status != v1alpha1.StatusError && wfr.Status.Overall.Status !=  v1alpha1.StatusCompleted {
+		if wfr.Status.Overall.Status != v1alpha1.StatusError && wfr.Status.Overall.Status != v1alpha1.StatusCompleted {
 			wfr.Status.Overall = v1alpha1.Status{
-				Status: v1alpha1.StatusError,
-				Reason: "Timeout",
+				Status:             v1alpha1.StatusError,
+				Reason:             "Timeout",
 				LastTransitionTime: metav1.Time{time.Now()},
 			}
 
