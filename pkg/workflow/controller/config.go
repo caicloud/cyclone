@@ -75,7 +75,7 @@ func LoadConfig(configPath *string, config *ControllerConfig) error {
 
 	err = json.Unmarshal(data, config)
 	if err != nil {
-		log.Errorf("Parse config error: ", err)
+		log.Error("Parse config error: ", err)
 		return err
 	}
 
