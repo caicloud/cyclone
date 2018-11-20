@@ -86,7 +86,7 @@ func (co *Coordinator) WaitRunning() {
 
 // WaitWorkloadTerminate waits all workload containers to be Terminated status.
 func (co *Coordinator) WaitWorkloadTerminate() {
-	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.WorkloadContainersSelector)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.OnlyWorkload)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
 		return
@@ -96,7 +96,7 @@ func (co *Coordinator) WaitWorkloadTerminate() {
 // WaitAllOthersTerminate waits all containers except for
 // the coordinator container itself to become Terminated status.
 func (co *Coordinator) WaitAllOthersTerminate() {
-	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.WorkloadContainersSelector)
+	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.NonWorkloadSidecar, common.NonCoordinator)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
 		return

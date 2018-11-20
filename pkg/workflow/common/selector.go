@@ -6,8 +6,8 @@ import (
 
 type ContainerSelector func(name string) bool
 
-// WorkloadContainerSelector selector workload containers.
-func WorkloadContainersSelector(name string) bool {
+// OnlyWorkload selects only workload containers.
+func OnlyWorkload(name string) bool {
 	if strings.HasPrefix(name, CycloneSidecarPrefix) {
 		return false
 	}
@@ -17,6 +17,20 @@ func WorkloadContainersSelector(name string) bool {
 	}
 
 	return true
+}
+
+// NonWorkloadSidecar selects all containers except workload sidecars.
+func NonWorkloadSidecar(name string) bool {
+	if strings.HasPrefix(name, WorkloadSidecarPrefix) {
+		return false
+	}
+
+	return true
+}
+
+// NonCoordinator selects all containers except coordinator.
+func NonCoordinator(name string) bool {
+	return name != CoordinatorSidecarName
 }
 
 // Pass check whether the given container name passes the given selectors.

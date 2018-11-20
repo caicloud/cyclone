@@ -8,7 +8,7 @@ spec:
   pullPolicy: Always
   parameters:
   - name: GIT_URL
-    value: https://github.com/zjfqxa/Test.git
+    value: http://192.168.21.100:10081/root/test.git
   - name: GIT_REVISION
     value: master
 
@@ -17,14 +17,14 @@ spec:
 apiVersion: cyclone.io/v1alpha1
 kind: Resource
 metadata:
-  name: awesome-image
+  name: docker-image
 spec:
   type: Image
   parameters:
   - name: IMAGE
-    value: test.caicloudprivatetest.com/release/cyclone-workflow-test:v1.0
+    value: test.caicloudprivatetest.com/release/workflow-test:v0.1
   - name: IMAGE_FILE
-    value: image.tar.gz
+    value: image.tar
 
 ---
 
@@ -37,65 +37,7 @@ spec:
     inputs:
       resources:
       - name: test-git
-        path: /go/src/github.com/zjfqxa
-    outputs:
-      artifacts:
-      - name: message
-        path: /go/message.txt
-    spec:
-      containers:
-      - name: main
-        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
-        command:
-        - go
-        - test
-        - github.com/zjfqxa/Test
-
----
-
-apiVersion: cyclone.io/v1alpha1
-kind: Stage
-metadata:
-  name: build-stage
-spec:
-  pod:
-    inputs:
-      resources:
-      - name: test-git
-        path: /go/src/github.com/zjfqxa
-    outputs:
-      artifacts:
-      - name: outbin
-        path: /go/bin/test
-      - name: myhosts
-        path: /etc/hosts
-    spec:
-      containers:
-      - name: main
-        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
-        command:
-        - go
-        - build
-        - -o
-        - /go/bin/test
-        - github.com/zjfqxa/Test
-
----
-
-apiVersion: cyclone.io/v1alpha1
-kind: Stage
-metadata:
-  name: image-build-stage
-spec:
-  pod:
-    inputs:
-      artifacts:
-      - name: binary
-        path: /go/test
-    outputs:
-      resources:
-      - name: awesome-image
-        path: /go/image.tar.gz
+        path: /go/src/root
     spec:
       containers:
       - name: main
@@ -103,7 +45,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "/go/test && cp /go/test /go/image.tar.gz"
+        - "ls -al /go/src/root/test && go test root/test"
 
 ---
 
@@ -116,6 +58,7 @@ spec:
     inputs:
       arguments:
       - name: message
+      - name: image
     spec:
       containers:
       - name: main
@@ -123,6 +66,72 @@ spec:
         command:
         - echo
         - "{{ message }}"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: build-stage
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: test-git
+        path: /go/src/root
+    outputs:
+      artifacts:
+      - name: app
+        path: /go/bin/app
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
+        command:
+        - /bin/sh
+        - -c
+        - "ls -al /go/src/root/test && go build -o /go/bin/app root/test && /go/bin/app"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: image-build-stage
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: test-git
+        path: /workspace
+      artifacts:
+      - name: binary
+        path: /workspace/app
+    outputs:
+      resources:
+      - name: docker-image
+        path: /workspace/image.tar
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/docker:1.13.1-dind
+        command:
+        - /bin/sh
+        - -c
+        - >-
+          ls -al /workspace &&
+          /workspace/app &&
+          docker build -f /workspace/test/Dockerfile -t test.caicloudprivatetest.com/release/workflow-test:v0.1 /workspace/test &&
+          docker save -o /workspace/image.tar test.caicloudprivatetest.com/release/workflow-test:v0.1 &&
+          ls -al /workspace/image.tar
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock-volume
+      volumes:
+      - hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+        name: docker-sock-volume
 
 ---
 
@@ -141,7 +150,7 @@ spec:
     - build-stage
     artifacts:
     - name: binary
-      source: build-stage/outbin
+      source: build-stage/app
   - name: echo-stage
 
 ---

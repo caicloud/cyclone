@@ -218,7 +218,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
 			// We only mount resource to workload containers, sidecars are excluded.
-			if common.WorkloadContainersSelector(c.Name) {
+			if common.OnlyWorkload(c.Name) {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      r.Name,
 					MountPath: r.Path,
@@ -281,6 +281,14 @@ func (m *PodBuilder) ResolveOutputResources() error {
 			// TODO(ChenDe): Used for develop purpose only, remove it.
 			ImagePullPolicy: corev1.PullAlways,
 		}
+
+		if resource.Spec.Type == v1alpha1.ImageResourceType {
+			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+				Name: common.DockerSockVolume,
+				MountPath: common.DockerSockPath,
+			})
+		}
+
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
 	}
 
@@ -334,7 +342,7 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 			}
 
 			// Mount artifacts only to workload containers, with sidecars excluded.
-			if common.WorkloadContainersSelector(c.Name) {
+			if common.OnlyWorkload(c.Name) {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      common.DefaultPvVolumeName,
 					MountPath: artifact.Path,
