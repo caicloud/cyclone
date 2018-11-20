@@ -25,6 +25,8 @@ type WorkflowSpec struct {
 type StageItem struct {
 	// Name of stage
 	Name string `json:"name"`
+	// Input artifacts that this stage needed, we bind the artifacts source here.
+	Artifacts []ArtifactItem `json:"artifacts"`
 	// Stages that this stage depends on
 	Depends []string `json:"depends"`
 }

@@ -4,14 +4,12 @@ import (
 	"context"
 	"flag"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
-
-	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
@@ -31,7 +29,10 @@ func main() {
 	controller.InitLogger(&controller.Config.Logging)
 
 	// Create k8s clientset and registry system signals for exit.
-	client := getClients(*kubeConfigPath)
+	client, err := common.GetClient("", *kubeConfigPath)
+	if err != nil {
+		log.Fatal("Create k8s clientset error: ", err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	signals.GracefulShutdown(cancel)
 
@@ -49,27 +50,4 @@ func main() {
 
 	// Wait forever.
 	select {}
-}
-
-func getClients(kubeConfigPath string) (clientset.Interface) {
-	var config *rest.Config
-	var err error
-	if kubeConfigPath != "" {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
-		if err != nil {
-			log.Fatalf("create config error: %v", err)
-		}
-	} else {
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			log.Fatalf("create config error: %v", err)
-		}
-	}
-
-	client, err := clientset.NewForConfig(config)
-	if err != nil {
-		log.Fatalf("create client error: %v", err)
-	}
-
-	return client
 }

@@ -10,9 +10,9 @@ import (
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
-	Client clientset.Interface
+	Client         clientset.Interface
 	TimeoutManager *TimeoutManager
-	Operator *Operator
+	Operator       *Operator
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.

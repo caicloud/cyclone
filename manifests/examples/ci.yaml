@@ -8,9 +8,23 @@ spec:
   pullPolicy: Always
   parameters:
   - name: GIT_URL
-    value: https://github.com/zjfqxa/Test.git
+    value: http://192.168.21.100:10081/root/test.git
   - name: GIT_REVISION
     value: master
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: docker-image
+spec:
+  type: Image
+  parameters:
+  - name: IMAGE
+    value: test.caicloudprivatetest.com/release/workflow-test:v0.1
+  - name: IMAGE_FILE
+    value: image.tar
 
 ---
 
@@ -23,21 +37,35 @@ spec:
     inputs:
       resources:
       - name: test-git
-        path: /go/src/github.com/zjfqxa
-      arguments:
-      - name: message
-    outputs:
-      artifacts:
-      - name: message
-        path: /go/message.txt
+        path: /go/src/root
     spec:
       containers:
       - name: main
         image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
         command:
-        - go
-        - test
-        - github.com/zjfqxa/Test
+        - /bin/sh
+        - -c
+        - "ls -al /go/src/root/test && go test root/test"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: echo-stage
+spec:
+  pod:
+    inputs:
+      arguments:
+      - name: message
+      - name: image
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/{{ image }}
+        command:
+        - echo
+        - "{{ message }}"
 
 ---
 
@@ -50,21 +78,60 @@ spec:
     inputs:
       resources:
       - name: test-git
-        path: /go/src/github.com/zjfqxa
+        path: /go/src/root
     outputs:
       artifacts:
-      - name: message
-        path: /go/test
+      - name: app
+        path: /go/bin/app
     spec:
       containers:
       - name: main
         image: test.caicloudprivatetest.com/release/golang:1.10-alpine3.8
         command:
-        - go
-        - build
-        - -o
-        - /go/test
-        - github.com/zjfqxa/Test
+        - /bin/sh
+        - -c
+        - "ls -al /go/src/root/test && go build -o /go/bin/app root/test && /go/bin/app"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: image-build-stage
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: test-git
+        path: /workspace
+      artifacts:
+      - name: binary
+        path: /workspace/app
+    outputs:
+      resources:
+      - name: docker-image
+        path: /workspace/image.tar
+    spec:
+      containers:
+      - name: main
+        image: test.caicloudprivatetest.com/release/docker:1.13.1-dind
+        command:
+        - /bin/sh
+        - -c
+        - >-
+          ls -al /workspace &&
+          /workspace/app &&
+          docker build -f /workspace/test/Dockerfile -t test.caicloudprivatetest.com/release/workflow-test:v0.1 /workspace/test &&
+          docker save -o /workspace/image.tar test.caicloudprivatetest.com/release/workflow-test:v0.1 &&
+          ls -al /workspace/image.tar
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock-volume
+      volumes:
+      - hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+        name: docker-sock-volume
 
 ---
 
@@ -78,6 +145,13 @@ spec:
   - name: build-stage
     depends:
     - unit-test-stage
+  - name: image-build-stage
+    depends:
+    - build-stage
+    artifacts:
+    - name: binary
+      source: build-stage/app
+  - name: echo-stage
 
 ---
 
@@ -89,9 +163,11 @@ spec:
   workflowRef:
     kind: workflow.cyclone.io
     name: ci-workflow
-  timeout: 300s
+  timeout: 5h
   stages:
-  - name: unit-test-stage
+  - name: echo-stage
     parameters:
     - name: message
       value: Hello, World~
+    - name: image
+      value: golang:1.10-alpine3.8
