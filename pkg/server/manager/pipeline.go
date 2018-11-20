@@ -118,11 +118,15 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	}
 
 	// Create SCM webhook if enable SCM trigger.
-	createWebhook(pipeline, provider, scmConfig.Type, gitSource.Url, "")
+	err = createWebhook(pipeline, provider, scmConfig.Type, gitSource.Url, "")
+	if err != nil {
+		logdog.Errorf("create webhook failed: %v", err)
+		return nil, err
+	}
+
 	// Remove the webhook if there is error.
 	defer func() {
 		if err != nil && gitSource != nil && pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
-			//if err != nil && gitSource != nil && webHook != nil {
 			if err = provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
 				logdog.Errorf("Fail to delete the webhook %s", pipeline.Name)
 			}
