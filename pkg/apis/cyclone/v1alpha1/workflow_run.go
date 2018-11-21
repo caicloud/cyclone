@@ -66,9 +66,19 @@ type StageStatus struct {
 }
 
 const (
+	// When used for stage, it means stage is not executed yet. When used
+	// for WorkflowRun overall status, it means no stages in WorkflowRun are
+	// started to execute.
+	StatusPending   = "Pending"
+	// Stage or WorkflowRun is in running.
 	StatusRunning   = "Running"
+	// Stage or WorkflowRun have finished, but need to wait for external events
+	// to continue. For example, a stage's executing result needs approval of
+	// users, so that following stages can preceeding.
 	StatusWaiting   = "Waiting"
+	// Stage or WorkflowRun gotten completed without errors.
 	StatusCompleted = "Completed"
+	// Something wrong in the execution of Stage or WorkflowRun.
 	StatusError     = "Error"
 )
 

@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
-
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
+	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
 func NewWorkflowRunController(client clientset.Interface) *Controller {
@@ -56,16 +57,14 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		},
 	})
 
-	operator := workflowrun.NewOperator(client)
 	return &Controller{
 		name:      "WorkflowRun Controller",
 		clientSet: client,
 		informer:  informer,
 		queue:     queue,
-		eventHandler: &workflowrun.Handler{
+		eventHandler: &handlers.Handler{
 			Client:         client,
-			TimeoutManager: workflowrun.NewTimeoutManager(client, operator),
-			Operator:       operator,
+			TimeoutManager: workflowrun.NewTimeoutManager(client),
 		},
 	}
 }

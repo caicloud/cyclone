@@ -70,15 +70,13 @@ func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 // TimeoutManager manages timeout of WorkflowRun.
 type TimeoutManager struct {
 	client   clientset.Interface
-	operator *Operator
 	items    map[string]*workflowRunItem
 }
 
 // NewTimeoutManager creates a timeout manager and run it.
-func NewTimeoutManager(client clientset.Interface, operator *Operator) *TimeoutManager {
+func NewTimeoutManager(client clientset.Interface) *TimeoutManager {
 	manager := &TimeoutManager{
 		client:   client,
-		operator: operator,
 		items:    make(map[string]*workflowRunItem),
 	}
 	go manager.Run()
@@ -118,10 +116,10 @@ func (m *TimeoutManager) process() {
 	}
 
 	for _, i := range expired {
-		log.WithField("workflowrun", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
+		log.WithField("wfr", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
 		wfr, err := m.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
 		if err != nil {
-			log.WithField("workflowrun", wfr.Name).Error("Get WorkflowRun error: ", err)
+			log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			continue
 		}
 
@@ -132,8 +130,12 @@ func (m *TimeoutManager) process() {
 				LastTransitionTime: metav1.Time{time.Now()},
 			}
 
-			if err = m.operator.UpdateStatus(wfr); err != nil {
-				log.WithField("workflowrun", wfr.Name).Error("Update WorkflowRun status error: ", err)
+			operator := operator{
+				client: m.client,
+				wfr: wfr,
+			}
+			if err = operator.Update(); err != nil {
+				log.WithField("wfr", wfr.Name).Error("Update WorkflowRun status error: ", err)
 				continue
 			}
 		}
@@ -145,9 +147,9 @@ func (m *TimeoutManager) process() {
 				if status.Pod == nil {
 					continue
 				}
-				log.WithField("workflowrun", wfr.Name).
+				log.WithField("wfr", wfr.Name).
 					WithField("pod", status.Pod.Name).
-					WithField("stage", stage).
+					WithField("stg", stage).
 					Info("To delete pod for expired WorkflowRun")
 				err = m.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 				if err != nil {
