@@ -23,8 +23,5 @@ func CreateWorkflowRun(ctx context.Context) (*v1alpha1.WorkflowRun, error) {
 // POST /apis/v1alpha1/workflowruns/{workflowrun-name}
 // X-Tenant: any
 func GetWorkflowRun(ctx context.Context, name, namespace string) (*v1alpha1.WorkflowRun, error) {
-	if namespace == "" {
-		namespace = "default"
-	}
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(name, metav1.GetOptions{})
 }

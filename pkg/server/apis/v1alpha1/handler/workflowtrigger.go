@@ -23,8 +23,5 @@ func CreateWorkflowTrigger(ctx context.Context) (*v1alpha1.WorkflowTrigger, erro
 // POST /apis/v1alpha1/workflowtriggers/{workflowtrigger-name}
 // X-Tenant: any
 func GetWorkflowTrigger(ctx context.Context, name, namespace string) (*v1alpha1.WorkflowTrigger, error) {
-	if namespace == "" {
-		namespace = "default"
-	}
 	return k8sClient.CycloneV1alpha1().WorkflowTriggers(namespace).Get(name, metav1.GetOptions{})
 }

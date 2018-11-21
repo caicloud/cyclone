@@ -26,14 +26,6 @@ func GetHttpResponseWriter(ctx context.Context) http.ResponseWriter {
 	return service.HTTPContextFrom(ctx).ResponseWriter()
 }
 
-//func GetTenant(ctx context.Context) (string, error) {
-//	return GetHeaderParameter(ctx, httputil.HeaderTenant)
-//}
-//
-//func GetUser(ctx context.Context) (string, error) {
-//	return GetHeaderParameter(ctx, httputil.HeaderUser)
-//}
-
 // GetHeaderParameter gets value from request.HeaderParameter.
 func GetHeaderParameter(ctx context.Context, name string) (string, error) {
 	request := GetHttpRequest(ctx)

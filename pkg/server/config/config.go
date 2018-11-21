@@ -4,70 +4,52 @@ import (
 	"log"
 	"os"
 	"strconv"
-
-	"github.com/caicloud/storage-admin/pkg/constants"
 )
 
 const (
-	EnvListenPort = "ENV_LISTEN_PORT"
-
-	EnvClusterAdminHost = "ENV_CLUSTER_ADMIN_HOST"
+	EnvCycloneServerPort = "ENV_CYCLONE_SERVER_PORT"
+	EnvCycloneServerHost = "ENV_CYCLONE_SERVER_HOST"
 
 	EnvKubeHost   = "ENV_KUBE_HOST"
 	EnvKubeConfig = "ENV_KUBE_CONFIG"
 
-	EnvCycloneAdminPort = "ENV_CYCLONE_ADMIN_PORT"
-	EnvCycloneAdminAddr = "ENV_CYCLONE_ADMIN_ADDR"
+	EnvLogLevel = "ENV_LOG_LEVEL"
 
-	EnvControllerResyncPeriodSecond = "ENV_CONTROLLER_RESYNC_PERIOD_SECOND"
+	envVarCannotEmptyFormat = "The environment variable '%s' cannot be empty."
 
-	EnvCtrlClusterName = "ENV_CTRL_CLUSTER_NAME"
+	DefaultCycloneServerPort int = 7099
 
-	EnvLogLevel     = "ENV_LOG_LEVEL"
-	EnvLogVerbosity = "ENV_LOG_VERBOSITY"
+	DefaultCycloneServerHost = "0.0.0.0"
+
+	DefaultLogLevel = "info"
 )
 
 var (
 	// listen port
-	ListenPort int
-	// cluster admin
-	ClusterAdminHost string
+	CycloneServerPort int
+	// cyclone server
+	CycloneServerHost string
 
 	// k8s about
 	KubeHost   string
 	KubeConfig string
 
-	// controller
-	ControllerResyncPeriodSecond int
-
-	// test
-	CtrlClusterName string
-
 	// log
-	LogLevel     string
-	LogVerbosity string
-)
-
-const (
-	envVarCannotEmptyFormat = "The environment variable '%s' cannot be empty."
+	LogLevel string
 )
 
 func init() {
 	// listen port
-	ListenPort = LoadIntEnvVar(EnvListenPort, constants.DefaultListenPort, true)
-	// cluster admin
-	ClusterAdminHost = LoadEnvVar(EnvClusterAdminHost, "", true)
+	CycloneServerPort = LoadIntEnvVar(EnvCycloneServerPort, DefaultCycloneServerPort, true)
+	// cyclone server
+	CycloneServerHost = LoadEnvVar(EnvCycloneServerHost, DefaultCycloneServerHost, true)
 
 	// k8s
 	KubeHost = LoadEnvVar(EnvKubeHost, "", true)
 	KubeConfig = LoadEnvVar(EnvKubeConfig, "", true)
-	// controller
-	ControllerResyncPeriodSecond = LoadIntEnvVar(EnvControllerResyncPeriodSecond, constants.DefaultControllerResyncPeriodSecond, true)
-	// test
-	CtrlClusterName = LoadEnvVar(EnvCtrlClusterName, constants.ControlClusterName, true)
+
 	// log
-	LogLevel = LoadEnvVar(EnvLogLevel, constants.DefaultLogLevel, true)
-	LogVerbosity = LoadEnvVar(EnvLogVerbosity, constants.DefaultLogVerbosity, true)
+	LogLevel = LoadEnvVar(EnvLogLevel, DefaultLogLevel, true)
 }
 
 // GetStringEnvWithDefault retrieves the value of the environment variable named

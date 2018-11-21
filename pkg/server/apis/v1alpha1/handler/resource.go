@@ -24,8 +24,5 @@ func CreateResource(ctx context.Context) (*v1alpha1.Resource, error) {
 // POST /apis/v1alpha1/resources/{resource-name}
 // X-Tenant: any
 func GetResource(ctx context.Context, name, namespace string) (*v1alpha1.Resource, error) {
-	if namespace == "" {
-		namespace = "default"
-	}
 	return k8sClient.CycloneV1alpha1().Resources(namespace).Get(name, metav1.GetOptions{})
 }

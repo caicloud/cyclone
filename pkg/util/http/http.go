@@ -92,6 +92,9 @@ const (
 
 	// SVNRevisionQueryParameterName represents the svn commit revision.
 	SVNRevisionQueryParameterName = "revision"
+
+	// DefaultNamespace represents the default namespace 'default'.
+	DefaultNamespace string = "default"
 )
 
 // GetHttpRequest gets request from context.

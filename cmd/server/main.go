@@ -37,6 +37,8 @@ type APIServerOptions struct {
 
 	CyclonePort int
 	CycloneAddr string
+
+	Loglevel string
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -52,8 +54,10 @@ func (opts *APIServerOptions) AddFlags() {
 	flag.StringVar(&opts.KubeHost, config.EnvKubeHost, config.KubeHost, "Kube host address")
 	flag.StringVar(&opts.KubeConfig, config.EnvKubeConfig, config.KubeConfig, "Kube config file path")
 
-	flag.IntVar(&opts.CyclonePort, config.EnvCycloneAdminPort, 7099, "The port for the cyclone server to serve on.")
-	flag.StringVar(&opts.CycloneAddr, config.EnvCycloneAdminAddr, "0.0.0.0", "The IP address for the cyclone server to serve on.")
+	flag.IntVar(&opts.CyclonePort, config.EnvCycloneServerPort, config.CycloneServerPort, "The port for the cyclone server to serve on.")
+	flag.StringVar(&opts.CycloneAddr, config.EnvCycloneServerHost, config.CycloneServerHost, "The IP address for the cyclone server to serve on.")
+
+	flag.StringVar(&opts.Loglevel, config.EnvLogLevel, config.LogLevel, "Log level.")
 
 	flag.Parse()
 }
@@ -78,8 +82,6 @@ func main() {
 
 	initialize(opts)
 
-	log.Infof("cyclone starts listening on %s:%v", opts.CycloneAddr, opts.CyclonePort)
-
 	config := nirvana.NewDefaultConfig()
 	nirvana.IP(opts.CycloneAddr)(config)
 	nirvana.Port(uint16(opts.CyclonePort))(config)
@@ -91,7 +93,7 @@ func main() {
 
 	config.Configure(nirvana.Descriptor(descriptor.Descriptor()))
 
-	log.Infof("API service listening on %s:%d", opts.CycloneAddr, opts.CyclonePort)
+	log.Infof("Cyclone service listening on %s:%d", opts.CycloneAddr, opts.CyclonePort)
 	if err := nirvana.NewServer(config).Serve(); err != nil {
 		log.Fatal(err)
 	}

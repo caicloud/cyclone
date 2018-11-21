@@ -31,15 +31,12 @@ func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 // POST /apis/v1alpha1/stages/{stage-name}
 // X-Tenant: any
 func GetStage(ctx context.Context, name, namespace string) (*v1alpha1.Stage, error) {
-	if namespace == "" {
-		namespace = "default"
-	}
 	return k8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
 }
 
 // GET /workflowruns/{workflowrun-name}/stages/{stage-name}/streamlogs?container-name=c0
-// ReceivePipelineRecordLogStream receives real-time log of workflowrun stage.
-func ReceivePipelineRecordLogStream(ctx context.Context, workflowrun, stage, container string) error {
+// ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
+func ReceiveContainerLogStream(ctx context.Context, workflowrun, stage, container string) error {
 	request := contextutil.GetHttpRequest(ctx)
 	writer := contextutil.GetHttpResponseWriter(ctx)
 
@@ -51,7 +48,7 @@ func ReceivePipelineRecordLogStream(ctx context.Context, workflowrun, stage, con
 	}
 	defer ws.Close()
 
-	if err := receivePipelineRecordLogStream(workflowrun, stage, container, ws); err != nil {
+	if err := receiveContainerLogStream(workflowrun, stage, container, ws); err != nil {
 		log.Errorf("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
 			workflowrun, stage, container, err.Error())
 		return cerr.ErrorUnknownInternal.Error(err)
@@ -60,9 +57,9 @@ func ReceivePipelineRecordLogStream(ctx context.Context, workflowrun, stage, con
 	return nil
 }
 
-// receivePipelineRecordLogStream receives the log stream for
+// receiveContainerLogStream receives the log stream for
 // one stage of the workflowrun, and stores it into log files.
-func receivePipelineRecordLogStream(workflowrun, stage, container string, ws *websocket.Conn) error {
+func receiveContainerLogStream(workflowrun, stage, container string, ws *websocket.Conn) error {
 	logFolder, err := getLogFolder(workflowrun, stage)
 	if err != nil {
 		log.Errorf("get log folder failed: %v", err)
