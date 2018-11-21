@@ -102,15 +102,15 @@ func (m *PodBuilder) ResolveArguments() error {
 	for _, a := range m.stg.Spec.Pod.Inputs.Arguments {
 		if _, ok := parameters[a.Name]; !ok {
 			if a.Value == "" {
-				log.WithField("Argument", a.Name).
-					WithField("Stage", m.stg.Name).
+				log.WithField("arg", a.Name).
+					WithField("stg", m.stg.Name).
 					Error("Argument not set and without default value")
 				return fmt.Errorf("argument '%s' not set in stage '%s' and without default value", a.Name, m.stg.Name)
 			}
 			parameters[a.Name] = a.Value
 		}
 	}
-	log.WithField("Parameters", parameters).Debug("Parameters collected")
+	log.WithField("params", parameters).Debug("Parameters collected")
 	raw, err := json.Marshal(m.stg.Spec.Pod.Spec)
 	if err != nil {
 		return err
@@ -191,7 +191,7 @@ func (m *PodBuilder) CreateVolumes() error {
 // resource to workload containers.
 func (m *PodBuilder) ResolveInputResources() error {
 	for _, r := range m.stg.Spec.Pod.Inputs.Resources {
-		log.WithField("stage", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
+		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("resource", r.Name).Error("Get resource error: ", err)
@@ -251,7 +251,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 // ResolveOutputResources add resource resolvers to pod spec.
 func (m *PodBuilder) ResolveOutputResources() error {
 	for _, r := range m.stg.Spec.Pod.Outputs.Resources {
-		log.WithField("stage", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
+		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("resource", r.Name).Error("Get resource error: ", err)
@@ -326,7 +326,7 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 		}
 	}
 	if wfStage == nil {
-		log.WithField("stage", m.stg.Name).WithField("workflow", m.wf.Name).Error("Stage not found in Workflow")
+		log.WithField("stg", m.stg.Name).WithField("wfr", m.wf.Name).Error("Stage not found in Workflow")
 		return fmt.Errorf("stage %s not found in workflow %s", m.stg.Name, m.wf.Name)
 	}
 
@@ -341,8 +341,8 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 			}
 		}
 		if source == "" {
-			log.WithField("stage", m.stg.Name).
-				WithField("workflow", m.wf.Name).
+			log.WithField("stg", m.stg.Name).
+				WithField("wfr", m.wf.Name).
 				WithField("artifact", artifact.Name).
 				Error("Input artifact not bind in workflow")
 			return fmt.Errorf("input artifact %s not binded in workflow %s", m.stg.Name, m.wf.Name)
@@ -502,7 +502,7 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 func (m *PodBuilder) ArtifactFileName(stageName, artifactName string) (string, error) {
 	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("stage", stageName).Error("Get stage error: ", err)
+		log.WithField("stg", stageName).Error("Get stage error: ", err)
 		return "", err
 	}
 

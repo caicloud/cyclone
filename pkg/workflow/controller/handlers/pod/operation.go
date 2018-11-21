@@ -11,7 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
+	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
 type Operator struct {
@@ -19,7 +19,6 @@ type Operator struct {
 	workflowRun string
 	stage       string
 	pod         *corev1.Pod
-	wfrOperator *workflowrun.Operator
 }
 
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
@@ -38,7 +37,6 @@ func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error)
 		workflowRun: wfr,
 		stage:       stage,
 		pod:         pod,
-		wfrOperator: workflowrun.NewOperator(client),
 	}, nil
 }
 
@@ -52,16 +50,20 @@ func (p *Operator) OnDelete() error {
 	}
 
 	wfr := origin.DeepCopy()
+	operator, err := workflowrun.NewOperator(p.client, wfr, origin.Namespace)
+	if err != nil {
+		return err
+	}
 	status, ok := wfr.Status.Stages[p.stage]
 	if !ok || status.Status.Status == v1alpha1.StatusRunning {
-		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
+		operator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             "Error",
 			LastTransitionTime: metav1.Time{time.Now()},
 			Reason:             "PodDeleted",
 		})
 	}
 
-	return p.wfrOperator.UpdateStatus(wfr)
+	return operator.Update()
 }
 
 func (p *Operator) OnUpdated() error {
@@ -72,16 +74,21 @@ func (p *Operator) OnUpdated() error {
 	}
 
 	wfr := origin.DeepCopy()
+	wfrOperator, err := workflowrun.NewOperator(p.client, wfr, origin.Namespace)
+	if err != nil {
+		return err
+	}
+
 	status, ok := wfr.Status.Stages[p.stage]
 
 	switch p.pod.Status.Phase {
 	case corev1.PodFailed:
 		if !ok || status.Status.Status != v1alpha1.StatusError {
-			log.WithField("workflowrun", wfr.Name).
-				WithField("stage", p.stage).
+			log.WithField("wfr", wfr.Name).
+				WithField("stg", p.stage).
 				WithField("status", v1alpha1.StatusError).
 				Info("To update stage status")
-			p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
+			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				LastTransitionTime: metav1.Time{time.Now()},
 				Reason:             "PodFailed",
@@ -89,21 +96,21 @@ func (p *Operator) OnUpdated() error {
 		}
 	case corev1.PodSucceeded:
 		if !ok || status.Status.Status != v1alpha1.StatusCompleted {
-			log.WithField("workflowrun", wfr.Name).
+			log.WithField("wfr", wfr.Name).
 				WithField("stage", p.stage).
 				WithField("status", v1alpha1.StatusCompleted).
 				Info("To update stage status")
-			p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
+			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusCompleted,
 				LastTransitionTime: metav1.Time{time.Now()},
 				Reason:             "PodSucceed",
 			})
 		}
 	default:
-		p.DetermineStatus(wfr)
+		p.DetermineStatus(wfrOperator)
 	}
 
-	return p.wfrOperator.UpdateStatus(wfr)
+	return wfrOperator.Update()
 }
 
 // DetermineStatus determines status of a stage and update WorkflowRun status accordingly.
@@ -111,7 +118,7 @@ func (p *Operator) OnUpdated() error {
 // logs, artifacts, notify resource resolver to push resource), when the coordinator container
 // have been finished (no matter Succeed or Failed), we need to update stage status, and take
 // necessary actions to stop the pod.
-func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
+func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	// If there are containers that haven't report status, no need to judge pod status.
 	if len(p.pod.Status.ContainerStatuses) != len(p.pod.Spec.Containers) {
 		return
@@ -136,22 +143,22 @@ func (p *Operator) DetermineStatus(wfr *v1alpha1.WorkflowRun) {
 	// - TODO(ChenDe): Delete pod
 
 	if anyError {
-		log.WithField("workflowrun", wfr.Name).
-			WithField("stage", p.stage).
+		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
+			WithField("stg", p.stage).
 			WithField("status", v1alpha1.StatusError).
 			Info("To update stage status")
-		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
+		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{time.Now()},
 			Reason:             "CoordinatorError",
 			Message:            "Coordinator exit with error",
 		})
 	} else {
-		log.WithField("workflowrun", wfr.Name).
-			WithField("stage", p.stage).
+		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
+			WithField("stg", p.stage).
 			WithField("status", v1alpha1.StatusCompleted).
 			Info("To update stage status")
-		p.wfrOperator.SetStageStatus(wfr, p.stage, v1alpha1.Status{
+		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusCompleted,
 			LastTransitionTime: metav1.Time{time.Now()},
 			Reason:             "CoordinatorCompleted",

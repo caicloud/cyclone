@@ -48,16 +48,6 @@ func ParseTime(t string) (time.Duration, error) {
 	return result, nil
 }
 
-type workflowRunItem struct {
-	name       string
-	namespace  string
-	expireTime time.Time
-}
-
-func (i *workflowRunItem) String() string {
-	return fmt.Sprintf("%s:%s", i.namespace, i.name)
-}
-
 func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	timeout, _ := ParseTime(wfr.Spec.Timeout)
 	return &workflowRunItem{
@@ -67,18 +57,16 @@ func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	}
 }
 
-// TimeoutManager manages timeout of WorkflowRun.
-type TimeoutManager struct {
+// TimeoutProcessor manages timeout of WorkflowRun.
+type TimeoutProcessor struct {
 	client   clientset.Interface
-	operator *Operator
 	items    map[string]*workflowRunItem
 }
 
 // NewTimeoutManager creates a timeout manager and run it.
-func NewTimeoutManager(client clientset.Interface, operator *Operator) *TimeoutManager {
-	manager := &TimeoutManager{
+func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
+	manager := &TimeoutProcessor{
 		client:   client,
-		operator: operator,
 		items:    make(map[string]*workflowRunItem),
 	}
 	go manager.Run()
@@ -86,7 +74,7 @@ func NewTimeoutManager(client clientset.Interface, operator *Operator) *TimeoutM
 }
 
 // Add adds a WorkflowRun to the timeout manager.
-func (m *TimeoutManager) Add(wfr *v1alpha1.WorkflowRun) error {
+func (m *TimeoutProcessor) Add(wfr *v1alpha1.WorkflowRun) error {
 	_, err := ParseTime(wfr.Spec.Timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout value '%s', error: %v", wfr.Spec.Timeout, err)
@@ -99,7 +87,7 @@ func (m *TimeoutManager) Add(wfr *v1alpha1.WorkflowRun) error {
 }
 
 // Run will check timeout of managed WorkflowRun and process items that have expired their time.
-func (m *TimeoutManager) Run() {
+func (m *TimeoutProcessor) Run() {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
@@ -109,7 +97,7 @@ func (m *TimeoutManager) Run() {
 	}
 }
 
-func (m *TimeoutManager) process() {
+func (m *TimeoutProcessor) process() {
 	var expired []*workflowRunItem
 	for _, v := range m.items {
 		if v.expireTime.Before(time.Now()) {
@@ -118,10 +106,10 @@ func (m *TimeoutManager) process() {
 	}
 
 	for _, i := range expired {
-		log.WithField("workflowrun", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
+		log.WithField("wfr", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
 		wfr, err := m.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
 		if err != nil {
-			log.WithField("workflowrun", wfr.Name).Error("Get WorkflowRun error: ", err)
+			log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			continue
 		}
 
@@ -132,22 +120,26 @@ func (m *TimeoutManager) process() {
 				LastTransitionTime: metav1.Time{time.Now()},
 			}
 
-			if err = m.operator.UpdateStatus(wfr); err != nil {
-				log.WithField("workflowrun", wfr.Name).Error("Update WorkflowRun status error: ", err)
+			operator := operator{
+				client: m.client,
+				wfr: wfr,
+			}
+			if err = operator.Update(); err != nil {
+				log.WithField("wfr", wfr.Name).Error("Update WorkflowRun status error: ", err)
 				continue
 			}
 		}
 
-		// Kill stage pods, notice that already completed WorkflowRun will also have their Pod deleted.
+		// Kill stage pods.
 		stages := wfr.Status.Stages
 		if stages != nil {
 			for stage, status := range stages {
 				if status.Pod == nil {
 					continue
 				}
-				log.WithField("workflowrun", wfr.Name).
+				log.WithField("wfr", wfr.Name).
 					WithField("pod", status.Pod.Name).
-					WithField("stage", stage).
+					WithField("stg", stage).
 					Info("To delete pod for expired WorkflowRun")
 				err = m.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 				if err != nil {
