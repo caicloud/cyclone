@@ -218,13 +218,13 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Error("event type not support.")
 	}
 
-	// If the pipeline configured cache dependency, turn it on.
-	buildInfo := pipeline.Build.BuildInfo
-	if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
-		performParams.CacheDependency = true
-	}
-
 	if performParams != nil {
+		// If the pipeline configured cache dependency, turn it on.
+		buildInfo := pipeline.Build.BuildInfo
+		if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
+			performParams.CacheDependency = true
+		}
+
 		pipelineRecord := &api.PipelineRecord{
 			Name:            performParams.Name,
 			PipelineID:      pipeline.ID,
@@ -388,13 +388,13 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Error("event type not support.")
 	}
 
-	// If the pipeline configured cache dependency, turn it on.
-	buildInfo := pipeline.Build.BuildInfo
-	if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
-		performParams.CacheDependency = true
-	}
-
 	if performParams != nil {
+		// If the pipeline configured cache dependency, turn it on.
+		buildInfo := pipeline.Build.BuildInfo
+		if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
+			performParams.CacheDependency = true
+		}
+
 		pipelineRecord := &api.PipelineRecord{
 			Name:            performParams.Name,
 			PipelineID:      pipeline.ID,
