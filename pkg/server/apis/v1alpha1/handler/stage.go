@@ -10,7 +10,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/k8s"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
@@ -26,7 +25,7 @@ func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 		return nil, err
 	}
 
-	return k8s.Client.CycloneV1alpha1().Stages(s.Namespace).Create(s)
+	return k8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
 }
 
 // POST /apis/v1alpha1/stages/{stage-name}
@@ -35,7 +34,7 @@ func GetStage(ctx context.Context, name, namespace string) (*v1alpha1.Stage, err
 	if namespace == "" {
 		namespace = "default"
 	}
-	return k8s.Client.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
+	return k8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
 }
 
 // GET /workflowruns/{workflowrun-name}/stages/{stage-name}/streamlogs?container-name=c0

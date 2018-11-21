@@ -18,18 +18,16 @@ package main
 
 import (
 	"flag"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/caicloud/nirvana"
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/plugins/metrics"
 	"github.com/caicloud/nirvana/plugins/profiling"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/descriptor"
+	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/handler"
 	"github.com/caicloud/cyclone/pkg/server/config"
-	"github.com/caicloud/cyclone/pkg/server/k8s"
 )
 
 // APIServerOptions contains all options(config) for api server
@@ -60,40 +58,25 @@ func (opts *APIServerOptions) AddFlags() {
 	flag.Parse()
 }
 
-func initialize(opts *APIServerOptions, closing chan struct{}) {
+func initialize(opts *APIServerOptions) {
 	// Init k8s client
-	client, err := k8s.GetClient(opts.KubeHost, opts.KubeConfig)
+	client, err := common.GetClient(opts.KubeHost, opts.KubeConfig)
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
-	k8s.Client = client
+
+	handler.InitHandlers(client)
+
 	log.Info("Init k8s client success")
 
 	return
 }
 
-func gracefulShutdown(closing chan struct{}) {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	log.Infof("capture system signal %s, to close \"closing\" channel", <-signals)
-	close(closing)
-}
-
 func main() {
-	//// Log to standard error instead of files.
-	//flag.Set("logtostderr", "true")
-
-	// Flushes all pending log I/O.
-	//defer glog.Flush()
-
 	opts := NewAPIServerOptions()
 	opts.AddFlags()
 
-	closing := make(chan struct{})
-
-	initialize(opts, closing)
-
-	go gracefulShutdown(closing)
+	initialize(opts)
 
 	log.Infof("cyclone starts listening on %s:%v", opts.CycloneAddr, opts.CyclonePort)
 

@@ -6,7 +6,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/k8s"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 )
 
@@ -19,7 +18,7 @@ func CreateResource(ctx context.Context) (*v1alpha1.Resource, error) {
 		return nil, err
 	}
 
-	return k8s.Client.CycloneV1alpha1().Resources(rs.Namespace).Create(rs)
+	return k8sClient.CycloneV1alpha1().Resources(rs.Namespace).Create(rs)
 }
 
 // POST /apis/v1alpha1/resources/{resource-name}
@@ -28,5 +27,5 @@ func GetResource(ctx context.Context, name, namespace string) (*v1alpha1.Resourc
 	if namespace == "" {
 		namespace = "default"
 	}
-	return k8s.Client.CycloneV1alpha1().Resources(namespace).Get(name, metav1.GetOptions{})
+	return k8sClient.CycloneV1alpha1().Resources(namespace).Get(name, metav1.GetOptions{})
 }

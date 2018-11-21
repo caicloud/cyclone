@@ -7,7 +7,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/k8s"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 )
 
@@ -20,7 +19,7 @@ func CreateWorkflow(ctx context.Context) (*v1alpha1.Workflow, error) {
 		return nil, err
 	}
 
-	wc, err := k8s.Client.CycloneV1alpha1().Workflows(wf.Namespace).Create(wf)
+	wc, err := k8sClient.CycloneV1alpha1().Workflows(wf.Namespace).Create(wf)
 	if err != nil {
 		log.Errorf("Create workflow %s error:%v", wf.Name, err)
 	}
@@ -33,5 +32,5 @@ func GetWorkflow(ctx context.Context, name, namespace string) (*v1alpha1.Workflo
 	if namespace == "" {
 		namespace = "default"
 	}
-	return k8s.Client.CycloneV1alpha1().Workflows(namespace).Get(name, metav1.GetOptions{})
+	return k8sClient.CycloneV1alpha1().Workflows(namespace).Get(name, metav1.GetOptions{})
 }
