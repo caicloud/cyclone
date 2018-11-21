@@ -12,7 +12,8 @@ import (
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
 	Client         clientset.Interface
-	TimeoutManager *workflowrun.TimeoutManager
+	TimeoutProcessor *workflowrun.TimeoutProcessor
+	GCProcessor    *workflowrun.GCProcessor
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -26,6 +27,10 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
 
+	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
+	// the GC queue.
+	h.GCProcessor.Add(originWfr)
+
 	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
 	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||
 		originWfr.Status.Overall.Status == v1alpha1.StatusError ||
@@ -33,8 +38,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		return
 	}
 
-	// Add this WorkflowRun to timeout manager, so that it would be cleaned up when time exipred.
-	h.TimeoutManager.Add(originWfr)
+	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time exipred.
+	h.TimeoutProcessor.Add(originWfr)
 
 	wfr := originWfr.DeepCopy()
 	operator, err := workflowrun.NewOperator(h.Client, wfr, wfr.Namespace)
@@ -55,6 +60,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 		return
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
+
+	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
+	// the GC queue.
+	h.GCProcessor.Add(originWfr)
 
 	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
 	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||

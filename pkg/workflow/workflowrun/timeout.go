@@ -48,16 +48,6 @@ func ParseTime(t string) (time.Duration, error) {
 	return result, nil
 }
 
-type workflowRunItem struct {
-	name       string
-	namespace  string
-	expireTime time.Time
-}
-
-func (i *workflowRunItem) String() string {
-	return fmt.Sprintf("%s:%s", i.namespace, i.name)
-}
-
 func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	timeout, _ := ParseTime(wfr.Spec.Timeout)
 	return &workflowRunItem{
@@ -67,15 +57,15 @@ func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	}
 }
 
-// TimeoutManager manages timeout of WorkflowRun.
-type TimeoutManager struct {
+// TimeoutProcessor manages timeout of WorkflowRun.
+type TimeoutProcessor struct {
 	client   clientset.Interface
 	items    map[string]*workflowRunItem
 }
 
 // NewTimeoutManager creates a timeout manager and run it.
-func NewTimeoutManager(client clientset.Interface) *TimeoutManager {
-	manager := &TimeoutManager{
+func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
+	manager := &TimeoutProcessor{
 		client:   client,
 		items:    make(map[string]*workflowRunItem),
 	}
@@ -84,7 +74,7 @@ func NewTimeoutManager(client clientset.Interface) *TimeoutManager {
 }
 
 // Add adds a WorkflowRun to the timeout manager.
-func (m *TimeoutManager) Add(wfr *v1alpha1.WorkflowRun) error {
+func (m *TimeoutProcessor) Add(wfr *v1alpha1.WorkflowRun) error {
 	_, err := ParseTime(wfr.Spec.Timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout value '%s', error: %v", wfr.Spec.Timeout, err)
@@ -97,7 +87,7 @@ func (m *TimeoutManager) Add(wfr *v1alpha1.WorkflowRun) error {
 }
 
 // Run will check timeout of managed WorkflowRun and process items that have expired their time.
-func (m *TimeoutManager) Run() {
+func (m *TimeoutProcessor) Run() {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
@@ -107,7 +97,7 @@ func (m *TimeoutManager) Run() {
 	}
 }
 
-func (m *TimeoutManager) process() {
+func (m *TimeoutProcessor) process() {
 	var expired []*workflowRunItem
 	for _, v := range m.items {
 		if v.expireTime.Before(time.Now()) {
@@ -140,7 +130,7 @@ func (m *TimeoutManager) process() {
 			}
 		}
 
-		// Kill stage pods, notice that already completed WorkflowRun will also have their Pod deleted.
+		// Kill stage pods.
 		stages := wfr.Status.Stages
 		if stages != nil {
 			for stage, status := range stages {

@@ -6,6 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"fmt"
 )
 
 // resolveStatus determines the final status from two given status, one is latest status, and
@@ -69,4 +70,16 @@ func staticStatus(status *v1alpha1.WorkflowRunStatus) *v1alpha1.WorkflowRunStatu
 		copy.Stages[k].Status.LastTransitionTime = t
 	}
 	return copy
+}
+
+// workflowRunItem describes a WorkflowRun object, it keeps the time that a action
+// should be taken, like GC, timeout handling.
+type workflowRunItem struct {
+	name       string
+	namespace  string
+	expireTime time.Time
+}
+
+func (i *workflowRunItem) String() string {
+	return fmt.Sprintf("%s:%s", i.namespace, i.name)
 }

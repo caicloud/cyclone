@@ -53,6 +53,8 @@ type WorkflowRunStatus struct {
 	Stages map[string]*StageStatus `json:"stages"`
 	// Overall status
 	Overall Status `json:"overall"`
+	// Whether gc is performed on this WorkflowRun, such as deleting pods.
+	Cleaned bool `json:"cleaned"`
 }
 
 // StageStatus describes status of a stage execution.

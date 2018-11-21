@@ -107,6 +107,7 @@ func (o *operator) Update() error {
 		}
 
 		// Apply changes to latest WorkflowRun
+		combined.Status.Cleaned = combined.Status.Cleaned || o.wfr.Status.Cleaned
 		combined.Status.Overall = *resolveStatus(&combined.Status.Overall, &o.wfr.Status.Overall)
 		for stage, status := range o.wfr.Status.Stages {
 			s, ok := combined.Status.Stages[stage]
@@ -129,6 +130,7 @@ func (o *operator) Update() error {
 			if err == nil {
 				log.WithField("wfr", latest.Name).
 					WithField("status", combined.Status.Overall.Status).
+					WithField("cleaned", combined.Status.Cleaned).
 					Info("WorkflowRun status updated successfully.")
 			}
 			return err
@@ -177,6 +179,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	if o.wfr.Status.Stages == nil || len(o.wfr.Status.Stages) == 0 {
 		return &v1alpha1.Status{
 			Status: v1alpha1.StatusPending,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -204,6 +207,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	if running {
 		return &v1alpha1.Status{
 			Status: v1alpha1.StatusRunning,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -211,6 +215,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	if waiting {
 		return &v1alpha1.Status{
 			Status: v1alpha1.StatusWaiting,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -218,6 +223,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	if err {
 		return &v1alpha1.Status{
 			Status: v1alpha1.StatusError,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -234,6 +240,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	if next > 0 {
 		return &v1alpha1.Status{
 			Status: v1alpha1.StatusRunning,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -241,13 +248,8 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// overall stage as Completed.
 	return &v1alpha1.Status{
 		Status: v1alpha1.StatusCompleted,
+		LastTransitionTime: metav1.Time{Time: time.Now()},
 	}, nil
-}
-
-// Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.
-// TODO(ChenDe): How to perform GC in PVC ?
-func (o *operator) GC() error {
-	return nil
 }
 
 // Reconcile finds next stages in the workflow to run and resolve WorkflowRun's overall status.
@@ -340,6 +342,32 @@ func (o *operator) Reconcile() error {
 		log.WithField("wfr", o.wfr.Name).Error("Update status error: ", err)
 		return err
 	}
+
+	return nil
+}
+
+// Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.
+// TODO(ChenDe): How to perform GC in PVC ?
+func (o *operator) GC() error {
+	for stg, status := range o.wfr.Status.Stages {
+		if status.Pod == nil {
+			log.WithField("wfr", o.wfr.Name).
+				WithField("stg", stg).
+				Warn("Pod information is missing, can't clean the pod.")
+			continue
+		}
+		err := o.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			log.WithField("wfr", o.wfr.Name).
+				WithField("stg", stg).
+				WithField("pod", status.Pod.Name).
+				Warn("Delete pod error: ", err)
+			continue
+		}
+	}
+
+	o.wfr.Status.Cleaned = true
+	o.Update()
 
 	return nil
 }
