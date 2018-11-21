@@ -2,8 +2,6 @@ package k8sapi
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
 	"time"
 
@@ -14,21 +12,24 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
 )
 
 type K8sapiExecutor struct {
-	client     clientset.Interface
-	kubeconfig string
-	namespace  string
-	podName    string
+	client        clientset.Interface
+	kubeconfig    string
+	namespace     string
+	podName       string
+	cycloneClient cycloneserver.CycloneServerClient
 }
 
-func NewK8sapiExecutor(n string, pod string, client clientset.Interface, kubecfg string) *K8sapiExecutor {
+func NewK8sapiExecutor(n string, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *K8sapiExecutor {
 	return &K8sapiExecutor{
-		namespace:  n,
-		podName:    pod,
-		client:     client,
-		kubeconfig: kubecfg,
+		namespace:     n,
+		podName:       pod,
+		client:        client,
+		kubeconfig:    kubecfg,
+		cycloneClient: cycloneserver.NewClient(cycloneServer),
 	}
 }
 
@@ -57,7 +58,7 @@ func (k *K8sapiExecutor) WaitContainers(expectState common.ContainerState, selec
 				for _, cs := range pod.Status.ContainerStatuses {
 					if c.Name == cs.Name {
 						s = &cs
-						break;
+						break
 					}
 				}
 
@@ -92,23 +93,23 @@ func (k *K8sapiExecutor) GetPod() (*core_v1.Pod, error) {
 }
 
 // CollectLog collects container logs.
-func (k *K8sapiExecutor) CollectLog(name, path string) error {
-	log.Infof("Start to collect %s log to %s:", name, path)
+func (k *K8sapiExecutor) CollectLog(container, workflowrun, stage string) error {
+	log.Infof("Start to collect %s log", container)
 	stream, err := k.client.CoreV1().Pods(k.namespace).GetLogs(k.podName, &core_v1.PodLogOptions{
-		Container: name,
+		Container: container,
 		Follow:    true,
 	}).Stream()
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
 
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(file, stream)
+	closeLog := make(chan struct{})
+	defer func() {
+		stream.Close()
+		close(closeLog)
+	}()
+
+	k.cycloneClient.PushLogStream(workflowrun, stage, container, stream, closeLog)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ VERSION ?= v0.9.0
 ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
-TARGETS := workflow/controller workflow/coordinator
+TARGETS := server workflow/controller workflow/coordinator
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
@@ -124,7 +124,7 @@ container: build-linux
 container-local: build-local
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
-	    image=$(IMAGE_PREFIX)$${target}$(IMAGE_SUFFIX);                                \
+	    image=$(IMAGE_PREFIX)$${target/\//-}$(IMAGE_SUFFIX);                           \
 	    docker build -t $${registry}/$${image}:$(VERSION)                              \
 	      -f $(BUILD_DIR)/$${target}/Dockerfile .;                                     \
 	  done                                                                             \

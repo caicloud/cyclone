@@ -10,6 +10,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
@@ -17,11 +18,6 @@ import (
 // GetExitCodeRetry defined the max retry times for
 // get containers exit code.
 var GetExitCodeRetry = 10
-
-func init() {
-	// create container directory if not exist.
-	createDirectory(common.CoordinatorLogsPath)
-}
 
 // Coordinator is a struct which contains infomations
 // will be used in workflow sidecar named coordinator.
@@ -36,7 +32,7 @@ type Coordinator struct {
 // to communicate with k8s container runtime.
 type RuntimeExecutor interface {
 	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
-	CollectLog(containerName string, path string) error
+	CollectLog(container, wrorkflowrun, stage string) error
 	GetStageOutputs(name string) (v1alpha1.Outputs, error)
 	CopyFromContainer(container, path, dst string) error
 	GetPod() (*core_v1.Pod, error)
@@ -45,7 +41,7 @@ type RuntimeExecutor interface {
 // NewCoordinator create a coordinator instance.
 func NewCoordinator(client clientset.Interface, kubecfg string) *Coordinator {
 	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExecutor(getNamespace(), getPodName(), client, kubecfg),
+		runtimeExec:       k8sapi.NewK8sapiExecutor(getNamespace(), getPodName(), client, getCycloneServerAddr(), kubecfg),
 		workflowrunName:   getWorkflowrunName(),
 		stageName:         getStageName(),
 		workloadContainer: getWorkloadContainer(),
@@ -60,17 +56,12 @@ func (co *Coordinator) CollectLogs() {
 	}
 
 	for _, c := range cs {
-		path := common.ContainerLogPath(c)
-		go func(containerName string, logPath string) {
-			errl := co.runtimeExec.CollectLog(containerName, logPath)
+		go func(container, workflowrun, stage string) {
+			errl := co.runtimeExec.CollectLog(container, workflowrun, stage)
 			if errl != nil {
 				log.Errorf("Collect %s log failed:%v", c, errl)
 			}
-		}(c, path)
-
-		go func() {
-			// TODO websocket send logs to cyclone-server
-		}()
+		}(c, co.workflowrunName, co.stageName)
 	}
 
 }
@@ -157,12 +148,12 @@ func (co *Coordinator) CollectArtifacts() error {
 	}
 
 	// Create the artifacts directory if not exist.
-	createDirectory(common.CoordinatorArtifactsPath)
+	fileutil.CreateDirectory(common.CoordinatorArtifactsPath)
 
 	log.WithField("artifacts", outputs.Artifacts).Info("start to collect.")
 	for _, artifact := range outputs.Artifacts {
 		dst := path.Join(common.CoordinatorArtifactsPath, artifact.Name)
-		createDirectory(dst)
+		fileutil.CreateDirectory(dst)
 
 		id, err := co.getContainerID(co.workloadContainer)
 		if err != nil {
@@ -191,12 +182,12 @@ func (co *Coordinator) CollectResources() error {
 	}
 
 	// Create the resources directory if not exist.
-	createDirectory(common.CoordinatorResourcesPath)
+	fileutil.CreateDirectory(common.CoordinatorResourcesPath)
 
 	log.WithField("resources", outputs.Resources).Info("start to collect.")
 	for _, resource := range outputs.Resources {
 		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
-		createDirectory(dst)
+		fileutil.CreateDirectory(dst)
 
 		id, err := co.getContainerID(co.workloadContainer)
 		if err != nil {
@@ -217,7 +208,7 @@ func (co *Coordinator) CollectResources() error {
 
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
-	exist := createDirectory(common.CoordinatorResolverNotifyPath)
+	exist := fileutil.CreateDirectory(common.CoordinatorResolverNotifyPath)
 	log.WithField("exist", exist).WithField("notifydir", common.CoordinatorResolverNotifyPath).Info()
 
 	_, err := os.Create(common.CoordinatorResolverNotifyOkPath)
