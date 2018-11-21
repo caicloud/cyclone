@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
+	"time"
 )
 
 const (
@@ -34,12 +35,20 @@ type ControllerConfig struct {
 	Images map[string]string `json:"images"`
 	// Logging configuration, such as log level.
 	Logging LoggingConfig `json:"logging"`
+	// GC configuration
+	GC GCConfig `json:"gc"`
 	// The PVC used to transfer artifacts in WorkflowRun
 	PVC string `json:"pvc"`
 }
 
 type LoggingConfig struct {
 	Level string `json:"level"`
+}
+
+type GCConfig struct {
+	// After a WorkflowRun has been terminated, we won't clean it up immediately, but after a
+	// delay time given by this configure item. When configured to 0, it equals to gc immediately.
+	DelaySeconds time.Duration `json:"delay_seconds"`
 }
 
 var Config ControllerConfig
