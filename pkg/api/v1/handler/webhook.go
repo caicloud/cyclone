@@ -216,7 +216,12 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		}
 	default:
 		log.Error("event type not support.")
+	}
 
+	// If the pipeline configured cache dependency, turn it on.
+	buildInfo := pipeline.Build.BuildInfo
+	if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
+		performParams.CacheDependency = true
 	}
 
 	if performParams != nil {
@@ -237,9 +242,6 @@ func HandleGithubWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		response.Message = "Is ignored"
 		return response, nil
 	}
-}
-
-type GitHubStatusURL struct {
 }
 
 // input   : `https://api.github.com/repos/aaa/bbb/statuses/ccc`
@@ -386,6 +388,12 @@ func HandleGitlabWebhook(ctx context.Context, pipelineID string) (webhookRespons
 		log.Error("event type not support.")
 	}
 
+	// If the pipeline configured cache dependency, turn it on.
+	buildInfo := pipeline.Build.BuildInfo
+	if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
+		performParams.CacheDependency = true
+	}
+
 	if performParams != nil {
 		pipelineRecord := &api.PipelineRecord{
 			Name:            performParams.Name,
@@ -503,13 +511,22 @@ func getSVNChangedFiles(message string) []string {
 
 func triggerSVNPipelines(trigger *api.PostCommitTrigger, pipeline api.Pipeline, revision string) error {
 	name := pipeline.Name + "-hook-revision-" + revision
+
+	// If the pipeline configured cache dependency, turn it on.
+	cacheDependency := false
+	buildInfo := pipeline.Build.BuildInfo
+	if buildInfo != nil && buildInfo.BuildTool != nil && buildInfo.CacheDependency {
+		cacheDependency = true
+	}
+
 	pipelineRecord := &api.PipelineRecord{
 		Name:       name,
 		PipelineID: pipeline.ID,
 		PerformParams: &api.PipelinePerformParams{
-			Name:   name,
-			Ref:    api.SVNPostCommitRefPrefix + revision,
-			Stages: trigger.Stages,
+			Name:            name,
+			Ref:             api.SVNPostCommitRefPrefix + revision,
+			Stages:          trigger.Stages,
+			CacheDependency: cacheDependency,
 		},
 		Trigger: api.TriggerSVNHookPostCommit,
 	}
