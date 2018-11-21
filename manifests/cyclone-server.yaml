@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: refactor-cyclone-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: refactor-cyclone-server
+  template:
+    metadata:
+      labels:
+        app: refactor-cyclone-server
+    spec:
+      containers:
+      - name: server
+        image: test.caicloudprivatetest.com/release/server:v0.9.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7089
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: refactor-cyclone-server
+spec:
+  selector:
+    app: refactor-cyclone-server
+  ports:
+  - protocol: TCP
+    port: 7099
+    nodePort: 30011
+    targetPort: 7099
+  type: NodePort

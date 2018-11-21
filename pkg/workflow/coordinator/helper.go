@@ -4,8 +4,6 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
@@ -25,6 +23,10 @@ func getWorkloadContainer() string {
 	return os.Getenv(common.EnvWorkloadContainerName)
 }
 
+func getCycloneServerAddr() string {
+	return os.Getenv(common.EnvCycloneServerAddr)
+}
+
 func getNamespace() string {
 	n := os.Getenv(common.EnvNamespace)
 	if n == "" {
@@ -32,26 +34,6 @@ func getNamespace() string {
 	}
 
 	return n
-}
-
-func createDirectory(dirName string) bool {
-	src, err := os.Stat(dirName)
-
-	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(dirName, 0755)
-		if errDir != nil {
-			log.Errorf("mkdir %s failed: %v", dirName, errDir)
-			panic(errDir)
-		}
-		return true
-	}
-
-	if src.Mode().IsRegular() {
-		log.Error(dirName, "already exist as a file!")
-		return false
-	}
-
-	return false
 }
 
 // refineContainerID strips the 'docker://' prefix from k8s ContainerID string

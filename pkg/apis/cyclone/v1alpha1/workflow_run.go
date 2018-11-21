@@ -103,5 +103,5 @@ type Status struct {
 type WorkflowRunList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []WorkflowRun `json:"items""`
+	Items           []WorkflowRun `json:"items"`
 }

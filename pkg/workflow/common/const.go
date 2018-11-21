@@ -14,11 +14,13 @@ const (
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
 	// EnvNamespace is an environment which represents namespace.
 	EnvNamespace = "NAMESPACE"
+	// EnvCycloneServerAddr is an environment which represents cyclone server address.
+	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
 
 	// Container name prefixes for sidecar. There are two kinds of sidecars in workflow:
 	// - Those added automatically by Cyclone such as coordinator, resource resolvers.
 	// - Those specified by users in stage spec as workload.
-	CycloneSidecarPrefix = "cyclone-sidecar-"
+	CycloneSidecarPrefix  = "cyclone-sidecar-"
 	WorkloadSidecarPrefix = "workload-sidecar-"
 
 	// Coordinator container name.
@@ -30,7 +32,7 @@ const (
 	// Name of the notify directory where coordinator would create ok file there.
 	ResolverNotifyDir = "notify"
 	// Notify directory path in resource resolver container.
-	ResolverNotifyDirPath  = "/workspace/notify"
+	ResolverNotifyDirPath = "/workspace/notify"
 
 	ResourcePullCommand = "pull"
 	ResourcePushCommand = "push"
@@ -41,12 +43,11 @@ const (
 	StageAnnotationName       = "cyclone.io/stage"
 
 	// Paths in coordinator container.
-	CoordinatorResolverPath   = "/workspace/resolvers"
-	CoordinatorResourcesPath = "/workspace/resolvers/resources"
-	CoordinatorResolverNotifyPath = "/workspace/resolvers/notify"
+	CoordinatorResolverPath         = "/workspace/resolvers"
+	CoordinatorResourcesPath        = "/workspace/resolvers/resources"
+	CoordinatorResolverNotifyPath   = "/workspace/resolvers/notify"
 	CoordinatorResolverNotifyOkPath = "/workspace/resolvers/notify/ok"
-	CoordinatorLogsPath = "/workspace/logs"
-	CoordinatorArtifactsPath = "/workspace/artifacts"
+	CoordinatorArtifactsPath        = "/workspace/artifacts"
 
 	// Name of the default PV used by all workflow stages.
 	DefaultPvVolumeName = "default-pv"
@@ -65,7 +66,7 @@ const (
 	// Name of the secret used by workflow.
 	DefaultSecretName = "cyclone-secrets"
 
-	DockerConfigPath = "/root/.docker"
+	DockerConfigPath     = "/root/.docker"
 	DockerConfigJsonFile = "config.json"
 
 	// ContainerStateTerminated represents container is stopped.
