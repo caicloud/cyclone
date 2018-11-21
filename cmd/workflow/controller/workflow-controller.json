@@ -8,5 +8,8 @@
   "logging": {
     "level": "debug"
   },
+  "gc": {
+    "delay_seconds": 3600
+  },
   "pvc": "cyclone-server-server-v1-0-cyclone-data"
 }

@@ -15,5 +15,8 @@ data:
       "logging": {
         "level": "debug"
       },
+      "gc": {
+        "delay_seconds": 1800
+      },
       "pvc": "cyclone-server-server-v1-0-cyclone-data"
     }
