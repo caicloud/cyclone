@@ -60,7 +60,7 @@ type SCMProvider interface {
 	CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSha string) error
 	GetPullRequestSHA(repoURL string, number int) (string, error)
 	GetMergeRequestTargetBranch(repoURL string, number int) (string, error)
-	RetrieveRepoInfo() (*api.RepoInfo, error)
+	RetrieveRepoInfo(url string) (*api.RepoInfo, error)
 }
 
 // WebHook represents the params for SCM webhook.
