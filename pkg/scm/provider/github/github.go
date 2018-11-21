@@ -486,6 +486,6 @@ func (g *Github) GetMergeRequestTargetBranch(repoURL string, number int) (string
 	return "", errors.ErrorNotImplemented.Error("get pull request target branch")
 }
 
-func (g *Github) RetrieveRepoInfo() (*api.RepoInfo, error) {
+func (g *Github) RetrieveRepoInfo(url string) (*api.RepoInfo, error) {
 	return nil, errors.ErrorNotImplemented.Error("retrieve GitHub repo info")
 }

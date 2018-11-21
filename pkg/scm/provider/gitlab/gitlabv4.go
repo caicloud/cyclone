@@ -271,6 +271,6 @@ func (g *GitlabV4) GetMergeRequestTargetBranch(repoURL string, number int) (stri
 	return mr.TargetBranch, nil
 }
 
-func (g *GitlabV4) RetrieveRepoInfo() (*api.RepoInfo, error) {
+func (g *GitlabV4) RetrieveRepoInfo(url string) (*api.RepoInfo, error) {
 	return nil, errors.ErrorNotImplemented.Error("retrieve GitLab repo info")
 }
