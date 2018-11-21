@@ -26,14 +26,6 @@
   revision = "0cd8f02a9807e0ee3f738525d1b0c53457a77975"
 
 [[projects]]
-  digest = "1:de6ba9010e48508fb7bbcd6241984b0a02ff611326a5b10bfb1d18288072e0bb"
-  name = "github.com/caicloud/storage-admin"
-  packages = ["pkg/constants"]
-  pruneopts = ""
-  revision = "90bde1ac21faec4dfa85bbb6ba9dc301894a6eb3"
-  version = "v0.1.10"
-
-[[projects]]
   digest = "1:7589cb4f91d684fad3e467fa1d33013c1078fe98a692a19e5c38a57c35d884de"
   name = "github.com/cbroglie/mustache"
   packages = ["."]
@@ -623,7 +615,6 @@
     "github.com/caicloud/nirvana/plugins/metrics",
     "github.com/caicloud/nirvana/plugins/profiling",
     "github.com/caicloud/nirvana/service",
-    "github.com/caicloud/storage-admin/pkg/constants",
     "github.com/cbroglie/mustache",
     "github.com/golang/glog",
     "github.com/gorilla/websocket",
