@@ -46,13 +46,13 @@ func ReceivePipelineRecordLogStream(ctx context.Context, workflowrun, stage, con
 	//upgrade HTTP rest API --> socket connection
 	ws, err := websocketutil.Upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %v", err))
+		log.Errorf(fmt.Sprintf("Unable to upgrade websocket for err: %v", err))
 		return cerr.ErrorUnknownInternal.Error(err)
 	}
 	defer ws.Close()
 
 	if err := receivePipelineRecordLogStream(workflowrun, stage, container, ws); err != nil {
-		log.Error("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
+		log.Errorf("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
 			workflowrun, stage, container, err.Error())
 		return cerr.ErrorUnknownInternal.Error(err)
 	}
@@ -63,8 +63,18 @@ func ReceivePipelineRecordLogStream(ctx context.Context, workflowrun, stage, con
 // receivePipelineRecordLogStream receives the log stream for
 // one stage of the workflowrun, and stores it into log files.
 func receivePipelineRecordLogStream(workflowrun, stage, container string, ws *websocket.Conn) error {
+	logFolder, err := getLogFolder(workflowrun, stage)
+	if err != nil {
+		log.Errorf("get log folder failed: %v", err)
+		return err
+	}
+
+	// create log folders.
+	fileutil.CreateDirectory(logFolder)
+
 	logFilePath, err := getLogFilePath(workflowrun, stage, container)
 	if err != nil {
+		log.Errorf("get log path failed: %v", err)
 		return err
 	}
 

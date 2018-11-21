@@ -44,7 +44,7 @@ const (
 	WorkflowTriggerNamePathParameterName = "workflowtrigger-name"
 
 	// ContainerNameQueryParameter represents the query param container name.
-	ContainerNameQueryParameter = "container-name"
+	ContainerNameQueryParameter = "container"
 
 	// NamespaceQueryParameter represents the query param namespace.
 	NamespaceQueryParameter string = "namespace"

@@ -25,7 +25,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: refactor-cyclone-service
+  name: refactor-cyclone-server
 spec:
   selector:
     app: refactor-cyclone-server

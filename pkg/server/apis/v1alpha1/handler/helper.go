@@ -19,11 +19,13 @@ func getLogFilePath(workflowrun, stage, container string) (string, error) {
 		return "", fmt.Errorf("workflowrun or stage or container can not be empty")
 	}
 
-	rf := getRecordFolder(workflowrun, stage)
-
-	return strings.Join([]string{rf, logsFolderName, container}, string(os.PathSeparator)), nil
+	rf, _ := getLogFolder(workflowrun, stage)
+	return strings.Join([]string{rf, container}, string(os.PathSeparator)), nil
 }
 
-func getRecordFolder(workflowrun, stage string) string {
-	return strings.Join([]string{cycloneHome, workflowrun, stage}, string(os.PathSeparator))
+func getLogFolder(workflowrun, stage string) (string, error) {
+	if workflowrun == "" || stage == "" {
+		return "", fmt.Errorf("workflowrun or stage can not be empty")
+	}
+	return strings.Join([]string{cycloneHome, workflowrun, stage, logsFolderName}, string(os.PathSeparator)), nil
 }

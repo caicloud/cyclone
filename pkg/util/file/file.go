@@ -18,6 +18,8 @@ package file
 
 import (
 	"os"
+
+	"github.com/caicloud/nirvana/log"
 )
 
 // DirExists checks the existence of the dir, true if exists, or false if not exist.
@@ -34,4 +36,26 @@ func FileExists(path string) bool {
 	}
 
 	return true
+}
+
+// CreateDirectory check if the specified file exist,
+// and will create if not exist.
+func CreateDirectory(dirName string) bool {
+	src, err := os.Stat(dirName)
+
+	if os.IsNotExist(err) {
+		errDir := os.MkdirAll(dirName, 0755)
+		if errDir != nil {
+			log.Errorf("mkdir %s failed: %v", dirName, errDir)
+			return false
+		}
+		return true
+	}
+
+	if src.Mode().IsRegular() {
+		log.Error(dirName, "already exist as a file!")
+		return false
+	}
+
+	return false
 }
