@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"reflect"
 )
 
 type PodBuilder struct {
@@ -75,7 +76,7 @@ func (m *PodBuilder) Prepare() error {
 		OwnerReferences: []metav1.OwnerReference{
 			{
 				APIVersion: v1alpha1.APIVersion,
-				Kind:       "WorkflowRun",
+				Kind:       reflect.TypeOf(v1alpha1.WorkflowRun{}).Name(),
 				Name:       m.wfr.Name,
 				UID:        m.wfr.UID,
 			},
