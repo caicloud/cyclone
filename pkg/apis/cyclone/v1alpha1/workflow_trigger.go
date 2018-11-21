@@ -30,15 +30,15 @@ const (
 
 // WorkflowTriggerSpec defines workflow trigger definition.
 type WorkflowTriggerSpec struct {
-	// Reference of the Workflow to trigger
-	WorkflowRef *corev1.ObjectReference `json:"workflowRef"`
 	// Type of this trigger, Schedule or Webhook
 	Type TriggerType `json:"triggerType"`
-	// Whether this trigger is enabled, if set to true, no workflow will be triggered
-	Enabled bool `json:"enabled"`
 	// Parameters of the trigger, for Schedule type trigger, "schedule"
 	// parameter is required
 	Parameters []ParameterItem `json:"parameters"`
+	// Whether this trigger is disabled, if set to true, no workflow will be triggered
+	Disabled bool `json:"disabled"`
+	// Spec to run the workflow
+	WorkflowRunSpec `json:",inline"`
 }
 
 // WorkflowTriggerStatus describes status of a workflow trigger
