@@ -17,6 +17,7 @@
     "definition",
     "errors",
     "log",
+    "operators/validator",
     "plugins/metrics",
     "plugins/profiling",
     "service",
@@ -48,6 +49,25 @@
   pruneopts = ""
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:709292c015123a3bc69ea970dc9abd6667170e7fbf5cdeb10c6d14b250d3385f"
+  name = "github.com/go-playground/locales"
+  packages = [
+    ".",
+    "currency",
+  ]
+  pruneopts = ""
+  revision = "f63010822830b6fe52288ee52d5a1151088ce039"
+  version = "v0.12.1"
+
+[[projects]]
+  digest = "1:7ca0f6f2a364f603e843763d35c979b595d71159982791de27f9ec40d532876b"
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  pruneopts = ""
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
 
 [[projects]]
   digest = "1:0a3f6a0c68ab8f3d455f8892295503b179e571b7fefe47cc6c556405d1f83411"
@@ -336,6 +356,14 @@
   ]
   pruneopts = ""
   revision = "e21233ffa6c386fc230b4328493f77af54ff9372"
+
+[[projects]]
+  digest = "1:6d6c2425d960ab1c35f54bc430e7e10a566b04bfb91ce80cad7f48941d90ec2e"
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  pruneopts = ""
+  revision = "1fa3c8d6336562f0a3f95c73593ee2b57ff4da11"
+  version = "v9.23.0"
 
 [[projects]]
   digest = "1:e5d1fb981765b6f7513f793a3fcaac7158408cca77f75f7311ac82cc88e9c445"
@@ -628,6 +656,7 @@
     "github.com/caicloud/nirvana/definition",
     "github.com/caicloud/nirvana/errors",
     "github.com/caicloud/nirvana/log",
+    "github.com/caicloud/nirvana/operators/validator",
     "github.com/caicloud/nirvana/plugins/metrics",
     "github.com/caicloud/nirvana/plugins/profiling",
     "github.com/caicloud/nirvana/service",
