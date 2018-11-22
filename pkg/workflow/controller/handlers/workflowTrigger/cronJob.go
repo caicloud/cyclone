@@ -3,6 +3,7 @@ package workflowTrigger
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/pkg/errors"
@@ -31,17 +32,25 @@ type CronTrigger struct {
 type CronTriggerManager struct {
 	Client         clientset.Interface
 	CronTriggerMap map[string]*CronTrigger
+	mutex          sync.Mutex
 }
 
 func NewTriggerManager(client clientset.Interface) *CronTriggerManager {
 	return &CronTriggerManager{
 		Client:         client,
 		CronTriggerMap: make(map[string]*CronTrigger),
+		mutex:          sync.Mutex{},
 	}
 }
 
+func (trigger *CronTrigger) getKeyFromTrigger() (string) {
+	return fmt.Sprintf(KeyTemplate, trigger.Namespace, trigger.WorkflowTriggerName)
+}
+
 func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
-	wftKey := fmt.Sprintf(KeyTemplate, trigger.Namespace, trigger.WorkflowTriggerName)
+	wftKey := trigger.getKeyFromTrigger()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	if wft, ok := m.CronTriggerMap[wftKey]; ok {
 		// this situation may not happen for k8s will do same name check
 		log.Warnf("failed to add cronTrigger, already exists: %+v\n", wft)
@@ -51,6 +60,8 @@ func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
 }
 
 func (m *CronTriggerManager) DeleteTrigger(wftKey string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	if wft, ok := m.CronTriggerMap[wftKey]; ok {
 		wft.Cron.Stop()
 		wft.IsRunning = false
@@ -133,6 +144,10 @@ func (m *CronTriggerManager) UpdateCron(wft *v1alpha1.WorkflowTrigger) {
 }
 
 func (m *CronTriggerManager) DeleteCron(wft *v1alpha1.WorkflowTrigger) {
-	wftKey := fmt.Sprintf(KeyTemplate, wft.Namespace, wft.Name)
+	wftKey := getKeyFromWorkflowTrigger(wft)
 	m.DeleteTrigger(wftKey)
+}
+
+func getKeyFromWorkflowTrigger(wft *v1alpha1.WorkflowTrigger) string {
+	return fmt.Sprintf(KeyTemplate, wft.Namespace, wft.Name)
 }
