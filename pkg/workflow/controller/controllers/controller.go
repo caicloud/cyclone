@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
-
 	log "github.com/sirupsen/logrus"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
 type Controller struct {
