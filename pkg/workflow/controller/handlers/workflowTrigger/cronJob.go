@@ -2,11 +2,10 @@ package workflowTrigger
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -15,30 +14,28 @@ import (
 )
 
 const (
-	KeyTemplate = "%s-%s"
+	KeyTemplate = "%s/%s"
 )
 
 type CronTrigger struct {
 	Cron                *cron.Cron
-	IsRun               bool
+	IsRunning           bool
 	SuccCount           int
 	FailCount           int
 	Namespace           string
 	WorkflowTriggerName string
 	WorkflowRun         *v1alpha1.WorkflowRun
+	Manage              *CronTriggerManager
 }
 
 type CronTriggerManager struct {
+	Client         clientset.Interface
 	CronTriggerMap map[string]*CronTrigger
 }
 
-var (
-	CronS  = NewTriggerManager()
-	Client clientset.Interface
-)
-
-func NewTriggerManager() *CronTriggerManager {
+func NewTriggerManager(client clientset.Interface) *CronTriggerManager {
 	return &CronTriggerManager{
+		Client:         client,
 		CronTriggerMap: make(map[string]*CronTrigger),
 	}
 }
@@ -47,7 +44,7 @@ func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
 	wftKey := fmt.Sprintf(KeyTemplate, trigger.Namespace, trigger.WorkflowTriggerName)
 	if wft, ok := m.CronTriggerMap[wftKey]; ok {
 		// this situation may not happen for k8s will do same name check
-		log.Errorf("failed to add cronTrigger, already exists: %+v\n", wft)
+		log.Warnf("failed to add cronTrigger, already exists: %+v\n", wft)
 	} else {
 		m.CronTriggerMap[wftKey] = trigger
 	}
@@ -56,59 +53,30 @@ func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
 func (m *CronTriggerManager) DeleteTrigger(wftKey string) {
 	if wft, ok := m.CronTriggerMap[wftKey]; ok {
 		wft.Cron.Stop()
-		wft.IsRun = false
+		wft.IsRunning = false
 		delete(m.CronTriggerMap, wftKey)
 	} else {
-		log.Errorf("failed to delete cronTrigger(%s), not exist\n", wftKey)
+		log.Warnf("failed to delete cronTrigger(%s), not exist\n", wftKey)
 	}
 }
 
-// [a-z0-9]{5}
-// exp: ab12c
-// Abandoned
-func RandName(length int) string {
-
-	var (
-		charList []byte
-		a        byte
-	)
-
-	for a = 'a'; a < 'z'; a++ {
-		charList = append(charList, a)
-	}
-	for a = '0'; a < '9'; a++ {
-		charList = append(charList, a)
-	}
-
-	var name []byte
-	r := rand.New(rand.NewSource(time.Now().Unix()))
-	for b := 0; b < length; b++ {
-		name = append(name, charList[r.Intn(len(charList))])
-	}
-
-	return string(name)
-}
-
-func ToWorkflowTrigger(obj interface{}) *v1alpha1.WorkflowTrigger {
+func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 	wft, ok := obj.(*v1alpha1.WorkflowTrigger)
 	if !ok {
-		log.Errorf("I want type: WorkflowTrigger, but it is: %T", obj)
-		return nil
+		return nil, errors.New(fmt.Sprintf("I want type: WorkflowTrigger, but it is: %T", obj))
 	} else {
-		return wft
+		return wft, nil
 	}
 }
 
 func (c *CronTrigger) Run() {
 
 	c.WorkflowRun.Name = c.WorkflowTriggerName + "-" + strings.Replace(uuid.NewV1().String(), "-", "", -1)
-
-	_, err := Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
+	_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 	if err != nil {
 		c.FailCount++
-		log.Errorf("can not create WorkflowRun: %s", err)
-		return
+		log.Warnf("can not create WorkflowRun: %s", err)
 	} else {
 		c.SuccCount++
 	}
@@ -123,20 +91,22 @@ func getParaValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 	return "", false
 }
 
-func CreateCron(wft *v1alpha1.WorkflowTrigger) {
+func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	schedule, has := getParaValue(wft.Spec.Parameters, "schedule")
 	if !has {
-		log.Errorf("I need schedule string(like '0 0 */2 * * *') in Parameters of WorkflowTrigger")
+		log.WithField("wft", wft.Name).Warn("Parameter 'schedule' not set in WorkflowTrigger spec")
 		return
 	}
 
 	ct := &CronTrigger{
 		Namespace:           wft.Namespace,
-		WorkflowTriggerName: fmt.Sprintf(KeyTemplate, wft.Namespace, wft.Name),
+		WorkflowTriggerName: wft.Name,
 	}
 
-	wfr := &v1alpha1.WorkflowRun{}
+	wfr := &v1alpha1.WorkflowRun{
+		Spec: wft.Spec.WorkflowRunSpec,
+	}
 
 	ct.WorkflowRun = wfr
 
@@ -148,21 +118,21 @@ func CreateCron(wft *v1alpha1.WorkflowTrigger) {
 	}
 
 	ct.Cron = c
+	ct.Manage = m
+	m.AddTrigger(ct)
 
-	CronS.AddTrigger(ct)
-
-	if wft.Spec.Enabled {
+	if !wft.Spec.Disabled {
 		ct.Cron.Start()
-		ct.IsRun = true
+		ct.IsRunning = true
 	}
 }
 
-func UpdateCron(wft *v1alpha1.WorkflowTrigger) {
-	DeleteCron(wft)
-	CreateCron(wft)
+func (m *CronTriggerManager) UpdateCron(wft *v1alpha1.WorkflowTrigger) {
+	m.DeleteCron(wft)
+	m.CreateCron(wft)
 }
 
-func DeleteCron(wft *v1alpha1.WorkflowTrigger) {
+func (m *CronTriggerManager) DeleteCron(wft *v1alpha1.WorkflowTrigger) {
 	wftKey := fmt.Sprintf(KeyTemplate, wft.Namespace, wft.Name)
-	CronS.DeleteTrigger(wftKey)
+	m.DeleteTrigger(wftKey)
 }

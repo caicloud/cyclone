@@ -7,7 +7,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
-type Handler struct{}
+type Handler struct {
+	CronManager *CronTriggerManager
+}
 
 var (
 	// Check whether *Handler has implemented handlers.Interface interface.
@@ -16,22 +18,28 @@ var (
 
 func (h *Handler) ObjectCreated(obj interface{}) {
 	// h.process(obj)
-	if wft := ToWorkflowTrigger(obj); wft != nil {
-		CreateCron(wft)
+	if wft, err := ToWorkflowTrigger(obj); err != nil {
+		log.Warnln(err)
+	} else {
+		h.CronManager.CreateCron(wft)
 	}
 }
 
 func (h *Handler) ObjectUpdated(obj interface{}) {
 	// h.process(obj)
-	if wft := ToWorkflowTrigger(obj); wft != nil {
-		UpdateCron(wft)
+	if wft, err := ToWorkflowTrigger(obj); err != nil {
+		log.Warnln(err)
+	} else {
+		h.CronManager.UpdateCron(wft)
 	}
 }
 
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	// h.process(obj)
-	if wft := ToWorkflowTrigger(obj); wft != nil {
-		DeleteCron(wft)
+	if wft, err := ToWorkflowTrigger(obj); err != nil {
+		log.Warnln(err)
+	} else {
+		h.CronManager.DeleteCron(wft)
 	}
 }
 
