@@ -16,6 +16,7 @@ data:
         "level": "debug"
       },
       "gc": {
+        "enabled": true,
         "delay_seconds": 1800
       },
       "pvc": "cyclone-server-server-v1-0-cyclone-data"

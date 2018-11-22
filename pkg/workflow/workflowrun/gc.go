@@ -43,20 +43,29 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 type GCProcessor struct {
 	client   clientset.Interface
 	items    map[string]*workflowRunItem
+	enabled  bool
 }
 
-func NewGCProcessor(client clientset.Interface) *GCProcessor {
+func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
 		client: client,
 		items: make(map[string]*workflowRunItem),
+		enabled: enabled,
 	}
-	go processor.Run()
+	if enabled {
+		go processor.run()
+	}
+
 	return processor
 }
 
 // Add WorkflowRun object to GC processor, it will firstly judge whether the WorkflowRun
 // object needs GC, if it's true, it will perform GC on it in the right time.
 func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
+	if !p.enabled {
+		return
+	}
+
 	if !checkGC(wfr) {
 		return
 	}
@@ -73,7 +82,17 @@ func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
 		Debug("Added to GCProcessor")
 }
 
-func (p *GCProcessor) Run() {
+// Enable the processor and start it.
+func (p *GCProcessor) Enable() {
+	if p.enabled {
+		return
+	}
+
+	p.enabled = true
+	go p.run()
+}
+
+func (p *GCProcessor) run() {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
