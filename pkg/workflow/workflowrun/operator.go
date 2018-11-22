@@ -35,8 +35,8 @@ type Operator interface {
 
 type operator struct {
 	client clientset.Interface
-	wf *v1alpha1.Workflow
-	wfr *v1alpha1.WorkflowRun
+	wf     *v1alpha1.Workflow
+	wfr    *v1alpha1.WorkflowRun
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -64,7 +64,7 @@ func newFromName(client clientset.Interface, wfr, namespace string) (Operator, e
 
 	return &operator{
 		client: client,
-		wfr: w,
+		wfr:    w,
 	}, nil
 }
 
@@ -77,8 +77,8 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 
 	return &operator{
 		client: client,
-		wf: f,
-		wfr: wfr,
+		wf:     f,
+		wfr:    wfr,
 	}, nil
 }
 
@@ -106,6 +106,11 @@ func (o *operator) Update() error {
 			combined.Status.Stages = make(map[string]*v1alpha1.StageStatus)
 		}
 
+		// Ensure it has owner reference to related Workflow.
+		if err := ensureOwner(o.client, o.wf, combined); err != nil {
+			log.WithField("wfr", combined.Name).Warn("Ensure owner error: ", err)
+		}
+
 		// Apply changes to latest WorkflowRun
 		combined.Status.Cleaned = combined.Status.Cleaned || o.wfr.Status.Cleaned
 		combined.Status.Overall = *resolveStatus(&combined.Status.Overall, &o.wfr.Status.Overall)
@@ -125,7 +130,8 @@ func (o *operator) Update() error {
 			}
 		}
 
-		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) {
+		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
+			len(latest.OwnerReferences) != len(combined.OwnerReferences) {
 			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(combined)
 			if err == nil {
 				log.WithField("wfr", latest.Name).
@@ -178,7 +184,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// If the WorkflowRun has no stage status recorded yet, we resolve the overall status as pending.
 	if o.wfr.Status.Stages == nil || len(o.wfr.Status.Stages) == 0 {
 		return &v1alpha1.Status{
-			Status: v1alpha1.StatusPending,
+			Status:             v1alpha1.StatusPending,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
@@ -206,7 +212,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// If there are running stages, resolve the overall status as running.
 	if running {
 		return &v1alpha1.Status{
-			Status: v1alpha1.StatusRunning,
+			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
@@ -214,7 +220,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Then if there are waiting stages, resolve the overall status as waiting.
 	if waiting {
 		return &v1alpha1.Status{
-			Status: v1alpha1.StatusWaiting,
+			Status:             v1alpha1.StatusWaiting,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
@@ -222,7 +228,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Then if there are failed stages, resolve the overall status as failed.
 	if err {
 		return &v1alpha1.Status{
-			Status: v1alpha1.StatusError,
+			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
@@ -239,7 +245,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	next := len(NextStages(o.wf, o.wfr))
 	if next > 0 {
 		return &v1alpha1.Status{
-			Status: v1alpha1.StatusRunning,
+			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 		}, nil
 	}
@@ -247,7 +253,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Finally, all stages have been completed and no more stages to run. We mark the WorkflowRun
 	// overall stage as Completed.
 	return &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Status:             v1alpha1.StatusCompleted,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
 	}, nil
 }
