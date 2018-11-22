@@ -1,12 +1,14 @@
 package workflowrun
 
 import (
+	"fmt"
+	"reflect"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"fmt"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
 // resolveStatus determines the final status from two given status, one is latest status, and
@@ -82,4 +84,34 @@ type workflowRunItem struct {
 
 func (i *workflowRunItem) String() string {
 	return fmt.Sprintf("%s:%s", i.namespace, i.name)
+}
+
+// EnsureOwner ensures WorkflowRun's owner is set to the referred Workflow.
+// So that when Workflow is deleted, related WorkflowRun would also be deleted.
+func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) (error) {
+	// If owner of Workflow already set, skip it.
+	for _, owner := range wfr.OwnerReferences {
+		if owner.Kind == reflect.TypeOf(v1alpha1.Workflow{}).Name() {
+			return nil
+		}
+	}
+
+	// Get Workflow if not available.
+	if wf == nil {
+		f, err := client.CycloneV1alpha1().Workflows(wfr.Namespace).Get(wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		wf = f
+	}
+
+	// Append Workflow as owner of WorkflowRun.
+	wfr.OwnerReferences = append(wfr.OwnerReferences, metav1.OwnerReference{
+		APIVersion: v1alpha1.APIVersion,
+		Kind:       reflect.TypeOf(v1alpha1.Workflow{}).Name(),
+		Name:       wf.Name,
+		UID:        wf.UID,
+	})
+
+	return nil
 }
