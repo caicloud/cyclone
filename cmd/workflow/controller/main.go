@@ -40,6 +40,10 @@ func main() {
 	cmController := controllers.NewConfigMapController(client, *namespace, *cm)
 	go cmController.Run(ctx.Done())
 
+	// Watch workflowTrigger who will start workflowRun on schedule
+	wftController := controllers.NewWorkflowTriggerController(client)
+	go wftController.Run(ctx.Done())
+
 	// Create and start WorkflowRun controller.
 	wfrController := controllers.NewWorkflowRunController(client)
 	go wfrController.Run(ctx.Done())
