@@ -38,6 +38,12 @@ func main() {
 	log.Info("Wait workload containers completion ... ")
 	c.WaitWorkloadTerminate()
 
+	// Check if the workload is succeeded.
+	if !c.IsStageSuccess() {
+		log.Errorf("Workload failed.")
+		os.Exit(1)
+	}
+
 	// Collect all resources
 	log.Info("Start to collect resources.")
 	err = c.CollectResources()
@@ -67,8 +73,8 @@ func main() {
 	log.Info("Wait for all other containers completion ... ")
 	c.WaitAllOthersTerminate()
 
-	// Check if the workload is succeeded.
-	if c.IsWorkloadSuccess() {
+	// Check if the workload and resolver containers are succeeded.
+	if c.IsStageSuccess() {
 		log.Info("Coordinator finished.")
 		os.Exit(0)
 	} else {

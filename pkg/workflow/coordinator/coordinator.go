@@ -15,10 +15,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
 
-// GetExitCodeRetry defined the max retry times for
-// get containers exit code.
-var GetExitCodeRetry = 10
-
 // Coordinator is a struct which contains infomations
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
@@ -94,15 +90,15 @@ func (co *Coordinator) WaitAllOthersTerminate() {
 	}
 }
 
-// Check if the workload is succeeded.
-func (co *Coordinator) IsWorkloadSuccess() bool {
+// IsStageSuccess checks if the workload and resolver containers are succeeded.
+func (co *Coordinator) IsStageSuccess() bool {
 	ws, err := co.GetExitCodes()
 	if err != nil {
 		log.Errorf("Get Exit Codes failed: %v", err)
 		return false
 	}
 
-	log.WithField("codes", ws).Debug()
+	log.WithField("codes", ws).Debug("Get containers exit codes")
 
 	for _, code := range ws {
 		if code != 0 {
@@ -113,8 +109,7 @@ func (co *Coordinator) IsWorkloadSuccess() bool {
 	return true
 }
 
-// Get all other containers exit code.
-// Try 'GetExitCodeRetry' times if the exit code not exist.
+// Get workload and resolver containers' exit code.
 func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
 	ws := make(map[string]int32)
 
@@ -126,7 +121,7 @@ func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
 	log.WithField("container statuses", pod.Status.ContainerStatuses).Debug()
 
 	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name != common.CoordinatorSidecarName {
+		if common.NonCoordinator(cs.Name) && common.NonWorkloadSidecar(cs.Name) {
 			if cs.State.Terminated == nil {
 				log.Warningf("container %s not terminated.", cs.Name)
 				continue
