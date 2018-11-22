@@ -29,3 +29,8 @@ func ArtifactsPath(wfr, stage string) string {
 func ArtifactPath(wfr, stage, artifact string) string {
 	return fmt.Sprintf("workflowruns/%s/stages/%s/artifacts/%s", wfr, stage, artifact)
 }
+
+// ResourcePath gets the path of a resource in PV
+func ResourcePath(wfr, resource string) string {
+	return fmt.Sprintf("workflowruns/%s/resources/%s", wfr, resource)
+}

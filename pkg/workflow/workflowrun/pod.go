@@ -129,16 +129,6 @@ func (m *PodBuilder) ResolveArguments() error {
 }
 
 func (m *PodBuilder) CreateVolumes() error {
-	// Add volumes for input resources to pod
-	for _, r := range m.stg.Spec.Pod.Inputs.Resources {
-		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: r.Name,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		})
-	}
-
 	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: common.CoordinatorSidecarVolumeName,
@@ -147,7 +137,7 @@ func (m *PodBuilder) CreateVolumes() error {
 		},
 	})
 
-	// Add PVC volume to pod
+	// Add common PVC volume to pod
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: common.DefaultPvVolumeName,
 		VolumeSource: corev1.VolumeSource{
@@ -177,7 +167,7 @@ func (m *PodBuilder) CreateVolumes() error {
 				SecretName: common.DefaultSecretName,
 				Items: []corev1.KeyToPath{
 					{
-						Key: common.DockerConfigJsonFile,
+						Key:  common.DockerConfigJsonFile,
 						Path: common.DockerConfigJsonFile,
 					},
 				},
@@ -197,6 +187,33 @@ func (m *PodBuilder) ResolveInputResources() error {
 		if err != nil {
 			log.WithField("resource", r.Name).Error("Get resource error: ", err)
 			return err
+		}
+
+		// Volumed to hold resource data, by default, it's the common PVC in Cyclone, but user can
+		// also specify it in the resource spec.
+		pvc := common.DefaultPvVolumeName
+
+		// Sub-path in the PVC to hold resource data
+		subPath := common.ResourcePath(m.wfr.Name, r.Name)
+
+		// If persistent is set in the resource spec, create a volume for the persistent PVC
+		// specified. Then resource would be pulled in the PVC. If persistent is not set, resource
+		// would be pulled in the common PVC in Cyclone. Note that, data in common PVC would be
+		// cleaned after workflow terminated.
+		persistent := resource.Spec.Persistent
+		if persistent != nil {
+			subPath = persistent.Path
+			if persistent.PVC != controller.Config.PVC {
+				pvc = common.InputResourceVolumeName(r.Name)
+				m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+					Name: common.InputResourceVolumeName(r.Name),
+					VolumeSource: corev1.VolumeSource{
+						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+							ClaimName: persistent.PVC,
+						},
+					},
+				})
+			}
 		}
 
 		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
@@ -224,8 +241,9 @@ func (m *PodBuilder) ResolveInputResources() error {
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{
 				{
-					Name:      r.Name,
+					Name:      pvc,
 					MountPath: common.ResolverDefaultDataPath,
+					SubPath: subPath,
 				},
 			},
 		}
@@ -237,8 +255,9 @@ func (m *PodBuilder) ResolveInputResources() error {
 			// We only mount resource to workload containers, sidecars are excluded.
 			if common.OnlyWorkload(c.Name) {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-					Name:      r.Name,
+					Name:      pvc,
 					MountPath: r.Path,
+					SubPath: subPath,
 				})
 			}
 			containers = append(containers, c)
@@ -301,10 +320,10 @@ func (m *PodBuilder) ResolveOutputResources() error {
 
 		if resource.Spec.Type == v1alpha1.ImageResourceType {
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-				Name: common.DockerSockVolume,
+				Name:      common.DockerSockVolume,
 				MountPath: common.DockerSockPath,
 			}, corev1.VolumeMount{
-				Name: common.DockerConfigJsonVolume,
+				Name:      common.DockerConfigJsonVolume,
 				MountPath: common.DockerConfigPath,
 			})
 		}
