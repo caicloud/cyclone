@@ -17,11 +17,12 @@ const (
 	// The key of config file in ConfigMap
 	ConfigFileKey = "workflow-controller.json"
 
-	// Keys of resources images and coordinator image in config file
+	// Keys of images in config file
 	GitResolverImage   = "git-resolver"
 	ImageResolverImage = "image-resolver"
 	KvResolverImage    = "kv-resolver"
 	CoordinatorImage   = "coordinator"
+	GCImage            = "gc"
 )
 
 var ResolverImageKeys = map[v1alpha1.ResourceType]string{
@@ -51,6 +52,8 @@ type GCConfig struct {
 	// After a WorkflowRun has been terminated, we won't clean it up immediately, but after a
 	// delay time given by this configure item. When configured to 0, it equals to gc immediately.
 	DelaySeconds time.Duration `json:"delay_seconds"`
+	// How many times to retry when GC failed, 0 means no retry.
+	RetryCount int `json:"retry"`
 }
 
 var Config ControllerConfig
