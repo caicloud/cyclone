@@ -16,7 +16,7 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		time.Second*30,
+		time.Minute*5,
 	)
 
 	informer := factory.Cyclone().V1alpha1().WorkflowTriggers().Informer()
