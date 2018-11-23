@@ -1,4 +1,4 @@
-package workflowTrigger
+package workflowtrigger
 
 import (
 	log "github.com/sirupsen/logrus"
