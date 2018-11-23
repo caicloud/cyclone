@@ -11,9 +11,9 @@ import (
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
-	Client         clientset.Interface
+	Client           clientset.Interface
 	TimeoutProcessor *workflowrun.TimeoutProcessor
-	GCProcessor    *workflowrun.GCProcessor
+	GCProcessor      *workflowrun.GCProcessor
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -65,10 +65,11 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	// the GC queue.
 	h.GCProcessor.Add(originWfr)
 
-	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
+	// If the WorkflowRun has already been terminated(Completed, Error, Cancel) or waiting for external events, skip it.
 	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||
 		originWfr.Status.Overall.Status == v1alpha1.StatusError ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusWaiting {
+		originWfr.Status.Overall.Status == v1alpha1.StatusWaiting ||
+		originWfr.Status.Overall.Status == v1alpha1.StatusCancelled {
 		return
 	}
 
