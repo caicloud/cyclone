@@ -9,6 +9,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
@@ -65,7 +66,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		eventHandler: &handlers.Handler{
 			Client:         client,
 			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
-			GCProcessor: workflowrun.NewGCProcessor(client),
+			GCProcessor: workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
 		},
 	}
 }

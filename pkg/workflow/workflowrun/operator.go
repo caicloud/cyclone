@@ -6,11 +6,15 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 // Operator is used to perform operations on a WorkflowRun instance, such
@@ -28,7 +32,10 @@ type Operator interface {
 	OverallStatus() (*v1alpha1.Status, error)
 	// Garbage collection on the WorkflowRun based on GC policy configured
 	// in Workflow Controller. Pod and data on PV would be cleaned.
-	GC() error
+	// 'lastTry' indicates whether this is the last time to perform GC,
+	// if set to true, the WorkflowRun status will be marked as cleaned regardless
+	// whether the GC action succeeded or not.
+	GC(lastTry bool) error
 	// Run next stages in the Workflow and resolve overall status.
 	Reconcile() error
 }
@@ -353,8 +360,10 @@ func (o *operator) Reconcile() error {
 }
 
 // Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.
-// TODO(ChenDe): How to perform GC in PVC ?
-func (o *operator) GC() error {
+// 'lastTry' indicates whether this is the last try to perform GC on this WorkflowRun object,
+// if set to true, the WorkflowRun would be marked as cleaned regardless whether the GC succeeded or not.
+func (o *operator) GC(lastTry bool) error {
+	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
 		if status.Pod == nil {
 			log.WithField("wfr", o.wfr.Name).
@@ -364,11 +373,74 @@ func (o *operator) GC() error {
 		}
 		err := o.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 		if err != nil {
+			errors.IsNotFound(err)
+			// If the pod not exist, just skip it without complain.
+			if errors.IsNotFound(err) {
+				continue
+			}
 			log.WithField("wfr", o.wfr.Name).
 				WithField("stg", stg).
 				WithField("pod", status.Pod.Name).
 				Warn("Delete pod error: ", err)
-			continue
+		}
+	}
+
+	// Create a gc pod to clean data on tmp PV.
+	gcPod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("wfrgc--%s", o.wfr.Name),
+			Namespace: o.wfr.Namespace,
+			Labels: map[string]string{
+				common.WorkflowLabelName: "true",
+			},
+			Annotations: map[string]string{
+				common.WorkflowRunAnnotationName: o.wfr.Name,
+				common.GCAnnotationName: "true",
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: v1alpha1.APIVersion,
+					Kind:       reflect.TypeOf(v1alpha1.WorkflowRun{}).Name(),
+					Name:       o.wfr.Name,
+					UID:        o.wfr.UID,
+				},
+			},
+		},
+		Spec: corev1.PodSpec{
+			RestartPolicy: corev1.RestartPolicyNever,
+			Containers: []corev1.Container{
+				{
+					Name: common.GCContainerName,
+					Image: controller.Config.Images[controller.GCImage],
+					Command: []string{"rm", "-rf", common.GCDataPath + "/" + o.wfr.Name},
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name: common.DefaultPvVolumeName,
+							MountPath: common.GCDataPath,
+							SubPath: common.WorkflowRunsPath(),
+						},
+					},
+				},
+			},
+			Volumes: []corev1.Volume {
+				{
+					Name: common.DefaultPvVolumeName,
+					VolumeSource: corev1.VolumeSource {
+						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+							ClaimName: controller.Config.PVC,
+							ReadOnly: false,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := o.client.CoreV1().Pods(o.wfr.Namespace).Create(gcPod)
+	if err != nil {
+		log.WithField("wfr", o.wfr.Name).Warn("Create GC pod failed")
+		if !lastTry {
+			return err
 		}
 	}
 

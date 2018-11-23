@@ -74,12 +74,18 @@ func staticStatus(status *v1alpha1.WorkflowRunStatus) *v1alpha1.WorkflowRunStatu
 	return copy
 }
 
-// workflowRunItem describes a WorkflowRun object, it keeps the time that a action
-// should be taken, like GC, timeout handling.
+// workflowRunItem keeps track of a WorkflowRun object (by name and namespace), and a time
+// to take an action on the WorkflowRun object, such as GC, timeout handling. Retry is also
+// supported, 'retry' indicates the remaining retry count, 0 means no retry.
 type workflowRunItem struct {
+	// Name of the WorkflowRun object
 	name       string
+	// Namespace of the WorkflowRun object
 	namespace  string
+	// The time to take the action (GC or timeout handling)
 	expireTime time.Time
+	// If the action taken failed, how many times to retry, 0 means no retry
+	retry int
 }
 
 func (i *workflowRunItem) String() string {
