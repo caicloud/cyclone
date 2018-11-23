@@ -1,14 +1,13 @@
 package controllers
 
 import (
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
+	"time"
+
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/k8s/informers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
@@ -16,21 +15,12 @@ import (
 
 func NewWorkflowRunController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
-
-	informer := cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-				return client.CycloneV1alpha1().WorkflowRuns("").List(options)
-			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-				return client.CycloneV1alpha1().WorkflowRuns("").Watch(options)
-			},
-		},
-		&v1alpha1.WorkflowRun{},
-		0,
-		cache.Indexers{},
+	factory := informers.NewSharedInformerFactory(
+		client,
+		time.Second * 30,
 	)
 
+	informer := factory.Cyclone().V1alpha1().WorkflowRuns().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
@@ -40,7 +30,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			queue.Add(Event{
 				Key:          key,
 				EventType:    CREATE,
-				ResourceType: "wfr",
 				Object:       obj,
 			})
 		},
@@ -52,7 +41,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			queue.Add(Event{
 				Key:          key,
 				EventType:    UPDATE,
-				ResourceType: "wfr",
 				Object:       new,
 			})
 		},
