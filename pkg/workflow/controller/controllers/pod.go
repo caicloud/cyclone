@@ -17,7 +17,7 @@ func NewPodController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		time.Second*30,
+		time.Minute*5,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = common.PodLabelSelector
 		}),
