@@ -4,11 +4,12 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
-	"k8s.io/client-go/tools/record"
 )
 
 // Check whether this WorkflowRun object is ready for GC, return true if:
@@ -45,7 +46,7 @@ type GCProcessor struct {
 func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
 		client:   client,
-		recorder: controller.GetEventRecorder(client),
+		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
 		items:    make(map[string]*workflowRunItem),
 		enabled:  enabled,
 	}
