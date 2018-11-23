@@ -38,6 +38,8 @@ type ControllerConfig struct {
 	Logging LoggingConfig `json:"logging"`
 	// GC configuration
 	GC GCConfig `json:"gc"`
+	// Limits of each resources should be retained
+	Limits LimitsConfig `json:"limits"`
 	// The PVC used to transfer artifacts in WorkflowRun
 	PVC string `json:"pvc"`
 }
@@ -54,6 +56,11 @@ type GCConfig struct {
 	DelaySeconds time.Duration `json:"delay_seconds"`
 	// How many times to retry when GC failed, 0 means no retry.
 	RetryCount int `json:"retry"`
+}
+
+type LimitsConfig struct {
+	// Maximum WorkflowRuns to be kept for each Workflow
+	MaxWorkflowRuns int `json:"max_workflowruns"`
 }
 
 var Config ControllerConfig

@@ -21,5 +21,8 @@ data:
         "delay_seconds": 3600,
         "retry": 1
       },
+      "limits": {
+        "max_workflowruns": 50
+      },
       "pvc": "cyclone-server-server-v1-0-cyclone-data"
     }

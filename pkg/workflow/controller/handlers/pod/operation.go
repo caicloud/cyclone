@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -45,7 +46,10 @@ func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error)
 func (p *Operator) OnDelete() error {
 	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
+		if !errors.IsNotFound(err) {
+			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
+			return nil
+		}
 		return err
 	}
 
@@ -69,7 +73,10 @@ func (p *Operator) OnDelete() error {
 func (p *Operator) OnUpdated() error {
 	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
+		if !errors.IsNotFound(err) {
+			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
+			return nil
+		}
 		return err
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/k8s/informers"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
@@ -17,7 +18,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactory(
 		client,
-		time.Minute*5,
+		common.ResyncPeriod,
 	)
 
 	informer := factory.Cyclone().V1alpha1().WorkflowRuns().Informer()
@@ -55,6 +56,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			Client:           client,
 			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
 			GCProcessor:      workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
+			LimitedQueues:    workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
 		},
 	}
 }
