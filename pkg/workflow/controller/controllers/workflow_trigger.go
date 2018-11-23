@@ -10,7 +10,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowTrigger"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowtrigger"
 )
 
 func NewWorkflowTriggerController(client clientset.Interface) *Controller {
@@ -77,8 +77,8 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 		clientSet: client,
 		informer:  informer,
 		queue:     queue,
-		eventHandler: &workflowTrigger.Handler{
-			CronManager: workflowTrigger.NewTriggerManager(client),
+		eventHandler: &workflowtrigger.Handler{
+			CronManager: workflowtrigger.NewTriggerManager(client),
 		},
 	}
 }
