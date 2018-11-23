@@ -14,7 +14,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
 const regString = "(\\d+h)(our)?|(\\d+m)(in)?|(\\d+s)(econd)?"
@@ -71,7 +71,7 @@ type TimeoutProcessor struct {
 func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
 	manager := &TimeoutProcessor{
 		client:   client,
-		recorder: controller.GetEventRecorder(client),
+		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
 		items:    make(map[string]*workflowRunItem),
 	}
 	go manager.Run()

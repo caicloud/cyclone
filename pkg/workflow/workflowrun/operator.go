@@ -73,7 +73,7 @@ func newFromName(client clientset.Interface, wfr, namespace string) (Operator, e
 
 	return &operator{
 		client:   client,
-		recorder: controller.GetEventRecorder(client),
+		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
 		wfr:      w,
 	}, nil
 }
@@ -87,7 +87,7 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 
 	return &operator{
 		client:   client,
-		recorder: controller.GetEventRecorder(client),
+		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
 		wf:       f,
 		wfr:      wfr,
 	}, nil

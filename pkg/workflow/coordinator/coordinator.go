@@ -10,6 +10,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -22,10 +23,13 @@ import (
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
 	runtimeExec       RuntimeExecutor
-	workflowrunName   string
-	stageName         string
 	workloadContainer string
-	stageSpec         v1alpha1.StageSpec
+	// Stage which this run pod belonged to.
+	Stage *v1alpha1.Stage
+	// WorkflowRun which triggered this run pod.
+	Wfr *v1alpha1.WorkflowRun
+	// Event recorder.
+	Recorder record.EventRecorder
 }
 
 // RuntimeExecutor is an interface defined some methods
@@ -41,7 +45,9 @@ type RuntimeExecutor interface {
 func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, error) {
 	namespace := getNamespace()
 	stageName := getStageName()
+	wfrName := getWorkflowrunName()
 	var stage *v1alpha1.Stage
+	var wfr *v1alpha1.WorkflowRun
 
 	backoff := wait.Backoff{
 		Duration: time.Duration(time.Second),
@@ -58,19 +64,27 @@ func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, e
 			return false, nil
 		}
 
+		wfr, err = client.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, meta_v1.GetOptions{})
+		if err != nil {
+			log.WithField("error", err).
+				WithField("wfrName", wfrName).Info("Get wfr error")
+			return false, nil
+		}
+
 		return true, nil
 	})
 	if err != nil {
-		log.WithField("error", err).WithField("stageName", stageName).Error("Get stage failed")
+		log.WithField("stageName", stageName).WithField("wfrName", wfrName).
+			WithField("error", err).Error("Get stage or workflowrun failed")
 		return nil, err
 	}
 
 	return &Coordinator{
 		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
-		workflowrunName:   getWorkflowrunName(),
-		stageName:         stageName,
 		workloadContainer: getWorkloadContainer(),
-		stageSpec:         stage.Spec,
+		Stage:             stage,
+		Wfr:               wfr,
+		Recorder:          common.GetEventRecorder(client, common.EventSourceCoordinator),
 	}, nil
 }
 
@@ -83,11 +97,11 @@ func (co *Coordinator) CollectLogs() {
 
 	for _, c := range cs {
 		go func(container, workflowrun, stage string) {
-			errl := co.runtimeExec.CollectLog(container, workflowrun, stage)
-			if errl != nil {
-				log.Errorf("Collect %s log failed:%v", c, errl)
+			err := co.runtimeExec.CollectLog(container, workflowrun, stage)
+			if err != nil {
+				log.Errorf("Collect %s log failed:%v", c, err)
 			}
-		}(c, co.workflowrunName, co.stageName)
+		}(c, co.Wfr.Name, co.Stage.Name)
 	}
 
 }
@@ -183,11 +197,11 @@ func (co *Coordinator) GetExitCodes(selectors ...common.ContainerSelector) (map[
 
 // CollectArtifacts collects workload artifacts.
 func (co *Coordinator) CollectArtifacts() error {
-	if co.stageSpec.Pod == nil {
+	if co.Stage.Spec.Pod == nil {
 		return fmt.Errorf("Get stage output artifacts failed, stage pod nil.")
 	}
 
-	artifacts := co.stageSpec.Pod.Outputs.Artifacts
+	artifacts := co.Stage.Spec.Pod.Outputs.Artifacts
 	if len(artifacts) == 0 {
 		log.Info("output artifacts empty, no need to collect.")
 		return nil
@@ -220,11 +234,11 @@ func (co *Coordinator) CollectArtifacts() error {
 
 // CollectResources collects workload resources.
 func (co *Coordinator) CollectResources() error {
-	if co.stageSpec.Pod == nil {
+	if co.Stage.Spec.Pod == nil {
 		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
 	}
 
-	reources := co.stageSpec.Pod.Outputs.Resources
+	reources := co.Stage.Spec.Pod.Outputs.Resources
 	if len(reources) == 0 {
 		log.Info("output resources empty, no need to collect.")
 		return nil
@@ -257,11 +271,11 @@ func (co *Coordinator) CollectResources() error {
 
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
-	if co.stageSpec.Pod == nil {
+	if co.Stage.Spec.Pod == nil {
 		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
 	}
 
-	reources := co.stageSpec.Pod.Outputs.Resources
+	reources := co.Stage.Spec.Pod.Outputs.Resources
 	if len(reources) == 0 {
 		log.Info("output resources empty, no need to notify resolver.")
 		return nil
