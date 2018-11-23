@@ -24,7 +24,11 @@ func main() {
 	}
 
 	// New workflow stage coordinator.
-	c := coordinator.NewCoordinator(client, *kubeConfigPath)
+	c, err := coordinator.NewCoordinator(client, *kubeConfigPath)
+	if err != nil {
+		log.Errorf("New coornidator failed: %v", err)
+		os.Exit(1)
+	}
 
 	// Wait all containers running, so we can start to collect logs.
 	log.Info("Wait all containers running ... ")
@@ -39,8 +43,8 @@ func main() {
 	c.WaitWorkloadTerminate()
 
 	// Check if the workload is succeeded.
-	if !c.IsStageSuccess() {
-		log.Errorf("Workload failed.")
+	if !c.WorkLoadSuccess() {
+		log.Error("Workload failed.")
 		os.Exit(1)
 	}
 
@@ -74,11 +78,11 @@ func main() {
 	c.WaitAllOthersTerminate()
 
 	// Check if the workload and resolver containers are succeeded.
-	if c.IsStageSuccess() {
+	if c.StageSuccess() {
 		log.Info("Coordinator finished.")
 		os.Exit(0)
 	} else {
-		log.Errorf("Workload failed.")
+		log.Error("Stage failed.")
 		os.Exit(1)
 	}
 

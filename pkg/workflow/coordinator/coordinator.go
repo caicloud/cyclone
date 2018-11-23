@@ -7,12 +7,19 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
+)
+
+const (
+	// GetStageRetry represents the max retry times for
+	// getting the Stage which adopt the pod.
+	GetStageRetry int = 15
 )
 
 // Coordinator is a struct which contains infomations
@@ -22,6 +29,7 @@ type Coordinator struct {
 	workflowrunName   string
 	stageName         string
 	workloadContainer string
+	stageSpec         v1alpha1.StageSpec
 }
 
 // RuntimeExecutor is an interface defined some methods
@@ -29,19 +37,39 @@ type Coordinator struct {
 type RuntimeExecutor interface {
 	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
 	CollectLog(container, wrorkflowrun, stage string) error
-	GetStageOutputs(name string) (v1alpha1.Outputs, error)
 	CopyFromContainer(container, path, dst string) error
 	GetPod() (*core_v1.Pod, error)
 }
 
 // NewCoordinator create a coordinator instance.
-func NewCoordinator(client clientset.Interface, kubecfg string) *Coordinator {
-	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExecutor(getNamespace(), getPodName(), client, getCycloneServerAddr(), kubecfg),
-		workflowrunName:   getWorkflowrunName(),
-		stageName:         getStageName(),
-		workloadContainer: getWorkloadContainer(),
+func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, error) {
+	namespace := getNamespace()
+	stageName := getStageName()
+	var stage *v1alpha1.Stage
+	var err error
+
+	for i := 0; i < GetStageRetry; i++ {
+		stage, err = client.CycloneV1alpha1().Stages(namespace).Get(stageName, meta_v1.GetOptions{})
+		if err != nil {
+			log.WithField("error", err).
+				WithField("stageName", stageName).
+				WithField("retry", i).Info("Get stage error")
+			continue
+		}
+		break
 	}
+
+	if err != nil {
+		log.WithField("error", err).WithField("stageName", stageName).Error("Get stage failed")
+		return nil, err
+	}
+	return &Coordinator{
+		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
+		workflowrunName:   getWorkflowrunName(),
+		stageName:         stageName,
+		workloadContainer: getWorkloadContainer(),
+		stageSpec:         stage.Spec,
+	}, nil
 }
 
 // CollectLogs collects all containers' logs except for the coordinator container itself.
@@ -90,9 +118,9 @@ func (co *Coordinator) WaitAllOthersTerminate() {
 	}
 }
 
-// IsStageSuccess checks if the workload and resolver containers are succeeded.
-func (co *Coordinator) IsStageSuccess() bool {
-	ws, err := co.GetExitCodes()
+// StageSuccess checks if the workload and resolver containers are succeeded.
+func (co *Coordinator) StageSuccess() bool {
+	ws, err := co.GetExitCodes(common.NonCoordinator, common.NonWorkloadSidecar)
 	if err != nil {
 		log.Errorf("Get Exit Codes failed: %v", err)
 		return false
@@ -109,8 +137,26 @@ func (co *Coordinator) IsStageSuccess() bool {
 	return true
 }
 
-// Get workload and resolver containers' exit code.
-func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
+// WorkLoadSuccess checks if the workload containers are succeeded.
+func (co *Coordinator) WorkLoadSuccess() bool {
+	ws, err := co.GetExitCodes(common.OnlyWorkload)
+	if err != nil {
+		log.Errorf("Get Exit Codes failed: %v", err)
+		return false
+	}
+
+	log.WithField("codes", ws).Debug("Get containers exit codes")
+
+	for _, code := range ws {
+		if code != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Get exit codes of containers passed the selector
+func (co *Coordinator) GetExitCodes(selectors ...common.ContainerSelector) (map[string]int32, error) {
 	ws := make(map[string]int32)
 
 	pod, err := co.runtimeExec.GetPod()
@@ -121,7 +167,7 @@ func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
 	log.WithField("container statuses", pod.Status.ContainerStatuses).Debug()
 
 	for _, cs := range pod.Status.ContainerStatuses {
-		if common.NonCoordinator(cs.Name) && common.NonWorkloadSidecar(cs.Name) {
+		if common.Pass(cs.Name, selectors) {
 			if cs.State.Terminated == nil {
 				log.Warningf("container %s not terminated.", cs.Name)
 				continue
@@ -135,18 +181,22 @@ func (co *Coordinator) GetExitCodes() (map[string]int32, error) {
 
 // CollectArtifacts collects workload artifacts.
 func (co *Coordinator) CollectArtifacts() error {
-	outputs, err := co.runtimeExec.GetStageOutputs(co.stageName)
-
-	if err != nil {
-		log.Errorf("Get stage %s output artifacts spec failed", co.stageName)
-		return err
+	if co.stageSpec.Pod == nil {
+		return fmt.Errorf("Get stage output artifacts failed, stage pod nil.")
 	}
+
+	artifacts := co.stageSpec.Pod.Outputs.Artifacts
+	if len(artifacts) == 0 {
+		log.Info("output artifacts empty, no need to collect.")
+		return nil
+	}
+
+	log.WithField("artifacts", artifacts).Info("start to collect.")
 
 	// Create the artifacts directory if not exist.
 	fileutil.CreateDirectory(common.CoordinatorArtifactsPath)
 
-	log.WithField("artifacts", outputs.Artifacts).Info("start to collect.")
-	for _, artifact := range outputs.Artifacts {
+	for _, artifact := range artifacts {
 		dst := path.Join(common.CoordinatorArtifactsPath, artifact.Name)
 		fileutil.CreateDirectory(dst)
 
@@ -156,31 +206,34 @@ func (co *Coordinator) CollectArtifacts() error {
 			return err
 		}
 
-		erra := co.runtimeExec.CopyFromContainer(id, artifact.Path, dst)
-		if erra != nil {
-			log.Errorf("Copy container %s artifact %s failed: %v", co.workloadContainer, artifact.Name, erra)
+		err = co.runtimeExec.CopyFromContainer(id, artifact.Path, dst)
+		if err != nil {
+			log.Errorf("Copy container %s artifact %s failed: %v", co.workloadContainer, artifact.Name, err)
 			return err
 		}
-
 	}
-	return nil
 
+	return nil
 }
 
 // CollectResources collects workload resources.
 func (co *Coordinator) CollectResources() error {
-	outputs, err := co.runtimeExec.GetStageOutputs(co.stageName)
-
-	if err != nil {
-		log.Errorf("Get stage %s output artifacts spec failed", co.stageName)
-		return err
+	if co.stageSpec.Pod == nil {
+		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
 	}
+
+	reources := co.stageSpec.Pod.Outputs.Resources
+	if len(reources) == 0 {
+		log.Info("output resources empty, no need to collect.")
+		return nil
+	}
+
+	log.WithField("resources", reources).Info("start to collect.")
 
 	// Create the resources directory if not exist.
 	fileutil.CreateDirectory(common.CoordinatorResourcesPath)
 
-	log.WithField("resources", outputs.Resources).Info("start to collect.")
-	for _, resource := range outputs.Resources {
+	for _, resource := range reources {
 		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
 		fileutil.CreateDirectory(dst)
 
@@ -190,19 +243,30 @@ func (co *Coordinator) CollectResources() error {
 			return err
 		}
 
-		erra := co.runtimeExec.CopyFromContainer(id, resource.Path, dst)
-		if erra != nil {
-			log.Errorf("Copy container %s resources %s failed: %v", co.workloadContainer, resource.Name, erra)
+		err = co.runtimeExec.CopyFromContainer(id, resource.Path, dst)
+		if err != nil {
+			log.Errorf("Copy container %s resources %s failed: %v", co.workloadContainer, resource.Name, err)
 			return err
 		}
-
 	}
-	return nil
 
+	return nil
 }
 
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
+	if co.stageSpec.Pod == nil {
+		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
+	}
+
+	reources := co.stageSpec.Pod.Outputs.Resources
+	if len(reources) == 0 {
+		log.Info("output resources empty, no need to notify resolver.")
+		return nil
+	}
+
+	log.WithField("resources", reources).Info("start to notify resolver.")
+
 	exist := fileutil.CreateDirectory(common.CoordinatorResolverNotifyPath)
 	log.WithField("exist", exist).WithField("notifydir", common.CoordinatorResolverNotifyPath).Info()
 

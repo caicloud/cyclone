@@ -9,7 +9,6 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
@@ -114,16 +113,6 @@ func (k *K8sapiExecutor) CollectLog(container, workflowrun, stage string) error 
 		return err
 	}
 	return nil
-}
-
-// GetStageOutputs get outputs of a stage.
-func (k *K8sapiExecutor) GetStageOutputs(name string) (v1alpha1.Outputs, error) {
-	stage, err := k.client.CycloneV1alpha1().Stages(k.namespace).Get(name, meta_v1.GetOptions{})
-	if err != nil {
-		return v1alpha1.Outputs{}, err
-	}
-
-	return stage.Spec.Pod.Outputs, nil
 }
 
 // CopyFromContainer copy a file/directory frome container:path to dst.
