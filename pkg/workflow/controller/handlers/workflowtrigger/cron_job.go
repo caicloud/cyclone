@@ -1,4 +1,4 @@
-package workflowTrigger
+package workflowtrigger
 
 import (
 	"fmt"

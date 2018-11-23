@@ -33,7 +33,6 @@ const (
 type Event struct {
 	Key          string
 	EventType    EventType
-	ResourceType string
 	Object       interface{}
 }
 
