@@ -37,10 +37,23 @@ var resource = []definition.Descriptor{
 				Description: "Create resource",
 				Results:     definition.DataErrorResults("resource"),
 			},
+			{
+				Method:      definition.Get,
+				Function:    handler.ListResources,
+				Description: "List resources",
+				Parameters: []definition.Parameter{
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: definition.DataErrorResults("resources"),
+			},
 		},
 	},
 	{
-		Path: "/resources/{resource-name}",
+		Path: "/resources/{resource}",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -58,6 +71,35 @@ var resource = []definition.Descriptor{
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
+			},
+			{
+				Method:      definition.Update,
+				Function:    handler.UpdateResource,
+				Description: "Update resource",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ResourceNamePathParameterName,
+					},
+				},
+				Results: definition.DataErrorResults("resource"),
+			},
+			{
+				Method:      definition.Delete,
+				Function:    handler.DeleteResource,
+				Description: "Delete resource",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ResourceNamePathParameterName,
+					},
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},

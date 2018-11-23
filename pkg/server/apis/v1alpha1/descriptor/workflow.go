@@ -38,10 +38,23 @@ var workflow = []definition.Descriptor{
 				Description: "Create workflow",
 				Results:     definition.DataErrorResults("workflow"),
 			},
+			{
+				Method:      definition.Get,
+				Function:    handler.ListWorkflows,
+				Description: "List workflows",
+				Parameters: []definition.Parameter{
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: definition.DataErrorResults("workflows"),
+			},
 		},
 	},
 	{
-		Path:        "/workflows/{workflow-name}",
+		Path:        "/workflows/{workflow}",
 		Description: "workflow APIs",
 		Definitions: []definition.Definition{
 			{
@@ -60,6 +73,35 @@ var workflow = []definition.Descriptor{
 					},
 				},
 				Results: definition.DataErrorResults("workflow"),
+			},
+			{
+				Method:      definition.Update,
+				Function:    handler.UpdateWorkflow,
+				Description: "Update workflow",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+				},
+				Results: definition.DataErrorResults("workflow"),
+			},
+			{
+				Method:      definition.Delete,
+				Function:    handler.DeleteWorkflow,
+				Description: "Delete workflow",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},
