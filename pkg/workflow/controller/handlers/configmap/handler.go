@@ -36,7 +36,7 @@ func (h *Handler) process(obj interface{}) {
 
 	// Reload config from this ConfigMap instance.
 	log.WithField("name", cm.Name).Info("Start to reload config from ConfigMap")
-	if err := controller.ReloadConfig(cm); err != nil {
+	if err := controller.LoadConfig(cm); err != nil {
 		log.WithField("configMap", cm.Name).Errorf("reload config from ConfigMap error: %v", err)
 	}
 }

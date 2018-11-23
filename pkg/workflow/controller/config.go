@@ -1,16 +1,14 @@
 package controller
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 
 	log "github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
-	"time"
 )
 
 const (
@@ -65,7 +63,7 @@ type LimitsConfig struct {
 
 var Config ControllerConfig
 
-func ReloadConfig(cm *api_v1.ConfigMap) error {
+func LoadConfig(cm *api_v1.ConfigMap) error {
 	data, ok := cm.Data[ConfigFileKey]
 	if !ok {
 		fmt.Errorf("ConfigMap '%s' doesn't have data key '%s'", cm.Name, ConfigFileKey)
@@ -82,69 +80,6 @@ func ReloadConfig(cm *api_v1.ConfigMap) error {
 
 	InitLogger(&Config.Logging)
 	return nil
-}
-
-func LoadConfig(configPath *string, config *ControllerConfig) error {
-	log.WithField("file", *configPath).Info("Start load configure file")
-
-	data, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		log.Error("Load conf failed: ", err)
-		return err
-	}
-	data = trimComments(data)
-
-	err = json.Unmarshal(data, config)
-	if err != nil {
-		log.Error("Parse config error: ", err)
-		return err
-	}
-
-	if !validate(&Config) {
-		return fmt.Errorf("validate config failed")
-	}
-
-	return nil
-}
-
-func trimComments(data []byte) (data1 []byte) {
-
-	var line []byte
-
-	data1 = data[:0]
-	for {
-		pos := bytes.IndexByte(data, '\n')
-		if pos < 0 {
-			line = data
-		} else {
-			line = data[:pos+1]
-		}
-		data1 = append(data1, trimCommentsLine(line)...)
-		if pos < 0 {
-			return
-		}
-		data = data[pos+1:]
-	}
-}
-
-func trimCommentsLine(line []byte) []byte {
-
-	n := len(line)
-	quoteCount := 0
-	for i := 0; i < n; i++ {
-		c := line[i]
-		switch c {
-		case '\\':
-			i++
-		case '"':
-			quoteCount++
-		case '#':
-			if (quoteCount & 1) == 0 {
-				return line[:i]
-			}
-		}
-	}
-	return line
 }
 
 // validate validates some required configurations.
