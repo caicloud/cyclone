@@ -8,6 +8,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"k8s.io/client-go/tools/record"
 )
 
 // Check whether this WorkflowRun object is ready for GC, return true if:
@@ -35,16 +36,18 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 
 // GCProcessor processes garbage collection for WorkflowRun objects.
 type GCProcessor struct {
-	client  clientset.Interface
-	items   map[string]*workflowRunItem
-	enabled bool
+	client   clientset.Interface
+	recorder record.EventRecorder
+	items    map[string]*workflowRunItem
+	enabled  bool
 }
 
 func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
-		client:  client,
-		items:   make(map[string]*workflowRunItem),
-		enabled: enabled,
+		client:   client,
+		recorder: controller.GetEventRecorder(client),
+		items:    make(map[string]*workflowRunItem),
+		enabled:  enabled,
 	}
 	if enabled {
 		go processor.run()
