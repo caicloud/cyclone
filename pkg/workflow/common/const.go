@@ -81,3 +81,7 @@ const (
 	GCContainerName = "gc"
 	GCDataPath = "/workspace"
 )
+
+func InputResourceVolumeName(name string) string {
+	return "input-" + name
+}
