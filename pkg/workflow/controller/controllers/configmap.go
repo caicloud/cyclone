@@ -1,38 +1,31 @@
 package controllers
 
 import (
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/configmap"
-
 	"fmt"
+	"time"
+
 	log "github.com/sirupsen/logrus"
-	api_v1 "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/k8s/informers"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/configmap"
 )
 
 func NewConfigMapController(client clientset.Interface, namespace string, cm string) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
-
-	informer := cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
-				return client.CoreV1().ConfigMaps(namespace).List(options)
-			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-				options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
-				return client.CoreV1().ConfigMaps(namespace).Watch(options)
-			},
-		},
-		&api_v1.ConfigMap{},
-		0,
-		cache.Indexers{},
+	factory := informers.NewSharedInformerFactoryWithOptions(
+		client,
+		time.Second * 30,
+		informers.WithNamespace(namespace),
+		informers.WithTweakListOptions(func(options *metav1.ListOptions){
+			options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
+		}),
 	)
 
+	informer := factory.Core().V1().ConfigMaps().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
@@ -43,7 +36,6 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			queue.Add(Event{
 				Key:          key,
 				EventType:    CREATE,
-				ResourceType: "cm",
 				Object:       obj,
 			})
 		},
@@ -56,7 +48,6 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			queue.Add(Event{
 				Key:          key,
 				EventType:    UPDATE,
-				ResourceType: "cm",
 				Object:       new,
 			})
 		},
