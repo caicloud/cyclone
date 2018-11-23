@@ -38,10 +38,23 @@ var workflowtrigger = []definition.Descriptor{
 				Description: "Create workflowtrigger",
 				Results:     definition.DataErrorResults("workflowtrigger"),
 			},
+			{
+				Method:      definition.Get,
+				Function:    handler.ListWorkflowTriggers,
+				Description: "List workflowtriggers",
+				Parameters: []definition.Parameter{
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: definition.DataErrorResults("workflowtrigger"),
+			},
 		},
 	},
 	{
-		Path:        "/workflowtriggers{workflowtrigger-name}",
+		Path:        "/workflowtriggers{workflowtrigger}",
 		Description: "workflowtrigger APIs",
 		Definitions: []definition.Definition{
 			{
@@ -60,6 +73,35 @@ var workflowtrigger = []definition.Descriptor{
 					},
 				},
 				Results: definition.DataErrorResults("workflowtrigger"),
+			},
+			{
+				Method:      definition.Update,
+				Function:    handler.UpdateWorkflowTrigger,
+				Description: "Update workflowtrigger",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowTriggerNamePathParameterName,
+					},
+				},
+				Results: definition.DataErrorResults("workflowtrigger"),
+			},
+			{
+				Method:      definition.Delete,
+				Function:    handler.DeleteWorkflowTrigger,
+				Description: "Delete workflowtrigger",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowTriggerNamePathParameterName,
+					},
+					{
+						Source:  definition.Query,
+						Name:    httputil.NamespaceQueryParameter,
+						Default: httputil.DefaultNamespace,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},

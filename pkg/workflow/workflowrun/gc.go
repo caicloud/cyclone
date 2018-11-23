@@ -23,9 +23,10 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 		return false
 	}
 
-	// If it's not in terminated state, skip it.
+	// If it's not in terminated state(Completed, Error, Cancel), skip it.
 	if wfr.Status.Overall.Status != v1alpha1.StatusCompleted &&
-		wfr.Status.Overall.Status != v1alpha1.StatusError {
+		wfr.Status.Overall.Status != v1alpha1.StatusError &&
+		wfr.Status.Overall.Status != v1alpha1.StatusCancelled {
 		return false
 	}
 
@@ -34,15 +35,15 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 
 // GCProcessor processes garbage collection for WorkflowRun objects.
 type GCProcessor struct {
-	client   clientset.Interface
-	items    map[string]*workflowRunItem
-	enabled  bool
+	client  clientset.Interface
+	items   map[string]*workflowRunItem
+	enabled bool
 }
 
 func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
-		client: client,
-		items: make(map[string]*workflowRunItem),
+		client:  client,
+		items:   make(map[string]*workflowRunItem),
 		enabled: enabled,
 	}
 	if enabled {
@@ -64,10 +65,10 @@ func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
 	}
 
 	item := &workflowRunItem{
-		name: wfr.Name,
-		namespace: wfr.Namespace,
+		name:       wfr.Name,
+		namespace:  wfr.Namespace,
 		expireTime: wfr.Status.Overall.LastTransitionTime.Time.Add(time.Second * controller.Config.GC.DelaySeconds),
-		retry: controller.Config.GC.RetryCount,
+		retry:      controller.Config.GC.RetryCount,
 	}
 	p.items[item.String()] = item
 

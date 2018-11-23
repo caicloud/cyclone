@@ -29,19 +29,19 @@ const (
 	APIVersion = "/apis/v1alpha1"
 
 	// ResourceNamePathParameterName represents the name of the path parameter for resource name.
-	ResourceNamePathParameterName = "resource-name"
+	ResourceNamePathParameterName = "resource"
 
 	// StageNamePathParameterName represents the name of the path parameter for stage name.
-	StageNamePathParameterName = "stage-name"
+	StageNamePathParameterName = "stage"
 
 	// WorkflowNamePathParameterName represents the name of the path parameter for workflow name.
-	WorkflowNamePathParameterName = "workflow-name"
+	WorkflowNamePathParameterName = "workflow"
 
 	// WorkflowRunNamePathParameterName represents the name of the path parameter for workflowrun name.
-	WorkflowRunNamePathParameterName = "workflowrun-name"
+	WorkflowRunNamePathParameterName = "workflowrun"
 
 	// WorkflowTriggerNamePathParameterName represents the name of the path parameter for workflowtrigger name.
-	WorkflowTriggerNamePathParameterName = "workflowtrigger-name"
+	WorkflowTriggerNamePathParameterName = "workflowtrigger"
 
 	// ContainerNameQueryParameter represents the query param container name.
 	ContainerNameQueryParameter = "container"
@@ -49,52 +49,17 @@ const (
 	// NamespaceQueryParameter represents the query param namespace.
 	NamespaceQueryParameter string = "namespace"
 
-	// ProjectPathParameterName represents the name of the path parameter for project.
-	ProjectPathParameterName = "project"
-
-	// PipelinePathParameterName represents the name of the path parameter for pipeline.
-	PipelinePathParameterName = "pipeline"
-
-	// PipelineRecordPathParameterName represents the name of the path parameter for pipeline record.
-	PipelineRecordPathParameterName = "recordid"
-
-	// FileNamePathParameterName represents the name of the path parameter for file name.
-	FileNamePathParameterName = "filename"
-
-	// PipelineRecordStagePathParameterName represents the name of the query parameter for pipeline record stage.
-	PipelineRecordStageQueryParameterName = "stage"
-
-	// PipelineRecordTaskQueryParameterName represents the name of the query parameter for pipeline record task.
-	PipelineRecordTaskQueryParameterName = "task"
-
-	// PipelineRecordDownloadQueryParameter represents a download flag of the query parameter for pipeline record task.
-	PipelineRecordDownloadQueryParameter = "download"
-
-	// EventPathParameterName represents the name of the path parameter for event.
-	EventPathParameterName = "eventid"
-
-	// CloudPathParameterName represents the name of the path parameter for cloud.
-	CloudPathParameterName = "cloud"
-
-	// RepoQueryParameterName represents the repo name of the query parameter.
-	RepoQueryParameter = "repo"
-
-	// EndTimeQueryParameter represents the query param end time.
-	EndTimeQueryParameter string = "endTime"
-
-	// HeaderUser represents the the key of user in request header.
-	HeaderUser = "X-User"
-
+	// HEADER_ContentType represents the the key of Content-Type.
 	HEADER_ContentType = "Content-Type"
-
-	// SVNRepoIDPathParameterName represents a svn repository's uuid.
-	SVNRepoIDPathParameterName = "svnrepoid"
-
-	// SVNRevisionQueryParameterName represents the svn commit revision.
-	SVNRevisionQueryParameterName = "revision"
 
 	// DefaultNamespace represents the default namespace 'default'.
 	DefaultNamespace string = "default"
+
+	// DownloadQueryParameter represents a download flag of the query parameter.
+	DownloadQueryParameter = "download"
+
+	// StatusQueryParameter represents a status of the query parameter.
+	StatusQueryParameter = "status"
 )
 
 // GetHttpRequest gets request from context.
