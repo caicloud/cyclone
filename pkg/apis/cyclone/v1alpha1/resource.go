@@ -44,12 +44,20 @@ type ResourceSpec struct {
 	Resolver string `json:"resolver,omitempty"`
 	// Resource type, e.g. image, git, kv, general.
 	Type ResourceType `json:"type"`
-	// Whether persist resource to a dedicated storage (PV).
-	Persistent bool `json:"persistent"`
+	// Persistent resource to PVC.
+	Persistent *Persistent `json:"persistent"`
 	// Whether to pull resource when there already be data
 	PullPolicy ResourcePullPolicy `json:"pullPolicy"`
 	// Parameters of the resource
 	Parameters []ParameterItem `json:"parameters"`
+}
+
+// Persistent describes persistent parameters for the resource.
+type Persistent struct {
+	// Name of the PVC to hold the resource
+	PVC string `json:"pvc"`
+	// Path of resource in the PVC
+	Path string `json:"path"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

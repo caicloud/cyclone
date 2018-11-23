@@ -4,7 +4,9 @@ metadata:
   name: test-git
 spec:
   type: Git
-  persistent: false
+  persistent:
+    pvc: cyclone-server-server-v1-0-cyclone-data
+    path: workflowruns/resources
   pullPolicy: Always
   parameters:
   - name: GIT_URL
