@@ -1,11 +1,11 @@
 package pod
 
 import (
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
-
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
 type Handler struct {
@@ -26,6 +26,13 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 	log.WithField("name", pod.Name).Debug("Observed pod updated")
 
+	// Check whether it's GC pod.
+	if IsGCPod(pod) {
+		GCPodUpdated(h.Client, pod)
+		return
+	}
+
+	// For stage pod, create operator to handle it.
 	operator, err := NewOperator(h.Client, pod)
 	if err != nil {
 		log.Error("Create operator error: ", err)
@@ -45,6 +52,11 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 		return
 	}
 	log.WithField("name", pod.Name).Debug("Observed pod deleted")
+
+	// Check whether it's GC pod.
+	if IsGCPod(pod) {
+		return
+	}
 
 	operator, err := NewOperator(h.Client, pod)
 	if err != nil {

@@ -6,13 +6,14 @@ const (
 	// The path that we will mount PV on in container.
 	StageMountPath = "/__cyclone__workspace"
 
-	// The mount path of the emptyDir shared by workload containers and coordinate container.
-	// It's used to transfer output artifacts.
-	StageEmptyDirMounthPath = "/__cyclone__emptydir"
-
 	// Path of artifacts in coordinator container
 	CoordinatorWorkspacePath = "/workspace/"
 )
+
+// WorkflowRuns data path in PV
+func WorkflowRunsPath() string {
+	return "workflowruns"
+}
 
 // StagePath gets the path of a stage in PV
 func StagePath(wfr, stage string) string {

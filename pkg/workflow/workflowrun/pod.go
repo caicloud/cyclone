@@ -3,6 +3,7 @@ package workflowrun
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/cbroglie/mustache"
@@ -15,7 +16,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
-	"reflect"
 )
 
 type PodBuilder struct {
