@@ -10,11 +10,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
-// Check whether garbage collection is needed. We will return true to indicate
-// garbage collection needed when:
+// Check whether this WorkflowRun object is ready for GC, return true if:
 // - The garbage collection hasn't been performed on this WorkflowRun yet.
 // - The WorkflowRun has already been terminated,
-// - The configured delay time is expired.
 func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 	if wfr == nil {
 		return false
@@ -31,11 +29,6 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 		return false
 	}
 
-	// If the configured delay time is not expired, skip it.
-	if wfr.Status.Overall.LastTransitionTime.Add(time.Second * controller.Config.GC.DelaySeconds).After(time.Now()) {
-		return false
-	}
-
 	return true
 }
 
@@ -43,20 +36,29 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 type GCProcessor struct {
 	client   clientset.Interface
 	items    map[string]*workflowRunItem
+	enabled  bool
 }
 
-func NewGCProcessor(client clientset.Interface) *GCProcessor {
+func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
 		client: client,
 		items: make(map[string]*workflowRunItem),
+		enabled: enabled,
 	}
-	go processor.Run()
+	if enabled {
+		go processor.run()
+	}
+
 	return processor
 }
 
 // Add WorkflowRun object to GC processor, it will firstly judge whether the WorkflowRun
 // object needs GC, if it's true, it will perform GC on it in the right time.
 func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
+	if !p.enabled {
+		return
+	}
+
 	if !checkGC(wfr) {
 		return
 	}
@@ -65,6 +67,7 @@ func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
 		name: wfr.Name,
 		namespace: wfr.Namespace,
 		expireTime: wfr.Status.Overall.LastTransitionTime.Time.Add(time.Second * controller.Config.GC.DelaySeconds),
+		retry: controller.Config.GC.RetryCount,
 	}
 	p.items[item.String()] = item
 
@@ -73,7 +76,17 @@ func (p *GCProcessor) Add(wfr *v1alpha1.WorkflowRun) {
 		Debug("Added to GCProcessor")
 }
 
-func (p *GCProcessor) Run() {
+// Enable the processor and start it.
+func (p *GCProcessor) Enable() {
+	if p.enabled {
+		return
+	}
+
+	p.enabled = true
+	go p.run()
+}
+
+func (p *GCProcessor) run() {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
@@ -92,15 +105,24 @@ func (p *GCProcessor) process() {
 	}
 
 	for _, i := range expired {
+		i.retry--
+		log.WithField("wfr", i.name).Info("Start GC")
 		operator, err := NewOperator(p.client, i.name, i.namespace)
 		if err != nil {
 			log.WithField("wfr", i.name).Warn("Create operator for gc error: ", err)
+			if i.retry <= 0 {
+				delete(p.items, i.String())
+			}
 			continue
 		}
-		if err = operator.GC(); err != nil {
+		if err = operator.GC(i.retry <= 0); err != nil {
 			log.WithField("wfr", i.name).Warn("GC error: ", err)
+			if i.retry <= 0 {
+				delete(p.items, i.String())
+			}
 			continue
 		}
+		log.WithField("wfr", i.name).Info("GC succeeded")
 
 		delete(p.items, i.String())
 	}

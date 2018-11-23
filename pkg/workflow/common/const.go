@@ -40,6 +40,7 @@ const (
 	WorkflowLabelName         = "cyclone.io/workflow"
 	PodLabelSelector          = "cyclone.io/workflow==true"
 	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
+	GCAnnotationName          = "cyclone.io/gc"
 	StageAnnotationName       = "cyclone.io/stage"
 
 	// Paths in coordinator container.
@@ -73,4 +74,10 @@ const (
 	ContainerStateTerminated ContainerState = "Terminated"
 	// ContainerStateInitialized represents container is Running or Stopped, not Init or Creating.
 	ContainerStateInitialized ContainerState = "Initialized"
+)
+
+// Constants for GC pod.
+const (
+	GCContainerName = "gc"
+	GCDataPath = "/workspace"
 )

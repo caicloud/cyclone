@@ -3,13 +3,16 @@
     "git-resolver": "test.caicloudprivatetest.com/release/git-resource-resolver:v0.1",
     "image-resolver": "test.caicloudprivatetest.com/release/image-resource-resolver:v0.1",
     "kv-resolver": "test.caicloudprivatetest.com/release/kv-resource-resolver:v0.1",
-    "coordinator": "test.caicloudprivatetest.com/release/workflow-coordinator:v0.9.0"
+    "coordinator": "test.caicloudprivatetest.com/release/workflow-coordinator:v0.9.0",
+    "gc": "test.caicloudprivatetest.com/library/alpine:3.8"
   },
   "logging": {
     "level": "debug"
   },
   "gc": {
-    "delay_seconds": 3600
+    "enabled": true,
+    "delay_seconds": 3600,
+    "retry": 1
   },
   "pvc": "cyclone-server-server-v1-0-cyclone-data"
 }
