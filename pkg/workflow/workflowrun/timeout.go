@@ -7,11 +7,14 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record"
+
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-
-	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 const regString = "(\\d+h)(our)?|(\\d+m)(in)?|(\\d+s)(econd)?"
@@ -60,6 +63,7 @@ func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 // TimeoutProcessor manages timeout of WorkflowRun.
 type TimeoutProcessor struct {
 	client   clientset.Interface
+	recorder record.EventRecorder
 	items    map[string]*workflowRunItem
 }
 
@@ -67,6 +71,7 @@ type TimeoutProcessor struct {
 func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
 	manager := &TimeoutProcessor{
 		client:   client,
+		recorder: controller.GetEventRecorder(client),
 		items:    make(map[string]*workflowRunItem),
 	}
 	go manager.Run()
@@ -112,6 +117,7 @@ func (m *TimeoutProcessor) process() {
 			log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			continue
 		}
+		m.recorder.Event(wfr, corev1.EventTypeWarning, "Timeout", "WorkflowRun execution timeout")
 
 		if wfr.Status.Overall.Status != v1alpha1.StatusError && wfr.Status.Overall.Status != v1alpha1.StatusCompleted {
 			wfr.Status.Overall = v1alpha1.Status{
@@ -122,7 +128,7 @@ func (m *TimeoutProcessor) process() {
 
 			operator := operator{
 				client: m.client,
-				wfr: wfr,
+				wfr:    wfr,
 			}
 			if err = operator.Update(); err != nil {
 				log.WithField("wfr", wfr.Name).Error("Update WorkflowRun status error: ", err)
@@ -149,5 +155,6 @@ func (m *TimeoutProcessor) process() {
 		}
 
 		delete(m.items, i.String())
+		m.recorder.Event(wfr, corev1.EventTypeWarning, "Timeout", "Stages stopped due to timeout")
 	}
 }

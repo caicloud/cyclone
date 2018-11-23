@@ -18,9 +18,9 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		time.Second * 30,
+		time.Second*30,
 		informers.WithNamespace(namespace),
-		informers.WithTweakListOptions(func(options *metav1.ListOptions){
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.FieldSelector = fmt.Sprintf("metadata.name==%s", cm)
 		}),
 	)
@@ -34,9 +34,9 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			}
 			log.WithField("name", key).Debug("new configMap observed")
 			queue.Add(Event{
-				Key:          key,
-				EventType:    CREATE,
-				Object:       obj,
+				Key:       key,
+				EventType: CREATE,
+				Object:    obj,
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
@@ -46,9 +46,9 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			}
 			log.WithField("name", key).Debug("configMap update observed")
 			queue.Add(Event{
-				Key:          key,
-				EventType:    UPDATE,
-				Object:       new,
+				Key:       key,
+				EventType: UPDATE,
+				Object:    new,
 			})
 		},
 	})

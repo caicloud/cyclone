@@ -17,8 +17,8 @@ func NewPodController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		time.Second * 30,
-		informers.WithTweakListOptions(func(options *metav1.ListOptions){
+		time.Second*30,
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = common.PodLabelSelector
 		}),
 	)
@@ -31,9 +31,9 @@ func NewPodController(client clientset.Interface) *Controller {
 				return
 			}
 			queue.Add(Event{
-				Key:          key,
-				EventType:    CREATE,
-				Object:       obj,
+				Key:       key,
+				EventType: CREATE,
+				Object:    obj,
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
@@ -42,9 +42,9 @@ func NewPodController(client clientset.Interface) *Controller {
 				return
 			}
 			queue.Add(Event{
-				Key:          key,
-				EventType:    UPDATE,
-				Object:       new,
+				Key:       key,
+				EventType: UPDATE,
+				Object:    new,
 			})
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -53,9 +53,9 @@ func NewPodController(client clientset.Interface) *Controller {
 				return
 			}
 			queue.Add(Event{
-				Key:          key,
-				EventType:    DELETE,
-				Object:       obj,
+				Key:       key,
+				EventType: DELETE,
+				Object:    obj,
 			})
 		},
 	})

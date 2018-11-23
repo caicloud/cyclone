@@ -17,7 +17,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactory(
 		client,
-		time.Second * 30,
+		time.Second*30,
 	)
 
 	informer := factory.Cyclone().V1alpha1().WorkflowRuns().Informer()
@@ -28,9 +28,9 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 				return
 			}
 			queue.Add(Event{
-				Key:          key,
-				EventType:    CREATE,
-				Object:       obj,
+				Key:       key,
+				EventType: CREATE,
+				Object:    obj,
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
@@ -39,9 +39,9 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 				return
 			}
 			queue.Add(Event{
-				Key:          key,
-				EventType:    UPDATE,
-				Object:       new,
+				Key:       key,
+				EventType: UPDATE,
+				Object:    new,
 			})
 		},
 	})
@@ -52,9 +52,9 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		informer:  informer,
 		queue:     queue,
 		eventHandler: &handlers.Handler{
-			Client:         client,
+			Client:           client,
 			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
-			GCProcessor: workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
+			GCProcessor:      workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
 		},
 	}
 }

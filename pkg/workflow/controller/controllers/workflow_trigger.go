@@ -16,7 +16,7 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		time.Second * 30,
+		time.Second*30,
 	)
 
 	informer := factory.Cyclone().V1alpha1().WorkflowTriggers().Informer()
@@ -28,9 +28,9 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 			}
 			log.WithField("name", key).Debug("new WorkflowTrigger observed")
 			queue.Add(Event{
-				Key:          key,
-				EventType:    CREATE,
-				Object:       obj,
+				Key:       key,
+				EventType: CREATE,
+				Object:    obj,
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
@@ -40,9 +40,9 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 			}
 			log.WithField("name", key).Debug("WorkflowTrigger update observed")
 			queue.Add(Event{
-				Key:          key,
-				EventType:    UPDATE,
-				Object:       new,
+				Key:       key,
+				EventType: UPDATE,
+				Object:    new,
 			})
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -52,9 +52,9 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 			}
 			log.WithField("name", key).Debug("deleting WorkflowTrigger")
 			queue.Add(Event{
-				Key:          key,
-				EventType:    DELETE,
-				Object:       obj,
+				Key:       key,
+				EventType: DELETE,
+				Object:    obj,
 			})
 		},
 	})
