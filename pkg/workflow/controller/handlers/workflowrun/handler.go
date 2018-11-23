@@ -2,7 +2,6 @@ package workflowrun
 
 import (
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -14,8 +13,7 @@ import (
 type Handler struct {
 	Client           clientset.Interface
 	TimeoutProcessor *workflowrun.TimeoutProcessor
-	GCProcessor    *workflowrun.GCProcessor
-	EventRecorder record.EventRecorder
+	GCProcessor      *workflowrun.GCProcessor
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.

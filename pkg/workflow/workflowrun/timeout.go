@@ -128,7 +128,7 @@ func (m *TimeoutProcessor) process() {
 
 			operator := operator{
 				client: m.client,
-				wfr: wfr,
+				wfr:    wfr,
 			}
 			if err = operator.Update(); err != nil {
 				log.WithField("wfr", wfr.Name).Error("Update WorkflowRun status error: ", err)

@@ -12,9 +12,14 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
-var once sync.Once
+// EventRecorder is used to record events to k8s, controllers here would use it to record
+// events reflecting the WorkflowRun executing process.
 var eventRecorder record.EventRecorder
 
+// Once is used to ensure that the eventRecorder is initailized only once.
+var once sync.Once
+
+// GetEventRecorder get the event recorder object. Create it of not exists yet.
 func GetEventRecorder(client clientset.Interface) record.EventRecorder {
 	once.Do(func() {
 		log.Info("Creating event recorder")

@@ -31,9 +31,9 @@ const (
 )
 
 type Event struct {
-	Key          string
-	EventType    EventType
-	Object       interface{}
+	Key       string
+	EventType EventType
+	Object    interface{}
 }
 
 func (c *Controller) Run(stopCh <-chan struct{}) {

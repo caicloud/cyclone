@@ -79,7 +79,7 @@ const (
 // Constants for GC pod.
 const (
 	GCContainerName = "gc"
-	GCDataPath = "/workspace"
+	GCDataPath      = "/workspace"
 )
 
 func InputResourceVolumeName(name string) string {

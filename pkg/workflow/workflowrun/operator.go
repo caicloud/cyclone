@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 
@@ -42,10 +42,10 @@ type Operator interface {
 }
 
 type operator struct {
-	client clientset.Interface
+	client   clientset.Interface
 	recorder record.EventRecorder
-	wf     *v1alpha1.Workflow
-	wfr    *v1alpha1.WorkflowRun
+	wf       *v1alpha1.Workflow
+	wfr      *v1alpha1.WorkflowRun
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -72,9 +72,9 @@ func newFromName(client clientset.Interface, wfr, namespace string) (Operator, e
 	}
 
 	return &operator{
-		client: client,
+		client:   client,
 		recorder: controller.GetEventRecorder(client),
-		wfr:    w,
+		wfr:      w,
 	}, nil
 }
 
@@ -86,10 +86,10 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 	}
 
 	return &operator{
-		client: client,
+		client:   client,
 		recorder: controller.GetEventRecorder(client),
-		wf:     f,
-		wfr:    wfr,
+		wf:       f,
+		wfr:      wfr,
 	}, nil
 }
 
@@ -395,14 +395,14 @@ func (o *operator) GC(lastTry bool) error {
 	// Create a gc pod to clean data on tmp PV.
 	gcPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("wfrgc--%s", o.wfr.Name),
+			Name:      fmt.Sprintf("wfrgc--%s", o.wfr.Name),
 			Namespace: o.wfr.Namespace,
 			Labels: map[string]string{
 				common.WorkflowLabelName: "true",
 			},
 			Annotations: map[string]string{
 				common.WorkflowRunAnnotationName: o.wfr.Name,
-				common.GCAnnotationName: "true",
+				common.GCAnnotationName:          "true",
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -417,25 +417,25 @@ func (o *operator) GC(lastTry bool) error {
 			RestartPolicy: corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
-					Name: common.GCContainerName,
-					Image: controller.Config.Images[controller.GCImage],
+					Name:    common.GCContainerName,
+					Image:   controller.Config.Images[controller.GCImage],
 					Command: []string{"rm", "-rf", common.GCDataPath + "/" + o.wfr.Name},
 					VolumeMounts: []corev1.VolumeMount{
 						{
-							Name: common.DefaultPvVolumeName,
+							Name:      common.DefaultPvVolumeName,
 							MountPath: common.GCDataPath,
-							SubPath: common.WorkflowRunsPath(),
+							SubPath:   common.WorkflowRunsPath(),
 						},
 					},
 				},
 			},
-			Volumes: []corev1.Volume {
+			Volumes: []corev1.Volume{
 				{
 					Name: common.DefaultPvVolumeName,
-					VolumeSource: corev1.VolumeSource {
+					VolumeSource: corev1.VolumeSource{
 						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 							ClaimName: controller.Config.PVC,
-							ReadOnly: false,
+							ReadOnly:  false,
 						},
 					},
 				},

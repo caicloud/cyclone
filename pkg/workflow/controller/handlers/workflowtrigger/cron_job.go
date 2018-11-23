@@ -43,7 +43,7 @@ func NewTriggerManager(client clientset.Interface) *CronTriggerManager {
 	}
 }
 
-func (trigger *CronTrigger) getKeyFromTrigger() (string) {
+func (trigger *CronTrigger) getKeyFromTrigger() string {
 	return fmt.Sprintf(KeyTemplate, trigger.Namespace, trigger.WorkflowTriggerName)
 }
 

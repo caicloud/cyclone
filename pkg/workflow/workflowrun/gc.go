@@ -44,10 +44,10 @@ type GCProcessor struct {
 
 func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
-		client: client,
+		client:   client,
 		recorder: controller.GetEventRecorder(client),
-		items: make(map[string]*workflowRunItem),
-		enabled: enabled,
+		items:    make(map[string]*workflowRunItem),
+		enabled:  enabled,
 	}
 	if enabled {
 		go processor.run()
