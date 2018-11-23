@@ -1,4 +1,4 @@
-package controller
+package common
 
 import (
 	"sync"
@@ -12,6 +12,13 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
+const (
+	// EventSourceWfrController represents events send from workflowrun controller.
+	EventSourceWfrController string = "WorkflowRunController"
+	// EventSourceWfrController represents events send from coordinator.
+	EventSourceCoordinator string = "CycloneCoordinator"
+)
+
 // EventRecorder is used to record events to k8s, controllers here would use it to record
 // events reflecting the WorkflowRun executing process.
 var eventRecorder record.EventRecorder
@@ -20,12 +27,12 @@ var eventRecorder record.EventRecorder
 var once sync.Once
 
 // GetEventRecorder get the event recorder object. Create it of not exists yet.
-func GetEventRecorder(client clientset.Interface) record.EventRecorder {
+func GetEventRecorder(client clientset.Interface, component string) record.EventRecorder {
 	once.Do(func() {
 		log.Info("Creating event recorder")
 		broadcaster := record.NewBroadcaster()
 		broadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: client.CoreV1().Events("")})
-		eventRecorder = broadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "WorkflowRun Controller"})
+		eventRecorder = broadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: component})
 	})
 
 	return eventRecorder
