@@ -55,6 +55,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			Client:         client,
 			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
 			GCProcessor: workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
+			EventRecorder: controller.GetEventRecorder(client),
 		},
 	}
 }

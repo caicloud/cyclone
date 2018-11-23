@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -42,6 +43,7 @@ type Operator interface {
 
 type operator struct {
 	client clientset.Interface
+	recorder record.EventRecorder
 	wf     *v1alpha1.Workflow
 	wfr    *v1alpha1.WorkflowRun
 }
@@ -71,6 +73,7 @@ func newFromName(client clientset.Interface, wfr, namespace string) (Operator, e
 
 	return &operator{
 		client: client,
+		recorder: controller.GetEventRecorder(client),
 		wfr:    w,
 	}, nil
 }
@@ -84,6 +87,7 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 
 	return &operator{
 		client: client,
+		recorder: controller.GetEventRecorder(client),
 		wf:     f,
 		wfr:    wfr,
 	}, nil
@@ -310,6 +314,7 @@ func (o *operator) Reconcile() error {
 		pod, err := NewPodBuilder(o.client, o.wf, o.wfr, stage).Build()
 		if err != nil {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod manifest for stage error: ", err)
+			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GeneratePodSpecError", "Generate pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "GeneratePodError",
@@ -324,6 +329,7 @@ func (o *operator) Reconcile() error {
 		pod, err = o.client.CoreV1().Pods(o.wfr.Namespace).Create(pod)
 		if err != nil {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod for stage error: ", err)
+			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "CreatePodError",
@@ -333,10 +339,11 @@ func (o *operator) Reconcile() error {
 			continue
 		}
 
+		o.recorder.Eventf(o.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", stage)
 		o.UpdateStageStatus(stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{time.Now()},
-			Reason:             "StageInitialized",
+			Reason:             "StagePodCreated",
 		})
 
 		o.UpdateStagePodInfo(stage, &v1alpha1.PodInfo{
@@ -373,7 +380,6 @@ func (o *operator) GC(lastTry bool) error {
 		}
 		err := o.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 		if err != nil {
-			errors.IsNotFound(err)
 			// If the pod not exist, just skip it without complain.
 			if errors.IsNotFound(err) {
 				continue
@@ -382,6 +388,7 @@ func (o *operator) GC(lastTry bool) error {
 				WithField("stg", stg).
 				WithField("pod", status.Pod.Name).
 				Warn("Delete pod error: ", err)
+			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Delete pod '%s' error: %v", status.Pod.Name, err)
 		}
 	}
 
@@ -442,7 +449,10 @@ func (o *operator) GC(lastTry bool) error {
 		if !lastTry {
 			return err
 		}
+		o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Create GC pod error: %v", err)
 	}
+
+	o.recorder.Event(o.wfr, corev1.EventTypeNormal, "GC", "GC is performed succeed.")
 
 	o.wfr.Status.Cleaned = true
 	o.Update()
