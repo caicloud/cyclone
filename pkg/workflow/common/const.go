@@ -1,9 +1,14 @@
 package common
 
+import "time"
+
 // ContainerState represents container state.
 type ContainerState string
 
 const (
+	// Resync period for controllers
+	ResyncPeriod = time.Minute * 5
+
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.

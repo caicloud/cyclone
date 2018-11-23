@@ -14,6 +14,7 @@ type Handler struct {
 	Client           clientset.Interface
 	TimeoutProcessor *workflowrun.TimeoutProcessor
 	GCProcessor      *workflowrun.GCProcessor
+	LimitedQueues    *workflowrun.LimitedQueues
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -26,6 +27,11 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		return
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
+
+	// AddOrRefresh adds a WorkflowRun to its corresponding queue, if the queue size exceed the
+	// maximum size, the oldest one would be deleted. And if the WorkflowRun already exists in
+	// the queue, its 'refresh' time field would be refreshed.
+	h.LimitedQueues.AddOrRefresh(originWfr)
 
 	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
 	// the GC queue.

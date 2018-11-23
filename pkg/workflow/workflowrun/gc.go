@@ -12,29 +12,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
-// Check whether this WorkflowRun object is ready for GC, return true if:
-// - The garbage collection hasn't been performed on this WorkflowRun yet.
-// - The WorkflowRun has already been terminated,
-func checkGC(wfr *v1alpha1.WorkflowRun) bool {
-	if wfr == nil {
-		return false
-	}
-
-	// If it's already cleaned up, skip it.
-	if wfr.Status.Cleaned {
-		return false
-	}
-
-	// If it's not in terminated state(Completed, Error, Cancel), skip it.
-	if wfr.Status.Overall.Status != v1alpha1.StatusCompleted &&
-		wfr.Status.Overall.Status != v1alpha1.StatusError &&
-		wfr.Status.Overall.Status != v1alpha1.StatusCancelled {
-		return false
-	}
-
-	return true
-}
-
 // GCProcessor processes garbage collection for WorkflowRun objects.
 type GCProcessor struct {
 	client   clientset.Interface
@@ -131,4 +108,27 @@ func (p *GCProcessor) process() {
 
 		delete(p.items, i.String())
 	}
+}
+
+// Check whether this WorkflowRun object is ready for GC, return true if:
+// - The garbage collection hasn't been performed on this WorkflowRun yet.
+// - The WorkflowRun has already been terminated,
+func checkGC(wfr *v1alpha1.WorkflowRun) bool {
+	if wfr == nil {
+		return false
+	}
+
+	// If it's already cleaned up, skip it.
+	if wfr.Status.Cleaned {
+		return false
+	}
+
+	// If it's not in terminated state(Completed, Error, Cancel), skip it.
+	if wfr.Status.Overall.Status != v1alpha1.StatusCompleted &&
+		wfr.Status.Overall.Status != v1alpha1.StatusError &&
+		wfr.Status.Overall.Status != v1alpha1.StatusCancelled {
+		return false
+	}
+
+	return true
 }
