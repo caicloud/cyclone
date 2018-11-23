@@ -243,7 +243,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 				{
 					Name:      pvc,
 					MountPath: common.ResolverDefaultDataPath,
-					SubPath: subPath,
+					SubPath:   subPath,
 				},
 			},
 		}
@@ -257,7 +257,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      pvc,
 					MountPath: r.Path,
-					SubPath: subPath,
+					SubPath:   subPath,
 				})
 			}
 			containers = append(containers, c)

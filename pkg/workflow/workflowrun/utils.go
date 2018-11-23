@@ -79,9 +79,9 @@ func staticStatus(status *v1alpha1.WorkflowRunStatus) *v1alpha1.WorkflowRunStatu
 // supported, 'retry' indicates the remaining retry count, 0 means no retry.
 type workflowRunItem struct {
 	// Name of the WorkflowRun object
-	name       string
+	name string
 	// Namespace of the WorkflowRun object
-	namespace  string
+	namespace string
 	// The time to take the action (GC or timeout handling)
 	expireTime time.Time
 	// If the action taken failed, how many times to retry, 0 means no retry
@@ -94,7 +94,7 @@ func (i *workflowRunItem) String() string {
 
 // EnsureOwner ensures WorkflowRun's owner is set to the referred Workflow.
 // So that when Workflow is deleted, related WorkflowRun would also be deleted.
-func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) (error) {
+func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) error {
 	// If owner of Workflow already set, skip it.
 	for _, owner := range wfr.OwnerReferences {
 		if owner.Kind == reflect.TypeOf(v1alpha1.Workflow{}).Name() {

@@ -88,6 +88,14 @@
   revision = "44145f04b68cf362d9c4df2182967c2275eaefed"
 
 [[projects]]
+  branch = "master"
+  digest = "1:aa2251148505e561bfa8cd6b69a319b37761da57b0b25529c4af08389559e3b9"
+  name = "github.com/golang/groupcache"
+  packages = ["lru"]
+  pruneopts = ""
+  revision = "c65c006176ff7ff98bb916961c7abbc6b0afc0aa"
+
+[[projects]]
   digest = "1:bcb38c8fc9b21bb8682ce2d605a7d4aeb618abc7f827e3ac0b27c0371fdb23fb"
   name = "github.com/golang/protobuf"
   packages = [
@@ -451,15 +459,18 @@
     "pkg/util/framer",
     "pkg/util/intstr",
     "pkg/util/json",
+    "pkg/util/mergepatch",
     "pkg/util/net",
     "pkg/util/runtime",
     "pkg/util/sets",
+    "pkg/util/strategicpatch",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
     "pkg/util/yaml",
     "pkg/version",
     "pkg/watch",
+    "third_party/forked/golang/json",
     "third_party/forked/golang/reflect",
   ]
   pruneopts = ""
@@ -609,6 +620,7 @@
     "tools/clientcmd/api/v1",
     "tools/metrics",
     "tools/pager",
+    "tools/record",
     "tools/reference",
     "transport",
     "util/buffer",
@@ -648,6 +660,14 @@
   pruneopts = ""
   revision = "b9b56d5dfc9208f60ea747056670942d8b0afdc8"
 
+[[projects]]
+  branch = "master"
+  digest = "1:e5d4ca90c0f3862515c98454bb37d4d340f4ceeca60ac3e0a5cb5857360aed7c"
+  name = "k8s.io/kube-openapi"
+  packages = ["pkg/util/proto"]
+  pruneopts = ""
+  revision = "0317810137be915b9cf888946c6e115c1bfac693"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -686,10 +706,12 @@
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/kubernetes/scheme",
+    "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/client-go/util/retry",
     "k8s.io/client-go/util/workqueue",
