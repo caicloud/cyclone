@@ -4,22 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
-)
-
-const (
-	// GetStageRetry represents the max retry times for
-	// getting the Stage which adopt the pod.
-	GetStageRetry int = 15
 )
 
 // Coordinator is a struct which contains infomations
@@ -46,23 +42,29 @@ func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, e
 	namespace := getNamespace()
 	stageName := getStageName()
 	var stage *v1alpha1.Stage
-	var err error
 
-	for i := 0; i < GetStageRetry; i++ {
+	backoff := wait.Backoff{
+		Duration: time.Duration(time.Second),
+		Factor:   2,
+		Jitter:   1,
+		Steps:    3,
+	}
+
+	err := wait.ExponentialBackoff(backoff, func() (done bool, err error) {
 		stage, err = client.CycloneV1alpha1().Stages(namespace).Get(stageName, meta_v1.GetOptions{})
 		if err != nil {
 			log.WithField("error", err).
-				WithField("stageName", stageName).
-				WithField("retry", i).Info("Get stage error")
-			continue
+				WithField("stageName", stageName).Info("Get stage error")
+			return false, nil
 		}
-		break
-	}
 
+		return true, nil
+	})
 	if err != nil {
 		log.WithField("error", err).WithField("stageName", stageName).Error("Get stage failed")
 		return nil, err
 	}
+
 	return &Coordinator{
 		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
 		workflowrunName:   getWorkflowrunName(),
