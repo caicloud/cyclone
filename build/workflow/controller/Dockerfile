@@ -4,4 +4,4 @@ WORKDIR /workspace
 
 COPY ./bin/workflow/controller /workspace/controller
 
-CMD ["./controller", "-config", "/workspace/etc/config.json"]
+CMD ["./controller"]

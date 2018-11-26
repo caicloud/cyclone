@@ -40,6 +40,8 @@ type ControllerConfig struct {
 	Limits LimitsConfig `json:"limits"`
 	// The PVC used to transfer artifacts in WorkflowRun
 	PVC string `json:"pvc"`
+	// Address of the Cyclone Server
+	CycloneServerAddr string `json:"cyclone_server_addr"`
 }
 
 type LoggingConfig struct {
