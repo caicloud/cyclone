@@ -59,16 +59,20 @@
   version = "1.20.0"
 
 [[constraint]]
-  branch = "master"
+  version = "kubernetes-1.10.0"
   name = "k8s.io/api"
 
 [[constraint]]
-  branch = "master"
+  version = "kubernetes-1.10.0"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
   name = "k8s.io/client-go"
   version = "v7.0.0"
+
+[[constraint]]
+  name = "k8s.io/gengo"
+  branch = "master"
 
 [[override]]
   name = "github.com/opencontainers/runtime-spec"
@@ -89,10 +93,6 @@
 [[override]]
   name = "github.com/prometheus/client_model"
   revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
-
-[[constraint]]
-  name = "k8s.io/gengo"
-  branch = "master"
 
 [[constraint]]
   name = "github.com/cbroglie/mustache"
