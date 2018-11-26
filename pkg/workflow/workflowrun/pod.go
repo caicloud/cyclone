@@ -446,6 +446,10 @@ func (m *PodBuilder) AddCoordinator() error {
 				Name:  common.EnvWorkloadContainerName,
 				Value: workloadContainer,
 			},
+			{
+				Name:  common.EnvCycloneServerAddr,
+				Value: controller.Config.CycloneServerAddr,
+			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
