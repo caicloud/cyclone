@@ -54,7 +54,7 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/workflowruns{workflowrun}",
+		Path:        "/workflowruns/{workflowrun}",
 		Description: "workflowrun APIs",
 		Definitions: []definition.Definition{
 			{
