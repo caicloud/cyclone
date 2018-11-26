@@ -73,10 +73,10 @@ func (p *Operator) OnDelete() error {
 func (p *Operator) OnUpdated() error {
 	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
+		if errors.IsNotFound(err) {
 			return nil
 		}
+		log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
 		return err
 	}
 

@@ -22,6 +22,9 @@ const (
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
 
+	// Default Cyclone Server address
+	DefaultCycloneServerAddr = "native-cyclone-server"
+
 	// Container name prefixes for sidecar. There are two kinds of sidecars in workflow:
 	// - Those added automatically by Cyclone such as coordinator, resource resolvers.
 	// - Those specified by users in stage spec as workload.
