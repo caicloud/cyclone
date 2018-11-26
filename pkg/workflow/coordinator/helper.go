@@ -24,7 +24,11 @@ func getWorkloadContainer() string {
 }
 
 func getCycloneServerAddr() string {
-	return os.Getenv(common.EnvCycloneServerAddr)
+	addr := os.Getenv(common.EnvCycloneServerAddr)
+	if addr == "" {
+		addr = common.DefaultCycloneServerAddr
+	}
+	return addr
 }
 
 func getNamespace() string {
