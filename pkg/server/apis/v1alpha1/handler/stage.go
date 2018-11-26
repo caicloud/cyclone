@@ -236,8 +236,8 @@ func getContainerLogs(workflowrun, stage, container, namespace string) (string, 
 		return "", err
 	}
 
-	// Check the existence of the log file for this stage. If does not exist, return error when pipeline record is success,
-	// otherwise directly return the got logs as pipeline record is failed or aborted.
+	// Check the existence of the log file for this stage. If does not exist, return error when stage is success,
+	// otherwise directly return the got logs as stage is failed or aborted.
 	if !fileutil.FileExists(logFilePath) {
 		log.Errorf("log file %s does not exist", logFilePath)
 		return "", fmt.Errorf("log file for stage %s does not exist", stage)
