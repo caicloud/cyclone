@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
@@ -13,20 +14,11 @@ import (
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-var configPath = flag.String("config", "workflow-controller.json", "Path to workflow controller config.")
-var cm = flag.String("cm", "workflow-controller-config", "ConfigMap that configures workflow controller")
+var configMap = flag.String("configmap", "workflow-controller-config", "ConfigMap that configures workflow controller")
 var namespace = flag.String("namespace", "default", "Namespace that workflow controller will run in")
 
 func main() {
 	flag.Parse()
-
-	// Load configuration from config file.
-	if err := controller.LoadConfig(configPath, &controller.Config); err != nil {
-		log.Fatal("Load config failed.")
-	}
-
-	// Init logging system.
-	controller.InitLogger(&controller.Config.Logging)
 
 	// Create k8s clientset and registry system signals for exit.
 	client, err := common.GetClient("", *kubeConfigPath)
@@ -36,8 +28,20 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	signals.GracefulShutdown(cancel)
 
+	// Load configuration from ConfigMap.
+	cm, err := client.CoreV1().ConfigMaps(*namespace).Get(*configMap, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("configmap", *configMap).Fatal("Get ConfigMap error: ", err)
+	}
+	if err = controller.LoadConfig(cm); err != nil {
+		log.WithField("configmap", *cm).Fatal("Load config from ConfigMap error: ", err)
+	}
+
+	// Init logging system.
+	controller.InitLogger(&controller.Config.Logging)
+
 	// Watch configure changes in ConfigMap.
-	cmController := controllers.NewConfigMapController(client, *namespace, *cm)
+	cmController := controllers.NewConfigMapController(client, *namespace, *configMap)
 	go cmController.Run(ctx.Done())
 
 	// Watch workflowTrigger who will start workflowRun on schedule
