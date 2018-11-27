@@ -46,8 +46,6 @@ type ResourceSpec struct {
 	Type ResourceType `json:"type"`
 	// Persistent resource to PVC.
 	Persistent *Persistent `json:"persistent"`
-	// Whether to pull resource when there already be data
-	PullPolicy ResourcePullPolicy `json:"pullPolicy"`
 	// Parameters of the resource
 	Parameters []ParameterItem `json:"parameters"`
 }
@@ -58,6 +56,8 @@ type Persistent struct {
 	PVC string `json:"pvc"`
 	// Path of resource in the PVC
 	Path string `json:"path"`
+	// Whether to pull resource when there already be data
+	PullPolicy ResourcePullPolicy `json:"pullPolicy"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cyclone-secrets
+type: Opaque
+data:
+  config.json: ewoJImF1dGhzIjogewoJCSJ0ZXN0LmNhaWNsb3VkcHJpdmF0ZXRlc3QuY29tIjogewoJCQkiYXV0aCI6ICJZV1J0YVc0NlVIZGtNVEl6TkRVMiIKCQl9Cgl9Cn0K
+
+---
+
 apiVersion: cyclone.io/v1alpha1
 kind: Resource
 metadata:
@@ -154,22 +164,3 @@ spec:
     - name: binary
       source: build-stage/app
   - name: echo-stage
-
----
-
-apiVersion: cyclone.io/v1alpha1
-kind: WorkflowRun
-metadata:
-  name: ci-workflowrun
-spec:
-  workflowRef:
-    kind: workflow.cyclone.io
-    name: ci-workflow
-  timeout: 5h
-  stages:
-  - name: echo-stage
-    parameters:
-    - name: message
-      value: Hello, World~
-    - name: image
-      value: golang:1.10-alpine3.8

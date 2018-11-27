@@ -19,21 +19,23 @@ import (
 )
 
 type PodBuilder struct {
-	client clientset.Interface
-	wf     *v1alpha1.Workflow
-	wfr    *v1alpha1.WorkflowRun
-	stg    *v1alpha1.Stage
-	stage  string
-	pod    *corev1.Pod
+	client     clientset.Interface
+	wf         *v1alpha1.Workflow
+	wfr        *v1alpha1.WorkflowRun
+	stg        *v1alpha1.Stage
+	stage      string
+	pod        *corev1.Pod
+	pvcVolumes map[string]string
 }
 
 func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage string) *PodBuilder {
 	return &PodBuilder{
-		client: client,
-		wf:     wf,
-		wfr:    wfr,
-		stage:  stage,
-		pod:    &corev1.Pod{},
+		client:     client,
+		wf:         wf,
+		wfr:        wfr,
+		stage:      stage,
+		pod:        &corev1.Pod{},
+		pvcVolumes: make(map[string]string),
 	}
 }
 
@@ -138,14 +140,10 @@ func (m *PodBuilder) CreateVolumes() error {
 	})
 
 	// Add common PVC volume to pod
-	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: common.DefaultPvVolumeName,
-		VolumeSource: corev1.VolumeSource{
-			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-				ClaimName: controller.Config.PVC,
-			},
-		},
-	})
+	if n := m.CreatePVCVolume(common.DefaultPvVolumeName, controller.Config.PVC); n != common.DefaultPvVolumeName {
+		log.WithField("volume", n).Error("Another volume already exist for the PVC: ", controller.Config.PVC)
+		return fmt.Errorf("%s already in another volume %s", controller.Config.PVC, n)
+	}
 
 	// Create hostPath volume for /var/run/docker.sock
 	var hostPathSocket = corev1.HostPathSocket
@@ -178,6 +176,31 @@ func (m *PodBuilder) CreateVolumes() error {
 	return nil
 }
 
+// CreatePVCVolume tries to create a PVC volume for the given volume name and PVC name.
+// If no volume available for the PVC, a new volume would be created and the volume name
+// will be returned. If a volume of the given PVC already exists, return name of  the volume,
+// note that in this case, the returned volume name is usually different to the provided
+// 'volumeName' argument.
+func (m *PodBuilder) CreatePVCVolume(volumeName, pvc string) string {
+	// PVC --> Volume Name
+	if volume, ok := m.pvcVolumes[pvc]; ok {
+		return volume
+	}
+
+	// Create volume if no volumes available for the PVC.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: volumeName,
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc,
+			},
+		},
+	})
+
+	m.pvcVolumes[pvc] = volumeName
+	return volumeName
+}
+
 // ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
 func (m *PodBuilder) ResolveInputResources() error {
@@ -203,17 +226,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 		persistent := resource.Spec.Persistent
 		if persistent != nil {
 			subPath = persistent.Path
-			if persistent.PVC != controller.Config.PVC {
-				pvc = common.InputResourceVolumeName(r.Name)
-				m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-					Name: common.InputResourceVolumeName(r.Name),
-					VolumeSource: corev1.VolumeSource{
-						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-							ClaimName: persistent.PVC,
-						},
-					},
-				})
-			}
+			pvc = m.CreatePVCVolume(common.InputResourceVolumeName(r.Name), persistent.PVC)
 		}
 
 		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
@@ -226,14 +239,29 @@ func (m *PodBuilder) ResolveInputResources() error {
 		}
 
 		// Create init container for each input resource and project all parameters into the
-		// container through environment variables.
-		var envs []corev1.EnvVar
+		// container through environment variables. Parameters are gathered from both the resource
+		// spec and the WorkflowRun spec.
+		envsMap := make(map[string]string)
+		envsMap[common.EnvWorkflowrunName] = m.wfr.Name
 		for _, p := range resource.Spec.Parameters {
+			envsMap[p.Name] = p.Value
+
+		}
+		for _, p := range m.wfr.Spec.Resources {
+			if p.Name == r.Name {
+				for _, c := range p.Parameters {
+					envsMap[c.Name] = c.Value
+				}
+			}
+		}
+		var envs []corev1.EnvVar
+		for key, value := range envsMap {
 			envs = append(envs, corev1.EnvVar{
-				Name:  p.Name,
-				Value: p.Value,
+				Name:  key,
+				Value: value,
 			})
 		}
+
 		container := corev1.Container{
 			Name:  r.Name,
 			Image: image,
@@ -288,15 +316,27 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		}
 
 		// Create container for each output resource and project all parameters into the
-		// container through environment variables. Also mount volumes shared between resolver
-		// and coordinator container.
-		var envs []corev1.EnvVar
+		// container through environment variables.
+		envsMap := make(map[string]string)
 		for _, p := range resource.Spec.Parameters {
+			envsMap[p.Name] = p.Value
+
+		}
+		for _, p := range m.wfr.Spec.Resources {
+			if p.Name == r.Name {
+				for _, c := range p.Parameters {
+					envsMap[c.Name] = c.Value
+				}
+			}
+		}
+		var envs []corev1.EnvVar
+		for key, value := range envsMap {
 			envs = append(envs, corev1.EnvVar{
-				Name:  p.Name,
-				Value: p.Value,
+				Name:  key,
+				Value: value,
 			})
 		}
+
 		container := corev1.Container{
 			Name:  common.CycloneSidecarPrefix + r.Name,
 			Image: image,
