@@ -69,7 +69,7 @@ push() {
 
 # Wait until resource data is ready.
 wait_ok() {
-    while [ ! -f ${WORKDIR}/ok ]
+    while [ ! -f ${WORKDIR}/notify/ok ]
     do
         sleep 3
     done
