@@ -1,0 +1,35 @@
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-workflowrun-1
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci-workflow
+  timeout: 1h
+  stages:
+  - name: echo-stage
+    parameters:
+    - name: message
+      value: Hello, World~
+    - name: image
+      value: golang:1.10-alpine3.8
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-workflowrun-2
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci-workflow
+  timeout: 1h
+  stages:
+  - name: echo-stage
+    parameters:
+    - name: message
+      value: Hello, Cyclone~
+    - name: image
+      value: golang:1.10-alpine3.8

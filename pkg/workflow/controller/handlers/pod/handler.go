@@ -16,33 +16,14 @@ type Handler struct {
 var _ handlers.Interface = (*Handler)(nil)
 
 func (h *Handler) ObjectCreated(obj interface{}) {
+	// If Workflow Controller got restarted, previous started pods would be
+	// observed by controller with create event. We need to handle update in
+	// this case as well. Otherwise WorkflowRun may stuck in running state.
+	h.onUpdate(obj)
 }
 
 func (h *Handler) ObjectUpdated(obj interface{}) {
-	pod, ok := obj.(*corev1.Pod)
-	if !ok {
-		log.Warning("unknown resource type")
-		return
-	}
-	log.WithField("name", pod.Name).Debug("Observed pod updated")
-
-	// Check whether it's GC pod.
-	if IsGCPod(pod) {
-		GCPodUpdated(h.Client, pod)
-		return
-	}
-
-	// For stage pod, create operator to handle it.
-	operator, err := NewOperator(h.Client, pod)
-	if err != nil {
-		log.Error("Create operator error: ", err)
-		return
-	}
-
-	err = operator.OnUpdated()
-	if err != nil {
-		log.WithField("pod", pod.Name).Error("process updated pod error: ", err)
-	}
+	h.onUpdate(obj)
 }
 
 func (h *Handler) ObjectDeleted(obj interface{}) {
@@ -67,5 +48,32 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 	err = operator.OnDelete()
 	if err != nil {
 		log.WithField("pod", pod.Name).Error("process deleted pod error: ", err)
+	}
+}
+
+func (h *Handler) onUpdate(obj interface{}) {
+	pod, ok := obj.(*corev1.Pod)
+	if !ok {
+		log.Warning("unknown resource type")
+		return
+	}
+	log.WithField("name", pod.Name).Debug("Observed pod updated")
+
+	// Check whether it's GC pod.
+	if IsGCPod(pod) {
+		GCPodUpdated(h.Client, pod)
+		return
+	}
+
+	// For stage pod, create operator to handle it.
+	operator, err := NewOperator(h.Client, pod)
+	if err != nil {
+		log.Error("Create operator error: ", err)
+		return
+	}
+
+	err = operator.OnUpdated()
+	if err != nil {
+		log.WithField("pod", pod.Name).Error("process updated pod error: ", err)
 	}
 }
