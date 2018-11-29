@@ -63,17 +63,6 @@ func newLogMiddleware() definition.Middleware {
 				resp.ContentLength,
 				time.Since(startTime),
 			)
-		} else {
-			//log.V(log.LevelDebug).Infof("%s - [%s] \"%s %s %s\" %d %d %v",
-			//	req.RemoteAddr,
-			//	time.Now().Format("02/Jan/2006:15:04:05 -0700"),
-			//	req.Method,
-			//	req.URL.RequestURI(),
-			//	req.Proto,
-			//	resp.StatusCode,
-			//	resp.ContentLength,
-			//	time.Since(startTime),
-			//)
 		}
 
 		return err
