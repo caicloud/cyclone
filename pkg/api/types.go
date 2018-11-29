@@ -224,11 +224,13 @@ type GitSource struct {
 type UnitTestStage struct {
 	GeneralStage `bson:",inline"`
 	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	AllowFailure bool     `bson:"allowFailure,omitempty" json:"allowFailure,omitempty" description:"whether this stage can accept failure"`
 }
 
 // CodeScanStage represents the config of code scan stage.
 type CodeScanStage struct {
-	SonarQube *ScanSonarQube `bson:"sonarqube,omitempty" json:"sonarqube,omitempty" description:"code scan using sonarqube"`
+	SonarQube    *ScanSonarQube `bson:"sonarqube,omitempty" json:"sonarqube,omitempty" description:"code scan using sonarqube"`
+	AllowFailure bool           `bson:"allowFailure,omitempty" json:"allowFailure,omitempty" description:"whether this stage can accept failure"`
 }
 
 // ScanSonarQube represents the sonarqube integration name and config of sonarqube-type code scan.
@@ -250,6 +252,7 @@ type ScanSonarQubeConfig struct {
 type PackageStage struct {
 	GeneralStage `bson:",inline"`
 	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	AllowFailure bool     `bson:"allowFailure,omitempty" json:"allowFailure,omitempty" description:"whether this stage can accept failure"`
 }
 
 // ImageBuildStage represents the config of image build stage.
@@ -269,8 +272,9 @@ type ImageBuildInfo struct {
 
 // IntegrationTestStage represents the config of integration test stage.
 type IntegrationTestStage struct {
-	Config   *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
-	Services []Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	Config       *IntegrationTestConfig `bson:"Config,omitempty" json:"Config,omitempty" description:"integration test config"`
+	Services     []Service              `bson:"services,omitempty" json:"services,omitempty" description:"list of dependent services for integration test"`
+	AllowFailure bool                   `bson:"allowFailure,omitempty" json:"allowFailure,omitempty" description:"whether this stage can accept failure"`
 }
 
 // IntegrationTestConfig represents the config for integration test.
@@ -291,6 +295,7 @@ type Service struct {
 // ImageReleaseStage represents the config of image release stage.
 type ImageReleaseStage struct {
 	ReleasePolicies []ImageReleasePolicy `bson:"releasePolicies,omitempty" json:"releasePolicies,omitempty" description:"list of policies for image release"`
+	AllowFailure    bool                 `bson:"allowFailure,omitempty" json:"allowFailure,omitempty" description:"whether this stage can accept failure"`
 }
 
 // ImageReleasePolicyType represents the type of image release policy.
