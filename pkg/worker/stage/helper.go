@@ -35,6 +35,7 @@ const (
 var stageDesps = map[api.PipelineStageName]string{
 	api.CodeCheckoutStageName:    "Code checkout",
 	api.PackageStageName:         "Package",
+	api.CodeScanStageName:        "Code scan",
 	api.ImageBuildStageName:      "Build image",
 	api.IntegrationTestStageName: "Integration test",
 	api.ImageReleaseStageName:    "Push image",
@@ -81,6 +82,11 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 			stageStatus.Package = &api.GeneralStageStatus{}
 		}
 		gss = stageStatus.Package
+	case api.CodeScanStageName:
+		if stageStatus.CodeScan == nil {
+			stageStatus.CodeScan = &api.CodeScanStageStatus{}
+		}
+		gss = &stageStatus.CodeScan.GeneralStageStatus
 	case api.ImageBuildStageName:
 		if stageStatus.ImageBuild == nil {
 			stageStatus.ImageBuild = &api.ImageBuildStageStatus{}

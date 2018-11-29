@@ -32,6 +32,7 @@ const (
 	pipelineCollectionName       string = "pipelines"
 	pipelineRecordCollectionName string = "pipelineRecords"
 	eventCollectionName          string = "events"
+	integrationCollectionName    string = "integrations"
 
 	socketTimeout  = time.Second * 5
 	syncTimeout    = time.Second * 5
@@ -55,6 +56,7 @@ type DataStore struct {
 	pipelineCollection       *mgo.Collection
 	pipelineRecordCollection *mgo.Collection
 	eventCollection          *mgo.Collection
+	integrationCollection    *mgo.Collection
 }
 
 // Init store mongo client session
@@ -115,6 +117,13 @@ func ensureIndexes() error {
 		return err
 	}
 
+	integrationCollection := session.DB(defaultDBName).C(integrationCollectionName)
+	integrationIndex := mgo.Index{Key: []string{"name"}, Unique: true}
+	if err = integrationCollection.EnsureIndex(integrationIndex); err != nil {
+		log.Errorf("fail to create index for integration as %v", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -129,6 +138,7 @@ func NewStore() *DataStore {
 		pipelineCollection:       session.DB(defaultDBName).C(pipelineCollectionName),
 		pipelineRecordCollection: session.DB(defaultDBName).C(pipelineRecordCollectionName),
 		eventCollection:          session.DB(defaultDBName).C(eventCollectionName),
+		integrationCollection:    session.DB(defaultDBName).C(integrationCollectionName),
 	}
 }
 

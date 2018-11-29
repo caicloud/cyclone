@@ -64,6 +64,9 @@ const (
 	// CloudPathParameterName represents the name of the path parameter for cloud.
 	CloudPathParameterName = "cloud"
 
+	// IntegrationPathParameterName represents the name of the path parameter for integration.
+	IntegrationPathParameterName = "integration"
+
 	// NamespaceQueryParameterName represents the k8s cluster namespce of the query parameter for cloud.
 	NamespaceQueryParameter = "namespace"
 

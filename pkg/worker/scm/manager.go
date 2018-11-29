@@ -28,12 +28,10 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	pathutil "github.com/caicloud/cyclone/pkg/util/path"
+	"github.com/caicloud/cyclone/pkg/worker/common"
 )
 
 const (
-	// cloneDir represents the dir which the repo clone to.
-	cloneDir = "/tmp/code"
-
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
 
 	// maxRetry represents the max number of retry for git clone.
@@ -75,7 +73,7 @@ func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 
 // GetCloneDir returns the clone dir.
 func GetCloneDir() string {
-	return cloneDir
+	return common.CloneDir
 }
 
 func GetRepoName(codeSource *api.CodeSource) (string, error) {

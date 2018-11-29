@@ -79,6 +79,19 @@ func NewEventManager(ds *store.DataStore) EventManager {
 
 // HandleEvent handles the event.
 func (em *eventManager) HandleEvent(event *api.Event) error {
+	// get sonar integration if necessary.
+	if api.ContainsStage(event.PipelineRecord.PerformParams.Stages, api.CodeScanStageName) {
+		codeScan := event.Pipeline.Build.Stages.CodeScan
+		if codeScan != nil && codeScan.SonarQube != nil {
+			integration, err := em.ds.GetIntegration(codeScan.SonarQube.Name)
+			if err != nil {
+				log.Errorf("get integration %s failed: %v", codeScan.SonarQube.Name)
+				return err
+			}
+			event.Pipeline.Build.Stages.CodeScan.SonarQube.SonarInfo = integration.SonarQube
+		}
+	}
+
 	eventID := event.ID
 	pipelineRecord := event.PipelineRecord
 	err := createWorkerForEvent(event)
