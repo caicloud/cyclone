@@ -54,9 +54,16 @@ func (m *PodBuilder) Prepare() error {
 		return fmt.Errorf("pod must be defined in stage spec, stage: %s", m.stage)
 	}
 
-	// TODO(ChenDe): Support multiple containers in pod workload.
-	if len(stage.Spec.Pod.Spec.Containers) != 1 {
-		return fmt.Errorf("only one container in pod spec supported, stage: %s", m.stage)
+	// Only on workload container supported, others should be sidecar marked by special
+	// container name prefix.
+	var workloadContainers int
+	for _, c := range stage.Spec.Pod.Spec.Containers {
+		if !strings.HasPrefix(c.Name, common.WorkloadSidecarPrefix) {
+			workloadContainers++
+		}
+	}
+	if workloadContainers != 1 {
+		return fmt.Errorf("only one workload containers supported, others should be sidecars, stage: %s", m.stage)
 	}
 
 	// Generate pod name using UUID.
@@ -514,6 +521,33 @@ func (m *PodBuilder) AddCoordinator() error {
 	return nil
 }
 
+// InjectEnvs injects environment variables to containers, such as WorkflowRun name
+// stage name, namespace.
+func (m *PodBuilder) InjectEnvs() error {
+	envs := []corev1.EnvVar{
+		{
+			Name:  common.EnvWorkflowrunName,
+			Value: m.wfr.Name,
+		},
+		{
+			Name:  common.EnvStageName,
+			Value: m.stage,
+		},
+		{
+			Name:  common.EnvNamespace,
+			Value: m.wfr.Namespace,
+		},
+	}
+	var containers []corev1.Container
+	for _, c := range m.pod.Spec.Containers {
+		c.Env = append(c.Env, envs...)
+		containers = append(containers, c)
+	}
+	m.pod.Spec.Containers = containers
+
+	return nil
+}
+
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
@@ -556,6 +590,11 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	}
 
 	err = m.AddCoordinator()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.InjectEnvs()
 	if err != nil {
 		return nil, err
 	}
