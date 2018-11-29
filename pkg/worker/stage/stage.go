@@ -31,6 +31,7 @@ import (
 	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	pathutil "github.com/caicloud/cyclone/pkg/util/path"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
+	itg "github.com/caicloud/cyclone/pkg/worker/integrate"
 	"github.com/caicloud/cyclone/pkg/worker/junit"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
@@ -51,6 +52,7 @@ type StageManager interface {
 	SetEvent(event *api.Event)
 	ExecCodeCheckout(token string, stage *api.CodeCheckoutStage) error
 	ExecPackage(*api.BuilderImage, *api.BuildInfo, *api.UnitTestStage, *api.PackageStage) error
+	ExecCodeScan(stage *api.CodeScanStage) error
 	ExecImageBuild(stage *api.ImageBuildStage) ([]string, error)
 	ExecIntegrationTest(builtImages []string, stage *api.IntegrationTestStage) error
 	ExecImageRelease(builtImages []string, stage *api.ImageReleaseStage) error
@@ -235,6 +237,62 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 	}
 
+	return nil
+}
+
+func (sm *stageManager) ExecCodeScan(stage *api.CodeScanStage) (err error) {
+	errChan := make(chan error)
+	defer func() {
+		errChan <- err
+		sm.updateEventAfterStage(api.CodeScanStageName, err)
+	}()
+
+	// New CodeScanStageStatus to store task status.
+	if event.PipelineRecord.StageStatus.CodeScan == nil {
+		event.PipelineRecord.StageStatus.CodeScan = &api.CodeScanStageStatus{}
+	}
+	csStatus := event.PipelineRecord.StageStatus.CodeScan
+
+	logFile, err := sm.startWatchLogs(api.CodeScanStageName, "", errChan)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	sonar := stage.SonarQube
+	if stage.SonarQube == nil {
+		return fmt.Errorf("CodoScan sonar qube config is empty.")
+	}
+
+	cfg := &itg.CodeScanConfig{
+		SourcePath:    sonar.Config.SourcePath,
+		EncodingStyle: sonar.Config.EncodingStyle,
+		Language:      sonar.Config.Language,
+		Threshold:     sonar.Config.Threshold,
+		// TODO detect code coverage file path.
+		ExtensionAgrs: []string{},
+		ProjectKey:    event.Pipeline.ID,
+		ProjectName:   event.Pipeline.Alias,
+	}
+
+	// Collect logs
+	logs, err := itg.ScanCode(api.IntegrationTypeSonar, sonar.SonarInfo.Address, sonar.SonarInfo.Token, cfg)
+	if err != nil {
+		log.Error(err.Error())
+		logFile.WriteString(err.Error())
+		return err
+	} else {
+		logFile.WriteString(logs)
+	}
+
+	// Get scan result from third-party, e.g. sonarqube.
+	err = itg.SetCodeScanStatus(api.IntegrationTypeSonar, sonar.SonarInfo.Address, sonar.SonarInfo.Token, cfg.ProjectKey, csStatus)
+	if err != nil {
+		log.Errorf("Set code scan status failed: %v", err)
+		return err
+	}
+
+	log.Info("Execute cede scan successfully.")
 	return nil
 }
 

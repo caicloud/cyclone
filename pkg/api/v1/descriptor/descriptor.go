@@ -18,6 +18,7 @@ package descriptor
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/caicloud/nirvana/definition"
@@ -51,16 +52,18 @@ func newLogMiddleware() definition.Middleware {
 		req := httpCtx.Request()
 		resp := httpCtx.ResponseWriter()
 
-		log.Infof("%s - [%s] \"%s %s %s\" %d %d %v",
-			req.RemoteAddr,
-			time.Now().Format("02/Jan/2006:15:04:05 -0700"),
-			req.Method,
-			req.URL.RequestURI(),
-			req.Proto,
-			resp.StatusCode,
-			resp.ContentLength,
-			time.Since(startTime),
-		)
+		if req.Method != http.MethodGet {
+			log.Infof("%s - [%s] \"%s %s %s\" %d %d %v",
+				req.RemoteAddr,
+				time.Now().Format("02/Jan/2006:15:04:05 -0700"),
+				req.Method,
+				req.URL.RequestURI(),
+				req.Proto,
+				resp.StatusCode,
+				resp.ContentLength,
+				time.Since(startTime),
+			)
+		}
 
 		return err
 	}

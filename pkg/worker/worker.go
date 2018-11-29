@@ -28,6 +28,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/scm"
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
+	_ "github.com/caicloud/cyclone/pkg/worker/integrate/provider"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/stage"
 )
@@ -111,6 +112,15 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	// Execute the package stage if necessary.
 	if _, ok := stageSet[api.PackageStageName]; ok {
 		err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+	}
+
+	// Execute the package stage if necessary.
+	if _, ok := stageSet[api.CodeScanStageName]; ok {
+		err = stageManager.ExecCodeScan(build.Stages.CodeScan)
 		if err != nil {
 			log.Error(err.Error())
 			return

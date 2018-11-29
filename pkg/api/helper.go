@@ -47,3 +47,13 @@ func GetURL(codeSource *CodeSource) (string, error) {
 
 	return gitSource.Url, nil
 }
+
+// ContainsStage check if the input slice s contains pipeline stage e.
+func ContainsStage(s []PipelineStageName, e PipelineStageName) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}

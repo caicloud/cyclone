@@ -228,8 +228,22 @@ type UnitTestStage struct {
 
 // CodeScanStage represents the config of code scan stage.
 type CodeScanStage struct {
-	GeneralStage `bson:",inline"`
-	Outputs      []string `bson:"outputs,omitempty" json:"outputs,omitempty" description:"list of output path of this stage"`
+	SonarQube *ScanSonarQube `bson:"sonarqube,omitempty" json:"sonarqube,omitempty" description:"code scan using sonarqube"`
+}
+
+// ScanSonarQube represents the sonarqube integration name and config of sonarqube-type code scan.
+type ScanSonarQube struct {
+	Name      string               `bson:"name,omitempty" json:"name,omitempty" description:"name of sonarque integration"`
+	Config    *ScanSonarQubeConfig `bson:"config,omitempty" json:"config,omitempty" description:"config of sonarqube code scan"`
+	SonarInfo *IntegrationSonar    `bson:"sonarInfo,omitempty" json:"sonarInfo,omitempty" description:"information of sonarqube server"`
+}
+
+// ScanSonarQubeConfig represents config of sonarqube-type code scan.
+type ScanSonarQubeConfig struct {
+	SourcePath    string `bson:"sourcePath,omitempty" json:"sourcePath,omitempty" description:"path of the code used to be scanned"`
+	EncodingStyle string `bson:"encodingStyle,omitempty" json:"encodingStyle,omitempty" description:"encoding style of the source code"`
+	Language      string `bson:"language,omitempty" json:"language,omitempty" description:"language of the source code"`
+	Threshold     string `bson:"threshold,omitempty" json:"threshold,omitempty" description:"sonarqube threshold"`
 }
 
 // PackageStage represents the config of package stage.
@@ -424,7 +438,7 @@ const (
 type StageStatus struct {
 	CodeCheckout    *CodeCheckoutStageStatus `bson:"codeCheckout,omitempty" json:"codeCheckout,omitempty" description:"status of code checkout stage"`
 	UnitTest        *GeneralStageStatus      `bson:"unitTest,omitempty" json:"unitTest,omitempty" description:"status of unit test stage"`
-	CodeScan        *GeneralStageStatus      `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
+	CodeScan        *CodeScanStageStatus     `bson:"codeScan,omitempty" json:"codeScan,omitempty" description:"status of code scan stage"`
 	Package         *GeneralStageStatus      `bson:"package,omitempty" json:"package,omitempty" description:"status of package stage"`
 	ImageBuild      *ImageBuildStageStatus   `bson:"imageBuild,omitempty" json:"imageBuild,omitempty" description:"status of image build stage"`
 	IntegrationTest *GeneralStageStatus      `bson:"integrationTest,omitempty" json:"integrationTest,omitempty" description:"status of integration test stage"`
@@ -452,6 +466,12 @@ type CodeCheckoutStageStatus struct {
 	Commits            Commits `bson:"commits,omitempty" json:"commits,omitempty" description:"commits of the pipeline record"`
 }
 
+// CodeScanStageStatus includes GeneralStageStatus and code scan results.
+type CodeScanStageStatus struct {
+	GeneralStageStatus `bson:",inline"`
+	SonarQube          *ScanStatusSonarQube `bson:"sonarqube,omitempty" json:"sonarqube,omitempty" description:"code scan status using sonarqube"`
+}
+
 // ImageBuildStageStatus includes GeneralStageStatus and image build infos.
 type ImageBuildTaskStatus struct {
 	TaskStatus `bson:",inline"`
@@ -474,6 +494,19 @@ type ImageReleaseStageStatus struct {
 type ImageReleaseTaskStatus struct {
 	TaskStatus `bson:",inline"`
 	Image      string `bson:"image,omitempty" json:"image,omitempty" description:"released image name"`
+}
+
+// ScanStatusSonarQube including status of sonarqube scanning result overview.
+type ScanStatusSonarQube struct {
+	// including 'reliability_rating, sqale_rating, security_rating, coverage, duplicated_lines_density'
+	Measures     []*SonarMeasure `bson:"measures,omitempty" json:"measures,omitempty" description:"measures of this project from sonarqube"`
+	OverviewLink string          `bson:"overviewLink,omitempty" json:"overviewLink,omitempty" description:"link to sonarqube result website"`
+}
+
+// SonarMeasure represents the measure defined by sonarqube.
+type SonarMeasure struct {
+	Metric string `bson:"metric,omitempty" json:"metric,omitempty"`
+	Value  string `bson:"value,omitempty" json:"value,omitempty"`
 }
 
 // ImageReleaseStageStatus includes GeneralStageStatus and Images.
@@ -559,6 +592,9 @@ const (
 
 	// PackageStageName represents the name of package stage.
 	PackageStageName PipelineStageName = "package"
+
+	// CodeScanStageName represents the name of code scan stage.
+	CodeScanStageName PipelineStageName = "codeScan"
 
 	// ImageBuildStageName represents the name of image build stage.
 	ImageBuildStageName PipelineStageName = "imageBuild"
@@ -730,7 +766,7 @@ const (
 
 	// Fixme, this is a litter tricky.
 	// SVNPostCommitRefPrefix is a flag used by svn code checkout;
-	// If 'ref' with this prefix, we will checkout code frome a specific revision,
+	// If 'ref' with this prefix, we will checkout code from a specific revision,
 	// otherwise, apped ref to clone url, then do checkout.
 	SVNPostCommitRefPrefix           string = "hook-post-commit-"
 	TriggerSVNHookPostCommit         string = "hook-post-commit"
@@ -814,4 +850,31 @@ const (
 // TestResult contains some pipeline record test result.
 type TestResult struct {
 	FileName string `bson:"fileName,omitempty" json:"fileName,omitempty" `
+}
+
+// Integration represents integration for third party components.
+type Integration struct {
+	ID             string            `bson:"_id,omitempty" json:"id,omitempty"`
+	Name           string            `json:"name,omitempty" bson:"name,omitempty"`
+	Alias          string            `bson:"alias,omitempty" json:"alias,omitempty"`
+	Type           IntegrationType   `bson:"type,omitempty" json:"type,omitempty"`
+	SonarQube      *IntegrationSonar `json:"sonarqube,omitempty" bson:"sonarqube,omitempty"`
+	CreationTime   time.Time         `bson:"creationTime,omitempty" json:"creationTime,omitempty"`
+	LastUpdateTime time.Time         `bson:"lastUpdateTime,omitempty" json:"lastUpdateTime,omitempty"`
+}
+
+// IntegrationType represents integration type, only supports SonarQube for now.
+type IntegrationType string
+
+const (
+	// IntegrationTypeSonar represents the SonarQube integration type.
+	IntegrationTypeSonar IntegrationType = "SonarQube"
+)
+
+// IntegrationSonar represents information of sonarqube-type integration.
+type IntegrationSonar struct {
+	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	Address     string `json:"address,omitempty" bson:"address,omitempty"`
+	Token       string `bson:"token,omitempty" json:"token,omitempty"`
+	User        string `bson:"user,omitempty" json:"user,omitempty"`
 }
