@@ -114,6 +114,9 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
 		if err != nil {
 			log.Error(err.Error())
+		}
+
+		if !build.Stages.Package.AllowFailure {
 			return
 		}
 	}
@@ -123,6 +126,9 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecCodeScan(build.Stages.CodeScan)
 		if err != nil {
 			log.Error(err.Error())
+		}
+
+		if !build.Stages.CodeScan.AllowFailure {
 			return
 		}
 	}
@@ -144,6 +150,9 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecIntegrationTest(builtImages, build.Stages.IntegrationTest)
 		if err != nil {
 			log.Error(err.Error())
+		}
+
+		if !build.Stages.IntegrationTest.AllowFailure {
 			return
 		}
 	}
@@ -153,6 +162,9 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecImageRelease(builtImages, build.Stages.ImageRelease)
 		if err != nil {
 			log.Error(err.Error())
+		}
+
+		if !build.Stages.ImageRelease.AllowFailure {
 			return
 		}
 	}
