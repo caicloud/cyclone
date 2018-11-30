@@ -235,6 +235,50 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	return tags, nil
 }
 
+// ListDockerfiles lists the dockerfiles for specified repo.
+func (g *Github) ListDockerfiles(repo string) ([]string, error) {
+	opt := &github.SearchOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	owner := g.scmCfg.Username
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			log.Error(err.Error())
+			return nil, err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
+	q := fmt.Sprintf("FROM filename:Dockerfile repo:%s/%s", owner, repo)
+	var allCodeResult []github.CodeResult
+	for {
+		csr, resp, err := g.client.Search.Code(q, opt)
+		if err != nil {
+			return nil, err
+		}
+
+		allCodeResult = append(allCodeResult, csr.CodeResults...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	crs := []string{}
+	for _, c := range allCodeResult {
+		if *c.Name == "Dockerfile" {
+			crs = append(crs, *c.Path)
+		}
+	}
+
+	return crs, nil
+}
+
 // CreateWebHook creates webhook for specified repo.
 func (g *Github) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
@@ -382,7 +426,7 @@ func (g *Github) GetTemplateType(repo string) (string, error) {
 	languages, r, err := g.client.Repositories.ListLanguages(owner, repo)
 	log.Error(r, err)
 	if err != nil {
-		log.Error("list language failed:%v", err)
+		log.Errorf("list language failed:%v", err)
 		return "", err
 	}
 
@@ -393,7 +437,7 @@ func (g *Github) GetTemplateType(repo string) (string, error) {
 		opt := &github.RepositoryContentGetOptions{}
 		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
 		if err != nil {
-			log.Error("get contents failed:%v", err)
+			log.Errorf("get contents failed:%v", err)
 			return language, nil
 		}
 

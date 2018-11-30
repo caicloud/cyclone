@@ -138,6 +138,21 @@ func ListTags(ctx context.Context, name, repo string) (api.ListResponse, error) 
 	return httputil.ResponseWithList(tags, len(tags)), nil
 }
 
+// ListDockerfiles handles the request to list dockerfiles for SCM repositories.
+func ListDockerfiles(ctx context.Context, name, repo string) (api.ListResponse, error) {
+	_, err := projectManager.GetProject(name)
+	if err != nil {
+		return api.ListResponse{}, err
+	}
+
+	dockerfiles, err := projectManager.ListDockerfiles(name, repo)
+	if err != nil {
+		return api.ListResponse{}, err
+	}
+
+	return httputil.ResponseWithList(dockerfiles, len(dockerfiles)), nil
+}
+
 // GetTemplateType handles the request to get project type for SCM repositories.
 func GetTemplateType(ctx context.Context, name, repo string) (*api.TemplateType, error) {
 	templateType := &api.TemplateType{}

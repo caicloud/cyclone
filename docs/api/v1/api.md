@@ -44,6 +44,7 @@
     - [List SCM Repos](#list-scm-repos)
     - [List SCM Branches](#list-scm-branches)
     - [List SCM Tags](#list-scm-tags)
+    - [List SCM Dockerfiles](#list-scm-dockerfiles)
     - [Get SCM Templatetype](#get-scm-templatetype)
     - [Github webhook](#github-webhook)
     - [Gitlab webhook](#gitlab-webhook)
@@ -145,8 +146,9 @@
 | --- | --- | --- |
 | List | GET `/api/v1/projects/{project}/repos` | [link](#list-scm-repos) |
 | List | GET `/api/v1/projects/{project}/branches?repo=` | [link](#list-scm-branches) |
-| List | GET `/api/v1/projects/{project}/tags?repo=` | WIP, [link](#list-scm-tags) |
-| Get  | GET `/api/v1/projects/{project}/templatetype?repo=` | WIP, [link](#get-scm-templatetype) |
+| List | GET `/api/v1/projects/{project}/tags?repo=` | [link](#list-scm-tags) |
+| List | GET `/api/v1/projects/{project}/dockerfiles?repo=` | [link](#list-scm-dockerfiles) |
+| Get  | GET `/api/v1/projects/{project}/templatetype?repo=` | [link](#get-scm-templatetype) |
 
 ### Webhook API
 
@@ -1266,6 +1268,33 @@ Success:
 {
     "metadata": <PaginationObject>,
     "items": [ <tag>, ... ]
+}
+```
+
+### List SCM Dockerfiles
+
+List all dockerfiles for the repositories can be accessed by this project.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/dockerfiles?repo=`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| repo | Required, repo for which the dockerfiles will be listed. should in format "owner/repo" |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": <PaginationObject>,
+    "items": [ <dockerfile-path>, ... ]
 }
 ```
 
