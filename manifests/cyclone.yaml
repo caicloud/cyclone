@@ -26,6 +26,16 @@ data:
       "limits": {
         "max_workflowruns": 50
       },
+      "default_resource_quota": {
+        "limits": {
+          "cpu": "200m",
+          "memory": "256m"
+        },
+        "requests": {
+          "cpu": "100m",
+          "memory": "128m"
+        }
+      },
       "pvc": "cyclone-server-server-v1-0-cyclone-data",
       "cyclone_server_addr": "native-cyclone-server"
     }

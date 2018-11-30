@@ -48,9 +48,9 @@ func (p *Operator) OnDelete() error {
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
-			return nil
+			return err
 		}
-		return err
+		return nil
 	}
 
 	wfr := origin.DeepCopy()
