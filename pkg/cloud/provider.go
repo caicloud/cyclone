@@ -77,7 +77,7 @@ func InitCloud(autoDiscovery bool) error {
 	_, err := ds.FindCloudByName(DefaultCloudName)
 	if err != nil && err == mgo.ErrNotFound {
 		if autoDiscovery {
-			log.Info("add the default incluster cloud %s", DefaultCloudName)
+			log.Infof("add the default incluster cloud %s", DefaultCloudName)
 
 			namespace, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/" + apiv1.ServiceAccountNamespaceKey)
 			if err != nil {

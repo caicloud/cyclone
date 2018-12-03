@@ -48,7 +48,7 @@ func newCliApp() *cli.App {
 	opts.AddFlags(app)
 
 	app.Action = func(c *cli.Context) error {
-		glog.Info("worker options: %v", opts)
+		glog.Infof("worker options: %v", opts)
 
 		worker := worker.NewWorker(opts)
 		return worker.Run()

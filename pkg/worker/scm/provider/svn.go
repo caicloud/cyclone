@@ -85,11 +85,11 @@ func (s *Svn) Clone(token, url, ref, destPath string) (string, error) {
 
 // GetCommitID implements SCMProvider interface. returns latest commit id.
 func (s *Svn) GetCommitID(repoPath string) (string, error) {
-	log.Infof("About to get commit info in repo path", repoPath)
+	log.Infof("About to get commit info in repo path: %s", repoPath)
 	args := []string{"info", "--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	if err != nil {
-		log.Infof("failed get commit reversion in repo path", repoPath)
+		log.Infof("failed get commit reversion in repo path: %s", repoPath)
 	}
 
 	var id string
@@ -142,7 +142,7 @@ func (s *Svn) GetCommitLog(repoPath string) api.CommitLog {
 // getCommitMessage get the latest commit message.
 func (s *Svn) getCommitMessage(repoPath string) (string, error) {
 	var message string
-	log.Infof("About to get commit message in repo path", repoPath)
+	log.Infof("About to get commit message in repo path: %s", repoPath)
 	args := []string{"log", "-r", "COMMITTED", "--xml", "--non-interactive", "--trust-server-cert-failures", "unknown-ca", "--no-auth-cache"}
 	output, err := executil.RunInDir(repoPath, "svn", args...)
 	if err != nil {
