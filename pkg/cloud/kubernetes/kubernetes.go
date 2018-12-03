@@ -17,7 +17,9 @@ limitations under the License.
 package kubernetes
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	log "github.com/golang/glog"
@@ -29,6 +31,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/cloud"
+	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/wait"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
@@ -214,12 +217,14 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 				pod.Spec.Volumes = []apiv1.Volume{
 					apiv1.Volume{
 						Name: volumeName,
+						VolumeSource: apiv1.VolumeSource{
+							PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+								ClaimName: cacheVolume,
+							},
+						},
 					},
 				}
 
-				pod.Spec.Volumes[0].PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
-					ClaimName: cacheVolume,
-				}
 			} else {
 				// Just log error and let the pipeline to run in non-cache mode.
 				log.Errorf("Can not use cache volume %s as its status is %v", cacheVolume, pvc.Status.Phase)
@@ -228,6 +233,21 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 			// Just log error and let the pipeline to run in non-cache mode.
 			log.Errorf("Can not use cache volume %s as fail to get it: %v", cacheVolume, err)
 		}
+	}
+
+	// set ENV_CERT_DATA Env if the RegistryCertPath exist.
+	if fileutil.FileExists(cloud.RegistryCertPath) {
+		certs, err := ioutil.ReadFile(cloud.RegistryCertPath)
+		if err != nil {
+			log.Warningf("read registry cert failed: %v", err)
+		}
+
+		certEnv := apiv1.EnvVar{
+			Name:  cloud.ENV_CERT_DATA,
+			Value: base64.StdEncoding.EncodeToString(certs),
+		}
+
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, certEnv)
 	}
 
 	check := func() (bool, error) {
