@@ -426,7 +426,7 @@ func (g *Github) GetTemplateType(repo string) (string, error) {
 	languages, r, err := g.client.Repositories.ListLanguages(owner, repo)
 	log.Error(r, err)
 	if err != nil {
-		log.Errorf("list language failed:%v", err)
+		log.Errorf("list language failed: %v", err)
 		return "", err
 	}
 
@@ -437,7 +437,7 @@ func (g *Github) GetTemplateType(repo string) (string, error) {
 		opt := &github.RepositoryContentGetOptions{}
 		_, directories, _, err := g.client.Repositories.GetContents(owner, repo, "", opt)
 		if err != nil {
-			log.Errorf("get contents failed:%v", err)
+			log.Errorf("get contents failed: %v", err)
 			return language, nil
 		}
 

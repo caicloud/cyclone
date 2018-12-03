@@ -212,7 +212,7 @@ func (c *dockerCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOption
 
 	container, err := c.client.ContainerCreate(ctx, config, hostConfig, nil, info.Name)
 	if err != nil {
-		log.Error("fail to create container as %v", err)
+		log.Errorf("fail to create container as %v", err)
 		return nil, err
 	}
 
@@ -230,7 +230,7 @@ func (c *dockerCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOption
 
 func (c *dockerCloud) Ping() error {
 	if _, err := c.client.Info(context.Background()); err != nil {
-		log.Error("fail to ping Docker cloud as %v", err)
+		log.Errorf("fail to ping Docker cloud as %v", err)
 		return err
 	}
 

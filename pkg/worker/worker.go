@@ -51,7 +51,7 @@ func NewWorker(opts *options.WorkerOptions) *Worker {
 
 // Run starts the worker
 func (worker *Worker) Run() error {
-	log.Info("worker start with options: %v", worker.Options)
+	log.Infof("worker start with options: %v", worker.Options)
 
 	// Get event for cyclone server
 	eventID := worker.Options.EventID
@@ -203,7 +203,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		log.Errorf("set event result err: %v", err)
 		return
 	}
-	log.Infof("send event %s to server", event)
+	log.Infof("send event %+v to server", event)
 }
 
 func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStageName]struct{} {
