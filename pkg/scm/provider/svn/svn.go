@@ -69,6 +69,10 @@ func (s *SVN) ListTags(repo string) ([]string, error) {
 	return nil, errors.ErrorNotImplemented.Error("list svn tags")
 }
 
+func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
+	return nil, errors.ErrorNotImplemented.Error("list svn dockerfiles")
+}
+
 func (s *SVN) CheckToken() bool {
 	return true
 }

@@ -67,7 +67,17 @@ func init() {
 		Project: &api.Project{
 			Registry: &registry,
 		},
-		Pipeline: &api.Pipeline{},
+		Pipeline: &api.Pipeline{
+			Build: &api.Build{
+				Stages: &api.BuildStages{
+					UnitTest:        &api.UnitTestStage{},
+					Package:         &api.PackageStage{},
+					CodeScan:        &api.CodeScanStage{},
+					IntegrationTest: &api.IntegrationTestStage{},
+					ImageRelease:    &api.ImageReleaseStage{},
+				},
+			},
+		},
 		PipelineRecord: &api.PipelineRecord{
 			PerformParams: &api.PipelinePerformParams{
 				Ref: "refs/heads/master",

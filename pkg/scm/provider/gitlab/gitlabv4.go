@@ -133,6 +133,43 @@ func (g *GitlabV4) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListDockerfiles lists the Dockerfiles for specified repo.
+func (g *GitlabV4) ListDockerfiles(repo string) ([]string, error) {
+	recursive := true
+	opt := &gitlab.ListTreeOptions{
+		Recursive: &recursive,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	treeNodes := []*gitlab.TreeNode{}
+	for {
+		treeNode, resp, err := g.client.Repositories.ListTree(repo, opt)
+		if err != nil {
+			log.Errorf("Fail to list dockerfile for %s", repo)
+			return nil, err
+		}
+
+		treeNodes = append(treeNodes, treeNode...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+
+		opt.Page = resp.NextPage
+	}
+
+	files := []string{}
+	for _, t := range treeNodes {
+		if t.Type == "blob" && t.Name == "Dockerfile" {
+			files = append(files, t.Path)
+		}
+	}
+
+	return files, nil
+}
+
 // CreateWebHook creates webhook for specified repo.
 func (g *GitlabV4) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {

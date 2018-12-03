@@ -123,6 +123,16 @@ func (g *GitlabV3) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListDockerfiles lists the Dockerfiles for specified repo.
+func (g *GitlabV3) ListDockerfiles(repo string) ([]string, error) {
+	// List Dockerfiles in a project with gitlab v3 api is very inefficient.
+	// There is not a proper api can be used to do this with GitLab v3.
+	//
+	// FYI:
+	// https://stackoverflow.com/questions/25127695/search-filenames-with-gitlab-api
+	return nil, errors.ErrorNotImplemented.Error("list gitlab v3 dockerfiles")
+}
+
 // CreateWebHook creates webhook for specified repo.
 func (g *GitlabV3) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
