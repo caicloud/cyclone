@@ -1273,7 +1273,7 @@ Success:
 
 ### List SCM Dockerfiles
 
-List all dockerfiles for the repositories can be accessed by this project.
+List all dockerfiles for the repository.
 
 **Request**
 
@@ -1283,7 +1283,7 @@ Note:
 
 | Field | Note |
 | --- | --- |
-| repo | Required, repo for which the dockerfiles will be listed. should in format "owner/repo" |
+| repo | Required, all dockerfiles in the repository will be listed. should in format of '{owner}/{repo}' |
 
 **Response**
 

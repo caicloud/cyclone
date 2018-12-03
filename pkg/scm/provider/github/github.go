@@ -169,7 +169,7 @@ func (g *Github) ListBranches(repo string) ([]string, error) {
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")
 		if len(parts) != 2 {
-			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			err := fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repo)
 			log.Error(err.Error())
 			return nil, err
 		}
@@ -207,7 +207,7 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")
 		if len(parts) != 2 {
-			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			err := fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repo)
 			log.Error(err.Error())
 			return nil, err
 		}
@@ -247,7 +247,7 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	if strings.Contains(repo, "/") {
 		parts := strings.Split(repo, "/")
 		if len(parts) != 2 {
-			err := fmt.Errorf("repo %s is not correct, only supports one left slash", repo)
+			err := fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repo)
 			log.Error(err.Error())
 			return nil, err
 		}
@@ -282,7 +282,7 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 // CreateWebHook creates webhook for specified repo.
 func (g *Github) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
-		return fmt.Errorf("The webhook %v is not correct", webHook)
+		return fmt.Errorf("the webhook %v is not correct", webHook)
 	}
 
 	// Hook name must be passed as "web".
