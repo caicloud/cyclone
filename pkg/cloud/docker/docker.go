@@ -18,8 +18,10 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,6 +39,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/cloud"
+	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
@@ -177,6 +180,17 @@ func (c *dockerCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOption
 			"cyclone/pipelineName": opts.PipelineName,
 			"cyclone/recordID":     eventID,
 		},
+	}
+
+	// set ENV_CERT_DATA Env if the RegistryCertPath exist.
+	if fileutil.FileExists(cloud.RegistryCertPath) {
+		certs, err := ioutil.ReadFile(cloud.RegistryCertPath)
+		if err != nil {
+			log.Warningf("read registry cert failed: %v", err)
+		}
+
+		config.Env = append(config.Env,
+			fmt.Sprintf("%s=%s", cloud.ENV_CERT_DATA, base64.StdEncoding.EncodeToString(certs)))
 	}
 
 	hostConfig := &container.HostConfig{
