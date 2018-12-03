@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -548,6 +549,50 @@ func (m *PodBuilder) InjectEnvs() error {
 	return nil
 }
 
+// applyQuota applies default quota configured to a list of containers.
+func applyQuota(containers []corev1.Container) []corev1.Container {
+	var results []corev1.Container
+	for _, c := range containers {
+		// If default limits are set in configuration, we would apply them
+		// to containers. While for containers already have limits specified,
+		// we will still use the specified values.
+		for k, v := range controller.Config.ResourceRequirements.Limits {
+			if c.Resources.Limits == nil {
+				c.Resources.Limits = make(map[corev1.ResourceName]resource.Quantity)
+			}
+
+			if _, ok := c.Resources.Limits[k]; !ok {
+				c.Resources.Limits[k] = v
+			}
+		}
+
+		// If default requests are set in configuration, we would apply them
+		// to containers. While for containers already have requests specified,
+		// we will still use the specified values.
+		for k, v := range controller.Config.ResourceRequirements.Requests {
+			if c.Resources.Requests == nil {
+				c.Resources.Requests = make(map[corev1.ResourceName]resource.Quantity)
+			}
+
+			if _, ok := c.Resources.Requests[k]; !ok {
+				c.Resources.Requests[k] = v
+			}
+		}
+
+		results = append(results, c)
+	}
+
+	return results
+}
+
+// ApplyQuota applies default quota to all containers without quota specified in the pod.
+func (m *PodBuilder) ApplyQuota() error {
+	m.pod.Spec.InitContainers = applyQuota(m.pod.Spec.InitContainers)
+	m.pod.Spec.Containers = applyQuota(m.pod.Spec.Containers)
+
+	return nil
+}
+
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
@@ -595,6 +640,11 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	}
 
 	err = m.InjectEnvs()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ApplyQuota()
 	if err != nil {
 		return nil, err
 	}

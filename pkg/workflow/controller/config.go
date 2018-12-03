@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-
 	log "github.com/sirupsen/logrus"
-	api_v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 )
 
 const (
@@ -38,6 +38,8 @@ type ControllerConfig struct {
 	GC GCConfig `json:"gc"`
 	// Limits of each resources should be retained
 	Limits LimitsConfig `json:"limits"`
+	// Default resource requirements for containers in stage Pod
+	ResourceRequirements corev1.ResourceRequirements `json:"default_resource_quota"`
 	// The PVC used to transfer artifacts in WorkflowRun
 	PVC string `json:"pvc"`
 	// Address of the Cyclone Server
@@ -65,7 +67,7 @@ type LimitsConfig struct {
 
 var Config ControllerConfig
 
-func LoadConfig(cm *api_v1.ConfigMap) error {
+func LoadConfig(cm *corev1.ConfigMap) error {
 	data, ok := cm.Data[ConfigFileKey]
 	if !ok {
 		fmt.Errorf("ConfigMap '%s' doesn't have data key '%s'", cm.Name, ConfigFileKey)
