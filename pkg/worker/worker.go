@@ -79,7 +79,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	performParams := event.PipelineRecord.PerformParams
 	performStages := performParams.Stages
 	stageSet := convertPerformStageSet(performStages)
-	log.Infof("[Debug] stage set :%v", stageSet)
+	log.Infof("stage set :%v", stageSet)
 	build := pipeline.Build
 
 	opts := worker.Options
