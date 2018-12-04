@@ -29,11 +29,11 @@ data:
       "default_resource_quota": {
         "limits": {
           "cpu": "200m",
-          "memory": "256m"
+          "memory": "256Mi"
         },
         "requests": {
           "cpu": "100m",
-          "memory": "128m"
+          "memory": "128Mi"
         }
       },
       "pvc": "cyclone-server-server-v1-0-cyclone-data",
