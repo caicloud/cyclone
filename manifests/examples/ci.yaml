@@ -17,7 +17,7 @@ spec:
   persistent:
     pvc: cyclone-server-server-v1-0-cyclone-data
     path: workflowruns/resources
-  pullPolicy: Always
+    pullPolicy: Always
   parameters:
   - name: GIT_URL
     value: http://192.168.21.100:10081/root/test.git
