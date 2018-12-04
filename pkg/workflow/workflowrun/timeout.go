@@ -9,6 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 
@@ -114,6 +115,9 @@ func (m *TimeoutProcessor) process() {
 		log.WithField("wfr", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
 		wfr, err := m.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
 		if err != nil {
+			if errors.IsNotFound(err) {
+				delete(m.items, i.String())
+			}
 			log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			continue
 		}
