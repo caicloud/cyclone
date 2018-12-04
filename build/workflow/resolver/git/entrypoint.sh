@@ -40,6 +40,11 @@ if [ -z ${GIT_TOKEN+x} ]; then echo "WARN: GIT_TOKEN is unset"; fi
 
 cd $WORKDIR/data
 
+# Get repo name from the url. For example,
+# https://xxx@github.com/caicloud/cyclone.git --> cyclone
+TMP=${GIT_URL##*/}
+REPO=${TMP%.git}
+
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/data/${WORKFLOWRUN_NAME}-pulling.lock
 
@@ -70,7 +75,7 @@ wrapPull() {
         # If flock command return 0, it means lock is acquired and can pull resources,
         # otherwise lock is acquired by others and we should wait.
         result=$(flock -xn $PULLING_LOCK -c "echo ok; touch /tmp/pulling.lock" || echo fail)
-        if [ result == "ok" ]; then
+        if [ $result == "ok" ]; then
             echo "Got the lock, start to pulling..."
             pull
         else
@@ -85,11 +90,6 @@ wrapPull() {
 }
 
 pull() {
-    # Get repo name from the url. For example,
-    # https://xxx@github.com/caicloud/cyclone.git --> cyclone
-    TMP=${GIT_URL##*/}
-    REPO=${TMP%.git}
-
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
     if [ -e $WORKDIR/data/$REPO ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
         # Ensure existed data come from the git repo
