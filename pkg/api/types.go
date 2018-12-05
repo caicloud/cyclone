@@ -245,7 +245,7 @@ type ScanSonarQubeConfig struct {
 	SourcePath    string `bson:"sourcePath,omitempty" json:"sourcePath,omitempty" description:"path of the code used to be scanned"`
 	EncodingStyle string `bson:"encodingStyle,omitempty" json:"encodingStyle,omitempty" description:"encoding style of the source code"`
 	Language      string `bson:"language,omitempty" json:"language,omitempty" description:"language of the source code"`
-	Threshold     string `bson:"threshold,omitempty" json:"threshold,omitempty" description:"sonarqube threshold"`
+	Threshold     int    `bson:"threshold,omitempty" json:"threshold,omitempty" description:"sonarqube threshold"`
 }
 
 // PackageStage represents the config of package stage.
@@ -503,8 +503,9 @@ type ImageReleaseTaskStatus struct {
 
 // ScanStatusSonarQube including status of sonarqube scanning result overview.
 type ScanStatusSonarQube struct {
-	// including 'reliability_rating, sqale_rating, security_rating, coverage, duplicated_lines_density'
+	// including 'reliability_rating, sqale_rating, security_rating, coverage, duplicated_lines_density, quality_gate_details'
 	Measures     []*SonarMeasure `bson:"measures,omitempty" json:"measures,omitempty" description:"measures of this project from sonarqube"`
+	QGStatus     string          `bson:"qgstatus,omitempty" json:"qgstatus,omitempty" description:"quality gate status of this project from sonarqube"`
 	OverviewLink string          `bson:"overviewLink,omitempty" json:"overviewLink,omitempty" description:"link to sonarqube result website"`
 }
 
@@ -822,6 +823,9 @@ const (
 
 	// NodeRepoType represents the repository type NodeJS.
 	NodeRepoType string = "NodeJS"
+
+	// GolangType represents Go language.
+	GolangType string = "Go"
 )
 
 // NotificationContent contains some pipeline record infomation.

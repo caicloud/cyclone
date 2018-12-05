@@ -125,3 +125,30 @@ func TestUpdateRecordStageStatus(t *testing.T) {
 		t.Errorf("expect error to be nil, but got %v", err)
 	}
 }
+
+func Test_findGoCoverprofile(t *testing.T) {
+	testCases := map[string]struct {
+		commands []string
+		file     string
+	}{
+		"find-success-1": {
+			[]string{"xxx", "go test -cover $(go list ./...) -coverprofile coverage.out -v", ""},
+			"coverage.out",
+		},
+		"find-success-2": {
+			[]string{"xxx", "go test -cover $(go list ./...) -coverprofile=coverage.out -v"},
+			"coverage.out",
+		},
+		"not-found": {
+			[]string{"xxx", "go test -cover $(go list ./...) -v"},
+			"",
+		},
+	}
+
+	for d, tc := range testCases {
+		result := findGoCoverprofile(tc.commands)
+		if result != tc.file {
+			t.Errorf("%s fails to find go coverprofile: expected %s; but got %s", d, tc.file, result)
+		}
+	}
+}

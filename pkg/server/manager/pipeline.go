@@ -31,6 +31,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
+	"github.com/caicloud/cyclone/pkg/integrate"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
@@ -133,12 +134,51 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 		}
 	}()
 
+	// set quality gate if codeScan is turned on.
+	codeScan := pipeline.Build.Stages.CodeScan
+	if codeScan != nil && codeScan.SonarQube != nil && codeScan.SonarQube.Config != nil &&
+		codeScan.SonarQube.Config.Threshold > 0 {
+		setSonarQualityGate(m.dataStore, pipeline)
+	}
+
 	createdPipeline, err := m.dataStore.CreatePipeline(pipeline)
 	if err != nil {
 		return nil, err
 	}
 
 	return createdPipeline, nil
+}
+
+// setSonarQualityGate create the project if it not exist,
+// then set it's quality gate to specific value.
+func setSonarQualityGate(ds *store.DataStore, pipeline *api.Pipeline) error {
+	itName := pipeline.Build.Stages.CodeScan.SonarQube.Name
+	gateID := pipeline.Build.Stages.CodeScan.SonarQube.Config.Threshold
+	integration, err := ds.GetIntegration(itName)
+	if err != nil {
+		return err
+	}
+
+	sonar := integration.SonarQube
+	if sonar == nil {
+		return fmt.Errorf("get sonar info failed")
+	}
+
+	err = integrate.CreateProject(api.IntegrationTypeSonar, sonar.Address, sonar.Token, pipeline.ID, pipeline.Alias)
+	if strings.Contains(err.Error(), "key already exists") {
+		// If project already exist, will return:
+		// {"errors":[{"msg":"Could not create Project, key already exists: project-1"}]}
+		log.Infof("Project %s(%s) already exists.", pipeline.Alias, pipeline.ID)
+	} else {
+		return err
+	}
+
+	err = integrate.SetQualityGate(api.IntegrationTypeSonar, sonar.Address, sonar.Token, pipeline.ID, gateID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createWebhook(pipeline *api.Pipeline, provider scm.SCMProvider, scmType api.SCMType, mainRepoUrl, pipelineID string) error {
@@ -350,6 +390,14 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	}
 
 	pipeline.AutoTrigger = newPipeline.AutoTrigger
+
+	// set quality gate if codeScan is turned on.
+	cs := pipeline.Build.Stages.CodeScan
+	newcs := newPipeline.Build.Stages.CodeScan
+	if newcs != nil && newcs.SonarQube != nil && newcs.SonarQube.Config != nil && newcs.SonarQube.Config.Threshold > 0 &&
+		(cs == nil || cs.SonarQube.Config.Threshold != newcs.SonarQube.Config.Threshold) {
+		setSonarQualityGate(m.dataStore, newPipeline)
+	}
 
 	// Update the properties of the pipeline.
 	// TODO (robin) Whether need a method for this merge?

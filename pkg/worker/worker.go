@@ -25,10 +25,10 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
+	_ "github.com/caicloud/cyclone/pkg/integrate/provider/sonar"
 	"github.com/caicloud/cyclone/pkg/scm"
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
-	_ "github.com/caicloud/cyclone/pkg/worker/integrate/provider"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/stage"
 )
