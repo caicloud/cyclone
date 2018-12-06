@@ -18,11 +18,13 @@ package stage
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 )
 
@@ -160,4 +162,26 @@ func updateEvent(c cycloneserver.CycloneServerClient, event *api.Event, stage ap
 	}
 
 	return c.SendEvent(event)
+}
+
+// findGoCoverprofile find golang coverprofile from commands.
+func findGoCoverprofile(commands []string) string {
+	var file string
+	for _, command := range commands {
+		// 'go test ... -coverprofile=xxx ...' or 'go test ... -coverprofile xxx ...'
+		if strings.Contains(command, "go test") && strings.Contains(command, "-coverprofile") {
+			i := strings.Index(command, "-coverprofile")
+			tmp := command[i+len("-coverprofile"):]
+			commandFields := strings.Fields(tmp)
+			file = strings.TrimPrefix(commandFields[0], "=")
+		}
+	}
+	return file
+}
+
+// CopyFile cp file from src to dest.
+func CopyFile(dir, src, dest string) (string, error) {
+	args := []string{src, dest}
+	output, err := executil.RunInDir(dir, "cp", args...)
+	return string(output), err
 }

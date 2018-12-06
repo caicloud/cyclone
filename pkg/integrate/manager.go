@@ -4,14 +4,25 @@ import (
 	"fmt"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
 // ITGProvider is an interface for ingetration.
 type ITGProvider interface {
 	// CodeScan execute code analysis.
 	CodeScan(url, token string, config *CodeScanConfig) (string, error)
+
 	// SetCodeScanStatus sets status for CodeScanStageStatus.
 	SetCodeScanStatus(url, token string, pid string, s *api.CodeScanStageStatus) error
+
+	// CreateProject create a project.
+	CreateProject(url, token string, projectKey, projectName string) error
+
+	// SetQualityGate sets the project's quality gate.
+	SetQualityGate(url, token string, projectKey string, gateId int) error
+
+	// Validate validate the token.
+	Validate(url, token string) (bool, error)
 }
 
 // itgProviders represents the set of integration providers.
@@ -46,7 +57,7 @@ type CodeScanConfig struct {
 	SourcePath    string   `bson:"sourcePath,omitempty" json:"sourcePath,omitempty"`
 	EncodingStyle string   `bson:"encodingStyle,omitempty" json:"encodingStyle,omitempty"`
 	Language      string   `bson:"language,omitempty" json:"language,omitempty"`
-	Threshold     string   `bson:"threshold,omitempty" json:"threshold,omitempty"`
+	Threshold     int      `bson:"threshold,omitempty" json:"threshold,omitempty"`
 	ExtensionAgrs []string `bson:"extensionArgs,omitempty" json:"extensionArgs,omitempty"`
 	ProjectName   string   `bson:"projectName,omitempty" json:"projectName,omitempty"`
 	ProjectKey    string   `bson:"projectKey,omitempty" json:"projectKey,omitempty"`
@@ -74,4 +85,47 @@ func SetCodeScanStatus(itype api.IntegrationType, url, token string, projectID s
 	}
 
 	return p.SetCodeScanStatus(url, token, projectID, s)
+}
+
+// CreateProject create a project.
+func CreateProject(itype api.IntegrationType, url, token string, projectKey, projectName string) error {
+	p, err := GetProvider(itype)
+	if err != nil {
+		return err
+	}
+	return p.CreateProject(url, token, projectKey, projectName)
+}
+
+// SetQualityGate sets the project's quality gate.
+func SetQualityGate(itype api.IntegrationType, url, token string, projectKey string, gateId int) error {
+	p, err := GetProvider(itype)
+	if err != nil {
+		return err
+	}
+	return p.SetQualityGate(url, token, projectKey, gateId)
+}
+
+// Validate validate the token.
+func Validate(it *api.Integration) (bool, error) {
+	p, err := GetProvider(it.Type)
+	if err != nil {
+		return false, err
+	}
+
+	var url, token string
+
+	switch it.Type {
+	case api.IntegrationTypeSonar:
+		if it.SonarQube == nil {
+			return false, fmt.Errorf("integration type is SonarQube, so SonarQube info can not be empty")
+		}
+		url = it.SonarQube.Address
+		token = it.SonarQube.Token
+
+	default:
+		return false, errors.ErrorNotImplemented.Error(
+			fmt.Sprintf("Validate token for %s type integration", it.Type))
+	}
+
+	return p.Validate(url, token)
 }

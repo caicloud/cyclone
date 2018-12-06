@@ -22,7 +22,9 @@ import (
 	"github.com/caicloud/nirvana/log"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/integrate"
 	"github.com/caicloud/cyclone/pkg/store"
+	"github.com/caicloud/cyclone/pkg/util/http/errors"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
 	slug "github.com/caicloud/cyclone/pkg/util/slugify"
 )
@@ -72,7 +74,12 @@ func (m *integrationManager) CreateIntegration(i *api.Integration) (*api.Integra
 		}
 	}
 
-	// TODO check auth info
+	// check auth info
+	valid, err := integrate.Validate(i)
+	if err != nil || !valid {
+		log.Errorf("Valid not pass, valid:%s, error:%v", valid, err)
+		return nil, errors.ErrorAuthenticationFailed.Error()
+	}
 
 	if err := m.ds.InsertIntegration(i); err != nil {
 		return nil, err
@@ -96,7 +103,12 @@ func (m *integrationManager) UpdateIntegration(name string, ni *api.Integration)
 		i.SonarQube = ni.SonarQube
 	}
 
-	// TODO check auth info
+	// check auth info
+	valid, err := integrate.Validate(i)
+	if err != nil || !valid {
+		log.Errorf("Valid not pass, valid:%s, error:%v", valid, err)
+		return nil, errors.ErrorAuthenticationFailed.Error()
+	}
 
 	if err = m.ds.UpdateIntegration(i); err != nil {
 		return nil, err

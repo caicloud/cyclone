@@ -49,9 +49,8 @@ var (
 
 	// ErrorAuthenticationRequired defines error that authentication not provided.
 	ErrorAuthenticationRequired = nerror.Unauthorized.Build(ReasonRequest, "authentication required")
-
-	// ErrorInternalTypeError defines internal type error
-	//ErrorInternalTypeError = nerror.InternalServerError.Build(ReasonInternal, "type of ${resource} should be ${expect}, but got ${real}")
+	// ErrorAuthenticationFailed defines error that authentication failed.
+	ErrorAuthenticationFailed = nerror.Unauthorized.Build("ReasonAuthenticationFailed", "authentication failed")
 
 	// ErrorUnknownNotFoundError defines not found error that we can't find a reason
 	ErrorUnknownNotFoundError = nerror.InternalServerError.Build(ReasonInternal, "content ${content} not found, may be it's a serious error")

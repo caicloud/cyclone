@@ -27,8 +27,8 @@ import (
 	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/common"
 	pathutil "github.com/caicloud/cyclone/pkg/util/path"
-	"github.com/caicloud/cyclone/pkg/worker/common"
 )
 
 const (

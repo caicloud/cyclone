@@ -27,12 +27,13 @@ import (
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/docker"
+	itg "github.com/caicloud/cyclone/pkg/integrate"
+	"github.com/caicloud/cyclone/pkg/junit"
 	osutil "github.com/caicloud/cyclone/pkg/util/os"
-	pathutil "github.com/caicloud/cyclone/pkg/util/path"
+	"github.com/caicloud/cyclone/pkg/util/path"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
-	itg "github.com/caicloud/cyclone/pkg/worker/integrate"
-	"github.com/caicloud/cyclone/pkg/worker/junit"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
 
@@ -237,10 +238,19 @@ func (sm *stageManager) ExecPackage(builderImage *api.BuilderImage, buildInfo *a
 		}
 	}
 
+	// find go cover profile
+	goCoverFile := findGoCoverprofile(cmds)
+	if goCoverFile != "" {
+		// copy it to go_test_report.cyclone
+		cpOutput, errcp := CopyFile(common.CloneDir, goCoverFile, common.GoTestReport)
+		log.Warningf("cp golang test report file, error: %v", errcp)
+		log.Warningf("cp golang test report file, output: %v", cpOutput)
+	}
 	return nil
 }
 
 func (sm *stageManager) ExecCodeScan(stage *api.CodeScanStage) (err error) {
+	log.Info("Start to execute code scan.")
 	errChan := make(chan error)
 	defer func() {
 		errChan <- err
@@ -269,7 +279,6 @@ func (sm *stageManager) ExecCodeScan(stage *api.CodeScanStage) (err error) {
 		EncodingStyle: sonar.Config.EncodingStyle,
 		Language:      sonar.Config.Language,
 		Threshold:     sonar.Config.Threshold,
-		// TODO detect code coverage file path.
 		ExtensionAgrs: []string{},
 		ProjectKey:    event.Pipeline.ID,
 		ProjectName:   event.Pipeline.Alias,
@@ -292,7 +301,7 @@ func (sm *stageManager) ExecCodeScan(stage *api.CodeScanStage) (err error) {
 		return err
 	}
 
-	log.Info("Execute cede scan successfully.")
+	log.Info("Execute code scan successfully.")
 	return nil
 }
 
