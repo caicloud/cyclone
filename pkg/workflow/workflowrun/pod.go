@@ -147,10 +147,12 @@ func (m *PodBuilder) CreateVolumes() error {
 		},
 	})
 
-	// Add common PVC volume to pod
-	if n := m.CreatePVCVolume(common.DefaultPvVolumeName, controller.Config.PVC); n != common.DefaultPvVolumeName {
-		log.WithField("volume", n).Error("Another volume already exist for the PVC: ", controller.Config.PVC)
-		return fmt.Errorf("%s already in another volume %s", controller.Config.PVC, n)
+	// Add common PVC volume to pod if configured.
+	if controller.Config.PVC != "" {
+		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, controller.Config.PVC); n != common.DefaultPvVolumeName {
+			log.WithField("volume", n).Error("Another volume already exist for the PVC: ", controller.Config.PVC)
+			return fmt.Errorf("%s already in another volume %s", controller.Config.PVC, n)
+		}
 	}
 
 	// Create hostPath volume for /var/run/docker.sock
@@ -166,20 +168,22 @@ func (m *PodBuilder) CreateVolumes() error {
 	})
 
 	// Create secret volume for use in resource resolvers.
-	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: common.DockerConfigJsonVolume,
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName: common.DefaultSecretName,
-				Items: []corev1.KeyToPath{
-					{
-						Key:  common.DockerConfigJsonFile,
-						Path: common.DockerConfigJsonFile,
+	if controller.Config.Secret != "" {
+		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+			Name: common.DockerConfigJsonVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: controller.Config.Secret,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  common.DockerConfigJsonFile,
+							Path: common.DockerConfigJsonFile,
+						},
 					},
 				},
 			},
-		},
-	})
+		})
+	}
 
 	return nil
 }
@@ -209,6 +213,16 @@ func (m *PodBuilder) CreatePVCVolume(volumeName, pvc string) string {
 	return volumeName
 }
 
+// CreateEmptyDirVolume creats a EmptyDir volume for the pod with the given name
+func (m *PodBuilder) CreateEmptyDirVolume(volumeName string) {
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: volumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+}
+
 // ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
 func (m *PodBuilder) ResolveInputResources() error {
@@ -220,9 +234,9 @@ func (m *PodBuilder) ResolveInputResources() error {
 			return err
 		}
 
-		// Volumed to hold resource data, by default, it's the common PVC in Cyclone, but user can
+		// Volume to hold resource data, by default, it's the common PVC in Cyclone, but user can
 		// also specify it in the resource spec.
-		pvc := common.DefaultPvVolumeName
+		volumeName := common.DefaultPvVolumeName
 
 		// Sub-path in the PVC to hold resource data
 		subPath := common.ResourcePath(m.wfr.Name, r.Name)
@@ -234,7 +248,11 @@ func (m *PodBuilder) ResolveInputResources() error {
 		persistent := resource.Spec.Persistent
 		if persistent != nil {
 			subPath = persistent.Path
-			pvc = m.CreatePVCVolume(common.InputResourceVolumeName(r.Name), persistent.PVC)
+			volumeName = m.CreatePVCVolume(common.InputResourceVolumeName(r.Name), persistent.PVC)
+		} else if controller.Config.PVC == "" {
+			volumeName = GetResourceVolumeName(resource.Name)
+			m.CreateEmptyDirVolume(volumeName)
+			subPath = ""
 		}
 
 		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
@@ -277,7 +295,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{
 				{
-					Name:      pvc,
+					Name:      volumeName,
 					MountPath: common.ResolverDefaultDataPath,
 					SubPath:   subPath,
 				},
@@ -291,7 +309,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 			// We only mount resource to workload containers, sidecars are excluded.
 			if common.OnlyWorkload(c.Name) {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-					Name:      pvc,
+					Name:      volumeName,
 					MountPath: r.Path,
 					SubPath:   subPath,
 				})
@@ -362,18 +380,21 @@ func (m *PodBuilder) ResolveOutputResources() error {
 					SubPath:   fmt.Sprintf("resources/%s", resource.Name),
 				},
 			},
-			// TODO(ChenDe): Used for develop purpose only, remove it.
-			ImagePullPolicy: corev1.PullAlways,
+			ImagePullPolicy: corev1.PullIfNotPresent,
 		}
 
 		if resource.Spec.Type == v1alpha1.ImageResourceType {
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
 				Name:      common.DockerSockVolume,
 				MountPath: common.DockerSockPath,
-			}, corev1.VolumeMount{
-				Name:      common.DockerConfigJsonVolume,
-				MountPath: common.DockerConfigPath,
 			})
+
+			if controller.Config.Secret != "" {
+				container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+					Name:      common.DockerConfigJsonVolume,
+					MountPath: common.DockerConfigPath,
+				})
+			}
 		}
 
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
@@ -384,6 +405,10 @@ func (m *PodBuilder) ResolveOutputResources() error {
 
 // ResolveInputArtifacts mount each input artifact from PVC.
 func (m *PodBuilder) ResolveInputArtifacts() error {
+	if controller.Config.PVC == "" && len(m.stg.Spec.Pod.Inputs.Artifacts) > 0 {
+		return fmt.Errorf("artifacts not supported when no PVC provided, but %d input artifacts found", len(m.stg.Spec.Pod.Inputs.Artifacts))
+	}
+
 	// Bind input artifacts to workload containers.
 	// First find StageItem from Workflow spec, we will get artifacts binding info from it.
 	var wfStage *v1alpha1.StageItem
@@ -444,18 +469,20 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 	return nil
 }
 
-// AddVolumeMounts add common PVC and coordinator emptyDir volume to workload containers
+// AddVolumeMounts add common PVC  to workload containers
 func (m *PodBuilder) AddVolumeMounts() error {
-	var containers []corev1.Container
-	for _, c := range m.pod.Spec.Containers {
-		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-			Name:      common.DefaultPvVolumeName,
-			MountPath: common.StageMountPath,
-			SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
-		})
-		containers = append(containers, c)
+	if controller.Config.PVC != "" {
+		var containers []corev1.Container
+		for _, c := range m.pod.Spec.Containers {
+			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+				Name:      common.DefaultPvVolumeName,
+				MountPath: common.StageMountPath,
+				SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
+			})
+			containers = append(containers, c)
+		}
+		m.pod.Spec.Containers = containers
 	}
-	m.pod.Spec.Containers = containers
 
 	return nil
 }
@@ -501,11 +528,6 @@ func (m *PodBuilder) AddCoordinator() error {
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name:      common.DefaultPvVolumeName,
-				MountPath: common.CoordinatorWorkspacePath + "artifacts",
-				SubPath:   common.ArtifactsPath(m.wfr.Name, m.stage),
-			},
-			{
 				Name:      common.DockerSockVolume,
 				MountPath: common.DockerSockPath,
 			},
@@ -514,8 +536,14 @@ func (m *PodBuilder) AddCoordinator() error {
 				MountPath: common.CoordinatorResolverPath,
 			},
 		},
-		// TODO(ChenDe): Used for develop purpose only, remove it.
-		ImagePullPolicy: corev1.PullAlways,
+		ImagePullPolicy: corev1.PullIfNotPresent,
+	}
+	if controller.Config.PVC != "" {
+		coordinator.VolumeMounts = append(coordinator.VolumeMounts, corev1.VolumeMount{
+			Name:      common.DefaultPvVolumeName,
+			MountPath: common.CoordinatorWorkspacePath + "artifacts",
+			SubPath:   common.ArtifactsPath(m.wfr.Name, m.stage),
+		})
 	}
 	m.pod.Spec.Containers = append(m.pod.Spec.Containers, coordinator)
 
