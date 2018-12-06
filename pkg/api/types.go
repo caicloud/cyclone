@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 )
@@ -667,6 +668,8 @@ type CloudKubernetes struct {
 	Username        string           `json:"username,omitempty" bson:"username"`
 	Password        string           `json:"password,omitempty" bson:"password"`
 	TLSClientConfig *TLSClientConfig `json:"tlsClientConfig,omitempty" bson:"tlsClientConfig"`
+
+	KubeConfig *clientcmdapi.Config `json:"kubeConfig,omitempty"`
 }
 
 // +k8s:deepcopy-gen=true

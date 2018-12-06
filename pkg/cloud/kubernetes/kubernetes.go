@@ -27,6 +27,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
@@ -71,20 +72,32 @@ func NewK8sCloud(c *api.Cloud) (cloud.Provider, error) {
 }
 
 func newK8sCloud(c *api.CloudKubernetes) (cloud.Provider, error) {
-	if c.TLSClientConfig == nil {
-		c.TLSClientConfig = &api.TLSClientConfig{Insecure: true}
-	}
+	var config *rest.Config
+	var err error
 
-	config := &rest.Config{
-		Host:        c.Host,
-		BearerToken: c.BearerToken,
-		Username:    c.Username,
-		Password:    c.Password,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: c.TLSClientConfig.Insecure,
-			CAFile:   c.TLSClientConfig.CAFile,
-			CAData:   c.TLSClientConfig.CAData,
-		},
+	// if KubeConfig is not empty, use it firstly, otherwise, use username/password.
+	if c.KubeConfig != nil {
+		config, err = clientcmd.NewDefaultClientConfig(*c.KubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+		if err != nil {
+			log.Infof("NewDefaultClientConfig error: %v", err)
+			return nil, err
+		}
+	} else {
+		if c.TLSClientConfig == nil {
+			c.TLSClientConfig = &api.TLSClientConfig{Insecure: true}
+		}
+
+		config = &rest.Config{
+			Host:        c.Host,
+			BearerToken: c.BearerToken,
+			Username:    c.Username,
+			Password:    c.Password,
+			TLSClientConfig: rest.TLSClientConfig{
+				Insecure: c.TLSClientConfig.Insecure,
+				CAFile:   c.TLSClientConfig.CAFile,
+				CAData:   c.TLSClientConfig.CAData,
+			},
+		}
 	}
 
 	client, err := kubernetes.NewForConfig(config)
