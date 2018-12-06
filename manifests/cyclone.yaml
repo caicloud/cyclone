@@ -36,7 +36,8 @@ data:
           "memory": "128Mi"
         }
       },
-      "pvc": "cyclone-server-server-v1-0-cyclone-data",
+      "pvc": "",
+      "secret": "",
       "cyclone_server_addr": "native-cyclone-server"
     }
 
