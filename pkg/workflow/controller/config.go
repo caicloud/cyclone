@@ -40,8 +40,15 @@ type ControllerConfig struct {
 	Limits LimitsConfig `json:"limits"`
 	// Default resource requirements for containers in stage Pod
 	ResourceRequirements corev1.ResourceRequirements `json:"default_resource_quota"`
-	// The PVC used to transfer artifacts in WorkflowRun
+	// The PVC used to transfer artifacts in WorkflowRun, and also to help share resources
+	// among stages within WorkflowRun. If no PVC is given here, input resources won't be
+	// shared among stages, but need to be pulled every time it's needed. And also if no
+	// PVC given, artifacts are not supported.
+	// TODO(ChenDe): Remove it when Cyclone can manage PVC for namespaces.
 	PVC string `json:"pvc"`
+	// Default secret used for Cyclone, auth of registry can be placed here. It's optional.
+	// TODO(ChenDe): Remove it when Cyclone can manage secrets for namespaces.
+	Secret string `json:secret`
 	// Address of the Cyclone Server
 	CycloneServerAddr string `json:"cyclone_server_addr"`
 }
@@ -88,6 +95,14 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 
 // validate validates some required configurations.
 func validate(config *ControllerConfig) bool {
+	if config.PVC == "" {
+		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
+	}
+
+	if config.Secret == "" {
+		log.Warn("Secret not configured, no auth information would be available, e.g. docker registry auth.")
+	}
+
 	for _, k := range []string{GitResolverImage, ImageResolverImage, KvResolverImage, CoordinatorImage} {
 		_, ok := config.Images[k]
 		if !ok {

@@ -11,6 +11,11 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
+// GetResourceVolumeName generates a volume name for a resource.
+func GetResourceVolumeName(resourceName string) string {
+	return fmt.Sprintf("rsc-%s", resourceName)
+}
+
 // resolveStatus determines the final status from two given status, one is latest status, and
 // another one is the new status reported.
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {

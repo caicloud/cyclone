@@ -72,9 +72,6 @@ const (
 	// Path of docker socket file
 	DockerSockPath = "/var/run/docker.sock"
 
-	// Name of the secret used by workflow.
-	DefaultSecretName = "cyclone-secrets"
-
 	DockerConfigPath     = "/root/.docker"
 	DockerConfigJsonFile = "config.json"
 
