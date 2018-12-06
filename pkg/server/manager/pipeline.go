@@ -452,6 +452,7 @@ func (m *pipelineManager) ClearPipelinesOfProject(projectName string) error {
 	if err != nil {
 		return err
 	}
+
 	for _, pipeline := range pipelines {
 		if err := m.deletePipeline(scmConfig, &pipeline); err != nil {
 			return err
@@ -475,6 +476,7 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 		return fmt.Errorf("Fail to delete the pipeline %s as %s", pipeline.Name, err.Error())
 	}
 
+	// Delete webhook
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
 		gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
 		if err != nil {
@@ -489,6 +491,29 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 
 		if err := provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
 			logdog.Warningf("Fail to delete webhook for pipeline %s", pipeline.Name)
+			return nil
+		}
+	}
+
+	// Delete sonar project
+	if pipeline.Build != nil && pipeline.Build.Stages != nil &&
+		pipeline.Build.Stages.CodeScan != nil && pipeline.Build.Stages.CodeScan.SonarQube != nil {
+		sonar := pipeline.Build.Stages.CodeScan.SonarQube
+		it, err := m.dataStore.GetIntegration(sonar.Name)
+		if err != nil {
+			log.Warningf("Delete pipeline %s, can not get integration info for %s", pipeline.Name, sonar.Name)
+			return nil
+		}
+
+		sonarInfo := it.SonarQube
+		if sonarInfo == nil {
+			log.Warningf("Delete pipeline %s, integration info for %s is empty", pipeline.Name, sonar.Name)
+			return nil
+		}
+
+		err = integrate.DeleteProject(api.IntegrationTypeSonar, sonarInfo.Address, sonarInfo.Token, pipeline.ID)
+		if err != nil {
+			log.Warningf("Delete pipeline %s, delete sonar qube project failed", pipeline.Name)
 			return nil
 		}
 	}
