@@ -7,7 +7,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/util/http/errors"
 )
 
-// ITGProvider is an interface for ingetration.
+// ITGProvider is an interface for integration.
 type ITGProvider interface {
 	// CodeScan execute code analysis.
 	CodeScan(url, token string, config *CodeScanConfig) (string, error)
@@ -20,6 +20,9 @@ type ITGProvider interface {
 
 	// SetQualityGate sets the project's quality gate.
 	SetQualityGate(url, token string, projectKey string, gateId int) error
+
+	// DeleteProject delete a project.
+	DeleteProject(url, token string, projectKey string) error
 
 	// Validate validate the token.
 	Validate(url, token string) (bool, error)
@@ -103,6 +106,15 @@ func SetQualityGate(itype api.IntegrationType, url, token string, projectKey str
 		return err
 	}
 	return p.SetQualityGate(url, token, projectKey, gateId)
+}
+
+// DeleteProject delete a project.
+func DeleteProject(itype api.IntegrationType, url, token string, projectKey string) error {
+	p, err := GetProvider(itype)
+	if err != nil {
+		return err
+	}
+	return p.DeleteProject(url, token, projectKey)
 }
 
 // Validate validate the token.

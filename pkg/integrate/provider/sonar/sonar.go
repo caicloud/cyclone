@@ -382,6 +382,40 @@ func (s *Sonar) SetQualityGate(url, token string, projectKey string, gateId int)
 	return err
 }
 
+// DeleteProject delete a project.
+func (s *Sonar) DeleteProject(url, token string, projectKey string) error {
+	url = strings.TrimSuffix(url, "/")
+	path := fmt.Sprintf("%s/api/projects/delete?project=%s", url, projectKey)
+
+	log.Infof("test path:%s", path)
+	req, err := http.NewRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return err
+	}
+
+	// -u your-token: , colon(:) is needed.
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(token+":"))))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to delete sonarqube project as %s", err.Error())
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to delete sonarqube project as %s", err.Error())
+		return err
+	}
+
+	if resp.StatusCode/100 == 2 {
+		return nil
+	}
+
+	err = fmt.Errorf("Fail to delete sonarqube project as %s, resp code: %v ", body, resp.StatusCode)
+	return err
+}
+
 // Validate validate the token.
 func (s *Sonar) Validate(url, token string) (bool, error) {
 	url = strings.TrimSuffix(url, "/")
