@@ -85,7 +85,7 @@ func (em *eventManager) HandleEvent(event *api.Event) error {
 		if codeScan != nil && codeScan.SonarQube != nil {
 			integration, err := em.ds.GetIntegration(codeScan.SonarQube.Name)
 			if err != nil {
-				log.Errorf("get integration %s failed: %v", codeScan.SonarQube.Name)
+				log.Errorf("get integration %s failed: %v", codeScan.SonarQube.Name, err)
 				return err
 			}
 			event.Pipeline.Build.Stages.CodeScan.SonarQube.SonarInfo = integration.SonarQube

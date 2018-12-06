@@ -105,6 +105,7 @@ func SetQualityGate(itype api.IntegrationType, url, token string, projectKey str
 	if err != nil {
 		return err
 	}
+
 	return p.SetQualityGate(url, token, projectKey, gateId)
 }
 

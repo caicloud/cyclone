@@ -138,7 +138,13 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	codeScan := pipeline.Build.Stages.CodeScan
 	if codeScan != nil && codeScan.SonarQube != nil && codeScan.SonarQube.Config != nil &&
 		codeScan.SonarQube.Config.Threshold > 0 {
-		setSonarQualityGate(m.dataStore, pipeline)
+		if pipeline.ID == "" {
+			pipeline.ID = bson.NewObjectId().Hex()
+		}
+		err = setSonarQualityGate(m.dataStore, pipeline)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	createdPipeline, err := m.dataStore.CreatePipeline(pipeline)
@@ -165,16 +171,20 @@ func setSonarQualityGate(ds *store.DataStore, pipeline *api.Pipeline) error {
 	}
 
 	err = integrate.CreateProject(api.IntegrationTypeSonar, sonar.Address, sonar.Token, pipeline.ID, pipeline.Alias)
-	if strings.Contains(err.Error(), "key already exists") {
-		// If project already exist, will return:
-		// {"errors":[{"msg":"Could not create Project, key already exists: project-1"}]}
-		log.Infof("Project %s(%s) already exists.", pipeline.Alias, pipeline.ID)
-	} else {
-		return err
+	if err != nil {
+		if strings.Contains(err.Error(), "key already exists") {
+			// If project already exist, will return:
+			// {"errors":[{"msg":"Could not create Project, key already exists: project-1"}]}
+			log.Infof("Project %s(%s) already exists.", pipeline.Alias, pipeline.ID)
+		} else {
+			log.Errorf("Create sonar project %s error:%v", pipeline.Alias, err)
+			return err
+		}
 	}
 
 	err = integrate.SetQualityGate(api.IntegrationTypeSonar, sonar.Address, sonar.Token, pipeline.ID, gateID)
 	if err != nil {
+		log.Errorf("Set sonar quality gate %d for project %s failed as %v", gateID, pipeline.ID, err)
 		return err
 	}
 
@@ -392,11 +402,19 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	pipeline.AutoTrigger = newPipeline.AutoTrigger
 
 	// set quality gate if codeScan is turned on.
-	cs := pipeline.Build.Stages.CodeScan
-	newcs := newPipeline.Build.Stages.CodeScan
-	if newcs != nil && newcs.SonarQube != nil && newcs.SonarQube.Config != nil && newcs.SonarQube.Config.Threshold > 0 &&
-		(cs == nil || cs.SonarQube.Config.Threshold != newcs.SonarQube.Config.Threshold) {
-		setSonarQualityGate(m.dataStore, newPipeline)
+	if pipeline.Build != nil && pipeline.Build.Stages != nil &&
+		newPipeline.Build != nil && newPipeline.Build.Stages != nil {
+		cs := pipeline.Build.Stages.CodeScan
+		newcs := newPipeline.Build.Stages.CodeScan
+
+		if newcs != nil && newcs.SonarQube != nil && newcs.SonarQube.Config != nil && newcs.SonarQube.Config.Threshold > 0 &&
+			(cs == nil || cs.SonarQube.Config.Threshold != newcs.SonarQube.Config.Threshold) {
+			newPipeline.ID = pipeline.ID
+			err = setSonarQualityGate(m.dataStore, newPipeline)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// Update the properties of the pipeline.
