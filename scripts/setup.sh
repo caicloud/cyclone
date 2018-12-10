@@ -53,7 +53,7 @@ function run_e2e {
     if [[ $OS == "darwin" ]] 
     then
         # for mac docker
-        export DOCKER_HOST=unix:///${HOME}/Library/Containers/com.docker.docker/Data/s60
+        export DOCKER_HOST=unix:///${HOME}/Library/Containers/com.docker.docker/Data/docker.sock
     else
         # for linux
         export DOCKER_HOST=unix:///var/run/docker.sock
