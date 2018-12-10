@@ -782,3 +782,21 @@ const (
 type TestResult struct {
 	FileName string `bson:"fileName,omitempty" json:"fileName,omitempty" `
 }
+
+type GitlabUserInfo struct {
+	Name             string `json:"name,omitempty"`
+	Username         string `json:"username,omitempty"`
+	ID               int    `json:"id,omitempty"`
+	State            string `json:"state,omitempty"`
+	AvatarURL        string `json:"avatar_url,omitempty"`
+	WebURL           string `json:"web_url,omitempty"`
+	CreatedAt        string `json:"created_at,omitempty"`
+	IsAdmin          bool   `json:"is_admin,omitempty"`
+	Email            string `json:"email,omitempty"`
+	ProjectsLimits   int    `json:"projects_limit,omitempty"`
+	CurrentSignInAt  string `json:"current_sign_in_at,omitempty"`
+	CanCreateGroup   bool   `json:"can_create_group,omitempty"`
+	CanCreateProject bool   `json:"can_create_project,omitempty"`
+	TwoFactorEnabled bool   `json:"two_factor_enabled,omitempty"`
+	PrivateToken     string `json:"private_token,omitempty"`
+}

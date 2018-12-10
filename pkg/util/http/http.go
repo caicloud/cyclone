@@ -80,6 +80,9 @@ const (
 	HeaderUser = "X-User"
 
 	HEADER_ContentType = "Content-Type"
+
+	// Scm represents the scm type of oauth include gitlab and github.
+	Scm = "scm"
 )
 
 // GetHttpRequest gets request from context.
