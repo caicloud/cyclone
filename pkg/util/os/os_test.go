@@ -65,7 +65,7 @@ func TestMustGet(t *testing.T) {
 
 }
 
-func Test_IsFileExists(t *testing.T) {
+func TestIsFileExists(t *testing.T) {
 	home := GetHomeDir()
 	existFile := filepath.Join(home, "cyclone.112233445566")
 	os.Create(existFile)
@@ -93,7 +93,7 @@ func Test_IsFileExists(t *testing.T) {
 	}
 }
 
-func Test_GetBoolEnv(t *testing.T) {
+func TestGetBoolEnv(t *testing.T) {
 	testEnv := "cyclone.112233445566"
 	testValue := "true"
 	os.Setenv(testEnv, testValue)

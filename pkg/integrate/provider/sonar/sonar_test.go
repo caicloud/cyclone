@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_extractCeTaskId(t *testing.T) {
+func TestExtractCeTaskId(t *testing.T) {
 
 	testCases := map[string]struct {
 		path string
@@ -28,7 +28,7 @@ func Test_extractCeTaskId(t *testing.T) {
 	}
 }
 
-func Test_findJavaBinaryFiles(t *testing.T) {
+func TestFindJavaBinaryFiles(t *testing.T) {
 	testCases := map[string]struct {
 		base    string
 		files   map[string][]string
