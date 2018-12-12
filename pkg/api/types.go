@@ -728,7 +728,7 @@ type WorkerInfo struct {
 	MountPath string
 
 	// quota represents the resource quota for worker.
-	Quota options.Quota
+	Quota options.Quota `json:"quota,omitempty" bson:"-"`
 
 	Name string
 
