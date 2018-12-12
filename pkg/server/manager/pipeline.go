@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/caicloud/nirvana/log"
-	"github.com/zoumo/logdog"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
@@ -94,7 +93,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 
 	// Check the existence of the project and pipeline.
 	if p, err := m.GetPipeline(projectName, pipeline.Name, 0, 0, 0); err == nil {
-		logdog.Errorf("name %s conflict, pipeline alias:%s, exist pipeline alias:%s",
+		log.Errorf("name %s conflict, pipeline alias:%s, exist pipeline alias:%s",
 			pipeline.Name, pipeline.Alias, p.Alias)
 		if nameEmpty {
 			pipeline.Name = slug.Slugify(pipeline.Name, true, -1)
@@ -121,7 +120,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	// Create SCM webhook if enable SCM trigger.
 	err = createWebhook(pipeline, provider, scmConfig.Type, gitSource.Url, "")
 	if err != nil {
-		logdog.Errorf("create webhook failed: %v", err)
+		log.Errorf("create webhook failed: %v", err)
 		return nil, err
 	}
 
@@ -129,7 +128,7 @@ func (m *pipelineManager) CreatePipeline(projectName string, pipeline *api.Pipel
 	defer func() {
 		if err != nil && gitSource != nil && pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
 			if err = provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
-				logdog.Errorf("Fail to delete the webhook %s", pipeline.Name)
+				log.Errorf("Fail to delete the webhook %s", pipeline.Name)
 			}
 		}
 	}()
@@ -216,7 +215,7 @@ func createWebhook(pipeline *api.Pipeline, provider scm.SCMProvider, scmType api
 				Events: collectSCMEvents(pipeline.AutoTrigger.SCMTrigger),
 			}
 			if err := provider.CreateWebHook(mainRepoUrl, webHook); err != nil {
-				logdog.Errorf("create webhook failed: %v", err)
+				log.Errorf("create webhook failed: %v", err)
 				scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
 				if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
 					(scmType == api.Github && strings.Contains(err.Error(), "404")) {
@@ -329,7 +328,7 @@ func (m *pipelineManager) assignRecentRecord(pipeline *api.Pipeline, recentCount
 	if recentCount > 0 {
 		recentRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, nil, recentCount)
 		if err != nil {
-			logdog.Error(err)
+			log.Error(err)
 		} else {
 			pipeline.RecentRecords = recentRecords
 		}
@@ -341,7 +340,7 @@ func (m *pipelineManager) assignRecentRecord(pipeline *api.Pipeline, recentCount
 		}
 		recentSuccessRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentSuccessCount)
 		if err != nil {
-			logdog.Error(err)
+			log.Error(err)
 		} else {
 			pipeline.RecentSuccessRecords = recentSuccessRecords
 		}
@@ -353,7 +352,7 @@ func (m *pipelineManager) assignRecentRecord(pipeline *api.Pipeline, recentCount
 		}
 		recentFailedRecords, _, err := ds.FindRecentRecordsByPipelineID(pipeline.ID, filter, recentFailedCount)
 		if err != nil {
-			logdog.Error(err)
+			log.Error(err)
 		} else {
 			pipeline.RecentFailedRecords = recentFailedRecords
 		}
@@ -377,7 +376,7 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 		return nil, err
 	}
 
-	gitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
+	oldGitSource, err := api.GetGitSource(pipeline.Build.Stages.CodeCheckout.MainRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -386,16 +385,31 @@ func (m *pipelineManager) UpdatePipeline(projectName string, pipelineName string
 	if pipeline.AutoTrigger != nil && pipeline.AutoTrigger.SCMTrigger != nil {
 		scmTrigger := pipeline.AutoTrigger.SCMTrigger
 		if scmTrigger.Webhook != "" {
-			if err := provider.DeleteWebHook(gitSource.Url, scmTrigger.Webhook); err != nil {
+			if err := provider.DeleteWebHook(oldGitSource.Url, scmTrigger.Webhook); err != nil {
 				return nil, err
 			}
 		}
 	}
 
+	var newGitSource *api.GitSource
+	// Use new pipeline git source url to create webhook
+	if newPipeline.Build != nil && newPipeline.Build.Stages != nil &&
+		newPipeline.Build.Stages.CodeCheckout != nil && newPipeline.Build.Stages.CodeCheckout.MainRepo != nil {
+		newGitSource, err = api.GetGitSource(newPipeline.Build.Stages.CodeCheckout.MainRepo)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Create the new webhook if necessary.
-	err = createWebhook(newPipeline, provider, scmConfig.Type, gitSource.Url, pipeline.ID)
+	err = createWebhook(newPipeline, provider, scmConfig.Type, newGitSource.Url, pipeline.ID)
 	if err != nil {
-		logdog.Errorf("create webhook failed: %v", err)
+		log.Errorf("create webhook failed: %v, try to rollback", err)
+		// Try to rollback
+		errrb := createWebhook(pipeline, provider, scmConfig.Type, oldGitSource.Url, pipeline.ID)
+		if errrb != nil {
+			log.Warningf("rollback to create old webhook failed: %v", errrb)
+		}
 		return nil, err
 	}
 
@@ -508,7 +522,7 @@ func (m *pipelineManager) deletePipeline(scmConfig *api.SCMConfig, pipeline *api
 		}
 
 		if err := provider.DeleteWebHook(gitSource.Url, pipeline.AutoTrigger.SCMTrigger.Webhook); err != nil {
-			logdog.Warningf("Fail to delete webhook for pipeline %s", pipeline.Name)
+			log.Warningf("Fail to delete webhook for pipeline %s", pipeline.Name)
 			return nil
 		}
 	}
