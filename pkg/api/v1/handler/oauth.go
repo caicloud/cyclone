@@ -10,6 +10,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/util/os"
+
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
 	"golang.org/x/oauth2"
@@ -40,9 +41,10 @@ func GetAuthCodeURL(ctx context.Context, scm string) (string, error) {
 		return url, nil
 	case "github":
 		//TODO: support github oauth2
-		return "", nil
+		return "", fmt.Errorf("gitlab oauth hasn't been implemented")
+	default:
+		return "", fmt.Errorf("unknow scm type, please choose gitlab or github")
 	}
-	return "", nil
 }
 
 // GetToken use code to change token and redirect to frontend
@@ -77,9 +79,10 @@ func GetToken(ctx context.Context, scm string, code string, state string) error 
 		return nil
 	case "github":
 		//TODO: support github oauth2
-		return nil
+		return fmt.Errorf("gitlab oauth hasn't been implemented")
+	default:
+		return fmt.Errorf("unknow scm type, please choose gitlab or github")
 	}
-	return nil
 }
 
 //TODO: support gitlab API V4 version
