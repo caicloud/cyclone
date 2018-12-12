@@ -1,42 +1,44 @@
-- name: maven-3.5.3-jdk-8-alpine
+- name: Maven
   type: Maven
   builderImage: maven:3.5.3-jdk-8-alpine
   testCommands: |
     mvn test
   packageCommands: |
     mvn clean package -Dmaven.test.skip
-  customizedDockerfile: |
-    FROM jboss/base-jdk:8
+  customizedDockerfiles:
+    Maven: |
+      FROM jboss/base-jdk:8
 
-    # Copy your file from source to destination.
-    COPY target/<app>.jar  /test-app.jar
+      # Copy your file from source to destination.
+      COPY target/<app>.jar  /test-app.jar
 
-    # Expose ports.
-    EXPOSE 8081
+      # Expose ports.
+      EXPOSE 8081
 
-    # Run your app or exec your start scripts.
-    CMD ["java", "-jar", "/test-app.jar"]
+      # Run your app or exec your start scripts.
+      CMD ["java", "-jar", "/test-app.jar"]
 
-- name: gradle-3.4.1
+- name: Gradle
   type: Gradle
   builderImage: gradle:3.4.1
   testCommands: |
     gradle clean test
   packageCommands: |
     gradle build -x test
-  customizedDockerfile: |
-    FROM jboss/base-jdk:8
+  customizedDockerfiles:
+    Gradle: |
+      FROM jboss/base-jdk:8
 
-    # Copy your file from source to destination.
-    COPY build/<app>.jar  /test-app.jar
+      # Copy your file from source to destination.
+      COPY build/<app>.jar  /test-app.jar
 
-    # Expose ports.
-    EXPOSE 8081
+      # Expose ports.
+      EXPOSE 8081
 
-    # Run your app or exec your start scripts.
-    CMD ["java", "-jar", "/test-app.jar"]
+      # Run your app or exec your start scripts.
+      CMD ["java", "-jar", "/test-app.jar"]
 
-- name: golang-1.9.5-alpine3.7
+- name: Go
   type: Go
   builderImage: golang:1.9.5-alpine3.7
   testCommands: |
@@ -61,78 +63,83 @@
     # Replace the {main-method-path} with the path of directory which contains a main() function.
     cd $WORKDIR/{main-method-path}
     go build -i -v
-  customizedDockerfile: |
-    FROM alpine:3.6
+  packageOutputs: |
+  customizedDockerfiles:
+    Go: |
+      FROM alpine:3.6
 
-    # Change path to your work dir.
-    WORKDIR /root
+      # Change path to your work dir.
+      WORKDIR /root
 
-    # Copy your file from source to destination.
-    COPY <app> /test-app
+      # Copy your file from source to destination.
+      COPY <app> /test-app
 
-    # Expose ports.
-    EXPOSE 7099
+      # Expose ports.
+      EXPOSE 7099
 
-    # Run your app or exec your start scripts.
-    ENTRYPOINT ["/test-app"]
+      # Run your app or exec your start scripts.
+      ENTRYPOINT ["/test-app"]
 
-- name: python-3.6.5-alpine3.6
+- name: Python
   type: Python
   builderImage: python:3.6.5-alpine3.6
   testCommands: |
     # Run all the test*.py modules inside the test package.
     python -m unittest discover -s test -p 'test*.py'
   packageCommands: |
-  customizedDockerfile: |
-    FROM python:3.6.5-alpine3.6
+  customizedDockerfiles:
+    Python: |
+      FROM python:3.6.5-alpine3.6
 
-    # Create working directory
-    RUN mkdir -p /usr/src/app
-    WORKDIR /usr/src/app
+      # Create working directory
+      RUN mkdir -p /usr/src/app
+      WORKDIR /usr/src/app
 
-    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
-    # it will be unpacked and added to worksapce.
-    ADD <uploaded-file> .
+      # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+      # it will be unpacked and added to worksapce.
+      ADD <uploaded-file> .
 
-    # Make sure the requirements.txt file exists and then install dependencies using it.
-    RUN touch requirements.txt
-    RUN pip install --no-cache-dir -r requirements.txt
+      # Make sure the requirements.txt file exists and then install dependencies using it.
+      RUN touch requirements.txt
+      RUN pip install --no-cache-dir -r requirements.txt
 
-    CMD [ "python", "./<entrypoint>.py" ]
+      CMD [ "python", "./<entrypoint>.py" ]
 
-- name: node-9-alpine
+- name: NodeJS
   type: NodeJS
   builderImage: node:9-alpine
   testCommands: |
   packageCommands: |
     npm run build
-  customizedDockerfile: |
-    FROM node:9-alpine
+  customizedDockerfiles:
+    NodeJS: |
+      FROM node:9-alpine
 
-    # Create working directory
-    WORKDIR /usr/src/app
+      # Create working directory
+      WORKDIR /usr/src/app
 
-    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
-    # it will be unpacked and added to worksapce.
-    ADD <uploaded-file> .
+      # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+      # it will be unpacked and added to worksapce.
+      ADD <uploaded-file> .
 
-    # Install app dependencies, if you are building your code for production
-    # RUN npm install --only=production
-    RUN npm install
+      # Install app dependencies, if you are building your code for production
+      # RUN npm install --only=production
+      RUN npm install
 
-    EXPOSE 8080
-    CMD [ "npm", "start" ]
+      EXPOSE 8080
+      CMD [ "npm", "start" ]
 
-- name: php-7.1-apache
+- name: PHP
   type: PHP
   builderImage: php:7.1-apache
   testCommands: |
   packageCommands: |
-  customizedDockerfile: |
-    FROM php:7.1-apache
+  customizedDockerfiles:
+    PHP: |
+      FROM php:7.1-apache
 
-    # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
-    # it will be unpacked and added to worksapce.
-    ADD <uploaded-file> /var/www/html/
+      # Add your uploaded file to workplace, if it's an archive file (zip, tar, tar.gz),
+      # it will be unpacked and added to worksapce.
+      ADD <uploaded-file> /var/www/html/
 
-    EXPOSE 80
+      EXPOSE 80

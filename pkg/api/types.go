@@ -798,12 +798,13 @@ type WorkerInstance struct {
 
 // Template contains some configurations of creating pipeline.
 type Template struct {
-	Name                 string `yaml:"name,omitempty" json:"name,omitempty" description:"name of the template, should be unique"`
-	Type                 string `yaml:"type,omitempty" json:"type,omitempty" description:"type of the template"`
-	BuilderImage         string `yaml:"builderImage,omitempty" json:"builderImage,omitempty" description:"image information of the builder"`
-	TestCommands         string `yaml:"testCommands,omitempty" json:"testCommands,omitempty" description:"sample commands of unit test stage"`
-	PackageCommands      string `yaml:"packageCommands,omitempty" json:"packageCommands,omitempty" description:"sample commands of package stage"`
-	CustomizedDockerfile string `yaml:"customizedDockerfile,omitempty" json:"customizedDockerfile,omitempty" description:"sample Dockerfile"`
+	Name                  string            `yaml:"name,omitempty" json:"name,omitempty" description:"name of the template, should be unique"`
+	Type                  string            `yaml:"type,omitempty" json:"type,omitempty" description:"type of the template"`
+	BuilderImage          string            `yaml:"builderImage,omitempty" json:"builderImage,omitempty" description:"image information of the builder"`
+	TestCommands          string            `yaml:"testCommands,omitempty" json:"testCommands,omitempty" description:"sample commands of unit test stage"`
+	PackageCommands       string            `yaml:"packageCommands,omitempty" json:"packageCommands,omitempty" description:"sample commands of package stage"`
+	PackageOutputs        string            `yaml:"packageOutputs,omitempty" json:"packageOutputs,omitempty" description:"list of output path of package stage"`
+	CustomizedDockerfiles map[string]string `yaml:"customizedDockerfiles,omitempty" json:"customizedDockerfiles,omitempty" description:"sample Dockerfiles"`
 }
 
 // TemplateType represents the type of the template
