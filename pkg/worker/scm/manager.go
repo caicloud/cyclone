@@ -35,7 +35,7 @@ const (
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
 
 	// maxRetry represents the max number of retry for git clone.
-	maxRetry = 5
+	maxRetry = 10
 )
 
 // scmProviders represents the set of SCM providers.

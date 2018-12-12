@@ -18,6 +18,7 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -28,6 +29,25 @@ import (
 	"github.com/caicloud/cyclone/pkg/api"
 	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
+)
+
+const (
+
+	// GIT_HTTP_LOW_SPEED_LIMIT,GIT_HTTP_LOW_SPEED_TIME these two Environment are used to controll
+	// timeout of git cloning.
+	//
+	// > If the data rate of an HTTP operation is lower than GIT_HTTP_LOW_SPEED_LIMIT bytes
+	// per second for longer than GIT_HTTP_LOW_SPEED_TIME seconds, Git will abort that operation.
+	// These values override the http.lowSpeedLimit and http.lowSpeedTime configuration values.
+	//
+	// More infomation:
+	// https://www.git-scm.com/docs/git-config/1.7.8#git-config-httplowSpeedLimithttplowSpeedTime
+	// https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables
+	ENV_GIT_HTTP_LOW_SPEED_LIMIT string = "GIT_HTTP_LOW_SPEED_LIMIT"
+	ENV_GIT_HTTP_LOW_SPEED_TIME  string = "GIT_HTTP_LOW_SPEED_TIME"
+
+	VALUE_GIT_HTTP_LOW_SPEED_LIMIT string = "5120" // 5 * 1024
+	VALUE_GIT_HTTP_LOW_SPEED_TIME  string = "60"
 )
 
 // Git is the type for git provider.
@@ -110,6 +130,19 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 			cmd{destPath, []string{"merge", "FETCH_HEAD", "--no-ff", "--no-commit"}},
 		}
 	}
+
+	// set GIT_HTTP_LOW_SPEED_LIMIT and GIT_HTTP_LOW_SPEED_TIME env to control timeout.
+	err = os.Setenv(ENV_GIT_HTTP_LOW_SPEED_LIMIT, VALUE_GIT_HTTP_LOW_SPEED_LIMIT)
+	if err != nil {
+		log.Warningf("Set env GIT_HTTP_LOW_SPEED_LIMIT error: %+v", err)
+	}
+	err = os.Setenv(ENV_GIT_HTTP_LOW_SPEED_TIME, VALUE_GIT_HTTP_LOW_SPEED_TIME)
+	if err != nil {
+		log.Warningf("Set env GIT_HTTP_LOW_SPEED_TIME error: %+v", err)
+	}
+
+	log.Infof("ENV_GIT_HTTP_LOW_SPEED_LIMIT : %v", os.Getenv(ENV_GIT_HTTP_LOW_SPEED_LIMIT))
+	log.Infof("ENV_GIT_HTTP_LOW_SPEED_TIME : %v", os.Getenv(ENV_GIT_HTTP_LOW_SPEED_TIME))
 
 	var outputs string
 	for _, cmd := range cmds {
