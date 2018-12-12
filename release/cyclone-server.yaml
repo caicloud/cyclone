@@ -14,23 +14,17 @@ _config:
       env:
       - name: MONGODB_HOST
         value: '[[ platform_mongo_host ]]'
-      - name: REGISTRY_LOCATION
-        value: '[[ cargo_registry ]]'
-      - name: REGISTRY_USERNAME
-        value: admin
-      - name: REGISTRY_PASSWORD
-        value: Pwd123456
-      - name: CLIENTID
+      - name: GITHUB_CLIENT
         value: clientid
-      - name: CLIENTIDSECRET
+      - name: GITHUB_SECRET
         value: clientidsecret
       - name: CONSOLE_WEB_ENDPOINT
         value: '[[ compassWebEndpoint ]]'
-      - name: CLIENTID_GITLAB
+      - name: GITLAB_CLIENT
         value: clientid_gitlab
-      - name: CLIENTIDSECRET_GITLAB
+      - name: GITLAB_SECRET
         value: clientidsecret_gitlab
-      - name: SERVER_GITLAB
+      - name: GITLAB_URL
         value: https://gitlab.com
       - name: CYCLONE_SERVER
         value: 'http://[[ kube_apiserver_endpoint_ip ]]:6008'
@@ -46,14 +40,6 @@ _config:
         value: 1Gi
       - name: REQUEST_CPU
         value: '0.5'
-      - name: SMTP_PASSWORD
-        value: smtp_password
-      - name: SMTP_PORT
-        value: smtp_port
-      - name: SMTP_SERVER
-        value: smtp_server
-      - name: SMTP_USERNAME
-        value: smtp_username
       - name: RECORD_ROTATION_THRESHOLD
         value: '50'
       - name: NOTIFICATION_URL
