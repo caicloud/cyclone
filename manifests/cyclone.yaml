@@ -61,7 +61,7 @@ spec:
       containers:
       - name: server
         image: test.caicloudprivatetest.com/release/cyclone-server:v0.9.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 7089
 
@@ -101,4 +101,12 @@ spec:
       containers:
       - name: controller
         image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: local-timezone
+          readOnly: true
+      volumes:
+      - hostPath:
+          path: /etc/localtime
+        name: local-timezone
