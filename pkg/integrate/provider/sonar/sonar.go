@@ -146,7 +146,7 @@ func (s *Sonar) SetCodeScanStatus(url, token string, pid string, status *api.Cod
 	url = strings.TrimSuffix(url, "/")
 	if status.SonarQube == nil {
 		status.SonarQube = &api.ScanStatusSonarQube{
-			OverviewLink: fmt.Sprintf("%s/component_measures?id=%s", url, pid),
+			OverviewLink: fmt.Sprintf("%s/dashboard?id=%s", url, pid),
 		}
 	}
 
