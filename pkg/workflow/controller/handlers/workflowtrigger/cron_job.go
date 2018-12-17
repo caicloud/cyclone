@@ -2,8 +2,10 @@ package workflowtrigger
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/pkg/errors"
@@ -110,6 +112,17 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 		return
 	}
 
+	timezone, has := getParaValue(wft.Spec.Parameters, "timezone")
+	if !has {
+		timezone = "0"
+	}
+
+	minuteOffUTC, err := strconv.Atoi(timezone)
+	if err != nil {
+		log.Warnf("can not parse timezone(%s) to int", timezone)
+		minuteOffUTC = 0
+	}
+
 	ct := &CronTrigger{
 		Namespace:           wft.Namespace,
 		WorkflowTriggerName: wft.Name,
@@ -121,8 +134,8 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	ct.WorkflowRun = wfr
 
-	c := cron.New()
-	err := c.AddJob(schedule, ct)
+	c := cron.NewWithLocation(time.FixedZone("userZone", -1*60*minuteOffUTC))
+	err = c.AddJob(schedule, ct)
 	if err != nil {
 		log.Errorf("can not create Cron job: %s", err)
 		return
