@@ -1,23 +1,23 @@
-import axios from "axios";
-import { message } from "antd";
+import axios from 'axios';
+import { message } from 'antd';
 // getToken
 const getToken = () => {
-  if (localStorage.getItem("user")) {
-    return JSON.parse(localStorage.getItem("user")).accessToken;
+  if (localStorage.getItem('user')) {
+    return JSON.parse(localStorage.getItem('user')).accessToken;
   }
-  return "";
+  return '';
 };
 
 // hint
-let curMes = "";
+let msg = '';
 const _message = mes => {
-  if (mes === curMes) {
+  if (mes === msg) {
     return;
   }
   message.error(mes, 1, () => {
-    curMes = "";
+    msg = '';
   });
-  curMes = mes;
+  msg = mes;
 };
 
 // intercept repeated requests( rule: same url and same method)
@@ -26,7 +26,7 @@ let requesting = {};
 const cancelRequesting = config => {
   let requestId =
     config.method +
-    config.url.replace(config.baseURL, "").replace(/^\//, "") +
+    config.url.replace(config.baseURL, '').replace(/^\//, '') +
     JSON.stringify(config.params);
   requesting[requestId] = false;
 };
@@ -37,13 +37,13 @@ const addRequesting = config => {
   });
   let requestId =
     config.method +
-    config.url.replace(config.baseURL, "").replace(/^\//, "") +
+    config.url.replace(config.baseURL, '').replace(/^\//, '') +
     JSON.stringify(config.params);
 
   if (requesting[requestId]) {
     cancel({
       message: `重复请求`,
-      config: config
+      config: config,
     });
     requesting[requestId] = false;
   } else {
@@ -59,7 +59,7 @@ let loadingNum = 0;
 const addLoading = function(method) {
   if (loadingNum <= 0) {
     loadingNum = 0;
-    loading = message.loading(method === "GET" ? "加载中" : "提交中", 3);
+    loading = message.loading(method === 'GET' ? '加载中' : '提交中', 3);
   }
   loadingNum++;
 };
@@ -73,29 +73,28 @@ const removeLoading = function() {
 };
 // axios instance
 const instance = axios.create({
-  baseURL: "http://192.168.19.96:30020/api/v1",
+  baseURL: 'http://192.168.19.96:30020/api/v1',
   timeout: 5000,
   headers: {
     accesstoken: getToken(),
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*"
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
   },
-  withCredentials: true
+  withCredentials: true,
 });
 
 instance.updateToken = token => {
-  instance.defaults.headers["accesstoken"] = token || getToken();
+  instance.defaults.headers['accesstoken'] = token || getToken();
 };
 
 // request interceptor
 instance.interceptors.request.use(
   config => {
-    if (!config.headers["accesstoken"]) {
+    if (!config.headers['accesstoken']) {
       instance.updateToken();
     }
     config = addRequesting(config);
     addLoading(config.method.toUpperCase());
-    console.log("request config", config);
     return config;
   },
   function(error) {
@@ -106,7 +105,6 @@ instance.interceptors.request.use(
 // response interceptor
 instance.interceptors.response.use(
   response => {
-    console.log("response.config", response.config);
     cancelRequesting(response.config);
     removeLoading();
     return Promise.resolve(response.data);
@@ -118,12 +116,12 @@ instance.interceptors.response.use(
       requesting = {};
     }
     removeLoading();
-    if (error.code === "ECONNABORTED") {
-      _message("网络连接超时");
-    } else if (error.message === "Request failed with status code 403") {
-      _message("请重新登录");
+    if (error.code === 'ECONNABORTED') {
+      _message('网络连接超时');
+    } else if (error.message === 'Request failed with status code 403') {
+      _message('请重新登录');
       setTimeout(() => {
-        window.location.href = window.location.origin + "/login";
+        window.location.href = window.location.origin + '/login';
       }, 1000);
     } else if (
       error.response &&
@@ -138,12 +136,5 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-//重写instance.get
-let getFn = instance.get;
-instance.get = function(url, data = {}, config = {}) {
-  config.params = data;
-  return getFn(url, config);
-};
 
 export default instance;

@@ -1,2 +1,2 @@
-import Pipeline from "./component/list";
+import Pipeline from './component/list';
 export default Pipeline;
