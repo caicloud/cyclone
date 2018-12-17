@@ -1,7 +1,7 @@
-import { Switch, Route, Redirect } from "react-router-dom";
-import Workspace from "../components/workspace";
-import Pipeline from "../components/pipeline";
-import React from "react";
+import { Switch, Route, Redirect } from 'react-router-dom';
+import Workspace from '../components/workspace';
+import Pipeline from '../components/pipeline';
+import React from 'react';
 
 const Routes = () => (
   <Switch>

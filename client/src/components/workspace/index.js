@@ -1,2 +1,2 @@
-import Workspace from "./component/list";
+import Workspace from './component/list';
 export default Workspace;
