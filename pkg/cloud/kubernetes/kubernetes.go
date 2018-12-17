@@ -17,7 +17,6 @@ limitations under the License.
 package kubernetes
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -257,7 +256,7 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 
 		certEnv := apiv1.EnvVar{
 			Name:  cloud.ENV_CERT_DATA,
-			Value: base64.StdEncoding.EncodeToString(certs),
+			Value: string(certs),
 		}
 
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, certEnv)
