@@ -1,6 +1,6 @@
-import pipeline from "./pipeline";
+import pipeline from './pipeline';
 
 const stores = {
-  pipeline
+  pipeline,
 };
 export default stores;
