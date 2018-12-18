@@ -19,9 +19,9 @@ import (
 const (
 	KeyTemplate = "%s/%s"
 
-	// the time zone difference, in minutes, from current locale (host system settings) to UTC
-	// -480 for Asia/Shanghai
-	ParamTimeZoneOffset = "timezone"
+	// time zone offset to UTC, in minutes
+	// -480 for Asia/Shanghai(+8)
+	ParamTimeZoneOffset = "timeZoneOffset"
 	ParamSchedule       = "schedule"
 )
 
