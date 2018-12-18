@@ -9,6 +9,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
@@ -88,7 +89,11 @@ func (k *K8sapiExecutor) WaitContainers(expectState common.ContainerState, selec
 // GetPod get the stage pod.
 func (k *K8sapiExecutor) GetPod() (*core_v1.Pod, error) {
 	return k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+}
 
+// GetResource get resource by its name
+func (k *K8sapiExecutor) GetResource(name string) (*v1alpha1.Resource, error) {
+	return k.client.CycloneV1alpha1().Resources(k.namespace).Get(name, meta_v1.GetOptions{})
 }
 
 // CollectLog collects container logs.
