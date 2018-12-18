@@ -1,7 +1,5 @@
 import http from './http.js';
 
-console.log('instance', http);
-
 const fetchApi = {
   http,
   fetchPipelineList(workspace, query) {
