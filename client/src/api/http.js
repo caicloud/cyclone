@@ -10,14 +10,14 @@ const getToken = () => {
 
 // hint
 let msg = '';
-const _message = mes => {
-  if (mes === msg) {
+const _message = m => {
+  if (m === msg) {
     return;
   }
-  message.error(mes, 1, () => {
+  message.error(m, 1, () => {
     msg = '';
   });
-  msg = mes;
+  msg = m;
 };
 
 // intercept repeated requests( rule: same url and same method)

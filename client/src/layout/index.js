@@ -21,7 +21,6 @@ class CoreLayout extends Component {
     const MenuSelectKey = _.startsWith(pathname, '/pipeline')
       ? ['pipeline']
       : ['workspace'];
-    console.log('MenuSelectKey', _.startsWith('/pipeline'), MenuSelectKey);
     return (
       <Layout>
         <Header className="header">
