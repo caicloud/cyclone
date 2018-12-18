@@ -18,6 +18,11 @@ import (
 
 const (
 	KeyTemplate = "%s/%s"
+
+	// the time zone difference, in minutes, from current locale (host system settings) to UTC
+	// -480 for Asia/Shanghai
+	ParamTimeZoneOffset = "timezone"
+	ParamSchedule       = "schedule"
 )
 
 type CronTrigger struct {
@@ -95,7 +100,7 @@ func (c *CronTrigger) Run() {
 	}
 }
 
-func getParaValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
+func getParamValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 	for _, item := range items {
 		if item.Name == key {
 			return item.Value, true
@@ -106,13 +111,13 @@ func getParaValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 
 func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
-	schedule, has := getParaValue(wft.Spec.Parameters, "schedule")
+	schedule, has := getParamValue(wft.Spec.Parameters, ParamSchedule)
 	if !has {
 		log.WithField("wft", wft.Name).Warn("Parameter 'schedule' not set in WorkflowTrigger spec")
 		return
 	}
 
-	timezone, has := getParaValue(wft.Spec.Parameters, "timezone")
+	timezone, has := getParamValue(wft.Spec.Parameters, ParamTimeZoneOffset)
 	if !has {
 		timezone = "0"
 	}
