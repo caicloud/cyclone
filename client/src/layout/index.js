@@ -1,11 +1,10 @@
-import { Layout, Menu, Breadcrumb, Icon } from 'antd';
+import { Layout, Menu, Icon } from 'antd';
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import Routes from '../routes';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
 
 class CoreLayout extends Component {
@@ -18,54 +17,58 @@ class CoreLayout extends Component {
     const {
       location: { pathname },
     } = this.props;
-    const MenuSelectKey = _.startsWith(pathname, '/pipeline')
-      ? ['pipeline']
-      : ['workspace'];
+    // TODO(qme): think of a more reasonable way
+    const selectNav = pathname.split('/')[1];
+    const menuSelectKey = selectNav ? selectNav : 'overview';
     return (
       <Layout>
         <Header className="header">
-          <div className="logo" />
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            defaultSelectedKeys={['2']}
-            style={{ lineHeight: '64px' }}
-          >
-            <Menu.Item key="2">nav 2</Menu.Item>
-            <Menu.Item key="3">nav 3</Menu.Item>
+          <div className="logo">CYCLONE</div>
+          <Menu theme="dark" mode="horizontal" style={{ lineHeight: '64px' }}>
+            <Menu.Item key="3">
+              <Icon type="user" />
+            </Menu.Item>
           </Menu>
         </Header>
         <Layout>
           <Sider width={200} style={{ background: '#fff' }}>
             <Menu
               mode="inline"
-              defaultSelectedKeys={MenuSelectKey}
-              defaultOpenKeys={['sub1']}
+              defaultSelectedKeys={menuSelectKey}
               style={{ height: '100%', borderRight: 0 }}
             >
               <Menu.Item key="overview">
-                <Icon type="home" />
-                <span>总览</span>
+                <NavLink to="/overview" activeClassName="active">
+                  <Icon type="home" />
+                  <span>总览</span>
+                </NavLink>
               </Menu.Item>
               <Menu.Item key="project">
-                <Icon type="project" />
-                <span>项目</span>
+                <NavLink to="/project" activeClassName="active">
+                  <Icon type="project" />
+                  <span>项目</span>
+                </NavLink>
               </Menu.Item>
               <Menu.Item key="resource">
-                <Icon type="cluster" />
-                <span>资源</span>
+                <NavLink to="/resource" activeClassName="active">
+                  <Icon type="cluster" />
+                  <span>资源</span>
+                </NavLink>
               </Menu.Item>
               <Menu.Item key="template">
-                <Icon type="profile" />
-                <span>模板</span>
+                <NavLink to="/template" activeClassName="active">
+                  <Icon type="profile" />
+                  <span>模板</span>
+                </NavLink>
               </Menu.Item>
-              <Menu.Item key="pipeline">
-                <NavLink to="/pipeline" activeClassName="active">
+              <Menu.Item key="workflow">
+                <NavLink to="/workflow" activeClassName="active">
                   <Icon type="share-alt" />
                   <span>流水线</span>
                 </NavLink>
               </Menu.Item>
-              <SubMenu
+              {/* TODO: manage and setting */}
+              {/* <SubMenu
                 key="manage"
                 title={
                   <span>
@@ -93,15 +96,16 @@ class CoreLayout extends Component {
                 <Menu.Item key="workspace">
                   <span>设置</span>
                 </Menu.Item>
-              </SubMenu>
+              </SubMenu> */}
             </Menu>
           </Sider>
           <Layout style={{ padding: '0 24px 24px' }}>
-            <Breadcrumb style={{ margin: '16px 0' }}>
+            {/* TODO: breadcrumb navigation */}
+            {/* <Breadcrumb style={{ margin: '16px 0' }}>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
               <Breadcrumb.Item>List</Breadcrumb.Item>
               <Breadcrumb.Item>App</Breadcrumb.Item>
-            </Breadcrumb>
+            </Breadcrumb> */}
             <Content
               style={{
                 background: '#fff',
