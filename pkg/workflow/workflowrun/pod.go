@@ -3,6 +3,7 @@ package workflowrun
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -374,13 +375,23 @@ func (m *PodBuilder) ResolveOutputResources() error {
 					MountPath: common.ResolverNotifyDirPath,
 					SubPath:   common.ResolverNotifyDir,
 				},
-				{
-					Name:      common.CoordinatorSidecarVolumeName,
-					MountPath: common.ResolverDefaultDataPath,
-					SubPath:   fmt.Sprintf("resources/%s", resource.Name),
-				},
 			},
 			ImagePullPolicy: corev1.PullIfNotPresent,
+		}
+
+		if resource.Spec.Persistent != nil {
+			volumeName := m.CreatePVCVolume(common.OutputResourceVolumeName(r.Name), resource.Spec.Persistent.PVC)
+			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+				Name:      volumeName,
+				MountPath: filepath.Join(common.ResolverDefaultDataPath, filepath.Base(resource.Spec.Persistent.Path)),
+				SubPath:   resource.Spec.Persistent.Path,
+			})
+		} else {
+			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+				Name:      common.CoordinatorSidecarVolumeName,
+				MountPath: common.ResolverDefaultDataPath,
+				SubPath:   fmt.Sprintf("resources/%s", resource.Name),
+			})
 		}
 
 		if resource.Spec.Type == v1alpha1.ImageResourceType {

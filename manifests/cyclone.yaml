@@ -9,10 +9,10 @@ data:
   workflow-controller.json: |
     {
       "images": {
-        "git-resolver": "test.caicloudprivatetest.com/release/git-resource-resolver:v0.9",
-        "image-resolver": "test.caicloudprivatetest.com/release/image-resource-resolver:v0.9",
-        "kv-resolver": "test.caicloudprivatetest.com/release/kv-resource-resolver:v0.9",
-        "coordinator": "test.caicloudprivatetest.com/release/cyclone-workflow-coordinator:v0.9.0",
+        "git-resolver": "test.caicloudprivatetest.com/release/git-resource-resolver:v0.9.1",
+        "image-resolver": "test.caicloudprivatetest.com/release/image-resource-resolver:v0.9.1",
+        "kv-resolver": "test.caicloudprivatetest.com/release/kv-resource-resolver:v0.9.1",
+        "coordinator": "test.caicloudprivatetest.com/release/cyclone-workflow-coordinator:v0.9.1",
         "gc": "test.caicloudprivatetest.com/library/alpine:3.8"
       },
       "logging": {
@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: test.caicloudprivatetest.com/release/cyclone-server:v0.9.0
+        image: test.caicloudprivatetest.com/release/cyclone-server:v0.9.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 7089
@@ -100,7 +100,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.0
+        image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.1
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /etc/localtime
