@@ -1,0 +1,9 @@
+{
+  "sideNav": {
+    "overview": "overview",
+    "project": "project",
+    "resource": "resource",
+    "template": "template",
+    "workflow": "workflow"
+  }
+}

@@ -40,31 +40,31 @@ class CoreLayout extends Component {
               <Menu.Item key="overview">
                 <NavLink to="/overview" activeClassName="active">
                   <Icon type="home" />
-                  <span>总览</span>
+                  <span>{intl.get('sideNav.overview')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="project">
                 <NavLink to="/project" activeClassName="active">
                   <Icon type="project" />
-                  <span>项目</span>
+                  <span>{intl.get('sideNav.project')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="resource">
                 <NavLink to="/resource" activeClassName="active">
                   <Icon type="cluster" />
-                  <span>资源</span>
+                  <span>{intl.get('sideNav.resource')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="template">
                 <NavLink to="/template" activeClassName="active">
                   <Icon type="profile" />
-                  <span>模板</span>
+                  <span>{intl.get('sideNav.template')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="workflow">
                 <NavLink to="/workflow" activeClassName="active">
                   <Icon type="share-alt" />
-                  <span>流水线</span>
+                  <span>{intl.get('sideNav.workflow')}</span>
                 </NavLink>
               </Menu.Item>
               {/* TODO: manage and setting */}

@@ -3,7 +3,8 @@
   "parser": "babel-eslint",
   "plugins": ["prettier"],
   "globals": {
-    "_": true
+    "_": true,
+    "intl": true
   },
   "rules": {
     "react/prop-types": "warn",
