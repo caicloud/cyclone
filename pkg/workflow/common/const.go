@@ -90,3 +90,7 @@ const (
 func InputResourceVolumeName(name string) string {
 	return "input-" + name
 }
+
+func OutputResourceVolumeName(name string) string {
+	return "output-" + name
+}

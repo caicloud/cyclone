@@ -39,6 +39,7 @@ type RuntimeExecutor interface {
 	CollectLog(container, wrorkflowrun, stage string) error
 	CopyFromContainer(container, path, dst string) error
 	GetPod() (*core_v1.Pod, error)
+	GetResource(name string) (*v1alpha1.Resource, error)
 }
 
 // NewCoordinator create a coordinator instance.
@@ -250,6 +251,18 @@ func (co *Coordinator) CollectResources() error {
 	fileutil.CreateDirectory(common.CoordinatorResourcesPath)
 
 	for _, resource := range reources {
+		r, err := co.runtimeExec.GetResource(resource.Name)
+		if err != nil {
+			log.WithField("resource", r.Name).Error("Get resource error: ", err)
+			return err
+		}
+
+		// If the resource is persisted in PVC, no need to copy here, Cyclone
+		// will mount it to resolver container directly.
+		if r.Spec.Persistent != nil {
+			continue
+		}
+
 		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
 		fileutil.CreateDirectory(dst)
 

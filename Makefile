@@ -23,7 +23,7 @@
 #
 
 # Current version of the project.
-VERSION ?= v0.9.0
+VERSION ?= v0.9.1
 
 # This repo's root import path (under GOPATH).
 ROOT := github.com/caicloud/cyclone
