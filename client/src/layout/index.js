@@ -43,24 +43,55 @@ class CoreLayout extends Component {
               defaultOpenKeys={['sub1']}
               style={{ height: '100%', borderRight: 0 }}
             >
+              <Menu.Item key="overview">
+                <Icon type="home" />
+                <span>总览</span>
+              </Menu.Item>
+              <Menu.Item key="project">
+                <Icon type="project" />
+                <span>项目</span>
+              </Menu.Item>
+              <Menu.Item key="resource">
+                <Icon type="cluster" />
+                <span>资源</span>
+              </Menu.Item>
+              <Menu.Item key="template">
+                <Icon type="profile" />
+                <span>模板</span>
+              </Menu.Item>
+              <Menu.Item key="pipeline">
+                <NavLink to="/pipeline" activeClassName="active">
+                  <Icon type="share-alt" />
+                  <span>流水线</span>
+                </NavLink>
+              </Menu.Item>
               <SubMenu
-                key="sub1"
+                key="manage"
                 title={
                   <span>
-                    <Icon type="user" />
-                    subnav 1
+                    <Icon type="team" />
+                    管理中心
+                  </span>
+                }
+              >
+                <Menu.Item key="tenant">租户</Menu.Item>
+                <Menu.Item key="user">
+                  <NavLink to="/pipeline" activeClassName="active">
+                    用户
+                  </NavLink>
+                </Menu.Item>
+              </SubMenu>
+              <SubMenu
+                key="setting"
+                title={
+                  <span>
+                    <Icon type="setting" />
+                    配置中心
                   </span>
                 }
               >
                 <Menu.Item key="workspace">
-                  <NavLink to="/workspace" activeClassName="active">
-                    流水线组
-                  </NavLink>
-                </Menu.Item>
-                <Menu.Item key="pipeline">
-                  <NavLink to="/pipeline" activeClassName="active">
-                    流水线
-                  </NavLink>
+                  <span>设置</span>
                 </Menu.Item>
               </SubMenu>
             </Menu>
