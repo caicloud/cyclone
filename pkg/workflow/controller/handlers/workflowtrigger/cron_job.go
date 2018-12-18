@@ -2,8 +2,10 @@ package workflowtrigger
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/pkg/errors"
@@ -16,6 +18,11 @@ import (
 
 const (
 	KeyTemplate = "%s/%s"
+
+	// time zone offset to UTC, in minutes
+	// -480 for Asia/Shanghai(+8)
+	ParamTimeZoneOffset = "timeZoneOffset"
+	ParamSchedule       = "schedule"
 )
 
 type CronTrigger struct {
@@ -93,7 +100,7 @@ func (c *CronTrigger) Run() {
 	}
 }
 
-func getParaValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
+func getParamValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 	for _, item := range items {
 		if item.Name == key {
 			return item.Value, true
@@ -104,10 +111,21 @@ func getParaValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 
 func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
-	schedule, has := getParaValue(wft.Spec.Parameters, "schedule")
+	schedule, has := getParamValue(wft.Spec.Parameters, ParamSchedule)
 	if !has {
 		log.WithField("wft", wft.Name).Warn("Parameter 'schedule' not set in WorkflowTrigger spec")
 		return
+	}
+
+	timezone, has := getParamValue(wft.Spec.Parameters, ParamTimeZoneOffset)
+	if !has {
+		timezone = "0"
+	}
+
+	minuteOffUTC, err := strconv.Atoi(timezone)
+	if err != nil {
+		log.Warnf("can not parse timezone(%s) to int", timezone)
+		minuteOffUTC = 0
 	}
 
 	ct := &CronTrigger{
@@ -121,8 +139,8 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	ct.WorkflowRun = wfr
 
-	c := cron.New()
-	err := c.AddJob(schedule, ct)
+	c := cron.NewWithLocation(time.FixedZone("userZone", -1*60*minuteOffUTC))
+	err = c.AddJob(schedule, ct)
 	if err != nil {
 		log.Errorf("can not create Cron job: %s", err)
 		return
