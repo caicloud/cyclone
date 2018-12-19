@@ -23,6 +23,7 @@ const (
 	// -480 for Asia/Shanghai(+8)
 	ParamTimeZoneOffset = "timeZoneOffset"
 	ParamSchedule       = "schedule"
+	CleverWorkflowName  = "clever.caicloud.io/workflow-name"
 )
 
 type CronTrigger struct {
@@ -91,6 +92,12 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 func (c *CronTrigger) Run() {
 
 	c.WorkflowRun.Name = c.WorkflowTriggerName + "-" + strings.Replace(uuid.NewV1().String(), "-", "", -1)
+
+	if c.WorkflowRun.Labels == nil {
+		c.WorkflowRun.Labels = make(map[string]string)
+	}
+	c.WorkflowRun.Labels[CleverWorkflowName] = c.WorkflowRun.Spec.WorkflowRef.Name
+
 	_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 	if err != nil {
 		c.FailCount++
