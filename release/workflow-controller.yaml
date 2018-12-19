@@ -1,0 +1,47 @@
+_config:
+  _metadata:
+    description: cyclone-workflow-controller
+    name: cyclone-workflow-controller
+    namespace: default
+    template:
+      type: template.caicloud.io/application
+      version: 1.0.0
+    version: '[[ imageTagFromGitTag ]]'
+  controllers:
+  - containers:
+    - command:
+      - /workspace/controller
+      image: '[[ registry_release ]]/cyclone-workflow-controller:[[ imageTagFromGitTag ]]'
+      imagePullPolicy: Always
+    controller:
+      replica: 1
+    pod:
+      serviceAccountName: admin
+    type: Deployment
+    configs:
+    - name: workflow-controller-config
+      data:
+      - key: workflow-controller.json
+        value: |
+          {
+            "images": {
+              "git-resolver": "[[ registry_release ]]/release/cyclone-resolver-git:[[ imageTagFromGitTag ]]",
+              "image-resolver": "[[ registry_release ]]/release/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
+              "kv-resolver": "[[ registry_release ]]/release/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
+              "coordinator": "[[ registry_release ]]/release/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
+              "gc": "[[ registry_library ]]/alpine:3.7"
+            },
+            "logging": {
+              "level": "debug"
+            },
+            "gc": {
+              "enabled": true,
+              "delay_seconds": 3600,
+              "retry": 1
+            },
+            "limits": {
+              "max_workflowruns": 50
+            },
+            "pvc": "native-cyclone-server-server-v1-0-cyclone-data",
+            "cyclone_server_addr": "native-cyclone-server"
+          }

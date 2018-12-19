@@ -1,0 +1,44 @@
+_config:
+  _metadata:
+    description: native-cyclone-server
+    name: native-cyclone-server
+    namespace: default
+    template:
+      type: template.caicloud.io/application
+      version: 1.0.0
+    version: '[[ imageTagFromGitTag ]]'
+  controllers:
+  - containers:
+    - command:
+      - /cyclone-server
+      image: '[[ registry_release ]]/native-cyclone-server:[[ imageTagFromGitTag ]]'
+      imagePullPolicy: Always
+      mounts:
+      - name: cyclone-data
+        path: /var/lib/cyclone
+      ports:
+      - port: 7089
+        protocol: TCP
+    controller:
+      replica: 1
+    pod:
+      serviceAccountName: admin
+    services:
+    - name: native-cyclone-server
+      ports:
+      - port: 7089
+        protocol: TCP
+        targetPort: 7089
+      type: ClusterIP
+    type: Deployment
+    volumes:
+    - name: cyclone-data
+      type: Dynamic
+      source:
+        class: heketi-storageclass
+        modes:
+        - ReadWriteMany
+      storage:
+        request: 500Gi
+        limit: 500Gi
+
