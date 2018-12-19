@@ -179,9 +179,11 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 			scmType := event.Pipeline.Build.Stages.CodeCheckout.MainRepo.Type
 			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
 				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				event.PipelineRecord.ErrorMessage = "Create SCM tag fails, please check your account permissions."
+				msg := fmt.Sprintf("%s: please check your account permissions.\n", api.CreateTagStageName)
+				event.PipelineRecord.ErrorMessage = event.PipelineRecord.ErrorMessage + msg
 			} else {
-				event.PipelineRecord.ErrorMessage = fmt.Sprintf("Create SCM tag fails : %v", err)
+				msg := fmt.Sprintf("%s: %v\n", api.CreateTagStageName, err)
+				event.PipelineRecord.ErrorMessage = event.PipelineRecord.ErrorMessage + msg
 			}
 
 			err = worker.Client.SendEvent(event)

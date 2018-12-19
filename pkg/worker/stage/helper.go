@@ -135,13 +135,8 @@ func updateRecordStageStatus(stages *api.BuildStages, pipelineRecord *api.Pipeli
 		}
 
 		if failErr != nil {
-			desp, ok := stageDesps[stage]
-			if !ok {
-				err := fmt.Errorf("stage status %s is not supported", status)
-				log.Error(err)
-				return err
-			}
-			pipelineRecord.ErrorMessage = fmt.Sprintf("%s fails : %v", desp, failErr)
+			msg := fmt.Sprintf("%s: %v\n", stage, failErr)
+			pipelineRecord.ErrorMessage = pipelineRecord.ErrorMessage + msg
 		}
 
 		// Wait for a while to ensure that stage logs are reported to server.
