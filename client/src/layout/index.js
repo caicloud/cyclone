@@ -17,9 +17,7 @@ class CoreLayout extends Component {
     const {
       location: { pathname },
     } = this.props;
-    // TODO(qme): think of a more reasonable way
-    const selectNav = pathname.split('/')[1];
-    const menuSelectKey = selectNav ? selectNav : 'overview';
+    const selectNav = pathname === '/' ? 'overview' : pathname;
     return (
       <Layout>
         <Header className="header">
@@ -34,7 +32,7 @@ class CoreLayout extends Component {
           <Sider width={200} style={{ background: '#fff' }}>
             <Menu
               mode="inline"
-              defaultSelectedKeys={menuSelectKey}
+              defaultSelectedKeys={selectNav}
               style={{ height: '100%', borderRight: 0 }}
             >
               <Menu.Item key="overview">

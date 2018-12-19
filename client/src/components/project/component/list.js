@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 @observer
 class List extends React.Component {
   render() {
-    return <div>项目</div>;
+    return <div>{intl.get('sideNav.project')}</div>;
   }
 }
 

@@ -17,33 +17,33 @@ class List extends React.Component {
     const { pipeline } = this.props;
     const columns = [
       {
-        title: '名称',
+        title: intl.get('name'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '最近版本',
+        title: intl.get('workflow.recentVersion'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '创建者',
+        title: intl.get('workflow.creator'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '创建时间',
+        title: intl.get('workflow.creationTime'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '操作',
+        title: intl.get('action'),
         dataIndex: 'name',
         key: 'name',
         render: () => {
           return (
             <div>
-              <Button>执行</Button>
+              <Button>{intl.get('operation.execute')}</Button>
             </div>
           );
         },
@@ -52,7 +52,7 @@ class List extends React.Component {
     return (
       <div>
         <div className="head-bar">
-          <Button type="primary">新增</Button>
+          <Button type="primary">{intl.get('operation.add')}</Button>
           <Search
             placeholder="input search text"
             onSearch={value => console.log(value)}

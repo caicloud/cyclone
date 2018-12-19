@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 @observer
 class Overview extends React.Component {
   render() {
-    return <div>总览</div>;
+    return <div>{intl.get('sideNav.overview')}</div>;
   }
 }
 

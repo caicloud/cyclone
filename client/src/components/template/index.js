@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 @observer
 class Template extends React.Component {
   render() {
-    return <div>模版</div>;
+    return <div>{intl.get('sideNav.template')}</div>;
   }
 }
 

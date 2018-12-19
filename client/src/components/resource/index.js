@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 @observer
 class Resource extends React.Component {
   render() {
-    return <div>资源</div>;
+    return <div>{intl.get('sideNav.resource')}</div>;
   }
 }
 
