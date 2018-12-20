@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	"github.com/satori/go.uuid"
@@ -23,7 +24,6 @@ const (
 	// -480 for Asia/Shanghai(+8)
 	ParamTimeZoneOffset = "timeZoneOffset"
 	ParamSchedule       = "schedule"
-	CleverWorkflowName  = "clever.caicloud.io/workflow-name"
 )
 
 type CronTrigger struct {
@@ -96,7 +96,7 @@ func (c *CronTrigger) Run() {
 	if c.WorkflowRun.Labels == nil {
 		c.WorkflowRun.Labels = make(map[string]string)
 	}
-	c.WorkflowRun.Labels[CleverWorkflowName] = c.WorkflowRun.Spec.WorkflowRef.Name
+	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
 
 	_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 	if err != nil {
