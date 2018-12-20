@@ -89,6 +89,9 @@ const (
 
 	// SVNRevisionQueryParameterName represents the svn commit revision.
 	SVNRevisionQueryParameterName = "revision"
+
+	// SCM represents scm type of oauth
+	SCM = "scm"
 )
 
 // GetHttpRequest gets request from context.
