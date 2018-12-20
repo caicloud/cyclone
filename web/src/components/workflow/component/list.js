@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Button, Input } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
+import EllipsisMenu from '../../public/ellipsisMenu';
 const Search = Input.Search;
 
 @inject('workflow')
@@ -40,13 +41,14 @@ class List extends React.Component {
         title: intl.get('action'),
         dataIndex: 'name',
         key: 'name',
-        render: () => {
-          return (
-            <div>
-              <Button>{intl.get('operation.execute')}</Button>
-            </div>
-          );
-        },
+        render: () => (
+          <EllipsisMenu
+            menuText="删除"
+            menuFunc={() => {
+              console.log('55555');
+            }}
+          />
+        ),
       },
     ];
     return (
