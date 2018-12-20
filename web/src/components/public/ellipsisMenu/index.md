@@ -3,7 +3,7 @@
 ### single delete action
 
 ```js
-import EllipsisMenu from './index';
+import EllipsisMenu from '@/public/ellipsisMenu/index';
 
 <EllipsisMenu menuFunc={() => {}} disabled>
 

@@ -33,7 +33,7 @@ class List extends React.Component {
         key: 'name',
       },
       {
-        title: intl.get('workflow.creationTime'),
+        title: intl.get('creationTime'),
         dataIndex: 'name',
         key: 'name',
       },
@@ -41,14 +41,7 @@ class List extends React.Component {
         title: intl.get('action'),
         dataIndex: 'name',
         key: 'name',
-        render: () => (
-          <EllipsisMenu
-            menuText="删除"
-            menuFunc={() => {
-              console.log('55555');
-            }}
-          />
-        ),
+        render: () => <EllipsisMenu menuFunc={() => {}} />,
       },
     ];
     return (
@@ -57,7 +50,7 @@ class List extends React.Component {
           <Button type="primary">{intl.get('operation.add')}</Button>
           <Search
             placeholder="input search text"
-            onSearch={value => console.log(value)}
+            onSearch={() => {}}
             style={{ width: 200 }}
           />
         </div>

@@ -1,12 +1,14 @@
 {
   "name": "名称",
   "action": "操作",
+  "creationTime": "创建时间",
   "operation": {
     "add": "新增",
     "delete": "删除",
     "update": "更新",
     "modify": "修改",
-    "execute": "执行"
+    "execute": "执行",
+    "confirm": "确定"
   },
   "sideNav": {
     "overview": "总览",
@@ -17,7 +19,14 @@
   },
   "workflow": {
     "recentVersion": "最近版本",
-    "creator": "创建者",
-    "creationTime": "创建时间"
+    "creator": "创建者"
+  },
+  "project": {
+    "workflowCount": "流水线数量",
+    "createProject": "新增项目",
+    "authentication": "认证",
+    "formTip": {
+      "projectNameRequired": "请输入项目名称"
+    }
   }
 }

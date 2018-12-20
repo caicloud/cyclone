@@ -1,12 +1,14 @@
 {
   "name": "Name",
   "action": "Action",
+  "creationTime": "Creation time",
   "operation": {
     "add": "Add",
     "delete": "Delete",
     "update": "Update",
     "modify": "Modify",
-    "execute": "Execute"
+    "execute": "Execute",
+    "confirm": "Confirm"
   },
   "sideNav": {
     "overview": "Overview",
@@ -17,7 +19,14 @@
   },
   "workflow": {
     "recentVersion": "Recent version",
-    "creator": "Creator",
-    "creationTime": "Creation time"
+    "creator": "Creator"
+  },
+  "project": {
+    "workflowCount": "Workflow count",
+    "createProject": "Create Project",
+    "authentication": "Authentication",
+    "formTip": {
+      "projectNameRequired": "Please input the name of project!"
+    }
   }
 }

@@ -12,17 +12,18 @@ class EllipsisMenu extends React.Component {
       'topCenter',
       'topRight',
     ]),
-    menuText: PropTypes.oneOf([PropTypes.string, PropTypes.array]),
-    menuFunc: PropTypes.oneOf([PropTypes.string, PropTypes.array]),
-    disabled: PropTypes.oneOf([PropTypes.string, PropTypes.array]),
+    menuText: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
+    menuFunc: PropTypes.oneOfType([PropTypes.func, PropTypes.array]),
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
   };
   static defaultProps = {
     placement: 'bottomLeft',
     disabled: false,
-    menuText: intl.get('operation.delete'),
   };
+
   render() {
     const { placement, menuText, menuFunc, disabled } = this.props;
+    const _menuText = menuText || intl.get('operation.delete');
     const menu = (
       <Menu>
         {_.isArray(menuText) ? (
@@ -33,13 +34,21 @@ class EllipsisMenu extends React.Component {
           ))
         ) : (
           <Menu.Item onClick={menuFunc} disabled={disabled}>
-            {menuText}
+            {_menuText}
           </Menu.Item>
         )}
       </Menu>
     );
     return (
-      <Dropdown overlay={menu} placement={placement} trigger={['click']}>
+      <Dropdown
+        overlay={menu}
+        placement={placement}
+        trigger={['click']}
+        onClick={e => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <Icon type="ellipsis" style={{ transform: 'rotate(90deg)' }} />
       </Dropdown>
     );
