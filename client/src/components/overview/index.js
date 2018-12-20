@@ -1,6 +1,6 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
-@inject('pipeline')
+@inject('workflow')
 @observer
 class Overview extends React.Component {
   render() {

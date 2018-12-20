@@ -2,8 +2,8 @@ import http from './http.js';
 
 const fetchApi = {
   http,
-  fetchPipelineList(workspace, query) {
-    return http.get(`/workspaces/${workspace}/pipelines`, query).then(data => {
+  fetchWorkflowList(project, query) {
+    return http.get(`/projects/${project}/workflows`, query).then(data => {
       return data;
     });
   },

@@ -3,11 +3,11 @@ import { observable, useStrict, action } from 'mobx';
 
 useStrict(true);
 
-class Pipeline {
-  @observable pipelineList = [];
+class Workflow {
+  @observable workflowList = [];
   @action.bound
-  getPipelineList(pipelineId) {
-    this.pipelineList = [
+  getWorkflowList(workflowId) {
+    this.workflowList = [
       {
         id: '5c04e7a73c17eb00019e5a32',
         name: 'svn-1',
@@ -17,11 +17,11 @@ class Pipeline {
       },
     ];
     // TODO
-    // return fetchApi.fetchPipelineList("svn-trigger", {}).then(data => {
+    // return fetchApi.fetchWorkflowList("svn-trigger", {}).then(data => {
 
     // });
     return;
   }
 }
 
-export default new Pipeline();
+export default new Workflow();

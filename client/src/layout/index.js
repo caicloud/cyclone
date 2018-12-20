@@ -77,7 +77,7 @@ class CoreLayout extends Component {
               >
                 <Menu.Item key="tenant">租户</Menu.Item>
                 <Menu.Item key="user">
-                  <NavLink to="/pipeline" activeClassName="active">
+                  <NavLink activeClassName="active">
                     用户
                   </NavLink>
                 </Menu.Item>
@@ -91,7 +91,7 @@ class CoreLayout extends Component {
                   </span>
                 }
               >
-                <Menu.Item key="workspace">
+                <Menu.Item>
                   <span>设置</span>
                 </Menu.Item>
               </SubMenu> */}

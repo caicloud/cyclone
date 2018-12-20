@@ -4,17 +4,17 @@ import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 const Search = Input.Search;
 
-@inject('pipeline')
+@inject('workflow')
 @observer
 class List extends React.Component {
   static propTypes = {
-    pipeline: PropTypes.object,
+    workflow: PropTypes.object,
   };
   componentDidMount() {
-    this.props.pipeline.getPipelineList();
+    this.props.workflow.getWorkflowList();
   }
   render() {
-    const { pipeline } = this.props;
+    const { workflow } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -59,7 +59,7 @@ class List extends React.Component {
             style={{ width: 200 }}
           />
         </div>
-        <Table columns={columns} dataSource={pipeline.pipelineList} />
+        <Table columns={columns} dataSource={workflow.workflowList} />
       </div>
     );
   }

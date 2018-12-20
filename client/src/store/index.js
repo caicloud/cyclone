@@ -1,6 +1,6 @@
-import pipeline from './pipeline';
+import workflow from './workflow';
 
 const stores = {
-  pipeline,
+  workflow,
 };
 export default stores;
