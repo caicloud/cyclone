@@ -1,0 +1,14 @@
+{
+  "extends": ["react-app", "prettier"],
+  "parser": "babel-eslint",
+  "plugins": ["prettier"],
+  "globals": {
+    "_": true,
+    "intl": true
+  },
+  "rules": {
+    "react/prop-types": "warn",
+    "prettier/prettier": "error",
+    "no-useless-escape": "off"
+  }
+}

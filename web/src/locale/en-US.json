@@ -1,0 +1,23 @@
+{
+  "name": "Name",
+  "action": "Action",
+  "operation": {
+    "add": "Add",
+    "delete": "Delete",
+    "update": "Update",
+    "modify": "Modify",
+    "execute": "Execute"
+  },
+  "sideNav": {
+    "overview": "Overview",
+    "project": "Project",
+    "resource": "Resource",
+    "template": "Template",
+    "workflow": "Workflow"
+  },
+  "workflow": {
+    "recentVersion": "Recent version",
+    "creator": "Creator",
+    "creationTime": "Creation time"
+  }
+}
