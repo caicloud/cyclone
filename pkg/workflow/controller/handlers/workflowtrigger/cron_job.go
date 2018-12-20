@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	"github.com/satori/go.uuid"
@@ -91,6 +92,12 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 func (c *CronTrigger) Run() {
 
 	c.WorkflowRun.Name = c.WorkflowTriggerName + "-" + strings.Replace(uuid.NewV1().String(), "-", "", -1)
+
+	if c.WorkflowRun.Labels == nil {
+		c.WorkflowRun.Labels = make(map[string]string)
+	}
+	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
+
 	_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 	if err != nil {
 		c.FailCount++

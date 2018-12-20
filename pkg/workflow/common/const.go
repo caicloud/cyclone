@@ -46,6 +46,7 @@ const (
 	ResourcePushCommand = "push"
 
 	WorkflowLabelName         = "cyclone.io/workflow"
+	WorkflowRunLabelName      = "cyclone.io/workflow-name"
 	PodLabelSelector          = "cyclone.io/workflow==true"
 	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
 	GCAnnotationName          = "cyclone.io/gc"
