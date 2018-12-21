@@ -3,7 +3,7 @@ import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import EllipsisMenu from '../../public/ellipsisMenu';
-import CreateProjectForm from './addProject';
+import CreateProjectForm from './AddProject';
 
 @inject('workflow')
 @observer

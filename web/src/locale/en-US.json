@@ -26,7 +26,7 @@
     "createProject": "Create Project",
     "authentication": "Authentication",
     "formTip": {
-      "projectNameRequired": "Please input the name of project!"
+      "projectNameRequired": "Please input the name of project"
     }
   }
 }

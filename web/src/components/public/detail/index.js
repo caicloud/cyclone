@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Head from './head';
-import HeadItem from './headItem';
-import DetailContent from './content';
+import Head from './Head';
+import HeadItem from './HeadItem';
+import DetailContent from './Content';
 
 class Detail extends React.Component {
   render() {

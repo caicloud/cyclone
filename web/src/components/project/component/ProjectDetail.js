@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'antd';
 import { inject, observer, PropTypes } from 'mobx-react';
-import Detail from '@/public/detail/index';
+import Detail from '@/public/detail';
 const { DetailHead, DetailHeadItem, DetailContent } = Detail;
 
 const TabPane = Tabs.TabPane;

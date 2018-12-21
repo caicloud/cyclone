@@ -1,5 +1,5 @@
-import Project from './component/list';
-import ProjectDetail from './component/detail/index';
+import Project from './component/List';
+import ProjectDetail from './component/ProjectDetail';
 import { Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import React from 'react';
