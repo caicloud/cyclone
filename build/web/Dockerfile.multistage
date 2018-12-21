@@ -1,0 +1,11 @@
+FROM cargo-infra.caicloud.xyz/library/node:9-alpine as build-deps
+WORKDIR /usr/src/app
+COPY web/package.json web/yarn.lock ./web/
+RUN cd web && ls -la && yarn
+COPY ./web/ ./web
+RUN cd web && ls -la && yarn build
+
+FROM cargo-infra.caicloud.xyz/library/nginx:1.12.2
+COPY --from=build-deps /usr/src/app/web/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
