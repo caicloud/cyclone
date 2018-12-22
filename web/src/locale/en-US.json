@@ -15,18 +15,22 @@
     "project": "Project",
     "resource": "Resource",
     "template": "Template",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "integration": "IntegrationCenter"
   },
   "workflow": {
     "recentVersion": "Recent version",
-    "creator": "Creator"
+    "creator": "Creator",
+    "creationTime": "Creation time"
   },
-  "project": {
-    "workflowCount": "Workflow count",
-    "createProject": "Create Project",
-    "authentication": "Authentication",
-    "formTip": {
-      "projectNameRequired": "Please input the name of project"
+  "integration": {
+    "type": "Type",
+    "integrationTime": "Integration time",
+    "dataform": {
+      "imagesregistry": "Imagesregistry",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "datasourcetype": "Please select a resource type"
     }
   }
 }
