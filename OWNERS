@@ -1,12 +1,14 @@
 approvers:
   - supereagle
   - cd1989
-  - zoumo
   - zhujian7
+  - artecher
+  - qiuxiaolian
 reviewers:
   - supereagle
   - cd1989
   - zhujian7
-  - zoumo
-  - gaocegege
-  - bbbmj
+  - artecher
+  - qiuxiaolian
+  - caosm
+  - huxiangtao
