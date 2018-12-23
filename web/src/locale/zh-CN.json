@@ -26,6 +26,8 @@
   "integration": {
     "type": "类型",
     "integrationTime": "集成时间",
+    "datasource": "数据源",
+    "adddatasource": "新增数据源",
     "dataform": {
       "imagesregistry": "镜像仓库",
       "confirm": "确定",

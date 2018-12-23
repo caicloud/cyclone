@@ -52,7 +52,7 @@ class List extends React.Component {
     return (
       <div>
         <div className="head-bar">
-          <h2>数据源</h2>
+          <h2>{intl.get('integration.datasource')}</h2>
           <Button type="primary" onClick={this.addDataSource}>
             {intl.get('operation.add')}
           </Button>
@@ -60,7 +60,7 @@ class List extends React.Component {
         <Table columns={columns} dataSource={integration.integrationList} />
         <Modal
           ref="modal"
-          title="新增数据源"
+          title={intl.get('integration.adddatasource')}
           visible={this.state.visible}
           footer={null}
           onCancel={this.handleCancel}

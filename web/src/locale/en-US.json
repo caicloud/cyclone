@@ -26,6 +26,8 @@
   "integration": {
     "type": "Type",
     "integrationTime": "Integration time",
+    "datasource": "Data source",
+    "adddatasource": "Add new data source",
     "dataform": {
       "imagesregistry": "Imagesregistry",
       "confirm": "Confirm",
