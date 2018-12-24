@@ -4,7 +4,7 @@ import { Breadcrumb } from 'antd';
 import PropTypes from 'prop-types';
 
 const mainModules = ['overview', 'project', 'template', 'resource', 'workflow'];
-const operation = ['update', 'add'];
+const operations = ['update', 'add'];
 
 /**
  * define the route rules
@@ -18,9 +18,9 @@ const BreadcrumbComponent = ({ location }) => {
   const extraBreadcrumbItems = pathSnippets.map((path, index) => {
     const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
     let text = path;
-    if (_.includes(mainModules, `${path}`)) {
+    if (_.includes(mainModules, path)) {
       text = intl.get(`sideNav.${path}`);
-    } else if (_.includes(operation, `${path}`)) {
+    } else if (_.includes(operations, path)) {
       text = intl.get(`operation.${path}`);
     }
     return (
