@@ -16,7 +16,7 @@
     "resource": "Resource",
     "template": "Template",
     "workflow": "Workflow",
-    "integration": "IntegrationCenter"
+    "integration": "Integration Center"
   },
   "workflow": {
     "recentVersion": "Recent version",
@@ -29,9 +29,12 @@
     "datasource": "Data source",
     "adddatasource": "Add new data source",
     "dataform": {
-      "imagesregistry": "Imagesregistry",
+      "dockerregistry": "Docker registry",
+      "registryaddress": "Registry Address",
       "confirm": "Confirm",
       "cancel": "Cancel",
+      "username": "Username",
+      "pwd": "password",
       "datasourcetype": "Please select a resource type"
     }
   }

@@ -7,7 +7,7 @@ const Option = Select.Option;
 const formMap = {
   git: [
     {
-      label: 'url',
+      label: 'URL',
       key: 'url',
     },
     {
@@ -17,15 +17,15 @@ const formMap = {
   ],
   imagesregistry: [
     {
-      label: '域名',
-      key: 'domain',
+      label: intl.get('integration.dataform.registryaddress'),
+      key: 'registryAddress',
     },
     {
-      label: '用户名',
+      label: intl.get('integration.dataform.username'),
       key: 'username',
     },
     {
-      label: '密码',
+      label: intl.get('integration.dataform.pwd'),
       key: 'pwd',
     },
   ],
@@ -60,7 +60,6 @@ class DataForm extends React.Component {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        console.log('Received values of form: ', values);
         // TODO post request
         this.resetForm();
         onSubmit();

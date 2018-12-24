@@ -44,7 +44,7 @@ class List extends React.Component {
         key: 'type',
       },
       {
-        title: intl.get('integration.integrationTime'),
+        title: intl.get('integration.creationTime'),
         dataIndex: 'time',
         key: 'time',
       },

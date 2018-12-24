@@ -25,13 +25,16 @@
   },
   "integration": {
     "type": "类型",
-    "integrationTime": "集成时间",
+    "creationTime": "创建时间",
     "datasource": "数据源",
     "adddatasource": "新增数据源",
     "dataform": {
-      "imagesregistry": "镜像仓库",
+      "dockerregistry": "镜像仓库",
+      "registryaddress": "仓库地址",
       "confirm": "确定",
       "cancel": "取消",
+      "username": "用户吗",
+      "pwd": "密码",
       "datasourcetype": "请选择资源类型"
     }
   }
