@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Button, Input } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
+import EllipsisMenu from '../../public/ellipsisMenu';
 const Search = Input.Search;
 
 @inject('workflow')
@@ -32,7 +33,7 @@ class List extends React.Component {
         key: 'name',
       },
       {
-        title: intl.get('workflow.creationTime'),
+        title: intl.get('creationTime'),
         dataIndex: 'name',
         key: 'name',
       },
@@ -40,13 +41,7 @@ class List extends React.Component {
         title: intl.get('action'),
         dataIndex: 'name',
         key: 'name',
-        render: () => {
-          return (
-            <div>
-              <Button>{intl.get('operation.execute')}</Button>
-            </div>
-          );
-        },
+        render: () => <EllipsisMenu menuFunc={() => {}} />,
       },
     ];
     return (
@@ -55,7 +50,7 @@ class List extends React.Component {
           <Button type="primary">{intl.get('operation.add')}</Button>
           <Search
             placeholder="input search text"
-            onSearch={value => console.log(value)}
+            onSearch={() => {}}
             style={{ width: 200 }}
           />
         </div>
