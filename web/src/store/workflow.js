@@ -13,6 +13,8 @@ class Workflow {
         name: 'svn-1',
         alias: 'svn-1',
         owner: 'admin',
+        recentVersion: 'v1.1.0',
+        creationTime: '2018-09-09',
         projectID: '5c04dcef3c17eb00019e5a2d',
       },
     ];
