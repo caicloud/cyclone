@@ -14,10 +14,9 @@ class CoreLayout extends Component {
     }),
   };
   render() {
-    const {
-      location: { pathname },
-    } = this.props;
-    const selectNav = pathname === '/' ? 'overview' : pathname;
+    const { location } = this.props;
+    const pathSnippets = location.pathname.split('/').filter(i => i);
+    const selectNav = pathSnippets[0] ? pathSnippets[0] : '/overview';
     return (
       <Layout>
         <Header className="header">
@@ -32,7 +31,7 @@ class CoreLayout extends Component {
           <Sider width={200} style={{ background: '#fff' }}>
             <Menu
               mode="inline"
-              defaultSelectedKeys={selectNav}
+              defaultSelectedKeys={[selectNav]}
               style={{ height: '100%', borderRight: 0 }}
             >
               <Menu.Item key="overview">
@@ -97,7 +96,7 @@ class CoreLayout extends Component {
               </SubMenu> */}
             </Menu>
           </Sider>
-          <Layout style={{ padding: '0 24px 24px' }}>
+          <Layout style={{ padding: '24px 24px' }}>
             {/* TODO: breadcrumb navigation */}
             {/* <Breadcrumb style={{ margin: '16px 0' }}>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
