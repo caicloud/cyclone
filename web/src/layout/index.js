@@ -14,22 +14,37 @@ class CoreLayout extends Component {
       pathname: PropTypes.string,
     }),
   };
+
+  state = {
+    collapsed: false,
+  };
+
+  onCollapse = collapsed => {
+    this.setState({ collapsed });
+  };
+
   render() {
     const { location } = this.props;
     const pathSnippets = location.pathname.split('/').filter(i => i);
     const selectNav = pathSnippets[0] ? pathSnippets[0] : '/overview';
     return (
-      <Layout>
-        <Header className="header">
+      <Layout style={{ height: '100%' }}>
+        <Header className="header" style={{ lineHeight: '64px' }}>
           <div className="logo">CYCLONE</div>
-          <Menu theme="dark" mode="horizontal" style={{ lineHeight: '64px' }}>
+          <Menu mode="horizontal" theme="dark">
             <Menu.Item key="3">
               <Icon type="user" />
             </Menu.Item>
           </Menu>
         </Header>
         <Layout>
-          <Sider width={200} style={{ background: '#fff' }}>
+          <Sider
+            width={200}
+            collapsible
+            style={{ background: '#fff' }}
+            collapsed={this.state.collapsed}
+            onCollapse={this.onCollapse}
+          >
             <Menu
               mode="inline"
               defaultSelectedKeys={[selectNav]}
@@ -97,13 +112,12 @@ class CoreLayout extends Component {
               </SubMenu> */}
             </Menu>
           </Sider>
-          <Layout style={{ padding: '12px 24px 24px 24px' }}>
+          <Layout style={{ margin: '16px' }}>
             <BreadCrumb location={location} />
             <Content
               style={{
                 background: '#fff',
                 padding: 24,
-                margin: 0,
                 minHeight: 280,
               }}
             >
