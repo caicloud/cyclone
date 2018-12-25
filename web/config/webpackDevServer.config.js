@@ -2,6 +2,7 @@
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
+const mockServerMiddleware = require('./middleware/mockServerMiddleware');
 const path = require('path');
 const config = require('./webpack.config.dev');
 const paths = require('./paths');
@@ -95,6 +96,11 @@ module.exports = function(proxy, allowedHost) {
       // it used the same host and port.
       // https://github.com/facebookincubator/create-react-app/issues/2272#issuecomment-302832432
       app.use(noopServiceWorkerMiddleware());
+
+      // get data from mock server firstly
+      app.use(
+        mockServerMiddleware(process.env.MOCK_DIR || `${__dirname}/../mock`)
+      );
     },
   };
 };

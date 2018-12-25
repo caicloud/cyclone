@@ -73,7 +73,7 @@ const removeLoading = function() {
 };
 // axios instance
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_SERVICE,
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   timeout: 5000,
   headers: {
     accesstoken: getToken(),
