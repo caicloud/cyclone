@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Button, Input } from 'antd';
-import { inject, observer } from 'mobx-react';
+import { inject, observer, PropTypes as MobxPropTypes } from 'mobx-react';
 import PropTypes from 'prop-types';
 import EllipsisMenu from '../../public/ellipsisMenu';
 const Search = Input.Search;
@@ -9,13 +9,18 @@ const Search = Input.Search;
 @observer
 class List extends React.Component {
   static propTypes = {
-    workflow: PropTypes.object,
+    workflow: PropTypes.shape({
+      workflowList: MobxPropTypes.observableArray,
+      getWorkflowList: PropTypes.func,
+    }),
   };
   componentDidMount() {
     this.props.workflow.getWorkflowList();
   }
   render() {
-    const { workflow } = this.props;
+    const {
+      workflow: { workflowList },
+    } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -24,23 +29,22 @@ class List extends React.Component {
       },
       {
         title: intl.get('workflow.recentVersion'),
-        dataIndex: 'name',
-        key: 'name',
+        dataIndex: 'recentVersion',
+        key: 'recentVersion',
       },
       {
         title: intl.get('workflow.creator'),
-        dataIndex: 'name',
-        key: 'name',
+        dataIndex: 'owner',
+        key: 'owner',
       },
       {
         title: intl.get('creationTime'),
-        dataIndex: 'name',
-        key: 'name',
+        dataIndex: 'creationTime',
+        key: 'creationTime',
       },
       {
         title: intl.get('action'),
-        dataIndex: 'name',
-        key: 'name',
+        dataIndex: 'action',
         render: () => <EllipsisMenu menuFunc={() => {}} />,
       },
     ];
@@ -54,7 +58,11 @@ class List extends React.Component {
             style={{ width: 200 }}
           />
         </div>
-        <Table columns={columns} dataSource={workflow.workflowList} />
+        <Table
+          rowKey={row => row.id}
+          columns={columns}
+          dataSource={[...workflowList]}
+        />
       </div>
     );
   }
