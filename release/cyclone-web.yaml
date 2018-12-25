@@ -1,0 +1,28 @@
+_config:
+  _metadata:
+    description: cyclone-web
+    name: cyclone-web
+    namespace: default
+    template:
+      type: template.caicloud.io/application
+      version: 1.0.0
+    version: 'v0.1.0-alpha'
+  controllers:
+  - containers:
+    - image: 'cargo-infra.caicloud.xyz/devops_release/cyclone-web:v0.1.0-alpha'
+      imagePullPolicy: Always
+      ports:
+      - port: 80
+        protocol: TCP
+    controller:
+      replica: 1
+    pod:
+      serviceAccountName: admin
+    services:
+    - name: cyclone-web
+      ports:
+      - port: 7090
+        protocol: TCP
+        targetPort: 80
+      type: ClusterIP
+    type: Deployment
