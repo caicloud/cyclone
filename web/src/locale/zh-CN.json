@@ -2,6 +2,7 @@
   "name": "名称",
   "action": "操作",
   "creationTime": "创建时间",
+  "description": "描述",
   "operation": {
     "add": "新增",
     "delete": "删除",

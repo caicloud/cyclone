@@ -2,6 +2,7 @@
   "name": "Name",
   "action": "Action",
   "creationTime": "Creation time",
+  "description": "Description",
   "operation": {
     "add": "Add",
     "delete": "Delete",

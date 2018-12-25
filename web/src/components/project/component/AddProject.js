@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Form, Input, Select } from 'antd';
+import { Modal, Form, Input, Cascader } from 'antd';
 
 const FormItem = Form.Item;
-const Option = Select.Option;
+const { TextArea } = Input;
 /**
  * TODO: list authentication
  */
@@ -27,7 +27,7 @@ const CreateProjectForm = Form.create()(
           onCancel={onCancel}
           onOk={onCreate}
         >
-          <Form layout="horizontal">
+          <Form>
             <FormItem label={intl.get('name')}>
               {getFieldDecorator('name', {
                 rules: [
@@ -38,15 +38,39 @@ const CreateProjectForm = Form.create()(
                 ],
               })(<Input />)}
             </FormItem>
-            <FormItem label={intl.get('project.authentication')}>
-              {getFieldDecorator('authentication')(
-                <Select>
-                  <Option value="gitlab">gitlab</Option>
-                  <Option value="github">github</Option>
-                  <Option value="registry">registry</Option>
-                </Select>
+            <FormItem label={intl.get('description')}>
+              {getFieldDecorator('description')(
+                <TextArea autosize={{ minRows: 2, maxRows: 6 }} />
               )}
             </FormItem>
+            <FormItem label="外部系统">
+              {getFieldDecorator('system', {
+                rules: [
+                  {
+                    required: true,
+                  },
+                ],
+              })(
+                <Cascader
+                  options={[
+                    {
+                      label: 'SCM',
+                      value: 'scm',
+                      children: [
+                        { value: 'githuab', label: 'Github' },
+                        { value: 'gitlab', label: 'Gitlab' },
+                      ],
+                    },
+                    {
+                      label: 'Docker Registry',
+                      value: 'registry',
+                      children: [{ value: 'devops', label: 'Devops' }],
+                    },
+                  ]}
+                />
+              )}
+            </FormItem>
+            {/* TODO(qme)：resource component */}
           </Form>
         </Modal>
       );
