@@ -112,6 +112,23 @@ build-linux:
 	  done                                                                             \
 	done
 
+build-web:
+	for registry in $(REGISTRIES); do                                                  \
+	  docker run --rm                                                                  \
+	    -v $(PWD)/web/:/app                                                            \
+	    -w /app                                                                        \
+	      $${registry}/node:8.9-alpine                                                 \
+	        sh -c '                                                                    \
+	          yarn;                                                                    \
+	          yarn build';                                                             \
+	done
+
+build-web-local:
+	sh -c '                                                                            \
+	  cd web;                                                                          \
+	  yarn;                                                                            \
+	  yarn build'
+
 container: build-linux
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
