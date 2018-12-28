@@ -6,10 +6,10 @@ _config:
     template:
       type: template.caicloud.io/application
       version: 1.0.0
-    version: 'v0.1.0-alpha'
+    version: '[[ imageTagFromGitTag ]]'
   controllers:
   - containers:
-    - image: 'cargo-infra.caicloud.xyz/devops_release/cyclone-web:v0.1.0-alpha'
+    - image: '[[ registry_release ]]/cyclone-web:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
       ports:
       - port: 80
