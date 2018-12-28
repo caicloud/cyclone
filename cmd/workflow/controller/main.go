@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
@@ -39,6 +40,9 @@ func main() {
 
 	// Init logging system.
 	controller.InitLogger(&controller.Config.Logging)
+
+	// create CRD
+	v1alpha1.EnsureCRDCreated("", *kubeConfigPath)
 
 	// Watch configure changes in ConfigMap.
 	cmController := controllers.NewConfigMapController(client, *namespace, *configMap)
