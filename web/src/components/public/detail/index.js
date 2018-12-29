@@ -5,17 +5,12 @@ import HeadItem from './HeadItem';
 import DetailContent from './Content';
 import Action from './Action';
 
-class Detail extends React.Component {
-  render() {
-    const { children, actions } = this.props;
-    return (
-      <div className="u-detail">
-        {actions && actions}
-        {children}
-      </div>
-    );
-  }
-}
+const Detail = ({ children, actions }) => (
+  <div className="u-detail">
+    {actions && actions}
+    {children}
+  </div>
+);
 
 Detail.DetailAction = Action;
 Detail.DetailHead = Head;

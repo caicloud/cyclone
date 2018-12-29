@@ -3,6 +3,7 @@
 ```js
 import Detail from '@/public/detail';
 import { Button } from 'antd';
+
 const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 
 <Detail
