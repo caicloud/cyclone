@@ -28,8 +28,8 @@ var workflowrunsKind = schema.GroupVersionKind{Group: "cyclone.caicloud.io", Ver
 
 // Get takes name of the workflowRun, and returns the corresponding workflowRun object, and an error if there is any.
 func (c *FakeWorkflowRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(workflowrunsResource, c.ns, name), &v1alpha1.WorkflowRun{})
+	a := testing.NewGetAction(workflowrunsResource, c.ns, name)
+	obj, err := c.Fake.Invokes(a, &v1alpha1.WorkflowRun{})
 
 	if obj == nil {
 		return nil, err
