@@ -21,8 +21,8 @@ install:
   - go build -o workflow-coordinator github.com/caicloud/cyclone/cmd/workflow/coordinator
 
 script:
-  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
-  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api,notify
+  - go test -cover $(go list ./pkg/... ./cmd/... | grep -v '/pkg/k8s/' | grep -v '/pkg/apis/')
+  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile
