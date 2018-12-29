@@ -1,0 +1,59 @@
+.u-resource-allocation {
+  .ant-radio-button-wrapper {
+    margin-right: 16px;
+    &:last-of-type {
+      margin-right: 0;
+    }
+  }
+  .allocation-type {
+    margin-bottom: 16px;
+    .ant-radio-button-wrapper {
+      width: 100px;
+      text-align: center;
+      border-radius: @border-radius-base;
+    }
+  }
+  .allocation-content {
+    .ant-radio-button-wrapper {
+      height: 160px;
+      width: 144px;
+      font-size: 12px;
+      padding: 0;
+      border-radius: @border-radius-base;
+    }
+    .content {
+      padding: 12px;
+      height: 126px;
+      line-height: 20px;
+      > div {
+        margin-bottom: 8px;
+        color: @font-color-secondary;
+        &:last-of-type {
+          margin-bottom: 0;
+        }
+      }
+      .key {
+        margin-right: 12px;
+      }
+    }
+    .footer {
+      background-color: #f5f5f5;
+      text-align: center;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 0 0 4px 4px;
+    }
+  }
+  .custom {
+    display: flex;
+    align-items: center;
+    > div {
+      &:first-of-type {
+        margin-right: 16px;
+      }
+      .key {
+        line-height: 40px;
+      }
+    }
+  }
+}
