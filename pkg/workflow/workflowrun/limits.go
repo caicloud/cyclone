@@ -52,17 +52,17 @@ func (w *LimitedQueues) AddOrRefresh(wfr *v1alpha1.WorkflowRun) {
 		w.Queues[key(wfr)] = q
 	}
 
-	if q.size >= w.MaxQueueSize {
+	// PushOrRefresh push the WorkflowRun to the queue. If it's already existed in the queue, its refresh
+	// time would be updated to now.
+	q.PushOrRefresh(wfr)
+
+	if q.size > w.MaxQueueSize {
 		old := q.Pop()
 		err := w.Client.CycloneV1alpha1().WorkflowRuns(old.namespace).Delete(old.wfr, &metav1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			log.WithField("wfr", old.wfr).Error("Delete old WorkflowRun error: ", err)
 		}
 	}
-
-	// PushOrRefresh push the WorkflowRun to the queue. If it's already existed in the queue, its refresh
-	// time would be updated to now.
-	q.PushOrRefresh(wfr)
 }
 
 // AutoScan scans all WorkflowRuns in the queues regularly, remove abnormal ones with old enough

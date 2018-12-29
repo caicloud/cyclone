@@ -75,7 +75,7 @@ func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
 		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
 		items:    make(map[string]*workflowRunItem),
 	}
-	go manager.Run()
+	go manager.Run(time.Second * 5)
 	return manager
 }
 
@@ -93,8 +93,8 @@ func (m *TimeoutProcessor) Add(wfr *v1alpha1.WorkflowRun) error {
 }
 
 // Run will check timeout of managed WorkflowRun and process items that have expired their time.
-func (m *TimeoutProcessor) Run() {
-	ticker := time.NewTicker(time.Second * 5)
+func (m *TimeoutProcessor) Run(interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	for {
 		select {
 		case <-ticker.C:
@@ -117,8 +117,9 @@ func (m *TimeoutProcessor) process() {
 		if err != nil {
 			if errors.IsNotFound(err) {
 				delete(m.items, i.String())
+			} else {
+				log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			}
-			log.WithField("wfr", wfr.Name).Error("Get WorkflowRun error: ", err)
 			continue
 		}
 		m.recorder.Event(wfr, corev1.EventTypeWarning, "Timeout", "WorkflowRun execution timeout")
