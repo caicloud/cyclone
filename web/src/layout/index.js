@@ -8,6 +8,8 @@ import BreadCrumb from './Breadcrumb';
 
 const { Header, Content, Sider } = Layout;
 
+const siderWidth = 200;
+
 class CoreLayout extends Component {
   static propTypes = {
     location: PropTypes.shape({
@@ -19,17 +21,26 @@ class CoreLayout extends Component {
     const pathSnippets = location.pathname.split('/').filter(i => i);
     const selectNav = pathSnippets[0] ? pathSnippets[0] : '/overview';
     return (
-      <Layout>
-        <Header className="header">
-          <div className="logo">CYCLONE</div>
+      <Layout style={{ minHeight: '100%' }}>
+        <Header className="cyclone-layout-header">
+          <div className="cyclone-logo">CYCLONE</div>
           <Menu theme="dark" mode="horizontal" style={{ lineHeight: '64px' }}>
             <Menu.Item key="3">
               <Icon type="user" />
             </Menu.Item>
           </Menu>
         </Header>
-        <Layout>
-          <Sider width={200} style={{ background: '#fff' }}>
+        <Layout style={{ marginTop: 64 }}>
+          <Sider
+            width={siderWidth}
+            style={{
+              background: '#fff',
+              overflow: 'auto',
+              height: '100vh',
+              position: 'fixed',
+              left: 0,
+            }}
+          >
             <Menu
               mode="inline"
               defaultSelectedKeys={[selectNav]}
@@ -53,10 +64,10 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.resource')}</span>
                 </NavLink>
               </Menu.Item>
-              <Menu.Item key="template">
-                <NavLink to="/template" activeClassName="active">
+              <Menu.Item key="stageTemplate">
+                <NavLink to="/stageTemplate" activeClassName="active">
                   <Icon type="profile" />
-                  <span>{intl.get('sideNav.template')}</span>
+                  <span>{intl.get('sideNav.stageTemplate')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="workflow">
@@ -97,7 +108,9 @@ class CoreLayout extends Component {
               </SubMenu> */}
             </Menu>
           </Sider>
-          <Layout style={{ padding: '12px 24px 24px 24px' }}>
+          <Layout
+            style={{ padding: '12px 24px 24px 24px', marginLeft: siderWidth }}
+          >
             <BreadCrumb location={location} />
             <Content
               style={{
