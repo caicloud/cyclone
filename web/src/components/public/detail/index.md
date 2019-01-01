@@ -1,7 +1,7 @@
 # Detail
 
 ```js
-import Detail from '@/public/detail';
+import Detail from '@/components/public/detail';
 const { DetailHead, DetailHeadItem, DetailContent } = Detail;
 
 <Detail>

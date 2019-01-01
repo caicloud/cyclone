@@ -3,7 +3,7 @@
 ### single delete action
 
 ```js
-import EllipsisMenu from '@/public/ellipsisMenu';
+import EllipsisMenu from '@/components/public/ellipsisMenu';
 
 <EllipsisMenu menuFunc={() => {}} disabled>
 
@@ -12,7 +12,7 @@ import EllipsisMenu from '@/public/ellipsisMenu';
 ### Multiple drop-down actions
 
 ```js
-import EllipsisMenu from '@/public/ellipsisMenu';
+import EllipsisMenu from '@/components/public/ellipsisMenu';
 
 <EllipsisMenu menuFunc={[() => {}, () => {}]} menuText={[intl.get("operation.modify"),intl.get("operation.delete")]} disabled={[false, true]}>
 
