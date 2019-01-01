@@ -14,7 +14,7 @@
     "overview": "Overview",
     "project": "Project",
     "resource": "Resource",
-    "template": "Template",
+    "stageTemplate": "Template",
     "workflow": "Workflow"
   },
   "workflow": {
