@@ -7,10 +7,13 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	string2 "github.com/caicloud/cyclone/pkg/util/string"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 )
@@ -89,7 +92,15 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 func (c *CronTrigger) Run() {
 
-	c.WorkflowRun.Name = fmt.Sprintf("%s-%d", c.WorkflowTriggerName, time.Now().Unix())
+	var wfrName string
+	for {
+		wfrName = fmt.Sprintf("%s-%s", c.WorkflowTriggerName, string2.RandString(5))
+		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Get(wfrName, v1.GetOptions{})
+		if errors2.IsNotFound(err) {
+			break;
+		}
+	}
+	c.WorkflowRun.Name = wfrName
 
 	if c.WorkflowRun.Labels == nil {
 		c.WorkflowRun.Labels = make(map[string]string)
