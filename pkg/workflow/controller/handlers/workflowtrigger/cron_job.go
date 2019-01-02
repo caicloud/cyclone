@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
-	errors2 "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/storage/names"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 const (
@@ -96,7 +96,7 @@ func (c *CronTrigger) Run() {
 	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
 
 	for {
-		c.WorkflowRun.Name = names.SimpleNameGenerator.GenerateName(c.WorkflowTriggerName + "-")
+		c.WorkflowRun.Name = fmt.Sprintf("%s-%s", c.WorkflowTriggerName, rand.String(5))
 		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
