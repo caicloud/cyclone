@@ -31,7 +31,7 @@ func newKubeExtClient(masterUrl, kubeConfigPath string) (apiextensionsclient.Int
 
 // EnsureCRDCreated will create built-in CRDs if they are not exist.
 func EnsureCRDCreated(masterUrl, kubeConfigPath string) {
-	log.Info("start to creat crd")
+	log.Info("start to create crd")
 	client, err := newKubeExtClient(masterUrl, kubeConfigPath)
 	if err != nil {
 		log.WithField("error", err).Fatal("new kube ext client error")
@@ -49,37 +49,42 @@ func EnsureCRDCreated(masterUrl, kubeConfigPath string) {
 func createCRD(singular, plural, kind string, shortNames []string, client apiextensionsclient.Interface) {
 	crdName := plural + "." + GroupName
 	_, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
-	if err != nil {
-		if err.(*errors.StatusError).Status().Reason == metav1.StatusReasonNotFound {
-			log.WithField("name", crdName).Info("create crd")
-			_, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Create(&v1beta1.CustomResourceDefinition{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "CustomResourceDefinition",
-					APIVersion: "apiextensions.k8s.io/v1beta1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      crdName,
-					Namespace: "default",
-				},
-				Spec: v1beta1.CustomResourceDefinitionSpec{
-					Group:   GroupName,
-					Version: Version,
-					Scope:   v1beta1.NamespaceScoped,
-					Names: v1beta1.CustomResourceDefinitionNames{
-						Kind:       kind,
-						Plural:     plural,
-						Singular:   singular,
-						ShortNames: shortNames,
-					},
-				},
-			})
-			if err != nil {
-				log.WithField("name", crdName).WithField("error", err).Fatal("create crd error")
-			}
-		} else {
-			log.WithField("name", crdName).WithField("error", err).Fatal("check existence of crd error")
-		}
-	} else {
+	if err == nil {
 		log.WithField("name", crdName).Info("crd already exist")
+		return
 	}
+
+	if !errors.IsNotFound(err) {
+		log.WithField("name", crdName).WithField("error", err).Fatal("check existence of crd error")
+		return
+	}
+
+	// create crd
+	log.WithField("name", crdName).Info("create crd")
+	_, err = client.ApiextensionsV1beta1().CustomResourceDefinitions().Create(&v1beta1.CustomResourceDefinition{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "CustomResourceDefinition",
+			APIVersion: "apiextensions.k8s.io/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      crdName,
+			Namespace: "default",
+		},
+		Spec: v1beta1.CustomResourceDefinitionSpec{
+			Group:   GroupName,
+			Version: Version,
+			Scope:   v1beta1.NamespaceScoped,
+			Names: v1beta1.CustomResourceDefinitionNames{
+				Kind:       kind,
+				Plural:     plural,
+				Singular:   singular,
+				ShortNames: shortNames,
+			},
+		},
+	})
+	if err != nil {
+		log.WithField("name", crdName).WithField("error", err).Fatal("create crd error")
+		return
+	}
+
 }
