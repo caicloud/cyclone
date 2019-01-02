@@ -456,6 +456,20 @@
   version = "kubernetes-1.10.0"
 
 [[projects]]
+  digest = "1:79405023ba46ff0b59fb74891d3e00bfd6959c65b2fa97b7f22517a793b7f526"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset",
+    "pkg/client/clientset/clientset/scheme",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
+  ]
+  pruneopts = ""
+  revision = "750feebe2038bad00fdf68ba37c31f62c4f1f891"
+  version = "kubernetes-1.10.0"
+
+[[projects]]
   digest = "1:9b07c796baf391a2dfa8c64bd5ddc28cbeb00723389f2f3da2e3d09b961f2e31"
   name = "k8s.io/apimachinery"
   packages = [
@@ -721,6 +735,8 @@
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/suite",
     "k8s.io/api/core/v1",
+    "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
