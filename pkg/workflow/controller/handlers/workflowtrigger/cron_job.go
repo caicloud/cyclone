@@ -95,20 +95,20 @@ func (c *CronTrigger) Run() {
 	}
 	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
 
-	var wfrName string
 	for {
-		wfrName = names.SimpleNameGenerator.GenerateName(c.WorkflowTriggerName + "-")
-		c.WorkflowRun.Name = wfrName
+		c.WorkflowRun.Name = names.SimpleNameGenerator.GenerateName(c.WorkflowTriggerName + "-")
 		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
-				continue;
+				continue
 			} else {
 				c.FailCount++
 				log.Warnf("can not create WorkflowRun: %s", err)
+				break
 			}
 		} else {
 			c.SuccCount++
+			break
 		}
 	}
 }
