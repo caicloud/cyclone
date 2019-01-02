@@ -3,18 +3,17 @@ package workflowtrigger
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
-	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	errors2 "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/storage/names"
 )
 
 const (
@@ -91,19 +90,26 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 func (c *CronTrigger) Run() {
 
-	c.WorkflowRun.Name = c.WorkflowTriggerName + "-" + strings.Replace(uuid.NewV1().String(), "-", "", -1)
-
 	if c.WorkflowRun.Labels == nil {
 		c.WorkflowRun.Labels = make(map[string]string)
 	}
 	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
 
-	_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
-	if err != nil {
-		c.FailCount++
-		log.Warnf("can not create WorkflowRun: %s", err)
-	} else {
-		c.SuccCount++
+	var wfrName string
+	for {
+		wfrName = names.SimpleNameGenerator.GenerateName(c.WorkflowTriggerName + "-")
+		c.WorkflowRun.Name = wfrName
+		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
+		if err != nil {
+			if errors2.IsAlreadyExists(err) {
+				continue;
+			} else {
+				c.FailCount++
+				log.Warnf("can not create WorkflowRun: %s", err)
+			}
+		} else {
+			c.SuccCount++
+		}
 	}
 }
 
