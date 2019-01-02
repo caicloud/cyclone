@@ -1,7 +1,7 @@
 _config:
   _metadata:
-    description: native-cyclone-server
-    name: native-cyclone-server
+    description: native-cyclone
+    name: native-cyclone
     namespace: default
     template:
       type: template.caicloud.io/application
