@@ -8,7 +8,8 @@ import (
 
 // GroupName is the group name use in this package
 const GroupName = "cyclone.io"
-const APIVersion = "cyclone.io/v1alpha1"
+const Version = "v1alpha1"
+const APIVersion = GroupName + "/" + Version
 
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
