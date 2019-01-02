@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
-	errors2 "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/storage/names"
 )
 
