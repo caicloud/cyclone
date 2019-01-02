@@ -3,7 +3,6 @@ package workflowtrigger
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
-	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -91,7 +89,7 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 func (c *CronTrigger) Run() {
 
-	c.WorkflowRun.Name = c.WorkflowTriggerName + "-" + strings.Replace(uuid.NewV1().String(), "-", "", -1)
+	c.WorkflowRun.Name = fmt.Sprintf("%s-%d", c.WorkflowTriggerName, time.Now().Unix())
 
 	if c.WorkflowRun.Labels == nil {
 		c.WorkflowRun.Labels = make(map[string]string)
