@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	string2 "github.com/caicloud/cyclone/pkg/util/string"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/storage/names"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 )
@@ -94,7 +94,7 @@ func (c *CronTrigger) Run() {
 
 	var wfrName string
 	for {
-		wfrName = fmt.Sprintf("%s-%s", c.WorkflowTriggerName, string2.RandString(5))
+		wfrName = names.SimpleNameGenerator.GenerateName(c.WorkflowTriggerName + "-")
 		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Get(wfrName, v1.GetOptions{})
 		if errors2.IsNotFound(err) {
 			break;
