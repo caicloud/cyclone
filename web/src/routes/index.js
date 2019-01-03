@@ -4,6 +4,7 @@ import Workflow from '../components/workflow';
 import Template from '../components/template';
 import Resource from '../components/resource';
 import Overview from '../components/overview';
+import Integration from '../components/integration';
 
 import React from 'react';
 
@@ -14,6 +15,7 @@ const Routes = () => (
     <Route path="/resource" component={Resource} />
     <Route path="/template" component={Template} />
     <Route path="/workflow" component={Workflow} />
+    <Route path="/integration" component={Integration} />
     <Redirect to="/" />
   </Switch>
 );

@@ -80,6 +80,12 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.workflow')}</span>
                 </NavLink>
               </Menu.Item>
+              <Menu.Item key="integration">
+                <NavLink to="/integration" activeClassName="active">
+                  <Icon type="sliders" />
+                  <span>{intl.get('sideNav.integration')}</span>
+                </NavLink>
+              </Menu.Item>
               {/* TODO: manage and setting */}
               {/* <SubMenu
                 key="manage"
