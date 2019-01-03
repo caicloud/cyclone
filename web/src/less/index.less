@@ -10,6 +10,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  height: 100%;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
@@ -35,4 +39,13 @@ code {
   color: #fff;
   font-size: 28px;
   text-align: left;
+}
+.ant-layout {
+  .ant-layout-sider-trigger {
+    background: #fff;
+    border-top: 1px solid @color-border;
+    .anticon {
+      color: @color-main;
+    }
+  }
 }
