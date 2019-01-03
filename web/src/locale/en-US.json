@@ -24,6 +24,8 @@
     "creationTime": "Creation time"
   },
   "integration": {
+    "name": "Name",
+    "desc": "Description",
     "type": "Type",
     "integrationTime": "Integration time",
     "datasource": "Data source",
