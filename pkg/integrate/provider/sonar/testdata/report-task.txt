@@ -1,6 +1,0 @@
-projectKey=cyclone-new-1
-serverUrl=http://192.168.21.100:9000
-serverVersion=7.1.0.11001
-dashboardUrl=http://192.168.21.100:9000/dashboard/index/cyclone-new-1
-ceTaskId=AWd9EPiuomqmtD7hc2iT
-ceTaskUrl=http://192.168.21.100:9000/api/ce/task?id=AWd9EPiuomqmtD7hc2iT
