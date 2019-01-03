@@ -45,7 +45,7 @@ Checkout a feature branch
 $ git checkout -b my_feature
 ```
 
-Add your commits, 
+Add your commits,
 ```
 $ git commit -a -s -m "Implement an awesome feature"
 ```
