@@ -1,11 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Form, Select, Input, Button } from 'antd';
+import TextArea from 'antd/lib/input/TextArea';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 const formMap = {
-  git: [
+  SCM: [
     {
       label: 'URL',
       key: 'url',
@@ -15,7 +16,7 @@ const formMap = {
       key: 'Token',
     },
   ],
-  imagesregistry: [
+  dockerregistry: [
     {
       label: intl.get('integration.dataform.registryaddress'),
       key: 'registryAddress',
@@ -97,6 +98,10 @@ class DataForm extends React.Component {
     );
   };
 
+  renderWrapForm = () => {
+    return <div>dsf</div>;
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
     const { inputList } = this.state;
@@ -119,13 +124,14 @@ class DataForm extends React.Component {
               placeholder={intl.get('integration.dataform.datasourcetype')}
               onChange={this.handleSelectChange}
             >
-              <Option value="git">git</Option>
-              <Option value="imagesregistry">
-                {intl.get('integration.dataform.imagesregistry')}
+              <Option value="SCM">SCM</Option>
+              <Option value="dockerregistry">
+                {intl.get('integration.dataform.dockerregistry')}
               </Option>
             </Select>
           )}
         </FormItem>
+        {this.renderWrapForm()}
         {this.renderFormInputs()}
         <Form.Item wrapperCol={{ span: 8, offset: 10 }}>
           <Button style={{ marginRight: '10px' }} onClick={this.handleCancle}>
