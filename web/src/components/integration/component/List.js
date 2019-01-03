@@ -59,8 +59,7 @@ class List extends React.Component {
         </div>
         <Table columns={columns} dataSource={integration.integrationList} />
         <Modal
-          ref="modal"
-          title={intl.get('integration.adddatasource')}
+          title={intl.get('integration.addexternalsystem')}
           visible={this.state.visible}
           footer={null}
           onCancel={this.handleCancel}
