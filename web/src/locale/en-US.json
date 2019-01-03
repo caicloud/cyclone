@@ -15,18 +15,27 @@
     "project": "Project",
     "resource": "Resource",
     "template": "Template",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "integration": "Integration Center"
   },
   "workflow": {
     "recentVersion": "Recent version",
-    "creator": "Creator"
+    "creator": "Creator",
+    "creationTime": "Creation time"
   },
-  "project": {
-    "workflowCount": "Workflow count",
-    "createProject": "Create Project",
-    "authentication": "Authentication",
-    "formTip": {
-      "projectNameRequired": "Please input the name of project"
+  "integration": {
+    "type": "Type",
+    "integrationTime": "Integration time",
+    "datasource": "Data source",
+    "adddatasource": "Add new data source",
+    "dataform": {
+      "dockerregistry": "Docker registry",
+      "registryaddress": "Registry Address",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "username": "Username",
+      "pwd": "password",
+      "datasourcetype": "Please select a resource type"
     }
   }
 }

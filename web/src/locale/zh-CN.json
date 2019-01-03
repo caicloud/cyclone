@@ -15,18 +15,27 @@
     "project": "项目",
     "resource": "资源",
     "template": "模板",
-    "workflow": "工作流"
+    "workflow": "流水线",
+    "integration": "集成中心"
   },
   "workflow": {
     "recentVersion": "最近版本",
-    "creator": "创建者"
+    "creator": "创建者",
+    "creationTime": "创建时间"
   },
-  "project": {
-    "workflowCount": "工作流数量",
-    "createProject": "新增项目",
-    "authentication": "认证",
-    "formTip": {
-      "projectNameRequired": "请输入项目名称"
+  "integration": {
+    "type": "类型",
+    "creationTime": "创建时间",
+    "datasource": "数据源",
+    "adddatasource": "新增数据源",
+    "dataform": {
+      "dockerregistry": "镜像仓库",
+      "registryaddress": "仓库地址",
+      "confirm": "确定",
+      "cancel": "取消",
+      "username": "用户吗",
+      "pwd": "密码",
+      "datasourcetype": "请选择资源类型"
     }
   }
 }
