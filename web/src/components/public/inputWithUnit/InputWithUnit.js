@@ -1,7 +1,9 @@
 import React from 'react';
-import { Input, Select } from 'antd';
+import { Input, Select, Form } from 'antd';
 import PropTypes from 'prop-types';
+import classnames from 'classnames';
 
+const FormItem = Form.Item;
 const Option = Select.Option;
 
 class InputAddon extends React.Component {
@@ -10,6 +12,11 @@ class InputAddon extends React.Component {
     addonAfter: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
     onChange: PropTypes.func,
     inputKey: PropTypes.string,
+    form: PropTypes.object,
+    field: PropTypes.object,
+    HandleAddon: PropTypes.func,
+    label: PropTypes.string,
+    className: PropTypes.string,
   };
   constructor(props) {
     super(props);
@@ -19,22 +26,23 @@ class InputAddon extends React.Component {
     };
   }
 
-  handleChange = e => {
-    const { onChange, inputKey } = this.props;
-    const { addonAfterText } = this.state;
-    const value = e.target.value;
-    this.setState({ inputValue: value });
-    onChange(inputKey, `${value}${addonAfterText}`);
-  };
-
   handleAddon = value => {
-    const { onChange, inputKey } = this.props;
-    const { inputValue } = this.state;
+    const { HandleAddon } = this.props;
     this.setState({ addonAfterText: value });
-    onChange(inputKey, `${inputValue}${value}`);
+    HandleAddon && HandleAddon(value);
   };
   render() {
-    const { addonAfter, defaultAddon } = this.props;
+    const {
+      addonAfter,
+      defaultAddon,
+      label,
+      form: { isValid, touched, errors },
+      field,
+      className,
+    } = this.props;
+    const cls = classnames('u-input-unit', { [className]: !!className });
+    const name = field.name;
+    const hasError = _.get(touched, name) && !isValid;
     const addonComp = _.isArray(addonAfter) ? (
       <Select
         defaultValue={defaultAddon}
@@ -51,7 +59,20 @@ class InputAddon extends React.Component {
       addonAfter
     );
 
-    return <Input addonAfter={addonComp} onChange={this.handleChange} />;
+    return (
+      <div className={cls}>
+        <FormItem
+          label={label}
+          validateStatus={hasError ? 'error' : 'success'}
+          hasFeedback={hasError}
+          help={hasError && _.get(errors, name)}
+          required
+          {...{ labelCol: { span: 8 }, wrapperCol: { span: 16 } }}
+        >
+          <Input {...field} addonAfter={addonComp} />
+        </FormItem>
+      </div>
+    );
   }
 }
 

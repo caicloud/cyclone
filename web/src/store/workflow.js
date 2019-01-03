@@ -1,8 +1,6 @@
 import { observable, action } from 'mobx';
 // import fetchApi from "../api/index.js";
 
-// useStrict(true);
-
 class Workflow {
   @observable workflowList = [];
   @action.bound

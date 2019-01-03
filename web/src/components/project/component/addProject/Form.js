@@ -1,80 +1,74 @@
 import React from 'react';
+import { Form, Input, Button } from 'antd';
 import PropTypes from 'prop-types';
-import { Form, Input, Select } from 'antd';
+import { Field, withFormik } from 'formik';
+import MakeField from '@/public/makeField';
+import IntegrationSelect from './IntegrationSelect';
 import ResourceAllocation from '@/public/resourceAllocation';
 
-const FormItem = Form.Item;
 const { TextArea } = Input;
-const { Option, OptGroup } = Select;
-/**
- * TODO: list authentication
- */
-const CreateProjectForm = Form.create()(
-  // eslint-disable-next-line
-  class extends React.Component {
-    static propTypes = {
-      visible: PropTypes.bool,
-      onCancel: PropTypes.func,
-      onCreate: PropTypes.func,
-      form: PropTypes.object,
-    };
 
-    checkResource = (rule, value, callback) => {
-      // callback('超出');
-    };
+const _Input = MakeField(Input);
+const _Textarea = MakeField(TextArea);
 
-    handleDelete = (value, option) => {};
-    render() {
-      const { form } = this.props;
-      const { getFieldDecorator } = form;
-      return (
-        <Form>
-          <FormItem label={intl.get('name')}>
-            {getFieldDecorator('name', {
-              rules: [
-                {
-                  required: true,
-                  message: intl.get('project.formTip.projectNameRequired'),
-                },
-              ],
-            })(<Input />)}
-          </FormItem>
-          <FormItem label={intl.get('description')}>
-            {getFieldDecorator('description')(
-              <TextArea autosize={{ minRows: 2, maxRows: 6 }} />
-            )}
-          </FormItem>
-          <FormItem label="外部系统">
-            {getFieldDecorator('system', {
-              rules: [
-                {
-                  required: true,
-                },
-              ],
-            })(
-              <Select mode="multiple" onDeselect={this.handleDelete}>
-                <OptGroup label="SCM">
-                  <Option value="scm/github">github111</Option>
-                  <Option value="scm/gitlab">gitlab222</Option>
-                </OptGroup>
-                <OptGroup label="Docker Registry">
-                  <Option value="docker/devops">devops</Option>
-                </OptGroup>
-                <OptGroup label="SonarQube">
-                  <Option value="sonarqube/test">test</Option>
-                </OptGroup>
-              </Select>
-            )}
-          </FormItem>
-          <FormItem label="资源配置">
-            {getFieldDecorator('resource', {
-              rules: [{ validator: this.checkResource }],
-            })(<ResourceAllocation />)}
-          </FormItem>
-        </Form>
-      );
+const AddProject = props => {
+  const { handleSubmit, setFieldValue } = props;
+  const changeConfig = value => {
+    setFieldValue('quota', value);
+  };
+  return (
+    <Form onSubmit={handleSubmit} layout={'horizontal'}>
+      <Field
+        label={intl.get('name')}
+        name="name"
+        component={_Input}
+        hasFeedback
+        required
+      />
+      <Field
+        label={intl.get('description')}
+        name="description"
+        component={_Textarea}
+      />
+      <Field
+        label={'外部系统'}
+        name="integration"
+        required
+        component={IntegrationSelect}
+      />
+      <Field
+        label={intl.get('allocation.quotaConfig')}
+        name="quota"
+        component={ResourceAllocation}
+        onChange={changeConfig}
+      />
+      <div className="form-bottom-btn">
+        <Button type="primary" htmlType="submit">
+          {intl.get('operation.confirm')}
+        </Button>
+        <Button>{intl.get('operation.cancel')}</Button>
+      </div>
+    </Form>
+  );
+};
+
+AddProject.propTypes = {
+  handleSubmit: PropTypes.func,
+  setFieldValue: PropTypes.func,
+};
+
+export default withFormik({
+  validate: values => {
+    const errors = {};
+
+    if (!values.name) {
+      errors.name = 'Required';
     }
-  }
-);
 
-export default CreateProjectForm;
+    return errors;
+  },
+  handleSubmit: values => {
+    // TODO(qme): handle submit
+  },
+  displayName: 'addProject', // a unique identifier for this form
+})(AddProject);

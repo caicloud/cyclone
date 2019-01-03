@@ -9,7 +9,8 @@
     "update": "Update",
     "modify": "Modify",
     "execute": "Execute",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "sideNav": {
     "overview": "Overview",
@@ -39,6 +40,28 @@
       "username": "Username",
       "pwd": "password",
       "datasourcetype": "Please select a resource type"
+    }
+  },
+  "project": {
+    "externalSystem": "External system"
+  },
+  "allocation": {
+    "quotaConfig": "Quota config",
+    "recommend": "Recommend quota",
+    "custom": "Custom quota",
+    "cpuRequest": "CPU request",
+    "cpuLimit": "CPU limit",
+    "memoryRequest": "Memory request",
+    "memoryLimit": "Memory limit",
+    "basic": "Basic configuration",
+    "middle": "Medium configuration",
+    "high": "Advanced configuration"
+  },
+  "validate": {
+    "required": "Reqiured",
+    "positiveOrFloat": "It has to be Number to allow two decimal places",
+    "quota": {
+      "exceedLimit": "The request can‘t exceed the limit"
     }
   }
 }
