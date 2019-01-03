@@ -1,9 +1,9 @@
 import React from 'react';
-import { Tabs } from 'antd';
+import { Tabs, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/public/detail';
 import PropTypes from 'prop-types';
-const { DetailHead, DetailHeadItem, DetailContent } = Detail;
+const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 
 const TabPane = Tabs.TabPane;
 
@@ -18,7 +18,13 @@ class ProjectDetail extends React.Component {
       match: { params },
     } = this.props;
     return (
-      <Detail>
+      <Detail
+        actions={
+          <DetailAction>
+            <Button>{intl.get('operation.update')}</Button>
+          </DetailAction>
+        }
+      >
         <DetailHead headName={params.projectId}>
           <DetailHeadItem name={intl.get('creationTime')} value="2018-09-08" />
         </DetailHead>
