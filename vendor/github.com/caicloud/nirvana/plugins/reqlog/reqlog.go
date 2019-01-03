@@ -52,7 +52,7 @@ func (i *reqlogInstaller) Name() string {
 // Install installs stuffs before server starting.
 func (i *reqlogInstaller) Install(builder service.Builder, cfg *nirvana.Config) error {
 	var err error
-	wapper(cfg, func(c *config) {
+	wrapper(cfg, func(c *config) {
 		begin, end := i.buildPrinters(c)
 		err = builder.AddDescriptor(definition.Descriptor{
 			Path: "/",
@@ -190,7 +190,7 @@ func Disable() nirvana.Configurer {
 // Default Configurer does nothing but ensure default config was set.
 func Default() nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.logger = nil
 		})
 		return nil
@@ -200,7 +200,7 @@ func Default() nirvana.Configurer {
 // Logger Configurer sets logger.
 func Logger(l log.Logger) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.logger = l
 		})
 		return nil
@@ -215,7 +215,7 @@ func Logger(l log.Logger) nirvana.Configurer {
 // Defaults to false.
 func DoubleLog(enable bool) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.doubleLog = enable
 		})
 		return nil
@@ -227,7 +227,7 @@ func DoubleLog(enable bool) nirvana.Configurer {
 // Defaults to false.
 func SourceAddr(enable bool) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.sourceAddr = enable
 		})
 		return nil
@@ -239,7 +239,7 @@ func SourceAddr(enable bool) nirvana.Configurer {
 // Defaults to false.
 func RequestID(enable bool) nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.requestID = enable
 		})
 		return nil
@@ -254,14 +254,14 @@ func RequestIDKey(key string) nirvana.Configurer {
 		key = "X-Request-Id"
 	}
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.requestKey = key
 		})
 		return nil
 	}
 }
 
-func wapper(c *nirvana.Config, f func(c *config)) {
+func wrapper(c *nirvana.Config, f func(c *config)) {
 	conf := c.Config(ExternalConfigName)
 	var cfg *config
 	if conf == nil {

@@ -111,7 +111,7 @@ func (i *metricsInstaller) Name() string {
 // Install installs stuffs before server starting.
 func (i *metricsInstaller) Install(builder service.Builder, cfg *nirvana.Config) error {
 	var err error
-	wapper(cfg, func(c *config) {
+	wrapper(cfg, func(c *config) {
 
 		monitorMiddleware := definition.Descriptor{
 			Path:        "/",
@@ -139,13 +139,13 @@ func Disable() nirvana.Configurer {
 // Default Configurer does nothing but ensure default config was set.
 func Default() nirvana.Configurer {
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 		})
 		return nil
 	}
 }
 
-func wapper(c *nirvana.Config, f func(c *config)) {
+func wrapper(c *nirvana.Config, f func(c *config)) {
 	conf := c.Config(ExternalConfigName)
 	var cfg *config
 	if conf == nil {
@@ -168,7 +168,7 @@ func Path(path string) nirvana.Configurer {
 		path = "/metrics"
 	}
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.path = path
 		})
 		return nil
@@ -181,7 +181,7 @@ func Namespace(ns string) nirvana.Configurer {
 		ns = "nirvana"
 	}
 	return func(c *nirvana.Config) error {
-		wapper(c, func(c *config) {
+		wrapper(c, func(c *config) {
 			c.namespace = ns
 		})
 		return nil

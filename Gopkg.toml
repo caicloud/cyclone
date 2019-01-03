@@ -1,3 +1,9 @@
+required = ["github.com/caicloud/nirvana/utils/api"]
+
+[prune]
+  go-tests = true
+  unused-packages = true
+
 [[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.2.0"
@@ -90,9 +96,13 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/caicloud/nirvana"
-  revision = "0cd8f02a9807e0ee3f738525d1b0c53457a77975"
+  version = "v0.2.0"
+
+[[override]]
+  name = "github.com/spf13/pflag"
+  version = "1.0.3"
 
 [[override]]
   name = "github.com/prometheus/client_model"
