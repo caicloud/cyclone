@@ -116,22 +116,34 @@ func (c *container) Query(key string) ([]string, bool) {
 	if c.query == nil {
 		c.query = c.request.URL.Query()
 	}
-	values := c.query[key]
-	return values, len(values) > 0
+	return c.removeEmpties(c.query[key])
 }
 
 // Header returns value by header key.
 func (c *container) Header(key string) ([]string, bool) {
 	h := c.request.Header[textproto.CanonicalMIMEHeaderKey(key)]
-	return h, len(h) > 0
+	return c.removeEmpties(h)
 }
 
 // Form returns value from request. It is valid when
 // http "Content-Type" is "application/x-www-form-urlencoded"
 // or "multipart/form-data".
 func (c *container) Form(key string) ([]string, bool) {
-	values := c.request.PostForm[key]
-	return values, len(values) > 0
+	return c.removeEmpties(c.request.PostForm[key])
+}
+
+// removeEmpties removes empty strings.
+func (c *container) removeEmpties(values []string) ([]string, bool) {
+	if len(values) <= 0 {
+		return values, false
+	}
+	results := make([]string, 0, len(values))
+	for _, value := range values {
+		if value != "" {
+			results = append(results, value)
+		}
+	}
+	return results, len(results) > 0
 }
 
 // File returns a file reader when "Content-Type" is "multipart/form-data".

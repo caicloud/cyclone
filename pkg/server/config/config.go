@@ -9,11 +9,15 @@ import (
 const (
 	EnvCycloneServerPort = "ENV_CYCLONE_SERVER_PORT"
 	EnvCycloneServerHost = "ENV_CYCLONE_SERVER_HOST"
+	EnvKubeHost          = "ENV_KUBE_HOST"
+	EnvKubeConfig        = "ENV_KUBE_CONFIG"
+	EnvLogLevel          = "ENV_LOG_LEVEL"
 
-	EnvKubeHost   = "ENV_KUBE_HOST"
-	EnvKubeConfig = "ENV_KUBE_CONFIG"
-
-	EnvLogLevel = "ENV_LOG_LEVEL"
+	FlagCycloneServerPort = "cyclone-server-port"
+	FlagCycloneServerHost = "cyclone-server-host"
+	FlagKubeHost          = "kubehost"
+	FlagKubeConfig        = "kubeconfig"
+	FlagLogLevel          = "log-level"
 
 	envVarCannotEmptyFormat = "The environment variable '%s' cannot be empty."
 

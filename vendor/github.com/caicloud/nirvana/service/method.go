@@ -38,7 +38,7 @@ var mappings = map[definition.Method]statusMapping{
 	definition.Patch:       {http.MethodPatch, http.StatusOK},
 	definition.Delete:      {http.MethodDelete, http.StatusNoContent},
 	definition.AsyncCreate: {http.MethodPost, http.StatusAccepted},
-	definition.AsyncUpdate: {http.MethodPost, http.StatusAccepted},
+	definition.AsyncUpdate: {http.MethodPut, http.StatusAccepted},
 	definition.AsyncPatch:  {http.MethodPatch, http.StatusAccepted},
 	definition.AsyncDelete: {http.MethodDelete, http.StatusAccepted},
 }

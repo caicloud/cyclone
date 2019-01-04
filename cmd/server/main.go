@@ -13,21 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package main
 
 import (
 	"flag"
 
-	"github.com/caicloud/nirvana"
-	"github.com/caicloud/nirvana/log"
-	"github.com/caicloud/nirvana/plugins/metrics"
-	"github.com/caicloud/nirvana/plugins/profiling"
-
 	"github.com/caicloud/cyclone/pkg/common"
-	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/descriptor"
-	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/handler"
+	"github.com/caicloud/cyclone/pkg/server/apis"
+	"github.com/caicloud/cyclone/pkg/server/apis/filters"
+	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
 	"github.com/caicloud/cyclone/pkg/server/config"
+	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/version"
+
+	"github.com/caicloud/nirvana"
+	nconfig "github.com/caicloud/nirvana/config"
+	"github.com/caicloud/nirvana/log"
+	"github.com/caicloud/nirvana/plugins/logger"
+	"github.com/caicloud/nirvana/plugins/metrics"
+	"github.com/caicloud/nirvana/plugins/reqlog"
+	pversion "github.com/caicloud/nirvana/plugins/version"
 )
 
 // APIServerOptions contains all options(config) for api server
@@ -44,26 +49,25 @@ type APIServerOptions struct {
 // NewAPIServerOptions returns a new APIServerOptions
 func NewAPIServerOptions() *APIServerOptions {
 	return &APIServerOptions{
+		CycloneAddr: "",
 		CyclonePort: 7099,
 	}
 }
 
 // AddFlags adds flags to APIServerOptions.
 func (opts *APIServerOptions) AddFlags() {
-
-	flag.StringVar(&opts.KubeHost, config.EnvKubeHost, config.KubeHost, "Kube host address")
-	flag.StringVar(&opts.KubeConfig, config.EnvKubeConfig, config.KubeConfig, "Kube config file path")
-
-	flag.IntVar(&opts.CyclonePort, config.EnvCycloneServerPort, config.CycloneServerPort, "The port for the cyclone server to serve on.")
-	flag.StringVar(&opts.CycloneAddr, config.EnvCycloneServerHost, config.CycloneServerHost, "The IP address for the cyclone server to serve on.")
-
-	flag.StringVar(&opts.Loglevel, config.EnvLogLevel, config.LogLevel, "Log level.")
+	flag.StringVar(&opts.KubeHost, config.FlagKubeHost, config.KubeHost, "Kube host address")
+	flag.StringVar(&opts.KubeConfig, config.FlagKubeConfig, config.KubeConfig, "Kube config file path")
+	flag.IntVar(&opts.CyclonePort, config.FlagCycloneServerPort, config.CycloneServerPort, "The port for the cyclone server to serve on")
+	flag.StringVar(&opts.CycloneAddr, config.FlagCycloneServerHost, config.CycloneServerHost, "The IP address for the cyclone server to serve on")
+	flag.StringVar(&opts.Loglevel, config.FlagLogLevel, config.LogLevel, "Log level")
 
 	flag.Parse()
 }
 
 func initialize(opts *APIServerOptions) {
 	// Init k8s client
+	log.Info("kube config:", opts.KubeConfig)
 	client, err := common.GetClient(opts.KubeHost, opts.KubeConfig)
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
@@ -82,20 +86,61 @@ func main() {
 
 	initialize(opts)
 
-	config := nirvana.NewDefaultConfig()
-	nirvana.IP(opts.CycloneAddr)(config)
-	nirvana.Port(uint16(opts.CyclonePort))(config)
-	config.Configure(
-		metrics.Path("/metrics"),
-		profiling.Path("/debug/pprof/"),
-		profiling.Contention(true),
+	// Print nirvana banner.
+	log.Infoln(nirvana.Logo, nirvana.Banner)
+
+	// Create nirvana command.
+	cmd := nconfig.NewNamedNirvanaCommand("cyclone-server", &nconfig.Option{
+		IP:   opts.CycloneAddr,
+		Port: uint16(opts.CyclonePort),
+	})
+
+	// add flags
+	cmd.Add(&opts.KubeHost, config.FlagKubeHost, "", "Kube host address")
+	cmd.Add(&opts.KubeConfig, config.FlagKubeConfig, "", "Kube config file path")
+	cmd.Add(&opts.CyclonePort, config.FlagCycloneServerPort, "", "The port for the cyclone server to serve on")
+	cmd.Add(&opts.CycloneAddr, config.FlagCycloneServerHost, "", "The IP address for the cyclone server to serve on")
+	cmd.Add(&opts.Loglevel, config.FlagLogLevel, "", "Log level")
+
+	// Create plugin options.
+	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
+	loggerOption := logger.NewDefaultOption()   // Logger plugin.
+	reqlogOption := reqlog.NewDefaultOption()   // Request log plugin.
+	versionOption := pversion.NewOption(        // Version plugin.
+		"server",
+		version.Version,
+		version.Commit,
+		version.Package,
 	)
 
-	config.Configure(nirvana.Descriptor(descriptor.Descriptor()))
+	// Enable plugins.
+	cmd.EnablePlugin(metricsOption, loggerOption, reqlogOption, versionOption)
+
+	// Create server config.
+	serverConfig := nirvana.NewConfig()
+
+	// Configure APIs. These configurations may be changed by plugins.
+	serverConfig.Configure(
+		nirvana.Logger(log.DefaultLogger()), // Will be changed by logger plugin.
+		nirvana.Filter(filters.Filters()...),
+		nirvana.Modifier(modifiers.Modifiers()...),
+		nirvana.Descriptor(apis.Descriptor()),
+	)
+
+	// Set nirvana command hooks.
+	cmd.SetHook(&nconfig.NirvanaCommandHookFunc{
+		PreServeFunc: func(config *nirvana.Config, server nirvana.Server) error {
+			// Output project information.
+			config.Logger().Infof("Package:%s Version:%s Commit:%s", version.Package, version.Version, version.Commit)
+			return nil
+		},
+	})
 
 	log.Infof("Cyclone service listening on %s:%d", opts.CycloneAddr, opts.CyclonePort)
-	if err := nirvana.NewServer(config).Serve(); err != nil {
-		log.Fatal(err)
+
+	// Start with server config.
+	if err := cmd.ExecuteWithConfig(serverConfig); err != nil {
+		serverConfig.Logger().Fatal(err)
 	}
 
 	log.Info("Cyclone server stopped")
