@@ -13,7 +13,7 @@ RUN apk add --no-cache curl && \
     rm /tmp/docker-${DOCKER_VERSION}.tgz
 
 
-COPY ./build/workflow/resolver/image/entrypoint.sh /workspace
+COPY ./build/resolver/image/entrypoint.sh /workspace
 
 ENTRYPOINT ["/workspace/entrypoint.sh"]
 

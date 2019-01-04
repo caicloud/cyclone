@@ -9,10 +9,10 @@ data:
   workflow-controller.json: |
     {
       "images": {
-        "git-resolver": "test.caicloudprivatetest.com/release/git-resource-resolver:v0.9.1",
-        "image-resolver": "test.caicloudprivatetest.com/release/image-resource-resolver:v0.9.1",
-        "kv-resolver": "test.caicloudprivatetest.com/release/kv-resource-resolver:v0.9.1",
-        "coordinator": "test.caicloudprivatetest.com/release/cyclone-workflow-coordinator:v0.9.1",
+        "git-resolver": "test.caicloudprivatetest.com/release/cyclone-resolver-git:v0.9.2",
+        "image-resolver": "test.caicloudprivatetest.com/release/cyclone-resolver-image:v0.9.2",
+        "kv-resolver": "test.caicloudprivatetest.com/release/cyclone-resolver-kv:v0.9.2",
+        "coordinator": "test.caicloudprivatetest.com/release/cyclone-workflow-coordinator:v0.9.2",
         "gc": "test.caicloudprivatetest.com/library/alpine:3.8"
       },
       "logging": {
@@ -46,6 +46,46 @@ data:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  name: cyclone-web
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cyclone-web
+  template:
+    metadata:
+      labels:
+        app: cyclone-web
+    spec:
+      containers:
+      - name: web
+        image: test.caicloudprivatetest.com/release/cyclone-web:v0.9.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: cyclone-web
+spec:
+  selector:
+    app: cyclone-web
+  ports:
+  - protocol: TCP
+    port: 80
+    nodePort: 30022
+    targetPort: 80
+  type: NodePort
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
   name: native-cyclone-server
   namespace: default
 spec:
@@ -60,10 +100,10 @@ spec:
     spec:
       containers:
       - name: server
-        image: test.caicloudprivatetest.com/release/cyclone-server:v0.9.1
+        image: test.caicloudprivatetest.com/release/cyclone-server:v0.9.2
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 7089
+        - containerPort: 7099
 
 ---
 
@@ -100,7 +140,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.1
+        image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.2
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /etc/localtime
