@@ -24,10 +24,12 @@
     "creationTime": "创建时间"
   },
   "integration": {
+    "name": "名称",
+    "desc": "描述",
     "type": "类型",
     "creationTime": "创建时间",
     "datasource": "数据源",
-    "adddatasource": "新增数据源",
+    "addexternalsystem": "新增外部系统",
     "dataform": {
       "dockerregistry": "镜像仓库",
       "registryaddress": "仓库地址",

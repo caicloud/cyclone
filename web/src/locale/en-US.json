@@ -24,10 +24,12 @@
     "creationTime": "Creation time"
   },
   "integration": {
+    "name": "Name",
+    "desc": "Description",
     "type": "Type",
     "integrationTime": "Integration time",
     "datasource": "Data source",
-    "adddatasource": "Add new data source",
+    "addexternalsystem": "Add external system",
     "dataform": {
       "dockerregistry": "Docker registry",
       "registryaddress": "Registry Address",
