@@ -26,7 +26,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		log.Warning("unknown resource type")
 		return
 	}
-	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
+	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun create")
 
 	// AddOrRefresh adds a WorkflowRun to its corresponding queue, if the queue size exceed the
 	// maximum size, the oldest one would be deleted. And if the WorkflowRun already exists in
@@ -65,7 +65,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 		log.Warning("unknown resource type")
 		return
 	}
-	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun.")
+	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
+
+	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
+	h.LimitedQueues.Refresh(originWfr)
 
 	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
 	// the GC queue.
