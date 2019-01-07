@@ -5,7 +5,7 @@ import Template from '../components/template';
 import Resource from '../components/resource';
 import Overview from '../components/overview';
 import Integration from '../components/integration';
-
+import Swagger from '../components/swagger';
 import React from 'react';
 
 const Routes = () => (
@@ -16,6 +16,7 @@ const Routes = () => (
     <Route path="/template" component={Template} />
     <Route path="/workflow" component={Workflow} />
     <Route path="/integration" component={Integration} />
+    <Route path="/swagger" component={Swagger} />
     <Redirect to="/" />
   </Switch>
 );
