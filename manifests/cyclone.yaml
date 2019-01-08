@@ -39,6 +39,7 @@ data:
       "pvc": "",
       "secret": "",
       "cyclone_server_addr": "native-cyclone-server.default.svc.cluster.local"
+      "service_account": ""
     }
 
 ---

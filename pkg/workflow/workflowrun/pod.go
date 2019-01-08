@@ -632,6 +632,14 @@ func (m *PodBuilder) ApplyQuota() error {
 	return nil
 }
 
+// ApplyServiceAccount applies service account.
+func (m *PodBuilder) ApplyServiceAccount() {
+	if controller.Config.ServiceAccount != "" {
+		m.pod.Spec.ServiceAccountName = controller.Config.ServiceAccount
+	}
+	return
+}
+
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
@@ -687,6 +695,8 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	m.ApplyServiceAccount()
 
 	return m.pod, nil
 }

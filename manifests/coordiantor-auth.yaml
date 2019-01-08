@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cyclone-coordinator
+  namespace: {change-me}
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: cyclone-coordinator
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "watch", "list", "create", "update"]
+- apiGroups: ["cyclone.io"]
+  resources: ["*"]
+  verbs: ["get", "watch", "list"]
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cyclone-coordinator
+subjects:
+- kind: ServiceAccount
+  name: cyclone-coordinator # Name is case sensitive
+  namespace: {change-me}
+roleRef:
+  kind: ClusterRole
+  name: cyclone-coordinator
+  apiGroup: rbac.authorization.k8s.io

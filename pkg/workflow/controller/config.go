@@ -51,6 +51,8 @@ type ControllerConfig struct {
 	Secret string `json:secret`
 	// Address of the Cyclone Server
 	CycloneServerAddr string `json:"cyclone_server_addr"`
+	// ServiceAccount used for coordinator to access k8s resources.
+	ServiceAccount string `json:"service_account"`
 }
 
 type LoggingConfig struct {
