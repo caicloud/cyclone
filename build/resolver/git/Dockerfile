@@ -4,7 +4,7 @@ ENV WORKDIR /workspace
 WORKDIR $WORKDIR
 
 RUN mkdir -p /workspace/data
-COPY ./build/workflow/resolver/git/entrypoint.sh /workspace
+COPY ./build/resolver/git/entrypoint.sh /workspace
 
 ENTRYPOINT ["/workspace/entrypoint.sh"]
 

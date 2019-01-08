@@ -23,13 +23,14 @@
 #
 
 # Current version of the project.
-VERSION ?= v0.9.1
+VERSION ?= v0.9.2
 
 # This repo's root import path (under GOPATH).
 ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
 TARGETS := server workflow/controller workflow/coordinator
+IMAGES := server web workflow/controller workflow/coordinator resolver/git resolver/image resolver/kv
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
@@ -39,7 +40,7 @@ IMAGE_PREFIX ?= $(strip cyclone-)
 IMAGE_SUFFIX ?= $(strip )
 
 # Container registries.
-REGISTRIES ?= docker.io/library
+REGISTRIES ?= test.caicloudprivatetest.com/release
 
 #
 # These variables should not need tweaking.
@@ -130,11 +131,11 @@ build-web-local:
 	  yarn build'
 
 container: build-linux
-	@for target in $(TARGETS); do                                                      \
+	@for image in $(IMAGES); do                                                        \
 	  for registry in $(REGISTRIES); do                                                \
-	    image=$(IMAGE_PREFIX)$${target/\//-}$(IMAGE_SUFFIX);                           \
-	    docker build -t $${registry}/$${image}:$(VERSION)                              \
-	      -f $(BUILD_DIR)/$${target}/Dockerfile .;                                     \
+	    imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                        \
+	    docker build -t $${registry}/$${imageName}:$(VERSION)                          \
+	      -f $(BUILD_DIR)/$${image}/Dockerfile .;                                      \
 	  done                                                                             \
 	done
 

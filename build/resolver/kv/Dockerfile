@@ -6,7 +6,7 @@ WORKDIR $WORKDIR
 RUN mkdir -p /workspace/data && \
     apk add --no-cache curl
 
-COPY ./build/workflow/resolver/kv/entrypoint.sh /workspace
+COPY ./build/resolver/kv/entrypoint.sh /workspace
 
 ENTRYPOINT ["/workspace/entrypoint.sh"]
 
