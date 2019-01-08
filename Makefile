@@ -159,6 +159,20 @@ push: container
 gen: clean-generated
 	bash tools/generator/autogenerate.sh
 
+swagger:
+	docker run --rm                                                                   \
+	  -v $(PWD):/go/src/$(ROOT)                                                       \
+	  -w /go/src/$(ROOT)                                                              \
+	  -e GOOS=linux                                                                   \
+	  -e GOARCH=amd64                                                                 \
+	  -e GOPATH=/go                                                                   \
+	  -e CGO_ENABLED=0                                                                \
+	  $(REGISTRIES)/golang:1.10-alpine3.8                                             \
+	  sh -c "apk add git &&                                                           \
+	  go get -u github.com/caicloud/nirvana/cmd/nirvana &&                            \
+	  go get -u github.com/golang/dep/cmd/dep &&                                      \
+	  nirvana api --output web/public pkg/server/apis"
+
 .PHONY: clean
 clean:
 	-rm -vrf ${OUTPUT_DIR}

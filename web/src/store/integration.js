@@ -1,6 +1,6 @@
-import { observable, useStrict, action } from 'mobx';
+import { observable, action } from 'mobx';
 
-useStrict(true);
+// useStrict(true);
 
 class Integration {
   @observable integrationList = [];
