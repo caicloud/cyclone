@@ -22,14 +22,17 @@ const (
 	FlagCycloneServerPort = "cyclone-server-port"
 	// FlagCycloneServerHost ...
 	FlagCycloneServerHost = "cyclone-server-host"
+
 	// FlagKubeHost ...
 	FlagKubeHost = "kubehost"
 	// FlagKubeConfig ...
 	FlagKubeConfig = "kubeconfig"
 	// FlagLogLevel ...
 	FlagLogLevel = "log-level"
-
+	// FlagStrorageClass ...
+	FlagStrorageClass = "storage-class"
 	// envVarCannotEmptyFormat ...
+
 	envVarCannotEmptyFormat = "The environment variable '%s' cannot be empty."
 
 	// DefaultCycloneServerPort ...
@@ -55,6 +58,9 @@ var (
 
 	// LogLevel defines log level
 	LogLevel string
+
+	// StorageClass defines which storageclass used to create pvc for default tenant
+	StorageClass string
 )
 
 func init() {

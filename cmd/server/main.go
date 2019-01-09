@@ -23,7 +23,8 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
 	"github.com/caicloud/cyclone/pkg/server/config"
-	"github.com/caicloud/cyclone/pkg/server/handler"
+	hcommon "github.com/caicloud/cyclone/pkg/server/handler/common"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
 
 	"github.com/caicloud/nirvana"
@@ -44,6 +45,9 @@ type APIServerOptions struct {
 	CycloneAddr string
 
 	Loglevel string
+
+	// StorageClass is used to create pvc for default tenant
+	StorageClass string
 }
 
 // NewAPIServerOptions returns a new APIServerOptions
@@ -61,6 +65,7 @@ func (opts *APIServerOptions) AddFlags() {
 	flag.IntVar(&opts.CyclonePort, config.FlagCycloneServerPort, config.CycloneServerPort, "The port for the cyclone server to serve on")
 	flag.StringVar(&opts.CycloneAddr, config.FlagCycloneServerHost, config.CycloneServerHost, "The IP address for the cyclone server to serve on")
 	flag.StringVar(&opts.Loglevel, config.FlagLogLevel, config.LogLevel, "Log level")
+	flag.StringVar(&opts.StorageClass, config.FlagStrorageClass, config.StorageClass, "StorageClass is used to create pvc for default tenant")
 
 	flag.Parse()
 }
@@ -73,10 +78,13 @@ func initialize(opts *APIServerOptions) {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
 
-	handler.InitHandlers(client)
-
+	hcommon.InitHandlers(client)
 	log.Info("Init k8s client success")
 
+	err = v1alpha1.CreateDefaultTenant()
+	if err != nil {
+		log.Fatalf("Create default tenant cyclone error %v", err)
+	}
 	return
 }
 
@@ -101,6 +109,7 @@ func main() {
 	cmd.Add(&opts.CyclonePort, config.FlagCycloneServerPort, "", "The port for the cyclone server to serve on")
 	cmd.Add(&opts.CycloneAddr, config.FlagCycloneServerHost, "", "The IP address for the cyclone server to serve on")
 	cmd.Add(&opts.Loglevel, config.FlagLogLevel, "", "Log level")
+	cmd.Add(&opts.StorageClass, config.FlagStrorageClass, "", "StorageClass is used to create pvc for default tenant")
 
 	// Create plugin options.
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.

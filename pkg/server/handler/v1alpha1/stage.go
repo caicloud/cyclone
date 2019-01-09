@@ -1,4 +1,4 @@
-package handler
+package v1alpha1
 
 import (
 	"bufio"
@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/handler/common"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
@@ -21,7 +22,7 @@ import (
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
-// CreateStage ... POST /apis/v1alpha1/stages/
+// CreateStage ...
 func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 	s := &v1alpha1.Stage{}
 	err := contextutil.GetJSONPayload(ctx, s)
@@ -29,20 +30,20 @@ func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 		return nil, err
 	}
 
-	return k8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
+	return common.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
 }
 
-// ListStages ... GET /apis/v1alpha1/Stages/
+// ListStages ...
 func ListStages(ctx context.Context, namespace string) (*v1alpha1.StageList, error) {
-	return k8sClient.CycloneV1alpha1().Stages(namespace).List(metav1.ListOptions{})
+	return common.K8sClient.CycloneV1alpha1().Stages(namespace).List(metav1.ListOptions{})
 }
 
-// GetStage ... GET /apis/v1alpha1/stages/{stage}
+// GetStage ...
 func GetStage(ctx context.Context, name, namespace string) (*v1alpha1.Stage, error) {
-	return k8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
+	return common.K8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
 }
 
-// UpdateStage ... PUT /apis/v1alpha1/stages/{stage}
+// UpdateStage ...
 func UpdateStage(ctx context.Context, name string) (*v1alpha1.Stage, error) {
 	s := &v1alpha1.Stage{}
 	err := contextutil.GetJSONPayload(ctx, s)
@@ -54,15 +55,14 @@ func UpdateStage(ctx context.Context, name string) (*v1alpha1.Stage, error) {
 		return nil, cerr.ErrorValidationFailed.Error("Name", "Stage name inconsistent between body and path.")
 	}
 
-	return k8sClient.CycloneV1alpha1().Stages(s.Namespace).Update(s)
+	return common.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Update(s)
 }
 
-// DeleteStage ... DELETE /apis/v1alpha1/stages/{stage}
+// DeleteStage ...
 func DeleteStage(ctx context.Context, name, namespace string) error {
-	return k8sClient.CycloneV1alpha1().Stages(namespace).Delete(name, nil)
+	return common.K8sClient.CycloneV1alpha1().Stages(namespace).Delete(name, nil)
 }
 
-// ReceiveContainerLogStream ... GET /workflowruns/{workflowrun-name}/stages/{stage-name}/streamlogs?container-name=c0
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
 func ReceiveContainerLogStream(ctx context.Context, workflowrun, stage, container, namespace string) error {
 	request := contextutil.GetHTTPRequest(ctx)
@@ -208,6 +208,7 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
 		}
 	}
+
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
