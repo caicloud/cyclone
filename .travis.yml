@@ -6,7 +6,6 @@ services:
   - docker
 
 go:
-  - 1.8
   - 1.9
 
 go_import_path: github.com/caicloud/cyclone
@@ -14,6 +13,7 @@ go_import_path: github.com/caicloud/cyclone
 before_install:
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
+  - go get golang.org/x/lint/golint
 
 install:
   - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
@@ -21,8 +21,10 @@ install:
   - go build -o workflow-coordinator github.com/caicloud/cyclone/cmd/workflow/coordinator
 
 script:
-  - go test -cover $(go list ./pkg/... ./cmd/... | grep -v '/pkg/k8s/' | grep -v '/pkg/apis/')
-  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
+  - ./tests/travis/gofmt.sh
+  - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
+  - go vet  $(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
+  - golint $(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile
