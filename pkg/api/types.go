@@ -884,6 +884,7 @@ type GitlabUserInfo struct {
 	CanCreateProject bool   `json:"can_create_project,omitempty"`
 	TwoFactorEnabled bool   `json:"two_factor_enabled,omitempty"`
 	PrivateToken     string `json:"private_token,omitempty"`
+}
 
 // Integration represents integration for third party components.
 type Integration struct {
