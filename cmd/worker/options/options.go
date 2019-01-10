@@ -116,7 +116,6 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 
 		cli.StringFlag{
 			Name:        "registry",
-			Value:       "cargo.caicloud.io",
 			Usage:       "docker registry location for docker push",
 			EnvVar:      RegistryLocation,
 			Destination: &opts.RegistryLocation,

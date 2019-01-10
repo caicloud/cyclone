@@ -29,6 +29,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
+	_ "github.com/caicloud/cyclone/pkg/integrate/provider/fake"
 	osutil "github.com/caicloud/cyclone/pkg/util/os"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 	_ "github.com/caicloud/cyclone/pkg/worker/scm/provider"
@@ -67,7 +68,17 @@ func init() {
 		Project: &api.Project{
 			Registry: &registry,
 		},
-		Pipeline: &api.Pipeline{},
+		Pipeline: &api.Pipeline{
+			Build: &api.Build{
+				Stages: &api.BuildStages{
+					UnitTest:        &api.UnitTestStage{},
+					Package:         &api.PackageStage{},
+					CodeScan:        &api.CodeScanStage{},
+					IntegrationTest: &api.IntegrationTestStage{},
+					ImageRelease:    &api.ImageReleaseStage{},
+				},
+			},
+		},
 		PipelineRecord: &api.PipelineRecord{
 			PerformParams: &api.PipelinePerformParams{
 				Ref: "refs/heads/master",
@@ -300,6 +311,34 @@ func TestExecPackage(t *testing.T) {
 
 	for d, tc := range testCases {
 		err := smTest.ExecPackage(tc.buildImage, tc.buildInfo, tc.unitTestStage, tc.packageStage)
+		if tc.pass && err != nil || !tc.pass && err == nil {
+			t.Errorf("%s failed as error: %v", d, err)
+		}
+	}
+}
+
+func TestExecCodeScan(t *testing.T) {
+	testCases := map[string]struct {
+		csStage *api.CodeScanStage
+		pass    bool
+	}{
+		"correct": {
+			csStage: &api.CodeScanStage{
+				SonarQube: &api.ScanSonarQube{
+					Name:   "test",
+					Config: &api.ScanSonarQubeConfig{},
+					SonarInfo: &api.IntegrationSonar{
+						Address: "https://sonar-test:9000",
+						Token:   "token-test",
+					},
+				},
+			},
+			pass: true,
+		},
+	}
+
+	for d, tc := range testCases {
+		err := smTest.ExecCodeScan(tc.csStage)
 		if tc.pass && err != nil || !tc.pass && err == nil {
 			t.Errorf("%s failed as error: %v", d, err)
 		}

@@ -88,7 +88,7 @@ test:
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
-	  CGO_ENABLED=0                                                                    \
+	  CGO_ENABLED=0   GOOS=linux   GOARCH=amd64                                        \
 	  go build -i -v -o $(OUTPUT_DIR)/$${target}                                       \
 	    -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)                      \
 	              -X $(ROOT)/pkg/version.COMMIT=$(COMMIT)                              \
@@ -116,6 +116,15 @@ build-linux:
 	done
 
 container: build-linux
+	@for target in $(TARGETS); do                                                      \
+	  for registry in $(REGISTRIES); do                                                \
+	    image=$(IMAGE_PREFIX)$${target}$(IMAGE_SUFFIX);                                \
+	    docker build -t $${registry}/$${image}:$(VERSION)                              \
+	      -f $(BUILD_DIR)/$${target}/Dockerfile .;                                     \
+	  done                                                                             \
+	done
+
+container-local: build-local
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
 	    image=$(IMAGE_PREFIX)$${target}$(IMAGE_SUFFIX);                                \

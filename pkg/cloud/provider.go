@@ -37,6 +37,17 @@ const (
 	WorkerTimeout = time.Duration(2 * time.Hour)
 
 	DefaultCloudName = "_inCluster"
+
+	// RegistryCertPath is the path of docker registry cert file
+	// that used for cyclone worker to pull images.
+	//
+	// Cyclone server will read the cert contents from RegistryCertPath,
+	// and set it to the Env whose key is ENV_CERT_DATA in cyclone worker.
+	RegistryCertPath string = "/tmp/certs/registry.crt"
+
+	// ENV_CERT_DATA is a environment name of cert path
+	// that used for cyclone worker to pull images.
+	ENV_CERT_DATA string = "CERT_DATA"
 )
 
 var DefaultNamespace = "default"
@@ -66,7 +77,7 @@ func InitCloud(autoDiscovery bool) error {
 	_, err := ds.FindCloudByName(DefaultCloudName)
 	if err != nil && err == mgo.ErrNotFound {
 		if autoDiscovery {
-			log.Info("add the default incluster cloud %s", DefaultCloudName)
+			log.Infof("add the default incluster cloud %s", DefaultCloudName)
 
 			namespace, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/" + apiv1.ServiceAccountNamespaceKey)
 			if err != nil {

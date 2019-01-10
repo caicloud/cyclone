@@ -43,6 +43,7 @@ type ProjectManager interface {
 	ListRepos(projectName string) ([]api.Repository, error)
 	ListBranches(projectName string, repo string) ([]string, error)
 	ListTags(projectName string, repo string) ([]string, error)
+	ListDockerfiles(projectName string, repo string) ([]string, error)
 	GetTemplateType(projectName string, repo string) (string, error)
 	GetStatistics(projectName string, start, end time.Time) (*api.PipelineStatusStats, error)
 }
@@ -230,6 +231,22 @@ func (m *projectManager) ListTags(projectName string, repo string) ([]string, er
 	}
 
 	return sp.ListTags(repo)
+}
+
+// ListDockerfiles lists the dockerfiles of the SCM repos authorized for the project.
+func (m *projectManager) ListDockerfiles(projectName string, repo string) ([]string, error) {
+	project, err := m.GetProject(projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	scmConfig := project.SCM
+	sp, err := scm.GetSCMProvider(scmConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return sp.ListDockerfiles(repo)
 }
 
 // GetTemplateType get the template type of the SCM repos authorized for the project.

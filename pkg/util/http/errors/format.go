@@ -49,9 +49,8 @@ var (
 
 	// ErrorAuthenticationRequired defines error that authentication not provided.
 	ErrorAuthenticationRequired = nerror.Unauthorized.Build(ReasonRequest, "authentication required")
-
-	// ErrorInternalTypeError defines internal type error
-	//ErrorInternalTypeError = nerror.InternalServerError.Build(ReasonInternal, "type of ${resource} should be ${expect}, but got ${real}")
+	// ErrorAuthenticationFailed defines error that authentication failed.
+	ErrorAuthenticationFailed = nerror.Unauthorized.Build("ReasonAuthenticationFailed", "authentication failed")
 
 	// ErrorUnknownNotFoundError defines not found error that we can't find a reason
 	ErrorUnknownNotFoundError = nerror.InternalServerError.Build(ReasonInternal, "content ${content} not found, may be it's a serious error")
@@ -72,6 +71,10 @@ var (
 	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
 	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build("ReasonCreateWebhookPermissionDenied",
 		"failed to create webhook of pipeline ${pipeline}, please check your account permissions.")
+
+	// ErrorPRNotFound defines error that failed getting GitHub/GitLab pr as permission denied or not exist.
+	ErrorPRNotFound = nerror.InternalServerError.Build("ReasonPRNotFound",
+		"failed to get pull request ${id} of project ${project}, please check if it exists.")
 
 	// ErrorUnsupported defines some feature/field not supported yet.
 	ErrorUnsupported = nerror.BadRequest.Build("ReasonUnsupported", "unsupported ${resource}: ${type}")

@@ -8,7 +8,7 @@ import (
 	osutil "github.com/caicloud/cyclone/pkg/util/os"
 )
 
-func TestConvertPerformStageSet(t *testing.T) {
+func Test_FindReportFiles(t *testing.T) {
 
 	testCases := map[string]struct {
 		base    string

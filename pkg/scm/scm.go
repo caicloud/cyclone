@@ -52,6 +52,7 @@ type SCMProvider interface {
 	ListRepos() ([]api.Repository, error)
 	ListBranches(repo string) ([]string, error)
 	ListTags(repo string) ([]string, error)
+	ListDockerfiles(repo string) ([]string, error)
 	GetTemplateType(repo string) (string, error)
 	CheckToken() bool
 	NewTagFromLatest(tagName, description, commitID, url string) error
@@ -59,6 +60,8 @@ type SCMProvider interface {
 	DeleteWebHook(repoURL string, webHookUrl string) error
 	CreateStatus(recordStatus api.Status, targetURL, repoURL, commitSha string) error
 	GetPullRequestSHA(repoURL string, number int) (string, error)
+	GetMergeRequestTargetBranch(repoURL string, number int) (string, error)
+	RetrieveRepoInfo(url string) (*api.RepoInfo, error)
 }
 
 // WebHook represents the params for SCM webhook.

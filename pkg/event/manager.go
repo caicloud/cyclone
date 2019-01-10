@@ -34,6 +34,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/cloud"
 	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
+	regexutil "github.com/caicloud/cyclone/pkg/util/regex"
 )
 
 // maxRetry represents the max number of retry for event when cloud is busy.
@@ -78,6 +79,19 @@ func NewEventManager(ds *store.DataStore) EventManager {
 
 // HandleEvent handles the event.
 func (em *eventManager) HandleEvent(event *api.Event) error {
+	// get sonar integration if necessary.
+	if api.ContainsStage(event.PipelineRecord.PerformParams.Stages, api.CodeScanStageName) {
+		codeScan := event.Pipeline.Build.Stages.CodeScan
+		if codeScan != nil && codeScan.SonarQube != nil {
+			integration, err := em.ds.GetIntegration(codeScan.SonarQube.Name)
+			if err != nil {
+				log.Errorf("get integration %s failed: %v", codeScan.SonarQube.Name, err)
+				return err
+			}
+			event.Pipeline.Build.Stages.CodeScan.SonarQube.SonarInfo = integration.SonarQube
+		}
+	}
+
 	eventID := event.ID
 	pipelineRecord := event.PipelineRecord
 	err := createWorkerForEvent(event)
@@ -338,8 +352,10 @@ func sendNotification(content *api.NotificationContent) error {
 }
 
 func sendScmStatuses(event *api.Event) error {
-	if event.PipelineRecord.Trigger != api.TriggerWebhookPullRequest &&
-		event.PipelineRecord.Trigger != api.TriggerWebhookPullRequestComment {
+	// If this event is not related to GitHub PR or GitLab MR, will return.
+	_, isGitlabMR := regexutil.GetGitlabMRID(event.PipelineRecord.PerformParams.Ref, false)
+	_, isGithubPR := regexutil.GetGithubPRID(event.PipelineRecord.PerformParams.Ref)
+	if !isGitlabMR && !isGithubPR {
 		return nil
 	}
 

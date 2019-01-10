@@ -37,8 +37,8 @@ install:
   - go build -o cyclone-worker github.com/caicloud/cyclone/cmd/worker 
 
 script:
-  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/' | grep -v '/notify')
-  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api,notify
+  - go test -cover $(go list ./... | grep -v '/vendor/' | grep -v '/tests/')
+  - travis_wait 15 overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,api
   # - ./scripts/e2e-docker.sh
 
 after_success:

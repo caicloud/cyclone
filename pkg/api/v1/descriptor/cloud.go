@@ -18,7 +18,7 @@ var clouds = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
-				Function:    handler.ListProjects,
+				Function:    handler.ListClouds,
 				Description: "List all clouds",
 				Parameters:  []definition.Parameter{},
 				Results:     definition.DataErrorResults("list clouds"),

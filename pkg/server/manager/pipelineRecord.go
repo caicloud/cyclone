@@ -31,9 +31,11 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/event"
+	"github.com/caicloud/cyclone/pkg/scm"
 	"github.com/caicloud/cyclone/pkg/store"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httperror "github.com/caicloud/cyclone/pkg/util/http/errors"
+	regexutil "github.com/caicloud/cyclone/pkg/util/regex"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
@@ -99,6 +101,60 @@ func (m *pipelineRecordManager) CreatePipelineRecord(pipelineRecord *api.Pipelin
 	project, err := m.dataStore.FindProjectByID(pipeline.ProjectID)
 	if err != nil {
 		return nil, err
+	}
+
+	if pipelineRecord.PerformParams != nil {
+		mrid, isGitlabMR := regexutil.GetGitlabMRID(pipelineRecord.PerformParams.Ref, true)
+		prid, isGithubPR := regexutil.GetGithubPRID(pipelineRecord.PerformParams.Ref)
+
+		// GitHub/GitLab PR/MR trigger manually, need to get last commit id.
+		if isGitlabMR || isGithubPR {
+			//if isGitlabMR || true {
+			provider, err := scm.GetSCMProvider(project.SCM)
+			if err != nil {
+				return nil, err
+			}
+
+			url, err := api.GetURL(pipeline.Build.Stages.CodeCheckout.MainRepo)
+			if err != nil {
+				return nil, err
+			}
+
+			scmType := pipeline.Build.Stages.CodeCheckout.MainRepo.Type
+			// If ref is `refs/merge-requests/%d/head`((GitLab PR),
+			// mutate it to `refs/merge-requests/%d/head:target-branch`
+			if scmType == api.Gitlab {
+				branch, err := provider.GetMergeRequestTargetBranch(url, mrid)
+				if err != nil {
+					log.Errorf("Record %s get mr target branch error as %v", pipelineRecord.Name, err)
+					if strings.Contains(err.Error(), "Not found") {
+						return nil, httperror.ErrorPRNotFound.Error(mrid, url)
+					}
+					return nil, err
+				}
+
+				pipelineRecord.PerformParams.Ref = pipelineRecord.PerformParams.Ref + ":" + branch
+			}
+
+			var id int
+			if isGitlabMR {
+				id = mrid
+			} else if isGithubPR {
+				id = prid
+			}
+			// Get last commit id
+			sha, err := provider.GetPullRequestSHA(url, id)
+			if err != nil {
+				log.Errorf("Record %s get pr last commit ID error as %v", pipelineRecord.Name, err)
+				if strings.Contains(err.Error(), "Not found") {
+					return nil, httperror.ErrorPRNotFound.Error(id, url)
+				}
+				return nil, err
+			}
+
+			pipelineRecord.PRLastCommitSHA = sha
+		}
+
 	}
 
 	createdPipelineRecord, err := m.dataStore.CreatePipelineRecord(pipelineRecord)

@@ -50,6 +50,12 @@ Feel free to hack on cyclone! We have [instructions to help you get started cont
 
 Please watch the [Fuctions Introduction](./docs/functions.md) for our features.
 
+## Community
+
+Welcome to join us for discussion and asking questions:
+- Slack: caicloud-cyclone.slack.com, and you can use [this link](https://caicloud-cyclone.slack.com/join/signup) to signup.
+- Email: zhujian@caicloud.io
+
 ## Roadmap
 
 Please watch the [Github milestones](https://github.com/caicloud/cyclone/milestones) for our future plans.

@@ -25,6 +25,7 @@ import (
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/docker"
+	_ "github.com/caicloud/cyclone/pkg/integrate/provider/sonar"
 	"github.com/caicloud/cyclone/pkg/scm"
 	_ "github.com/caicloud/cyclone/pkg/scm/provider"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
@@ -50,7 +51,7 @@ func NewWorker(opts *options.WorkerOptions) *Worker {
 
 // Run starts the worker
 func (worker *Worker) Run() error {
-	log.Info("worker start with options: %v", worker.Options)
+	log.Infof("worker start with options: %v", worker.Options)
 
 	// Get event for cyclone server
 	eventID := worker.Options.EventID
@@ -78,6 +79,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 	performParams := event.PipelineRecord.PerformParams
 	performStages := performParams.Stages
 	stageSet := convertPerformStageSet(performStages)
+	log.Infof("stage set :%v", stageSet)
 	build := pipeline.Build
 
 	opts := worker.Options
@@ -113,8 +115,23 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecPackage(build.BuilderImage, build.BuildInfo, build.Stages.UnitTest, build.Stages.Package)
 		if err != nil {
 			log.Error(err.Error())
-			return
+			if !build.Stages.Package.AllowFailure {
+				return
+			}
 		}
+
+	}
+
+	// Execute the package stage if necessary.
+	if _, ok := stageSet[api.CodeScanStageName]; ok {
+		err = stageManager.ExecCodeScan(build.Stages.CodeScan)
+		if err != nil {
+			log.Error(err.Error())
+			if !build.Stages.CodeScan.AllowFailure {
+				return
+			}
+		}
+
 	}
 
 	// The built images from image build stage.
@@ -134,8 +151,11 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecIntegrationTest(builtImages, build.Stages.IntegrationTest)
 		if err != nil {
 			log.Error(err.Error())
-			return
+			if !build.Stages.IntegrationTest.AllowFailure {
+				return
+			}
 		}
+
 	}
 
 	// Execute the image release stage if necessary.
@@ -143,8 +163,11 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		err = stageManager.ExecImageRelease(builtImages, build.Stages.ImageRelease)
 		if err != nil {
 			log.Error(err.Error())
-			return
+			if !build.Stages.ImageRelease.AllowFailure {
+				return
+			}
 		}
+
 	}
 
 	if event.PipelineRecord.PerformParams.CreateSCMTag {
@@ -156,9 +179,11 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 			scmType := event.Pipeline.Build.Stages.CodeCheckout.MainRepo.Type
 			if (scmType == api.Gitlab && strings.Contains(err.Error(), "403")) ||
 				(scmType == api.Github && strings.Contains(err.Error(), "404")) {
-				event.PipelineRecord.ErrorMessage = "Create SCM tag fails, please check your account permissions."
+				msg := fmt.Sprintf("%s: please check your account permissions.\n", api.CreateTagStageName)
+				event.PipelineRecord.ErrorMessage = event.PipelineRecord.ErrorMessage + msg
 			} else {
-				event.PipelineRecord.ErrorMessage = fmt.Sprintf("Create SCM tag fails : %v", err)
+				msg := fmt.Sprintf("%s: %v\n", api.CreateTagStageName, err)
+				event.PipelineRecord.ErrorMessage = event.PipelineRecord.ErrorMessage + msg
 			}
 
 			err = worker.Client.SendEvent(event)
@@ -181,7 +206,7 @@ func (worker *Worker) HandleEvent(event *api.Event) {
 		log.Errorf("set event result err: %v", err)
 		return
 	}
-	log.Infof("send event %s to server", event)
+	log.Infof("send event %+v to server", event)
 }
 
 func convertPerformStageSet(stages []api.PipelineStageName) map[api.PipelineStageName]struct{} {

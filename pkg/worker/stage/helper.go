@@ -18,11 +18,13 @@ package stage
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/golang/glog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	executil "github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/worker/cycloneserver"
 )
 
@@ -35,6 +37,7 @@ const (
 var stageDesps = map[api.PipelineStageName]string{
 	api.CodeCheckoutStageName:    "Code checkout",
 	api.PackageStageName:         "Package",
+	api.CodeScanStageName:        "Code scan",
 	api.ImageBuildStageName:      "Build image",
 	api.IntegrationTestStageName: "Integration test",
 	api.ImageReleaseStageName:    "Push image",
@@ -64,8 +67,9 @@ func generateStageFinishLog(stage api.PipelineStageName, err error) string {
 	return fmt.Sprintf(finishLogTmpl, desp)
 }
 
-func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.PipelineStageName, status api.Status, failErr error) error {
+func updateRecordStageStatus(stages *api.BuildStages, pipelineRecord *api.PipelineRecord, stage api.PipelineStageName, status api.Status, failErr error) error {
 	var gss *api.GeneralStageStatus
+	allowFailure := false
 	stageStatus := pipelineRecord.StageStatus
 
 	switch stage {
@@ -81,6 +85,13 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 			stageStatus.Package = &api.GeneralStageStatus{}
 		}
 		gss = stageStatus.Package
+		allowFailure = stages.Package.AllowFailure
+	case api.CodeScanStageName:
+		if stageStatus.CodeScan == nil {
+			stageStatus.CodeScan = &api.CodeScanStageStatus{}
+		}
+		gss = &stageStatus.CodeScan.GeneralStageStatus
+		allowFailure = stages.CodeScan.AllowFailure
 	case api.ImageBuildStageName:
 		if stageStatus.ImageBuild == nil {
 			stageStatus.ImageBuild = &api.ImageBuildStageStatus{}
@@ -91,6 +102,7 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 			stageStatus.IntegrationTest = &api.GeneralStageStatus{}
 		}
 		gss = stageStatus.IntegrationTest
+		allowFailure = stages.IntegrationTest.AllowFailure
 	case api.ImageReleaseStageName:
 		if stageStatus.ImageRelease == nil {
 			stageStatus.ImageRelease = &api.ImageReleaseStageStatus{
@@ -98,6 +110,7 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 			}
 		}
 		gss = &stageStatus.ImageRelease.GeneralStageStatus
+		allowFailure = stages.ImageRelease.AllowFailure
 	default:
 		err := fmt.Errorf("stage %s is not supported", stage)
 		log.Error(err)
@@ -116,16 +129,14 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 	case api.Failed:
 		gss.Status = api.Failed
 		gss.EndTime = time.Now()
-		pipelineRecord.Status = api.Failed
+
+		if !allowFailure {
+			pipelineRecord.Status = api.Failed
+		}
 
 		if failErr != nil {
-			desp, ok := stageDesps[stage]
-			if !ok {
-				err := fmt.Errorf("stage status %s is not supported", status)
-				log.Error(err)
-				return err
-			}
-			pipelineRecord.ErrorMessage = fmt.Sprintf("%s fails : %v", desp, failErr)
+			msg := fmt.Sprintf("%s: %v\n", stage, failErr)
+			pipelineRecord.ErrorMessage = pipelineRecord.ErrorMessage + msg
 		}
 
 		// Wait for a while to ensure that stage logs are reported to server.
@@ -141,9 +152,31 @@ func updateRecordStageStatus(pipelineRecord *api.PipelineRecord, stage api.Pipel
 }
 
 func updateEvent(c cycloneserver.CycloneServerClient, event *api.Event, stage api.PipelineStageName, status api.Status, failErr error) error {
-	if err := updateRecordStageStatus(event.PipelineRecord, stage, status, failErr); err != nil {
+	if err := updateRecordStageStatus(event.Pipeline.Build.Stages, event.PipelineRecord, stage, status, failErr); err != nil {
 		return err
 	}
 
 	return c.SendEvent(event)
+}
+
+// findGoCoverprofile find golang coverprofile from commands.
+func findGoCoverprofile(commands []string) string {
+	var file string
+	for _, command := range commands {
+		// 'go test ... -coverprofile=xxx ...' or 'go test ... -coverprofile xxx ...'
+		if strings.Contains(command, "go test") && strings.Contains(command, "-coverprofile") {
+			i := strings.Index(command, "-coverprofile")
+			tmp := command[i+len("-coverprofile"):]
+			commandFields := strings.Fields(tmp)
+			file = strings.TrimPrefix(commandFields[0], "=")
+		}
+	}
+	return file
+}
+
+// CopyFile cp file from src to dest.
+func CopyFile(dir, src, dest string) (string, error) {
+	args := []string{src, dest}
+	output, err := executil.RunInDir(dir, "cp", args...)
+	return string(output), err
 }

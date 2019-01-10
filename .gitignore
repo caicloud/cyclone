@@ -19,6 +19,9 @@ bin
 # Config when used with VS Code
 .vscode/
 
+# Config when used idea
+.idea/
+
 # Coverage file
 *.coverprofile
 

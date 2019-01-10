@@ -195,4 +195,26 @@ var projects = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path: "/projects/{project}/dockerfiles",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.List,
+				Function:    handler.ListDockerfiles,
+				Description: "List dockerfiles' path of the repo for the project",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectPathParameterName,
+					},
+					{
+						Source:    definition.Query,
+						Name:      httputil.RepoQueryParameter,
+						Operators: []definition.Operator{validator.String("required")},
+					},
+				},
+				Results: definition.DataErrorResults("dockerfiles"),
+			},
+		},
+	},
 }

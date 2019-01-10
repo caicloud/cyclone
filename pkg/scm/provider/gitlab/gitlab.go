@@ -67,7 +67,7 @@ func NewGitlab(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	case v3APIVersion:
 		client, err := newGitlabV3Client(scmCfg.Server, scmCfg.Username, scmCfg.Token)
 		if err != nil {
-			log.Error("fail to new Gitlab v3 client as %v", err)
+			log.Errorf("fail to new Gitlab v3 client as %v", err)
 			return nil, err
 		}
 
@@ -75,7 +75,7 @@ func NewGitlab(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	case v4APIVersion:
 		v4Client, err := newGitlabV4Client(scmCfg.Server, scmCfg.Username, scmCfg.Token)
 		if err != nil {
-			log.Error("fail to new Gitlab v4 client as %v", err)
+			log.Errorf("fail to new Gitlab v4 client as %v", err)
 			return nil, err
 		}
 

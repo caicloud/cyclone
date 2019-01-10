@@ -14,6 +14,7 @@
     - [Stats API](#stats-api)
     - [Cloud API](#cloud-api)
     - [Template API](#template-api)
+    - [Integration API](#integration-api)
   - [API Common](#api-common)
     - [Path Parameter Explanation](#path-parameter-explanation)
   - [API Details](#api-details)
@@ -43,9 +44,12 @@
     - [List SCM Repos](#list-scm-repos)
     - [List SCM Branches](#list-scm-branches)
     - [List SCM Tags](#list-scm-tags)
+    - [List SCM Dockerfiles](#list-scm-dockerfiles)
     - [Get SCM Templatetype](#get-scm-templatetype)
     - [Github webhook](#github-webhook)
     - [Gitlab webhook](#gitlab-webhook)
+    - [SVN hooks](#svn-hooks)
+      - [Config your svn repository](#config-your-svn-repository)
     - [PipelineStatusStatsObject](#pipelinestatusstatsobject)
     - [Get Project Stats](#get-project-stats)
     - [Get Pipeline Stats](#get-pipeline-stats)
@@ -59,6 +63,12 @@
     - [List cyclone workers](#list-cyclone-workers)
     - [ConfigTemplateObject](#configtemplateobject)
     - [List config templates](#list-config-templates)
+    - [IntegrationObject](#integrationobject)
+    - [Create integration](#create-integration)
+    - [List integrations](#list-integrations)
+    - [Get integration](#get-integration)
+    - [Update integration](#update-integration)
+    - [Delete integration](#delete-integration)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -136,8 +146,9 @@
 | --- | --- | --- |
 | List | GET `/api/v1/projects/{project}/repos` | [link](#list-scm-repos) |
 | List | GET `/api/v1/projects/{project}/branches?repo=` | [link](#list-scm-branches) |
-| List | GET `/api/v1/projects/{project}/tags?repo=` | WIP, [link](#list-scm-tags) |
-| Get  | GET `/api/v1/projects/{project}/templatetype?repo=` | WIP, [link](#get-scm-templatetype) |
+| List | GET `/api/v1/projects/{project}/tags?repo=` | [link](#list-scm-tags) |
+| List | GET `/api/v1/projects/{project}/dockerfiles?repo=` | [link](#list-scm-dockerfiles) |
+| Get  | GET `/api/v1/projects/{project}/templatetype?repo=` | [link](#get-scm-templatetype) |
 
 ### Webhook API
 
@@ -145,6 +156,7 @@
 | --- | --- | --- |
 | Create | POST `/api/v1/pipelines/{pipelineid}/githubwebhook` | WIP, [link](#github-webhook) |
 | Create | POST `/api/v1/pipelines/{pipelineid}/gitlabwebhook` | WIP, [link](#gitlab-webhook) |
+| Create | POST `/api/v1/subversion/{svnrepoid}/postcommithook` | [link](#svn-hooks) |
 
 ### Stats API
 
@@ -174,6 +186,19 @@
 | API | Path | Detail |
 | --- | --- | --- |
 | List | GET `/api/v1/configtemplates` | WIP, [link](#list-config-templates) |
+
+### Integration API
+- [IntegrationObject](#integrationobject)
+
+| API | Path | Detail |
+| --- | --- | --- |
+| Create | GET `/api/v1/integrations` | WIP, [link](#create-integration) |
+| List | GET `/api/v1/integrations` | WIP, [link](#list-integrations) |
+| Get | GET `/api/v1/integrations/{integration}` | WIP, [link](#get-integration) |
+| Update | GET `/api/v1/integrations/{integration}` | WIP, [link](#update-integration) |
+| Delete | GET `/api/v1/integrations/{integration}` | WIP, [link](#delete-integration) |
+
+
 ## API Common
 
 ### Path Parameter Explanation
@@ -457,6 +482,9 @@ Success:
                 "stages": ["string", ...],
                 "comments": ["string", ...]
             },
+            "postCommit":{
+                "stages": ["string", ...]
+            }
         }
     }, 
     "build": {
@@ -514,8 +542,15 @@ Success:
                 "outputs": ["string", ...]
             }, 
             "codeScan": {
-                "command": ["string", ...], 
-                "outputs": ["string", ...]
+                "sonarqube": {
+                    "name":"sonar1", // sonarqube integration name
+                    "config": {
+                        "sourcePath": "./", // default './'
+                        "encodingStyle": "UTF-8", // default 'UTF-8'
+                        "language": "Java",
+                        "threshold": ""
+                    }
+                }
             }, 
             "package": {
                 "command": ["string", ...], 
@@ -619,6 +654,24 @@ Pipeline is responsible for automating the lifecycle management of an applicatio
             "status": "Running|Success|Failed|Aborted", // string, required
             "startTime": "2017-08-23T08:40:33.764Z",    // time, required
             "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+        },
+        "codeScan": {
+            "status": "Running|Success|Failed", // string, required
+            "startTime": "2017-08-23T08:40:33.764Z",    // time, required
+            "endTime": "2017-08-23T08:40:33.764Z"       // time, optional
+            "sonarqube": {
+                "measures": [
+                    {
+                        "metric": "reliability_rating",
+                        "value": "3.0"
+                    },
+                    {
+                        "metric": "coverage",
+                        "value": "3.2"
+                    }
+                ],
+            "overviewLink": "http://sonarqube:9000/component_measures?id=5bfe0f872f6c050001da6fb0"
+            }
         },
         "imageBuild": {                                 // struct, optional
             "status": "Running|Success|Failed|Aborted", // string, required
@@ -1218,6 +1271,33 @@ Success:
 }
 ```
 
+### List SCM Dockerfiles
+
+List all dockerfiles for the repository.
+
+**Request**
+
+URL: `GET /api/v1/projects/{project}/dockerfiles?repo=`
+
+Note:
+
+| Field | Note |
+| --- | --- |
+| repo | Required, all dockerfiles in the repository will be listed. should in format of '{owner}/{repo}' |
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": <PaginationObject>,
+    "items": [ <dockerfile-path>, ... ]
+}
+```
+
 ### Get SCM Templatetype
 
 Get the template type of the specific repo.
@@ -1294,6 +1374,59 @@ Success:
 ```
 200 OK
 ```
+
+### SVN hooks
+
+Trigger pipeline by SVN post-commit hooks.
+
+**Request**
+
+URL: `POST /api/v1/subversion/{svnrepoid}/postcommithook`
+
+Header:
+```
+Content-Type:text/plain;charset=UTF-8
+```
+
+Query:
+```
+revision: 27 // {revision-id}
+```
+
+Body:
+Output of `svnlook changed --revision $REV $REPOS`, for example:
+```
+U   cyclone/test.go
+U   cyclone/README.md
+```
+
+**Response**
+
+Success:
+
+```
+200 OK
+```
+
+To make post-commit hooks effective, you should [config your svn repository](#Config-your-svn-repository).
+
+#### Config your svn repository
+You can set up a post commit hook so the Subversion repository can notify cyclone whenever a change is made to that repository. To do this, put the following script in your post-commit file (in the $REPOSITORY/hooks directory):
+```
+REPOS="$1"
+REV="$2"
+TXN_NAME="$3"
+
+UUID=`svnlook uuid $REPOS`
+
+/usr/bin/curl --request POST --header "Content-Type:text/plain;charset=UTF-8" \
+  --data "`svnlook changed --revision $REV $REPOS`" \
+  {cyclone-server-address}/api/v1/subversion/$UUID/postcommithook?revision=$REV
+```
+
+Notes:
+
+Replace `{cyclone-server-address}` by the actural cyclone server address value.
 
 ### PipelineStatusStatsObject
 
@@ -1621,4 +1754,136 @@ Success:
     },
     "items": [ <ConfigTemplateObject>, ... ]
 }
+```
+
+### IntegrationObject
+
+```
+{
+    "name": "sonar1",  // can not update
+    "alias": "alias",
+    "type": "SonarQube",  // can not update
+    "sonarqube": {
+        "description": "This is my first sonar qube instance.",
+        "address": "http://192.168.21.100:9000",
+        "token": "f399878566d5d6a3de1759222a4b5eb15cac51de",
+        "user":"" // Optional, stored for front-end to display.
+    },
+    "creationTime": "2017-08-23T09:44:08.653Z",
+    "lastUpdateTime": "2017-08-23T09:44:08.653Z"
+}
+```
+
+### Create integration
+
+Add integration.
+
+**Request**
+
+URL: `POST /api/v1/integrations`
+
+Body:
+
+```
+    // all <IntegrationObject> fields
+```
+
+**Response**
+
+Success:
+
+```
+201 OK
+
+{
+    // all <CloudObject> fields
+}
+```
+
+### List integrations
+
+List all integrations.
+
+**Request**
+
+URL: `GET /api/v1/integrations`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    "metadata": {
+        "total": 0,
+    },
+    "items": [ <IntegrationObject>, ... ]
+}
+```
+
+
+### Get integration
+
+Get integration information.
+
+**Request**
+
+URL: `GET /api/v1/integrations/{integration}`
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <IntegrationObject> fields
+}
+```
+
+### Update integration
+
+Update the integration information.
+
+**Request**
+
+URL: `PUT /api/v1/integrations/{integration}`
+
+Body:
+
+```
+{
+    // all <IntegrationObject> fields
+}
+```
+
+**Response**
+
+Success:
+
+```
+200 OK
+
+{
+    // all <IntegrationObject> fields
+}
+```
+
+### Delete integration
+
+Delete the integration.
+
+**Request**
+
+URL: `DELETE /api/v1/integrations/{integration}`
+
+**Response**
+
+Success:
+
+```
+204 No Content
 ```

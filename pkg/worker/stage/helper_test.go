@@ -92,6 +92,10 @@ func TestGenerateStageFinishLog(t *testing.T) {
 }
 
 func TestUpdateRecordStageStatus(t *testing.T) {
+	stages := &api.BuildStages{
+		CodeCheckout: &api.CodeCheckoutStage{},
+		Package:      &api.PackageStage{},
+	}
 	pr := &api.PipelineRecord{
 		StageStatus: &api.StageStatus{
 			CodeCheckout: &api.CodeCheckoutStageStatus{},
@@ -99,7 +103,7 @@ func TestUpdateRecordStageStatus(t *testing.T) {
 		},
 	}
 
-	if err := updateRecordStageStatus(pr, api.CodeCheckoutStageName, api.Running, nil); err == nil {
+	if err := updateRecordStageStatus(stages, pr, api.CodeCheckoutStageName, api.Running, nil); err == nil {
 		if pr.StageStatus.CodeCheckout.Status != api.Running {
 			t.Errorf("expect code checkout stage status to be Running, but get %s", pr.StageStatus.CodeCheckout.Status)
 		}
@@ -107,7 +111,7 @@ func TestUpdateRecordStageStatus(t *testing.T) {
 		t.Errorf("expect error to be nil, but got %v", err)
 	}
 
-	if err := updateRecordStageStatus(pr, api.PackageStageName, api.Failed, fmt.Errorf("meets error")); err == nil {
+	if err := updateRecordStageStatus(stages, pr, api.PackageStageName, api.Failed, fmt.Errorf("meets error")); err == nil {
 		if pr.StageStatus.Package.Status != api.Failed {
 			t.Errorf("expect code checkout stage status to be Running, but get %s", pr.StageStatus.CodeCheckout.Status)
 		}
@@ -119,5 +123,32 @@ func TestUpdateRecordStageStatus(t *testing.T) {
 		}
 	} else {
 		t.Errorf("expect error to be nil, but got %v", err)
+	}
+}
+
+func Test_findGoCoverprofile(t *testing.T) {
+	testCases := map[string]struct {
+		commands []string
+		file     string
+	}{
+		"find-success-1": {
+			[]string{"xxx", "go test -cover $(go list ./...) -coverprofile coverage.out -v", ""},
+			"coverage.out",
+		},
+		"find-success-2": {
+			[]string{"xxx", "go test -cover $(go list ./...) -coverprofile=coverage.out -v"},
+			"coverage.out",
+		},
+		"not-found": {
+			[]string{"xxx", "go test -cover $(go list ./...) -v"},
+			"",
+		},
+	}
+
+	for d, tc := range testCases {
+		result := findGoCoverprofile(tc.commands)
+		if result != tc.file {
+			t.Errorf("%s fails to find go coverprofile: expected %s; but got %s", d, tc.file, result)
+		}
 	}
 }

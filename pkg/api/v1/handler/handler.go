@@ -11,6 +11,7 @@ var (
 	eventManager          manager.EventManager
 	cloudManager          manager.CloudManager
 	projectManager        manager.ProjectManager
+	integrationManager    manager.IntegrationManager
 
 	ds *store.DataStore
 )
@@ -43,6 +44,12 @@ func InitHandler(dataStore *store.DataStore, recordRotationThreshold int) (err e
 
 	// New cloud manager
 	cloudManager, err = manager.NewCloudManager(dataStore)
+	if err != nil {
+		return err
+	}
+
+	// New integration manager
+	integrationManager, err = manager.NewIntegrationManager(dataStore)
 	if err != nil {
 		return err
 	}

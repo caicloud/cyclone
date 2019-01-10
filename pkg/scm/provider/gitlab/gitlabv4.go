@@ -38,7 +38,7 @@ type GitlabV4 struct {
 func NewGitlabV4(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	client, err := newGitlabV4Client(scmCfg.Server, scmCfg.Username, scmCfg.Token)
 	if err != nil {
-		log.Error("fail to new gitlab client as %v", err)
+		log.Errorf("fail to new gitlab client as %v", err)
 		return nil, err
 	}
 
@@ -133,6 +133,43 @@ func (g *GitlabV4) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListDockerfiles lists the Dockerfiles for specified repo.
+func (g *GitlabV4) ListDockerfiles(repo string) ([]string, error) {
+	recursive := true
+	opt := &gitlab.ListTreeOptions{
+		Recursive: &recursive,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	treeNodes := []*gitlab.TreeNode{}
+	for {
+		treeNode, resp, err := g.client.Repositories.ListTree(repo, opt)
+		if err != nil {
+			log.Errorf("Fail to list dockerfile for %s", repo)
+			return nil, err
+		}
+
+		treeNodes = append(treeNodes, treeNode...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+
+		opt.Page = resp.NextPage
+	}
+
+	files := []string{}
+	for _, t := range treeNodes {
+		if t.Type == "blob" && t.Name == "Dockerfile" {
+			files = append(files, t.Path)
+		}
+	}
+
+	return files, nil
+}
+
 // CreateWebHook creates webhook for specified repo.
 func (g *GitlabV4) CreateWebHook(repoURL string, webHook *scm.WebHook) error {
 	if webHook == nil || len(webHook.Url) == 0 || len(webHook.Events) == 0 {
@@ -204,7 +241,7 @@ func (g *GitlabV4) NewTagFromLatest(tagName, description, commitID, url string) 
 func (g *GitlabV4) GetTemplateType(repo string) (string, error) {
 	languages, err := getLanguages(g.scmCfg, v4APIVersion, repo)
 	if err != nil {
-		log.Error("list language failed:%v", err)
+		log.Errorf("list language failed:%v", err)
 		return "", err
 	}
 	language := getTopLanguage(languages)
@@ -213,7 +250,7 @@ func (g *GitlabV4) GetTemplateType(repo string) (string, error) {
 	case api.JavaRepoType, api.JavaScriptRepoType:
 		files, err := getContents(g.scmCfg, v4APIVersion, repo)
 		if err != nil {
-			log.Error("get contents failed:%v", err)
+			log.Errorf("get contents failed:%v", err)
 			return language, nil
 		}
 
@@ -252,5 +289,25 @@ func (g *GitlabV4) CreateStatus(recordStatus api.Status, targetURL, repoURL, com
 }
 
 func (g *GitlabV4) GetPullRequestSHA(repoURL string, number int) (string, error) {
-	return "", errors.ErrorNotImplemented.Error("get pull request sha")
+	owner, name := provider.ParseRepoURL(repoURL)
+	mr, _, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number)
+	if err != nil {
+		return "", err
+	}
+
+	return mr.SHA, nil
+}
+
+func (g *GitlabV4) GetMergeRequestTargetBranch(repoURL string, number int) (string, error) {
+	owner, name := provider.ParseRepoURL(repoURL)
+	mr, _, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number)
+	if err != nil {
+		return "", err
+	}
+
+	return mr.TargetBranch, nil
+}
+
+func (g *GitlabV4) RetrieveRepoInfo(url string) (*api.RepoInfo, error) {
+	return nil, errors.ErrorNotImplemented.Error("retrieve GitLab repo info")
 }

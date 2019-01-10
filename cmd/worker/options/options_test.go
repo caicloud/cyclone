@@ -35,7 +35,7 @@ func TestWorkerOptionsAddFlags(t *testing.T) {
 			}{
 				{CycloneServer, opts.CycloneServer, "http://127.0.0.1:7099"},
 				{ConsoleWebEndpoint, opts.ConsoleWebEndpoint, "http://127.0.0.1:3000"},
-				{RegistryLocation, opts.RegistryLocation, "cargo.caicloud.io"},
+				{RegistryLocation, opts.RegistryLocation, ""},
 				{GitlabURL, opts.GitlabURL, "https://gitlab.com"},
 				{WorkerImage, opts.WorkerImage, "cargo.caicloud.io/caicloud/cyclone-worker"},
 				{ResourceLimitsMemory, opts.Quota[ResourceLimitsMemory], DefaultLimitMemory},

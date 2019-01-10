@@ -27,17 +27,15 @@ import (
 	"github.com/zoumo/logdog"
 
 	"github.com/caicloud/cyclone/pkg/api"
+	"github.com/caicloud/cyclone/pkg/common"
 	pathutil "github.com/caicloud/cyclone/pkg/util/path"
 )
 
 const (
-	// cloneDir represents the dir which the repo clone to.
-	cloneDir = "/tmp/code"
-
 	repoNameRegexp = `^http[s]?://(?:git[\w]+\.com|[\d]+\.[\d]+\.[\d]+\.[\d]+:[\d]+|localhost:[\d]+)/([\S]*)\.git$`
 
 	// maxRetry represents the max number of retry for git clone.
-	maxRetry = 5
+	maxRetry = 10
 )
 
 // scmProviders represents the set of SCM providers.
@@ -75,7 +73,7 @@ func GetSCMProvider(scmType api.SCMType) (SCMProvider, error) {
 
 // GetCloneDir returns the clone dir.
 func GetCloneDir() string {
-	return cloneDir
+	return common.CloneDir
 }
 
 func GetRepoName(codeSource *api.CodeSource) (string, error) {
@@ -193,7 +191,7 @@ func CloneRepo(token string, codeSource *api.CodeSource, ref string, folder stri
 		return "", err
 	}
 
-	url, err := getURL(codeSource)
+	url, err := api.GetURL(codeSource)
 	if err != nil {
 		return "", err
 	}
@@ -245,17 +243,6 @@ func rebuildToken(token string, codeSource *api.CodeSource) (string, error) {
 	}
 
 	return token, nil
-}
-
-// getURL provide the URL of the code.
-func getURL(codeSource *api.CodeSource) (string, error) {
-	gitSource, err := api.GetGitSource(codeSource)
-	if err != nil {
-		logdog.Errorf(err.Error())
-		return "", err
-	}
-
-	return gitSource.Url, nil
 }
 
 // getRef provide the ref(branch or tag) of the code.

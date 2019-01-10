@@ -75,10 +75,10 @@ func GetFloat64Env(name string, def float64) float64 {
 func GetBoolEnv(name string, def bool) bool {
 	val, err := strconv.ParseBool(os.Getenv(name))
 	if err != nil {
-		log.Infof("Env variant %s is not bool, using default value: %f", name, def)
+		log.Infof("Env variant %s is not bool, using default value: %v", name, def)
 		return def
 	}
-	log.Infof("Env variant %s found, using env value: %f", name, val)
+	log.Infof("Env variant %s found, using env value: %v", name, val)
 	return val
 
 }

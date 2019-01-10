@@ -18,6 +18,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	log "github.com/golang/glog"
@@ -25,10 +26,12 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/caicloud/cyclone/cmd/worker/options"
 	"github.com/caicloud/cyclone/pkg/api"
 	"github.com/caicloud/cyclone/pkg/cloud"
+	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	"github.com/caicloud/cyclone/pkg/wait"
 	"github.com/caicloud/cyclone/pkg/worker/scm"
 )
@@ -68,20 +71,32 @@ func NewK8sCloud(c *api.Cloud) (cloud.Provider, error) {
 }
 
 func newK8sCloud(c *api.CloudKubernetes) (cloud.Provider, error) {
-	if c.TLSClientConfig == nil {
-		c.TLSClientConfig = &api.TLSClientConfig{Insecure: true}
-	}
+	var config *rest.Config
+	var err error
 
-	config := &rest.Config{
-		Host:        c.Host,
-		BearerToken: c.BearerToken,
-		Username:    c.Username,
-		Password:    c.Password,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: c.TLSClientConfig.Insecure,
-			CAFile:   c.TLSClientConfig.CAFile,
-			CAData:   c.TLSClientConfig.CAData,
-		},
+	// if KubeConfig is not empty, use it firstly, otherwise, use username/password.
+	if c.KubeConfig != nil {
+		config, err = clientcmd.NewDefaultClientConfig(*c.KubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+		if err != nil {
+			log.Infof("NewDefaultClientConfig error: %v", err)
+			return nil, err
+		}
+	} else {
+		if c.TLSClientConfig == nil {
+			c.TLSClientConfig = &api.TLSClientConfig{Insecure: true}
+		}
+
+		config = &rest.Config{
+			Host:        c.Host,
+			BearerToken: c.BearerToken,
+			Username:    c.Username,
+			Password:    c.Password,
+			TLSClientConfig: rest.TLSClientConfig{
+				Insecure: c.TLSClientConfig.Insecure,
+				CAFile:   c.TLSClientConfig.CAFile,
+				CAData:   c.TLSClientConfig.CAData,
+			},
+		}
 	}
 
 	client, err := kubernetes.NewForConfig(config)
@@ -214,12 +229,14 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 				pod.Spec.Volumes = []apiv1.Volume{
 					apiv1.Volume{
 						Name: volumeName,
+						VolumeSource: apiv1.VolumeSource{
+							PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+								ClaimName: cacheVolume,
+							},
+						},
 					},
 				}
 
-				pod.Spec.Volumes[0].PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
-					ClaimName: cacheVolume,
-				}
 			} else {
 				// Just log error and let the pipeline to run in non-cache mode.
 				log.Errorf("Can not use cache volume %s as its status is %v", cacheVolume, pvc.Status.Phase)
@@ -228,6 +245,21 @@ func (c *k8sCloud) Provision(info *api.WorkerInfo, opts *options.WorkerOptions) 
 			// Just log error and let the pipeline to run in non-cache mode.
 			log.Errorf("Can not use cache volume %s as fail to get it: %v", cacheVolume, err)
 		}
+	}
+
+	// set ENV_CERT_DATA Env if the RegistryCertPath exist.
+	if fileutil.FileExists(cloud.RegistryCertPath) {
+		certs, err := ioutil.ReadFile(cloud.RegistryCertPath)
+		if err != nil {
+			log.Warningf("read registry cert failed: %v", err)
+		}
+
+		certEnv := apiv1.EnvVar{
+			Name:  cloud.ENV_CERT_DATA,
+			Value: string(certs),
+		}
+
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, certEnv)
 	}
 
 	check := func() (bool, error) {

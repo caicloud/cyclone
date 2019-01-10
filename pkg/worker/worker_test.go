@@ -50,12 +50,13 @@ func TestConvertPerformStageSet(t *testing.T) {
 			},
 		},
 		"full stages": {
-			stages: []api.PipelineStageName{api.CodeCheckoutStageName, api.UnitTestStageName, api.PackageStageName, api.ImageBuildStageName,
-				api.IntegrationTestStageName, api.ImageReleaseStageName},
+			stages: []api.PipelineStageName{api.CodeCheckoutStageName, api.UnitTestStageName, api.PackageStageName,
+				api.CodeScanStageName, api.ImageBuildStageName, api.IntegrationTestStageName, api.ImageReleaseStageName},
 			stageSet: map[api.PipelineStageName]struct{}{
 				api.CodeCheckoutStageName:    struct{}{},
 				api.UnitTestStageName:        struct{}{},
 				api.PackageStageName:         struct{}{},
+				api.CodeScanStageName:        struct{}{},
 				api.ImageBuildStageName:      struct{}{},
 				api.IntegrationTestStageName: struct{}{},
 				api.ImageReleaseStageName:    struct{}{},
