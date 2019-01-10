@@ -100,7 +100,7 @@ func (co *Coordinator) CollectLogs() {
 		go func(container, workflowrun, stage string) {
 			err := co.runtimeExec.CollectLog(container, workflowrun, stage)
 			if err != nil {
-				log.Errorf("Collect %s log failed:%v", c, err)
+				log.Errorf("Collect %s log failed:%v", container, err)
 			}
 		}(c, co.Wfr.Name, co.Stage.Name)
 	}
@@ -172,7 +172,7 @@ func (co *Coordinator) WorkLoadSuccess() bool {
 	return true
 }
 
-// Get exit codes of containers passed the selector
+// GetExitCodes gets exit codes of containers passed the selector
 func (co *Coordinator) GetExitCodes(selectors ...common.ContainerSelector) (map[string]int32, error) {
 	ws := make(map[string]int32)
 
@@ -199,7 +199,7 @@ func (co *Coordinator) GetExitCodes(selectors ...common.ContainerSelector) (map[
 // CollectArtifacts collects workload artifacts.
 func (co *Coordinator) CollectArtifacts() error {
 	if co.Stage.Spec.Pod == nil {
-		return fmt.Errorf("Get stage output artifacts failed, stage pod nil.")
+		return fmt.Errorf("get stage output artifacts failed, stage pod nil")
 	}
 
 	artifacts := co.Stage.Spec.Pod.Outputs.Artifacts
@@ -236,7 +236,7 @@ func (co *Coordinator) CollectArtifacts() error {
 // CollectResources collects workload resources.
 func (co *Coordinator) CollectResources() error {
 	if co.Stage.Spec.Pod == nil {
-		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
+		return fmt.Errorf("get stage output resources failed, stage pod nil")
 	}
 
 	reources := co.Stage.Spec.Pod.Outputs.Resources
@@ -285,7 +285,7 @@ func (co *Coordinator) CollectResources() error {
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
 	if co.Stage.Spec.Pod == nil {
-		return fmt.Errorf("Get stage output resources failed, stage pod nil.")
+		return fmt.Errorf("get stage output resources failed, stage pod nil")
 	}
 
 	reources := co.Stage.Spec.Pod.Outputs.Resources

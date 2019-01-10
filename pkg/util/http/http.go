@@ -49,8 +49,8 @@ const (
 	// NamespaceQueryParameter represents the query param namespace.
 	NamespaceQueryParameter string = "namespace"
 
-	// HEADER_ContentType represents the the key of Content-Type.
-	HEADER_ContentType = "Content-Type"
+	// HeaderContentType represents the the key of Content-Type.
+	HeaderContentType = "Content-Type"
 
 	// DefaultNamespace represents the default namespace 'default'.
 	DefaultNamespace string = "default"
@@ -62,7 +62,7 @@ const (
 	StatusQueryParameter = "status"
 )
 
-// GetHttpRequest gets request from context.
-func GetHttpRequest(ctx context.Context) *http.Request {
+// GetHTTPRequest gets request from context.
+func GetHTTPRequest(ctx context.Context) *http.Request {
 	return service.HTTPContextFrom(ctx).Request()
 }

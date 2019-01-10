@@ -8,17 +8,24 @@ import (
 
 // GroupName is the group name use in this package
 const GroupName = "cyclone.io"
+
+// Version is version of the CRD
 const Version = "v1alpha1"
+
+// APIVersion ...
 const APIVersion = GroupName + "/" + Version
 
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
 
 var (
+	// SchemeBuilder ...
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme ...
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
+// GroupResource ...
 func GroupResource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }

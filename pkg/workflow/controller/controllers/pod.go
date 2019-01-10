@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
 )
 
+// NewPodController ...
 func NewPodController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(

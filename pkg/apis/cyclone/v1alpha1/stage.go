@@ -39,5 +39,5 @@ type TemplateRef struct {
 type StageList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Stage `json:"items""`
+	Items           []Stage `json:"items"`
 }

@@ -1,19 +1,3 @@
-/*
-Copyright 2018 caicloud authors. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package cycloneserver
 
 import (
@@ -39,7 +23,8 @@ const (
 	apiPathForLogStream = "/workflowruns/%s/stages/%s/streamlogs"
 )
 
-type CycloneServerClient interface {
+// Client ...
+type Client interface {
 	PushLogStream(workflowrun, stage, container string, reader io.Reader, close chan struct{}) error
 }
 
@@ -48,7 +33,8 @@ type client struct {
 	client  *http.Client
 }
 
-func NewClient(cycloneServer string) CycloneServerClient {
+// NewClient ...
+func NewClient(cycloneServer string) Client {
 	baseURL := strings.TrimRight(cycloneServer, "/")
 	if !strings.Contains(baseURL, "://") {
 		baseURL = "http://" + baseURL
@@ -89,18 +75,19 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 	return resp, nil
 }
 
+// PushLogStream ...
 func (c *client) PushLogStream(workflowrun, stage, container string, reader io.Reader, close chan struct{}) error {
 	path := fmt.Sprintf(apiPathForLogStream, workflowrun, stage)
 	host := strings.TrimPrefix(c.baseURL, "http://")
 	host = strings.TrimPrefix(host, "https://")
-	requestUrl := url.URL{
+	requestURL := url.URL{
 		Host:     host,
 		Path:     cycloneAPIVersion + path,
 		RawQuery: fmt.Sprintf("container=%s", container),
 		Scheme:   "ws",
 	}
 
-	log.Infof("Path: %s", requestUrl.String())
+	log.Infof("Path: %s", requestURL.String())
 
 	header := http.Header{
 		"Connection":            []string{"Upgrade"},
@@ -111,7 +98,7 @@ func (c *client) PushLogStream(workflowrun, stage, container string, reader io.R
 	}
 	filteredHeader := websocketutil.FilterHeader(header)
 
-	ws, _, err := websocket.DefaultDialer.Dial(requestUrl.String(), filteredHeader)
+	ws, _, err := websocket.DefaultDialer.Dial(requestURL.String(), filteredHeader)
 	if err != nil {
 		log.Errorf("Fail to new the WebSocket connection as %s", err.Error())
 		return err

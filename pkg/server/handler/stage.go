@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -12,7 +13,6 @@ import (
 	"github.com/gorilla/websocket"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"bufio"
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
@@ -21,10 +21,10 @@ import (
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
-// POST /apis/v1alpha1/stages/
+// CreateStage ... POST /apis/v1alpha1/stages/
 func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 	s := &v1alpha1.Stage{}
-	err := contextutil.GetJsonPayload(ctx, s)
+	err := contextutil.GetJSONPayload(ctx, s)
 	if err != nil {
 		return nil, err
 	}
@@ -32,20 +32,20 @@ func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 	return k8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
 }
 
-// GET /apis/v1alpha1/Stages/
+// ListStages ... GET /apis/v1alpha1/Stages/
 func ListStages(ctx context.Context, namespace string) (*v1alpha1.StageList, error) {
 	return k8sClient.CycloneV1alpha1().Stages(namespace).List(metav1.ListOptions{})
 }
 
-// GET /apis/v1alpha1/stages/{stage}
+// GetStage ... GET /apis/v1alpha1/stages/{stage}
 func GetStage(ctx context.Context, name, namespace string) (*v1alpha1.Stage, error) {
 	return k8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
 }
 
-// PUT /apis/v1alpha1/stages/{stage}
+// UpdateStage ... PUT /apis/v1alpha1/stages/{stage}
 func UpdateStage(ctx context.Context, name string) (*v1alpha1.Stage, error) {
 	s := &v1alpha1.Stage{}
-	err := contextutil.GetJsonPayload(ctx, s)
+	err := contextutil.GetJSONPayload(ctx, s)
 	if err != nil {
 		return nil, err
 	}
@@ -57,16 +57,16 @@ func UpdateStage(ctx context.Context, name string) (*v1alpha1.Stage, error) {
 	return k8sClient.CycloneV1alpha1().Stages(s.Namespace).Update(s)
 }
 
-// DELETE /apis/v1alpha1/stages/{stage}
+// DeleteStage ... DELETE /apis/v1alpha1/stages/{stage}
 func DeleteStage(ctx context.Context, name, namespace string) error {
 	return k8sClient.CycloneV1alpha1().Stages(namespace).Delete(name, nil)
 }
 
-// GET /workflowruns/{workflowrun-name}/stages/{stage-name}/streamlogs?container-name=c0
+// ReceiveContainerLogStream ... GET /workflowruns/{workflowrun-name}/stages/{stage-name}/streamlogs?container-name=c0
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
 func ReceiveContainerLogStream(ctx context.Context, workflowrun, stage, container, namespace string) error {
-	request := contextutil.GetHttpRequest(ctx)
-	writer := contextutil.GetHttpResponseWriter(ctx)
+	request := contextutil.GetHTTPRequest(ctx)
+	writer := contextutil.GetHTTPResponseWriter(ctx)
 
 	//upgrade HTTP rest API --> socket connection
 	ws, err := websocketutil.Upgrader.Upgrade(writer, request, nil)
@@ -103,7 +103,7 @@ func receiveContainerLogStream(workflowrun, stage, container, namespace string, 
 		return err
 	}
 
-	if fileutil.FileExists(logFilePath) {
+	if fileutil.Exists(logFilePath) {
 		return fmt.Errorf("log file %s already exists", logFilePath)
 	}
 
@@ -134,8 +134,8 @@ func receiveContainerLogStream(workflowrun, stage, container, namespace string, 
 
 // GetContainerLogStream gets real-time log of container within stage.
 func GetContainerLogStream(ctx context.Context, workflowrun, stage, container, namespace string) error {
-	request := contextutil.GetHttpRequest(ctx)
-	writer := contextutil.GetHttpResponseWriter(ctx)
+	request := contextutil.GetHTTPRequest(ctx)
+	writer := contextutil.GetHTTPResponseWriter(ctx)
 
 	//upgrade HTTP rest API --> socket connection
 	ws, err := websocketutil.Upgrader.Upgrade(writer, request, nil)
@@ -162,7 +162,7 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 		return err
 	}
 
-	if !fileutil.FileExists(logFilePath) {
+	if !fileutil.Exists(logFilePath) {
 		return fmt.Errorf("log file %s does not exist", logFilePath)
 	}
 
@@ -208,8 +208,6 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
 		}
 	}
-
-	return nil
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
@@ -220,7 +218,7 @@ func GetContainerLogs(ctx context.Context, workflowrun, stage, container, namesp
 	}
 
 	headers := make(map[string]string)
-	headers[httputil.HEADER_ContentType] = "text/plain"
+	headers[httputil.HeaderContentType] = "text/plain"
 	if download {
 		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", workflowrun, stage, container)
 		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", logFileName)
@@ -238,7 +236,7 @@ func getContainerLogs(workflowrun, stage, container, namespace string) (string, 
 
 	// Check the existence of the log file for this stage. If does not exist, return error when stage is success,
 	// otherwise directly return the got logs as stage is failed or aborted.
-	if !fileutil.FileExists(logFilePath) {
+	if !fileutil.Exists(logFilePath) {
 		log.Errorf("log file %s does not exist", logFilePath)
 		return "", fmt.Errorf("log file for stage %s does not exist", stage)
 	}

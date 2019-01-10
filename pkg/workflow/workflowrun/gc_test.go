@@ -9,15 +9,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 func TestCheckGC(t *testing.T) {
 	wfr := &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusRunning,
 			},
 			Cleaned: true,
@@ -27,7 +27,7 @@ func TestCheckGC(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusRunning,
 			},
 			Cleaned: false,
@@ -37,7 +37,7 @@ func TestCheckGC(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusCompleted,
 			},
 			Cleaned: false,
@@ -47,7 +47,7 @@ func TestCheckGC(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusError,
 			},
 			Cleaned: false,
@@ -63,7 +63,7 @@ type GCProcessorSuite struct {
 
 func (s *GCProcessorSuite) SetupTest() {
 	client := fake.NewSimpleClientset()
-	recorder := new(MockedRecorder);
+	recorder := new(MockedRecorder)
 	recorder.On("Event", mock.Anything).Return()
 	s.processor = &GCProcessor{
 		client:   client,
@@ -76,11 +76,11 @@ func (s *GCProcessorSuite) SetupTest() {
 func (s *GCProcessorSuite) TestAdd() {
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test1",
+			Name:      "test1",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusRunning,
 			},
 			Cleaned: true,
@@ -91,11 +91,11 @@ func (s *GCProcessorSuite) TestAdd() {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test2",
+			Name:      "test2",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusCompleted,
 			},
 			Cleaned: false,
@@ -106,11 +106,11 @@ func (s *GCProcessorSuite) TestAdd() {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test3",
+			Name:      "test3",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
+			Overall: v1alpha1.Status{
 				Status: v1alpha1.StatusError,
 			},
 			Cleaned: false,
@@ -125,16 +125,16 @@ func (s *GCProcessorSuite) TestProcess() {
 	controller.Config.GC.DelaySeconds = 2
 	defer func(preDelay time.Duration) {
 		controller.Config.GC.DelaySeconds = pre
-	}(pre);
+	}(pre)
 
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test1",
+			Name:      "test1",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
-			Overall: v1alpha1.Status {
-				Status: v1alpha1.StatusCompleted,
+			Overall: v1alpha1.Status{
+				Status:             v1alpha1.StatusCompleted,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 			},
 			Cleaned: false,

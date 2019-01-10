@@ -9,7 +9,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
@@ -17,14 +16,17 @@ import (
 )
 
 const (
+	// KeyTemplate ...
 	KeyTemplate = "%s/%s"
 
-	// time zone offset to UTC, in minutes
+	// ParamTimeZoneOffset is time zone offset to UTC, in minutes
 	// -480 for Asia/Shanghai(+8)
 	ParamTimeZoneOffset = "timeZoneOffset"
-	ParamSchedule       = "schedule"
+	// ParamSchedule ...
+	ParamSchedule = "schedule"
 )
 
+// CronTrigger ...
 type CronTrigger struct {
 	Cron                *cron.Cron
 	IsRunning           bool
@@ -36,12 +38,14 @@ type CronTrigger struct {
 	Manage              *CronTriggerManager
 }
 
+// CronTriggerManager ...
 type CronTriggerManager struct {
 	Client         clientset.Interface
 	CronTriggerMap map[string]*CronTrigger
 	mutex          sync.Mutex
 }
 
+// NewTriggerManager ...
 func NewTriggerManager(client clientset.Interface) *CronTriggerManager {
 	return &CronTriggerManager{
 		Client:         client,
@@ -50,10 +54,7 @@ func NewTriggerManager(client clientset.Interface) *CronTriggerManager {
 	}
 }
 
-func (trigger *CronTrigger) getKeyFromTrigger() string {
-	return fmt.Sprintf(KeyTemplate, trigger.Namespace, trigger.WorkflowTriggerName)
-}
-
+// AddTrigger ...
 func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
 	wftKey := trigger.getKeyFromTrigger()
 	m.mutex.Lock()
@@ -66,6 +67,7 @@ func (m *CronTriggerManager) AddTrigger(trigger *CronTrigger) {
 	}
 }
 
+// DeleteTrigger ...
 func (m *CronTriggerManager) DeleteTrigger(wftKey string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -78,36 +80,42 @@ func (m *CronTriggerManager) DeleteTrigger(wftKey string) {
 	}
 }
 
+// ToWorkflowTrigger ...
 func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 	wft, ok := obj.(*v1alpha1.WorkflowTrigger)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("I want type: WorkflowTrigger, but it is: %T", obj))
-	} else {
-		return wft, nil
+		return nil, fmt.Errorf("I want type: WorkflowTrigger, but it is: %T", obj)
 	}
+
+	return wft, nil
 }
 
-func (c *CronTrigger) Run() {
+func (t *CronTrigger) getKeyFromTrigger() string {
+	return fmt.Sprintf(KeyTemplate, t.Namespace, t.WorkflowTriggerName)
+}
 
-	if c.WorkflowRun.Labels == nil {
-		c.WorkflowRun.Labels = make(map[string]string)
+// Run ...
+func (t *CronTrigger) Run() {
+
+	if t.WorkflowRun.Labels == nil {
+		t.WorkflowRun.Labels = make(map[string]string)
 	}
-	c.WorkflowRun.Labels[common.WorkflowRunLabelName] = c.WorkflowRun.Spec.WorkflowRef.Name
+	t.WorkflowRun.Labels[common.WorkflowRunLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
 
 	for {
-		c.WorkflowRun.Name = fmt.Sprintf("%s-%s", c.WorkflowTriggerName, rand.String(5))
-		_, err := c.Manage.Client.CycloneV1alpha1().WorkflowRuns(c.Namespace).Create(c.WorkflowRun)
+		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))
+		_, err := t.Manage.Client.CycloneV1alpha1().WorkflowRuns(t.Namespace).Create(t.WorkflowRun)
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
 				continue
 			} else {
-				c.FailCount++
+				t.FailCount++
 				log.Warnf("can not create WorkflowRun: %s", err)
 				break
 			}
 		} else {
-			c.SuccCount++
+			t.SuccCount++
 			break
 		}
 	}
@@ -122,6 +130,7 @@ func getParamValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
 	return "", false
 }
 
+// CreateCron ...
 func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	schedule, has := getParamValue(wft.Spec.Parameters, ParamSchedule)
@@ -169,11 +178,13 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 	}
 }
 
+// UpdateCron ...
 func (m *CronTriggerManager) UpdateCron(wft *v1alpha1.WorkflowTrigger) {
 	m.DeleteCron(wft)
 	m.CreateCron(wft)
 }
 
+// DeleteCron ...
 func (m *CronTriggerManager) DeleteCron(wft *v1alpha1.WorkflowTrigger) {
 	wftKey := getKeyFromWorkflowTrigger(wft)
 	m.DeleteTrigger(wftKey)

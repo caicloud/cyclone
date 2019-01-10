@@ -72,10 +72,10 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 # All targets.
 .PHONY: lint test build container push
 
-build: build-local
-
 lint: $(GOMETALINTER)
-	gometalinter ./... --vendor
+	gometalinter ./pkg/... ./cmd/...
+
+build: build-local
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter

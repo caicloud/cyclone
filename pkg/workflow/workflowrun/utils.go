@@ -73,7 +73,7 @@ func staticStatus(status *v1alpha1.WorkflowRunStatus) *v1alpha1.WorkflowRunStatu
 	t := metav1.Time{Time: time.Unix(0, 0)}
 	copy := status.DeepCopy()
 	copy.Overall.LastTransitionTime = t
-	for k, _ := range status.Stages {
+	for k := range status.Stages {
 		copy.Stages[k].Status.LastTransitionTime = t
 	}
 	return copy

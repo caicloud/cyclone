@@ -11,11 +11,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func newKubeExtClient(masterUrl, kubeConfigPath string) (apiextensionsclient.Interface, error) {
+func newKubeExtClient(masterURL, kubeConfigPath string) (apiextensionsclient.Interface, error) {
 	var config *rest.Config
 	var err error
 	if kubeConfigPath != "" {
-		config, err = clientcmd.BuildConfigFromFlags(masterUrl, kubeConfigPath)
+		config, err = clientcmd.BuildConfigFromFlags(masterURL, kubeConfigPath)
 		if err != nil {
 			return nil, err
 		}
@@ -30,9 +30,9 @@ func newKubeExtClient(masterUrl, kubeConfigPath string) (apiextensionsclient.Int
 }
 
 // EnsureCRDCreated will create built-in CRDs if they are not exist.
-func EnsureCRDCreated(masterUrl, kubeConfigPath string) {
+func EnsureCRDCreated(masterURL, kubeConfigPath string) {
 	log.Info("start to create crd")
-	client, err := newKubeExtClient(masterUrl, kubeConfigPath)
+	client, err := newKubeExtClient(masterURL, kubeConfigPath)
 	if err != nil {
 		log.WithField("error", err).Fatal("new kube ext client error")
 	}

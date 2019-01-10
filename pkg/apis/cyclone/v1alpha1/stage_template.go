@@ -92,5 +92,5 @@ type StageTemplateSpec struct {
 type StageTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []StageTemplate `json:"items""`
+	Items           []StageTemplate `json:"items"`
 }

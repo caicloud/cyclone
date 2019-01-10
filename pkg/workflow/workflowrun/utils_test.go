@@ -51,18 +51,18 @@ func TestResolveStatus(t *testing.T) {
 	result = resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
 
-	now := metav1.Time{time.Now()}
-	old := metav1.Time{time.Now().Add(-time.Second * 10)}
+	now := metav1.Time{Time: time.Now()}
+	old := metav1.Time{Time: time.Now().Add(-time.Second * 10)}
 	latest = &v1alpha1.Status{
-		Status: v1alpha1.StatusRunning,
+		Status:             v1alpha1.StatusRunning,
 		LastTransitionTime: now,
 	}
 	update = &v1alpha1.Status{
-		Status: v1alpha1.StatusRunning,
+		Status:             v1alpha1.StatusRunning,
 		LastTransitionTime: old,
 	}
 	expected = &v1alpha1.Status{
-		Status: v1alpha1.StatusRunning,
+		Status:             v1alpha1.StatusRunning,
 		LastTransitionTime: now,
 	}
 	result = resolveStatus(latest, update)
@@ -77,7 +77,7 @@ func TestNextStages(t *testing.T) {
 					Name: "A",
 				},
 				{
-					Name: "B",
+					Name:    "B",
 					Depends: []string{"A"},
 				},
 				{
@@ -106,7 +106,7 @@ func TestNextStages(t *testing.T) {
 					Name: "A",
 				},
 				{
-					Name: "B",
+					Name:    "B",
 					Depends: []string{"A"},
 				},
 				{
@@ -118,7 +118,7 @@ func TestNextStages(t *testing.T) {
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
-				"A": &v1alpha1.StageStatus{
+				"A": {
 					Status: v1alpha1.Status{Status: v1alpha1.StatusError},
 				},
 			},
@@ -135,7 +135,7 @@ func TestNextStages(t *testing.T) {
 					Name: "A",
 				},
 				{
-					Name: "B",
+					Name:    "B",
 					Depends: []string{"A"},
 				},
 				{
@@ -147,7 +147,7 @@ func TestNextStages(t *testing.T) {
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
-				"A": &v1alpha1.StageStatus{
+				"A": {
 					Status: v1alpha1.Status{Status: v1alpha1.StatusRunning},
 				},
 			},
@@ -163,30 +163,30 @@ func TestStaticStatus(t *testing.T) {
 	zero := metav1.Time{Time: time.Unix(0, 0)}
 	status := &v1alpha1.WorkflowRunStatus{
 		Stages: map[string]*v1alpha1.StageStatus{
-			"A": &v1alpha1.StageStatus{
+			"A": {
 				Status: v1alpha1.Status{
-					Status: v1alpha1.StatusRunning,
+					Status:             v1alpha1.StatusRunning,
 					LastTransitionTime: now,
 				},
 			},
 		},
 		Overall: v1alpha1.Status{
-			Status: v1alpha1.StatusRunning,
+			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: now,
 		},
 	}
 	actual := staticStatus(status)
 	expected := &v1alpha1.WorkflowRunStatus{
 		Stages: map[string]*v1alpha1.StageStatus{
-			"A": &v1alpha1.StageStatus{
+			"A": {
 				Status: v1alpha1.Status{
-					Status: v1alpha1.StatusRunning,
+					Status:             v1alpha1.StatusRunning,
 					LastTransitionTime: zero,
 				},
 			},
 		},
 		Overall: v1alpha1.Status{
-			Status: v1alpha1.StatusRunning,
+			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: zero,
 		},
 	}
@@ -195,7 +195,7 @@ func TestStaticStatus(t *testing.T) {
 
 func TestString(t *testing.T) {
 	item := workflowRunItem{
-		name: "test",
+		name:      "test",
 		namespace: "default",
 	}
 	assert.Equal(t, "default:test", item.String())

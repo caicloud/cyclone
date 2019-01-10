@@ -11,10 +11,10 @@ import (
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 )
 
-// POST /api/v1alpha1/workflowruns
+// CreateWorkflowRun ... POST /api/v1alpha1/workflowruns
 func CreateWorkflowRun(ctx context.Context) (*v1alpha1.WorkflowRun, error) {
 	wfr := &v1alpha1.WorkflowRun{}
-	err := contextutil.GetJsonPayload(ctx, wfr)
+	err := contextutil.GetJSONPayload(ctx, wfr)
 	if err != nil {
 		return nil, err
 	}
@@ -22,20 +22,20 @@ func CreateWorkflowRun(ctx context.Context) (*v1alpha1.WorkflowRun, error) {
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Create(wfr)
 }
 
-// GET /apis/v1alpha1/workflowruns/
+// ListWorkflowRuns ... GET /apis/v1alpha1/workflowruns/
 func ListWorkflowRuns(ctx context.Context, namespace string) (*v1alpha1.WorkflowRunList, error) {
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).List(metav1.ListOptions{})
 }
 
-// GET /apis/v1alpha1/workflowruns/{workflowrun}
+// GetWorkflowRun ... GET /apis/v1alpha1/workflowruns/{workflowrun}
 func GetWorkflowRun(ctx context.Context, name, namespace string) (*v1alpha1.WorkflowRun, error) {
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(name, metav1.GetOptions{})
 }
 
-// PUT /apis/v1alpha1/workflowruns/{workflowrun}
+// UpdateWorkflowRun ... PUT /apis/v1alpha1/workflowruns/{workflowrun}
 func UpdateWorkflowRun(ctx context.Context, name string) (*v1alpha1.WorkflowRun, error) {
 	wfr := &v1alpha1.WorkflowRun{}
-	err := contextutil.GetJsonPayload(ctx, wfr)
+	err := contextutil.GetJSONPayload(ctx, wfr)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func UpdateWorkflowRun(ctx context.Context, name string) (*v1alpha1.WorkflowRun,
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
 }
 
-// DELETE /apis/v1alpha1/workflowruns/{workflowrun}
+// DeleteWorkflowRun ... DELETE /apis/v1alpha1/workflowruns/{workflowrun}
 func DeleteWorkflowRun(ctx context.Context, name, namespace string) error {
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Delete(name, nil)
 }
@@ -58,7 +58,7 @@ func CancelWorkflowRun(ctx context.Context, name, namespace string) (*v1alpha1.W
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Patch(name, types.JSONPatchType, []byte(data))
 }
 
-// CancelWorkflowRun updates the workflowrun overall status to Running.
+// ContinueWorkflowRun updates the workflowrun overall status to Running.
 func ContinueWorkflowRun(ctx context.Context, name, namespace string) (*v1alpha1.WorkflowRun, error) {
 	data := `[{"op":"replace","path":"/status/overall/status","value":"Running"}]`
 	return k8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Patch(name, types.JSONPatchType, []byte(data))

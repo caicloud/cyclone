@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/configmap"
 )
 
+// NewConfigMapController ...
 func NewConfigMapController(client clientset.Interface, namespace string, cm string) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(

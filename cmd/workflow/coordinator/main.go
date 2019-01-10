@@ -14,7 +14,6 @@ import (
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to kubeconfig. Only required if out-of-cluster.")
-var logLevel = flag.String("loglevel", "Info", "Log level of workflow assistant.")
 
 func main() {
 	flag.Parse()
@@ -104,10 +103,9 @@ func main() {
 	if c.StageSuccess() {
 		message = fmt.Sprintf("Stage %s succeeded", c.Stage.Name)
 		return
-	} else {
-		message = fmt.Sprintf("Stage %s failed, resolver exit code is not 0", c.Stage.Name)
-		err = fmt.Errorf(message)
-		return
 	}
 
+	message = fmt.Sprintf("Stage %s failed, resolver exit code is not 0", c.Stage.Name)
+	err = fmt.Errorf(message)
+	return
 }

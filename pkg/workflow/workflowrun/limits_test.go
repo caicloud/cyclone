@@ -18,7 +18,7 @@ func TestKey(t *testing.T) {
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "test",
+				Name:      "test",
 			},
 		},
 	}
@@ -38,14 +38,14 @@ func (s *LimitQueuesSuite) TestAddOrRefresh() {
 	now := time.Now()
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "wfr1",
-			Namespace: "default",
+			Name:              "wfr1",
+			Namespace:         "default",
 			CreationTimestamp: metav1.Time{Time: now},
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "wf1",
+				Name:      "wf1",
 			},
 		},
 	}
@@ -56,14 +56,14 @@ func (s *LimitQueuesSuite) TestAddOrRefresh() {
 	time.Sleep(time.Millisecond * 10)
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "wfr1",
-			Namespace: "default",
+			Name:              "wfr1",
+			Namespace:         "default",
 			CreationTimestamp: metav1.Time{Time: now},
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "wf1",
+				Name:      "wf1",
 			},
 		},
 	}
@@ -73,14 +73,14 @@ func (s *LimitQueuesSuite) TestAddOrRefresh() {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "wfr2",
-			Namespace: "default",
+			Name:              "wfr2",
+			Namespace:         "default",
 			CreationTimestamp: metav1.Time{Time: now.Add(time.Second)},
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "wf1",
+				Name:      "wf1",
 			},
 		},
 	}
@@ -89,14 +89,14 @@ func (s *LimitQueuesSuite) TestAddOrRefresh() {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "wfr3",
-			Namespace: "default",
+			Name:              "wfr3",
+			Namespace:         "default",
 			CreationTimestamp: metav1.Time{Time: now.Add(time.Second * 2)},
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "wf1",
+				Name:      "wf1",
 			},
 		},
 	}
@@ -106,14 +106,14 @@ func (s *LimitQueuesSuite) TestAddOrRefresh() {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "wfr4",
-			Namespace: "default",
+			Name:              "wfr4",
+			Namespace:         "default",
 			CreationTimestamp: metav1.Time{Time: now.Add(-time.Second * 2)},
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			WorkflowRef: &corev1.ObjectReference{
 				Namespace: "default",
-				Name: "wf1",
+				Name:      "wf1",
 			},
 		},
 	}

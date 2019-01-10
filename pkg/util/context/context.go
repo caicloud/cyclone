@@ -1,7 +1,3 @@
-/*
-Copyright 2018 caicloud authors. All rights reserved.
-*/
-
 package context
 
 import (
@@ -16,19 +12,19 @@ import (
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
-// GetHttpRequest gets request from context.
-func GetHttpRequest(ctx context.Context) *http.Request {
+// GetHTTPRequest gets request from context.
+func GetHTTPRequest(ctx context.Context) *http.Request {
 	return service.HTTPContextFrom(ctx).Request()
 }
 
-// GetHttpRequest gets request from context.
-func GetHttpResponseWriter(ctx context.Context) http.ResponseWriter {
+// GetHTTPResponseWriter gets response writer from context.
+func GetHTTPResponseWriter(ctx context.Context) http.ResponseWriter {
 	return service.HTTPContextFrom(ctx).ResponseWriter()
 }
 
 // GetHeaderParameter gets value from request.HeaderParameter.
 func GetHeaderParameter(ctx context.Context, name string) (string, error) {
-	request := GetHttpRequest(ctx)
+	request := GetHTTPRequest(ctx)
 
 	value := request.Header.Get(name)
 	if len(value) <= 0 {
@@ -37,9 +33,9 @@ func GetHeaderParameter(ctx context.Context, name string) (string, error) {
 	return value, nil
 }
 
-// GetJsonPayload reads json payload from request and unmarshal it into entity.
-func GetJsonPayload(ctx context.Context, entity interface{}) error {
-	request := GetHttpRequest(ctx)
+// GetJSONPayload reads json payload from request and unmarshal it into entity.
+func GetJSONPayload(ctx context.Context, entity interface{}) error {
+	request := GetHTTPRequest(ctx)
 
 	content, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -56,6 +52,6 @@ func GetJsonPayload(ctx context.Context, entity interface{}) error {
 
 // GetQueryParameters gets values from request.QueryParameter.
 func GetQueryParameters(ctx context.Context) (string, error) {
-	request := GetHttpRequest(ctx)
+	request := GetHTTPRequest(ctx)
 	return request.Form.Encode(), nil
 }

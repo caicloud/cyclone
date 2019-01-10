@@ -52,7 +52,7 @@ func ParseTime(t string) (time.Duration, error) {
 	return result, nil
 }
 
-func NewWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
+func newWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 	timeout, _ := ParseTime(wfr.Spec.Timeout)
 	return &workflowRunItem{
 		name:       wfr.Name,
@@ -68,7 +68,7 @@ type TimeoutProcessor struct {
 	items    map[string]*workflowRunItem
 }
 
-// NewTimeoutManager creates a timeout manager and run it.
+// NewTimeoutProcessor creates a timeout manager and run it.
 func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
 	manager := &TimeoutProcessor{
 		client:   client,
@@ -86,7 +86,7 @@ func (m *TimeoutProcessor) Add(wfr *v1alpha1.WorkflowRun) error {
 		return fmt.Errorf("invalid timeout value '%s', error: %v", wfr.Spec.Timeout, err)
 	}
 
-	item := NewWorkflowRunItem(wfr)
+	item := newWorkflowRunItem(wfr)
 	m.items[item.String()] = item
 
 	return nil
@@ -128,7 +128,7 @@ func (m *TimeoutProcessor) process() {
 			wfr.Status.Overall = v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "Timeout",
-				LastTransitionTime: metav1.Time{time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 			}
 
 			operator := operator{

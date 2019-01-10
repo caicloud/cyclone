@@ -6,14 +6,14 @@ import "time"
 type ContainerState string
 
 const (
-	// Resync period for controllers
+	// ResyncPeriod defines resync period for controllers
 	ResyncPeriod = time.Minute * 5
 
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
 	EnvWorkflowrunName = "WORKFLOWRUN_NAME"
-	// EnvStagePodName is an environment which represents stage name.
+	// EnvStageName is an environment which represents stage name.
 	EnvStageName = "STAGE_NAME"
 	// EnvWorkloadContainerName is an environment which represents the workload container name.
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
@@ -22,59 +22,76 @@ const (
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
 
-	// Default Cyclone Server address
+	// DefaultCycloneServerAddr defines default Cyclone Server address
 	DefaultCycloneServerAddr = "native-cyclone-server"
 
-	// Container name prefixes for sidecar. There are two kinds of sidecars in workflow:
+	// CycloneSidecarPrefix defines container name prefixes for sidecar. There are two kinds of
+	// sidecars in workflow:
 	// - Those added automatically by Cyclone such as coordinator, resource resolvers.
 	// - Those specified by users in stage spec as workload.
-	CycloneSidecarPrefix  = "cyclone-sidecar-"
+	CycloneSidecarPrefix = "cyclone-sidecar-"
+
+	// WorkloadSidecarPrefix defines workload sidecar container name prefix.
 	WorkloadSidecarPrefix = "workload-sidecar-"
 
-	// Coordinator container name.
+	// CoordinatorSidecarName defines name of coordinator container.
 	CoordinatorSidecarName = CycloneSidecarPrefix + "coordinator"
 
-	// Paths in resource resolver containers.
+	// ResolverDefaultDataPath is paths in resource resolver containers.
 	// Default data path in resource resolver container.
 	ResolverDefaultDataPath = "/workspace/data"
-	// Name of the notify directory where coordinator would create ok file there.
+	// ResolverNotifyDir is name of the notify directory where coordinator would create ok file there.
 	ResolverNotifyDir = "notify"
-	// Notify directory path in resource resolver container.
+	// ResolverNotifyDirPath is notify directory path in resource resolver container.
 	ResolverNotifyDirPath = "/workspace/notify"
 
+	// ResourcePullCommand indicates pull resource
 	ResourcePullCommand = "pull"
+	// ResourcePushCommand indicates push resource
 	ResourcePushCommand = "push"
 
-	WorkflowLabelName         = "cyclone.io/workflow"
-	WorkflowRunLabelName      = "cyclone.io/workflow-name"
-	PodLabelSelector          = "cyclone.io/workflow==true"
+	// WorkflowLabelName is label to indicate resources created by Cyclone workflow engine
+	WorkflowLabelName = "cyclone.io/workflow"
+	// WorkflowRunLabelName is label applied to WorkflowRun to specify Workflow
+	WorkflowRunLabelName = "cyclone.io/workflow-name"
+	// PodLabelSelector is selector used to select pod created by Cyclone stages
+	PodLabelSelector = "cyclone.io/workflow==true"
+	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to
 	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
-	GCAnnotationName          = "cyclone.io/gc"
-	StageAnnotationName       = "cyclone.io/stage"
+	// GCAnnotationName is annotation applied to pod to indicate whether the pod is used for GC purpose
+	GCAnnotationName = "cyclone.io/gc"
+	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
+	StageAnnotationName = "cyclone.io/stage"
 
-	// Paths in coordinator container.
-	CoordinatorResolverPath         = "/workspace/resolvers"
-	CoordinatorResourcesPath        = "/workspace/resolvers/resources"
-	CoordinatorResolverNotifyPath   = "/workspace/resolvers/notify"
+	// CoordinatorResolverPath ...
+	CoordinatorResolverPath = "/workspace/resolvers"
+	// CoordinatorResourcesPath ...
+	CoordinatorResourcesPath = "/workspace/resolvers/resources"
+	// CoordinatorResolverNotifyPath ...
+	CoordinatorResolverNotifyPath = "/workspace/resolvers/notify"
+	// CoordinatorResolverNotifyOkPath ...
 	CoordinatorResolverNotifyOkPath = "/workspace/resolvers/notify/ok"
-	CoordinatorArtifactsPath        = "/workspace/artifacts"
+	// CoordinatorArtifactsPath ...
+	CoordinatorArtifactsPath = "/workspace/artifacts"
 
-	// Name of the default PV used by all workflow stages.
+	// DefaultPvVolumeName is name of the default PV used by all workflow stages.
 	DefaultPvVolumeName = "default-pv"
-	// Name of the emptyDir volume shared between coordinator and sidecar containers, e.g.
-	// image resolvers. Coordinator would notify resolvers that workload containers have
-	// finished their work, so that resource resolvers can push resources.
+	// CoordinatorSidecarVolumeName is name of the emptyDir volume shared between coordinator and
+	// sidecar containers, e.g. image resolvers. Coordinator would notify resolvers that workload
+	// containers have finished their work, so that resource resolvers can push resources.
 	CoordinatorSidecarVolumeName = "coordinator-sidecar-volume"
-	// Volume name to mount host /var/run/docker.sock to container, it's used by coordinator.
+	// DockerSockVolume is volume name to mount host /var/run/docker.sock to container, it's used by coordinator.
 	DockerSockVolume = "docker-sock"
-	// Volume for config.json in secret.
-	DockerConfigJsonVolume = "cyclone-docker-secret-volume"
+	// DockerConfigJSONVolume is volume for config.json in secret.
+	DockerConfigJSONVolume = "cyclone-docker-secret-volume"
 
-	// Path of docker socket file
+	// DockerSockPath is path of docker socket file
 	DockerSockPath = "/var/run/docker.sock"
 
-	DockerConfigPath     = "/root/.docker"
-	DockerConfigJsonFile = "config.json"
+	// DockerConfigPath is path of docker config
+	DockerConfigPath = "/root/.docker"
+	// DockerConfigJSONFile is name of docker config file
+	DockerConfigJSONFile = "config.json"
 
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"
@@ -82,16 +99,19 @@ const (
 	ContainerStateInitialized ContainerState = "Initialized"
 )
 
-// Constants for GC pod.
 const (
+	// GCContainerName is name of GC container
 	GCContainerName = "gc"
-	GCDataPath      = "/workspace"
+	// GCDataPath is parent folder holding data to be cleaned by GC pod
+	GCDataPath = "/workspace"
 )
 
+// InputResourceVolumeName ...
 func InputResourceVolumeName(name string) string {
 	return "input-" + name
 }
 
+// OutputResourceVolumeName ...
 func OutputResourceVolumeName(name string) string {
 	return "output-" + name
 }

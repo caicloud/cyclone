@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// ContainerSelector is a function to select containers
 type ContainerSelector func(name string) bool
 
 // OnlyWorkload selects only workload containers.

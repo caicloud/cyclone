@@ -3,14 +3,14 @@ package common
 import "fmt"
 
 const (
-	// The path that we will mount PV on in container.
+	// StageMountPath is path that we will mount PV on in container.
 	StageMountPath = "/__cyclone__workspace"
 
-	// Path of artifacts in coordinator container
+	// CoordinatorWorkspacePath is path of artifacts in coordinator container
 	CoordinatorWorkspacePath = "/workspace/"
 )
 
-// WorkflowRuns data path in PV
+// WorkflowRunsPath indicates WorkflowRuns data path in PV
 func WorkflowRunsPath() string {
 	return "workflowruns"
 }

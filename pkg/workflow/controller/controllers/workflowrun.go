@@ -12,6 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
+// NewWorkflowRunController ...
 func NewWorkflowRunController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactory(
