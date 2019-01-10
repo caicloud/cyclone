@@ -14,7 +14,6 @@ import (
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to kubeconfig. Only required if out-of-cluster.")
-var logLevel = flag.String("loglevel", "Info", "Log level of workflow assistant.")
 
 func main() {
 	flag.Parse()

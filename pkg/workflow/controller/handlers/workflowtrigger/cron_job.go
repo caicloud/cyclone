@@ -9,7 +9,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
@@ -86,7 +85,7 @@ func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
 
 	wft, ok := obj.(*v1alpha1.WorkflowTrigger)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("I want type: WorkflowTrigger, but it is: %T", obj))
+		return nil, fmt.Errorf("I want type: WorkflowTrigger, but it is: %T", obj)
 	}
 
 	return wft, nil

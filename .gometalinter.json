@@ -1,0 +1,4 @@
+{
+  "Enable": ["gofmt", "goimports", "golint", "vet", "varcheck"],
+  "Skip": ["pkg/k8s"]
+}

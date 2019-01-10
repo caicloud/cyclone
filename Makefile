@@ -72,7 +72,14 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 # All targets.
 .PHONY: lint test build container push
 
+lint: $(GOMETALINTER)
+	gometalinter ./pkg/... ./cmd/...
+
 build: build-local
+
+$(GOMETALINTER):
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install &> /dev/null
 
 test:
 	go test $(PKGS)
@@ -151,11 +158,6 @@ push: container
 
 gen: clean-generated
 	bash tools/generator/autogenerate.sh
-
-lint:
-	gofmt -w -s pkg
-	go vet $$(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
-	golint $$(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
 
 swagger:
 	docker run --rm                                                                   \

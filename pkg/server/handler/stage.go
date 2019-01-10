@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -12,7 +13,6 @@ import (
 	"github.com/gorilla/websocket"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"bufio"
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
@@ -132,7 +132,7 @@ func receiveContainerLogStream(workflowrun, stage, container, namespace string, 
 	}
 }
 
-// GetContainerLogStream ... GetContainerLogStream gets real-time log of container within stage.
+// GetContainerLogStream gets real-time log of container within stage.
 func GetContainerLogStream(ctx context.Context, workflowrun, stage, container, namespace string) error {
 	request := contextutil.GetHTTPRequest(ctx)
 	writer := contextutil.GetHTTPResponseWriter(ctx)
@@ -210,7 +210,7 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 	}
 }
 
-// GetContainerLogs ... GetContainerLogs handles the request to get container logs, only supports finished stage records.
+// GetContainerLogs handles the request to get container logs, only supports finished stage records.
 func GetContainerLogs(ctx context.Context, workflowrun, stage, container, namespace string, download bool) ([]byte, map[string]string, error) {
 	logs, err := getContainerLogs(workflowrun, stage, container, namespace)
 	if err != nil {
