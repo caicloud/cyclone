@@ -1,27 +1,31 @@
 package configmap
 
 import (
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
-
 	log "github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
+
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
+// Handler ...
 type Handler struct {
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
+// ObjectCreated ...
 func (h *Handler) ObjectCreated(obj interface{}) {
 	h.process(obj)
 }
 
+// ObjectUpdated ...
 func (h *Handler) ObjectUpdated(obj interface{}) {
 	h.process(obj)
 }
 
+// ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	return
 }

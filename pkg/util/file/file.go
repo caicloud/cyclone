@@ -28,8 +28,8 @@ func DirExists(path string) bool {
 	return (err == nil || os.IsExist(err)) && fileInfo.IsDir()
 }
 
-// FileExists checks the existence of the file, true if exists, or false if not exist.
-func FileExists(path string) bool {
+// Exists checks the existence of the file, true if exists, or false if not exist.
+func Exists(path string) bool {
 	// First check the err, if the file exists, err is nil
 	if _, err := os.Stat(path); err != nil {
 		return false

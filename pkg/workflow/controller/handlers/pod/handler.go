@@ -8,6 +8,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
+// Handler ...
 type Handler struct {
 	Client clientset.Interface
 }
@@ -15,6 +16,7 @@ type Handler struct {
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
+// ObjectCreated ...
 func (h *Handler) ObjectCreated(obj interface{}) {
 	// If Workflow Controller got restarted, previous started pods would be
 	// observed by controller with create event. We need to handle update in
@@ -22,10 +24,12 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	h.onUpdate(obj)
 }
 
+// ObjectUpdated ...
 func (h *Handler) ObjectUpdated(obj interface{}) {
 	h.onUpdate(obj)
 }
 
+// ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {

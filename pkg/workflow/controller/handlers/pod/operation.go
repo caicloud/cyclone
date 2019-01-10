@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
+// Operator ...
 type Operator struct {
 	client      clientset.Interface
 	workflowRun string
@@ -22,6 +23,7 @@ type Operator struct {
 	pod         *corev1.Pod
 }
 
+// NewOperator ...
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
 	wfr, ok := annotations[common.WorkflowRunAnnotationName]
@@ -62,7 +64,7 @@ func (p *Operator) OnDelete() error {
 	if !ok || status.Status.Status == v1alpha1.StatusRunning {
 		operator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             "Error",
-			LastTransitionTime: metav1.Time{time.Now()},
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "PodDeleted",
 		})
 	}
@@ -70,6 +72,7 @@ func (p *Operator) OnDelete() error {
 	return operator.Update()
 }
 
+// OnUpdated ...
 func (p *Operator) OnUpdated() error {
 	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
@@ -97,7 +100,7 @@ func (p *Operator) OnUpdated() error {
 				Info("To update stage status")
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
-				LastTransitionTime: metav1.Time{time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "PodFailed",
 			})
 		}
@@ -109,7 +112,7 @@ func (p *Operator) OnUpdated() error {
 				Info("To update stage status")
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusCompleted,
-				LastTransitionTime: metav1.Time{time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "PodSucceed",
 			})
 		}
@@ -156,7 +159,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			Info("To update stage status")
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
-			LastTransitionTime: metav1.Time{time.Now()},
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "CoordinatorError",
 			Message:            "Coordinator exit with error",
 		})
@@ -167,7 +170,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			Info("To update stage status")
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusCompleted,
-			LastTransitionTime: metav1.Time{time.Now()},
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "CoordinatorCompleted",
 			Message:            "Coordinator completed",
 		})

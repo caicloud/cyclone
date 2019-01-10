@@ -15,16 +15,18 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
 )
 
-type K8sapiExecutor struct {
+// Executor ...
+type Executor struct {
 	client        clientset.Interface
 	kubeconfig    string
 	namespace     string
 	podName       string
-	cycloneClient cycloneserver.CycloneServerClient
+	cycloneClient cycloneserver.Client
 }
 
-func NewK8sapiExecutor(n string, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *K8sapiExecutor {
-	return &K8sapiExecutor{
+// NewK8sapiExecutor ...
+func NewK8sapiExecutor(n string, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *Executor {
+	return &Executor{
 		namespace:     n,
 		podName:       pod,
 		client:        client,
@@ -33,8 +35,8 @@ func NewK8sapiExecutor(n string, pod string, client clientset.Interface, cyclone
 	}
 }
 
-// WaitContainersTerminate waits containers that pass selectors.
-func (k *K8sapiExecutor) WaitContainers(expectState common.ContainerState, selectors ...common.ContainerSelector) error {
+// WaitContainers waits containers that pass selectors.
+func (k *Executor) WaitContainers(expectState common.ContainerState, selectors ...common.ContainerSelector) error {
 	ticker := time.NewTicker(time.Second * 1)
 	defer ticker.Stop()
 
@@ -82,22 +84,20 @@ func (k *K8sapiExecutor) WaitContainers(expectState common.ContainerState, selec
 			}
 		}
 	}
-
-	return nil
 }
 
 // GetPod get the stage pod.
-func (k *K8sapiExecutor) GetPod() (*core_v1.Pod, error) {
+func (k *Executor) GetPod() (*core_v1.Pod, error) {
 	return k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
 }
 
 // GetResource get resource by its name
-func (k *K8sapiExecutor) GetResource(name string) (*v1alpha1.Resource, error) {
+func (k *Executor) GetResource(name string) (*v1alpha1.Resource, error) {
 	return k.client.CycloneV1alpha1().Resources(k.namespace).Get(name, meta_v1.GetOptions{})
 }
 
 // CollectLog collects container logs.
-func (k *K8sapiExecutor) CollectLog(container, workflowrun, stage string) error {
+func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 	log.Infof("Start to collect %s log", container)
 	stream, err := k.client.CoreV1().Pods(k.namespace).GetLogs(k.podName, &core_v1.PodLogOptions{
 		Container: container,
@@ -121,7 +121,7 @@ func (k *K8sapiExecutor) CollectLog(container, workflowrun, stage string) error 
 }
 
 // CopyFromContainer copy a file/directory frome container:path to dst.
-func (k *K8sapiExecutor) CopyFromContainer(container, path, dst string) error {
+func (k *Executor) CopyFromContainer(container, path, dst string) error {
 	//args := []string{"--kubeconfig", k.kubeconfig, "cp", fmt.Sprintf("%s/%s:%s", k.namespace, k.podName, path), "-c", container, dst}
 	//
 	//cmd := exec.Command("kubectl", args...)

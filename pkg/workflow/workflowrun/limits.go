@@ -137,7 +137,7 @@ type LimitedSortedQueue struct {
 func NewQueue(key string, max int) *LimitedSortedQueue {
 	dummy := &Node{}
 	return &LimitedSortedQueue{
-		key:   key,
+		key:  key,
 		max:  max,
 		size: 0,
 		head: dummy,

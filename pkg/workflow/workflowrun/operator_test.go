@@ -13,12 +13,12 @@ import (
 
 func TestOverallStatus(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	recorder := new(MockedRecorder);
+	recorder := new(MockedRecorder)
 	recorder.On("Event", mock.Anything).Return()
 	wf := &v1alpha1.Workflow{}
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 	}
@@ -45,7 +45,7 @@ func TestOverallStatus(t *testing.T) {
 	}
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
@@ -67,7 +67,7 @@ func TestOverallStatus(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
@@ -92,7 +92,7 @@ func TestOverallStatus(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{
@@ -117,7 +117,7 @@ func TestOverallStatus(t *testing.T) {
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 		Status: v1alpha1.WorkflowRunStatus{

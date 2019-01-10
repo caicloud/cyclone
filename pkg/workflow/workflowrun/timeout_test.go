@@ -91,54 +91,57 @@ func TestParseTime(t *testing.T) {
 func TestNewWorkflowRunItem(t *testing.T) {
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
 			Timeout: "30s",
 		},
 	}
-	result := NewWorkflowRunItem(wfr)
-	expected := &workflowRunItem {
-		name: "test",
-		namespace: "default",
+	result := newWorkflowRunItem(wfr)
+	expected := &workflowRunItem{
+		name:       "test",
+		namespace:  "default",
 		expireTime: time.Now().Add(time.Second * 30),
 	}
 
 	if expected.name != result.name ||
 		expected.namespace != result.namespace ||
-		(expected.expireTime.Unix() - result.expireTime.Unix()) > 1 {
-		t.Errorf("%v expected, but got %v", expected, result);
+		(expected.expireTime.Unix()-result.expireTime.Unix()) > 1 {
+		t.Errorf("%v expected, but got %v", expected, result)
 	}
 }
 
-type MockedRecorder struct{
+type MockedRecorder struct {
 	mock.Mock
 }
-func (r * MockedRecorder) Event(object runtime.Object, eventtype, reason, message string) {}
-func (r * MockedRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {}
-func (r * MockedRecorder) PastEventf(object runtime.Object, timestamp metav1.Time, eventtype, reason, messageFmt string, args ...interface{}) {}
+
+func (r *MockedRecorder) Event(object runtime.Object, eventtype, reason, message string) {}
+func (r *MockedRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
+}
+func (r *MockedRecorder) PastEventf(object runtime.Object, timestamp metav1.Time, eventtype, reason, messageFmt string, args ...interface{}) {
+}
 
 type TimeoutProcessorSuite struct {
 	suite.Suite
 	processor *TimeoutProcessor
-};
+}
 
 func (suite *TimeoutProcessorSuite) SetupTest() {
 	client := fake.NewSimpleClientset()
-	recorder := new(MockedRecorder);
+	recorder := new(MockedRecorder)
 	recorder.On("Event", mock.Anything).Return()
 	suite.processor = &TimeoutProcessor{
-		client: client,
+		client:   client,
 		recorder: recorder,
-		items: make(map[string]*workflowRunItem),
-	};
+		items:    make(map[string]*workflowRunItem),
+	}
 }
 
 func (suite *TimeoutProcessorSuite) TestAdd() {
 	suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test1",
+			Name:      "test1",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
@@ -150,7 +153,7 @@ func (suite *TimeoutProcessorSuite) TestAdd() {
 
 	suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test2",
+			Name:      "test2",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
@@ -166,7 +169,7 @@ func (suite *TimeoutProcessorSuite) TestAdd() {
 func (suite *TimeoutProcessorSuite) TestProcess() {
 	suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test1",
+			Name:      "test1",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.WorkflowRunSpec{
@@ -174,11 +177,10 @@ func (suite *TimeoutProcessorSuite) TestProcess() {
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
-				"stg1": {
-				},
+				"stg1": {},
 				"stg2": {
 					Pod: &v1alpha1.PodInfo{
-						Name: "stg1",
+						Name:      "stg1",
 						Namespace: "default",
 					},
 				},
@@ -187,7 +189,7 @@ func (suite *TimeoutProcessorSuite) TestProcess() {
 	})
 	suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test2",
+			Name:      "test2",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.WorkflowRunSpec{

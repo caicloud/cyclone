@@ -30,5 +30,5 @@ type WorkflowParamSpec struct {
 type WorkflowParamList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []WorkflowParam `json:"items""`
+	Items           []WorkflowParam `json:"items"`
 }

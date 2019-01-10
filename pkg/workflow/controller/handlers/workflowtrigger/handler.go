@@ -6,6 +6,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
+// Handler ...
 type Handler struct {
 	CronManager *CronTriggerManager
 }
@@ -15,6 +16,7 @@ var (
 	_ handlers.Interface = (*Handler)(nil)
 )
 
+// ObjectCreated ...
 func (h *Handler) ObjectCreated(obj interface{}) {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
@@ -23,6 +25,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	}
 }
 
+// ObjectUpdated ...
 func (h *Handler) ObjectUpdated(obj interface{}) {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
@@ -31,6 +34,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 }
 
+// ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)

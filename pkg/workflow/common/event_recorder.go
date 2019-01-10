@@ -15,7 +15,7 @@ import (
 const (
 	// EventSourceWfrController represents events send from workflowrun controller.
 	EventSourceWfrController string = "WorkflowRunController"
-	// EventSourceWfrController represents events send from coordinator.
+	// EventSourceCoordinator represents events send from coordinator.
 	EventSourceCoordinator string = "CycloneCoordinator"
 )
 

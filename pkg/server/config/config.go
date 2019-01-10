@@ -7,38 +7,53 @@ import (
 )
 
 const (
-	EnvCycloneServerPort = "ENV_CYCLONE_SERVER_PORT"
+	// EnvCycloneServerHost is environment variable name defining Cyclone-Server host
 	EnvCycloneServerHost = "ENV_CYCLONE_SERVER_HOST"
-	EnvKubeHost          = "ENV_KUBE_HOST"
-	EnvKubeConfig        = "ENV_KUBE_CONFIG"
-	EnvLogLevel          = "ENV_LOG_LEVEL"
+	// EnvCycloneServerPort is environment variable name defining Cyclone-Server port
+	EnvCycloneServerPort = "ENV_CYCLONE_SERVER_PORT"
+	// EnvKubeHost is environment variable name defining k8s host
+	EnvKubeHost = "ENV_KUBE_HOST"
+	// EnvKubeConfig is environment variable name defining kubeConfig
+	EnvKubeConfig = "ENV_KUBE_CONFIG"
+	// EnvLogLevel is environment variable name defining log level
+	EnvLogLevel = "ENV_LOG_LEVEL"
 
+	// FlagCycloneServerPort ...
 	FlagCycloneServerPort = "cyclone-server-port"
+	// FlagCycloneServerHost ...
 	FlagCycloneServerHost = "cyclone-server-host"
-	FlagKubeHost          = "kubehost"
-	FlagKubeConfig        = "kubeconfig"
-	FlagLogLevel          = "log-level"
+	// FlagKubeHost ...
+	FlagKubeHost = "kubehost"
+	// FlagKubeConfig ...
+	FlagKubeConfig = "kubeconfig"
+	// FlagLogLevel ...
+	FlagLogLevel = "log-level"
 
+	// envVarCannotEmptyFormat ...
 	envVarCannotEmptyFormat = "The environment variable '%s' cannot be empty."
 
+	// DefaultCycloneServerPort ...
 	DefaultCycloneServerPort int = 7099
 
+	// DefaultCycloneServerHost ...
 	DefaultCycloneServerHost = "0.0.0.0"
 
+	// DefaultLogLevel ...
 	DefaultLogLevel = "info"
 )
 
 var (
-	// listen port
+	// CycloneServerPort defines port of Cyclone Server
 	CycloneServerPort int
-	// cyclone server
+	// CycloneServerHost defines host of Cyclone Server
 	CycloneServerHost string
 
-	// k8s about
-	KubeHost   string
+	// KubeHost defines host of k8s cluster
+	KubeHost string
+	// KubeConfig defines path of KubeConfig file
 	KubeConfig string
 
-	// log
+	// LogLevel defines log level
 	LogLevel string
 )
 
@@ -78,30 +93,32 @@ func LoadEnvVar(name string, defaultValue string, canBeEmpty bool) string {
 	return value
 }
 
+// LoadFloatEnvVar ...
 func LoadFloatEnvVar(name string, defaultValue float64, canBeEmpty bool) float64 {
 	val := LoadEnvVar(name, "", canBeEmpty)
 	if len(val) == 0 {
 		return defaultValue
-	} else {
-		floatVal, err := strconv.ParseFloat(val, 64)
-		if err != nil {
-			log.Fatalf("The value '%s' of environment variable '%s' is not a valid float64: %v\n", val, name, err)
-			os.Exit(-1)
-		}
-		return floatVal
 	}
+
+	floatVal, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		log.Fatalf("The value '%s' of environment variable '%s' is not a valid float64: %v\n", val, name, err)
+		os.Exit(-1)
+	}
+	return floatVal
 }
 
+// LoadIntEnvVar ...
 func LoadIntEnvVar(name string, defaultValue int, canBeEmpty bool) int {
 	val := LoadEnvVar(name, "", canBeEmpty)
 	if len(val) == 0 {
 		return defaultValue
-	} else {
-		intVal, err := strconv.ParseInt(val, 10, 32)
-		if err != nil {
-			log.Fatalf("The value '%s' of environment variable '%s' is not a valid integer: %v\n", val, name, err)
-			os.Exit(-1)
-		}
-		return int(intVal)
 	}
+
+	intVal, err := strconv.ParseInt(val, 10, 32)
+	if err != nil {
+		log.Fatalf("The value '%s' of environment variable '%s' is not a valid integer: %v\n", val, name, err)
+		os.Exit(-1)
+	}
+	return int(intVal)
 }

@@ -51,6 +51,7 @@ type operator struct {
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ Operator = (*operator)(nil)
 
+// NewOperator create a new operator.
 func NewOperator(client clientset.Interface, wfr interface{}, namespace string) (Operator, error) {
 	if w, ok := wfr.(string); ok {
 		return newFromName(client, w, namespace)
@@ -287,7 +288,7 @@ func (o *operator) Reconcile() error {
 		o.UpdateStageStatus(stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			Reason:             "StageInitialized",
-			LastTransitionTime: metav1.Time{time.Now()},
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 		})
 	}
 	overall, err := o.OverallStatus()
@@ -318,7 +319,7 @@ func (o *operator) Reconcile() error {
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "GeneratePodError",
-				LastTransitionTime: metav1.Time{time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to generate pod: %v", err),
 			})
 			continue
@@ -333,7 +334,7 @@ func (o *operator) Reconcile() error {
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				Reason:             "CreatePodError",
-				LastTransitionTime: metav1.Time{time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to create pod: %v", err),
 			})
 			continue
@@ -342,7 +343,7 @@ func (o *operator) Reconcile() error {
 		o.recorder.Eventf(o.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", stage)
 		o.UpdateStageStatus(stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
-			LastTransitionTime: metav1.Time{time.Now()},
+			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "StagePodCreated",
 		})
 

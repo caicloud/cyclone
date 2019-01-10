@@ -20,6 +20,7 @@ type Handler struct {
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
+// ObjectCreated ...
 func (h *Handler) ObjectCreated(obj interface{}) {
 	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
 	if !ok {
@@ -59,6 +60,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	}
 }
 
+// ObjectUpdated ...
 func (h *Handler) ObjectUpdated(obj interface{}) {
 	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
 	if !ok {
@@ -94,6 +96,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 }
 
+// ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	return
 }

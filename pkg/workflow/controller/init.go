@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// InitLogger inits logging
 func InitLogger(logging *LoggingConfig) {
 	log.WithField("level", logging.Level).Info("Setting log level")
 

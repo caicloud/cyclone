@@ -59,7 +59,7 @@ func TestFileExists(t *testing.T) {
 	}
 
 	for k, v := range d {
-		r := FileExists(v.path)
+		r := Exists(v.path)
 		if r != v.expect {
 			t.Errorf("%s failed: expected %v, but got %v", k, v.expect, r)
 		}

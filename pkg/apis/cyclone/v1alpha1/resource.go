@@ -16,25 +16,27 @@ type Resource struct {
 	Spec ResourceSpec `json:"spec"`
 }
 
-// Resource type
+// ResourceType defines resource type
 type ResourceType string
 
 const (
-	ImageResourceType   = "Image"
-	GitResourceType     = "Git"
-	KVResourceType      = "KV"
-	PVResourceType      = "PV"
+	// ImageResourceType represents image in docker registry
+	ImageResourceType = "Image"
+	// GitResourceType represents git repo in SCM
+	GitResourceType = "Git"
+	// KVResourceType represents a set of key-values
+	KVResourceType = "KV"
+	// GeneralResourceType represents general resource
 	GeneralResourceType = "General"
 )
 
-// Resource pull policy
+// ResourcePullPolicy indicates resource pull policy
 type ResourcePullPolicy string
 
 const (
-	// Always pull resource. Old data would be removed if exist.
+	// PullAlways indicates always pull resource. Old data would be removed if exist.
 	PullAlways = "Always"
-	// If old data exists, take advantage of it when pull resource,
-	// incremental pull is performed.
+	// PullIfNotExist performs incremental pull if old data exists.
 	PullIfNotExist = "IfNotExist"
 )
 
@@ -66,5 +68,5 @@ type Persistent struct {
 type ResourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Resource `json:"items""`
+	Items           []Resource `json:"items"`
 }

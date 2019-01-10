@@ -12,6 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowtrigger"
 )
 
+// NewWorkflowTriggerController ...
 func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(

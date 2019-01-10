@@ -74,13 +74,6 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 
 build: build-local
 
-lint: $(GOMETALINTER)
-	gometalinter ./... --vendor
-
-$(GOMETALINTER):
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install &> /dev/null
-
 test:
 	go test $(PKGS)
 
@@ -158,6 +151,11 @@ push: container
 
 gen: clean-generated
 	bash tools/generator/autogenerate.sh
+
+lint:
+	gofmt -w -s pkg
+	go vet $$(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
+	golint $$(go list ./pkg/... ./cmd/... | grep -v "/pkg/k8s/")
 
 swagger:
 	docker run --rm                                                                   \

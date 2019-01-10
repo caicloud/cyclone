@@ -20,6 +20,7 @@ type GCProcessor struct {
 	enabled  bool
 }
 
+// NewGCProcessor create new GC processor.
 func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
 		client:   client,

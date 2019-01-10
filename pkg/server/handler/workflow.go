@@ -11,10 +11,10 @@ import (
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 )
 
-// POST /apis/v1alpha1/workflows/
+// CreateWorkflow ... POST /apis/v1alpha1/workflows/
 func CreateWorkflow(ctx context.Context) (*v1alpha1.Workflow, error) {
 	wf := &v1alpha1.Workflow{}
-	err := contextutil.GetJsonPayload(ctx, wf)
+	err := contextutil.GetJSONPayload(ctx, wf)
 	if err != nil {
 		return nil, err
 	}
@@ -26,20 +26,20 @@ func CreateWorkflow(ctx context.Context) (*v1alpha1.Workflow, error) {
 	return wc, nil
 }
 
-// GET /apis/v1alpha1/workflows/
+// ListWorkflows ... GET /apis/v1alpha1/workflows/
 func ListWorkflows(ctx context.Context, namespace string) (*v1alpha1.WorkflowList, error) {
 	return k8sClient.CycloneV1alpha1().Workflows(namespace).List(metav1.ListOptions{})
 }
 
-// GET /apis/v1alpha1/workflows/{workflow}
+// GetWorkflow ... GET /apis/v1alpha1/workflows/{workflow}
 func GetWorkflow(ctx context.Context, name, namespace string) (*v1alpha1.Workflow, error) {
 	return k8sClient.CycloneV1alpha1().Workflows(namespace).Get(name, metav1.GetOptions{})
 }
 
-// PUT /apis/v1alpha1/workflows/{workflow}
+// UpdateWorkflow ... PUT /apis/v1alpha1/workflows/{workflow}
 func UpdateWorkflow(ctx context.Context, name string) (*v1alpha1.Workflow, error) {
 	wf := &v1alpha1.Workflow{}
-	err := contextutil.GetJsonPayload(ctx, wf)
+	err := contextutil.GetJSONPayload(ctx, wf)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func UpdateWorkflow(ctx context.Context, name string) (*v1alpha1.Workflow, error
 	return k8sClient.CycloneV1alpha1().Workflows(wf.Namespace).Update(wf)
 }
 
-// DELETE /apis/v1alpha1/workflows/{workflow}
+// DeleteWorkflow ... DELETE /apis/v1alpha1/workflows/{workflow}
 func DeleteWorkflow(ctx context.Context, name, namespace string) error {
 	return k8sClient.CycloneV1alpha1().Workflows(namespace).Delete(name, nil)
 }

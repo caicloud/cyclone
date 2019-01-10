@@ -14,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
+// Controller ...
 type Controller struct {
 	name         string
 	clientSet    clientset.Interface
@@ -22,20 +23,26 @@ type Controller struct {
 	eventHandler handlers.Interface
 }
 
+// EventType ...
 type EventType int
 
 const (
+	// CREATE indicates creation event
 	CREATE EventType = iota
+	// UPDATE indicates updating event
 	UPDATE
+	// DELETE indicates deletion event
 	DELETE
 )
 
+// Event ...
 type Event struct {
 	Key       string
 	EventType EventType
 	Object    interface{}
 }
 
+// Run ...
 func (c *Controller) Run(stopCh <-chan struct{}) {
 	defer c.queue.ShutDown()
 
@@ -50,6 +57,7 @@ func (c *Controller) Run(stopCh <-chan struct{}) {
 	wait.Until(c.work, time.Second, stopCh)
 }
 
+// HasSynced ...
 func (c *Controller) HasSynced() bool {
 	return c.informer.HasSynced()
 }

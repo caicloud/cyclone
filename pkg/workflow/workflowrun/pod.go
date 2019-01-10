@@ -20,6 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
+// PodBuilder is builder used to build pod for stage
 type PodBuilder struct {
 	client     clientset.Interface
 	wf         *v1alpha1.Workflow
@@ -30,6 +31,7 @@ type PodBuilder struct {
 	pvcVolumes map[string]string
 }
 
+// NewPodBuilder creates a new pod builder.
 func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage string) *PodBuilder {
 	return &PodBuilder{
 		client:     client,
@@ -41,6 +43,7 @@ func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alp
 	}
 }
 
+// Prepare ...
 func (m *PodBuilder) Prepare() error {
 	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(m.stage, metav1.GetOptions{})
 	if err != nil {
@@ -97,11 +100,13 @@ func (m *PodBuilder) Prepare() error {
 	return nil
 }
 
+// ApplyTemplate ...
 // TODO(ChenDe): Implement stage template.
 func (m *PodBuilder) ApplyTemplate() error {
 	return nil
 }
 
+// ResolveArguments ...
 func (m *PodBuilder) ResolveArguments() error {
 	parameters := make(map[string]string)
 	for _, s := range m.wfr.Spec.Stages {
@@ -139,6 +144,7 @@ func (m *PodBuilder) ResolveArguments() error {
 	return nil
 }
 
+// CreateVolumes ...
 func (m *PodBuilder) CreateVolumes() error {
 	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
@@ -171,14 +177,14 @@ func (m *PodBuilder) CreateVolumes() error {
 	// Create secret volume for use in resource resolvers.
 	if controller.Config.Secret != "" {
 		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: common.DockerConfigJsonVolume,
+			Name: common.DockerConfigJSONVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: controller.Config.Secret,
 					Items: []corev1.KeyToPath{
 						{
-							Key:  common.DockerConfigJsonFile,
-							Path: common.DockerConfigJsonFile,
+							Key:  common.DockerConfigJSONFile,
+							Path: common.DockerConfigJSONFile,
 						},
 					},
 				},
@@ -402,7 +408,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 
 			if controller.Config.Secret != "" {
 				container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-					Name:      common.DockerConfigJsonVolume,
+					Name:      common.DockerConfigJSONVolume,
 					MountPath: common.DockerConfigPath,
 				})
 			}
@@ -632,6 +638,7 @@ func (m *PodBuilder) ApplyQuota() error {
 	return nil
 }
 
+// Build ...
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
@@ -691,6 +698,7 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	return m.pod, nil
 }
 
+// ArtifactFileName gets artifact file name from artifacts path.
 func (m *PodBuilder) ArtifactFileName(stageName, artifactName string) (string, error) {
 	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
 	if err != nil {

@@ -19,12 +19,14 @@ type WorkflowTrigger struct {
 	Status WorkflowTriggerStatus `json:"status"`
 }
 
-// Type of workflow trigger
+// TriggerType defines type of workflow trigger
 type TriggerType string
 
 const (
+	// ScheduledTrigger indicates scheduled trigger
 	ScheduledTrigger = "Schedule"
-	WebhookTrigger   = "Webhook"
+	// WebhookTrigger indicates webhook trigger
+	WebhookTrigger = "Webhook"
 )
 
 // WorkflowTriggerSpec defines workflow trigger definition.
@@ -52,5 +54,5 @@ type WorkflowTriggerStatus struct {
 type WorkflowTriggerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []WorkflowTrigger `json:"items""`
+	Items           []WorkflowTrigger `json:"items"`
 }
