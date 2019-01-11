@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
-import Detail from '@/public/detail';
+import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
 const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 

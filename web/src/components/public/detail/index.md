@@ -1,7 +1,7 @@
 # Detail
 
 ```js
-import Detail from '@/public/detail';
+import Detail from '@/components/public/detail';
 import { Button } from 'antd';
 
 const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;

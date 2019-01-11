@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { Breadcrumb } from 'antd';
 import PropTypes from 'prop-types';
 
-const mainModules = ['overview', 'project', 'template', 'resource', 'workflow'];
+const mainModules = [
+  'overview',
+  'project',
+  'stageTemplate',
+  'resource',
+  'workflow',
+];
 const operations = ['update', 'add'];
 
 /**
