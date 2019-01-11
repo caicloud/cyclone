@@ -1,10 +1,10 @@
 import React from 'react';
 import { Radio, Form, Row, Col } from 'antd';
 import { Field, withFormik } from 'formik';
-import InputWithUnit from '@/public/inputWithUnit';
-import MakeField from '@/public/makeField';
+import InputWithUnit from '@/components/public/inputWithUnit';
+import MakeField from '@/components/public/makeField';
 import PropTypes from 'prop-types';
-import { resourceValidate } from '@/public/consts/validate';
+import { resourceValidate } from '@/components/public/consts/validate';
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -78,6 +78,7 @@ class Allocation extends React.Component {
           wrapperCol: { span: 14 },
         }}
       >
+        {/* TODO: split into sub-components */}
         <div className="u-resource-allocation">
           <div className="allocation-type">
             <Field

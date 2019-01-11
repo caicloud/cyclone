@@ -1,4 +1,4 @@
-import { POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT } from '@/public/consts/regexp';
+import { POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT } from '@/components/public/consts/regexp';
 
 export const required = val => {
   let empty = true;
@@ -14,7 +14,10 @@ export const required = val => {
 
 // Positive number (including decimal, two decimal places at most)
 export const positiveOrFloat = val => {
-  if (!POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT.test(val)) {
+  const error = required(val);
+  if (error) {
+    return error;
+  } else if (!POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT.test(val)) {
     return intl.get('validate.positiveOrFloat');
   }
 };
@@ -42,12 +45,13 @@ export const resourceValidate = resources => {
   const cpuRequests = _.get(value, 'requests.cpu');
   const memoryRequests = _.get(value, 'requests.memory');
 
-  const limitCpuErr = required(cpuLimit) || positiveOrFloat(cpuLimit);
-  const limitMemErr = required(memoryLimit) || positiveOrFloat(memoryLimit);
-  let reqCpuErr = required(cpuRequests) || positiveOrFloat(cpuRequests);
-  let reqMemErr = required(memoryRequests) || positiveOrFloat(memoryRequests);
+  const limitCpuErr = positiveOrFloat(cpuLimit);
+  const limitMemErr = positiveOrFloat(memoryLimit);
+  let reqCpuErr = positiveOrFloat(cpuRequests);
+  let reqMemErr = positiveOrFloat(memoryRequests);
 
   if (value && value.limits && value.requests) {
+    // TODO(qme): process unit conversion
     // if (Numeral.compare(value.requests.cpu, value.limits.cpu, 'cpu') > 0) {
     //   reqCpuErr = `CPU ${i18n.get('application.validates.quotaLimit')}`;
     // }

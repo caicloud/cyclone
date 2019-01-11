@@ -18,6 +18,7 @@ class InputAddon extends React.Component {
     label: PropTypes.string,
     className: PropTypes.string,
   };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -31,6 +32,7 @@ class InputAddon extends React.Component {
     this.setState({ addonAfterText: value });
     HandleAddon && HandleAddon(value);
   };
+
   render() {
     const {
       addonAfter,

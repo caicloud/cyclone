@@ -9,20 +9,22 @@ class Integration {
     DockerRegistry: [],
   };
   @observable groupKeys = [];
-  @observable listLoading = true;
+  @observable listFetched = false;
   @action.bound
   getIntegrationList() {
     fetchApi.fetchIntegrationList({}).then(data => {
-      this.integrationList = data;
-      this.listLoading = false;
+      this.listFetched = true;
+      const groups = {};
       _.forEach(data, o => {
         const type = _.get(o, 'spec.type');
         if (!this.groupIntegrationList[type]) {
-          this.groupIntegrationList[type] = [o];
+          groups[type] = [o];
         } else {
-          this.groupIntegrationList[type].push(o);
+          groups[type].push(o);
         }
       });
+      this.integrationList = data;
+      this.groupIntegrationList = groups;
     });
   }
 

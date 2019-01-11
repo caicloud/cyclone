@@ -2,14 +2,14 @@ import React from 'react';
 import { Form, Input, Button } from 'antd';
 import PropTypes from 'prop-types';
 import { Field, withFormik } from 'formik';
-import MakeField from '@/public/makeField';
+import MakeField from '@/components/public/makeField';
 import IntegrationSelect from './IntegrationSelect';
-import ResourceAllocation from '@/public/resourceAllocation';
+import ResourceAllocation from '@/components/public/resourceAllocation';
 
 const { TextArea } = Input;
 
-const _Input = MakeField(Input);
-const _Textarea = MakeField(TextArea);
+const InputField = MakeField(Input);
+const TextareaField = MakeField(TextArea);
 
 const AddProject = props => {
   const { handleSubmit, setFieldValue } = props;
@@ -21,14 +21,14 @@ const AddProject = props => {
       <Field
         label={intl.get('name')}
         name="name"
-        component={_Input}
+        component={InputField}
         hasFeedback
         required
       />
       <Field
         label={intl.get('description')}
         name="description"
-        component={_Textarea}
+        component={TextareaField}
       />
       <Field
         label={'外部系统'}

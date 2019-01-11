@@ -3,7 +3,7 @@ import { Select, Row, Col } from 'antd';
 import { Form, Button } from 'antd';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
-import { IntegrationTypeMap } from '@/public/consts/const.js';
+import { IntegrationTypeMap } from '@/components/public/consts/const.js';
 
 const FormItem = Form.Item;
 const { Option, OptGroup } = Select;
@@ -21,7 +21,7 @@ class IntegrationSelect extends React.Component {
   };
   componentDidMount() {
     const { integration } = this.props;
-    if (integration.listLoading) {
+    if (!integration.listFetched) {
       integration.getIntegrationList();
     }
   }
