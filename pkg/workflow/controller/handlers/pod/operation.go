@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
+	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Operator ...
@@ -135,16 +134,18 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	}
 
 	// Check coordinator container's status, if it's terminated, we regard the pod completed.
-	anyError := false
+	var terminatedCoordinatorState *corev1.ContainerStateTerminated
 	for _, containerStatus := range p.pod.Status.ContainerStatuses {
 		if containerStatus.Name == common.CoordinatorSidecarName {
 			if containerStatus.State.Terminated == nil {
 				log.WithField("container", containerStatus.Name).Debug("Coordinator not terminated")
 				return
 			}
-			if containerStatus.State.Terminated.ExitCode != 0 {
-				anyError = true
-			}
+
+			terminatedCoordinatorState = containerStatus.State.Terminated
+
+			// There is only one coordinator container in each pod.
+			break
 		}
 	}
 
@@ -152,7 +153,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	// - Update the stage status in WorkflowRun based on coordinator's exit code.
 	// - TODO(ChenDe): Delete pod
 
-	if anyError {
+	if terminatedCoordinatorState.ExitCode != 0 {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
 			WithField("status", v1alpha1.StatusError).
@@ -160,8 +161,8 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
-			Reason:             "CoordinatorError",
-			Message:            "Coordinator exit with error",
+			Reason:             terminatedCoordinatorState.Reason,
+			Message:            terminatedCoordinatorState.Message,
 		})
 	} else {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
