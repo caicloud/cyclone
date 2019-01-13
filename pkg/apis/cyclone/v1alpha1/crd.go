@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	log "github.com/sirupsen/logrus"
-
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -41,8 +40,6 @@ func EnsureCRDCreated(masterURL, kubeConfigPath string) {
 	createCRD("stage", "stages", "Stage", []string{"stg"}, client)
 	createCRD("workflow", "workflows", "Workflow", []string{"wf"}, client)
 	createCRD("workflowrun", "workflowruns", "WorkflowRun", []string{"wfr"}, client)
-	createCRD("stagetemplate", "stagetemplates", "StageTemplate", []string{"stpl"}, client)
-	createCRD("workflowparam", "workflowparams", "WorkflowParams", []string{"wfp"}, client)
 	createCRD("workflowtrigger", "workflowtriggers", "WorkflowTrigger", []string{"wft"}, client)
 }
 

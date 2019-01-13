@@ -22,14 +22,6 @@ type StageListerExpansion interface{}
 // StageNamespaceLister.
 type StageNamespaceListerExpansion interface{}
 
-// StageTemplateListerExpansion allows custom methods to be added to
-// StageTemplateLister.
-type StageTemplateListerExpansion interface{}
-
-// StageTemplateNamespaceListerExpansion allows custom methods to be added to
-// StageTemplateNamespaceLister.
-type StageTemplateNamespaceListerExpansion interface{}
-
 // WorkflowListerExpansion allows custom methods to be added to
 // WorkflowLister.
 type WorkflowListerExpansion interface{}
@@ -37,14 +29,6 @@ type WorkflowListerExpansion interface{}
 // WorkflowNamespaceListerExpansion allows custom methods to be added to
 // WorkflowNamespaceLister.
 type WorkflowNamespaceListerExpansion interface{}
-
-// WorkflowParamListerExpansion allows custom methods to be added to
-// WorkflowParamLister.
-type WorkflowParamListerExpansion interface{}
-
-// WorkflowParamNamespaceListerExpansion allows custom methods to be added to
-// WorkflowParamNamespaceLister.
-type WorkflowParamNamespaceListerExpansion interface{}
 
 // WorkflowRunListerExpansion allows custom methods to be added to
 // WorkflowRunLister.

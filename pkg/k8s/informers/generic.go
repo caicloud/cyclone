@@ -37,12 +37,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().Resources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("stages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().Stages().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("stagetemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().StageTemplates().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("workflows"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().Workflows().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("workflowparams"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().WorkflowParams().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("workflowruns"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cyclone().V1alpha1().WorkflowRuns().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("workflowtriggers"):

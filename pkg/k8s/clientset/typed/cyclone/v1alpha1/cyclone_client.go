@@ -17,9 +17,7 @@ type CycloneV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ResourcesGetter
 	StagesGetter
-	StageTemplatesGetter
 	WorkflowsGetter
-	WorkflowParamsGetter
 	WorkflowRunsGetter
 	WorkflowTriggersGetter
 }
@@ -37,16 +35,8 @@ func (c *CycloneV1alpha1Client) Stages(namespace string) StageInterface {
 	return newStages(c, namespace)
 }
 
-func (c *CycloneV1alpha1Client) StageTemplates(namespace string) StageTemplateInterface {
-	return newStageTemplates(c, namespace)
-}
-
 func (c *CycloneV1alpha1Client) Workflows(namespace string) WorkflowInterface {
 	return newWorkflows(c, namespace)
-}
-
-func (c *CycloneV1alpha1Client) WorkflowParams(namespace string) WorkflowParamInterface {
-	return newWorkflowParams(c, namespace)
 }
 
 func (c *CycloneV1alpha1Client) WorkflowRuns(namespace string) WorkflowRunInterface {

@@ -7,17 +7,16 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/cbroglie/mustache"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 // PodBuilder is builder used to build pod for stage
@@ -51,10 +50,6 @@ func (m *PodBuilder) Prepare() error {
 	}
 	m.stg = stage
 
-	// TODO(ChenDe): Support template.
-	if stage.Spec.Template != nil {
-		return fmt.Errorf("Stage template not support yet, stage: %s", m.stage)
-	}
 	if stage.Spec.Pod == nil {
 		return fmt.Errorf("pod must be defined in stage spec, stage: %s", m.stage)
 	}

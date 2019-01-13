@@ -1,6 +1,9 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +genclient
 // +genclient:noStatus
@@ -19,18 +22,42 @@ type Stage struct {
 // StageSpec defines stage specification.
 // Exact one workload should be specified.
 type StageSpec struct {
-	// Use stage template
-	Template *TemplateRef `json:"template,omitempty"`
 	// Pod kind workload
 	Pod *PodWorkload `json:"pod,omitempty"`
 }
 
-// TemplateRef refers to a stage template and defines necessary arguments.
-type TemplateRef struct {
-	// Template name
-	Name string `json:"name"`
-	// Arguments passed to the template
-	Arguments []ArgumentValue `json:"arguments"`
+// PodWorkload describes pod type workload, a complete pod spec is included.
+type PodWorkload struct {
+	// Stage inputs
+	Inputs Inputs `json:"inputs,omitempty"`
+	// Stage outputs
+	Outputs Outputs `json:"outputs,omitempty"`
+	// Stage workload specification
+	Spec corev1.PodSpec `json:"spec"`
+}
+
+// Argument defines a argument.
+type Argument struct {
+	Name    string `json:"name"`
+	Default string `json:"default"`
+}
+
+// Inputs defines stage inputs.
+type Inputs struct {
+	// Resources used as input
+	Resources []ResourceItem `json:"resources,omitempty"`
+	// Parameters used as input
+	Arguments []ArgumentValue `json:"arguments,omitempty"`
+	// Artifacts to output
+	Artifacts []ArtifactItem `json:"artifacts,omitempty"`
+}
+
+// Outputs defines stage output.
+type Outputs struct {
+	// Resources used as output
+	Resources []ResourceItem `json:"resources,omitempty"`
+	// Artifacts to output
+	Artifacts []ArtifactItem `json:"artifacts,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

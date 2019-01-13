@@ -16,12 +16,8 @@ type Interface interface {
 	Resources() ResourceInformer
 	// Stages returns a StageInformer.
 	Stages() StageInformer
-	// StageTemplates returns a StageTemplateInformer.
-	StageTemplates() StageTemplateInformer
 	// Workflows returns a WorkflowInformer.
 	Workflows() WorkflowInformer
-	// WorkflowParams returns a WorkflowParamInformer.
-	WorkflowParams() WorkflowParamInformer
 	// WorkflowRuns returns a WorkflowRunInformer.
 	WorkflowRuns() WorkflowRunInformer
 	// WorkflowTriggers returns a WorkflowTriggerInformer.
@@ -49,19 +45,9 @@ func (v *version) Stages() StageInformer {
 	return &stageInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// StageTemplates returns a StageTemplateInformer.
-func (v *version) StageTemplates() StageTemplateInformer {
-	return &stageTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
 // Workflows returns a WorkflowInformer.
 func (v *version) Workflows() WorkflowInformer {
 	return &workflowInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// WorkflowParams returns a WorkflowParamInformer.
-func (v *version) WorkflowParams() WorkflowParamInformer {
-	return &workflowParamInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // WorkflowRuns returns a WorkflowRunInformer.

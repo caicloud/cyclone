@@ -24,16 +24,8 @@ func (c *FakeCycloneV1alpha1) Stages(namespace string) v1alpha1.StageInterface {
 	return &FakeStages{c, namespace}
 }
 
-func (c *FakeCycloneV1alpha1) StageTemplates(namespace string) v1alpha1.StageTemplateInterface {
-	return &FakeStageTemplates{c, namespace}
-}
-
 func (c *FakeCycloneV1alpha1) Workflows(namespace string) v1alpha1.WorkflowInterface {
 	return &FakeWorkflows{c, namespace}
-}
-
-func (c *FakeCycloneV1alpha1) WorkflowParams(namespace string) v1alpha1.WorkflowParamInterface {
-	return &FakeWorkflowParams{c, namespace}
 }
 
 func (c *FakeCycloneV1alpha1) WorkflowRuns(namespace string) v1alpha1.WorkflowRunInterface {
