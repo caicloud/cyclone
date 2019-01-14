@@ -10,11 +10,7 @@ type ResourceExpansion interface{}
 
 type StageExpansion interface{}
 
-type StageTemplateExpansion interface{}
-
 type WorkflowExpansion interface{}
-
-type WorkflowParamExpansion interface{}
 
 type WorkflowRunExpansion interface{}
 

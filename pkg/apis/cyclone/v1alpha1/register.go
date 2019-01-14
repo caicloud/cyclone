@@ -36,9 +36,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&Resource{},
 		&Workflow{},
 		&WorkflowRun{},
-		&StageTemplate{},
 		&Stage{},
-		&WorkflowParam{},
 		&WorkflowTrigger{},
 	)
 	// Add the watch version that applies
