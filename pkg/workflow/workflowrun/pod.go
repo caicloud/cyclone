@@ -54,7 +54,7 @@ func (m *PodBuilder) Prepare() error {
 		return fmt.Errorf("pod must be defined in stage spec, stage: %s", m.stage)
 	}
 
-	// Only on workload container supported, others should be sidecar marked by special
+	// Only one workload container supported, others should be sidecar marked by special
 	// container name prefix.
 	var workloadContainers int
 	for _, c := range stage.Spec.Pod.Spec.Containers {
