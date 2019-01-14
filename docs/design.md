@@ -17,7 +17,7 @@ workflow DAG scheduling, resource lifecycle management.
 ### Kubernetes CRDs
 
 * Stage: Minimum executable unit for workflow, it does some work on input resources and output results.
-* Resource: Resource is the data used by stages, it can be the input or output of stages.
+* Resource: Resource is the data used by stages as input or output, such as git repository or docker images.
 * Workflow: Executable DAG graph composed of stages.
 * WorkflowRun: Running record of a workflow.
 * WorkflowTrigger: Auto-trigger policy for workflow.
@@ -34,6 +34,7 @@ Workflow controller creates a pod for each stage to execute, and there are 3 kin
 * Workload Containers: Workload containers are functional containers, which do the main work for stages.
 * Sidecar Containers: There are 2 common sidecar containers.
   * Coordinator: Coordinator sidecar is in charge of log collection, artifact collection and notifying resource resolver to handle output resources.
+    Workflow controller regards a stage pod completed when the coordinator sidecar container completed.
   * Resource Resolver: Resource resolver sidecar will handle the output resources after workload containers finished.
 
 ### Resources
