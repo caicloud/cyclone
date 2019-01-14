@@ -105,7 +105,7 @@ func GenerateSCMToken(config *api.SCMConfig) error {
 		return httperror.ErrorContentNotFound.Error("SCM config")
 	}
 
-	if config.AuthType != api.Password && config.AuthType != api.Token {
+	if config.AuthType != api.Password && config.AuthType != api.Token && config.AuthType != api.OAuth {
 		return httperror.ErrorUnsupported.Error("SCM authType", config.AuthType)
 	}
 
