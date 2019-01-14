@@ -184,6 +184,7 @@ type SCMAuthType string
 const (
 	Password SCMAuthType = "Password"
 	Token                = "Token"
+	OAuth                = "OAuth"
 )
 
 // SVN username and password seperator, because SVN username can not contain ":".
@@ -911,5 +912,4 @@ type IntegrationSonar struct {
 	Address     string `json:"address,omitempty" bson:"address,omitempty"`
 	Token       string `bson:"token,omitempty" json:"token,omitempty"`
 	User        string `bson:"user,omitempty" json:"user,omitempty"`
-
 }
