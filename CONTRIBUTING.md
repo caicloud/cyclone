@@ -65,6 +65,12 @@ For a more detailed workflow, you can refer to [Kubernetes Github Workflow](http
 
 Cyclone is written with Golang, before you commit your code, please check [Golang Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
+Cyclone uses [Gometalinter](https://github.com/alecthomas/gometalinter) to statically check source code for errors and warnings. Please ensure your commits have passed the check before creating PR.
+
+```bash
+$ make lint
+``` 
+
 ### Javascript
 
 Cyclone's web UI is developed with React, Ant Design, please read [Airbnb Javascript Style Guide](https://github.com/airbnb/javascript) if you want to contribute to frontend. Cyclone also makes use of linter tools like Prettier, ESLint, Lint-staged to enforce its code quality.
