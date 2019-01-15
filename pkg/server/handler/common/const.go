@@ -4,17 +4,11 @@ const (
 	// TeanntNamespacePrefix is the prefix of namespace which related to a specific tenant
 	TeanntNamespacePrefix = "cyclone--"
 
-	// DefaultTenant is a default tenant created while cyclone initialize
-	DefaultTenant = "admin"
-
-	// DefaultTenantNamespace is the namespace of the default tenant
-	DefaultTenantNamespace = TeanntNamespacePrefix + DefaultTenant
+	// AdminTenant is a default tenant created while cyclone initialize
+	AdminTenant = "admin"
 
 	// TenantPVCPrefix is the prefix of pvc which related to a specific tenant
 	TenantPVCPrefix = "cyclone-pvc-"
-
-	//// DefaultTenantPVC is the pvc name of the default tenant
-	//DefaultTenantPVC = TenantPVCPrefix + DefaultTenant
 
 	// DefaultPVCSize is the default size of pvc
 	DefaultPVCSize = "5Gi"
@@ -37,3 +31,23 @@ const (
 	// QuotaMemoryRequest represents default value of 'requests.memory'
 	QuotaMemoryRequest = "2Gi"
 )
+
+// TenantNamespace returns namespace name related the tenant
+func TenantNamespace(tenant string) string {
+	return TeanntNamespacePrefix + tenant
+}
+
+// TenantPVC returns pvc name related the tenant
+func TenantPVC(tenant string) string {
+	return TenantPVCPrefix + tenant
+}
+
+// TenantResourceQuota returns resource quota name related the tenant
+func TenantResourceQuota(tenant string) string {
+	return tenant
+}
+
+// LabelOwnerCyclone returns a label string describes resource belongs to cyclone
+func LabelOwnerCyclone() string {
+	return LabelOwner + "=" + OwnerCyclone
+}

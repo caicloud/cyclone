@@ -14,18 +14,12 @@ type Tenant struct {
 
 // TenantMetadata contains metadata information about tenant
 type TenantMetadata struct {
-	//ID             string `json:"id,omitempty"`
-
 	// Name is the name of tenant, unique.
 	Name string `json:"name"`
-	// Alias is the alias of tenant
-	Alias string `json:"alias,omitempty"`
 	// Description describes the tenant
 	Description string `json:"description,omitempty"`
 	// CreationTime records the time of tenant creation
 	CreationTime string `json:"creationTime"`
-	// LastUpdateTime records the time of last update tenant
-	LastUpdateTime string `json:"lastUpdateTime"`
 }
 
 // TenantSpec contains the tenant spec information
@@ -40,10 +34,13 @@ type TenantSpec struct {
 
 // PersistentVolumeClaim describes information about pvc belongs to a tenant
 type PersistentVolumeClaim struct {
-	//Name string `json:"name"`
+	// Name is the pvc name specified by user, and if Name is not nil, cyclone will
+	// use this pvc and not to create another one.
+	Name string `json:"name"`
 
 	// StorageClass represents the strorageclass used to create pvc
 	StorageClass string `json:"storageclass"`
+
 	// Size represents the capacity of the pvc, unit supports 'Gi' or 'Mi'
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 	Size string `json:"size"`

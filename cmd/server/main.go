@@ -81,7 +81,7 @@ func initialize(opts *APIServerOptions) {
 	hcommon.InitHandlers(client)
 	log.Info("Init k8s client success")
 
-	err = v1alpha1.CreateDefaultTenant()
+	err = v1alpha1.CreateAdminTenant()
 	if err != nil {
 		log.Fatalf("Create default tenant cyclone error %v", err)
 	}
