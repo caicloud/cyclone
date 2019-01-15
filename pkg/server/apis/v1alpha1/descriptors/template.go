@@ -3,7 +3,7 @@ package descriptors
 import (
 	"github.com/caicloud/nirvana/definition"
 
-	"github.com/caicloud/cyclone/pkg/server/handler"
+	handler "github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 )
 
@@ -17,7 +17,7 @@ var template = []definition.Descriptor{
 		Description: "Stage template APIs",
 		Definitions: []definition.Definition{
 			{
-				Method:      definition.Get,
+				Method:      definition.List,
 				Function:    handler.ListTemplates,
 				Description: "List stage templates",
 				Parameters: []definition.Parameter{
@@ -48,7 +48,7 @@ var template = []definition.Descriptor{
 					{
 						Source:      definition.Header,
 						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose templates to list",
+						Description: "Name of the tenant to create template for",
 					},
 					{
 						Source:      definition.Body,
@@ -71,7 +71,7 @@ var template = []definition.Descriptor{
 					{
 						Source:      definition.Header,
 						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose templates to list",
+						Description: "Name of the tenant whose templates to get",
 					},
 					{
 						Source:      definition.Path,
@@ -89,12 +89,12 @@ var template = []definition.Descriptor{
 					{
 						Source:      definition.Header,
 						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose templates to list",
+						Description: "Name of the tenant whose template to update",
 					},
 					{
 						Source:      definition.Path,
 						Name:        "template",
-						Description: "Name of the stage template to get",
+						Description: "Name of the stage template to update",
 					},
 					{
 						Source:      definition.Body,
@@ -111,12 +111,12 @@ var template = []definition.Descriptor{
 					{
 						Source:      definition.Header,
 						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose templates to list",
+						Description: "Name of the tenant whose template to delete",
 					},
 					{
 						Source:      definition.Path,
 						Name:        "template",
-						Description: "Name of the stage template to get",
+						Description: "Name of the stage template to delete",
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},

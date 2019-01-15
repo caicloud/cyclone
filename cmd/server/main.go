@@ -23,7 +23,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
 	"github.com/caicloud/cyclone/pkg/server/config"
-	hcommon "github.com/caicloud/cyclone/pkg/server/handler/common"
+	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
 
@@ -78,7 +78,7 @@ func initialize(opts *APIServerOptions) {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
 
-	hcommon.InitHandlers(client)
+	handler.InitHandlers(client)
 	log.Info("Init k8s client success")
 
 	err = v1alpha1.CreateAdminTenant()
