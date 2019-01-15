@@ -28,6 +28,9 @@ const (
 	// APIVersion is the version of API.
 	APIVersion = "/apis/v1alpha1"
 
+	// TenantNamePathParameterName represents the name of the path parameter for tenant name.
+	TenantNamePathParameterName = "tenant"
+
 	// ResourceNamePathParameterName represents the name of the path parameter for resource name.
 	ResourceNamePathParameterName = "resource"
 

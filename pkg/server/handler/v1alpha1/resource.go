@@ -1,4 +1,4 @@
-package handler
+package v1alpha1
 
 import (
 	"context"
@@ -6,11 +6,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/handler/common"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 )
 
-// CreateResource ... POST /apis/v1alpha1/resources/
+// CreateResource ...
 func CreateResource(ctx context.Context) (*v1alpha1.Resource, error) {
 	rs := &v1alpha1.Resource{}
 	err := contextutil.GetJSONPayload(ctx, rs)
@@ -18,20 +19,20 @@ func CreateResource(ctx context.Context) (*v1alpha1.Resource, error) {
 		return nil, err
 	}
 
-	return k8sClient.CycloneV1alpha1().Resources(rs.Namespace).Create(rs)
+	return common.K8sClient.CycloneV1alpha1().Resources(rs.Namespace).Create(rs)
 }
 
-// ListResources ... GET /apis/v1alpha1/resources/
+// ListResources ...
 func ListResources(ctx context.Context, namespace string) (*v1alpha1.ResourceList, error) {
-	return k8sClient.CycloneV1alpha1().Resources(namespace).List(metav1.ListOptions{})
+	return common.K8sClient.CycloneV1alpha1().Resources(namespace).List(metav1.ListOptions{})
 }
 
-// GetResource ... GET /apis/v1alpha1/resources/{resource}
+// GetResource ...
 func GetResource(ctx context.Context, name, namespace string) (*v1alpha1.Resource, error) {
-	return k8sClient.CycloneV1alpha1().Resources(namespace).Get(name, metav1.GetOptions{})
+	return common.K8sClient.CycloneV1alpha1().Resources(namespace).Get(name, metav1.GetOptions{})
 }
 
-// UpdateResource ... PUT /apis/v1alpha1/resources/{resource}
+// UpdateResource ...
 func UpdateResource(ctx context.Context, name string) (*v1alpha1.Resource, error) {
 	rs := &v1alpha1.Resource{}
 	err := contextutil.GetJSONPayload(ctx, rs)
@@ -43,10 +44,10 @@ func UpdateResource(ctx context.Context, name string) (*v1alpha1.Resource, error
 		return nil, cerr.ErrorValidationFailed.Error("Name", "Resource name inconsistent between body and path.")
 	}
 
-	return k8sClient.CycloneV1alpha1().Resources(rs.Namespace).Update(rs)
+	return common.K8sClient.CycloneV1alpha1().Resources(rs.Namespace).Update(rs)
 }
 
-// DeleteResource ... DELETE /apis/v1alpha1/resources/{resource}
+// DeleteResource ...
 func DeleteResource(ctx context.Context, name, namespace string) error {
-	return k8sClient.CycloneV1alpha1().Resources(namespace).Delete(name, nil)
+	return common.K8sClient.CycloneV1alpha1().Resources(namespace).Delete(name, nil)
 }
