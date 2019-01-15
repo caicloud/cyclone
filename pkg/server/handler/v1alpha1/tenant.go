@@ -176,16 +176,23 @@ func createTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 }
 
 func updateTenantNamespace(tenant *apiv1alpha1.Tenant) error {
-	// marshal tenant and set it into namespace annotation
-	namespace, err := buildNamespace(tenant)
+	t, err := json.Marshal(tenant)
 	if err != nil {
-		log.Warningf("Build namespace for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Warningf("Marshal tenant %s error %v", tenant.Metadata.Name, err)
 		return err
 	}
 
-	// update namespace with retry
+	// update namespace annotation with retry
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		_, err = common.K8sClient.CoreV1().Namespaces().Update(namespace)
+		ns, err := common.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Metadata.Name), meta_v1.GetOptions{})
+		if err != nil {
+			log.Errorf("Get namespace for tenant %s error %v", tenant.Metadata.Name, err)
+			return err
+		}
+
+		ns.ObjectMeta.Annotations[common.AnnotationTenant] = string(t)
+
+		_, err = common.K8sClient.CoreV1().Namespaces().Update(ns)
 		if err != nil {
 			log.Errorf("Update namespace for tenant %s error %v", tenant.Metadata.Name, err)
 			return err
@@ -262,14 +269,23 @@ func buildResourceQuota(tenant *apiv1alpha1.Tenant) (*v1.ResourceQuota, error) {
 }
 
 func updateResourceQuota(tenant *apiv1alpha1.Tenant) error {
-	quota, err := buildResourceQuota(tenant)
+	// parse resource list
+	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
 	if err != nil {
-		log.Warningf("Build resource quota for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Metadata.Name, err)
 		return err
 	}
 	nsname := common.TenantNamespace(tenant.Metadata.Name)
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		quota, err := common.K8sClient.CoreV1().ResourceQuotas(nsname).Get(
+			common.TenantResourceQuota(tenant.Metadata.Name), meta_v1.GetOptions{})
+		if err != nil {
+			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
+			return err
+		}
+
+		quota.Spec.Hard = rl
 		_, err = common.K8sClient.CoreV1().ResourceQuotas(nsname).Update(quota)
 		if err != nil {
 			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
