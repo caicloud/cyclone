@@ -18,6 +18,3 @@ bin
 
 # Coverage file
 *.coverprofile
-
-# Volume for docker-compose
-local
