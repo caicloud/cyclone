@@ -53,6 +53,7 @@ func GetTenant(ctx context.Context, name string) (*apiv1alpha1.Tenant, error) {
 	return NamespaceToTenant(namespace)
 }
 
+// NamespaceToTenant trans namespace to tenant
 func NamespaceToTenant(namespace *core_v1.Namespace) (*apiv1alpha1.Tenant, error) {
 	annotationTenant := namespace.Annotations[common.AnnotationTenant]
 
