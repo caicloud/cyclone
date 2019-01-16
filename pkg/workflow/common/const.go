@@ -62,6 +62,10 @@ const (
 	GCAnnotationName = "cyclone.io/gc"
 	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
 	StageAnnotationName = "cyclone.io/stage"
+	// StageTemplateLabelName indicates whether a stage is used as stage template
+	StageTemplateLabelName = "cyclone.io/stage-template"
+	// StageTemplateLabelSelector is label selector to select stage templates
+	StageTemplateLabelSelector = "cyclone.io/stage-template=true"
 
 	// CoordinatorResolverPath ...
 	CoordinatorResolverPath = "/workspace/resolvers"

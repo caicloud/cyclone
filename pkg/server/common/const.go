@@ -1,10 +1,9 @@
 package common
 
 const (
-	// TeanntNamespacePrefix is the prefix of namespace which related to a specific tenant
-	TeanntNamespacePrefix = "cyclone--"
-
-	// AdminTenant is a default tenant created while cyclone initialize
+	// AdminTenant is name of the system admin tenant, it's a default tenant created when Cyclone
+	// start, and resources shared among all tenants would be placed in this tenant, such as stage
+	// templates.
 	AdminTenant = "admin"
 
 	// TenantPVCPrefix is the prefix of pvc which related to a specific tenant
@@ -31,23 +30,3 @@ const (
 	// QuotaMemoryRequest represents default value of 'requests.memory'
 	QuotaMemoryRequest = "2Gi"
 )
-
-// TenantNamespace returns namespace name related the tenant
-func TenantNamespace(tenant string) string {
-	return TeanntNamespacePrefix + tenant
-}
-
-// TenantPVC returns pvc name related the tenant
-func TenantPVC(tenant string) string {
-	return TenantPVCPrefix + tenant
-}
-
-// TenantResourceQuota returns resource quota name related the tenant
-func TenantResourceQuota(tenant string) string {
-	return tenant
-}
-
-// LabelOwnerCyclone returns a label string describes resource belongs to cyclone
-func LabelOwnerCyclone() string {
-	return LabelOwner + "=" + OwnerCyclone
-}

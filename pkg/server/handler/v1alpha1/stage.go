@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/handler/common"
+	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
@@ -30,17 +30,17 @@ func CreateStage(ctx context.Context) (*v1alpha1.Stage, error) {
 		return nil, err
 	}
 
-	return common.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
+	return handler.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Create(s)
 }
 
 // ListStages ...
 func ListStages(ctx context.Context, namespace string) (*v1alpha1.StageList, error) {
-	return common.K8sClient.CycloneV1alpha1().Stages(namespace).List(metav1.ListOptions{})
+	return handler.K8sClient.CycloneV1alpha1().Stages(namespace).List(metav1.ListOptions{})
 }
 
 // GetStage ...
 func GetStage(ctx context.Context, name, namespace string) (*v1alpha1.Stage, error) {
-	return common.K8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
+	return handler.K8sClient.CycloneV1alpha1().Stages(namespace).Get(name, metav1.GetOptions{})
 }
 
 // UpdateStage ...
@@ -55,12 +55,12 @@ func UpdateStage(ctx context.Context, name string) (*v1alpha1.Stage, error) {
 		return nil, cerr.ErrorValidationFailed.Error("Name", "Stage name inconsistent between body and path.")
 	}
 
-	return common.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Update(s)
+	return handler.K8sClient.CycloneV1alpha1().Stages(s.Namespace).Update(s)
 }
 
 // DeleteStage ...
 func DeleteStage(ctx context.Context, name, namespace string) error {
-	return common.K8sClient.CycloneV1alpha1().Stages(namespace).Delete(name, nil)
+	return handler.K8sClient.CycloneV1alpha1().Stages(namespace).Delete(name, nil)
 }
 
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.

@@ -12,7 +12,8 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	apiv1alpha1 "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/handler/common"
+	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/handler"
 )
 
 // CreateTenant creates a cyclone tenant
@@ -22,7 +23,7 @@ func CreateTenant(ctx context.Context, tenant *apiv1alpha1.Tenant) (*apiv1alpha1
 
 // ListTenants list all tenants' information
 func ListTenants(ctx context.Context) ([]apiv1alpha1.Tenant, error) {
-	namespaces, err := common.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
+	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
 		LabelSelector: common.LabelOwnerCyclone(),
 	})
 	if err != nil {
@@ -44,7 +45,7 @@ func ListTenants(ctx context.Context) ([]apiv1alpha1.Tenant, error) {
 
 // GetTenant gets information for a specific tenant
 func GetTenant(ctx context.Context, name string) (*apiv1alpha1.Tenant, error) {
-	namespace, err := common.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
+	namespace, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		log.Errorf("Get namespace for tenant %s error %v", name, err)
 		return nil, err
@@ -91,7 +92,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *apiv1alpha1.Tenan
 
 // DeleteTenant deletes a tenant
 func DeleteTenant(ctx context.Context, name string) error {
-	err := common.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
+	err := handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)
 		return err
@@ -103,7 +104,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 // First create namespace, then create pvc
 func CreateAdminTenant() error {
 	ns := common.TenantNamespace(common.AdminTenant)
-	_, err := common.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
+	_, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
 	if err == nil {
 		log.Infof("Default namespace %s already exist", ns)
 		return nil
@@ -166,7 +167,7 @@ func createTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 		return err
 	}
 
-	_, err = common.K8sClient.CoreV1().Namespaces().Create(namespace)
+	_, err = handler.K8sClient.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		log.Errorf("Create namespace for tenant %s error %v", tenant.Metadata.Name, err)
 		return err
@@ -184,7 +185,7 @@ func updateTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 
 	// update namespace annotation with retry
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		ns, err := common.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Metadata.Name), meta_v1.GetOptions{})
+		ns, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Metadata.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace for tenant %s error %v", tenant.Metadata.Name, err)
 			return err
@@ -192,7 +193,7 @@ func updateTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 
 		ns.ObjectMeta.Annotations[common.AnnotationTenant] = string(t)
 
-		_, err = common.K8sClient.CoreV1().Namespaces().Update(ns)
+		_, err = handler.K8sClient.CoreV1().Namespaces().Update(ns)
 		if err != nil {
 			log.Errorf("Update namespace for tenant %s error %v", tenant.Metadata.Name, err)
 			return err
@@ -236,7 +237,7 @@ func createResourceQuota(tenant *apiv1alpha1.Tenant) error {
 	}
 	nsname := common.TenantNamespace(tenant.Metadata.Name)
 
-	_, err = common.K8sClient.CoreV1().ResourceQuotas(nsname).Create(quota)
+	_, err = handler.K8sClient.CoreV1().ResourceQuotas(nsname).Create(quota)
 	if err != nil {
 		log.Errorf("Create ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
 		return err
@@ -278,7 +279,7 @@ func updateResourceQuota(tenant *apiv1alpha1.Tenant) error {
 	nsname := common.TenantNamespace(tenant.Metadata.Name)
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		quota, err := common.K8sClient.CoreV1().ResourceQuotas(nsname).Get(
+		quota, err := handler.K8sClient.CoreV1().ResourceQuotas(nsname).Get(
 			common.TenantResourceQuota(tenant.Metadata.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
@@ -286,7 +287,7 @@ func updateResourceQuota(tenant *apiv1alpha1.Tenant) error {
 		}
 
 		quota.Spec.Hard = rl
-		_, err = common.K8sClient.CoreV1().ResourceQuotas(nsname).Update(quota)
+		_, err = handler.K8sClient.CoreV1().ResourceQuotas(nsname).Update(quota)
 		if err != nil {
 			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
 			return err
@@ -328,7 +329,7 @@ func createTenantPVC(tenantName, storageClass, size string) error {
 		volume.Spec.StorageClassName = &storageClass
 	}
 
-	_, err = common.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Create(volume)
+	_, err = handler.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Create(volume)
 	if err != nil {
 		log.Errorf("Create persistent volume claim %s error %v", pvcName, err)
 		return err

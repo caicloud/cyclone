@@ -50,19 +50,26 @@ const (
 	ContainerNameQueryParameter = "container"
 
 	// NamespaceQueryParameter represents the query param namespace.
-	NamespaceQueryParameter string = "namespace"
+	NamespaceQueryParameter = "namespace"
+
+	// TenantHeaderName is name of tenant header name in http reqeust
+	TenantHeaderName = "X-Tenant"
 
 	// HeaderContentType represents the the key of Content-Type.
 	HeaderContentType = "Content-Type"
 
 	// DefaultNamespace represents the default namespace 'default'.
-	DefaultNamespace string = "default"
+	DefaultNamespace = "default"
 
 	// DownloadQueryParameter represents a download flag of the query parameter.
 	DownloadQueryParameter = "download"
 
 	// StatusQueryParameter represents a status of the query parameter.
 	StatusQueryParameter = "status"
+
+	// IncludePublicQueryParameter indicates whether include system level resources, for example, when list
+	// stage templates in a tenant, whether to include system level templates. Default is true.
+	IncludePublicQueryParameter = "includePublic"
 )
 
 // GetHTTPRequest gets request from context.
