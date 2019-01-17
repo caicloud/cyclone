@@ -17,7 +17,7 @@ _config:
       - name: cyclone-data
         path: /var/lib/cyclone
       ports:
-      - port: 7089
+      - port: 7099
         protocol: TCP
     controller:
       replica: 1
@@ -26,9 +26,9 @@ _config:
     services:
     - name: native-cyclone-server
       ports:
-      - port: 7089
+      - port: 7099
         protocol: TCP
-        targetPort: 7089
+        targetPort: 7099
       type: ClusterIP
     type: Deployment
     volumes:
