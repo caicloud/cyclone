@@ -9,15 +9,17 @@ class Integration {
     DockerRegistry: [],
   };
   @observable groupKeys = [];
-  @observable listFetched = false;
   @action.bound
   getIntegrationList() {
     fetchApi.fetchIntegrationList({}).then(data => {
-      this.listFetched = true;
-      const groups = {};
+      const groups = {
+        SonarQube: [],
+        SCM: [],
+        DockerRegistry: [],
+      };
       _.forEach(data, o => {
         const type = _.get(o, 'spec.type');
-        if (!this.groupIntegrationList[type]) {
+        if (!groups[type]) {
           groups[type] = [o];
         } else {
           groups[type].push(o);

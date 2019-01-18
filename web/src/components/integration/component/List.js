@@ -13,9 +13,7 @@ class List extends React.Component {
   };
   state = { visible: false };
   componentDidMount() {
-    if (!this.props.integration.listFetched) {
-      this.props.integration.getIntegrationList();
-    }
+    this.props.integration.getIntegrationList();
   }
   addDataSource = () => {
     this.setState({

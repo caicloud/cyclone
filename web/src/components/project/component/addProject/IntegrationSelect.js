@@ -21,9 +21,7 @@ class IntegrationSelect extends React.Component {
   };
   componentDidMount() {
     const { integration } = this.props;
-    if (!integration.listFetched) {
-      integration.getIntegrationList();
-    }
+    integration.getIntegrationList();
   }
   render() {
     const {
