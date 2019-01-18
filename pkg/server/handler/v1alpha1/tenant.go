@@ -118,7 +118,7 @@ func CreateAdminTenant() error {
 	}
 
 	tenant := &apiv1alpha1.Tenant{
-		Metadata: apiv1alpha1.TenantMetadata{
+		Metadata: apiv1alpha1.Metadata{
 			Name: common.AdminTenant,
 		},
 		Spec: apiv1alpha1.TenantSpec{

@@ -21,3 +21,8 @@ func TenantResourceQuota(tenant string) string {
 func LabelOwnerCyclone() string {
 	return LabelOwner + "=" + OwnerCyclone
 }
+
+// IntegrationSecret returns secret name related to the integration
+func IntegrationSecret(i string) string {
+	return i
+}
