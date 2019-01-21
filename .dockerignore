@@ -1,2 +1,8 @@
 .git
 vendor
+web
+docs
+pkg
+release
+tools
+hack

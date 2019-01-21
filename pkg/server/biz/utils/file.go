@@ -14,9 +14,9 @@ func ListAllFiles(directory string) ([]string, error) {
 		return nil, err
 	}
 
-	seperator := string(os.PathSeparator)
+	separator := string(os.PathSeparator)
 	for _, f := range list {
-		path := directory + seperator + f.Name()
+		path := directory + separator + f.Name()
 		if f.IsDir() {
 			subFiles, err := ListAllFiles(path)
 			if err != nil {
