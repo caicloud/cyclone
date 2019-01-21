@@ -37,7 +37,7 @@ type TenantSpec struct {
 type PersistentVolumeClaim struct {
 	// Name is the pvc name specified by user, and if Name is not nil, cyclone will
 	// use this pvc and not to create another one.
-	Name string `json:"name"`
+	// Name string `json:"name"`
 
 	// StorageClass represents the strorageclass used to create pvc
 	StorageClass string `json:"storageclass"`
@@ -69,7 +69,7 @@ const (
 	Cluster IntegrationType = "Cluster"
 )
 
-// TenantSpec contains the tenant spec information
+// IntegrationSpec contains the integration spec information
 type IntegrationSpec struct {
 	// Type of integration
 	Type IntegrationType `json:"type"`
@@ -141,14 +141,22 @@ type SCMSource struct {
 
 // ClusterSource contains info about clusters.
 type ClusterSource struct {
-	// Namespace is the namespace where workload will run in.
-	Namespace string `json:"type"`
 	// Credential is the credential info of the cluster
 	Credential ClusterCredential `json:"credential"`
+	// InCluster describes whether the cluster is the control cluster itself
+	InCluster bool `json:"inCluster,omitempty"`
 	// Worker defines whether this cluster can be used to perform workload.
 	// True, will create namespace and pvc associated with tenant in the cluster.
 	// False, will delete namespace and pvc associated with tenant in the cluster.
 	Worker bool `json:"worker"`
+	// Namespace is the namespace where workload will run in. and if this is not nil, cyclone will
+	// use this namespace and not to create another one.
+	// Useful when 'Worker' is True.
+	Namespace string `json:"namespace"`
+	// PVC is the pvc name specified by user, and if this is not nil, cyclone will
+	// use this pvc and not to create another one.
+	// Useful when 'Worker' is True.
+	PVC string `json:"pvc"`
 }
 
 // ClusterCredential contains credential info about cluster
@@ -167,7 +175,6 @@ type ClusterCredential struct {
 	KubeConfig *cmd_api.Config `json:"kubeConfig,omitempty"`
 }
 
-// +k8s:deepcopy-gen=true
 // TLSClientConfig contains settings to enable transport layer security
 type TLSClientConfig struct {
 	// Server should be accessed without verifying the TLS certificate. For testing only.

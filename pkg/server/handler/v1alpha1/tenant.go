@@ -3,26 +3,26 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/api/core/v1"
 	core_v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
-	apiv1alpha1 "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 )
 
 // CreateTenant creates a cyclone tenant
-func CreateTenant(ctx context.Context, tenant *apiv1alpha1.Tenant) (*apiv1alpha1.Tenant, error) {
-	return tenant, createCycloneTenant(tenant)
+func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) {
+	return tenant, createTenant(tenant)
 }
 
 // ListTenants list all tenants' information
-func ListTenants(ctx context.Context) ([]apiv1alpha1.Tenant, error) {
+func ListTenants(ctx context.Context) ([]api.Tenant, error) {
 	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
 		LabelSelector: common.LabelOwnerCyclone(),
 	})
@@ -31,7 +31,7 @@ func ListTenants(ctx context.Context) ([]apiv1alpha1.Tenant, error) {
 		return nil, err
 	}
 
-	tenants := []apiv1alpha1.Tenant{}
+	tenants := []api.Tenant{}
 	for _, namespace := range namespaces.Items {
 		t, err := NamespaceToTenant(&namespace)
 		if err != nil {
@@ -44,7 +44,11 @@ func ListTenants(ctx context.Context) ([]apiv1alpha1.Tenant, error) {
 }
 
 // GetTenant gets information for a specific tenant
-func GetTenant(ctx context.Context, name string) (*apiv1alpha1.Tenant, error) {
+func GetTenant(ctx context.Context, name string) (*api.Tenant, error) {
+	return getTenant(name)
+}
+
+func getTenant(name string) (*api.Tenant, error) {
 	namespace, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		log.Errorf("Get namespace for tenant %s error %v", name, err)
@@ -55,10 +59,10 @@ func GetTenant(ctx context.Context, name string) (*apiv1alpha1.Tenant, error) {
 }
 
 // NamespaceToTenant trans namespace to tenant
-func NamespaceToTenant(namespace *core_v1.Namespace) (*apiv1alpha1.Tenant, error) {
+func NamespaceToTenant(namespace *core_v1.Namespace) (*api.Tenant, error) {
 	annotationTenant := namespace.Annotations[common.AnnotationTenant]
 
-	tenant := &apiv1alpha1.Tenant{}
+	tenant := &api.Tenant{}
 	err := json.Unmarshal([]byte(annotationTenant), tenant)
 	if err != nil {
 		log.Errorf("Unmarshal tenant annotation error %v", err)
@@ -70,23 +74,80 @@ func NamespaceToTenant(namespace *core_v1.Namespace) (*apiv1alpha1.Tenant, error
 }
 
 // UpdateTenant updates information for a specific tenant
-func UpdateTenant(ctx context.Context, name string, newTenant *apiv1alpha1.Tenant) (*apiv1alpha1.Tenant, error) {
+func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api.Tenant, error) {
+	// get old tenant
+	tenant, err := getTenant(name)
+	if err != nil {
+		log.Errorf("get old tenant %s error %v", name, err)
+		return nil, err
+	}
+
+	integrations := []api.Integration{}
+	// update resource quota if necessary
+	if !reflect.DeepEqual(tenant.Spec.ResourceQuota, newTenant.Spec.ResourceQuota) {
+		integrations, err = GetWokerClusters(name)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, integration := range integrations {
+			cluster := integration.Spec.Cluster
+			if cluster == nil {
+				log.Warningf("cluster of integration %s is nil", integration.Metadata.Name)
+				continue
+			}
+
+			client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+			if err != nil {
+				log.Warningf("new cluster client for integration %s error %v", integration.Metadata.Name, err)
+				continue
+			}
+
+			err = common.UpdateResourceQuota(newTenant, cluster.Namespace, client)
+			if err != nil {
+				log.Errorf("Update resource quota for tenant %s error %v", name, err)
+				return nil, err
+			}
+		}
+	}
+
+	// update pvc if necessary
+	if !reflect.DeepEqual(tenant.Spec.PersistentVolumeClaim, newTenant.Spec.PersistentVolumeClaim) {
+		if len(integrations) == 0 {
+			integrations, err = GetWokerClusters(name)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, integration := range integrations {
+			cluster := integration.Spec.Cluster
+			if cluster == nil {
+				log.Warningf("cluster of integration %s is nil", integration.Metadata.Name)
+				continue
+			}
+
+			client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+			if err != nil {
+				log.Warningf("new cluster client for integration %s error %v", integration.Metadata.Name, err)
+				continue
+			}
+
+			newPVC := newTenant.Spec.PersistentVolumeClaim
+			err = common.UpdatePVC(tenant.Metadata.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
+			if err != nil {
+				log.Errorf("Update resource quota for tenant %s error %v", name, err)
+				return nil, err
+			}
+		}
+	}
+
 	// update namespace
-	err := updateTenantNamespace(newTenant)
+	err = updateTenantNamespace(newTenant)
 	if err != nil {
 		log.Errorf("Update namespace for tenant %s error %v", name, err)
 		return nil, err
 	}
-
-	// TODO , update pvc
-
-	// update resource quota
-	err = updateResourceQuota(newTenant)
-	if err != nil {
-		log.Errorf("Update resource quota for tenant %s error %v", name, err)
-		return nil, err
-	}
-
 	return newTenant, nil
 }
 
@@ -117,13 +178,13 @@ func CreateAdminTenant() error {
 		core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 	}
 
-	tenant := &apiv1alpha1.Tenant{
-		Metadata: apiv1alpha1.Metadata{
+	tenant := &api.Tenant{
+		Metadata: api.Metadata{
 			Name: common.AdminTenant,
 		},
-		Spec: apiv1alpha1.TenantSpec{
+		Spec: api.TenantSpec{
 			// TODO(zhujian7), read from configmap
-			PersistentVolumeClaim: apiv1alpha1.PersistentVolumeClaim{
+			PersistentVolumeClaim: api.PersistentVolumeClaim{
 				StorageClass: "", // use default storageclass
 				Size:         common.DefaultPVCSize,
 			},
@@ -131,35 +192,50 @@ func CreateAdminTenant() error {
 		},
 	}
 
-	return createCycloneTenant(tenant)
+	return createTenant(tenant)
 }
 
-func createCycloneTenant(tenant *apiv1alpha1.Tenant) error {
+func createControlClusterIntegration(tenant string) error {
+	in := &api.Integration{
+		Metadata: api.Metadata{
+			Name:        common.ControlClusterName,
+			Description: "This is cluster is integrated by cyclone while creating tenant.",
+		},
+		Spec: api.IntegrationSpec{
+			Type: api.Cluster,
+			IntegrationSource: api.IntegrationSource{
+				Cluster: &api.ClusterSource{
+					InCluster: true,
+					Worker:    true,
+					Namespace: common.TenantNamespace(tenant),
+				},
+			},
+		},
+	}
+
+	_, err := createIntegration(tenant, in)
+	return err
+}
+
+func createTenant(tenant *api.Tenant) error {
 	// create namespace
 	err := createTenantNamespace(tenant)
 	if err != nil {
 		return err
 	}
 
-	// create resouce quota
-	err = createResourceQuota(tenant)
+	// create cluster integration for control cluster
+	err = createControlClusterIntegration(tenant.Metadata.Name)
 	if err != nil {
 		return err
 	}
 
-	// TODO(zhujian7), create cluster integration for control cluster
+	// TODO(zhujian7): create built-in template-stage if tenant is admin
 
-	// create pvc
-	if tenant.Spec.PersistentVolumeClaim.Size == "" {
-		tenant.Spec.PersistentVolumeClaim.Size = common.DefaultPVCSize
-	}
-
-	return createTenantPVC(tenant.Metadata.Name,
-		tenant.Spec.PersistentVolumeClaim.StorageClass, tenant.Spec.PersistentVolumeClaim.Size)
-
+	return nil
 }
 
-func createTenantNamespace(tenant *apiv1alpha1.Tenant) error {
+func createTenantNamespace(tenant *api.Tenant) error {
 	// marshal tenant and set it into namespace annotation
 	namespace, err := buildNamespace(tenant)
 	if err != nil {
@@ -176,7 +252,7 @@ func createTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 	return nil
 }
 
-func updateTenantNamespace(tenant *apiv1alpha1.Tenant) error {
+func updateTenantNamespace(tenant *api.Tenant) error {
 	t, err := json.Marshal(tenant)
 	if err != nil {
 		log.Warningf("Marshal tenant %s error %v", tenant.Metadata.Name, err)
@@ -203,7 +279,7 @@ func updateTenantNamespace(tenant *apiv1alpha1.Tenant) error {
 
 }
 
-func buildNamespace(tenant *apiv1alpha1.Tenant) (*v1.Namespace, error) {
+func buildNamespace(tenant *api.Tenant) (*v1.Namespace, error) {
 	// marshal tenant and set it into namespace annotation
 	annotation := make(map[string]string)
 	t, err := json.Marshal(tenant)
@@ -227,129 +303,4 @@ func buildNamespace(tenant *apiv1alpha1.Tenant) (*v1.Namespace, error) {
 	}
 
 	return namespace, nil
-}
-
-func createResourceQuota(tenant *apiv1alpha1.Tenant) error {
-	quota, err := buildResourceQuota(tenant)
-	if err != nil {
-		log.Warningf("Build resource quota for tenant %s error %v", tenant.Metadata.Name, err)
-		return err
-	}
-	nsname := common.TenantNamespace(tenant.Metadata.Name)
-
-	_, err = handler.K8sClient.CoreV1().ResourceQuotas(nsname).Create(quota)
-	if err != nil {
-		log.Errorf("Create ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
-		return err
-	}
-
-	return nil
-}
-
-func buildResourceQuota(tenant *apiv1alpha1.Tenant) (*v1.ResourceQuota, error) {
-	// parse resource list
-	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
-	if err != nil {
-		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Metadata.Name, err)
-		return nil, err
-	}
-
-	quotaName := common.TenantResourceQuota(tenant.Metadata.Name)
-	nsname := common.TenantNamespace(tenant.Metadata.Name)
-	quota := &core_v1.ResourceQuota{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      quotaName,
-			Namespace: nsname,
-		},
-		Spec: core_v1.ResourceQuotaSpec{
-			Hard: rl,
-		},
-	}
-
-	return quota, nil
-}
-
-func updateResourceQuota(tenant *apiv1alpha1.Tenant) error {
-	// parse resource list
-	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
-	if err != nil {
-		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Metadata.Name, err)
-		return err
-	}
-	nsname := common.TenantNamespace(tenant.Metadata.Name)
-
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		quota, err := handler.K8sClient.CoreV1().ResourceQuotas(nsname).Get(
-			common.TenantResourceQuota(tenant.Metadata.Name), meta_v1.GetOptions{})
-		if err != nil {
-			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
-			return err
-		}
-
-		quota.Spec.Hard = rl
-		_, err = handler.K8sClient.CoreV1().ResourceQuotas(nsname).Update(quota)
-		if err != nil {
-			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
-			return err
-		}
-
-		return nil
-	})
-
-}
-
-func createTenantPVC(tenantName, storageClass, size string) error {
-	// parse quantity
-	resources := make(map[core_v1.ResourceName]resource.Quantity)
-	quantity, err := resource.ParseQuantity(size)
-	if err != nil {
-		log.Errorf("Parse Quantity %s error %v", size, err)
-		return err
-	}
-	resources[core_v1.ResourceStorage] = quantity
-
-	// create pvc
-	pvcName := common.TenantPVC(tenantName)
-	namespace := common.TenantNamespace(tenantName)
-	volume := &core_v1.PersistentVolumeClaim{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      pvcName,
-			Namespace: namespace,
-		},
-		Spec: core_v1.PersistentVolumeClaimSpec{
-			AccessModes: []core_v1.PersistentVolumeAccessMode{core_v1.ReadWriteMany},
-			Resources: core_v1.ResourceRequirements{
-				Limits:   resources,
-				Requests: resources,
-			},
-		},
-	}
-
-	if storageClass != "" {
-		volume.Spec.StorageClassName = &storageClass
-	}
-
-	_, err = handler.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Create(volume)
-	if err != nil {
-		log.Errorf("Create persistent volume claim %s error %v", pvcName, err)
-		return err
-	}
-
-	return nil
-}
-
-// ParseResourceList parse resouces from 'map[string]string' to 'ResourceList'
-func ParseResourceList(resources map[core_v1.ResourceName]string) (map[core_v1.ResourceName]resource.Quantity, error) {
-	rl := make(map[core_v1.ResourceName]resource.Quantity)
-
-	for r, q := range resources {
-		quantity, err := resource.ParseQuantity(q)
-		if err != nil {
-			log.Errorf("Parse %s Quantity %s error %v", r, q, err)
-			return nil, err
-		}
-		rl[r] = quantity
-	}
-
-	return rl, nil
 }

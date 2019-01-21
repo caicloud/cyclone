@@ -18,6 +18,12 @@ const (
 	// LabelIntegrationType is the label key used to indicate type of integration
 	LabelIntegrationType = "cyclone.io/integration-type"
 
+	// LabelClusterOn is the label key used to indicate the cluster is a worker for the tenant
+	LabelClusterOn = "cyclone.io/cluster-worker"
+
+	// LabelClusterOnValue is the label value used to indicate the cluster is a worker for the tenant
+	LabelClusterOnValue = "true"
+
 	// LabelOwner is the label key used to indicate namespaces created by cyclone
 	LabelOwner = "cyclone.io/owner"
 
@@ -35,4 +41,7 @@ const (
 
 	// SecretKeyIntegration is the key of the secret dada to indicate its value is about integration information.
 	SecretKeyIntegration = "integration"
+
+	// ControlClusterName is the name of control cluster
+	ControlClusterName = "control-cluster"
 )
