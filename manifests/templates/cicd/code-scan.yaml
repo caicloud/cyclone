@@ -3,11 +3,11 @@
   metadata:
     name: sonarqube-scan-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: code-scan
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: code-scan
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Source code statistically scan with SonarQube
   spec:
     pod:
@@ -30,8 +30,8 @@
         - name: image
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"

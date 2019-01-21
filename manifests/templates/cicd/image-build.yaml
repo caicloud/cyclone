@@ -3,11 +3,11 @@
   metadata:
     name: image-build-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: image-build
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: image-build
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Build docker image with Dockerfile and build context
   spec:
     pod:
@@ -32,8 +32,8 @@
         - name: image
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"

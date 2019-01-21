@@ -1,19 +1,24 @@
 package templates
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 
 	"github.com/caicloud/nirvana/log"
-	"gopkg.in/yaml.v2"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
+
+// DefaultTemplatesPath is default path of stage templates
+const DefaultTemplatesPath = "/root/templates"
 
 // StageTemplatesLoader loads stage templates from manifest files.
 type StageTemplatesLoader struct {
-	// TemplatesDir is path of the folder holding templates manifest files
+	// TemplatesDir is path of the folder holding templates manifest files.
+	// If not set, default value DefaultTemplatesPath will be used.
 	TemplatesDir string
 }
 
@@ -23,7 +28,7 @@ type StageTemplatesLoader struct {
 func (l *StageTemplatesLoader) LoadStageTemplates(scene string) ([]*v1alpha1.Stage, error) {
 	templatesPath := l.TemplatesDir
 	if l.TemplatesDir == "" {
-		templatesPath = "/root/templates"
+		templatesPath = DefaultTemplatesPath
 	}
 	if scene != "" {
 		templatesPath = templatesPath + string(os.PathSeparator) + scene
@@ -38,16 +43,17 @@ func (l *StageTemplatesLoader) LoadStageTemplates(scene string) ([]*v1alpha1.Sta
 	for _, f := range files {
 		data, err := ioutil.ReadFile(f)
 		if err != nil {
-			log.Errorf("Load templates %s failed: error", f, err)
+			log.Errorf("Load templates %s failed: %v", f, err)
 			continue
 		}
 
 		templates := make([]*v1alpha1.Stage, 0)
-		err = yaml.Unmarshal(data, &templates)
+		jsonData, err := yaml.ToJSON(data)
 		if err != nil {
-			log.Errorf("Unmarshal yaml template file %s error: %v", f, err)
+			log.Errorf("Convert template %s from YAML to JSON error: %v", f, err)
 			continue
 		}
+		json.Unmarshal(jsonData, &templates)
 
 		results = append(results, templates...)
 	}

@@ -3,11 +3,11 @@
   metadata:
     name: build-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: build
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Build source code
   spec:
     pod:
@@ -22,24 +22,24 @@
       outputs:
         artifacts:
         - name: bin
-          path: {{ output-artifact-path }}
+          path: "{{ output-artifact-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: golang-build-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: build
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Build Golang source code
   spec:
     pod:
@@ -59,24 +59,24 @@
       outputs:
         artifacts:
         - name: bin
-          path: {{ output-artifact-path }}
+          path: "{{ output-artifact-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: maven-build-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: build
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Build Java source code with Maven
   spec:
     pod:
@@ -96,24 +96,24 @@
       outputs:
         artifacts:
         - name: jar
-          path: {{ output-artifact-path }}
+          path: "{{ output-artifact-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: gradle-build-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: build
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Build Java source code with Gradle
   spec:
     pod:
@@ -133,11 +133,11 @@
       outputs:
         artifacts:
         - name: jar
-          path: {{ output-artifact-path }}
+          path: "{{ output-artifact-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"

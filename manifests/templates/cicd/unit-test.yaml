@@ -3,11 +3,11 @@
   metadata:
     name: unit-test-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: unit-test
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: unit-test
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Unit test for the project
   spec:
     pod:
@@ -22,24 +22,24 @@
       outputs:
         resources:
         - name: test-result
-          path: {{ test-result-path }}
+          path: "{{ test-result-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: golang-unit-test-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: unit-test
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: unit-test
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Unit test for Golang project
   spec:
     pod:
@@ -74,24 +74,24 @@
       outputs:
         resources:
         - name: test-result
-          path: {{ test-result-path }}
+          path: "{{ test-result-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: maven-unit-test-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: unit-test
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: unit-test
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Unit test for Java project with Maven
   spec:
     pod:
@@ -111,24 +111,24 @@
       outputs:
         resources:
         - name: test-result
-          path: {{ test-result-path }}
+          path: "{{ test-result-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
   kind: Stage
   metadata:
     name: gradle-unit-test-template
     labels:
-      cyclone.io/stage-template: true
-      cyclone.io/stage-template/scene: cicd
-      cyclone.io/stage-template/kind: unit-test
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: unit-test
     annotations:
-      cyclone.io/stage-template/description: >
+      cyclone.io/description: >
         Unit test for Java project with Gradle
   spec:
     pod:
@@ -148,11 +148,11 @@
       outputs:
         resources:
         - name: test-result
-          path: {{ test-result-path }}
+          path: "{{ test-result-path }}"
       spec:
         containers:
-        - image: {{ image }}
+        - image: "{{ image }}"
           command:
           - /bin/sh
           - -c
-          - {{ cmd }}
+          - "{{ cmd }}"
