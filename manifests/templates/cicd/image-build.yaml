@@ -1,0 +1,39 @@
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: image-build-template
+    labels:
+      cyclone.io/stage-template: true
+      cyclone.io/stage-template/scene: cicd
+      cyclone.io/stage-template/kind: image-build
+    annotations:
+      cyclone.io/stage-template/description: >
+        Build docker image with Dockerfile and build context
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image-name
+        - name: build-context
+          value: .
+        - name: dockerfile-path
+          value: ./Dockerfile
+        - name: image
+          value: docker:18.03.1-ce-dind
+        - name: cmd
+          value: |
+            cd /workspace/<repo-name> &&
+            docker build -f {{ dockerfile-path }} -t {{ image-name }} {{ build-context }}
+        resources:
+        - name: code
+          path: /workspace
+      outputs:
+        resources:
+        - name: image
+      spec:
+        containers:
+        - image: {{ image }}
+          command:
+          - /bin/sh
+          - -c
+          - {{ cmd }}
