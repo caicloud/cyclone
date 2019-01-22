@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -85,6 +86,11 @@ func CreateNamespace(name string, client *kubernetes.Clientset) error {
 
 	_, err = client.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Info("namespace %s already exists", name)
+			return nil
+		}
+
 		log.Errorf("Create namespace %s error %v", name, err)
 		return err
 	}
@@ -92,12 +98,12 @@ func CreateNamespace(name string, client *kubernetes.Clientset) error {
 	return nil
 }
 
-func buildNamespace(name string) (*core_v1.Namespace, error) {
+func buildNamespace(tenant string) (*core_v1.Namespace, error) {
 	// set labels
 	label := make(map[string]string)
 	label[LabelOwner] = OwnerCyclone
 
-	nsname := TenantNamespace(name)
+	nsname := TenantNamespace(tenant)
 	namespace := &core_v1.Namespace{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:   nsname,

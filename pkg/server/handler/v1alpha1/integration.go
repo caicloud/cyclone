@@ -70,7 +70,7 @@ func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) 
 }
 
 func createIntegration(tenant string, in *api.Integration) (*api.Integration, error) {
-	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.Worker {
+	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// open cluster for the tenant, create namespace and pvc
 		err := OpenClusterForTenant(in.Spec.Cluster, tenant)
 		if err != nil {
@@ -96,7 +96,7 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 // OpenClusterForTenant opens cluster to run workload.
 func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client for tenant %s error %v", tenantName, err)
 		return err
@@ -161,7 +161,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 // It is dangerous since all pvc data will lost.
 func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) error {
 	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client error %v", err)
 		return err
@@ -204,7 +204,7 @@ func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 	labels := make(map[string]string)
 	labels[common.LabelIntegrationType] = string(in.Spec.Type)
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
-		worker := in.Spec.Cluster.Worker
+		worker := in.Spec.Cluster.IsWorkerCluster
 		if worker {
 			labels[common.LabelClusterOn] = common.LabelClusterOnValue
 		}
@@ -255,7 +255,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 
 		// turn on worker cluster
-		if !oldIn.Spec.Cluster.Worker && in.Spec.Cluster.Worker {
+		if !oldIn.Spec.Cluster.IsWorkerCluster && in.Spec.Cluster.IsWorkerCluster {
 			// open cluster for the tenant, create namespace and pvc
 			err := OpenClusterForTenant(in.Spec.Cluster, tenant)
 			if err != nil {
@@ -264,7 +264,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 
 		// turn on worker cluster
-		if oldIn.Spec.Cluster.Worker && !in.Spec.Cluster.Worker {
+		if oldIn.Spec.Cluster.IsWorkerCluster && !in.Spec.Cluster.IsWorkerCluster {
 			// close cluster for the tenant, delete namespace
 			err := CloseClusterForTenant(in.Spec.Cluster, tenant)
 			if err != nil {
@@ -273,7 +273,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 
 		// TODO(zhujian7): namespace or pvc changed
-		if oldIn.Spec.Cluster.Worker && in.Spec.Cluster.Worker {
+		if oldIn.Spec.Cluster.IsWorkerCluster && in.Spec.Cluster.IsWorkerCluster {
 		}
 	}
 

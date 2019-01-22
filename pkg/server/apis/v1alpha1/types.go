@@ -29,7 +29,7 @@ type TenantSpec struct {
 	PersistentVolumeClaim PersistentVolumeClaim `json:"persistentVolumeClaim"`
 
 	// ResourceQuota describes the resource quota of the namespace,
-	// eg map[string]string{"cpu": "2Gi", "memory": "512Mi"}
+	// eg map[core_v1.ResourceName]string{"cpu": "2Gi", "memory": "512Mi"}
 	ResourceQuota map[core_v1.ResourceName]string `json:"resourceQuota"`
 }
 
@@ -40,7 +40,7 @@ type PersistentVolumeClaim struct {
 	// Name string `json:"name"`
 
 	// StorageClass represents the strorageclass used to create pvc
-	StorageClass string `json:"storageclass"`
+	StorageClass string `json:"storageClass"`
 
 	// Size represents the capacity of the pvc, unit supports 'Gi' or 'Mi'
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
@@ -67,6 +67,8 @@ const (
 	SCM IntegrationType = "SCM"
 	// Cluster is the Cluster integration
 	Cluster IntegrationType = "Cluster"
+	// GeneralIntegration is the General integration
+	GeneralIntegration IntegrationType = "General"
 )
 
 // IntegrationSpec contains the integration spec information
@@ -93,6 +95,17 @@ type IntegrationSource struct {
 	// Users can define which cluster will be used to run workload,
 	// and clusters integrated here can be used to deploy application in CD tasks.
 	Cluster *ClusterSource `json:"cluster"`
+
+	// General contains parameters defined by users.
+	General []ParameterItem `json:"general"`
+}
+
+// ParameterItem defines a parameter
+type ParameterItem struct {
+	// Name of the parameter
+	Name string `json:"name"`
+	// Value of the parameter
+	Value string `json:"value"`
 }
 
 // SonarQubeSource represents a code scanning tool for CI.
@@ -143,19 +156,19 @@ type SCMSource struct {
 type ClusterSource struct {
 	// Credential is the credential info of the cluster
 	Credential ClusterCredential `json:"credential"`
-	// InCluster describes whether the cluster is the control cluster itself
-	InCluster bool `json:"inCluster,omitempty"`
-	// Worker defines whether this cluster can be used to perform workload.
+	// IsControlCluster describes whether the cluster is the control cluster itself
+	IsControlCluster bool `json:"isControlCluster,omitempty"`
+	// IsWorkerCluster defines whether this cluster can be used to run workflow.
 	// True, will create namespace and pvc associated with tenant in the cluster.
 	// False, will delete namespace and pvc associated with tenant in the cluster.
-	Worker bool `json:"worker"`
-	// Namespace is the namespace where workload will run in. and if this is not nil, cyclone will
-	// use this namespace and not to create another one.
-	// Useful when 'Worker' is True.
+	IsWorkerCluster bool `json:"isWorkerCluster"`
+	// Namespace is the namespace where workflow will run in.
+	// If set, cyclone will use it directly, otherwise a new one will be created.
+	// It's used when 'IsWorkerCluster' is True.
 	Namespace string `json:"namespace"`
 	// PVC is the pvc name specified by user, and if this is not nil, cyclone will
 	// use this pvc and not to create another one.
-	// Useful when 'Worker' is True.
+	// It's used when 'IsWorkerCluster' is True.
 	PVC string `json:"pvc"`
 }
 

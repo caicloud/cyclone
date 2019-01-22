@@ -97,7 +97,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
-			client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Metadata.Name, err)
 				continue
@@ -127,7 +127,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
-			client, err := common.NewClusterClient(&cluster.Credential, cluster.InCluster)
+			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Metadata.Name, err)
 				continue
@@ -205,9 +205,9 @@ func createControlClusterIntegration(tenant string) error {
 			Type: api.Cluster,
 			IntegrationSource: api.IntegrationSource{
 				Cluster: &api.ClusterSource{
-					InCluster: true,
-					Worker:    true,
-					Namespace: common.TenantNamespace(tenant),
+					IsControlCluster: true,
+					IsWorkerCluster:  true,
+					Namespace:        common.TenantNamespace(tenant),
 				},
 			},
 		},
