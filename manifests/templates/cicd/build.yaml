@@ -28,6 +28,7 @@
         - image: "{{ image }}"
           command:
           - /bin/sh
+          - -e
           - -c
           - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
@@ -65,6 +66,7 @@
         - image: "{{ image }}"
           command:
           - /bin/sh
+          - -e
           - -c
           - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
@@ -86,10 +88,10 @@
           value: maven:3.5.3-jdk-8-alpine
         - name: cmd
           value: |
-            cd /workspace/<repo-name> &&
+            cd /workspace
             mvn clean package -Dmaven.test.skip
         - name: output-artifact-path
-          value: /workspace/<repo-name>/target/<app>.jar
+          value: /workspace/target/<app>.jar
         resources:
         - name: code
           path: /workspace
@@ -102,6 +104,7 @@
         - image: "{{ image }}"
           command:
           - /bin/sh
+          - -e
           - -c
           - "{{ cmd }}"
 - apiVersion: cyclone.io/v1alpha1
@@ -123,10 +126,10 @@
           value: gradle:3.4.1
         - name: cmd
           value: |
-            cd /workspace/<repo-name> &&
+            cd /workspace
             gradle build -x test
         - name: output-artifact-path
-          value: /workspace/<repo-name>/build/<app>.jar
+          value: /workspace/build/<app>.jar
         resources:
         - name: code
           path: /workspace
@@ -139,5 +142,6 @@
         - image: "{{ image }}"
           command:
           - /bin/sh
+          - -e
           - -c
           - "{{ cmd }}"

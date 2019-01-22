@@ -22,7 +22,7 @@
           value: docker:18.03.1-ce-dind
         - name: cmd
           value: |
-            cd /workspace/<repo-name> &&
+            cd /workspace
             docker build -f {{ dockerfile-path }} -t {{ image-name }} {{ build-context }}
         resources:
         - name: code
@@ -35,5 +35,6 @@
         - image: "{{ image }}"
           command:
           - /bin/sh
+          - -e
           - -c
           - "{{ cmd }}"
