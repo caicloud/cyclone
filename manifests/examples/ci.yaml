@@ -16,11 +16,11 @@ spec:
   type: Git
   persistent:
     pvc: cyclone-server-server-v1-0-cyclone-data
-    path: workflowruns/resources
+    path: workflowruns/resources/test-git
     pullPolicy: Always
   parameters:
   - name: GIT_URL
-    value: http://192.168.21.100:10081/root/test.git
+    value: https://github.com/caicloud/cyclone.git
   - name: GIT_REVISION
     value: master
 

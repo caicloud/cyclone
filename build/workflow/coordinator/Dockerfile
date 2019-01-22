@@ -1,5 +1,7 @@
 FROM alpine:3.8
 
+MAINTAINER zhujian@caicloud.io
+
 WORKDIR /workspace
 
 RUN apk update && apk add ca-certificates &&\

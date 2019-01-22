@@ -37,8 +37,13 @@ const (
 	// CoordinatorSidecarName defines name of coordinator container.
 	CoordinatorSidecarName = CycloneSidecarPrefix + "coordinator"
 
-	// ResolverDefaultDataPath is paths in resource resolver containers.
-	// Default data path in resource resolver container.
+	// ResolverDefaultWorkspacePath is workspace path in resource resolver containers.
+	// Following files or directories will be in this workspace.
+	// - ${WORKFLOWRUN_NAME}-pulling.lock File lock determine which stage to pull the resource
+	// - notify Directory contains notify file indicating readiness of output resource data.
+	// - data Directory contains the data of the resource. For example, source code.
+	ResolverDefaultWorkspacePath = "/workspace"
+	// ResolverDefaultDataPath is data path in resource resolver containers.
 	ResolverDefaultDataPath = "/workspace/data"
 	// ResolverNotifyDir is name of the notify directory where coordinator would create ok file there.
 	ResolverNotifyDir = "notify"
