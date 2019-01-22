@@ -3,6 +3,7 @@ package workflowrun
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -298,7 +299,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      volumeName,
-					MountPath: common.ResolverDefaultDataPath,
+					MountPath: common.ResolverDefaultWorkspacePath,
 					SubPath:   subPath,
 				},
 			},
@@ -308,12 +309,19 @@ func (m *PodBuilder) ResolveInputResources() error {
 		// Mount the resource to all workload containers.
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
+			tmpSubPath := subPath
+			if tmpSubPath == "" {
+				tmpSubPath = "data"
+			} else {
+				tmpSubPath = tmpSubPath + string(os.PathSeparator) + "data"
+			}
+
 			// We only mount resource to workload containers, sidecars are excluded.
 			if common.OnlyWorkload(c.Name) {
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      volumeName,
 					MountPath: r.Path,
-					SubPath:   subPath,
+					SubPath:   tmpSubPath,
 				})
 			}
 			containers = append(containers, c)

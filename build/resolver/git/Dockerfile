@@ -1,11 +1,12 @@
 FROM alpine/git:1.0.4
 
+MAINTAINER chende@caicloud.io
+
 ENV WORKDIR /workspace
 WORKDIR $WORKDIR
 
-RUN mkdir -p /workspace/data
-COPY ./build/resolver/git/entrypoint.sh /workspace
+COPY ./build/resolver/git/entrypoint.sh /
 
-ENTRYPOINT ["/workspace/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["help"]

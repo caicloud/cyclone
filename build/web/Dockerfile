@@ -8,6 +8,7 @@ COPY ./web/ ./
 RUN npm run build
 
 FROM nginx:1.14-alpine
+MAINTAINER chende@caicloud.io
 COPY ./build/web/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build-deps /usr/src/app/build /usr/share/nginx/html
 EXPOSE 80

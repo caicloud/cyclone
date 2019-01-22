@@ -1,5 +1,7 @@
 FROM alpine:3.8
 
+MAINTAINER chende@caicloud.io
+
 ENV WORKDIR /workspace
 ENV DOCKER_VERSION 18.03.1-ce
 WORKDIR $WORKDIR
@@ -13,8 +15,8 @@ RUN apk add --no-cache curl && \
     rm /tmp/docker-${DOCKER_VERSION}.tgz
 
 
-COPY ./build/resolver/image/entrypoint.sh /workspace
+COPY ./build/resolver/image/entrypoint.sh /
 
-ENTRYPOINT ["/workspace/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["help"]

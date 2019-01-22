@@ -383,7 +383,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 	assert.Equal(suite.T(), corev1.VolumeMount{
 		Name:      common.InputResourceVolumeName("git-persistent"),
 		MountPath: "/resource",
-		SubPath:   "/persistent",
+		SubPath:   "/persistent/data",
 	}, resourceMount)
 }
 
