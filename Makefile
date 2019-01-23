@@ -40,7 +40,7 @@ IMAGE_PREFIX ?= $(strip cyclone-)
 IMAGE_SUFFIX ?= $(strip )
 
 # Container registries.
-REGISTRIES ?= test.caicloudprivatetest.com/release
+REGISTRIES ?= docker.io/library
 
 #
 # These variables should not need tweaking.
