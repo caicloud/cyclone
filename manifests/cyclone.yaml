@@ -142,6 +142,9 @@ spec:
       - name: controller
         image: test.caicloudprivatetest.com/release/cyclone-workflow-controller:v0.9.2
         imagePullPolicy: IfNotPresent
+        env:
+        - name: DEVELOP_MODE
+          value: "true"
         volumeMounts:
         - mountPath: /etc/localtime
           name: local-timezone

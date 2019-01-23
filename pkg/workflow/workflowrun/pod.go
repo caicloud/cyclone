@@ -303,6 +303,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 					SubPath:   subPath,
 				},
 			},
+			ImagePullPolicy: controller.ImagePullPolicy(),
 		}
 		m.pod.Spec.InitContainers = append(m.pod.Spec.InitContainers, container)
 
@@ -385,7 +386,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 					SubPath:   common.ResolverNotifyDir,
 				},
 			},
-			ImagePullPolicy: corev1.PullIfNotPresent,
+			ImagePullPolicy: controller.ImagePullPolicy(),
 		}
 
 		if resource.Spec.Persistent != nil {
@@ -556,7 +557,7 @@ func (m *PodBuilder) AddCoordinator() error {
 				MountPath: common.CoordinatorResolverPath,
 			},
 		},
-		ImagePullPolicy: corev1.PullIfNotPresent,
+		ImagePullPolicy: controller.ImagePullPolicy(),
 	}
 	if controller.Config.PVC != "" {
 		coordinator.VolumeMounts = append(coordinator.VolumeMounts, corev1.VolumeMount{
