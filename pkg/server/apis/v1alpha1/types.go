@@ -29,7 +29,7 @@ type TenantSpec struct {
 	PersistentVolumeClaim PersistentVolumeClaim `json:"persistentVolumeClaim"`
 
 	// ResourceQuota describes the resource quota of the namespace,
-	// eg map[core_v1.ResourceName]string{"cpu": "2Gi", "memory": "512Mi"}
+	// eg map[core_v1.ResourceName]string{"cpu": "2", "memory": "4Gi"}
 	ResourceQuota map[core_v1.ResourceName]string `json:"resourceQuota"`
 }
 
