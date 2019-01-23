@@ -161,8 +161,10 @@ func DeleteTenant(ctx context.Context, name string) error {
 	return nil
 }
 
-// CreateAdminTenant creates cyclone admin tenant
-// First create namespace, then create pvc
+// CreateAdminTenant creates cyclone admin tenant and initialize the tenant:
+// - Create namespace
+// - Create PVC
+// - Load and create stage templates
 func CreateAdminTenant() error {
 	ns := common.TenantNamespace(common.AdminTenant)
 	_, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
@@ -183,10 +185,10 @@ func CreateAdminTenant() error {
 			Name: common.AdminTenant,
 		},
 		Spec: api.TenantSpec{
-			// TODO(zhujian7), read from configmap
+			// TODO(zhujian7) Use default StorageClass temporarily.
+			// Make it configurable
 			PersistentVolumeClaim: api.PersistentVolumeClaim{
-				StorageClass: "", // use default storageclass
-				Size:         common.DefaultPVCSize,
+				Size: common.DefaultPVCSize,
 			},
 			ResourceQuota: quota,
 		},

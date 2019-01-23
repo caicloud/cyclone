@@ -1,0 +1,147 @@
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: build-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
+    annotations:
+      cyclone.io/description: >
+        Build source code
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+        - name: cmd
+        - name: output-artifact-path
+        resources:
+        - name: code
+          path: /workspace
+      outputs:
+        artifacts:
+        - name: bin
+          path: "{{ output-artifact-path }}"
+      spec:
+        containers:
+        - image: "{{ image }}"
+          command:
+          - /bin/sh
+          - -e
+          - -c
+          - "{{ cmd }}"
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: golang-build-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
+    annotations:
+      cyclone.io/description: >
+        Build Golang source code
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+          value: golang:1.10-alpine3.8
+        - name: cmd
+          value: |
+            # Replace <main-entrypoint-path> with the main package path, for example 'cyclone/cmd/workflow/controller'.
+            go build -o /go/bin/app <main-entrypoint-path>
+        - name: output-artifact-path
+          value: /go/bin/app
+        resources:
+        - name: code
+          path: /go/src
+      outputs:
+        artifacts:
+        - name: bin
+          path: "{{ output-artifact-path }}"
+      spec:
+        containers:
+        - image: "{{ image }}"
+          command:
+          - /bin/sh
+          - -e
+          - -c
+          - "{{ cmd }}"
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: maven-build-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
+    annotations:
+      cyclone.io/description: >
+        Build Java source code with Maven
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+          value: maven:3.5.3-jdk-8-alpine
+        - name: cmd
+          value: |
+            cd /workspace
+            mvn clean package -Dmaven.test.skip
+        - name: output-artifact-path
+          value: /workspace/target/<app>.jar
+        resources:
+        - name: code
+          path: /workspace
+      outputs:
+        artifacts:
+        - name: jar
+          path: "{{ output-artifact-path }}"
+      spec:
+        containers:
+        - image: "{{ image }}"
+          command:
+          - /bin/sh
+          - -e
+          - -c
+          - "{{ cmd }}"
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: gradle-build-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: build
+    annotations:
+      cyclone.io/description: >
+        Build Java source code with Gradle
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+          value: gradle:3.4.1
+        - name: cmd
+          value: |
+            cd /workspace
+            gradle build -x test
+        - name: output-artifact-path
+          value: /workspace/build/<app>.jar
+        resources:
+        - name: code
+          path: /workspace
+      outputs:
+        artifacts:
+        - name: jar
+          path: "{{ output-artifact-path }}"
+      spec:
+        containers:
+        - image: "{{ image }}"
+          command:
+          - /bin/sh
+          - -e
+          - -c
+          - "{{ cmd }}"

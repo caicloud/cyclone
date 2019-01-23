@@ -8,8 +8,9 @@ RUN apk update && apk add ca-certificates && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
-# Copy cyclone
+# Copy cyclone server and stage templates
 COPY bin/server /cyclone-server
+COPY manifests/templates /root/templates
 
 EXPOSE 7099
 

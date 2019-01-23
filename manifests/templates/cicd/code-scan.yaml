@@ -1,0 +1,38 @@
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: sonarqube-scan-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: code-scan
+    annotations:
+      cyclone.io/description: >
+        Source code statistically scan with SonarQube
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: sonarqube
+        - name: scan-source
+          value: .
+        - name: image
+          value: emeraldsquad/sonar-scanner:1.0.0
+        - name: cmd
+          value: |
+            cd /workspace
+            sonar-scanner -Dsonar.projectName=<project-name> -Dsonar.projectKey=<project-key> -Dsonar.sources={{ scan-source }}
+        resources:
+        - name: code
+          path: /workspace
+      outputs:
+        resources:
+        - name: image
+      spec:
+        containers:
+        - image: "{{ image }}"
+          command:
+          - /bin/sh
+          - -e
+          - -c
+          - "{{ cmd }}"
