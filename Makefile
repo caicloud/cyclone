@@ -22,7 +22,7 @@
 # Tweak the variables based on your project.
 #
 
-# Current version of the project.
+# Current version of the project.x`
 VERSION ?= v0.9.2
 
 # This repo's root import path (under GOPATH).

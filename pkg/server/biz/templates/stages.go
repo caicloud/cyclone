@@ -12,8 +12,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-// DefaultTemplatesPath is default path of stage templates
-const DefaultTemplatesPath = "/root/templates"
+const (
+	// TemplatesPathEnvName is templates path environment name
+	TemplatesPathEnvName = "TEMPLATES_PATH"
+
+	// DefaultTemplatesPath is default path of stage templates
+	DefaultTemplatesPath = "/root/templates"
+)
 
 // StageTemplatesLoader loads stage templates from manifest files.
 type StageTemplatesLoader struct {
@@ -33,6 +38,7 @@ func (l *StageTemplatesLoader) LoadStageTemplates(scene string) ([]*v1alpha1.Sta
 	if scene != "" {
 		templatesPath = templatesPath + string(os.PathSeparator) + scene
 	}
+	log.Infof("Load stage templates from '%s'", templatesPath)
 
 	files, err := utils.ListAllFiles(templatesPath)
 	if err != nil {

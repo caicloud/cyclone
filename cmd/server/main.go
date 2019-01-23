@@ -27,6 +27,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
 
+	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
 	"github.com/caicloud/nirvana"
 	nconfig "github.com/caicloud/nirvana/config"
 	"github.com/caicloud/nirvana/log"
@@ -85,7 +86,7 @@ func initialize(opts *APIServerOptions) {
 	if err != nil {
 		log.Fatalf("Create default tenant cyclone error %v", err)
 	}
-	return
+	tenants.InitStageTemplates("")
 }
 
 func main() {
