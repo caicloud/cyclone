@@ -1,7 +1,7 @@
-import { observable, useStrict, action } from 'mobx';
+import { observable, action } from 'mobx';
 import fetchApi from '../api/index.js';
 
-useStrict(true);
+//useStrict(true);
 
 class StageTemplate {
   @observable templateList = [];
