@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,11 @@ import (
 )
 
 const (
+	// DevModeEnvName determines whether workflow controller is in development mode.
+	// In development mode, resource resolver containers, coordinator containers will
+	// have image pull policy being 'Always', otherwise it's 'IfNotPresent'.
+	DevModeEnvName = "DEVELOP_MODE"
+
 	// ConfigFileKey is key of config file in ConfigMap
 	ConfigFileKey = "workflow-controller.json"
 
@@ -122,4 +128,13 @@ func validate(config *WorkflowControllerConfig) bool {
 	}
 
 	return true
+}
+
+// ImagePullPolicy determines image pull policy based on environment variable DEVELOP_MODE
+// This pull policy will be used in image resolver containers and coordinator containers.
+func ImagePullPolicy() corev1.PullPolicy {
+	if os.Getenv(DevModeEnvName) == "true" {
+		return corev1.PullAlways
+	}
+	return corev1.PullIfNotPresent
 }
