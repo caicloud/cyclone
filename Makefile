@@ -106,7 +106,7 @@ build-linux:
 	      -e GOARCH=amd64                                                              \
 	      -e GOPATH=/go                                                                \
 	      -e CGO_ENABLED=0                                                             \
-	        $${registry}/golang:1.10-alpine3.8                                         \
+	        golang:1.10-alpine3.8                                                      \
 	          go build -i -v -o $(OUTPUT_DIR)/$${target}                               \
 	            -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)              \
 	            -X $(ROOT)/pkg/version.COMMIT=$(COMMIT)                                \
@@ -120,7 +120,7 @@ build-web:
 	  docker run --rm                                                                  \
 	    -v $(PWD)/web/:/app                                                            \
 	    -w /app                                                                        \
-	      $${registry}/node:8.9-alpine                                                 \
+	      node:8.9-alpine                                                              \
 	        sh -c '                                                                    \
 	          yarn;                                                                    \
 	          yarn build';                                                             \
@@ -151,10 +151,10 @@ container-local: build-local
 	done
 
 push: container
-	@for target in $(TARGETS); do                                                      \
+	@for image in $(IMAGES); do                                                        \
 	  for registry in $(REGISTRIES); do                                                \
-	    image=$(IMAGE_PREFIX)$${target}$(IMAGE_SUFFIX);                                \
-	    docker push $${registry}/$${image}:$(VERSION);                                 \
+	    imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                        \
+	    docker push $${registry}/$${imageName}:$(VERSION);                             \
 	  done                                                                             \
 	done
 
@@ -169,11 +169,21 @@ swagger:
 	  -e GOARCH=amd64                                                                 \
 	  -e GOPATH=/go                                                                   \
 	  -e CGO_ENABLED=0                                                                \
-	  $(REGISTRIES)/golang:1.10-alpine3.8                                             \
+	  golang:1.10-alpine3.8                                                           \
 	  sh -c "apk add git &&                                                           \
 	  go get -u github.com/caicloud/nirvana/cmd/nirvana &&                            \
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
 	  nirvana api --output web/public pkg/server/apis"
+
+deploy:
+	sed -e "s/__REGISTRY__/$${REGISTRIES/\//\\/}/g" -e "s/__VERSION__/${VERSION}/g" manifests/cyclone.yaml.template > .cyclone.yaml
+	kubectl create -f .cyclone.yaml
+	rm -rf .cyclone.yaml
+
+undeploy:
+	sed -e "s/__REGISTRY__/$${REGISTRIES/\//\\/}/g" -e "s/__VERSION__/${VERSION}/g" manifests/cyclone.yaml.template > .cyclone.yaml
+	kubectl delete -f .cyclone.yaml
+	rm -rf .cyclone.yaml
 
 .PHONY: clean
 clean:

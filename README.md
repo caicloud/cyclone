@@ -33,16 +33,16 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 
 ## Quick Start
 
-Build images
+Build and push images. `<registry>/<project>` specifies registry and project where to push your images, for example, `test.caicloudprivatetest.com/release`.
 
 ```bash
-$ make container
+$ make push REGISTRIES=<registry>/<project>
 ```
 
-Deploy to Kubernetes cluster
+Deploy to Kubernetes cluster, please make sure `kubectl` is installed and appropriately configured.
 
 ```bash
-$ kubectl create -f manifests/cyclone.yaml
+$ make deploy REGISTRIES=<registry>/<project>
 ```
 
 ## Community
