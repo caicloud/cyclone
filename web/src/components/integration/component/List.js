@@ -14,6 +14,7 @@ class List extends React.Component {
   state = { visible: false };
   componentDidMount() {
     this.props.integration.getIntegrationList();
+    // this.props.integration.getResources();
   }
   addDataSource = () => {
     this.setState({

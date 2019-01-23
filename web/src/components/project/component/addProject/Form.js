@@ -67,7 +67,23 @@ export default withFormik({
 
     return errors;
   },
+  mapPropsToValues: () => {
+    return {
+      name: '',
+      quota: {
+        limits: {
+          cpu: '',
+          memory: '',
+        },
+        requests: {
+          cpu: '',
+          memory: '',
+        },
+      },
+    };
+  },
   handleSubmit: values => {
+    console.log('values', values);
     // TODO(qme): handle submit
   },
   displayName: 'addProject', // a unique identifier for this form

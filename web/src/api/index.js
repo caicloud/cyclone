@@ -17,6 +17,11 @@ const fetchApi = {
       return data;
     });
   },
+  fetchResources() {
+    return http.get('/resources').then(data => {
+      return data;
+    });
+  },
 };
 
 export default fetchApi;
