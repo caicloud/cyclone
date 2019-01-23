@@ -12,6 +12,11 @@ const fetchApi = {
       return data;
     });
   },
+  fetchIntegrationList(query) {
+    return http.get(`/integrations`, query).then(data => {
+      return data;
+    });
+  },
 };
 
 export default fetchApi;

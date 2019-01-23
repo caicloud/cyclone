@@ -3,6 +3,7 @@ import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import IntegrationForm from './DataForm';
 import PropTypes from 'prop-types';
+import { IntegrationTypeMap } from '@/components/public/consts/const.js';
 
 @inject('integration')
 @observer
@@ -35,18 +36,23 @@ class List extends React.Component {
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'name',
+        dataIndex: 'metadata.name',
         key: 'name',
       },
       {
         title: intl.get('integration.type'),
-        dataIndex: 'type',
+        dataIndex: 'spec.type',
         key: 'type',
       },
       {
         title: intl.get('integration.creationTime'),
-        dataIndex: 'time',
-        key: 'time',
+        dataIndex: 'spec',
+        key: 'spec',
+        render: spec => (
+          <div>
+            {_.get(spec, `${IntegrationTypeMap[spec.type]}.creationTime`)}
+          </div>
+        ),
       },
     ];
     return (

@@ -16,6 +16,7 @@
     "react/prop-types": "warn",
     "prettier/prettier": "error",
     "no-useless-escape": "off",
-    "no-console": "warn"
+    "no-console": "warn",
+    "react/display-name": [2]
   }
 }
