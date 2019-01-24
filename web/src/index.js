@@ -7,8 +7,8 @@ import { Provider } from 'mobx-react';
 import { LocaleProvider } from 'antd';
 import zhCN from 'antd/lib/locale-provider/zh_CN';
 import enUS from 'antd/lib/locale-provider/en_US';
-import _zhCN from './locale/zh-CN.json';
-import _enUS from './locale/en-US.json';
+import _zhCN from './locale/zh-CN.yaml';
+import _enUS from './locale/en-US.yaml';
 import registerServiceWorker from './registerServiceWorker';
 import { BrowserRouter, Switch, Route } from 'react-router-dom';
 

@@ -1,0 +1,57 @@
+name: 名称
+action: 操作
+creationTime: 创建时间
+description: 描述
+operation:
+  add: 新增
+  delete: 删除
+  update: 更新
+  modify: 修改
+  execute: 执行
+  confirm: 确定
+  cancel: 取消
+sideNav:
+  overview: 总览
+  project: 项目
+  resource: 资源
+  stageTemplate: 模板
+  workflow: 流水线
+  integration: 集成中心
+workflow:
+  recentVersion: 最近版本
+  creator: 创建者
+  creationTime: 创建时间
+integration:
+  name: 名称
+  desc: 描述
+  type: 类型
+  creationTime: 创建时间
+  datasource: 数据源
+  addexternalsystem: 新增外部系统
+  serviceAddress: 服务地址
+  dataform:
+    dockerregistry: 镜像仓库
+    registryaddress: 仓库地址
+    confirm: 确定
+    cancel: 取消
+    username: 用户名
+    pwd: 密码
+    datasourcetype: 请选择资源类型
+project:
+  externalSystem: 外部系统
+allocation:
+  quotaConfig: 资源配置
+  recommend: 推荐配额
+  custom: 自定义
+  cpuRequest: CPU 请求
+  cpuLimit: CPU 上限
+  memoryRequest: 内存请求
+  memoryLimit: 内存上限
+  basic: 基础配置
+  middle: 中等配置
+  high: 高级配置
+validate:
+  required: 必填
+  positiveOrFloat: 必须是 Number, 允许两位小数
+  quota:
+    exceedLimit: 请求不能超过上限
