@@ -1,8 +1,10 @@
 import React from 'react';
-import { Table, Button } from 'antd';
+import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import EllipsisMenu from '../../public/ellipsisMenu';
+
+const confirm = Modal.confirm;
 
 @inject('project')
 @observer
@@ -39,15 +41,15 @@ class List extends React.Component {
     });
   };
 
-  // TODO(qme): finish remove projct
-  // removeProject = name => {
-  //   confirm({
-  //     title: `Do you Want to delete project ${name} ?`,
-  //     onOk() {
-  //       this.props.project.deleteProject(name);
-  //     },
-  //   });
-  // };
+  removeProject = name => {
+    const { project } = this.props;
+    confirm({
+      title: `Do you Want to delete project ${name} ?`,
+      onOk() {
+        project.deleteProject(name);
+      },
+    });
+  };
   render() {
     const { match, project } = this.props;
     const columns = [
@@ -70,7 +72,13 @@ class List extends React.Component {
         title: intl.get('action'),
         dataIndex: 'metadata.name',
         key: 'action',
-        render: value => <EllipsisMenu menuFunc={() => {}} />,
+        render: value => (
+          <EllipsisMenu
+            menuFunc={() => {
+              this.removeProject(value);
+            }}
+          />
+        ),
       },
     ];
     return (
@@ -82,11 +90,13 @@ class List extends React.Component {
         </div>
         <Table
           columns={columns}
-          rowKey={record => record.id}
+          rowKey={record => record.name}
           onRow={record => {
             return {
               onClick: () => {
-                this.props.history.push(`${match.path}/${record.id}`);
+                this.props.history.push(
+                  `${match.path}/${record.metadata.name}`
+                );
               },
             };
           }}

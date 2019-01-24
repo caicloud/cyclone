@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, Button } from 'antd';
+import { Tabs, Button, Spin } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
@@ -7,16 +7,29 @@ const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 
 const TabPane = Tabs.TabPane;
 
-@inject('workflow')
+@inject('project')
 @observer
 class ProjectDetail extends React.Component {
   static propTypes = {
     match: PropTypes.object,
+    project: PropTypes.object,
   };
-  render() {
+  constructor(props) {
+    super(props);
     const {
-      match: { params },
+      match: {
+        params: { projectId },
+      },
     } = this.props;
+    this.props.project.getProject(projectId);
+  }
+  render() {
+    const { project } = this.props;
+    const loading = project.detailLoading;
+    if (loading) {
+      return <Spin />;
+    }
+    const detail = project.projectDetail;
     return (
       <Detail
         actions={
@@ -25,8 +38,11 @@ class ProjectDetail extends React.Component {
           </DetailAction>
         }
       >
-        <DetailHead headName={params.projectId}>
-          <DetailHeadItem name={intl.get('creationTime')} value="2018-09-08" />
+        <DetailHead headName={_.get(detail, 'metadata.name')}>
+          <DetailHeadItem
+            name={intl.get('creationTime')}
+            value={_.get(detail, 'metadata.creationTimestamp')}
+          />
         </DetailHead>
         <DetailContent>
           <Tabs defaultActiveKey="workflow" type="card">

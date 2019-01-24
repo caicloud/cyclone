@@ -84,7 +84,12 @@ class Quota extends React.Component {
       _.get(customValues, 'requests.cpu') &&
       _.isEmpty(_.get(errors, 'custom'))
     ) {
-      onChange(customValues);
+      onChange({
+        'limits.cpu': _.get(customValues, 'limits.cpu'),
+        'limits.memory': _.get(customValues, 'limits.memory'),
+        'requests.memory': _.get(customValues, 'requests.memory'),
+        'requests.cpu': _.get(customValues, 'requests.cpu'),
+      });
     } else if (value) {
       onChange('');
     }

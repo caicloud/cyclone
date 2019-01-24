@@ -32,7 +32,10 @@ const fetchApi = {
     return http.post('/projects', data);
   },
   removeProject(name) {
-    return http.post(`/projects/${name}`);
+    return http.delete(`/projects/${name}`);
+  },
+  getProject(name) {
+    return http.get(`/projects/${name}`);
   },
   /** end project */
 };

@@ -3,6 +3,8 @@ import fetchApi from '../api/index.js';
 
 class Project {
   @observable projectList = null;
+  @observable projectDetail = null;
+  @observable detailLoading = false;
   @action.bound
   listProjects() {
     fetchApi.listProjects().then(data => {
@@ -17,9 +19,19 @@ class Project {
     });
   }
 
+  @action.bound
   deleteProject(name) {
     fetchApi.removeProject(name).then(() => {
       this.listProjects();
+    });
+  }
+
+  @action.bound
+  getProject(name) {
+    this.detailLoading = true;
+    fetchApi.getProject(name).then(data => {
+      this.projectDetail = data;
+      this.detailLoading = false;
     });
   }
 }

@@ -28,12 +28,27 @@ class EllipsisMenu extends React.Component {
       <Menu>
         {_.isArray(menuText) ? (
           menuText.map((m, i) => (
-            <Menu.Item key={m} onClick={menuFunc[i]} disabled={disabled[i]}>
+            <Menu.Item
+              key={m}
+              onClick={e => {
+                e.domEvent.preventDefault();
+                e.domEvent.stopPropagation();
+                menuFunc[i]();
+              }}
+              disabled={disabled[i]}
+            >
               {m}
             </Menu.Item>
           ))
         ) : (
-          <Menu.Item onClick={menuFunc} disabled={disabled}>
+          <Menu.Item
+            onClick={e => {
+              e.domEvent.preventDefault();
+              e.domEvent.stopPropagation();
+              menuFunc();
+            }}
+            disabled={disabled}
+          >
             {_menuText}
           </Menu.Item>
         )}
