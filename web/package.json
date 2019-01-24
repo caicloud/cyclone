@@ -15,7 +15,8 @@
     "object-assign": "4.1.1",
     "promise": "8.0.1",
     "raf": "3.4.0",
-    "redoc": "^2.0.0-alpha.41"
+    "redoc": "^2.0.0-alpha.41",
+    "yaml-loader": "0.5.0"
   },
   "scripts": {
     "precommit": "lint-staged",
