@@ -16,6 +16,10 @@ type FakeCycloneV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeCycloneV1alpha1) Projects(namespace string) v1alpha1.ProjectInterface {
+	return &FakeProjects{c, namespace}
+}
+
 func (c *FakeCycloneV1alpha1) Resources(namespace string) v1alpha1.ResourceInterface {
 	return &FakeResources{c, namespace}
 }

@@ -41,6 +41,7 @@ func EnsureCRDCreated(masterURL, kubeConfigPath string) {
 	createCRD("workflow", "workflows", "Workflow", []string{"wf"}, client)
 	createCRD("workflowrun", "workflowruns", "WorkflowRun", []string{"wfr"}, client)
 	createCRD("workflowtrigger", "workflowtriggers", "WorkflowTrigger", []string{"wft"}, client)
+	createCRD("project", "projects", "Project", []string{"proj"}, client)
 }
 
 func createCRD(singular, plural, kind string, shortNames []string, client apiextensionsclient.Interface) {
