@@ -63,7 +63,10 @@ class List extends React.Component {
             {intl.get('operation.add')}
           </Button>
         </div>
-        <Table columns={columns} dataSource={integration.integrationList} />
+        <Table
+          columns={columns}
+          dataSource={_.get(integration, 'integrationList.items', [])}
+        />
         <Modal
           title={intl.get('integration.addexternalsystem')}
           visible={this.state.visible}
