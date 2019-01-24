@@ -2,7 +2,7 @@ import { observable, action, keys } from 'mobx';
 import fetchApi from '../api/index.js';
 
 class Integration {
-  @observable integrationList = [];
+  @observable integrationList = null;
   @observable groupIntegrationList = {
     SonarQube: [],
     SCM: [],
@@ -17,7 +17,7 @@ class Integration {
         SCM: [],
         DockerRegistry: [],
       };
-      _.forEach(data, o => {
+      _.forEach(data.items, o => {
         const type = _.get(o, 'spec.type');
         if (!groups[type]) {
           groups[type] = [o];

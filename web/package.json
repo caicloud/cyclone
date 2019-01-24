@@ -20,7 +20,7 @@
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint src",
-    "start": "REACT_APP_API_BASE_URL=/api/v1 node scripts/start.js",
+    "start": "REACT_APP_API_BASE_URL=/apis/v1alpha1 node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
   },
@@ -125,7 +125,7 @@
   "peerDependencies": {},
   "proxy": {
     "/api": {
-      "target": "http://192.168.19.96:30020"
+      "target": "http://192.168.17.100:30011"
     }
   }
 }
