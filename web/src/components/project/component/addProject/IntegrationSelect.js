@@ -83,13 +83,13 @@ class IntegrationSelect extends React.Component {
               <Row>
                 <Col span={12}>
                   <div className="text-item">
-                    <div className="key">{Intl.get('integration.name')}：</div>
+                    <div className="key">{intl.get('integration.name')}：</div>
                     <div className="value">{_.get(item, 'metadata.name')}</div>
                   </div>
                 </Col>
                 <Col span={12}>
                   <div className="text-item">
-                    <div className="key">{Intl.get('integration.type')}：</div>
+                    <div className="key">{intl.get('integration.type')}：</div>
                     <div className="value">{_.get(item, 'spec.type')}</div>
                   </div>
                 </Col>
