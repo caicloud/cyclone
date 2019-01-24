@@ -1,7 +1,6 @@
 import React from 'react';
-import { Table, Button, Modal } from 'antd';
+import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
-import IntegrationForm from './DataForm';
 import PropTypes from 'prop-types';
 import { IntegrationTypeMap } from '@/consts/const.js';
 
@@ -10,27 +9,16 @@ import { IntegrationTypeMap } from '@/consts/const.js';
 class List extends React.Component {
   static propTypes = {
     integration: PropTypes.object,
+    history: PropTypes.object,
   };
   state = { visible: false };
   componentDidMount() {
     this.props.integration.getIntegrationList();
   }
   addDataSource = () => {
-    this.setState({
-      visible: true,
-    });
-  };
-  handleOk = e => {
-    this.setState({
-      visible: false,
-    });
+    this.props.history.push('/integration/addsource');
   };
 
-  handleCancel = e => {
-    this.setState({
-      visible: false,
-    });
-  };
   render() {
     const { integration } = this.props;
     const columns = [
@@ -63,21 +51,7 @@ class List extends React.Component {
             {intl.get('operation.add')}
           </Button>
         </div>
-        <Table
-          columns={columns}
-          dataSource={_.get(integration, 'integrationList.items', [])}
-        />
-        <Modal
-          title={intl.get('integration.addexternalsystem')}
-          visible={this.state.visible}
-          footer={null}
-          onCancel={this.handleCancel}
-        >
-          <IntegrationForm
-            onSubmit={this.handleOk}
-            onCancel={this.handleCancel}
-          />
-        </Modal>
+        <Table columns={columns} dataSource={integration.integrationList} />
       </div>
     );
   }
