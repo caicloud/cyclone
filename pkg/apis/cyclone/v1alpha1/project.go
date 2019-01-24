@@ -9,7 +9,7 @@ import (
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Project defines a project which holds a lot of common default information of some workflow under it.
+// Project defines a project which holds common information of workflows under it.
 type Project struct {
 	// Metadata for the resource, like kind and apiversion
 	meta_v1.TypeMeta `json:",inline"`
@@ -21,16 +21,16 @@ type Project struct {
 
 // ProjectSpec defines project specification.
 type ProjectSpec struct {
-	// Services contains default value of various type of integrations.
-	Services []ServiceItem `json:"services"`
+	// Integrations contains default value of various type of integrations.
+	Integrations []IntegrationItem `json:"integrations"`
 
 	// Quota is the default quota of the workflow under it,
 	// eg map[core_v1.ResourceName]string{"requests.cpu": "2", "requests.memory": "4Gi"}
 	Quota map[core_v1.ResourceName]string `json:"quota"`
 }
 
-// ServiceItem describes default value of a type of integrations
-type ServiceItem struct {
+// IntegrationItem describes default value of a type of integrations
+type IntegrationItem struct {
 	// Type is the integration type
 	Type string `json:"type"`
 	// Name is the default value of the corresponding type of integration
