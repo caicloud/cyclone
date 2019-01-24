@@ -41,7 +41,7 @@ const allocationMap = [
   },
 ];
 
-class Allocation extends React.Component {
+class Quota extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     field: PropTypes.object,
@@ -303,4 +303,4 @@ export default withFormik({
     return errors;
   },
   displayName: 'allocation', // a unique identifier for this form
-})(Allocation);
+})(Quota);

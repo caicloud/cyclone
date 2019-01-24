@@ -5,7 +5,7 @@ import { Field, Formik } from 'formik';
 import { inject, observer } from 'mobx-react';
 import MakeField from '@/components/public/makeField';
 import IntegrationSelect from './IntegrationSelect';
-import ResourceAllocation from '@/components/public/resourceAllocation';
+import Quota from '@/components/public/quota';
 
 const { TextArea } = Input;
 
@@ -77,7 +77,7 @@ class AddProject extends React.Component {
             <Field
               label={intl.get('allocation.quotaConfig')}
               name="spec.quota"
-              component={ResourceAllocation}
+              component={Quota}
               onChange={value => {
                 props.setFieldValue('spec.quota', value);
               }}
