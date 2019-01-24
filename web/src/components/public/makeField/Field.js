@@ -30,7 +30,7 @@ export default function makeField(Component) {
       ...rest
     } = props;
     const name = field.name;
-    const hasError = touched[name] && _.get(errors, name);
+    const hasError = _.get(touched, name) && _.get(errors, name);
     const _formItemLayout = formItemLayout || defaultFormItemLayout;
     return (
       <FormItem

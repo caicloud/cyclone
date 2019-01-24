@@ -25,7 +25,7 @@ class InputAddon extends React.Component {
     super(props);
     this.state = {
       byteFieldNum: '',
-      byteUnit: props.defaultAddon || 'Mi',
+      byteUnit: props.defaultAddon === undefined ? 'Mi' : props.defaultAddon,
     };
   }
 

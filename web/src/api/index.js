@@ -22,6 +22,19 @@ const fetchApi = {
       return data;
     });
   },
+  /** start project */
+  listProjects() {
+    return http.get('/projects').then(data => {
+      return data;
+    });
+  },
+  createProject(data) {
+    return http.post('/projects', data);
+  },
+  removeProject(name) {
+    return http.post(`/projects/${name}`);
+  },
+  /** end project */
 };
 
 export default fetchApi;

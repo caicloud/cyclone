@@ -19,6 +19,13 @@ class IntegrationSelect extends React.Component {
     children: PropTypes.node,
     integration: PropTypes.object,
   };
+  constructor(props) {
+    super(props);
+    // TODO(qme): initialize when update
+    this.state = {
+      selectedSourceType: [],
+    };
+  }
   componentDidMount() {
     const { integration } = this.props;
     integration.getIntegrationList();
@@ -31,6 +38,7 @@ class IntegrationSelect extends React.Component {
       form: { isValid, touched, errors, setFieldValue },
       integration,
     } = this.props;
+    const { selectedSourceType } = this.state;
     const list = integration.groupIntegrationList;
     const groupKeys = integration.getGroupKeys();
     const name = field.name;
@@ -38,11 +46,14 @@ class IntegrationSelect extends React.Component {
     const hasError = touched[name] && !isValid;
     const handleChange = value => {
       setFieldValue(name, value);
+      const selected = _.map(value, n => n.split('/')[0]);
+      this.setState({ selectedSourceType: selected });
     };
-
     const handleRemove = text => {
       const val = _.pull(value, text);
       setFieldValue(name, val);
+      const selected = _.pull(selectedSourceType, text.split('/')[0]);
+      this.setState({ selectedSourceType: selected });
     };
     return (
       <FormItem
@@ -68,6 +79,10 @@ class IntegrationSelect extends React.Component {
                   <Option
                     value={`${o}/${v.metadata.name}`}
                     key={v.metadata.name}
+                    disabled={
+                      _.includes(selectedSourceType, o) &&
+                      !_.includes(value, `${o}/${v.metadata.name}`)
+                    }
                   >
                     {_.get(v, 'metadata.name')}
                   </Option>

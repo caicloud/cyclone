@@ -15,8 +15,8 @@ const allocationMap = [
   {
     name: 'basic',
     value: {
-      'requests.cpu': 0.5,
-      'limits.cpu': 1,
+      'requests.cpu': '0.5',
+      'limits.cpu': '1',
       'requests.memory': '1GiB',
       'limits.memory': '2GiB',
     },
@@ -24,8 +24,8 @@ const allocationMap = [
   {
     name: 'middle',
     value: {
-      'requests.cpu': 1,
-      'limits.cpu': 2,
+      'requests.cpu': '1',
+      'limits.cpu': '2',
       'requests.memory': '2 GiB',
       'limits.memory': '4 GiB',
     },
@@ -33,8 +33,8 @@ const allocationMap = [
   {
     name: 'high',
     value: {
-      'requests.cpu': 2,
-      'limits.cpu': 4,
+      'requests.cpu': '2',
+      'limits.cpu': '4',
       'requests.memory': '4GiB',
       'limits.memory': '8GiB',
     },
@@ -188,7 +188,7 @@ class Allocation extends React.Component {
                           <InputWithUnit
                             label={intl.get('allocation.cpuRequest')}
                             addonAfter="Core"
-                            defaultAddon="Core"
+                            defaultAddon=""
                             className="cpu"
                             {..._props}
                             onChange={this.handleInputChange}
@@ -242,7 +242,7 @@ class Allocation extends React.Component {
                           <InputWithUnit
                             label={intl.get('allocation.cpuLimit')}
                             addonAfter="Core"
-                            defaultAddon="Core"
+                            defaultAddon=""
                             className="cpu"
                             {..._props}
                             onChange={this.handleInputChange}
