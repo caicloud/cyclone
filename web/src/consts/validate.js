@@ -1,4 +1,4 @@
-import { POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT } from '@/components/public/consts/regexp';
+import { POSITIVE_INT_OR_UP_TO_TWO_DIGITS_FLOAT } from '@/consts/regexp';
 
 export const required = val => {
   let empty = true;

@@ -7,7 +7,7 @@ import FormContent from './FormContent';
 @inject('project')
 @observer
 class AddProject extends React.Component {
-  // submto form data
+  // submit form data
   submit = values => {
     const { project, history } = this.props;
     const data = { ...values };

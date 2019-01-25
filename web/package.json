@@ -106,6 +106,7 @@
     "less": "^2.7.3",
     "less-loader": "^4.0.5",
     "lint-staged": "^8.1.0",
+    "moment": "^2.24.0",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
     "prettier": "^1.15.3",

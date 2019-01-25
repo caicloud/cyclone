@@ -3,8 +3,9 @@ import { Tabs, Button, Spin } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
-const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
+import { FormatTime } from '@/lib/util';
 
+const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 const TabPane = Tabs.TabPane;
 
 @inject('project')
@@ -41,7 +42,7 @@ class ProjectDetail extends React.Component {
         <DetailHead headName={_.get(detail, 'metadata.name')}>
           <DetailHeadItem
             name={intl.get('creationTime')}
-            value={_.get(detail, 'metadata.creationTimestamp')}
+            value={FormatTime(_.get(detail, 'metadata.creationTimestamp'))}
           />
         </DetailHead>
         <DetailContent>
