@@ -11,11 +11,10 @@ class AddProject extends React.Component {
   submit = values => {
     const { project, history } = this.props;
     const data = { ...values };
-    const services = _.map(values.spec.services, n => {
+    data.spec.services = _.map(values.spec.services, n => {
       const resources = n.split('/');
       return { type: resources[0], name: resources[1] };
     });
-    data.spec.services = services;
     project.createProject(data, () => {
       history.replace(`/project`);
     });
@@ -29,6 +28,7 @@ class AddProject extends React.Component {
     }
     return errors;
   };
+
   render() {
     const { history } = this.props;
     const initValue = {
