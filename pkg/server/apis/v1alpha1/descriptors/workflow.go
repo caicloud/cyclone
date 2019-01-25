@@ -29,24 +29,46 @@ func init() {
 
 var workflow = []definition.Descriptor{
 	{
-		Path:        "/workflows",
+		Path:        "/projects/{project}/workflows",
 		Description: "workflow APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
 				Function:    handler.CreateWorkflow,
 				Description: "Create workflow",
-				Results:     definition.DataErrorResults("workflow"),
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the new workflow",
+					},
+				},
+				Results: definition.DataErrorResults("workflow"),
 			},
 			{
-				Method:      definition.Get,
+				Method:      definition.List,
 				Function:    handler.ListWorkflows,
 				Description: "List workflows",
 				Parameters: []definition.Parameter{
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Auto,
+						Name:        "pagination",
+						Description: "pagination",
 					},
 				},
 				Results: definition.DataErrorResults("workflows"),
@@ -54,7 +76,7 @@ var workflow = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/workflows/{workflow}",
+		Path:        "/projects/{project}/workflows/{workflow}",
 		Description: "workflow APIs",
 		Definitions: []definition.Definition{
 			{
@@ -64,12 +86,15 @@ var workflow = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflow"),
@@ -81,7 +106,19 @@ var workflow = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated workflow",
 					},
 				},
 				Results: definition.DataErrorResults("workflow"),
@@ -93,12 +130,15 @@ var workflow = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},

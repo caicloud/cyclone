@@ -23,7 +23,7 @@ func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.R
 		return nil, err
 	}
 
-	created.Name = rsc.Name
+	created.Name = common.RetrieveResoucesName(project, rsc.Name)
 	return created, nil
 }
 

@@ -35,7 +35,7 @@ func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stag
 		return nil, err
 	}
 
-	created.Name = stg.Name
+	created.Name = common.RetrieveResoucesName(project, stg.Name)
 	return created, nil
 }
 

@@ -13,7 +13,7 @@ func init() {
 
 var resource = []definition.Descriptor{
 	{
-		Path:        "projects/{project}/resources",
+		Path:        "/projects/{project}/resources",
 		Description: "Resource APIs",
 		Definitions: []definition.Definition{
 			{
@@ -60,7 +60,7 @@ var resource = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "projects/{project}/resources/{resource}",
+		Path: "/projects/{project}/resources/{resource}",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
