@@ -12,8 +12,7 @@ class InputAddon extends React.Component {
     addonAfter: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
     onChange: PropTypes.func,
     inputKey: PropTypes.string,
-    error: PropTypes.string,
-    touched: PropTypes.bool,
+    form: PropTypes.object,
     field: PropTypes.object,
     HandleAddon: PropTypes.func,
     label: PropTypes.string,
@@ -59,10 +58,17 @@ class InputAddon extends React.Component {
   };
 
   render() {
-    const { addonAfter, label, error, touched, field, className } = this.props;
+    const {
+      addonAfter,
+      label,
+      field,
+      className,
+      form: { errors, touched },
+    } = this.props;
     const { byteFieldNum, byteUnit } = this.state;
     const cls = classnames('u-input-unit', { [className]: !!className });
-    const hasError = touched && error;
+    const name = field.name;
+    const hasError = _.get(touched, name) && _.get(errors, name);
     const addonComp = _.isArray(addonAfter) ? (
       <Select
         defaultValue={byteUnit}

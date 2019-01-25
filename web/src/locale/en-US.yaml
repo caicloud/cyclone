@@ -38,6 +38,7 @@ integration:
     datasourcetype: Please select a resource type
 project:
   externalSystem: External system
+  workflowCount: Workflow count
 allocation:
   quotaConfig: Quota config
   recommend: Recommend quota
