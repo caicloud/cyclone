@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Form, Select, Input, Button } from 'antd';
 import { withFormik, Field } from 'formik';
-import ScmGroup from '../formGroup/ScmGroup';
+import ScmGroup from '../formGroup/ScmGroup/index';
 import SonarQube from '../formGroup/SonarQube';
 import DockerRegistry from '../formGroup/DockerRegistry';
 import MakeField from '@/components/public/makeField';
@@ -12,11 +12,6 @@ const Option = Select.Option;
 const { TextArea } = Input;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
-const formMap = {
-  SCM: <ScmGroup />,
-  dockerregistry: <DockerRegistry />,
-  sonarqube: <SonarQube />,
-};
 
 const selectSourceType = props => {
   return (
@@ -40,7 +35,6 @@ const SelectField = MakeField(selectSourceType);
 
 class IntegrationForm extends React.Component {
   static propTypes = {
-    form: PropTypes.object,
     payload: PropTypes.object,
     onSubmit: PropTypes.func,
     onCancel: PropTypes.func,
@@ -57,6 +51,11 @@ class IntegrationForm extends React.Component {
 
   renderWrapForm = () => {
     const { formType } = this.state;
+    const formMap = {
+      SCM: <ScmGroup {...this.props} />,
+      dockerregistry: <DockerRegistry />,
+      sonarqube: <SonarQube />,
+    };
     return formMap[formType];
   };
 

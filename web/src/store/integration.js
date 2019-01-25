@@ -27,7 +27,7 @@ class Integration {
           }
         }
       });
-      this.integrationList = data;
+      this.integrationList = data.items; //TODO 处理返回的集成list items
       this.groupIntegrationList = groups;
     });
   }
