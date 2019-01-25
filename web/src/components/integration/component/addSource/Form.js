@@ -83,7 +83,7 @@ class IntegrationForm extends React.Component {
         />
         <Field
           label={intl.get('integration.type')}
-          name="type"
+          name="sourceType"
           required
           handleSelectChange={this.handleSelectChange}
           component={SelectField}
@@ -112,6 +112,13 @@ export default withFormik({
 
     return errors;
   },
-  mapPropsToValues: () => ({ name: '', desc: '', type: '' }),
-  handleSubmit: values => {},
+  mapPropsToValues: () => ({
+    name: '',
+    desc: '',
+    sourceType: '',
+    codeType: 'GitHub',
+  }),
+  handleSubmit: values => {
+    console.log(values, 'elliot'); // eslint-disable-line
+  },
 })(IntegrationForm);
