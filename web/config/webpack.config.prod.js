@@ -371,6 +371,8 @@ module.exports = {
     // You can remove this if you don't use Moment.js:
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new webpack.ProvidePlugin({
+      React: 'react',
+      ReactDOM: 'react-dom',
       _: 'lodash',
       intl: 'react-intl-universal',
     }),
