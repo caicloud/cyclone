@@ -16,7 +16,7 @@ const TextareaField = MakeField(TextArea);
 const selectSourceType = props => {
   return (
     <Select
-      placeholder={intl.get('integration.form.validate.datasourcetype')}
+      placeholder={intl.get('integration.form.datasourcetype')}
       onChange={props.handleSelectChange}
     >
       <Option value="SCM">SCM</Option>

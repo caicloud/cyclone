@@ -3,6 +3,8 @@ import { Radio, Form } from 'antd';
 import { Field, withFormik } from 'formik';
 import MakeField from '@/components/public/makeField';
 import GitHub from './Forms/GitHub';
+import GitLab from './Forms/GitLab';
+import SVN from './Forms/SVN';
 import PropTypes from 'prop-types';
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
@@ -12,8 +14,8 @@ const _RadioGroup = MakeField(RadioGroup);
 
 const ScmMap = {
   GitHub: <GitHub />,
-  GitLab: <div>GitLab</div>,
-  SVN: <div>SVN</div>,
+  GitLab: <GitLab />,
+  SVN: <SVN />,
 };
 
 class Selection extends React.Component {

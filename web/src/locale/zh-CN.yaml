@@ -30,7 +30,7 @@ integration:
   datasource: 数据源
   addexternalsystem: 新增外部系统
   serviceAddress: 服务地址
-  dataform:
+  form:
     dockerregistry: 镜像仓库
     registryaddress: 仓库地址
     confirm: 确定
