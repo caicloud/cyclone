@@ -154,6 +154,41 @@ module.exports = {
             test: /\.yaml$/,
             use: ['json-loader', 'yaml-loader'],
           },
+          {
+            test: /\.module.less$/,
+            use: [
+              require.resolve('style-loader'),
+              {
+                loader: 'css-loader',
+                options: {
+                  sourceMap: true,
+                  modules: true,
+                  localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                },
+              },
+              {
+                loader: require.resolve('postcss-loader'),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: 'postcss',
+                  plugins: () => [
+                    require('postcss-flexbugs-fixes'),
+                    autoprefixer({
+                      browsers: [
+                        '>1%',
+                        'last 4 versions',
+                        'Firefox ESR',
+                        'not ie < 9', // React doesn't support IE8 anyway
+                      ],
+                      flexbox: 'no-2009',
+                    }),
+                  ],
+                },
+              },
+              { loader: require.resolve('less-loader') },
+            ],
+          },
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
           // "style" loader turns CSS into JS modules that inject <style> tags.
@@ -250,6 +285,8 @@ module.exports = {
     // You can remove this if you don't use Moment.js:
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new webpack.ProvidePlugin({
+      React: 'react',
+      ReactDOM: 'react-dom',
       _: 'lodash',
       intl: 'react-intl-universal',
     }),
