@@ -23,7 +23,7 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   "project",
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Header,
@@ -31,7 +31,7 @@ var resource = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Body,
-						Description: "JSON body to describe the new integration",
+						Description: "JSON body to describe the new resource",
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
@@ -43,7 +43,7 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   "project",
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Header,
@@ -69,7 +69,7 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   "project",
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Path,
@@ -89,7 +89,7 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   "project",
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Path,
@@ -101,7 +101,7 @@ var resource = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Body,
-						Description: "JSON body to describe the new integration",
+						Description: "JSON body to describe the updated resource",
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
@@ -113,7 +113,7 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   "project",
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Path,

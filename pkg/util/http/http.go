@@ -31,6 +31,9 @@ const (
 	// TenantNamePathParameterName represents the name of the path parameter for tenant name.
 	TenantNamePathParameterName = "tenant"
 
+	// ProjectNamePathParameterName represents the name of the path parameter for project name.
+	ProjectNamePathParameterName = "project"
+
 	// ResourceNamePathParameterName represents the name of the path parameter for resource name.
 	ResourceNamePathParameterName = "resource"
 

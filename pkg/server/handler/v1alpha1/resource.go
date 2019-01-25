@@ -15,15 +15,16 @@ import (
 
 // CreateResource ...
 func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.Resource) (*v1alpha1.Resource, error) {
-	labels := rsc.ObjectMeta.Labels
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels[common.LabelProject] = project
-
+	rsc.ObjectMeta.Labels = common.AddProjectLabel(rsc.ObjectMeta.Labels, project)
 	rsc.Name = common.BuildResoucesName(project, rsc.Name)
-	rsc.ObjectMeta.Labels = labels
-	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Create(rsc)
+
+	created, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Create(rsc)
+	if err != nil {
+		return nil, err
+	}
+
+	created.Name = rsc.Name
+	return created, nil
 }
 
 // ListResources ...

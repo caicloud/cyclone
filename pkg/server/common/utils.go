@@ -49,3 +49,14 @@ func BuildResoucesName(project string, name string) string {
 func RetrieveResoucesName(project string, name string) string {
 	return strings.TrimPrefix(name, project+"-")
 }
+
+// AddProjectLabel adds project label for a resource metadata labels
+func AddProjectLabel(rl map[string]string, project string) map[string]string {
+	labels := rl
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[LabelProject] = project
+
+	return labels
+}

@@ -30,24 +30,46 @@ func init() {
 
 var stage = []definition.Descriptor{
 	{
-		Path:        "/stages",
+		Path:        "/projects/{project}/stages",
 		Description: "Stage APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
 				Function:    handler.CreateStage,
 				Description: "Create stage",
-				Results:     definition.DataErrorResults("stage"),
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the new stage",
+					},
+				},
+				Results: definition.DataErrorResults("stage"),
 			},
 			{
-				Method:      definition.Get,
+				Method:      definition.List,
 				Function:    handler.ListStages,
 				Description: "List stages",
 				Parameters: []definition.Parameter{
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Auto,
+						Name:        "pagination",
+						Description: "pagination",
 					},
 				},
 				Results: definition.DataErrorResults("stages"),
@@ -55,7 +77,7 @@ var stage = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/stages/{stage}",
+		Path:        "/projects/{project}/stages/{stage}",
 		Description: "Stage APIs",
 		Definitions: []definition.Definition{
 			{
@@ -65,12 +87,15 @@ var stage = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.StageNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("stage"),
@@ -82,7 +107,19 @@ var stage = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.StageNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated stage",
 					},
 				},
 				Results: definition.DataErrorResults("stage"),
@@ -94,12 +131,15 @@ var stage = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.StageNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
