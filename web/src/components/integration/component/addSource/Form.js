@@ -36,8 +36,7 @@ const SelectField = MakeField(selectSourceType);
 class IntegrationForm extends React.Component {
   static propTypes = {
     payload: PropTypes.object,
-    onSubmit: PropTypes.func,
-    onCancel: PropTypes.func,
+    handleSubmit: PropTypes.func,
   };
   state = {
     formType: '',
@@ -67,8 +66,9 @@ class IntegrationForm extends React.Component {
 
   render() {
     const { formType } = this.state;
+    const { handleSubmit } = this.props;
     return (
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <Field
           label={intl.get('integration.name')}
           name="name"

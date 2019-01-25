@@ -1,6 +1,6 @@
 import React from 'react';
 import { Radio, Form } from 'antd';
-import { Field, withFormik } from 'formik';
+import { Field } from 'formik';
 import MakeField from '@/components/public/makeField';
 import GitHub from './Forms/GitHub';
 import GitLab from './Forms/GitLab';
@@ -18,27 +18,26 @@ const ScmMap = {
   SVN: <SVN />,
 };
 
-class Selection extends React.Component {
+export default class Selection extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     field: PropTypes.object,
-    values: PropTypes.object,
     label: PropTypes.string,
     onChange: PropTypes.func,
   };
   handleType = e => {
-    const { setFieldValue, onChange } = this.props;
+    const {
+      setFieldValue,
+      field: { name },
+    } = this.props;
     const value = e.target.value;
-    setFieldValue('type', value);
-    onChange(value);
+    setFieldValue(name, value);
   };
 
   // TODO(qme): realize custom and validate residual quota
   render() {
-    const {
-      values: { type },
-      label,
-    } = this.props;
+    const { field, label } = this.props;
+    const type = field.value || 'GitHub';
     return (
       <div>
         <FormItem
@@ -70,12 +69,3 @@ class Selection extends React.Component {
     );
   }
 }
-
-export default withFormik({
-  mapPropsToValues: () => ({ type: 'GitHub' }),
-  validate: values => {
-    const errors = {};
-    return errors;
-  },
-  displayName: 'selection', // a unique identifier for this form
-})(Selection);
