@@ -3,6 +3,7 @@ import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import EllipsisMenu from '../../public/ellipsisMenu';
+import { FormatTime } from '@/lib/util';
 
 const confirm = Modal.confirm;
 
@@ -61,7 +62,8 @@ class List extends React.Component {
       {
         title: intl.get('creationTime'),
         dataIndex: 'metadata.creationTimestamp',
-        key: 'creationTime', // TODO(qme): transform time
+        key: 'creationTime',
+        render: value => FormatTime(value),
       },
       {
         title: intl.get('project.workflowCount'),
@@ -72,6 +74,7 @@ class List extends React.Component {
         title: intl.get('action'),
         dataIndex: 'metadata.name',
         key: 'action',
+        align: 'right',
         render: value => (
           <EllipsisMenu
             menuFunc={() => {

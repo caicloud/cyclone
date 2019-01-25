@@ -14,7 +14,6 @@ class Project {
   @action.bound
   createProject(data, cb) {
     fetchApi.createProject(data).then(() => {
-      this.listProjects();
       cb();
     });
   }

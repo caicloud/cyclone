@@ -1,2 +1,2 @@
-import Quota from './Quota';
+import Quota from './QuotaSetting';
 export default Quota;

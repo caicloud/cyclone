@@ -39,6 +39,7 @@ integration:
     datasourcetype: 请选择资源类型
 project:
   externalSystem: 外部系统
+  workflowCount: 工作流数量
 allocation:
   quotaConfig: 资源配置
   recommend: 推荐配额
