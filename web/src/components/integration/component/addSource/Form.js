@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import { Form, Select, Input, Button } from 'antd';
 import { withFormik, Field } from 'formik';
 import ScmGroup from '../formGroup/ScmGroup/index';
-import SonarQube from '../formGroup/SonarQube';
-import DockerRegistry from '../formGroup/DockerRegistry';
+import SonarQube from '../formGroup/SonarQube/index';
+import DockerRegistry from '../formGroup/DockerRegistry/index';
 import MakeField from '@/components/public/makeField';
 
 const FormItem = Form.Item;
