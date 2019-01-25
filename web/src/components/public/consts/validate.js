@@ -40,10 +40,18 @@ export const positiveOrFloat = val => {
 export const resourceValidate = resources => {
   const err = {};
   const value = resources;
-  const cpuLimit = _.get(value, 'limits.cpu');
-  const memoryLimit = _.get(value, 'limits.memory');
-  const cpuRequests = _.get(value, 'requests.cpu');
-  const memoryRequests = _.get(value, 'requests.memory');
+  const cpuLimit = _.replace(_.get(value, 'limits.cpu'), 'Core', '');
+  const memoryLimit = _.replace(
+    _.get(value, 'limits.memory'),
+    /(M|G|T)iB/g,
+    ''
+  );
+  const cpuRequests = _.replace(_.get(value, 'requests.cpu'), 'Core', '');
+  const memoryRequests = _.replace(
+    _.get(value, 'requests.memory'),
+    /(M|G|T)iB/g,
+    ''
+  );
 
   const limitCpuErr = positiveOrFloat(cpuLimit);
   const limitMemErr = positiveOrFloat(memoryLimit);
@@ -78,5 +86,6 @@ export const resourceValidate = resources => {
   if (_.isEmpty(err)) {
     return undefined;
   }
+
   return err;
 };

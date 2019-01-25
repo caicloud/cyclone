@@ -17,6 +17,27 @@ const fetchApi = {
       return data;
     });
   },
+  fetchResources() {
+    return http.get('/resources').then(data => {
+      return data;
+    });
+  },
+  /** start project */
+  listProjects() {
+    return http.get('/projects').then(data => {
+      return data;
+    });
+  },
+  createProject(data) {
+    return http.post('/projects', data);
+  },
+  removeProject(name) {
+    return http.delete(`/projects/${name}`);
+  },
+  getProject(name) {
+    return http.get(`/projects/${name}`);
+  },
+  /** end project */
 };
 
 export default fetchApi;

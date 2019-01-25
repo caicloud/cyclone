@@ -1,10 +1,12 @@
 import React from 'react';
-import { Table, Button } from 'antd';
+import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import EllipsisMenu from '../../public/ellipsisMenu';
 
-@inject('workflow')
+const confirm = Modal.confirm;
+
+@inject('project')
 @observer
 class List extends React.Component {
   /**
@@ -14,7 +16,12 @@ class List extends React.Component {
   static propTypes = {
     match: PropTypes.object,
     history: PropTypes.object,
+    project: PropTypes.object,
   };
+  componentDidMount() {
+    const { project } = this.props;
+    project.listProjects();
+  }
   saveFormRef = formRef => {
     this.formRef = formRef;
   };
@@ -33,18 +40,28 @@ class List extends React.Component {
       form.resetFields();
     });
   };
+
+  removeProject = name => {
+    const { project } = this.props;
+    confirm({
+      title: `Do you Want to delete project ${name} ?`,
+      onOk() {
+        project.deleteProject(name);
+      },
+    });
+  };
   render() {
-    const { match } = this.props;
+    const { match, project } = this.props;
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'name',
+        dataIndex: 'metadata.name',
         key: 'name',
       },
       {
         title: intl.get('creationTime'),
-        dataIndex: 'creationTime',
-        key: 'creationTime',
+        dataIndex: 'metadata.creationTimestamp',
+        key: 'creationTime', // TODO(qme): transform time
       },
       {
         title: intl.get('project.workflowCount'),
@@ -53,9 +70,15 @@ class List extends React.Component {
       },
       {
         title: intl.get('action'),
-        dataIndex: 'action',
+        dataIndex: 'metadata.name',
         key: 'action',
-        render: () => <EllipsisMenu menuFunc={() => {}} />,
+        render: value => (
+          <EllipsisMenu
+            menuFunc={() => {
+              this.removeProject(value);
+            }}
+          />
+        ),
       },
     ];
     return (
@@ -67,22 +90,17 @@ class List extends React.Component {
         </div>
         <Table
           columns={columns}
-          rowKey={record => record.id}
+          rowKey={record => record.name}
           onRow={record => {
             return {
               onClick: () => {
-                this.props.history.push(`${match.path}/${record.id}`);
+                this.props.history.push(
+                  `${match.path}/${record.metadata.name}`
+                );
               },
             };
           }}
-          dataSource={[
-            {
-              name: '项目1',
-              id: 'proejct1',
-              creationTime: '2018-12-26 09:09',
-              workflowCount: '2',
-            },
-          ]}
+          dataSource={_.get(project, 'projectList.items', [])}
         />
       </div>
     );

@@ -25,19 +25,19 @@ export default function makeField(Component) {
       hasFeedback,
       field,
       required = false,
-      form: { isValid, touched, errors },
+      form: { touched, errors },
       formItemLayout,
       ...rest
     } = props;
     const name = field.name;
-    const hasError = touched[name] && !isValid;
+    const hasError = _.get(touched, name) && _.get(errors, name);
     const _formItemLayout = formItemLayout || defaultFormItemLayout;
     return (
       <FormItem
         label={label}
         validateStatus={hasError ? 'error' : 'success'}
         hasFeedback={hasFeedback && hasError}
-        help={hasError && errors[name]}
+        help={hasError}
         required={required}
         {..._formItemLayout}
       >

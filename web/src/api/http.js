@@ -79,6 +79,7 @@ const instance = axios.create({
     accesstoken: getToken(),
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
+    'X-Tenant': 'admin',
   },
   withCredentials: true,
 });

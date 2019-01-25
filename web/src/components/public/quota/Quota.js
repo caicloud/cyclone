@@ -15,8 +15,8 @@ const allocationMap = [
   {
     name: 'basic',
     value: {
-      'requests.cpu': 0.5,
-      'limits.cpu': 1,
+      'requests.cpu': '0.5',
+      'limits.cpu': '1',
       'requests.memory': '1GiB',
       'limits.memory': '2GiB',
     },
@@ -24,8 +24,8 @@ const allocationMap = [
   {
     name: 'middle',
     value: {
-      'requests.cpu': 1,
-      'limits.cpu': 2,
+      'requests.cpu': '1',
+      'limits.cpu': '2',
       'requests.memory': '2 GiB',
       'limits.memory': '4 GiB',
     },
@@ -33,21 +33,22 @@ const allocationMap = [
   {
     name: 'high',
     value: {
-      'requests.cpu': 2,
-      'limits.cpu': 4,
+      'requests.cpu': '2',
+      'limits.cpu': '4',
       'requests.memory': '4GiB',
       'limits.memory': '8GiB',
     },
   },
 ];
 
-class Allocation extends React.Component {
+class Quota extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     field: PropTypes.object,
     values: PropTypes.object,
     label: PropTypes.string,
     onChange: PropTypes.func,
+    form: PropTypes.object,
   };
   handleType = e => {
     const { setFieldValue, onChange } = this.props;
@@ -61,6 +62,37 @@ class Allocation extends React.Component {
     const value = e.target.value;
     setFieldValue('config', value);
     onChange(value);
+  };
+
+  handleInputChange = (name, value) => {
+    const { setFieldValue } = this.props;
+    setFieldValue(name, value);
+  };
+
+  handleBlur = () => {
+    const {
+      values,
+      form: { errors },
+      onChange,
+      field: { value },
+    } = this.props;
+    const customValues = values.custom;
+    if (
+      _.get(customValues, 'limits.cpu') &&
+      _.get(customValues, 'limits.memory') &&
+      _.get(customValues, 'requests.memory') &&
+      _.get(customValues, 'requests.cpu') &&
+      _.isEmpty(_.get(errors, 'custom'))
+    ) {
+      onChange({
+        'limits.cpu': _.get(customValues, 'limits.cpu'),
+        'limits.memory': _.get(customValues, 'limits.memory'),
+        'requests.memory': _.get(customValues, 'requests.memory'),
+        'requests.cpu': _.get(customValues, 'requests.cpu'),
+      });
+    } else if (value) {
+      onChange('');
+    }
   };
 
   // TODO(qme): realize custom and validate residual quota
@@ -150,33 +182,53 @@ class Allocation extends React.Component {
                   <Col span={12}>
                     <Field
                       name="custom.requests.cpu"
-                      render={props => (
-                        <InputWithUnit
-                          label={intl.get('allocation.cpuRequest')}
-                          addonAfter="Core"
-                          defaultAddon="Core"
-                          className="cpu"
-                          {...props}
-                        />
-                      )}
+                      render={props => {
+                        const name = props.field.name;
+                        const _props = {
+                          error: _.get(props, `form.errors.${name}`),
+                          touched: _.get(props, `form.touched.${name}`),
+                          field: props.field,
+                        };
+                        return (
+                          <InputWithUnit
+                            label={intl.get('allocation.cpuRequest')}
+                            addonAfter="Core"
+                            defaultAddon=""
+                            className="cpu"
+                            {..._props}
+                            onChange={this.handleInputChange}
+                            onBlur={this.handleBlur}
+                          />
+                        );
+                      }}
                     />
                   </Col>
                   <Col span={12}>
                     <Field
                       name="custom.requests.memory"
-                      render={props => (
-                        <InputWithUnit
-                          defaultAddon="MiB"
-                          className="memory"
-                          label={intl.get('allocation.memoryRequest')}
-                          addonAfter={[
-                            { name: 'MiB', value: 'MiB' },
-                            { name: 'GiB', value: 'GiB' },
-                            { name: 'TiB', value: 'TiB' },
-                          ]}
-                          {...props}
-                        />
-                      )}
+                      render={props => {
+                        const name = props.field.name;
+                        const _props = {
+                          error: _.get(props, `form.errors.${name}`),
+                          touched: _.get(props, `form.touched.${name}`),
+                          field: props.field,
+                        };
+                        return (
+                          <InputWithUnit
+                            defaultAddon="MiB"
+                            className="memory"
+                            label={intl.get('allocation.memoryRequest')}
+                            addonAfter={[
+                              { name: 'MiB', value: 'MiB' },
+                              { name: 'GiB', value: 'GiB' },
+                              { name: 'TiB', value: 'TiB' },
+                            ]}
+                            {..._props}
+                            onChange={this.handleInputChange}
+                            onBlur={this.handleBlur}
+                          />
+                        );
+                      }}
                     />
                   </Col>
                 </Row>
@@ -184,33 +236,53 @@ class Allocation extends React.Component {
                   <Col span={12}>
                     <Field
                       name="custom.limits.cpu"
-                      component={props => (
-                        <InputWithUnit
-                          label={intl.get('allocation.cpuLimit')}
-                          addonAfter="Core"
-                          defaultAddon="Core"
-                          className="cpu"
-                          {...props}
-                        />
-                      )}
+                      render={props => {
+                        const name = props.field.name;
+                        const _props = {
+                          error: _.get(props, `form.errors.${name}`),
+                          touched: _.get(props, `form.touched.${name}`),
+                          field: props.field,
+                        };
+                        return (
+                          <InputWithUnit
+                            label={intl.get('allocation.cpuLimit')}
+                            addonAfter="Core"
+                            defaultAddon=""
+                            className="cpu"
+                            {..._props}
+                            onChange={this.handleInputChange}
+                            onBlur={this.handleBlur}
+                          />
+                        );
+                      }}
                     />
                   </Col>
                   <Col span={12}>
                     <Field
                       name="custom.limits.memory"
-                      component={props => (
-                        <InputWithUnit
-                          defaultAddon="MiB"
-                          label={intl.get('allocation.memoryLimit')}
-                          className="memory"
-                          addonAfter={[
-                            { name: 'MiB', value: 'MiB' },
-                            { name: 'GiB', value: 'GiB' },
-                            { name: 'TiB', value: 'TiB' },
-                          ]}
-                          {...props}
-                        />
-                      )}
+                      render={props => {
+                        const name = props.field.name;
+                        const _props = {
+                          error: _.get(props, `form.errors.${name}`),
+                          touched: _.get(props, `form.touched.${name}`),
+                          field: props.field,
+                        };
+                        return (
+                          <InputWithUnit
+                            defaultAddon="MiB"
+                            label={intl.get('allocation.memoryLimit')}
+                            className="memory"
+                            addonAfter={[
+                              { name: 'MiB', value: 'MiB' },
+                              { name: 'GiB', value: 'GiB' },
+                              { name: 'TiB', value: 'TiB' },
+                            ]}
+                            {..._props}
+                            onChange={this.handleInputChange}
+                            onBlur={this.handleBlur}
+                          />
+                        );
+                      }}
                     />
                   </Col>
                 </Row>
@@ -236,4 +308,4 @@ export default withFormik({
     return errors;
   },
   displayName: 'allocation', // a unique identifier for this form
-})(Allocation);
+})(Quota);
