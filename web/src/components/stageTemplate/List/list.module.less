@@ -1,0 +1,78 @@
+@import "../../../less/inc.var.less";
+
+.template-list {
+  margin-bottom: 16px;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: space-between;
+  justify-content: flex-start;
+}
+
+.template-item {
+  :global {
+    .ant-card-meta-description {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      // use `ignore next` instead while upgrade autoprefixer to 8.4+
+      /* autoprefixer: off */
+      -webkit-box-orient: vertical;
+    }
+  }
+}
+
+.kind-list {
+  list-style: none;
+  margin: unset;
+  padding: unset;
+  width: 144px;
+  border: 1px solid #dedede;
+}
+
+.kind-item-wrapper {
+  &:last-of-type {
+    .kind-item {
+      border: unset;
+    }
+  }
+
+  &,
+  &:visited,
+  &:active,
+  &:focus {
+    text-decoration: none;
+    outline: none;
+  }
+}
+
+.kind-item {
+  cursor: pointer;
+  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border-bottom: 1px solid #dedede;
+  padding: 0px 8px;
+  line-height: 40px;
+  color: @font-color-secondary;
+  transition: all 0.1s;
+  background: #f8f8f8;
+  text-decoration: none;
+
+  .kind-item-ico {
+    display: none;
+  }
+
+  &:hover,
+  &.active {
+    color: @font-color;
+    background: unset;
+  }
+
+  &.active {
+    .kind-item-ico {
+      display: inline-block;
+    }
+  }
+}

@@ -8,7 +8,7 @@ const fetchApi = {
     });
   },
   fetchStageTemplates(query) {
-    return http.get(`/stages/templates`, query).then(data => {
+    return http.get(`/templates`, query).then(data => {
       return data;
     });
   },

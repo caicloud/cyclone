@@ -1,41 +1,41 @@
 import defaultCover from '@/images/stage/template_default.png';
-
+import { Card, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
-import { Col, Card } from 'antd';
-import React from 'react';
+
+import styles from './list.module.less';
 
 const { Meta } = Card;
 
 const Item = ({ template }) => {
   return (
-    <Col
-      span={6}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        marginBottom: '16px',
-      }}
+    <Card
+      hoverable
+      className={styles['template-item']}
+      style={{ width: 208, height: 208, margin: '0 16px 16px 0' }}
+      cover={<img height="104px" alt="example" src={defaultCover} />}
     >
-      <Card
-        hoverable
-        style={{ width: 240, height: 240 }}
-        cover={<img height="120px" alt="example" src={defaultCover} />}
-      >
-        <Meta
-          title={_.get(template, 'metadata.name')}
-          description={_.get(template, 'metadata.description')}
-        />
-      </Card>
-    </Col>
+      <Meta
+        title={
+          <Tooltip title={_.get(template, 'metadata.name')}>
+            {_.get(template, 'metadata.name')}
+          </Tooltip>
+        }
+        description={_.get(template, [
+          'metadata',
+          'annotations',
+          'cyclone.io/description',
+        ])}
+      />
+    </Card>
   );
 };
 
 Item.propTypes = {
   template: PropTypes.shape({
-    metadata: {
+    metadata: PropTypes.shape({
       name: PropTypes.string,
-      description: PropTypes.string,
-    },
+      annotations: PropTypes.object,
+    }),
   }),
 };
 

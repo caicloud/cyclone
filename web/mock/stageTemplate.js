@@ -1,5 +1,5 @@
 module.exports = {
-  'GET /api/v1/stages/templates': [
+  'GET /apis/v1alpha1/stages/templates': [
     {
       metadata: {
         name: 'ImageBuild',
