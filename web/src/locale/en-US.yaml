@@ -49,6 +49,13 @@ allocation:
   basic: Basic configuration
   middle: Medium configuration
   high: Advanced configuration
+template:
+  kinds:
+    all: All
+    build: Build
+    unit-test: UnitTest
+    image-build: ImageBuild
+    code-scan: CodeScan
 validate:
   required: Reqiured
   positiveOrFloat: It has to be Number to allow two decimal places

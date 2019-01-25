@@ -50,6 +50,13 @@ allocation:
   basic: 基础配置
   middle: 中等配置
   high: 高级配置
+template:
+  kinds:
+    all: 全部类型
+    build: 构建
+    unit-test: 单元测试
+    image-build: 镜像构建
+    code-scan: 代码扫描
 validate:
   required: 必填
   positiveOrFloat: 必须是 Number, 允许两位小数
