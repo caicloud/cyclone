@@ -4,7 +4,7 @@ import { Field, withFormik } from 'formik';
 import InputWithUnit from '@/components/public/inputWithUnit';
 import MakeField from '@/components/public/makeField';
 import PropTypes from 'prop-types';
-import { resourceValidate } from '@/components/public/consts/validate';
+import { resourceValidate } from '@/consts/validate';
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;

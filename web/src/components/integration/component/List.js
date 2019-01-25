@@ -3,7 +3,7 @@ import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import IntegrationForm from './DataForm';
 import PropTypes from 'prop-types';
-import { IntegrationTypeMap } from '@/components/public/consts/const.js';
+import { IntegrationTypeMap } from '@/consts/const.js';
 
 @inject('integration')
 @observer
