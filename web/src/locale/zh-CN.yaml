@@ -38,6 +38,7 @@ integration:
     username: 用户名
     pwd: 密码
     datasourcetype: 请选择资源类型
+    tokentip: 请点击[Access Token]新建 Token，并勾选 repo 权限，然后将生成的 Token 复制粘贴到这里。
 project:
   externalSystem: 外部系统
   workflowCount: 工作流数量

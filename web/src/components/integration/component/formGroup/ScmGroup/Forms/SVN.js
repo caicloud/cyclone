@@ -10,12 +10,22 @@ export default class SVN extends React.Component {
       <div>
         <Field
           label="服务地址"
-          name="serviceAddress"
+          name="spec.inline.scm.server"
           component={InputField}
           required
         />
-        <Field label="用户名" name="username" required component={InputField} />
-        <Field label="密码" name="pwd" required component={InputField} />
+        <Field
+          label="用户名"
+          name="spec.inline.scm.user"
+          required
+          component={InputField}
+        />
+        <Field
+          label="密码"
+          name="spec.inline.scm.password"
+          required
+          component={InputField}
+        />
       </div>
     );
   }

@@ -17,6 +17,9 @@ const fetchApi = {
       return data;
     });
   },
+  createIntegration(data) {
+    return http.post('/integrations', data);
+  },
   fetchResources() {
     return http.get('/resources').then(data => {
       return data;

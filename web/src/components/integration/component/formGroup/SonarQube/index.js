@@ -20,14 +20,14 @@ export default class SonarQube extends React.Component {
         <Field
           label="Server地址"
           required
-          name="serverAddress"
+          name="spec.inline.sonarQube.server"
           component={InputField}
           onChange={this.changeConfig}
         />
         <Field
           label="Token"
           required
-          name="token"
+          name="spec.inline.sonarQube.token"
           component={InputField}
           onChange={this.changeConfig}
         />

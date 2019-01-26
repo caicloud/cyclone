@@ -22,6 +22,7 @@ export default class Selection extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     field: PropTypes.object,
+    values: PropTypes.object,
     label: PropTypes.string,
     onChange: PropTypes.func,
   };
@@ -32,12 +33,27 @@ export default class Selection extends React.Component {
     } = this.props;
     const value = e.target.value;
     setFieldValue(name, value);
+    if (value === 'GitLab') {
+      setFieldValue('spec.inline.scm.server', 'https://gitlab.com');
+    } else if (value === 'SVN') {
+      setFieldValue('spec.inline.scm.server', '');
+    } else if (value === 'GitHub') {
+      setFieldValue('spec.inline.scm.server', 'https://github.com');
+    }
   };
 
   // TODO(qme): realize custom and validate residual quota
   render() {
-    const { field, label } = this.props;
-    const type = field.value || 'GitHub';
+    const {
+      label,
+      values: {
+        spec: {
+          inline: {
+            scm: { type },
+          },
+        },
+      },
+    } = this.props;
     return (
       <div>
         <FormItem
@@ -52,8 +68,7 @@ export default class Selection extends React.Component {
           <div className="u-resource-allocation">
             <div className="allocation-type">
               <Field
-                name="type"
-                value={type}
+                name="spec.inline.scm.type"
                 component={_RadioGroup}
                 onChange={this.handleType}
               >

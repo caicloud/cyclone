@@ -42,6 +42,13 @@ class Integration {
     const items = this.groupIntegrationList[keys[0]];
     return _.find(items, o => _.get(o, 'metadata.name') === keys[1]);
   }
+  @action.bound
+  createIntegration(data, cb) {
+    fetchApi.createIntegration(data).then(() => {
+      //this.listProjects();
+      cb();
+    });
+  }
 }
 
 export default new Integration();

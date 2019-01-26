@@ -8,12 +8,33 @@ const InputField = MakeField(Input);
 const FormItem = Form.Item;
 
 const _RadioGroup = MakeField(RadioGroup);
+
 const validateMap = {
-  Token: <Field label="Token" name="Token" component={InputField} />,
+  Token: (
+    <div>
+      <Field
+        label="Token"
+        name="spec.inline.scm.token"
+        required
+        component={InputField}
+      />
+      <p className="elliot">{intl.get('integration.name')}</p>
+    </div>
+  ),
   UserPwd: (
     <div>
-      <Field label="用户名" name="UserName" component={InputField} />
-      <Field label="密码" name="Pwd" component={InputField} />
+      <Field
+        label="用户名"
+        name="spec.inline.scm.user"
+        required
+        component={InputField}
+      />
+      <Field
+        label="密码"
+        name="spec.inline.scm.password"
+        required
+        component={InputField}
+      />
     </div>
   ),
 };
@@ -38,7 +59,7 @@ export default class ValidateSelect extends React.Component {
           }}
         >
           <Field
-            name="type"
+            name="validateType"
             value={this.state.type}
             component={_RadioGroup}
             onChange={this.handleType}

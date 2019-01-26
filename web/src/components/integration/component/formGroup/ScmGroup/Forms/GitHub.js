@@ -9,13 +9,18 @@ export default class GitHub extends React.Component {
   render() {
     return (
       <div>
-        <Field label="服务地址" name="serviceAddress" component={InputField} />
+        <Field
+          label="服务地址"
+          name="spec.inline.scm.server"
+          disabled
+          component={InputField}
+        />
         <Field
           label="验证方式"
           name="validateFunc"
           component={ValidateSelect}
         />
-        <Button>验证</Button>
+        <Button>校验</Button>
       </div>
     );
   }

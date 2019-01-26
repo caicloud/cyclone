@@ -11,7 +11,7 @@ export default class AddSource extends React.Component {
         </div>
         <Row>
           <Col span={20}>
-            <IntegrationForm />
+            <IntegrationForm {...this.props} />
           </Col>
         </Row>
       </div>

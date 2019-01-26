@@ -9,7 +9,11 @@ export default class GitLab extends React.Component {
   render() {
     return (
       <div>
-        <Field label="服务地址" name="serviceAddress" component={InputField} />
+        <Field
+          label="服务地址"
+          name="spec.inline.scm.server"
+          component={InputField}
+        />
         <Field
           label="验证方式"
           name="validateFunc"
