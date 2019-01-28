@@ -115,3 +115,7 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 [[constraint]]
   name = "github.com/robfig/cron"
   version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/mozillazg/go-slugify"
+  version = "v0.2.0"
