@@ -117,7 +117,7 @@ class Quota extends React.Component {
     const { setFieldValue, onChange } = this.props;
     const name = e.target.value;
     setFieldValue('config', name);
-    const item = _.find(allocationMap, n => (n.name = name));
+    const item = _.find(allocationMap, n => n.name === name);
     onChange(item.value);
   };
 
@@ -164,7 +164,7 @@ class Quota extends React.Component {
         required
         {...{
           labelCol: { span: 4 },
-          wrapperCol: { span: 14 },
+          wrapperCol: { span: 16 },
         }}
       >
         {/* TODO: split into sub-components */}
@@ -191,7 +191,7 @@ class Quota extends React.Component {
                 component={_RadioGroup}
                 value={config}
                 onChange={this.handleConfigSelect}
-                formItemLayout={{ wrapperCol: { span: 20 } }}
+                formItemLayout={{ wrapperCol: { span: 24 } }}
               >
                 {allocationMap.map(a => (
                   <RadioButton value={a.name} key={a.name}>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input, Select, Form } from 'antd';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
@@ -51,7 +50,6 @@ class InputAddon extends React.Component {
 
   handleAddon = value => {
     const { byteFieldNum } = this.state;
-
     this.setState({ byteUnit: value });
     const valueWithUnit = `${byteFieldNum}${value}`;
     this.onChange(valueWithUnit);
@@ -122,7 +120,7 @@ class InputAddon extends React.Component {
           required
           {...{ labelCol: { span: 8 }, wrapperCol: { span: 16 } }}
         >
-          <Input {..._attr} addonAfter={addonComp} />
+          <Input {..._attr} addonAfter={addonComp} type="number" />
         </FormItem>
       </div>
     );

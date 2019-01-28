@@ -62,7 +62,7 @@ class IntegrationSelect extends React.Component {
         help={hasError && errors[name]}
         {...{
           labelCol: { span: 4 },
-          wrapperCol: { span: 14 },
+          wrapperCol: { span: 16 },
         }}
       >
         <Select
