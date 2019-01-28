@@ -10,10 +10,10 @@ const ProjectRoutes = ({ match }) => {
       <Route path="/project" exact component={Project} />
       <Route path={`${match.path}/add`} component={CreateProject} />
       <Route
-        path={`${match.path}/:projectId/update`}
+        path={`${match.path}/:projectName/update`}
         component={CreateProject}
       />
-      <Route path={`${match.path}/:projectId`} component={ProjectDetail} />
+      <Route path={`${match.path}/:projectName`} component={ProjectDetail} />
     </Switch>
   );
 };

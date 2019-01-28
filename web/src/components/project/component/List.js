@@ -1,10 +1,8 @@
-import { Table, Button, Modal } from 'antd';
+import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
-import EllipsisMenu from '../../public/ellipsisMenu';
 import { FormatTime } from '@/lib/util';
-
-const confirm = Modal.confirm;
+import MenuAction from './MenuAction';
 
 @inject('project')
 @observer
@@ -41,17 +39,8 @@ class List extends React.Component {
     });
   };
 
-  removeProject = name => {
-    const { project } = this.props;
-    confirm({
-      title: `Do you Want to delete project ${name} ?`,
-      onOk() {
-        project.deleteProject(name);
-      },
-    });
-  };
   render() {
-    const { match, project } = this.props;
+    const { match, project, history } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -74,13 +63,7 @@ class List extends React.Component {
         dataIndex: 'metadata.name',
         key: 'action',
         align: 'right',
-        render: value => (
-          <EllipsisMenu
-            menuFunc={() => {
-              this.removeProject(value);
-            }}
-          />
-        ),
+        render: value => <MenuAction name={value} history={history} />,
       },
     ];
     return (

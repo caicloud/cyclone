@@ -13,12 +13,12 @@ class AddProject extends React.Component {
     const {
       match: { params },
     } = props;
-    const update = !!_.get(params, 'projectId');
+    const update = !!_.get(params, 'projectName');
     this.state = {
       update,
     };
     if (update) {
-      props.project.getProject(params.projectId);
+      props.project.getProject(params.projectName);
     }
   }
 
@@ -39,7 +39,7 @@ class AddProject extends React.Component {
       'cyclone.io/description': values.metadata.description,
     };
     if (update) {
-      project.updateProject(data, params.projectId, () => {
+      project.updateProject(data, params.projectName, () => {
         history.replace(`/project`);
       });
     } else {
