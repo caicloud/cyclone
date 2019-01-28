@@ -39,6 +39,17 @@ integration:
     pwd: 密码
     datasourcetype: 请选择资源类型
     tokentip: 请点击[Access Token]新建 Token，并勾选 repo 权限，然后将生成的 Token 复制粘贴到这里。
+    scm:
+      serverAddress: 服务地址
+      verificationMode: 验证方式
+      usernamepwd: 用户名密码
+    error:
+      name: '名称不能为空'
+      sourceType: '请选择类型'
+      server: '请填写服务地址'
+      token: '请填写token信息'
+      user: '请填写用户名'
+      pwd: '请填写密码'
 project:
   externalSystem: 外部系统
   workflowCount: 工作流数量

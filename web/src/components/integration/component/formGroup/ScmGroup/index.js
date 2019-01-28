@@ -8,7 +8,7 @@ export default class ScmGroup extends React.Component {
       <div>
         <h3>代码源</h3>
         <Field
-          label="类型"
+          label={intl.get('integration.type')}
           name="spec.inline.scm.type"
           {...this.props}
           component={Selection}

@@ -36,44 +36,10 @@ selectSourceType.propTypes = {
 
 const SelectField = MakeField(selectSourceType);
 
-const generateData = (data, type) => {
-  const metadata = {
-    creationTime: Date.now(),
-    description: '',
-    name: '',
-  };
-  const spec = {
-    inline: {
-      dockerRegistry: {},
-      general: [
-        {
-          name: '',
-          value: '',
-        },
-      ],
-      scm: {
-        password: '',
-        server: '',
-        token: '',
-        type: '',
-        user: '',
-      },
-      sonarQube: {},
-    },
-    type: '',
-  };
-  _.forEach(metadata, (v, k) => {
-    if (k in data) {
-      v = data[k];
-    }
-  });
-  _.forEach(spec.inline[type], (v, k) => {
-    if (k in data) {
-      v = data[k];
-    }
-  });
-  const submitData = Object.assign({}, { metadata, spec });
-  return submitData;
+const generateData = data => {
+  delete data['sourceType'];
+  data['metadata']['creationTime'] = Date.now().toString();
+  return data;
 };
 
 @inject('integration')
@@ -152,28 +118,29 @@ export default class IntegrationForm extends React.Component {
             },
           };
           if (!values.metadata.name) {
-            errors.metadata = { name: '不能为空' };
+            errors.metadata = { name: intl.get('integration.form.error.name') };
           }
           if (!values.sourceType) {
-            errors.sourceType = '请选择类型s';
+            errors.sourceType = intl.get('integration.form.error.sourceType');
           }
 
           if (!values.spec.inline.scm.server) {
-            spec.inline.scm.server = '请填写服务地址';
+            spec.inline.scm.server = intl.get('integration.form.error.server');
             errors['spec'] = spec;
           }
 
           if (!values.spec.inline.scm.token) {
-            spec.inline.scm.token = '请填写token信息';
+            spec.inline.scm.token = intl.get('integration.form.error.token');
             errors['spec'] = spec;
           }
 
           if (!values.spec.inline.scm.user) {
-            spec.inline.scm.user = '请填写用户名';
+            spec.inline.scm.user = intl.get('integration.form.error.user');
             errors['spec'] = spec;
           }
           if (!values.spec.inline.scm.password) {
-            errors.spec.inline.scm.password = '请填写密码';
+            spec.inline.scm.password = intl.get('integration.form.error.pwd');
+            errors['spec'] = spec;
           }
           return errors;
         }}
@@ -215,15 +182,24 @@ export default class IntegrationForm extends React.Component {
                 component={SelectField}
               />
               {sourceType && this.renderWrapForm(sourceType, props)}
-              <FormItem>
+              <FormItem
+                {...{
+                  labelCol: { span: 8 },
+                  wrapperCol: { span: 18 },
+                }}
+              >
                 <Button
-                  style={{ marginRight: '10px' }}
+                  style={{ float: 'right' }}
+                  type="primary"
+                  htmlType="submit"
+                >
+                  {intl.get('integration.form.confirm')}
+                </Button>
+                <Button
+                  style={{ float: 'right', marginRight: 10 }}
                   onClick={this.handleCancle}
                 >
                   {intl.get('integration.form.cancel')}
-                </Button>
-                <Button type="primary" htmlType="submit">
-                  {intl.get('integration.form.confirm')}
                 </Button>
                 {!_.isEmpty(errors) && <p>有错误存在</p>}
               </FormItem>

@@ -10,12 +10,12 @@ export default class GitLab extends React.Component {
     return (
       <div>
         <Field
-          label="服务地址"
+          label={intl.get('integration.form.scm.serverAddress')}
           name="spec.inline.scm.server"
           component={InputField}
         />
         <Field
-          label="验证方式"
+          label={intl.get('integration.form.scm.verificationMode')}
           name="validateFunc"
           component={ValidateSelect}
         />

@@ -26,10 +26,12 @@ workflow:
 integration:
   name: Name
   desc: Description
-  integrationTime: Integration time
+  type: Type
+  creationTime: Creation time
   datasource: Data source
   addexternalsystem: Add external system
-  dataform:
+  serviceAddress: Service address
+  form:
     dockerregistry: Docker registry
     registryaddress: Registry Address
     confirm: Confirm
@@ -37,6 +39,18 @@ integration:
     username: Username
     pwd: password
     datasourcetype: Please select a resource type
+    tokentip: Click [Access Token] to create a new Token, check the repo permission, and copy and paste the generated Token here.
+    scm:
+      serverAddress: Server address
+      verificationMode: Verification mode
+      usernamepwd: Username password
+    error:
+      name: 'Name is required'
+      sourceType: 'Please choose the type'
+      server: 'Please fill in the service address'
+      token: 'Please fill in the token information'
+      user: 'please enter username'
+      pwd: 'please enter password'
 project:
   externalSystem: External system
   workflowCount: Workflow count

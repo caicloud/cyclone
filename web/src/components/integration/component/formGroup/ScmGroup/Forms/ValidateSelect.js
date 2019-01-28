@@ -24,13 +24,13 @@ const validateMap = {
   UserPwd: (
     <div>
       <Field
-        label="用户名"
+        label={intl.get('integration.form.username')}
         name="spec.inline.scm.user"
         required
         component={InputField}
       />
       <Field
-        label="密码"
+        label={intl.get('integration.form.password')}
         name="spec.inline.scm.password"
         required
         component={InputField}
@@ -51,7 +51,7 @@ export default class ValidateSelect extends React.Component {
     return (
       <div>
         <FormItem
-          label="验证方式"
+          label={intl.get('integration.form.scm.verificationMode')}
           required
           {...{
             labelCol: { span: 4 },
@@ -65,7 +65,9 @@ export default class ValidateSelect extends React.Component {
             onChange={this.handleType}
           >
             <RadioButton value="Token">Token</RadioButton>
-            <RadioButton value="UserPwd">用户名密码</RadioButton>
+            <RadioButton value="UserPwd">
+              label={intl.get('integration.form.scm.usernamepwd')}
+            </RadioButton>
           </Field>
         </FormItem>
         {validateMap[this.state.type]}

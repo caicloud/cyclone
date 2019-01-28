@@ -42,7 +42,6 @@ export default class Selection extends React.Component {
     }
   };
 
-  // TODO(qme): realize custom and validate residual quota
   render() {
     const {
       label,
