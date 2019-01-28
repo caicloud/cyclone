@@ -2,6 +2,7 @@ name: Name
 action: Action
 creationTime: Creation time
 description: Description
+memory: Memory
 operation:
   add: Add
   delete: Delete
@@ -62,3 +63,4 @@ validate:
   positiveOrFloat: It has to be Number to allow two decimal places
   quota:
     exceedLimit: The request can‘t exceed the limit
+    selectConfig: Please select config

@@ -1,10 +1,10 @@
-import React from 'react';
-import { Radio, Form, Row, Col } from 'antd';
-import { Field, withFormik } from 'formik';
 import InputWithUnit from '@/components/public/inputWithUnit';
 import MakeField from '@/components/public/makeField';
+import { resourceValidate } from '@/components/public/validate';
+import { Radio, Form, Row, Col } from 'antd';
+import { Field, withFormik } from 'formik';
 import PropTypes from 'prop-types';
-import { resourceValidate } from '@/consts/validate';
+
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -49,11 +49,42 @@ class Quota extends React.Component {
     label: PropTypes.string,
     onChange: PropTypes.func,
     form: PropTypes.object,
+    parentSubmitCount: PropTypes.number,
+    setTouched: PropTypes.func,
   };
   constructor(props) {
     super(props);
     const { field } = props;
     this.getInitialValues(field.value);
+  }
+
+  componentDidUpdate(prevProps) {
+    const {
+      parentSubmitCount,
+      setTouched,
+      values: { type },
+    } = this.props;
+    const prevSubmitCount = prevProps.parentSubmitCount;
+    const touchedValue =
+      type === 'recommend'
+        ? {
+            config: true,
+          }
+        : {
+            custom: {
+              limits: {
+                cpu: true,
+                memory: true,
+              },
+              requests: {
+                cpu: true,
+                memory: true,
+              },
+            },
+          };
+    if (prevSubmitCount !== parentSubmitCount) {
+      setTouched(touchedValue);
+    }
   }
 
   getInitialValues = value => {
@@ -306,7 +337,7 @@ export default withFormik({
   validate: values => {
     const errors = {};
     if (values.type === 'recommend' && _.isEmpty(values.config)) {
-      errors.config = '请选择配置';
+      errors.config = intl.get('validate.quota.selectConfig');
     }
     if (values.type === 'custom') {
       errors.custom = resourceValidate(values.custom);

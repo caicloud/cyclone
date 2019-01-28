@@ -117,7 +117,7 @@ class InputAddon extends React.Component {
         <FormItem
           label={label}
           validateStatus={hasError ? 'error' : 'success'}
-          hasFeedback={hasError}
+          hasFeedback={!!hasError}
           help={hasError}
           required
           {...{ labelCol: { span: 8 }, wrapperCol: { span: 16 } }}
