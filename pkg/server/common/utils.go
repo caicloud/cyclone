@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"strings"
 )
 
 // TenantNamespace gets namespace from given tenant name.
@@ -38,25 +37,4 @@ func WorkerClustersSelector() string {
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
 func ProjectSelector(project string) string {
 	return LabelProject + "=" + project
-}
-
-// BuildResoucesName returns name, in k8s side, of resources under the project.
-func BuildResoucesName(project string, name string) string {
-	return project + "-" + name
-}
-
-// RetrieveResoucesName returns name, in user side, of resources under the project.
-func RetrieveResoucesName(project string, name string) string {
-	return strings.TrimPrefix(name, project+"-")
-}
-
-// AddProjectLabel adds project label for a resource metadata labels
-func AddProjectLabel(rl map[string]string, project string) map[string]string {
-	labels := rl
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels[LabelProject] = project
-
-	return labels
 }

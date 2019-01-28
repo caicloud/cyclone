@@ -15,16 +15,12 @@ import (
 
 // CreateWorkflow ...
 func CreateWorkflow(ctx context.Context, project, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
-	wf.ObjectMeta.Labels = common.AddProjectLabel(wf.ObjectMeta.Labels, project)
-	wf.Name = common.BuildResoucesName(project, wf.Name)
-
-	created, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Create(wf)
+	err := CreatePrelude(project, tenant, wf)
 	if err != nil {
 		return nil, err
 	}
 
-	created.Name = common.RetrieveResoucesName(project, wf.Name)
-	return created, nil
+	return handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Create(wf)
 }
 
 // ListWorkflows ...
@@ -48,35 +44,24 @@ func ListWorkflows(ctx context.Context, project, tenant string, pagination *type
 		end = size
 	}
 
-	wfs := make([]v1alpha1.Workflow, size)
-	for i, wf := range items[pagination.Start:end] {
-		wf.Name = common.RetrieveResoucesName(project, wf.Name)
-		wfs[i] = wf
-	}
-	return types.NewListResponse(int(size), wfs), nil
+	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
 }
 
 // GetWorkflow ...
 func GetWorkflow(ctx context.Context, project, workflow, tenant string) (*v1alpha1.Workflow, error) {
-	name := common.BuildResoucesName(project, workflow)
-	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	wf.Name = common.RetrieveResoucesName(project, wf.Name)
-	return wf, nil
+	return handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
 }
 
 // UpdateWorkflow ...
 func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
-	name := common.BuildResoucesName(project, workflow)
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 		newWf := origin.DeepCopy()
 		newWf.Spec = wf.Spec
+		newWf.Annotations = UpdateAnnotations(wf.Annotations, newWf.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Update(newWf)
 		return err
 	})
@@ -90,6 +75,5 @@ func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v
 
 // DeleteWorkflow ...
 func DeleteWorkflow(ctx context.Context, project, workflow, tenant string) error {
-	name := common.BuildResoucesName(project, workflow)
-	return handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(name, nil)
+	return handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(workflow, nil)
 }

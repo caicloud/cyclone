@@ -33,6 +33,12 @@ const (
 	// OwnerCyclone is the label value used to indicate namespaces created by cyclone
 	OwnerCyclone = "cyclone"
 
+	// AnnotationAlias is the annotation key used to indicate the alias of resources
+	AnnotationAlias = "cyclone.io/alias"
+
+	// AnnotationDescription is the annotation key used to describe resources
+	AnnotationDescription = "cyclone.io/description"
+
 	// QuotaCPULimit represents default value of 'limits.cpu'
 	QuotaCPULimit = "2"
 	// QuotaCPURequest represents default value of 'requests.cpu'

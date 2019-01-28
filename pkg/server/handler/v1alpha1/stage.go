@@ -15,16 +15,12 @@ import (
 
 // CreateStage ...
 func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
-	stg.ObjectMeta.Labels = common.AddProjectLabel(stg.ObjectMeta.Labels, project)
-	stg.Name = common.BuildResoucesName(project, stg.Name)
-
-	created, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stg)
+	err := CreatePrelude(project, tenant, stg)
 	if err != nil {
 		return nil, err
 	}
 
-	created.Name = common.RetrieveResoucesName(project, stg.Name)
-	return created, nil
+	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stg)
 }
 
 // ListStages ...
@@ -48,35 +44,24 @@ func ListStages(ctx context.Context, project, tenant string, pagination *types.P
 		end = size
 	}
 
-	stgs := make([]v1alpha1.Stage, size)
-	for i, stg := range items[pagination.Start:end] {
-		stg.Name = common.RetrieveResoucesName(project, stg.Name)
-		stgs[i] = stg
-	}
-	return types.NewListResponse(int(size), stgs), nil
+	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
 }
 
 // GetStage ...
 func GetStage(ctx context.Context, project, stage, tenant string) (*v1alpha1.Stage, error) {
-	name := common.BuildResoucesName(project, stage)
-	stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	stg.Name = common.RetrieveResoucesName(project, stg.Name)
-	return stg, nil
+	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
 }
 
 // UpdateStage ...
 func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
-	name := common.BuildResoucesName(project, stage)
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 		newStg := origin.DeepCopy()
 		newStg.Spec = stg.Spec
+		newStg.Annotations = UpdateAnnotations(stg.Annotations, newStg.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStg)
 		return err
 	})
@@ -90,6 +75,5 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 
 // DeleteStage ...
 func DeleteStage(ctx context.Context, project, stage, tenant string) error {
-	name := common.BuildResoucesName(project, stage)
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(name, nil)
+	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(stage, nil)
 }

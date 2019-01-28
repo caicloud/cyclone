@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/caicloud/nirvana/log"
@@ -29,19 +28,12 @@ import (
 
 // CreateWorkflowRun ...
 func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	wfr.ObjectMeta.Labels = common.AddProjectLabel(wfr.ObjectMeta.Labels, project)
-	if wfr.Name == "" {
-		wfr.Name = strconv.FormatInt(time.Now().UnixNano(), 10)
-	}
-	wfr.Name = common.BuildResoucesName(project, wfr.Name)
-
-	created, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
+	err := CreatePrelude(project, tenant, wfr)
 	if err != nil {
 		return nil, err
 	}
 
-	created.Name = common.RetrieveResoucesName(project, wfr.Name)
-	return created, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
 }
 
 // ListWorkflowRuns ...
@@ -65,35 +57,24 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pag
 		end = size
 	}
 
-	wfrs := make([]v1alpha1.WorkflowRun, size)
-	for i, wfr := range items[pagination.Start:end] {
-		wfr.Name = common.RetrieveResoucesName(project, wfr.Name)
-		wfrs[i] = wfr
-	}
-	return types.NewListResponse(int(size), wfrs), nil
+	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
 }
 
 // GetWorkflowRun ...
 func GetWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	name := common.BuildResoucesName(project, workflowrun)
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	wfr.Name = common.RetrieveResoucesName(project, wfr.Name)
-	return wfr, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
 }
 
 // UpdateWorkflowRun ...
 func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	name := common.BuildResoucesName(project, workflowrun)
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 		newWfr := origin.DeepCopy()
 		newWfr.Spec = wfr.Spec
+		newWfr.Annotations = UpdateAnnotations(wfr.Annotations, newWfr.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(newWfr)
 		return err
 	})
@@ -107,42 +88,29 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 
 // DeleteWorkflowRun ...
 func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) error {
-	name := common.BuildResoucesName(project, workflowrun)
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(name, nil)
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
 }
 
 // CancelWorkflowRun updates the workflowrun overall status to Cancelled.
 func CancelWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	name := common.BuildResoucesName(project, workflowrun)
 	data, err := handler.BuildWfrStatusPatch("Cancelled")
 	if err != nil {
 		log.Errorf("cancel workflowrun %s error %s", workflowrun, err)
 		return nil, err
 	}
 
-	updated, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(name, k8s_types.JSONPatchType, data)
-	if err != nil {
-		return nil, err
-	}
-	updated.Name = common.RetrieveResoucesName(project, updated.Name)
-	return updated, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
 }
 
 // ContinueWorkflowRun updates the workflowrun overall status to Running.
 func ContinueWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	name := common.BuildResoucesName(project, workflowrun)
 	data, err := handler.BuildWfrStatusPatch("Running")
 	if err != nil {
 		log.Errorf("continue workflowrun %s error %s", workflowrun, err)
 		return nil, err
 	}
 
-	updated, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(name, k8s_types.JSONPatchType, data)
-	if err != nil {
-		return nil, err
-	}
-	updated.Name = common.RetrieveResoucesName(project, updated.Name)
-	return updated, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
 }
 
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
@@ -158,11 +126,10 @@ func ReceiveContainerLogStream(ctx context.Context, project, workflow, workflowr
 	}
 	defer ws.Close()
 
-	name := common.BuildResoucesName(project, workflowrun)
 	namespace := common.TenantNamespace(tenant)
-	if err := receiveContainerLogStream(name, stage, container, namespace, ws); err != nil {
+	if err := receiveContainerLogStream(workflowrun, stage, container, namespace, ws); err != nil {
 		log.Errorf("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
-			name, stage, container, err.Error())
+			workflowrun, stage, container, err.Error())
 		return cerr.ErrorUnknownInternal.Error(err)
 	}
 
@@ -229,11 +196,10 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 	}
 	defer ws.Close()
 
-	name := common.BuildResoucesName(project, workflowrun)
 	namespace := common.TenantNamespace(tenant)
-	if err := getContainerLogStream(name, stage, container, namespace, ws); err != nil {
+	if err := getContainerLogStream(workflowrun, stage, container, namespace, ws); err != nil {
 		log.Errorf("Unable to get logstream for %s/%s/%s/%s for err: %s",
-			namespace, name, stage, container, err)
+			namespace, workflowrun, stage, container, err)
 		return cerr.ErrorUnknownInternal.Error(err.Error())
 	}
 
@@ -299,10 +265,9 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
 func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string, download bool) ([]byte, map[string]string, error) {
-	name := common.BuildResoucesName(project, workflowrun)
 	namespace := common.TenantNamespace(tenant)
 
-	logs, err := getContainerLogs(name, stage, container, namespace)
+	logs, err := getContainerLogs(workflowrun, stage, container, namespace)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -310,7 +275,7 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	headers := make(map[string]string)
 	headers[httputil.HeaderContentType] = "text/plain"
 	if download {
-		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", name, stage, container)
+		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", workflowrun, stage, container)
 		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", logFileName)
 	}
 

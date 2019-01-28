@@ -15,16 +15,12 @@ import (
 
 // CreateWorkflowTrigger ...
 func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	wft.ObjectMeta.Labels = common.AddProjectLabel(wft.ObjectMeta.Labels, project)
-	wft.Name = common.BuildResoucesName(project, wft.Name)
-
-	created, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Create(wft)
+	err := CreatePrelude(project, tenant, wft)
 	if err != nil {
 		return nil, err
 	}
 
-	created.Name = common.RetrieveResoucesName(project, wft.Name)
-	return created, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Create(wft)
 }
 
 // ListWorkflowTriggers ...
@@ -48,35 +44,24 @@ func ListWorkflowTriggers(ctx context.Context, project, tenant string, paginatio
 		end = size
 	}
 
-	wfts := make([]v1alpha1.WorkflowTrigger, size)
-	for i, wft := range items[pagination.Start:end] {
-		wft.Name = common.RetrieveResoucesName(project, wft.Name)
-		wfts[i] = wft
-	}
-	return types.NewListResponse(int(size), wfts), nil
+	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
 }
 
 // GetWorkflowTrigger ...
 func GetWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) (*v1alpha1.WorkflowTrigger, error) {
-	name := common.BuildResoucesName(project, workflowtrigger)
-	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	wft.Name = common.RetrieveResoucesName(project, wft.Name)
-	return wft, nil
+	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
 }
 
 // UpdateWorkflowTrigger ...
 func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	name := common.BuildResoucesName(project, workflowtrigger)
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 		newWft := origin.DeepCopy()
 		newWft.Spec = wft.Spec
+		newWft.Annotations = UpdateAnnotations(wft.Annotations, newWft.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
 		return err
 	})
@@ -90,6 +75,5 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 
 // DeleteWorkflowTrigger ...
 func DeleteWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) error {
-	name := common.BuildResoucesName(project, workflowtrigger)
-	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(name, nil)
+	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
 }
