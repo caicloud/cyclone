@@ -22,7 +22,7 @@
     "precommit": "lint-staged",
     "lint": "eslint src",
     "start": "REACT_APP_API_BASE_URL=/apis/v1alpha1 node scripts/start.js",
-    "build": "node scripts/build.js",
+    "build": "REACT_APP_API_BASE_URL=/apis/v1alpha1 node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
   },
   "jest": {
