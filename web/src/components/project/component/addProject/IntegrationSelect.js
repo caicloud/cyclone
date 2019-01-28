@@ -1,4 +1,3 @@
-import React from 'react';
 import { Select, Row, Col } from 'antd';
 import { Form, Button } from 'antd';
 import PropTypes from 'prop-types';

@@ -3,13 +3,16 @@ import ProjectDetail from './component/ProjectDetail';
 import CreateProject from './component/addProject';
 import { Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import React from 'react';
 
 const ProjectRoutes = ({ match }) => {
   return (
     <Switch>
       <Route path="/project" exact component={Project} />
       <Route path={`${match.path}/add`} component={CreateProject} />
+      <Route
+        path={`${match.path}/:projectId/update`}
+        component={CreateProject}
+      />
       <Route path={`${match.path}/:projectId`} component={ProjectDetail} />
     </Switch>
   );

@@ -41,15 +41,11 @@ export const resourceValidate = resources => {
   const err = {};
   const value = resources;
   const cpuLimit = _.replace(_.get(value, 'limits.cpu'), 'Core', '');
-  const memoryLimit = _.replace(
-    _.get(value, 'limits.memory'),
-    /(M|G|T)iB/g,
-    ''
-  );
+  const memoryLimit = _.replace(_.get(value, 'limits.memory'), /(M|G|T)i/g, '');
   const cpuRequests = _.replace(_.get(value, 'requests.cpu'), 'Core', '');
   const memoryRequests = _.replace(
     _.get(value, 'requests.memory'),
-    /(M|G|T)iB/g,
+    /(M|G|T)i/g,
     ''
   );
 

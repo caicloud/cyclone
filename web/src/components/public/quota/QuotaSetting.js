@@ -17,8 +17,8 @@ const allocationMap = [
     value: {
       'requests.cpu': '0.5',
       'limits.cpu': '1',
-      'requests.memory': '1GiB',
-      'limits.memory': '2GiB',
+      'requests.memory': '1Gi',
+      'limits.memory': '2Gi',
     },
   },
   {
@@ -26,8 +26,8 @@ const allocationMap = [
     value: {
       'requests.cpu': '1',
       'limits.cpu': '2',
-      'requests.memory': '2 GiB',
-      'limits.memory': '4 GiB',
+      'requests.memory': '2Gi',
+      'limits.memory': '4Gi',
     },
   },
   {
@@ -35,8 +35,8 @@ const allocationMap = [
     value: {
       'requests.cpu': '2',
       'limits.cpu': '4',
-      'requests.memory': '4GiB',
-      'limits.memory': '8GiB',
+      'requests.memory': '4Gi',
+      'limits.memory': '8Gi',
     },
   },
 ];
@@ -50,6 +50,31 @@ class Quota extends React.Component {
     onChange: PropTypes.func,
     form: PropTypes.object,
   };
+  constructor(props) {
+    super(props);
+    const { field } = props;
+    this.getInitialValues(field.value);
+  }
+
+  getInitialValues = value => {
+    const configItem = _.find(allocationMap, n => _.isEqual(n.value, value));
+    let init = {};
+    if (configItem > -1) {
+      init.config = value;
+    } else {
+      init.custom = {
+        limits: {
+          cpu: _.get(value, 'limits.cpu'),
+          memory: _.get(value, 'limits.memory'),
+        },
+        requests: {
+          cpu: _.get(value, 'requests.cpu'),
+          memory: _.get(value, 'requests.memory'),
+        },
+      };
+    }
+  };
+
   handleType = e => {
     const { setFieldValue, onChange } = this.props;
     const value = e.target.value;
@@ -59,9 +84,10 @@ class Quota extends React.Component {
 
   handleConfigSelect = e => {
     const { setFieldValue, onChange } = this.props;
-    const value = e.target.value;
-    setFieldValue('config', value);
-    onChange(value);
+    const name = e.target.value;
+    setFieldValue('config', name);
+    const item = _.find(allocationMap, n => (n.name = name));
+    onChange(item.value);
   };
 
   handleInputChange = (name, value) => {
@@ -137,7 +163,7 @@ class Quota extends React.Component {
                 formItemLayout={{ wrapperCol: { span: 20 } }}
               >
                 {allocationMap.map(a => (
-                  <RadioButton value={a.value} key={a.name}>
+                  <RadioButton value={a.name} key={a.name}>
                     <div>
                       <div className="content">
                         <div>
@@ -185,9 +211,8 @@ class Quota extends React.Component {
                       render={props => (
                         <InputWithUnit
                           label={intl.get('allocation.cpuRequest')}
-                          addonAfter="Core"
-                          defaultAddon=""
                           className="cpu"
+                          type="cpu"
                           {...props}
                           onChange={this.handleInputChange}
                           onBlur={this.handleBlur}
@@ -200,14 +225,9 @@ class Quota extends React.Component {
                       name="custom.requests.memory"
                       render={props => (
                         <InputWithUnit
-                          defaultAddon="MiB"
                           className="memory"
                           label={intl.get('allocation.memoryRequest')}
-                          addonAfter={[
-                            { name: 'MiB', value: 'MiB' },
-                            { name: 'GiB', value: 'GiB' },
-                            { name: 'TiB', value: 'TiB' },
-                          ]}
+                          type="memory"
                           {...props}
                           onChange={this.handleInputChange}
                           onBlur={this.handleBlur}
@@ -223,8 +243,7 @@ class Quota extends React.Component {
                       render={props => (
                         <InputWithUnit
                           label={intl.get('allocation.cpuLimit')}
-                          addonAfter="Core"
-                          defaultAddon=""
+                          type="cpu"
                           className="cpu"
                           {...props}
                           onChange={this.handleInputChange}
@@ -238,14 +257,9 @@ class Quota extends React.Component {
                       name="custom.limits.memory"
                       render={props => (
                         <InputWithUnit
-                          defaultAddon="MiB"
                           label={intl.get('allocation.memoryLimit')}
                           className="memory"
-                          addonAfter={[
-                            { name: 'MiB', value: 'MiB' },
-                            { name: 'GiB', value: 'GiB' },
-                            { name: 'TiB', value: 'TiB' },
-                          ]}
+                          type="memory"
                           {...props}
                           onChange={this.handleInputChange}
                           onBlur={this.handleBlur}
@@ -264,7 +278,31 @@ class Quota extends React.Component {
 }
 
 export default withFormik({
-  mapPropsToValues: () => ({ type: 'recommend' }),
+  mapPropsToValues: props => {
+    const initValue = { type: 'recommend' };
+    if (props.update) {
+      const quotaValue = props.field.value;
+      const configItem = _.find(allocationMap, n =>
+        _.isEqual(n.value, quotaValue)
+      );
+      if (configItem) {
+        initValue.config = configItem.name;
+      } else {
+        initValue.custom = {
+          limits: {
+            cpu: _.get(quotaValue, 'limits.cpu'),
+            memory: _.get(quotaValue, 'limits.memory'),
+          },
+          requests: {
+            cpu: _.get(quotaValue, 'requests.cpu'),
+            memory: _.get(quotaValue, 'requests.memory'),
+          },
+        };
+        initValue.type = 'custom';
+      }
+    }
+    return initValue;
+  },
   validate: values => {
     const errors = {};
     if (values.type === 'recommend' && _.isEmpty(values.config)) {

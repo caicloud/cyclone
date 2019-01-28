@@ -19,6 +19,13 @@ class Project {
   }
 
   @action.bound
+  updateProject(data, name, cb) {
+    fetchApi.updateProject(data, name).then(() => {
+      cb();
+    });
+  }
+
+  @action.bound
   deleteProject(name) {
     fetchApi.removeProject(name).then(() => {
       this.listProjects();
