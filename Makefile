@@ -175,6 +175,17 @@ swagger:
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
 	  nirvana api --output web/public pkg/server/apis"
 
+
+swagger_client:
+	@echo "Generate swagger client"
+	wget -q http://central.maven.org/maven2/io/swagger/swagger-codegen-cli/2.4.1/swagger-codegen-cli-2.4.1.jar -O swagger-codegen-cli.jar
+	rm -rf cycloneclient
+	mkdir cycloneclient
+	java -jar swagger-codegen-cli.jar generate -i api.v1alpha1.json -l python -o cycloneclient
+	cd cycloneclient; python3 ./setup.py install
+
+
+
 deploy:
 	sed -e "s/__REGISTRY__/$${REGISTRIES/\//\\/}/g" -e "s/__VERSION__/${VERSION}/g" manifests/cyclone.yaml.template > .cyclone.yaml
 	kubectl create -f .cyclone.yaml
