@@ -21,7 +21,6 @@ import (
 
 	handler "github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/nirvana/operators/validator"
 )
 
 func init() {
@@ -143,116 +142,6 @@ var stage = []definition.Descriptor{
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
-			},
-		},
-	},
-	{
-		Path: "/workflowruns/{workflowrun}/stages/{stage}/streamlogs",
-		Definitions: []definition.Definition{
-			{
-				Method:      definition.Get,
-				Function:    handler.ReceiveContainerLogStream,
-				Description: "Used for collecting stage logs",
-				Parameters: []definition.Parameter{
-					{
-						Source: definition.Path,
-						Name:   httputil.WorkflowRunNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.StageNamePathParameterName,
-					},
-					{
-						Source: definition.Query,
-						Name:   httputil.ContainerNameQueryParameter,
-					},
-					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
-					},
-				},
-				Results: []definition.Result{
-					{
-						Destination: definition.Error,
-					},
-				},
-			},
-		},
-	},
-	{
-		Path: "/workflowruns/{workflowrun}/stages/{stage}/logstream",
-		Definitions: []definition.Definition{
-			{
-				Method:      definition.Get,
-				Function:    handler.GetContainerLogStream,
-				Description: "Get log stream of stage",
-				Parameters: []definition.Parameter{
-					{
-						Source: definition.Path,
-						Name:   httputil.WorkflowRunNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.StageNamePathParameterName,
-					},
-					{
-						Source: definition.Query,
-						Name:   httputil.ContainerNameQueryParameter,
-					},
-					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
-					},
-				},
-				Results: []definition.Result{definition.ErrorResult()},
-			},
-		},
-	},
-	{
-		Path: "/workflowruns/{workflowrun}/stages/{stage}/logs",
-		Definitions: []definition.Definition{
-			{
-				Method:      definition.Get,
-				Function:    handler.GetContainerLogs,
-				Description: "Get log of stage",
-				Parameters: []definition.Parameter{
-					{
-						Source: definition.Path,
-						Name:   httputil.WorkflowRunNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.StageNamePathParameterName,
-					},
-					{
-						Source: definition.Query,
-						Name:   httputil.ContainerNameQueryParameter,
-					},
-					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
-					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.DownloadQueryParameter,
-						Operators: []definition.Operator{validator.Bool("")},
-					},
-				},
-				Results: []definition.Result{
-					{
-						Destination: definition.Data,
-						Description: "stage log",
-					},
-					{
-						Destination: definition.Meta,
-					},
-					{
-						Destination: definition.Error,
-					},
-				},
 			},
 		},
 	},

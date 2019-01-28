@@ -68,8 +68,8 @@ func GetWorkflow(ctx context.Context, project, workflow, tenant string) (*v1alph
 }
 
 // UpdateWorkflow ...
-func UpdateWorkflow(ctx context.Context, project, resource, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
-	name := common.BuildResoucesName(project, resource)
+func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+	name := common.BuildResoucesName(project, workflow)
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		origin, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
 		if err != nil {
@@ -89,7 +89,7 @@ func UpdateWorkflow(ctx context.Context, project, resource, tenant string, wf *v
 }
 
 // DeleteWorkflow ...
-func DeleteWorkflow(ctx context.Context, project, resource, tenant string) error {
-	name := common.BuildResoucesName(project, resource)
+func DeleteWorkflow(ctx context.Context, project, workflow, tenant string) error {
+	name := common.BuildResoucesName(project, workflow)
 	return handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(name, nil)
 }

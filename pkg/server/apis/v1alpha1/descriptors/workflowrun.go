@@ -18,6 +18,7 @@ package descriptors
 
 import (
 	"github.com/caicloud/nirvana/definition"
+	"github.com/caicloud/nirvana/operators/validator"
 
 	handler "github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
@@ -29,14 +30,32 @@ func init() {
 
 var workflowrun = []definition.Descriptor{
 	{
-		Path:        "/workflowruns",
+		Path:        "/projects/{project}/workflows/{workflow}/workflowruns",
 		Description: "workflowrun APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
 				Function:    handler.CreateWorkflowRun,
 				Description: "Create workflowrun",
-				Results:     definition.DataErrorResults("workflowrun"),
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the new workflowrun",
+					},
+				},
+				Results: definition.DataErrorResults("workflowrun"),
 			},
 			{
 				Method:      definition.Get,
@@ -44,9 +63,21 @@ var workflowrun = []definition.Descriptor{
 				Description: "List workflowruns",
 				Parameters: []definition.Parameter{
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Auto,
+						Name:        "pagination",
+						Description: "pagination",
 					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
@@ -54,7 +85,7 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/workflowruns/{workflowrun}",
+		Path:        "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}",
 		Description: "workflowrun APIs",
 		Definitions: []definition.Definition{
 			{
@@ -64,12 +95,19 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
@@ -81,7 +119,23 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated workflowrun",
 					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
@@ -93,12 +147,19 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
@@ -106,7 +167,7 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/workflowruns/{workflowrun}/cancel",
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/cancel",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Update,
@@ -115,12 +176,19 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
@@ -128,7 +196,7 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/workflowruns/{workflowrun}/continue",
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/continue",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Update,
@@ -137,15 +205,153 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/streamlogs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ReceiveContainerLogStream,
+				Description: "Used for collecting stage logs",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Query,
+						Name:   "stage",
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.ContainerNameQueryParameter,
+					},
+				},
+				Results: []definition.Result{
+					{
+						Destination: definition.Error,
+					},
+				},
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/logstream",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.GetContainerLogStream,
+				Description: "Get log stream of containers",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Query,
+						Name:   "stage",
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.ContainerNameQueryParameter,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/logs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.GetContainerLogs,
+				Description: "Get log of containers",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Query,
+						Name:   "stage",
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.ContainerNameQueryParameter,
+					},
+					{
+						Source:    definition.Query,
+						Name:      httputil.DownloadQueryParameter,
+						Operators: []definition.Operator{validator.Bool("")},
+					},
+				},
+				Results: []definition.Result{
+					{
+						Destination: definition.Data,
+						Description: "container log",
+					},
+					{
+						Destination: definition.Meta,
+					},
+					{
+						Destination: definition.Error,
+					},
+				},
 			},
 		},
 	},
