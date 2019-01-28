@@ -1,4 +1,3 @@
-import React from 'react';
 import { Tabs, Button, Spin } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
@@ -14,6 +13,7 @@ class ProjectDetail extends React.Component {
   static propTypes = {
     match: PropTypes.object,
     project: PropTypes.object,
+    history: PropTypes.object,
   };
   constructor(props) {
     super(props);
@@ -25,7 +25,13 @@ class ProjectDetail extends React.Component {
     this.props.project.getProject(projectId);
   }
   render() {
-    const { project } = this.props;
+    const {
+      project,
+      history,
+      match: {
+        params: { projectId },
+      },
+    } = this.props;
     const loading = project.detailLoading;
     if (loading) {
       return <Spin />;
@@ -35,7 +41,13 @@ class ProjectDetail extends React.Component {
       <Detail
         actions={
           <DetailAction>
-            <Button>{intl.get('operation.update')}</Button>
+            <Button
+              onClick={() => {
+                history.push(`/project/${projectId}/update`);
+              }}
+            >
+              {intl.get('operation.update')}
+            </Button>
           </DetailAction>
         }
       >

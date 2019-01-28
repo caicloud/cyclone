@@ -31,6 +31,9 @@ const fetchApi = {
   createProject(data) {
     return http.post('/projects', data);
   },
+  updateProject(data, name) {
+    return http.put(`/projects/${name}`, data);
+  },
   removeProject(name) {
     return http.delete(`/projects/${name}`);
   },

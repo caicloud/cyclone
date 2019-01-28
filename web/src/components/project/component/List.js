@@ -1,4 +1,3 @@
-import React from 'react';
 import { Table, Button, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';

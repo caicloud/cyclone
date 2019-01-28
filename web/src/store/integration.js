@@ -19,10 +19,12 @@ class Integration {
       };
       _.forEach(data.items, o => {
         const type = _.get(o, 'spec.type');
-        if (!groups[type]) {
-          groups[type] = [o];
-        } else {
-          groups[type].push(o);
+        if (_.includes(['SonarQube', 'SCM', 'DockerRegistry'], type)) {
+          if (!groups[type]) {
+            groups[type] = [o];
+          } else {
+            groups[type].push(o);
+          }
         }
       });
       this.integrationList = data;

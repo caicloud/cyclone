@@ -1,4 +1,3 @@
-import React from 'react';
 import { Field } from 'formik';
 import PropTypes from 'prop-types';
 import { Form, Input, Button } from 'antd';
@@ -10,7 +9,7 @@ const { TextArea } = Input;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
 
-const FormContent = ({ history, handleSubmit, setFieldValue }) => {
+const FormContent = ({ history, handleSubmit, setFieldValue, update }) => {
   return (
     <Form layout={'horizontal'} onSubmit={handleSubmit}>
       <Field
@@ -27,7 +26,7 @@ const FormContent = ({ history, handleSubmit, setFieldValue }) => {
       />
       <Field
         label={intl.get('project.externalSystem')}
-        name="spec.services"
+        name="spec.integrations"
         required
         component={IntegrationSelect}
       />
@@ -35,6 +34,7 @@ const FormContent = ({ history, handleSubmit, setFieldValue }) => {
         label={intl.get('allocation.quotaConfig')}
         name="spec.quota"
         component={Quota}
+        update={update}
         onChange={value => {
           setFieldValue('spec.quota', value);
         }}
@@ -59,6 +59,7 @@ FormContent.propTypes = {
   history: PropTypes.object,
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,
+  update: PropTypes.bool,
 };
 
 export default FormContent;

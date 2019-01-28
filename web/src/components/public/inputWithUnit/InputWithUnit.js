@@ -6,6 +6,7 @@ import classnames from 'classnames';
 const FormItem = Form.Item;
 const Option = Select.Option;
 
+const memoryUnit = ['Mi', 'Gi', 'Ti'];
 class InputAddon extends React.Component {
   static propTypes = {
     defaultAddon: PropTypes.string,
@@ -18,15 +19,35 @@ class InputAddon extends React.Component {
     label: PropTypes.string,
     className: PropTypes.string,
     onBlur: PropTypes.func,
+    type: PropTypes.oneOf(['cpu', 'memory']),
+  };
+
+  static defaultProps = {
+    addonAfter: [
+      { name: 'MiB', value: 'Mi' },
+      { name: 'GiB', value: 'Gi' },
+      { name: 'TiB', value: 'Ti' },
+    ],
+    defaultAddon: 'Mi',
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      byteFieldNum: '',
-      byteUnit: props.defaultAddon === undefined ? 'Mi' : props.defaultAddon,
+      byteFieldNum: props.field.value ? parseFloat(props.field.value) : '',
+      byteUnit: props.type === 'cpu' ? '' : this.getUnit(props.field.value),
     };
   }
+
+  getUnit = value => {
+    let _unit = this.props.defaultAddon;
+    const num = parseFloat(value);
+    const unit = _.replace(value, num, '');
+    if (_.includes(memoryUnit, unit)) {
+      _unit = unit;
+    }
+    return _unit;
+  };
 
   handleAddon = value => {
     const { byteFieldNum } = this.state;
@@ -64,26 +85,28 @@ class InputAddon extends React.Component {
       field,
       className,
       form: { errors, touched },
+      type,
     } = this.props;
     const { byteFieldNum, byteUnit } = this.state;
     const cls = classnames('u-input-unit', { [className]: !!className });
     const name = field.name;
     const hasError = _.get(touched, name) && _.get(errors, name);
-    const addonComp = _.isArray(addonAfter) ? (
-      <Select
-        defaultValue={byteUnit}
-        style={{ width: 80 }}
-        onChange={this.handleAddon}
-      >
-        {addonAfter.map(o => (
-          <Option value={o.value} key={o.value}>
-            {o.name}
-          </Option>
-        ))}
-      </Select>
-    ) : (
-      addonAfter
-    );
+    const addonComp =
+      type === 'memory' ? (
+        <Select
+          defaultValue={byteUnit}
+          style={{ width: 80 }}
+          onChange={this.handleAddon}
+        >
+          {addonAfter.map(o => (
+            <Option value={o.value} key={o.value}>
+              {o.name}
+            </Option>
+          ))}
+        </Select>
+      ) : (
+        'Core'
+      );
 
     const _attr = { name: field.name };
     _attr.onChange = this.inputChange;
