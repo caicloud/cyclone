@@ -1,8 +1,9 @@
-import { Tabs, Button, Spin } from 'antd';
+import { Tabs, Spin } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
 import { FormatTime } from '@/lib/util';
+import MenuAction from './MenuAction';
 
 const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 const TabPane = Tabs.TabPane;
@@ -19,18 +20,18 @@ class ProjectDetail extends React.Component {
     super(props);
     const {
       match: {
-        params: { projectId },
+        params: { projectName },
       },
     } = this.props;
-    this.props.project.getProject(projectId);
+    this.props.project.getProject(projectName);
   }
   render() {
     const {
       project,
-      history,
       match: {
-        params: { projectId },
+        params: { projectName },
       },
+      history,
     } = this.props;
     const loading = project.detailLoading;
     if (loading) {
@@ -41,13 +42,7 @@ class ProjectDetail extends React.Component {
       <Detail
         actions={
           <DetailAction>
-            <Button
-              onClick={() => {
-                history.push(`/project/${projectId}/update`);
-              }}
-            >
-              {intl.get('operation.update')}
-            </Button>
+            <MenuAction name={projectName} history={history} detail />
           </DetailAction>
         }
       >

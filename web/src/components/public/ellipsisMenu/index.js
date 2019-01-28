@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Menu, Dropdown, Icon } from 'antd';
+import { Menu, Dropdown, Icon, Button } from 'antd';
 
 class EllipsisMenu extends React.Component {
   static propTypes = {
@@ -64,7 +64,14 @@ class EllipsisMenu extends React.Component {
           e.stopPropagation();
         }}
       >
-        <Icon type="ellipsis" style={{ transform: 'rotate(90deg)' }} />
+        <Button size="small">
+          <Icon
+            type="ellipsis"
+            style={{
+              transform: 'rotate(90deg)',
+            }}
+          />
+        </Button>
       </Dropdown>
     );
   }
