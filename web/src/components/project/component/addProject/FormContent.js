@@ -16,6 +16,7 @@ const FormContent = ({ history, handleSubmit, setFieldValue, update }) => {
         label={intl.get('name')}
         name="metadata.name"
         component={InputField}
+        disabled={update}
         hasFeedback
         required
       />
