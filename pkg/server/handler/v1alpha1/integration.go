@@ -54,18 +54,30 @@ func ListIntegrations(ctx context.Context, tenant string, pagination *types.Pagi
 
 // SecretToIntegration translates secret to integration
 func SecretToIntegration(secret *core_v1.Secret) (*api.Integration, error) {
-	integration := &api.Integration{}
-	err := json.Unmarshal(secret.Data[common.SecretKeyIntegration], integration)
+	integration := &api.Integration{
+		ObjectMeta: secret.ObjectMeta,
+	}
+
+	// retrieve integration name
+	integration.Name = common.SecretIntegration(secret.Name)
+	err := json.Unmarshal(secret.Data[common.SecretKeyIntegration], &integration.Spec)
 	if err != nil {
 		return integration, err
 	}
 
-	integration.Metadata.CreationTime = secret.ObjectMeta.CreationTimestamp.String()
 	return integration, nil
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.
 func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) (*api.Integration, error) {
+	modifiers := []CreationModifier{GenerateNameModifier}
+	for _, modifier := range modifiers {
+		err := modifier("", tenant, in)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return createIntegration(tenant, in)
 }
 
@@ -117,7 +129,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		}
 	} else {
 		// create namespace
-		cluster.Namespace = common.TenantNamespace(tenant.Metadata.Name)
+		cluster.Namespace = common.TenantNamespace(tenant.Name)
 		err = common.CreateNamespace(cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
@@ -144,14 +156,14 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 			tenant.Spec.PersistentVolumeClaim.Size = common.DefaultPVCSize
 		}
 
-		err = common.CreatePVC(tenant.Metadata.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
+		err = common.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
 			return err
 		}
 
-		cluster.PVC = common.TenantPVC(tenant.Metadata.Name)
+		cluster.PVC = common.TenantPVC(tenant.Name)
 	}
 
 	return nil
@@ -198,33 +210,32 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) error {
 }
 
 func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
-	ns := common.TenantNamespace(tenant)
-	secretName := common.IntegrationSecret(in.Metadata.Name)
+	meta := in.ObjectMeta
+	// build secret name
+	meta.Name = common.IntegrationSecret(in.Name)
+	if meta.Labels == nil {
+		meta.Labels = make(map[string]string)
+	}
 
-	labels := make(map[string]string)
-	labels[common.LabelIntegrationType] = string(in.Spec.Type)
+	meta.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
 		worker := in.Spec.Cluster.IsWorkerCluster
 		if worker {
-			labels[common.LabelClusterOn] = common.LabelClusterOnValue
+			meta.Labels[common.LabelClusterOn] = common.LabelClusterOnValue
 		}
 	}
 
-	integration, err := json.Marshal(in)
+	integration, err := json.Marshal(in.Spec)
 	if err != nil {
-		log.Errorf("Marshal integration %v for tenant %s error %v", in.Metadata.Name, tenant, err)
+		log.Errorf("Marshal integration %v for tenant %s error %v", in.Name, tenant, err)
 		return nil, err
 	}
 	data := make(map[string][]byte)
 	data[common.SecretKeyIntegration] = integration
 
 	secret := &core_v1.Secret{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      secretName,
-			Namespace: ns,
-			Labels:    labels,
-		},
-		Data: data,
+		ObjectMeta: meta,
+		Data:       data,
 	}
 
 	return secret, nil
@@ -292,6 +303,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 		newSecret := origin.DeepCopy()
 		newSecret.Data = secret.Data
+		newSecret.Annotations = UpdateAnnotations(secret.Annotations, newSecret.Annotations)
 		_, err = handler.K8sClient.CoreV1().Secrets(ns).Update(newSecret)
 		return err
 	})

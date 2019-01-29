@@ -2,11 +2,17 @@ package common
 
 import (
 	"fmt"
+	"strings"
 )
 
 // TenantNamespace gets namespace from given tenant name.
 func TenantNamespace(tenant string) string {
-	return fmt.Sprintf("cyclone--%s", tenant)
+	return fmt.Sprintf("%s%s", TenantNamespacePrefix, tenant)
+}
+
+// NamespaceTenant retrieves tenant from given namespace name.
+func NamespaceTenant(n string) string {
+	return strings.TrimPrefix(n, TenantNamespacePrefix)
 }
 
 // TenantPVC returns pvc name related the tenant
@@ -27,6 +33,11 @@ func LabelOwnerCyclone() string {
 // IntegrationSecret returns secret name related to the integration
 func IntegrationSecret(i string) string {
 	return i
+}
+
+// SecretIntegration returns integration name related to the secret
+func SecretIntegration(s string) string {
+	return s
 }
 
 // WorkerClustersSelector is a selector for clusters which are use to perform workload

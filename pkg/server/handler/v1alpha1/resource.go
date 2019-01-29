@@ -15,9 +15,12 @@ import (
 
 // CreateResource ...
 func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.Resource) (*v1alpha1.Resource, error) {
-	err := ModifyResource(project, tenant, rsc)
-	if err != nil {
-		return nil, err
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	for _, modifier := range modifiers {
+		err := modifier(project, tenant, rsc)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Create(rsc)

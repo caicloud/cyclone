@@ -42,6 +42,14 @@ func ListProjects(ctx context.Context, tenant string, pagination *types.Paginati
 
 // CreateProject creates a project for the tenant.
 func CreateProject(ctx context.Context, tenant string, project *v1alpha1.Project) (*v1alpha1.Project, error) {
+	modifiers := []CreationModifier{GenerateNameModifier}
+	for _, modifier := range modifiers {
+		err := modifier("", tenant, project)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Create(project)
 }
 
@@ -60,6 +68,7 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 		}
 		newProject := origin.DeepCopy()
 		newProject.Spec = project.Spec
+		newProject.Annotations = UpdateAnnotations(project.Annotations, newProject.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Update(newProject)
 		return err
 	})

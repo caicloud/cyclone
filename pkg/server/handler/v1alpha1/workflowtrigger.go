@@ -15,9 +15,12 @@ import (
 
 // CreateWorkflowTrigger ...
 func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	err := ModifyResource(project, tenant, wft)
-	if err != nil {
-		return nil, err
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	for _, modifier := range modifiers {
+		err := modifier(project, tenant, wft)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Create(wft)

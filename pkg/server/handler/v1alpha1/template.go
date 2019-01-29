@@ -57,6 +57,14 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagin
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates
 // are special stages, with 'cyclone.io/stage-template' label. If created successfully, return the create template.
 func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (*v1alpha1.Stage, error) {
+	modifiers := []CreationModifier{GenerateNameModifier}
+	for _, modifier := range modifiers {
+		err := modifier("", tenant, stage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stage)
 }
 
@@ -75,6 +83,7 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 		}
 		newStage := origin.DeepCopy()
 		newStage.Spec = stage.Spec
+		newStage.Annotations = UpdateAnnotations(stage.Annotations, newStage.Annotations)
 		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStage)
 		return err
 	})

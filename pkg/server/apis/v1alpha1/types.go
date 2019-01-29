@@ -2,25 +2,16 @@ package v1alpha1
 
 import (
 	core_v1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cmd_api "k8s.io/client-go/tools/clientcmd/api"
 )
 
 // Tenant contains information about tenant
 type Tenant struct {
-	// Metadata contains metadata information about tenant
-	Metadata Metadata `json:"metadata"`
+	// Metadata for the particular object, including name, namespace, labels, etc
+	meta_v1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec contains tenant spec
 	Spec TenantSpec `json:"spec"`
-}
-
-// Metadata contains metadata information
-type Metadata struct {
-	// Name is the name of the resource
-	Name string `json:"name"`
-	// Description describes the resource
-	Description string `json:"description,omitempty"`
-	// CreationTime records the time of the resource creation
-	CreationTime string `json:"creationTime"`
 }
 
 // TenantSpec contains the tenant spec information
@@ -49,8 +40,8 @@ type PersistentVolumeClaim struct {
 
 // Integration contains information about external systems
 type Integration struct {
-	// Metadata contains metadata information about integration
-	Metadata Metadata `json:"metadata"`
+	// Metadata for the particular object, including name, namespace, labels, etc
+	meta_v1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec contains integration spec
 	Spec IntegrationSpec `json:"spec"`
 }

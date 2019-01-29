@@ -116,20 +116,20 @@ func buildNamespace(tenant string) (*core_v1.Namespace, error) {
 
 // CreateResourceQuota creates resource quota for tenant
 func CreateResourceQuota(tenant *api.Tenant, namespace string, client *kubernetes.Clientset) error {
-	nsname := TenantNamespace(tenant.Metadata.Name)
+	nsname := TenantNamespace(tenant.Name)
 	if namespace != "" {
 		nsname = namespace
 	}
 
 	quota, err := buildResourceQuota(tenant)
 	if err != nil {
-		log.Warningf("Build resource quota for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Warningf("Build resource quota for tenant %s error %v", tenant.Name, err)
 		return err
 	}
 
 	_, err = client.CoreV1().ResourceQuotas(nsname).Create(quota)
 	if err != nil {
-		log.Errorf("Create ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Errorf("Create ResourceQuota for tenant %s error %v", tenant.Name, err)
 		return err
 	}
 
@@ -140,11 +140,11 @@ func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
 	// parse resource list
 	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
 	if err != nil {
-		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Name, err)
 		return nil, err
 	}
 
-	quotaName := TenantResourceQuota(tenant.Metadata.Name)
+	quotaName := TenantResourceQuota(tenant.Name)
 	quota := &core_v1.ResourceQuota{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: quotaName,
@@ -159,7 +159,7 @@ func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
 
 // UpdateResourceQuota updates resource quota for tenant
 func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernetes.Clientset) error {
-	nsname := TenantNamespace(tenant.Metadata.Name)
+	nsname := TenantNamespace(tenant.Name)
 	if namespace != "" {
 		nsname = namespace
 	}
@@ -167,22 +167,22 @@ func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 	// parse resource list
 	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
 	if err != nil {
-		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Metadata.Name, err)
+		log.Warningf("Parse resource quota for tenant %s error %v", tenant.Name, err)
 		return err
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		quota, err := client.CoreV1().ResourceQuotas(nsname).Get(
-			TenantResourceQuota(tenant.Metadata.Name), meta_v1.GetOptions{})
+			TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
-			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
+			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err
 		}
 
 		quota.Spec.Hard = rl
 		_, err = client.CoreV1().ResourceQuotas(nsname).Update(quota)
 		if err != nil {
-			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Metadata.Name, err)
+			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err
 		}
 

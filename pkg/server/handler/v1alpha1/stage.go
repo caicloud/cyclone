@@ -15,9 +15,12 @@ import (
 
 // CreateStage ...
 func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
-	err := ModifyResource(project, tenant, stg)
-	if err != nil {
-		return nil, err
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	for _, modifier := range modifiers {
+		err := modifier(project, tenant, stg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stg)
