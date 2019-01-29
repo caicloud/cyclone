@@ -48,12 +48,10 @@ type JSONPatch struct {
 	Value string `json:"value"`
 }
 
-// BuildPVCPatch builds patch for pvc
-func BuildPVCPatch(storageclass, size string) ([]byte, error) {
+// BuildWfrStatusPatch builds patch for updating status of workflowrun
+func BuildWfrStatusPatch(status string) ([]byte, error) {
 	p := map[string]string{
-		"/spec/storageClassName":           storageclass,
-		"/spec/resources/limits/storage":   size,
-		"/spec/resources/requests/storage": size,
+		"/status/overall/status": status,
 	}
 	return BuildPatch(p)
 }

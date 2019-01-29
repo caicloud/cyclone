@@ -29,14 +29,28 @@ func init() {
 
 var workflowtrigger = []definition.Descriptor{
 	{
-		Path:        "/workflowtriggers",
+		Path:        "/projects/{project}/workflowtriggers",
 		Description: "workflowtrigger APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
 				Function:    handler.CreateWorkflowTrigger,
 				Description: "Create workflowtrigger",
-				Results:     definition.DataErrorResults("workflowtrigger"),
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the new workflowtrigger",
+					},
+				},
+				Results: definition.DataErrorResults("workflowtrigger"),
 			},
 			{
 				Method:      definition.Get,
@@ -44,9 +58,17 @@ var workflowtrigger = []definition.Descriptor{
 				Description: "List workflowtriggers",
 				Parameters: []definition.Parameter{
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Auto,
+						Name:        "pagination",
+						Description: "pagination",
 					},
 				},
 				Results: definition.DataErrorResults("workflowtrigger"),
@@ -54,7 +76,7 @@ var workflowtrigger = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/workflowtriggers/{workflowtrigger}",
+		Path:        "/projects/{project}/workflowtriggers/{workflowtrigger}",
 		Description: "workflowtrigger APIs",
 		Definitions: []definition.Definition{
 			{
@@ -64,12 +86,15 @@ var workflowtrigger = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowTriggerNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflowtrigger"),
@@ -81,7 +106,19 @@ var workflowtrigger = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowTriggerNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated workflowtrigger",
 					},
 				},
 				Results: definition.DataErrorResults("workflowtrigger"),
@@ -93,12 +130,15 @@ var workflowtrigger = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.WorkflowTriggerNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},

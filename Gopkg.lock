@@ -262,6 +262,25 @@
   version = "1.0.0"
 
 [[projects]]
+  digest = "1:05e5a2e854eeeddda5e5ed5929ac53ce614b83a13a01d206b9d11e8ef56363be"
+  name = "github.com/mozillazg/go-slugify"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "591116de2dd717fdb8c05e29fa3bf5d3f7ba8c87"
+  version = "v0.2.0"
+
+[[projects]]
+  digest = "1:be88a46cd36136d9a0fbe8f42dffc269a62544e3a12ff3b047b4704f9b349b42"
+  name = "github.com/mozillazg/go-unidecode"
+  packages = [
+    ".",
+    "table",
+  ]
+  pruneopts = "UT"
+  revision = "7ab3c72180eeb79ccb8746137e14d6b0a60dd685"
+  version = "v0.1.0"
+
+[[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -832,6 +851,9 @@
     "github.com/cbroglie/mustache",
     "github.com/golang/glog",
     "github.com/gorilla/websocket",
+    "github.com/mozillazg/go-slugify",
+    "github.com/mozillazg/go-unidecode",
+    "github.com/mozillazg/go-unidecode/table",
     "github.com/robfig/cron",
     "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
@@ -839,7 +861,6 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/suite",
-    "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
@@ -854,6 +875,7 @@
     "k8s.io/apimachinery/pkg/util/rand",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/wait",
+    "k8s.io/apimachinery/pkg/util/yaml",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
@@ -867,6 +889,7 @@
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/clientcmd/api",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/client-go/util/retry",

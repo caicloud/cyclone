@@ -1,6 +1,8 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // TenantNamespace gets namespace from given tenant name.
 func TenantNamespace(tenant string) string {
@@ -30,4 +32,9 @@ func IntegrationSecret(i string) string {
 // WorkerClustersSelector is a selector for clusters which are use to perform workload
 func WorkerClustersSelector() string {
 	return LabelClusterOn + "=" + LabelClusterOnValue
+}
+
+// ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
+func ProjectSelector(project string) string {
+	return LabelProject + "=" + project
 }

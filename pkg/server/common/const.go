@@ -15,6 +15,9 @@ const (
 	// AnnotationTenant is the annotation key used for namespace to relate tenant information
 	AnnotationTenant = "cyclone.io/tenant-info"
 
+	// LabelProject is the label key used to indicate the project which the resources belongs to
+	LabelProject = "cyclone.io/project"
+
 	// LabelIntegrationType is the label key used to indicate type of integration
 	LabelIntegrationType = "cyclone.io/integration-type"
 
@@ -29,6 +32,12 @@ const (
 
 	// OwnerCyclone is the label value used to indicate namespaces created by cyclone
 	OwnerCyclone = "cyclone"
+
+	// AnnotationAlias is the annotation key used to indicate the alias of resources
+	AnnotationAlias = "cyclone.io/alias"
+
+	// AnnotationDescription is the annotation key used to describe resources
+	AnnotationDescription = "cyclone.io/description"
 
 	// QuotaCPULimit represents default value of 'limits.cpu'
 	QuotaCPULimit = "2"

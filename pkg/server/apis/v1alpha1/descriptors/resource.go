@@ -13,24 +13,46 @@ func init() {
 
 var resource = []definition.Descriptor{
 	{
-		Path:        "/resources",
+		Path:        "/projects/{project}/resources",
 		Description: "Resource APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
 				Function:    handler.CreateResource,
 				Description: "Create resource",
-				Results:     definition.DataErrorResults("resource"),
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the new resource",
+					},
+				},
+				Results: definition.DataErrorResults("resource"),
 			},
 			{
-				Method:      definition.Get,
+				Method:      definition.List,
 				Function:    handler.ListResources,
 				Description: "List resources",
 				Parameters: []definition.Parameter{
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Auto,
+						Name:        "pagination",
+						Description: "pagination",
 					},
 				},
 				Results: definition.DataErrorResults("resources"),
@@ -38,7 +60,7 @@ var resource = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/resources/{resource}",
+		Path: "/projects/{project}/resources/{resource}",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -47,12 +69,15 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.ResourceNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
@@ -64,7 +89,19 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.ResourceNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated resource",
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
@@ -76,12 +113,15 @@ var resource = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
 						Name:   httputil.ResourceNamePathParameterName,
 					},
 					{
-						Source:  definition.Query,
-						Name:    httputil.NamespaceQueryParameter,
-						Default: httputil.DefaultNamespace,
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
