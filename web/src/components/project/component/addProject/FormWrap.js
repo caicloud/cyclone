@@ -30,13 +30,16 @@ class AddProject extends React.Component {
       match: { params },
     } = this.props;
     const { update } = this.state;
-    const data = _.omit(values, 'metadata.description');
+    const data = _.omit(values, 'metadata');
     data.spec.integrations = _.map(values.spec.integrations, n => {
       const resources = n.split('/');
       return { type: resources[0], name: resources[1] };
     });
-    data.metadata.annotations = {
-      'cyclone.io/description': values.metadata.description,
+    data.metadata = {
+      annotations: {
+        'cyclone.io/description': _.get(values, 'metadata.description', ''),
+        'cyclone.io/alias': _.get(values, 'metadata.alias', ''),
+      },
     };
     if (update) {
       project.updateProject(data, params.projectName, () => {
@@ -51,8 +54,8 @@ class AddProject extends React.Component {
 
   validate = values => {
     const errors = {};
-    if (!values.metadata.name) {
-      errors.metadata = { name: intl.get('validate.required') };
+    if (!values.metadata.alias) {
+      errors.metadata = { alias: intl.get('validate.required') };
     }
     if (!values.spec.quota['limits.cpu']) {
       errors.quota = intl.get('validate.quota.selectConfig');
@@ -63,7 +66,7 @@ class AddProject extends React.Component {
   getInitialValues = () => {
     const { update } = this.state;
     let defaultValue = {
-      metadata: { name: '', description: '' },
+      metadata: { alias: '', description: '' },
       spec: {
         integrations: [],
         quota: {
@@ -76,21 +79,16 @@ class AddProject extends React.Component {
     };
     if (update) {
       const proejctInfo = toJS(this.props.project.projectDetail);
-      const values = _.pick(proejctInfo, [
-        'metadata.name',
-        'spec.integrations',
-        'spec.quota',
-      ]);
-      const description = _.get(proejctInfo, [
-        'metadata',
-        'annotations',
-        'cyclone.io/description',
-      ]);
+      const values = _.pick(proejctInfo, ['spec.integrations', 'spec.quota']);
+      const metadata = _.get(proejctInfo, ['metadata', 'annotations']);
       values.spec.integrations = _.map(
         _.get(values, 'spec.integrations', []),
         n => `${n.type}/${n.name}`
       );
-      values.metadata.description = description;
+      values.metadata = {
+        alias: _.get(metadata, 'cyclone.io/alias', ''),
+        description: _.get(metadata, 'cyclone.io/description', ''),
+      };
       defaultValue = _.merge(defaultValue, values);
     }
 

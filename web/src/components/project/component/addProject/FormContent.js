@@ -20,7 +20,7 @@ const FormContent = ({
     <Form layout={'horizontal'} onSubmit={handleSubmit}>
       <Field
         label={intl.get('name')}
-        name="metadata.name"
+        name="metadata.alias"
         component={InputField}
         disabled={update}
         hasFeedback
