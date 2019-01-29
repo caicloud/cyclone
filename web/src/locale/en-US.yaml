@@ -45,13 +45,21 @@ integration:
       serverAddress: Server address
       verificationMode: Verification mode
       usernamepwd: Username password
+    sonarQube: 
+      serverAddress: Server address
+    dockerRegistry:
+      registryAddress: Registry address
+      admin: Admin
+      adminpwd: Admin password
     error:
-      name: 'Name is required'
-      sourceType: 'Please choose the type'
-      server: 'Please fill in the service address'
-      token: 'Please fill in the token information'
-      user: 'please enter username'
-      pwd: 'please enter password'
+      name: Name is required
+      sourceType: Please choose the type
+      server: Please fill in the service address
+      token: Please fill in the token information
+      user: please enter username
+      pwd: please enter password
+    tip:
+      error: There some error in form
 project:
   externalSystem: External system
   workflowCount: Workflow count

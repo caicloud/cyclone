@@ -1,20 +1,19 @@
-import React from 'react';
-import IntegrationForm from './Form';
+import IntegrationForm from './FormWrap';
 import { Row, Col } from 'antd';
 
-export default class AddSource extends React.Component {
-  render() {
-    return (
-      <div>
-        <div className="head-bar">
-          <h2>{intl.get('integration.addexternalsystem')}</h2>
-        </div>
-        <Row>
-          <Col span={20}>
-            <IntegrationForm {...this.props} />
-          </Col>
-        </Row>
+const AddSource = props => {
+  return (
+    <div>
+      <div className="head-bar">
+        <h2>{intl.get('integration.addexternalsystem')}</h2>
       </div>
-    );
-  }
-}
+      <Row>
+        <Col span={20}>
+          <IntegrationForm {...props} />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+export default AddSource;

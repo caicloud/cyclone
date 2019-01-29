@@ -1,4 +1,3 @@
-import React from 'react';
 import { Radio, Form } from 'antd';
 import { Field } from 'formik';
 import MakeField from '@/components/public/makeField';

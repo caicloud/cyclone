@@ -5,7 +5,8 @@
       box-shadow: none !important;
       margin-right: 16px;
       border-radius: 4px;
-      border-left: 1px solid #d9d9d9;
+      border: 1px solid @color-border;
+      border-left: 1px solid @color-border;
       &:not(:first-child)::before {
         display: none;
       }
@@ -18,7 +19,8 @@
       }
     }
     .ant-radio-button-wrapper-checked {
-      border-left: 1px solid #1890ff;
+      border-left: 1px solid @color-primary;
+      border: 1px solid @color-primary;
     }
   }
   .validate-select {

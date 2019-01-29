@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import Integration from './component/List';
 import AddSource from './component/addSource';
