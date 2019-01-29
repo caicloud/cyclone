@@ -40,6 +40,9 @@ const (
 	// StageNamePathParameterName represents the name of the path parameter for stage name.
 	StageNamePathParameterName = "stage"
 
+	// TemplateNamePathParameterName represents the name of the path parameter for template name.
+	TemplateNamePathParameterName = "template"
+
 	// WorkflowNamePathParameterName represents the name of the path parameter for workflow name.
 	WorkflowNamePathParameterName = "workflow"
 
@@ -49,11 +52,14 @@ const (
 	// WorkflowTriggerNamePathParameterName represents the name of the path parameter for workflowtrigger name.
 	WorkflowTriggerNamePathParameterName = "workflowtrigger"
 
+	// StageNameQueryParameter represents the query param stage name.
+	StageNameQueryParameter = "stage"
+
 	// ContainerNameQueryParameter represents the query param container name.
 	ContainerNameQueryParameter = "container"
 
-	// NamespaceQueryParameter represents the query param namespace.
-	NamespaceQueryParameter = "namespace"
+	// PaginationAutoParameter represents the auto param pagination.
+	PaginationAutoParameter = "pagination"
 
 	// TenantHeaderName is name of tenant header name in http reqeust
 	TenantHeaderName = "X-Tenant"

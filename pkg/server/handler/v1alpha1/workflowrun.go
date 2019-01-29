@@ -49,7 +49,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pag
 	items := workflowruns.Items
 	size := int64(len(items))
 	if pagination.Start >= size {
-		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
+		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil
 	}
 
 	end := pagination.Start + pagination.Limit

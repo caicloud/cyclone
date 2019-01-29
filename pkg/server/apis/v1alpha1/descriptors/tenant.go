@@ -29,7 +29,14 @@ var tenant = []definition.Descriptor{
 				Results: definition.DataErrorResults("tenant"),
 			},
 			{
-				Method:      definition.Get,
+				Method: definition.List,
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Auto,
+						Name:        httputil.PaginationAutoParameter,
+						Description: "pagination",
+					},
+				},
 				Function:    handler.ListTenants,
 				Description: "List tenants",
 				Results:     definition.DataErrorResults("tenants"),

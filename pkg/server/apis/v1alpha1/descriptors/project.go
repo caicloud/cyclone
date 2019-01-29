@@ -28,7 +28,7 @@ var project = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Auto,
-						Name:        "pagination",
+						Name:        httputil.PaginationAutoParameter,
 						Description: "pagination",
 					},
 				},

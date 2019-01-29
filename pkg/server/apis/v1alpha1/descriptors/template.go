@@ -34,7 +34,7 @@ var template = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Auto,
-						Name:        "pagination",
+						Name:        httputil.PaginationAutoParameter,
 						Description: "pagination",
 					},
 				},
@@ -75,7 +75,7 @@ var template = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Path,
-						Name:        "template",
+						Name:        httputil.TemplateNamePathParameterName,
 						Description: "Name of the stage template to get",
 					},
 				},
@@ -93,7 +93,7 @@ var template = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Path,
-						Name:        "template",
+						Name:        httputil.TemplateNamePathParameterName,
 						Description: "Name of the stage template to update",
 					},
 					{
@@ -115,7 +115,7 @@ var template = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Path,
-						Name:        "template",
+						Name:        httputil.TemplateNamePathParameterName,
 						Description: "Name of the stage template to delete",
 					},
 				},

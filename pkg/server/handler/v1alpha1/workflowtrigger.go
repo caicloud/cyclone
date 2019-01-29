@@ -36,7 +36,7 @@ func ListWorkflowTriggers(ctx context.Context, project, tenant string, paginatio
 	items := workflowTriggers.Items
 	size := int64(len(items))
 	if pagination.Start >= size {
-		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
+		return types.NewListResponse(int(size), []v1alpha1.WorkflowTrigger{}), nil
 	}
 
 	end := pagination.Start + pagination.Limit
