@@ -2,6 +2,7 @@ import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { IntegrationTypeMap } from '@/consts/const.js';
+import MenuAction from './MenuAction';
 
 @inject('integration')
 @observer
@@ -15,11 +16,10 @@ class List extends React.Component {
     this.props.integration.getIntegrationList();
   }
   addDataSource = () => {
-    this.props.history.push('/integration/addsource');
+    this.props.history.push('/integration/add');
   };
-
   render() {
-    const { integration } = this.props;
+    const { integration, history } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -40,6 +40,13 @@ class List extends React.Component {
             {_.get(spec, `${IntegrationTypeMap[spec.type]}.creationTime`)}
           </div>
         ),
+      },
+      {
+        title: intl.get('action'),
+        dataIndex: 'metadata.name',
+        key: 'action',
+        align: 'right',
+        render: value => <MenuAction name={value} history={history} />,
       },
     ];
     return (

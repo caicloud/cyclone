@@ -45,7 +45,12 @@ class Integration {
   @action.bound
   createIntegration(data, cb) {
     fetchApi.createIntegration(data).then(() => {
-      //this.listProjects();
+      cb();
+    });
+  }
+  @action.bound
+  deleteIntegration(name, cb) {
+    fetchApi.removeIntegration(name).then(() => {
       cb();
     });
   }
