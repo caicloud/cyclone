@@ -30,6 +30,8 @@ integration:
   datasource: 数据源
   addexternalsystem: 新增外部系统
   serviceAddress: 服务地址
+  confirm:
+    tips: 确定要删除集成对象
   form:
     dockerregistry: 镜像仓库
     registryaddress: 仓库地址
@@ -52,7 +54,7 @@ integration:
       admin: 管理员账号
       adminpwd: 管理员密码
     error:
-      name: 名称不能为空
+      alias: 名称不能为空
       sourceType: 请选择类型
       server: 请填写服务地址
       token: 请填写 token 信息

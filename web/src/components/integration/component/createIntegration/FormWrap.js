@@ -13,17 +13,9 @@ const generateData = data => {
 @observer
 export default class IntegrationForm extends React.Component {
   static propTypes = {
-    payload: PropTypes.object,
     history: PropTypes.object,
-    integration: PropTypes.observableObject,
-    setFieldValue: PropTypes.func,
-    sourceType: PropTypes.string,
+    integration: PropTypes.object,
     initialFormData: PropTypes.object,
-  };
-
-  handleSelectChange = val => {
-    const { setFieldValue } = this.props;
-    setFieldValue('sourceType', val);
   };
 
   handleCancle = () => {
@@ -33,7 +25,7 @@ export default class IntegrationForm extends React.Component {
 
   initFormValue = () => {
     return {
-      metadata: { name: '', description: '', creationTime: '' },
+      metadata: { alias: '', description: '', creationTime: '' },
       sourceType: '',
       spec: {
         dockerRegistry: {
@@ -41,12 +33,6 @@ export default class IntegrationForm extends React.Component {
           server: '',
           user: '',
         },
-        general: [
-          {
-            name: '',
-            value: '',
-          },
-        ],
         scm: {
           password: '',
           server: 'https://github.com',
@@ -69,8 +55,8 @@ export default class IntegrationForm extends React.Component {
       sonarQube: {},
       dockerRegistry: {},
     };
-    if (!values.metadata.name) {
-      errors.metadata = { name: intl.get('integration.form.error.name') };
+    if (!values.metadata.alias) {
+      errors.metadata = { alias: intl.get('integration.form.error.alias') };
     }
     if (!values.sourceType) {
       errors.sourceType = intl.get('integration.form.error.sourceType');
@@ -107,9 +93,10 @@ export default class IntegrationForm extends React.Component {
   };
 
   render() {
+    const initialValues = this.initFormValue();
     return (
       <Formik
-        initialValues={this.initFormValue()}
+        initialValues={initialValues}
         validate={this.validateForm}
         onSubmit={this.submit}
         render={props => (

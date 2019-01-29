@@ -1,13 +1,17 @@
 import { Route, Switch } from 'react-router-dom';
 import Integration from './component/List';
-import AddSource from './component/addSource';
+import CreateIntegration from './component/createIntegration';
 import PropTypes from 'prop-types';
 
 const IntegrationRoutes = ({ match }) => {
   return (
     <Switch>
       <Route path="/integration" exact component={Integration} />
-      <Route path={`${match.path}/add`} exact component={AddSource} />
+      <Route path={`${match.path}/add`} exact component={CreateIntegration} />
+      <Route
+        path={`${match.path}/:integrationName/update`}
+        component={CreateIntegration}
+      />
     </Switch>
   );
 };

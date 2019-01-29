@@ -31,6 +31,8 @@ integration:
   datasource: Data source
   addexternalsystem: Add external system
   serviceAddress: Service address
+  confirm:
+    tips: Do you Want to delete project Integration 
   form:
     dockerregistry: Docker registry
     registryaddress: Registry Address
@@ -52,7 +54,7 @@ integration:
       admin: Admin
       adminpwd: Admin password
     error:
-      name: Name is required
+      alias: Name is required
       sourceType: Please choose the type
       server: Please fill in the service address
       token: Please fill in the token information

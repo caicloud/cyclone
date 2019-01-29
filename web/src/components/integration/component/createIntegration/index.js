@@ -1,7 +1,7 @@
 import IntegrationForm from './FormWrap';
 import { Row, Col } from 'antd';
 
-const AddSource = props => {
+const CreateIntegration = props => {
   return (
     <div>
       <div className="head-bar">
@@ -16,4 +16,4 @@ const AddSource = props => {
   );
 };
 
-export default AddSource;
+export default CreateIntegration;

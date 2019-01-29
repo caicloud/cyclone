@@ -1,6 +1,7 @@
 import { Modal } from 'antd';
-import { inject, observer, PropTypes } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 import EllipsisMenu from '../../public/ellipsisMenu';
+import PropTypes from 'prop-types';
 
 const confirm = Modal.confirm;
 
@@ -8,15 +9,15 @@ const confirm = Modal.confirm;
 @observer
 class MenuAction extends React.Component {
   static propTypes = {
-    integration: PropTypes.observableObject,
+    integration: PropTypes.object,
     history: PropTypes.object,
     name: PropTypes.string,
     detail: PropTypes.bool,
   };
-  removeProject = name => {
+  removeIntegration = name => {
     const { integration, history } = this.props;
     confirm({
-      title: `Do you Want to delete project ${name} ?`,
+      title: `${intl.get('integration.confirm.tips')} ${name} ?`,
       onOk() {
         integration.deleteIntegration(name, () => {
           history.replace('/integration');
@@ -29,13 +30,10 @@ class MenuAction extends React.Component {
     const { name } = this.props;
     return (
       <EllipsisMenu
-        menuText={[intl.get('operation.modify'), intl.get('operation.delete')]}
+        menuText={[intl.get('operation.delete')]}
         menuFunc={[
           () => {
-            this.updateProject(name);
-          },
-          () => {
-            this.removeProject(name);
+            this.removeIntegration(name);
           },
         ]}
       />
