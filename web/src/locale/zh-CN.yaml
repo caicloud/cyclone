@@ -2,6 +2,7 @@ name: 名称
 action: 操作
 creationTime: 创建时间
 description: 描述
+memory: 内存
 operation:
   add: 新增
   delete: 删除
@@ -63,3 +64,4 @@ validate:
   positiveOrFloat: 必须是 Number, 允许两位小数
   quota:
     exceedLimit: 请求不能超过上限
+    selectConfig: 请选择配置

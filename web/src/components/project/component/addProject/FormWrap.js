@@ -35,7 +35,7 @@ class AddProject extends React.Component {
       const resources = n.split('/');
       return { type: resources[0], name: resources[1] };
     });
-    data.metadata.labels = {
+    data.metadata.annotations = {
       'cyclone.io/description': values.metadata.description,
     };
     if (update) {
@@ -51,9 +51,11 @@ class AddProject extends React.Component {
 
   validate = values => {
     const errors = {};
-
     if (!values.metadata.name) {
-      errors.metadata = { name: 'Required' };
+      errors.metadata = { name: intl.get('validate.required') };
+    }
+    if (!values.spec.quota['limits.cpu']) {
+      errors.quota = intl.get('validate.quota.selectConfig');
     }
     return errors;
   };
@@ -81,7 +83,7 @@ class AddProject extends React.Component {
       ]);
       const description = _.get(proejctInfo, [
         'metadata',
-        'labels',
+        'annotations',
         'cyclone.io/description',
       ]);
       values.spec.integrations = _.map(

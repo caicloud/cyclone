@@ -9,13 +9,20 @@ const { TextArea } = Input;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
 
-const FormContent = ({ history, handleSubmit, setFieldValue, update }) => {
+const FormContent = ({
+  history,
+  handleSubmit,
+  setFieldValue,
+  update,
+  submitCount,
+}) => {
   return (
     <Form layout={'horizontal'} onSubmit={handleSubmit}>
       <Field
         label={intl.get('name')}
         name="metadata.name"
         component={InputField}
+        disabled={update}
         hasFeedback
         required
       />
@@ -35,6 +42,7 @@ const FormContent = ({ history, handleSubmit, setFieldValue, update }) => {
         name="spec.quota"
         component={Quota}
         update={update}
+        parentSubmitCount={submitCount} // use submitCount to judge whether the parent form is submited
         onChange={value => {
           setFieldValue('spec.quota', value);
         }}
@@ -60,6 +68,7 @@ FormContent.propTypes = {
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,
   update: PropTypes.bool,
+  submitCount: PropTypes.number,
 };
 
 export default FormContent;

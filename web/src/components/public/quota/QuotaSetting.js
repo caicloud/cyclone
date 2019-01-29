@@ -1,10 +1,10 @@
-import React from 'react';
-import { Radio, Form, Row, Col } from 'antd';
-import { Field, withFormik } from 'formik';
 import InputWithUnit from '@/components/public/inputWithUnit';
 import MakeField from '@/components/public/makeField';
+import { resourceValidate } from '@/components/public/validate';
+import { Radio, Form, Row, Col } from 'antd';
+import { Field, withFormik } from 'formik';
 import PropTypes from 'prop-types';
-import { resourceValidate } from '@/consts/validate';
+
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -49,11 +49,42 @@ class Quota extends React.Component {
     label: PropTypes.string,
     onChange: PropTypes.func,
     form: PropTypes.object,
+    parentSubmitCount: PropTypes.number,
+    setTouched: PropTypes.func,
   };
   constructor(props) {
     super(props);
     const { field } = props;
     this.getInitialValues(field.value);
+  }
+
+  componentDidUpdate(prevProps) {
+    const {
+      parentSubmitCount,
+      setTouched,
+      values: { type },
+    } = this.props;
+    const prevSubmitCount = prevProps.parentSubmitCount;
+    const touchedValue =
+      type === 'recommend'
+        ? {
+            config: true,
+          }
+        : {
+            custom: {
+              limits: {
+                cpu: true,
+                memory: true,
+              },
+              requests: {
+                cpu: true,
+                memory: true,
+              },
+            },
+          };
+    if (prevSubmitCount !== parentSubmitCount) {
+      setTouched(touchedValue);
+    }
   }
 
   getInitialValues = value => {
@@ -86,7 +117,7 @@ class Quota extends React.Component {
     const { setFieldValue, onChange } = this.props;
     const name = e.target.value;
     setFieldValue('config', name);
-    const item = _.find(allocationMap, n => (n.name = name));
+    const item = _.find(allocationMap, n => n.name === name);
     onChange(item.value);
   };
 
@@ -133,7 +164,7 @@ class Quota extends React.Component {
         required
         {...{
           labelCol: { span: 4 },
-          wrapperCol: { span: 14 },
+          wrapperCol: { span: 16 },
         }}
       >
         {/* TODO: split into sub-components */}
@@ -160,7 +191,7 @@ class Quota extends React.Component {
                 component={_RadioGroup}
                 value={config}
                 onChange={this.handleConfigSelect}
-                formItemLayout={{ wrapperCol: { span: 20 } }}
+                formItemLayout={{ wrapperCol: { span: 24 } }}
               >
                 {allocationMap.map(a => (
                   <RadioButton value={a.name} key={a.name}>
@@ -306,7 +337,7 @@ export default withFormik({
   validate: values => {
     const errors = {};
     if (values.type === 'recommend' && _.isEmpty(values.config)) {
-      errors.config = '请选择配置';
+      errors.config = intl.get('validate.quota.selectConfig');
     }
     if (values.type === 'custom') {
       errors.custom = resourceValidate(values.custom);

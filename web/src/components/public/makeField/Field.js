@@ -6,7 +6,7 @@ const FormItem = Form.Item;
 
 const defaultFormItemLayout = {
   labelCol: { span: 4 },
-  wrapperCol: { span: 14 },
+  wrapperCol: { span: 16 },
 };
 
 export default function makeField(Component) {
