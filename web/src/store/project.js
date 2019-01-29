@@ -5,6 +5,13 @@ class Project {
   @observable projectList = null;
   @observable projectDetail = null;
   @observable detailLoading = false;
+
+  @observable resourceList = null;
+  @observable loadingResource = false;
+
+  @observable stageList = null;
+  @observable loadingStage = false;
+
   @action.bound
   listProjects() {
     fetchApi.listProjects().then(data => {
@@ -38,6 +45,24 @@ class Project {
     fetchApi.getProject(name).then(data => {
       this.projectDetail = data;
       this.detailLoading = false;
+    });
+  }
+
+  @action.bound
+  listProjectResources(project) {
+    this.loadingResource = true;
+    fetchApi.listProjectResources(project).then(data => {
+      this.resourceList = data;
+      this.loadingResource = false;
+    });
+  }
+
+  @action.bound
+  listProjectStages(project) {
+    this.loadingStage = true;
+    fetchApi.listProjectStages(project).then(data => {
+      this.stageList = data;
+      this.loadingStage = false;
     });
   }
 }
