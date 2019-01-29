@@ -36,7 +36,7 @@ func ListResources(ctx context.Context, project, tenant string, pagination *type
 	items := resources.Items
 	size := int64(len(items))
 	if pagination.Start >= size {
-		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
+		return types.NewListResponse(int(size), []v1alpha1.Resource{}), nil
 	}
 
 	end := pagination.Start + pagination.Limit

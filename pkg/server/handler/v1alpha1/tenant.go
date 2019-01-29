@@ -14,6 +14,7 @@ import (
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/types"
 )
 
 // CreateTenant creates a cyclone tenant
@@ -22,7 +23,7 @@ func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) 
 }
 
 // ListTenants list all tenants' information
-func ListTenants(ctx context.Context) ([]api.Tenant, error) {
+func ListTenants(ctx context.Context, pagination *types.Pagination) (*types.ListResponse, error) {
 	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
 		LabelSelector: common.LabelOwnerCyclone(),
 	})
@@ -40,7 +41,18 @@ func ListTenants(ctx context.Context) ([]api.Tenant, error) {
 		}
 		tenants = append(tenants, *t)
 	}
-	return tenants, nil
+
+	size := int64(len(tenants))
+	if pagination.Start >= size {
+		return types.NewListResponse(int(size), []api.Tenant{}), nil
+	}
+
+	end := pagination.Start + pagination.Limit
+	if end > size {
+		end = size
+	}
+
+	return types.NewListResponse(int(size), tenants[pagination.Start:end]), nil
 }
 
 // GetTenant gets information for a specific tenant

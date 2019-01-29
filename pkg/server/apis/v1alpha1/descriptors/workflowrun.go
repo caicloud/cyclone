@@ -76,7 +76,7 @@ var workflowrun = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Auto,
-						Name:        "pagination",
+						Name:        httputil.PaginationAutoParameter,
 						Description: "pagination",
 					},
 				},
@@ -250,7 +250,7 @@ var workflowrun = []definition.Descriptor{
 					},
 					{
 						Source: definition.Query,
-						Name:   "stage",
+						Name:   httputil.StageNameQueryParameter,
 					},
 					{
 						Source: definition.Query,
@@ -291,7 +291,7 @@ var workflowrun = []definition.Descriptor{
 					},
 					{
 						Source: definition.Query,
-						Name:   "stage",
+						Name:   httputil.StageNameQueryParameter,
 					},
 					{
 						Source: definition.Query,
@@ -328,7 +328,7 @@ var workflowrun = []definition.Descriptor{
 					},
 					{
 						Source: definition.Query,
-						Name:   "stage",
+						Name:   httputil.StageNameQueryParameter,
 					},
 					{
 						Source: definition.Query,
