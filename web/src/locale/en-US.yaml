@@ -40,6 +40,7 @@ integration:
 project:
   externalSystem: External system
   workflowCount: Workflow count
+  stage: Stage
 allocation:
   quotaConfig: Quota config
   recommend: Recommend quota

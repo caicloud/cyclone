@@ -41,6 +41,7 @@ integration:
 project:
   externalSystem: 外部系统
   workflowCount: 工作流数量
+  stage: 阶段
 allocation:
   quotaConfig: 资源配置
   recommend: 推荐配额

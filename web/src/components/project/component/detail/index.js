@@ -62,7 +62,7 @@ class ProjectDetail extends React.Component {
             <TabPane tab={intl.get('sideNav.resource')} key="resource">
               <ResourceList projectName={projectName} />
             </TabPane>
-            <TabPane tab="stage" key="stage">
+            <TabPane tab={intl.get('project.stage')} key="stage">
               <StageList projectName={projectName} />
             </TabPane>
           </Tabs>
