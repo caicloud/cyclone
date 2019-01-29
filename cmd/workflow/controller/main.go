@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +21,9 @@ var namespace = flag.String("namespace", "default", "Namespace that workflow con
 
 func main() {
 	flag.Parse()
+
+	// Print Cyclone ascii art logo
+	fmt.Println(common.CycloneLogo)
 
 	// Create k8s clientset and registry system signals for exit.
 	client, err := common.GetClient("", *kubeConfigPath)
