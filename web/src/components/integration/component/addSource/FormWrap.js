@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import { inject, observer } from 'mobx-react';
-import integration from '../../../../store/integration';
 import FormContent from './FormContent';
 
 const generateData = data => {
@@ -16,6 +15,7 @@ export default class IntegrationForm extends React.Component {
   static propTypes = {
     payload: PropTypes.object,
     history: PropTypes.object,
+    integration: PropTypes.observableObject,
     setFieldValue: PropTypes.func,
     sourceType: PropTypes.string,
     initialFormData: PropTypes.object,
@@ -99,6 +99,7 @@ export default class IntegrationForm extends React.Component {
 
   submit = values => {
     const { sourceType } = values;
+    const { integration } = this.props;
     const dsubmitData = generateData(values, sourceType);
     integration.createIntegration(dsubmitData, () => {
       this.props.history.replace(`/integration`);

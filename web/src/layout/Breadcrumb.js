@@ -9,6 +9,7 @@ const mainModules = [
   'stageTemplate',
   'resource',
   'workflow',
+  'integration',
 ];
 const operations = ['update', 'add'];
 

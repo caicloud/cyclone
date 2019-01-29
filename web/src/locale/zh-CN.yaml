@@ -55,7 +55,7 @@ integration:
       name: 名称不能为空
       sourceType: 请选择类型
       server: 请填写服务地址
-      token: 请填写token信息
+      token: 请填写 token 信息
       user: 请填写用户名
       pwd: 请填写密码
     tip:
