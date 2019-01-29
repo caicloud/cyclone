@@ -1,5 +1,5 @@
 import Project from './component/List';
-import ProjectDetail from './component/ProjectDetail';
+import ProjectDetail from './component/detail';
 import CreateProject from './component/addProject';
 import { Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';

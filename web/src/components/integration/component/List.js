@@ -40,7 +40,7 @@ class List extends React.Component {
         key: 'name',
       },
       {
-        title: intl.get('integration.type'),
+        title: intl.get('type'),
         dataIndex: 'spec.type',
         key: 'type',
       },

@@ -40,6 +40,16 @@ const fetchApi = {
   getProject(name) {
     return http.get(`/projects/${name}`);
   },
+  listProjectResources(project) {
+    return http.get(`/projects/${project}/resources`).then(data => {
+      return data;
+    });
+  },
+  listProjectStages(project) {
+    return http.get(`/projects/${project}/stages`).then(data => {
+      return data;
+    });
+  },
   /** end project */
 };
 

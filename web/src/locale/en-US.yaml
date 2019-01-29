@@ -3,6 +3,7 @@ action: Action
 creationTime: Creation time
 description: Description
 memory: Memory
+type: Type
 operation:
   add: Add
   delete: Delete
@@ -25,7 +26,6 @@ workflow:
 integration:
   name: Name
   desc: Description
-  type: Type
   integrationTime: Integration time
   datasource: Data source
   addexternalsystem: Add external system

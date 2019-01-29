@@ -3,6 +3,7 @@ action: 操作
 creationTime: 创建时间
 description: 描述
 memory: 内存
+type: 类型
 operation:
   add: 新增
   delete: 删除
@@ -25,7 +26,6 @@ workflow:
 integration:
   name: 名称
   desc: 描述
-  type: 类型
   creationTime: 创建时间
   datasource: 数据源
   addexternalsystem: 新增外部系统

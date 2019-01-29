@@ -103,7 +103,7 @@ class DataForm extends React.Component {
     return (
       <Form onSubmit={this.handleSubmit}>
         <FormItem
-          label={intl.get('integration.type')}
+          label={intl.get('type')}
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 12 }}
         >
