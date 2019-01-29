@@ -34,11 +34,11 @@ export default class Selection extends React.Component {
     const value = e.target.value;
     setFieldValue(name, value);
     if (value === 'GitLab') {
-      setFieldValue('spec.inline.scm.server', 'https://gitlab.com');
+      setFieldValue('spec.scm.server', 'https://gitlab.com');
     } else if (value === 'SVN') {
-      setFieldValue('spec.inline.scm.server', '');
+      setFieldValue('spec.scm.server', '');
     } else if (value === 'GitHub') {
-      setFieldValue('spec.inline.scm.server', 'https://github.com');
+      setFieldValue('spec.scm.server', 'https://github.com');
     }
   };
 
@@ -47,9 +47,7 @@ export default class Selection extends React.Component {
       label,
       values: {
         spec: {
-          inline: {
-            scm: { type },
-          },
+          scm: { type },
         },
       },
     } = this.props;
@@ -66,7 +64,7 @@ export default class Selection extends React.Component {
           <div className="u-scm-sellection">
             <div className="scm-type">
               <Field
-                name="spec.inline.scm.type"
+                name="spec.scm.type"
                 component={_RadioGroup}
                 onChange={this.handleType}
               >

@@ -82,40 +82,36 @@ export default class IntegrationForm extends React.Component {
           metadata: { name: '', description: '', creationTime: '' },
           sourceType: '',
           spec: {
-            inline: {
-              dockerRegistry: {
-                password: '',
-                server: '',
-                user: '',
+            dockerRegistry: {
+              password: '',
+              server: '',
+              user: '',
+            },
+            general: [
+              {
+                name: '',
+                value: '',
               },
-              general: [
-                {
-                  name: '',
-                  value: '',
-                },
-              ],
-              scm: {
-                password: '',
-                server: 'https://github.com',
-                token: '',
-                type: 'GitHub',
-                user: '',
-              },
-              sonarQube: {
-                token: '',
-                server: '',
-              },
+            ],
+            scm: {
+              password: '',
+              server: 'https://github.com',
+              token: '',
+              type: 'GitHub',
+              user: '',
+            },
+            sonarQube: {
+              token: '',
+              server: '',
             },
           },
         }}
         validate={values => {
           const errors = {};
           const spec = {
-            inline: {
-              scm: {},
-              sonarQube: {},
-              dockerRegistry: {},
-            },
+            scm: {},
+            sonarQube: {},
+            dockerRegistry: {},
           };
           if (!values.metadata.name) {
             errors.metadata = { name: intl.get('integration.form.error.name') };
@@ -124,22 +120,22 @@ export default class IntegrationForm extends React.Component {
             errors.sourceType = intl.get('integration.form.error.sourceType');
           }
 
-          if (!values.spec.inline.scm.server) {
-            spec.inline.scm.server = intl.get('integration.form.error.server');
+          if (!values.spec.scm.server) {
+            spec.scm.server = intl.get('integration.form.error.server');
             errors['spec'] = spec;
           }
 
-          if (!values.spec.inline.scm.token) {
-            spec.inline.scm.token = intl.get('integration.form.error.token');
+          if (!values.spec.scm.token) {
+            spec.scm.token = intl.get('integration.form.error.token');
             errors['spec'] = spec;
           }
 
-          if (!values.spec.inline.scm.user) {
-            spec.inline.scm.user = intl.get('integration.form.error.user');
+          if (!values.spec.scm.user) {
+            spec.scm.user = intl.get('integration.form.error.user');
             errors['spec'] = spec;
           }
-          if (!values.spec.inline.scm.password) {
-            spec.inline.scm.password = intl.get('integration.form.error.pwd');
+          if (!values.spec.scm.password) {
+            spec.scm.password = intl.get('integration.form.error.pwd');
             errors['spec'] = spec;
           }
           return errors;

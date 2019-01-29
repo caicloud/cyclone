@@ -11,7 +11,7 @@ export default class GitLab extends React.Component {
       <div>
         <Field
           label={intl.get('integration.form.scm.serverAddress')}
-          name="spec.inline.scm.server"
+          name="spec.scm.server"
           required
           component={InputField}
         />

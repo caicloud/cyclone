@@ -24,7 +24,7 @@ export default class ValidateSelect extends React.Component {
         <FormItem>
           <Field
             label="Token"
-            name="spec.inline.scm.token"
+            name="spec.scm.token"
             required
             component={InputField}
           />
@@ -49,13 +49,13 @@ export default class ValidateSelect extends React.Component {
         <FormItem>
           <Field
             label={intl.get('integration.form.username')}
-            name="spec.inline.scm.user"
+            name="spec.scm.user"
             required
             component={InputField}
           />
           <Field
             label={intl.get('integration.form.pwd')}
-            name="spec.inline.scm.password"
+            name="spec.scm.password"
             required
             component={InputField}
           />

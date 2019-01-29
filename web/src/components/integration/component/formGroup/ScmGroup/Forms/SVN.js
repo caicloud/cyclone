@@ -10,19 +10,19 @@ export default class SVN extends React.Component {
       <div>
         <Field
           label={intl.get('integration.form.scm.serverAddress')}
-          name="spec.inline.scm.server"
+          name="spec.scm.server"
           component={InputField}
           required
         />
         <Field
           label={intl.get('integration.form.username')}
-          name="spec.inline.scm.user"
+          name="spec.scm.user"
           required
           component={InputField}
         />
         <Field
           label={intl.get('integration.form.pwd')}
-          name="spec.inline.scm.password"
+          name="spec.scm.password"
           required
           component={InputField}
         />
