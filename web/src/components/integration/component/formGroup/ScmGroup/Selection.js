@@ -63,9 +63,8 @@ export default class Selection extends React.Component {
             wrapperCol: { span: 14 },
           }}
         >
-          {/* TODO: split into sub-components */}
-          <div className="u-resource-allocation">
-            <div className="allocation-type">
+          <div className="u-scm-sellection">
+            <div className="scm-type">
               <Field
                 name="spec.inline.scm.type"
                 component={_RadioGroup}

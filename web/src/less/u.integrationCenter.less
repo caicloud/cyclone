@@ -1,0 +1,27 @@
+.u-scm {
+  .u-scm-sellection {
+    margin-bottom: -25px;
+    .ant-radio-button-wrapper {
+      box-shadow: none !important;
+      margin-right: 16px;
+      border-radius: 4px;
+      border-left: 1px solid #d9d9d9;
+      &:not(:first-child)::before {
+        display: none;
+      }
+      &:first-child {
+        border-radius: 4px;
+      }
+      &:last-of-type {
+        margin-right: 0;
+        border-radius: 4px;
+      }
+    }
+    .ant-radio-button-wrapper-checked {
+      border-left: 1px solid #1890ff;
+    }
+  }
+  .validate-select {
+    margin-bottom: 0;
+  }
+}

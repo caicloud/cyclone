@@ -5,7 +5,7 @@ import Selection from './Selection';
 export default class ScmGroup extends React.Component {
   render() {
     return (
-      <div>
+      <div className="u-scm">
         <h3>代码源</h3>
         <Field
           label={intl.get('integration.type')}

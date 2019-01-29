@@ -21,7 +21,7 @@ export default class SVN extends React.Component {
           component={InputField}
         />
         <Field
-          label={intl.get('integration.form.password')}
+          label={intl.get('integration.form.pwd')}
           name="spec.inline.scm.password"
           required
           component={InputField}

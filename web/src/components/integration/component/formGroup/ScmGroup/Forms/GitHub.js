@@ -1,6 +1,6 @@
 import React from 'react';
 import { Field } from 'formik';
-import { Input, Button } from 'antd';
+import { Input } from 'antd';
 import MakeField from '@/components/public/makeField';
 import ValidateSelect from './ValidateSelect';
 
@@ -17,10 +17,9 @@ export default class GitHub extends React.Component {
         />
         <Field
           label={intl.get('integration.form.scm.verificationMode')}
-          name="validateFunc"
+          name="validateMode"
           component={ValidateSelect}
         />
-        <Button>校验</Button>
       </div>
     );
   }

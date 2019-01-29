@@ -1,6 +1,6 @@
 import React from 'react';
 import { Field } from 'formik';
-import { Input, Button } from 'antd';
+import { Input } from 'antd';
 import MakeField from '@/components/public/makeField';
 import ValidateSelect from './ValidateSelect';
 
@@ -12,6 +12,7 @@ export default class GitLab extends React.Component {
         <Field
           label={intl.get('integration.form.scm.serverAddress')}
           name="spec.inline.scm.server"
+          required
           component={InputField}
         />
         <Field
@@ -19,7 +20,6 @@ export default class GitLab extends React.Component {
           name="validateFunc"
           component={ValidateSelect}
         />
-        <Button>验证</Button>
       </div>
     );
   }

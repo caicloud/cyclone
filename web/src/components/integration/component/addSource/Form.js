@@ -201,8 +201,8 @@ export default class IntegrationForm extends React.Component {
                 >
                   {intl.get('integration.form.cancel')}
                 </Button>
-                {!_.isEmpty(errors) && <p>有错误存在</p>}
               </FormItem>
+              {!_.isEmpty(errors) && <p>有错误存在</p>}
             </Form>
           );
         }}
