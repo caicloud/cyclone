@@ -15,7 +15,7 @@ import (
 
 // CreateStage ...
 func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
-	err := CreatePrelude(project, tenant, stg)
+	err := ModifyResource(project, tenant, stg)
 	if err != nil {
 		return nil, err
 	}

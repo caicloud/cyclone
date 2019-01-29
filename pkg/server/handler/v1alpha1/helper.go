@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -83,9 +82,9 @@ func getWftMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 	return resource.ObjectMeta, nil
 }
 
-// CreatePrelude is the prelude of create cyclone CRD resources.
-// It will give the resource a name if it is empty. and will add project labels for the project.
-func CreatePrelude(project, tenant string, object interface{}) error {
+// ModifyResource is the prelude of create cyclone CRD resources.
+// It will give the resource a name if it is empty. and will add project labels for the resource.
+func ModifyResource(project, tenant string, object interface{}) error {
 	var getMetadata GetMetadata
 	var meta *meta_v1.ObjectMeta
 	var resource string
@@ -117,43 +116,46 @@ func CreatePrelude(project, tenant string, object interface{}) error {
 	if meta.Name == "" && (meta.Annotations == nil || meta.Annotations[common.AnnotationAlias] == "") {
 		return fmt.Errorf("name and metadata.annotations[cyclone.io/alias] can not both be empty")
 	}
+
+	// Add project label
+	if meta.Labels == nil {
+		meta.Labels = make(map[string]string)
+	}
+	meta.Labels[common.LabelProject] = project
+
+	// Get name and alias, if alias not set, use name as alias
 	name := meta.Name
 	alias := ""
 	if meta.Annotations != nil {
 		alias = meta.Annotations[common.AnnotationAlias]
 	}
-
-	nameEmpty := false
-	if name == "" && alias != "" {
-		name = slugify.Slugify(project+"-"+alias, false, -1)
-		nameEmpty = true
+	if alias == "" {
+		alias = name
 	}
 
-	if old, err := getMetadata(tenant, name); err == nil {
-		log.Errorf("name %s conflict, alias:%s, exist alias:%s",
-			name, alias, old.Annotations[common.AnnotationAlias])
-		if nameEmpty {
-			name = slugify.Slugify(name, true, -1)
-		} else {
-			return errors.NewAlreadyExists(schema.GroupResource{Group: v1alpha1.APIVersion, Resource: resource}, name)
-		}
-	}
-
-	meta.Name = name
+	// Add alias annotation if not set
 	if meta.Annotations == nil {
 		meta.Annotations = make(map[string]string)
 	}
-	if alias == "" {
-		meta.Annotations[common.AnnotationAlias] = name
-	} else {
-		meta.Annotations[common.AnnotationAlias] = alias
+	meta.Annotations[common.AnnotationAlias] = alias
+
+	// If resource name set, check whether name conflict exists.
+	if name != "" {
+		_, err := getMetadata(tenant, name)
+		if err == nil {
+			return errors.NewAlreadyExists(schema.GroupResource{Group: v1alpha1.APIVersion, Resource: resource}, name)
+		}
+		return nil
 	}
 
-	// add project label
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
+	// If resource name not set, generate one from alias.
+	name = slugify.Slugify(project+"-"+alias, false, -1)
+	_, err := getMetadata(tenant, name)
+	if err == nil {
+		name = slugify.Slugify(name, true, -1)
 	}
-	meta.Labels[common.LabelProject] = project
+	meta.Name = name
+
 	return nil
 }
 

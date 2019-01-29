@@ -15,7 +15,7 @@ import (
 
 // CreateResource ...
 func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.Resource) (*v1alpha1.Resource, error) {
-	err := CreatePrelude(project, tenant, rsc)
+	err := ModifyResource(project, tenant, rsc)
 	if err != nil {
 		return nil, err
 	}

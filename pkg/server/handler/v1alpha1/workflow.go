@@ -15,7 +15,7 @@ import (
 
 // CreateWorkflow ...
 func CreateWorkflow(ctx context.Context, project, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
-	err := CreatePrelude(project, tenant, wf)
+	err := ModifyResource(project, tenant, wf)
 	if err != nil {
 		return nil, err
 	}

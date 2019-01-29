@@ -15,7 +15,7 @@ import (
 
 // CreateWorkflowTrigger ...
 func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	err := CreatePrelude(project, tenant, wft)
+	err := ModifyResource(project, tenant, wft)
 	if err != nil {
 		return nil, err
 	}

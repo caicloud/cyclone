@@ -167,12 +167,12 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/cancel",
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/pause",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Update,
-				Function:    handler.CancelWorkflowRun,
-				Description: "Cancel workflowrun",
+				Function:    handler.PauseWorkflowRun,
+				Description: "Pause a workflowrun",
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,

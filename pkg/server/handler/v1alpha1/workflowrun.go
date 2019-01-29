@@ -28,7 +28,7 @@ import (
 
 // CreateWorkflowRun ...
 func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	err := CreatePrelude(project, tenant, wfr)
+	err := ModifyResource(project, tenant, wfr)
 	if err != nil {
 		return nil, err
 	}
@@ -91,11 +91,11 @@ func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
 }
 
-// CancelWorkflowRun updates the workflowrun overall status to Cancelled.
-func CancelWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch("Cancelled")
+// PauseWorkflowRun updates the workflowrun overall status to Waiting.
+func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting)
 	if err != nil {
-		log.Errorf("cancel workflowrun %s error %s", workflowrun, err)
+		log.Errorf("pause workflowrun %s error %s", workflowrun, err)
 		return nil, err
 	}
 
@@ -104,7 +104,7 @@ func CancelWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 
 // ContinueWorkflowRun updates the workflowrun overall status to Running.
 func ContinueWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch("Running")
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning)
 	if err != nil {
 		log.Errorf("continue workflowrun %s error %s", workflowrun, err)
 		return nil, err
