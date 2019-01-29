@@ -1,6 +1,6 @@
 FROM alpine/git:1.0.4
 
-MAINTAINER chende@caicloud.io
+LABEL maintainer="chende@caicloud.io"
 
 ENV WORKDIR /workspace
 WORKDIR $WORKDIR
