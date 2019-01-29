@@ -1,5 +1,7 @@
 FROM alpine:3.8
 
+LABEL maintainer="zhujian@caicloud.io"
+
 WORKDIR /root
 
 RUN apk update && apk add ca-certificates && \
