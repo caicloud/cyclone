@@ -6,6 +6,9 @@ const (
 	// templates.
 	AdminTenant = "admin"
 
+	// TenantNamespacePrefix is the prefix of namespace which related to a specific tenant
+	TenantNamespacePrefix = "cyclone--"
+
 	// TenantPVCPrefix is the prefix of pvc which related to a specific tenant
 	TenantPVCPrefix = "cyclone-pvc-"
 

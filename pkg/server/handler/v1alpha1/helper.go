@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/slugify"
@@ -82,9 +83,36 @@ func getWftMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 	return resource.ObjectMeta, nil
 }
 
-// ModifyResource is the prelude of create cyclone CRD resources.
-// It will give the resource a name if it is empty. and will add project labels for the resource.
-func ModifyResource(project, tenant string, object interface{}) error {
+func getIntegrationMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
+	resource, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(common.IntegrationSecret(name), meta_v1.GetOptions{})
+	if err != nil {
+		return meta_v1.ObjectMeta{}, err
+	}
+	return resource.ObjectMeta, nil
+}
+
+func getProjectMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
+	resource, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	if err != nil {
+		return meta_v1.ObjectMeta{}, err
+	}
+	return resource.ObjectMeta, nil
+}
+
+func getTenantMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
+	resource, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
+	if err != nil {
+		return meta_v1.ObjectMeta{}, err
+	}
+	return resource.ObjectMeta, nil
+}
+
+// CreationModifier is used in creating cyclone resources. It's used to modify cyclone resources.
+type CreationModifier func(project, tenant string, object interface{}) error
+
+// GenerateNameModifier is a modifier of create cyclone CRD resources.
+// It will give the resource a name if it is empty.
+func GenerateNameModifier(project, tenant string, object interface{}) error {
 	var getMetadata GetMetadata
 	var meta *meta_v1.ObjectMeta
 	var resource string
@@ -109,6 +137,18 @@ func ModifyResource(project, tenant string, object interface{}) error {
 		meta = &obj.ObjectMeta
 		getMetadata = getWftMetadata
 		resource = "workflowtriggers"
+	case *api.Tenant:
+		meta = &obj.ObjectMeta
+		getMetadata = getTenantMetadata
+		resource = "tenants"
+	case *api.Integration:
+		meta = &obj.ObjectMeta
+		getMetadata = getIntegrationMetadata
+		resource = "integrations"
+	case *v1alpha1.Project:
+		meta = &obj.ObjectMeta
+		getMetadata = getProjectMetadata
+		resource = "projects"
 	default:
 		return fmt.Errorf("resource type not support")
 	}
@@ -116,12 +156,6 @@ func ModifyResource(project, tenant string, object interface{}) error {
 	if meta.Name == "" && (meta.Annotations == nil || meta.Annotations[common.AnnotationAlias] == "") {
 		return fmt.Errorf("name and metadata.annotations[cyclone.io/alias] can not both be empty")
 	}
-
-	// Add project label
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
-	}
-	meta.Labels[common.LabelProject] = project
 
 	// Get name and alias, if alias not set, use name as alias
 	name := meta.Name
@@ -149,13 +183,45 @@ func ModifyResource(project, tenant string, object interface{}) error {
 	}
 
 	// If resource name not set, generate one from alias.
-	name = slugify.Slugify(project+"-"+alias, false, -1)
+	if project != "" {
+		name = slugify.Slugify(project+"-"+alias, false, -1)
+	} else {
+		name = slugify.Slugify(alias, false, -1)
+	}
+
 	_, err := getMetadata(tenant, name)
 	if err == nil {
 		name = slugify.Slugify(name, true, -1)
 	}
 	meta.Name = name
 
+	return nil
+}
+
+// InjectProjectLabelModifier is a modifier of create cyclone CRD resources.
+// It will will add project labels for the resource.
+func InjectProjectLabelModifier(project, tenant string, object interface{}) error {
+	var meta *meta_v1.ObjectMeta
+	switch obj := object.(type) {
+	case *v1alpha1.Resource:
+		meta = &obj.ObjectMeta
+	case *v1alpha1.Stage:
+		meta = &obj.ObjectMeta
+	case *v1alpha1.Workflow:
+		meta = &obj.ObjectMeta
+	case *v1alpha1.WorkflowRun:
+		meta = &obj.ObjectMeta
+	case *v1alpha1.WorkflowTrigger:
+		meta = &obj.ObjectMeta
+	default:
+		return fmt.Errorf("resource type not support")
+	}
+
+	// Add project label
+	if meta.Labels == nil {
+		meta.Labels = make(map[string]string)
+	}
+	meta.Labels[common.LabelProject] = project
 	return nil
 }
 
