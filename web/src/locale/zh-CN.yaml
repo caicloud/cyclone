@@ -62,7 +62,7 @@ template:
     code-scan: 代码扫描
 validate:
   required: 必填
-  positiveOrFloat: 必须是 Number, 允许两位小数
+  positiveOrFloat: 允许两位小数
   quota:
     exceedLimit: 请求不能超过上限
     selectConfig: 请选择配置
