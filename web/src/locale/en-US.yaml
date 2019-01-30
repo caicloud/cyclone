@@ -61,7 +61,7 @@ template:
     code-scan: CodeScan
 validate:
   required: Reqiured
-  positiveOrFloat: It has to be Number to allow two decimal places
+  positiveOrFloat: Two decimal allowed
   quota:
     exceedLimit: The request can‘t exceed the limit
     selectConfig: Please select config
