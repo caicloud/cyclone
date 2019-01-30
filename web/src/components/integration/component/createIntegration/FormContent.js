@@ -10,19 +10,21 @@ import SelectSourceType from './SelectSourceType';
 const { TextArea } = Input;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
-const renderWrapForm = (sourceType, props) => {
+const renderWrapForm = (type, props) => {
   const formMap = {
     scm: <ScmGroup {...props} />,
     dockerRegistry: <DockerRegistry {...props} />,
     sonarQube: <SonarQube {...props} />,
   };
-  return formMap[sourceType];
+  return formMap[type];
 };
 const SelectField = MakeField(SelectSourceType);
 const FormItem = Form.Item;
 const FormContent = props => {
   const {
-    values: { sourceType },
+    values: {
+      spec: { type },
+    },
     handleSubmit,
     setFieldValue,
     handleCancle,
@@ -32,7 +34,7 @@ const FormContent = props => {
     <Form onSubmit={handleSubmit}>
       <Field
         label={intl.get('integration.name')}
-        name="metadata.name"
+        name="metadata.alias"
         component={InputField}
         hasFeedback
         required
@@ -44,14 +46,14 @@ const FormContent = props => {
       />
       <Field
         label={intl.get('integration.type')}
-        name="sourceType"
+        name="spec.type"
         required
         handleSelectChange={val => {
-          setFieldValue('sourceType', val);
+          setFieldValue('spec.type', val);
         }}
         component={SelectField}
       />
-      {sourceType && renderWrapForm(sourceType, { ...props })}
+      {type && renderWrapForm(type, { ...props })}
       <FormItem
         {...{
           labelCol: { span: 8 },

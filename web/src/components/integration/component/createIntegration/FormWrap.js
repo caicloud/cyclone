@@ -4,16 +4,36 @@ import { inject, observer } from 'mobx-react';
 import FormContent from './FormContent';
 
 const generateData = data => {
-  delete data['sourceType'];
-  data['metadata']['creationTime'] = Date.now().toString();
+  data.metadata = {
+    creationTime: Date.now().toString(),
+    annotations: {
+      'cyclone.io/description': _.get(data, 'metadata.description', ''),
+      'cyclone.io/alias': _.get(data, 'metadata.alias', ''),
+    },
+  };
   return data;
 };
 
 @inject('integration')
 @observer
 export default class IntegrationForm extends React.Component {
+  constructor(props) {
+    super(props);
+    const {
+      match: { params },
+    } = props;
+    const update = !!_.get(params, 'integrationName');
+    this.state = {
+      update,
+    };
+    if (update) {
+      props.integration.getIntegration(params.integrationName);
+    }
+  }
+
   static propTypes = {
     history: PropTypes.object,
+    match: PropTypes.object,
     integration: PropTypes.object,
     initialFormData: PropTypes.object,
   };
@@ -26,7 +46,6 @@ export default class IntegrationForm extends React.Component {
   initFormValue = () => {
     return {
       metadata: { alias: '', description: '', creationTime: '' },
-      sourceType: '',
       spec: {
         dockerRegistry: {
           password: '',
@@ -44,6 +63,7 @@ export default class IntegrationForm extends React.Component {
           token: '',
           server: '',
         },
+        type: '',
       },
     };
   };
@@ -54,12 +74,15 @@ export default class IntegrationForm extends React.Component {
       scm: {},
       sonarQube: {},
       dockerRegistry: {},
+      type: '',
     };
     if (!values.metadata.alias) {
       errors.metadata = { alias: intl.get('integration.form.error.alias') };
     }
-    if (!values.sourceType) {
-      errors.sourceType = intl.get('integration.form.error.sourceType');
+
+    if (!values.spec.type) {
+      spec.type = intl.get('integration.form.error.sourceType');
+      errors['spec'] = spec;
     }
 
     if (!values.spec.scm.server) {
@@ -84,10 +107,9 @@ export default class IntegrationForm extends React.Component {
   };
 
   submit = values => {
-    const { sourceType } = values;
     const { integration } = this.props;
-    const dsubmitData = generateData(values, sourceType);
-    integration.createIntegration(dsubmitData, () => {
+    const submitData = generateData(values);
+    integration.createIntegration(submitData, () => {
       this.props.history.replace(`/integration`);
     });
   };
