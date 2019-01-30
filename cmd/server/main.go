@@ -90,13 +90,13 @@ func initialize(opts *APIServerOptions) {
 }
 
 func main() {
+	// Print Cyclone ascii art logo
+	log.Infoln(common.CycloneLogo)
+
 	opts := NewAPIServerOptions()
 	opts.AddFlags()
 
 	initialize(opts)
-
-	// Print nirvana banner.
-	log.Infoln(nirvana.Logo, nirvana.Banner)
 
 	// Create nirvana command.
 	cmd := nconfig.NewNamedNirvanaCommand("cyclone-server", &nconfig.Option{

@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	k8sclient "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
 )
@@ -17,6 +18,9 @@ var kubeConfigPath = flag.String("kubeconfig", "", "Path to kubeconfig. Only req
 
 func main() {
 	flag.Parse()
+
+	// Print Cyclone ascii art logo
+	fmt.Println(common.CycloneLogo)
 
 	var err error
 	var message string
