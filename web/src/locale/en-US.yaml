@@ -26,10 +26,14 @@ workflow:
 integration:
   name: Name
   desc: Description
-  integrationTime: Integration time
+  type: Type
+  creationTime: Creation time
   datasource: Data source
   addexternalsystem: Add external system
-  dataform:
+  serviceAddress: Service address
+  confirm:
+    tips: Do you Want to delete integration 
+  form:
     dockerregistry: Docker registry
     registryaddress: Registry Address
     confirm: Confirm
@@ -37,6 +41,27 @@ integration:
     username: Username
     pwd: password
     datasourcetype: Please select a resource type
+    pleaseClick: Click please
+    tokentip: to create a new Token, check the repo permission, and copy and paste the generated Token here.
+    scm:
+      serverAddress: Server address
+      verificationMode: Verification mode
+      usernamepwd: Username password
+    sonarQube: 
+      serverAddress: Server address
+    dockerRegistry:
+      registryAddress: Registry address
+      admin: Admin
+      adminpwd: Admin password
+    error:
+      alias: Name is required
+      sourceType: Please choose the type
+      server: Please fill in the service address
+      token: Please fill in the token information
+      user: please enter username
+      pwd: please enter password
+    tip:
+      error: There some error in form
 project:
   externalSystem: External system
   workflowCount: Workflow count

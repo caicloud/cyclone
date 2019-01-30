@@ -17,6 +17,12 @@ const fetchApi = {
       return data;
     });
   },
+  createIntegration(data) {
+    return http.post('/integrations', data);
+  },
+  removeIntegration(name) {
+    return http.delete(`/integrations/${name}`);
+  },
   fetchResources() {
     return http.get('/resources').then(data => {
       return data;

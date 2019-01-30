@@ -1,38 +1,25 @@
-import React from 'react';
-import { Table, Button, Modal } from 'antd';
+import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
-import IntegrationForm from './DataForm';
 import PropTypes from 'prop-types';
 import { IntegrationTypeMap } from '@/consts/const.js';
+import MenuAction from './MenuAction';
 
 @inject('integration')
 @observer
 class List extends React.Component {
   static propTypes = {
     integration: PropTypes.object,
+    history: PropTypes.object,
   };
   state = { visible: false };
   componentDidMount() {
     this.props.integration.getIntegrationList();
   }
   addDataSource = () => {
-    this.setState({
-      visible: true,
-    });
-  };
-  handleOk = e => {
-    this.setState({
-      visible: false,
-    });
-  };
-
-  handleCancel = e => {
-    this.setState({
-      visible: false,
-    });
+    this.props.history.push('/integration/add');
   };
   render() {
-    const { integration } = this.props;
+    const { integration, history } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -54,6 +41,13 @@ class List extends React.Component {
           </div>
         ),
       },
+      {
+        title: intl.get('action'),
+        dataIndex: 'metadata.name',
+        key: 'action',
+        align: 'right',
+        render: value => <MenuAction name={value} history={history} />,
+      },
     ];
     return (
       <div>
@@ -63,21 +57,7 @@ class List extends React.Component {
             {intl.get('operation.add')}
           </Button>
         </div>
-        <Table
-          columns={columns}
-          dataSource={_.get(integration, 'integrationList.items', [])}
-        />
-        <Modal
-          title={intl.get('integration.addexternalsystem')}
-          visible={this.state.visible}
-          footer={null}
-          onCancel={this.handleCancel}
-        >
-          <IntegrationForm
-            onSubmit={this.handleOk}
-            onCancel={this.handleCancel}
-          />
-        </Modal>
+        <Table columns={columns} dataSource={integration.integrationList} />
       </div>
     );
   }
