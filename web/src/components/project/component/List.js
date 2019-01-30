@@ -75,7 +75,7 @@ class List extends React.Component {
         </div>
         <Table
           columns={columns}
-          rowKey={record => record.name}
+          rowKey={record => record.metadata.name}
           onRow={record => {
             return {
               onClick: () => {

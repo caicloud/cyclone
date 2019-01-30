@@ -1,6 +1,7 @@
 import { Modal } from 'antd';
-import { inject, observer, PropTypes } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 import EllipsisMenu from '../../public/ellipsisMenu';
+import PropTypes from 'prop-types';
 
 const confirm = Modal.confirm;
 
@@ -8,11 +9,12 @@ const confirm = Modal.confirm;
 @observer
 class MenuAction extends React.Component {
   static propTypes = {
-    project: PropTypes.observableObject,
-    history: PropTypes.object,
+    project: PropTypes.object,
     name: PropTypes.string,
+    history: PropTypes.object,
     detail: PropTypes.bool,
   };
+
   removeProject = name => {
     const { project, history, detail } = this.props;
     confirm({
