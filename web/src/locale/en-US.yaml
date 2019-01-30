@@ -32,7 +32,7 @@ integration:
   addexternalsystem: Add external system
   serviceAddress: Service address
   confirm:
-    tips: Do you Want to delete project Integration 
+    tips: Do you Want to delete integration 
   form:
     dockerregistry: Docker registry
     registryaddress: Registry Address
