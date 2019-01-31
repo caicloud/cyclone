@@ -3,7 +3,7 @@ import { Row, Col } from 'antd';
 
 const CreateIntegration = props => {
   return (
-    <div>
+    <div className="integration-form">
       <div className="head-bar">
         <h2>{intl.get('integration.addexternalsystem')}</h2>
       </div>

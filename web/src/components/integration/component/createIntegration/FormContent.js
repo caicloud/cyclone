@@ -59,6 +59,11 @@ const FormContent = props => {
           wrapperCol: { span: 20 },
         }}
       >
+        {!_.isEmpty(errors) && (
+          <span className="tip-error">
+            {intl.get('integration.form.tip.error')}
+          </span>
+        )}
         <Button style={{ float: 'right' }} type="primary" htmlType="submit">
           {intl.get('integration.form.confirm')}
         </Button>
@@ -69,7 +74,6 @@ const FormContent = props => {
           {intl.get('integration.form.cancel')}
         </Button>
       </FormItem>
-      {!_.isEmpty(errors) && <p>{intl.get('integration.form.tip.error')}</p>}
     </Form>
   );
 };

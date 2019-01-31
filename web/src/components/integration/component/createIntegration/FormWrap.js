@@ -138,7 +138,7 @@ export default class IntegrationForm extends React.Component {
           errors['spec'] = spec;
         }
         if (!values.spec.sonarQube.token) {
-          spec.sonarQube.token = intl.get('integration.form.error.server');
+          spec.sonarQube.token = intl.get('integration.form.error.token');
           errors['spec'] = spec;
         }
       }
@@ -151,13 +151,11 @@ export default class IntegrationForm extends React.Component {
           errors['spec'] = spec;
         }
         if (!values.spec.dockerRegistry.user) {
-          spec.dockerRegistry.user = intl.get('integration.form.error.server');
+          spec.dockerRegistry.user = intl.get('integration.form.error.user');
           errors['spec'] = spec;
         }
         if (!values.spec.dockerRegistry.password) {
-          spec.dockerRegistry.password = intl.get(
-            'integration.form.error.server'
-          );
+          spec.dockerRegistry.password = intl.get('integration.form.error.pwd');
           errors['spec'] = spec;
         }
       }
@@ -184,7 +182,11 @@ export default class IntegrationForm extends React.Component {
 
   render() {
     if (this.props.integration.detailLoading) {
-      return <Spin />;
+      return (
+        <div className="loading">
+          <Spin />
+        </div>
+      );
     }
     const initialValues = this.initFormValue();
     return (
