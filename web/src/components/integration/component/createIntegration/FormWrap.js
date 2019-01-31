@@ -44,7 +44,6 @@ export default class IntegrationForm extends React.Component {
     };
     const type = _.get(data, 'spec.type');
     const spec = _.pick(data.spec, [`${type}`, 'type']); // 只取type类型的表单
-    // TODO scm type form need optimization
     if (type === 'scm') {
       const scmValueMap = {
         UserPwd: ['user', 'password', 'type'],
@@ -123,8 +122,8 @@ export default class IntegrationForm extends React.Component {
     const errors = {};
     const spec = {
       scm: {},
-      SonarQube: {},
-      DockerRegistry: {},
+      sonarQube: {},
+      dockerRegistry: {},
       type: '',
     };
     if (!values.metadata.alias) {

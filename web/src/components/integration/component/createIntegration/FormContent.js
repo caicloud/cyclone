@@ -13,8 +13,8 @@ const TextareaField = MakeField(TextArea);
 const renderWrapForm = (type, props) => {
   const formMap = {
     scm: <ScmGroup {...props} />,
-    DockerRegistry: <DockerRegistry {...props} />,
-    SonarQube: <SonarQube {...props} />,
+    dockerRegistry: <DockerRegistry {...props} />,
+    sonarQube: <SonarQube {...props} />,
   };
   return formMap[type];
 };

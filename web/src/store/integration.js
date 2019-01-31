@@ -29,7 +29,7 @@ class Integration {
           }
         }
       });
-      this.integrationList = data.items; //TODO 处理返回的集成list items
+      this.integrationList = data.items || [];
       this.groupIntegrationList = groups;
     });
   }
