@@ -36,7 +36,6 @@ const FormContent = props => {
         label={intl.get('integration.name')}
         name="metadata.alias"
         component={InputField}
-        hasFeedback
         required
       />
       <Field

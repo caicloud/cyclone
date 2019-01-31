@@ -3,8 +3,13 @@ import fetchApi from '../api/index.js';
 
 class Integration {
   @observable integrationList = null;
-  @observable groupIntegrationList = null;
+  @observable groupIntegrationList = {
+    SonarQube: [],
+    SCM: [],
+    DockerRegistry: [],
+  };
   @observable integrationDetail = null;
+  @observable detailLoading = false;
 
   @action.bound
   getIntegrationList() {
@@ -53,9 +58,15 @@ class Integration {
   }
   @action.bound
   getIntegration(name) {
+    this.detailLoading = true;
     fetchApi.getIntegration(name).then(data => {
       this.integrationDetail = data;
+      this.detailLoading = false;
     });
+  }
+  @action.bound
+  resetIntegration() {
+    this.integrationDetail = null;
   }
 }
 

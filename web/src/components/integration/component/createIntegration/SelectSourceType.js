@@ -5,7 +5,7 @@ const Option = Select.Option;
 const SelectSourceType = props => {
   return (
     <Select
-      defaultValue={props.value}
+      value={props.value}
       placeholder={intl.get('integration.form.datasourcetype')}
       onChange={props.handleSelectChange}
     >

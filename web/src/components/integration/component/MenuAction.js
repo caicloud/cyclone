@@ -20,6 +20,7 @@ class MenuAction extends React.Component {
       onOk() {
         integration.deleteIntegration(name, () => {
           history.replace('/integration');
+          integration.getIntegrationList();
         });
       },
     });

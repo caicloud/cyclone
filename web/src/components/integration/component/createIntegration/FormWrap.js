@@ -1,6 +1,10 @@
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import { inject, observer } from 'mobx-react';
+import { toJS } from 'mobx';
+import { Spin } from 'antd';
+import DevTools from 'mobx-react-devtools';
+import { IntegrationTypeMap } from '@/consts/const.js';
 import FormContent from './FormContent';
 
 const generateData = data => {
@@ -22,11 +26,8 @@ export default class IntegrationForm extends React.Component {
     const {
       match: { params },
     } = props;
-    const update = !!_.get(params, 'integrationName');
-    this.state = {
-      update,
-    };
-    if (update) {
+    this.update = !!_.get(params, 'integrationName');
+    if (this.update) {
       props.integration.getIntegration(params.integrationName);
     }
   }
@@ -44,27 +45,44 @@ export default class IntegrationForm extends React.Component {
   };
 
   initFormValue = () => {
-    return {
-      metadata: { alias: '', description: '', creationTime: '' },
-      spec: {
-        dockerRegistry: {
-          password: '',
-          server: '',
-          user: '',
-        },
-        scm: {
-          password: '',
-          server: 'https://github.com',
-          token: '',
-          type: 'GitHub',
-          user: '',
-        },
-        sonarQube: {
-          token: '',
-          server: '',
-        },
-        type: '',
+    const integrationDetail = toJS(this.props.integration.integrationDetail);
+    return this.mapRequestFormToInitForm(integrationDetail);
+  };
+
+  componentWillUnmount() {
+    this.props.integration.resetIntegration();
+  }
+
+  generateSpecObj = data => {
+    let defaultSpec = {
+      scm: {
+        server: 'https://github.com',
+        type: 'GitHub',
       },
+      type: '',
+    };
+    const type = _.get(data, 'spec.type');
+    const spec = _.get(data, 'spec');
+    const specData = _.pick(spec, [`${IntegrationTypeMap[type]}`, 'type']);
+    return _.assign(defaultSpec, specData);
+  };
+
+  mapRequestFormToInitForm = data => {
+    const alias = _.get(
+      data,
+      ['metadata', 'annotations', 'cyclone.io/alias'],
+      ''
+    );
+    const description = _.get(
+      data,
+      ['metadata', 'annotations', 'cyclone.io/description'],
+      ''
+    );
+    const creationTime = _.get(data, 'metadata.creationTimestamp', '');
+    const spec = this.generateSpecObj(data);
+    return {
+      metadata: { alias, description, creationTime },
+      spec,
     };
   };
 
@@ -72,8 +90,8 @@ export default class IntegrationForm extends React.Component {
     const errors = {};
     const spec = {
       scm: {},
-      sonarQube: {},
-      dockerRegistry: {},
+      SonarQube: {},
+      DockerRegistry: {},
       type: '',
     };
     if (!values.metadata.alias) {
@@ -115,16 +133,23 @@ export default class IntegrationForm extends React.Component {
   };
 
   render() {
+    if (this.props.integration.detailLoading) {
+      return <Spin />;
+    }
     const initialValues = this.initFormValue();
     return (
-      <Formik
-        initialValues={initialValues}
-        validate={this.validateForm}
-        onSubmit={this.submit}
-        render={props => (
-          <FormContent {...props} handleCancle={this.handleCancle} />
-        )}
-      />
+      <div>
+        <Formik
+          enableReinitialize={true}
+          initialValues={initialValues}
+          validate={this.validateForm}
+          onSubmit={this.submit}
+          render={props => (
+            <FormContent {...props} handleCancle={this.handleCancle} />
+          )}
+        />
+        <DevTools />
+      </div>
     );
   }
 }
