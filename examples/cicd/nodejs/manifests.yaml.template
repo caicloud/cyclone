@@ -1,0 +1,84 @@
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: nodejs-example-code
+spec:
+  type: Git
+  parameters:
+  - name: GIT_URL
+    value: https://github.com/cd1989/code-zoo.git
+  - name: GIT_REVISION
+    value: master
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: nodejs-example-image
+spec:
+  type: Image
+  parameters:
+  - name: IMAGE
+    value: __REGISTRY__/nodejs-example:v0.0.1
+  - name: IMAGE_FILE
+    value: image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: nodejs-image-build
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: nodejs-example-code
+        path: /workspace/examples
+    outputs:
+      resources:
+      - name: nodejs-example-image
+        path: /workspace/examples/nodejs/image.tar
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/docker:18.03-dind
+        workingDir: /workspace/examples/nodejs
+        securityContext:
+          privileged: true
+        command:
+        - /bin/sh
+        - -c
+        - >-
+          dockerd &
+          sleep 5 ;
+          docker build -f ./Dockerfile -t __REGISTRY__/nodejs-example:v0.0.1 . ;
+          docker save -o ./image.tar __REGISTRY__/nodejs-example:v0.0.1 ;
+          ls -al ./image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Workflow
+metadata:
+  name: ci-nodejs
+spec:
+  stages:
+  - name: nodejs-image-build
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-wfr-nodejs
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci-nodejs
+  timeout: 1h
+
+

@@ -3,7 +3,7 @@
 apiVersion: cyclone.io/v1alpha1
 kind: Resource
 metadata:
-  name: example-codes
+  name: golang-example-codes
 spec:
   type: Git
   parameters:
@@ -17,7 +17,7 @@ spec:
 apiVersion: cyclone.io/v1alpha1
 kind: Resource
 metadata:
-  name: example-image
+  name: golang-example-image
 spec:
   type: Image
   parameters:
@@ -31,12 +31,12 @@ spec:
 apiVersion: cyclone.io/v1alpha1
 kind: Stage
 metadata:
-  name: build
+  name: golang-build
 spec:
   pod:
     inputs:
       resources:
-      - name: example-codes
+      - name: golang-example-codes
         path: /go/src/examples
     spec:
       containers:
@@ -53,16 +53,16 @@ spec:
 apiVersion: cyclone.io/v1alpha1
 kind: Stage
 metadata:
-  name: image-build
+  name: golang-image-build
 spec:
   pod:
     inputs:
       resources:
-      - name: example-codes
+      - name: golang-example-codes
         path: /go/src/examples
     outputs:
       resources:
-      - name: example-image
+      - name: golang-example-image
         path: /go/src/examples/golang/image.tar
     spec:
       containers:
@@ -86,24 +86,24 @@ spec:
 apiVersion: cyclone.io/v1alpha1
 kind: Workflow
 metadata:
-  name: ci
+  name: ci-golang
 spec:
   stages:
-  - name: build
-  - name: image-build
+  - name: golang-build
+  - name: golang-image-build
     depends:
-    - build
+    - golang-build
 
 ---
 
 apiVersion: cyclone.io/v1alpha1
 kind: WorkflowRun
 metadata:
-  name: ci-wfr
+  name: ci-wfr-golang
 spec:
   workflowRef:
     kind: workflow.cyclone.io
-    name: ci
+    name: ci-golang
   timeout: 1h
 
 
