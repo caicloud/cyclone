@@ -43,6 +43,13 @@ IMAGE_SUFFIX ?= $(strip )
 
 # Container registries.
 REGISTRIES ?= docker.io/library
+AUTH ?= user:pwd
+
+# Example scene
+SCENE ?= cicd
+
+# PVC used to run workflow
+PVC ?=
 
 #
 # These variables should not need tweaking.
@@ -176,14 +183,20 @@ swagger:
 	  nirvana api --output web/public pkg/server/apis"
 
 deploy:
-	sed -e "s/__REGISTRY__/$${REGISTRIES/\//\\/}/g" -e "s/__VERSION__/${VERSION}/g" manifests/cyclone.yaml.template > .cyclone.yaml
-	kubectl create -f .cyclone.yaml
-	rm -rf .cyclone.yaml
+	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC}
+	kubectl create -f ./manifests/.generated/cyclone.yaml
 
 undeploy:
-	sed -e "s/__REGISTRY__/$${REGISTRIES/\//\\/}/g" -e "s/__VERSION__/${VERSION}/g" manifests/cyclone.yaml.template > .cyclone.yaml
-	kubectl delete -f .cyclone.yaml
-	rm -rf .cyclone.yaml
+	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC}
+	kubectl delete -f ./manifests/.generated/cyclone.yaml
+
+run_examples:
+	./examples/${SCENE}/generate.sh --registry=${REGISTRIES}
+	kubectl create -f ./examples/${SCENE}/.generated
+
+remove_examples:
+	./examples/${SCENE}/generate.sh --registry=${REGISTRIES}
+	kubectl delete -f ./examples/${SCENE}/.generated
 
 .PHONY: clean
 clean:

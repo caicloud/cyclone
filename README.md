@@ -36,13 +36,20 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 Build and push images. `<registry>/<project>` specifies registry and project where to push your images, for example, `test.caicloudprivatetest.com/release`.
 
 ```bash
+$ docker login <registry> -u <user> -p <pwd>
 $ make push REGISTRIES=<registry>/<project>
 ```
 
-Deploy to Kubernetes cluster, please make sure `kubectl` is installed and appropriately configured.
+Deploy to Kubernetes cluster, please make sure `kubectl` is installed and appropriately configured. Here `AUTH` is credential to the docker registry. `PVC` is a PersistentVolumeClaim that need to be prepared in k8s.
 
 ```bash
-$ make deploy REGISTRIES=<registry>/<project>
+$ make deploy REGISTRIES=<registry>/<project> AUTH=<user>:<pwd> PVC=<pvc>
+```
+
+Run CI/CD workflow examples. `SCENE` determines what kind of examples to run, for the moment, only `cicd` provided.
+
+```bash
+$ make run_examples SCENE=cicd REGISTRIES=<registry>/<project>
 ```
 
 ## Community

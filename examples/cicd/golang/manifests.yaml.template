@@ -1,0 +1,109 @@
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: example-codes
+spec:
+  type: Git
+  parameters:
+  - name: GIT_URL
+    value: https://github.com/cd1989/code-zoo.git
+  - name: GIT_REVISION
+    value: master
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: example-image
+spec:
+  type: Image
+  parameters:
+  - name: IMAGE
+    value: __REGISTRY__/golang-example:v0.0.1
+  - name: IMAGE_FILE
+    value: image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: build
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: example-codes
+        path: /go/src/examples
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/golang:1.10-alpine3.8
+        workingDir: /go/src/examples/golang
+        command:
+        - /bin/sh
+        - -c
+        - "go build -o ./bin/app . && ./bin/app"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: image-build
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: example-codes
+        path: /go/src/examples
+    outputs:
+      resources:
+      - name: example-image
+        path: /go/src/examples/golang/image.tar
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/docker:18.03-dind
+        workingDir: /go/src/examples/golang
+        securityContext:
+          privileged: true
+        command:
+        - /bin/sh
+        - -c
+        - >-
+          dockerd &
+          sleep 5 ;
+          docker build -f ./Dockerfile -t __REGISTRY__/golang-example:v0.0.1 . ;
+          docker save -o ./image.tar __REGISTRY__/golang-example:v0.0.1 ;
+          ls -al ./image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Workflow
+metadata:
+  name: ci
+spec:
+  stages:
+  - name: build
+  - name: image-build
+    depends:
+    - build
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-wfr
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci
+  timeout: 1h
+
+
