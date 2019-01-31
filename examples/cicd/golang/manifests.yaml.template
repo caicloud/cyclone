@@ -1,3 +1,5 @@
+---
+
 apiVersion: cyclone.io/v1alpha1
 kind: Resource
 metadata:
@@ -20,7 +22,7 @@ spec:
   type: Image
   parameters:
   - name: IMAGE
-    value: test.caicloudprivatetest.com/release/golang-example:v0.0.1
+    value: __REGISTRY__/golang-example:v0.0.1
   - name: IMAGE_FILE
     value: image.tar
 
@@ -39,7 +41,7 @@ spec:
     spec:
       containers:
       - name: main
-        image: golang:1.10-alpine3.8
+        image: __REGISTRY__/golang:1.10-alpine3.8
         workingDir: /go/src/examples/golang
         command:
         - /bin/sh
@@ -65,7 +67,7 @@ spec:
     spec:
       containers:
       - name: main
-        image: docker:18.03-dind
+        image: __REGISTRY__/docker:18.03-dind
         workingDir: /go/src/examples/golang
         securityContext:
           privileged: true
@@ -75,8 +77,8 @@ spec:
         - >-
           dockerd &
           sleep 5 ;
-          docker build -f ./Dockerfile -t golang-example:v0.0.1 . ;
-          docker save -o ./image.tar golang-example:v0.0.1 ;
+          docker build -f ./Dockerfile -t __REGISTRY__/golang-example:v0.0.1 . ;
+          docker save -o ./image.tar __REGISTRY__/golang-example:v0.0.1 ;
           ls -al ./image.tar
 
 ---
