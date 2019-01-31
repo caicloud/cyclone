@@ -57,7 +57,11 @@ class List extends React.Component {
             {intl.get('operation.add')}
           </Button>
         </div>
-        <Table columns={columns} dataSource={integration.integrationList} />
+        <Table
+          rowKey={record => record.metadata.name}
+          columns={columns}
+          dataSource={integration.integrationList}
+        />
       </div>
     );
   }

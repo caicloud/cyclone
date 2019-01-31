@@ -13,8 +13,8 @@ const TextareaField = MakeField(TextArea);
 const renderWrapForm = (type, props) => {
   const formMap = {
     scm: <ScmGroup {...props} />,
-    dockerRegistry: <DockerRegistry {...props} />,
-    sonarQube: <SonarQube {...props} />,
+    DockerRegistry: <DockerRegistry {...props} />,
+    SonarQube: <SonarQube {...props} />,
   };
   return formMap[type];
 };
@@ -45,7 +45,7 @@ const FormContent = props => {
         component={TextareaField}
       />
       <Field
-        label={intl.get('integration.type')}
+        label={intl.get('type')}
         name="spec.type"
         required
         handleSelectChange={val => {
