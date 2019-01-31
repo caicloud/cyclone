@@ -27,7 +27,7 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 - Controllability: workflow execution can be paused, resumed, retried or cancelled
 - Multi-cluster: workflow can be executed in different clusters from where Cyclone is running
 - Multi-tenant: resources manifests and workflow executions are grouped and isolated per tenant
-- Garbadge Collection: automatic resource cleanup after workflow execution
+- Garbage Collection: automatic resource cleanup after workflow execution
 - Logging: logs are persisted and indpendent from workflow lifecycle, enabling offline inspection
 - Built-in Pipeline: curated DAG templates and stage runtimes for running DevOps pipelines
 
