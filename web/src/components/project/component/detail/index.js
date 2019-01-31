@@ -40,6 +40,7 @@ class ProjectDetail extends React.Component {
       return <Spin />;
     }
     const detail = project.projectDetail;
+
     return (
       <Detail
         actions={
@@ -48,7 +49,9 @@ class ProjectDetail extends React.Component {
           </DetailAction>
         }
       >
-        <DetailHead headName={_.get(detail, 'metadata.name')}>
+        <DetailHead
+          headName={_.get(detail, 'metadata.annotations["cyclone.io/alias"]')}
+        >
           <DetailHeadItem
             name={intl.get('creationTime')}
             value={FormatTime(_.get(detail, 'metadata.creationTimestamp'))}

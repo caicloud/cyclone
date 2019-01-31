@@ -69,12 +69,6 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.project')}</span>
                 </NavLink>
               </Menu.Item>
-              <Menu.Item key="resource">
-                <NavLink to="/resource" activeClassName="active">
-                  <Icon type="cluster" />
-                  <span>{intl.get('sideNav.resource')}</span>
-                </NavLink>
-              </Menu.Item>
               <Menu.Item key="stageTemplate">
                 <NavLink to="/stageTemplate" activeClassName="active">
                   <Icon type="profile" />
