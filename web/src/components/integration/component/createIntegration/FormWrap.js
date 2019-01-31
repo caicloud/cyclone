@@ -127,9 +127,18 @@ export default class IntegrationForm extends React.Component {
   submit = values => {
     const { integration } = this.props;
     const submitData = generateData(values);
-    integration.createIntegration(submitData, () => {
-      this.props.history.replace(`/integration`);
-    });
+    if (this.update) {
+      const {
+        match: { params },
+      } = this.props;
+      integration.updateIntegration(submitData, params.integrationName, () => {
+        this.props.history.replace(`/integration`);
+      });
+    } else {
+      integration.createIntegration(submitData, () => {
+        this.props.history.replace(`/integration`);
+      });
+    }
   };
 
   render() {

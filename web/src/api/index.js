@@ -20,6 +20,9 @@ const fetchApi = {
   createIntegration(data) {
     return http.post('/integrations', data);
   },
+  updateIntegration(data, name) {
+    return http.put(`/integrations/${name}`, data);
+  },
   getIntegration(name) {
     return http.get(`/integrations/${name}`);
   },

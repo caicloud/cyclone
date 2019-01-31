@@ -51,6 +51,12 @@ class Integration {
     });
   }
   @action.bound
+  updateIntegration(data, name, cb) {
+    fetchApi.updateIntegration(data, name).then(() => {
+      cb();
+    });
+  }
+  @action.bound
   deleteIntegration(name, cb) {
     fetchApi.removeIntegration(name).then(() => {
       cb();
