@@ -123,8 +123,8 @@ export default class IntegrationForm extends React.Component {
     const errors = {};
     const spec = {
       scm: {},
-      sonarQube: {},
-      dockerRegistry: {},
+      SonarQube: {},
+      DockerRegistry: {},
       type: '',
     };
     if (!values.metadata.alias) {
