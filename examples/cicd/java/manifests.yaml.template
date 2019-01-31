@@ -1,0 +1,132 @@
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: java-example-codes
+spec:
+  type: Git
+  parameters:
+  - name: GIT_URL
+    value: https://github.com/cd1989/code-zoo.git
+  - name: GIT_REVISION
+    value: master
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Resource
+metadata:
+  name: java-example-image
+spec:
+  type: Image
+  parameters:
+  - name: IMAGE
+    value: __REGISTRY__/java-example:v0.0.1
+  - name: IMAGE_FILE
+    value: image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: java-test
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: java-example-codes
+        path: /workspace/examples
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/maven:3-jdk-8-alpine
+        workingDir: /workspace/examples/java
+        command:
+        - /bin/sh
+        - -c
+        - "mvn test"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: java-build
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: java-example-codes
+        path: /workspace/examples
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/maven:3-jdk-8-alpine
+        workingDir: /workspace/examples/java
+        command:
+        - /bin/sh
+        - -c
+        - "mvn install -DskipTests"
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Stage
+metadata:
+  name: java-image-build
+spec:
+  pod:
+    inputs:
+      resources:
+      - name: java-example-codes
+        path: /workspace/examples
+    outputs:
+      resources:
+      - name: java-example-image
+        path: /workspace/examples/java/image.tar
+    spec:
+      containers:
+      - name: main
+        image: __REGISTRY__/docker:18.03-dind
+        workingDir: /workspace/examples/java
+        securityContext:
+          privileged: true
+        command:
+        - /bin/sh
+        - -c
+        - >-
+          dockerd &
+          sleep 5 ;
+          docker build -f ./Dockerfile -t __REGISTRY__/java-example:v0.0.1 . ;
+          docker save -o ./image.tar __REGISTRY__/java-example:v0.0.1 ;
+          ls -al ./image.tar
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: Workflow
+metadata:
+  name: ci-java
+spec:
+  stages:
+  - name: java-test
+  - name: java-build
+  - name: java-image-build
+    depends:
+    - java-build
+
+---
+
+apiVersion: cyclone.io/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: ci-wfr-java
+spec:
+  workflowRef:
+    kind: workflow.cyclone.io
+    name: ci-java
+  timeout: 1h
+
+

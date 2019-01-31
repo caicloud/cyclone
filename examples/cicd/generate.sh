@@ -38,3 +38,5 @@ if [ ! -e ./.generated ]; then
     mkdir ./.generated
 fi
 sed -e "s/__REGISTRY__/${REGISTRY/\//\\/}/g" ./golang/manifests.yaml.template > ./.generated/golang.yaml
+sed -e "s/__REGISTRY__/${REGISTRY/\//\\/}/g" ./java/manifests.yaml.template > ./.generated/java.yaml
+sed -e "s/__REGISTRY__/${REGISTRY/\//\\/}/g" ./nodejs/manifests.yaml.template > ./.generated/nodejs.yaml
