@@ -11,8 +11,15 @@ const Item = ({ template }) => {
     <Card
       hoverable
       className={styles['template-item']}
-      style={{ width: 208, height: 208, margin: '0 16px 16px 0' }}
-      cover={<img height="104px" alt="example" src={defaultCover} />}
+      style={{ width: 224, margin: '0 16px 16px 0' }}
+      cover={
+        <img
+          height="104px"
+          alt="example"
+          src={defaultCover}
+          style={{ width: 'auto', margin: '8px auto' }}
+        />
+      }
     >
       <Meta
         title={

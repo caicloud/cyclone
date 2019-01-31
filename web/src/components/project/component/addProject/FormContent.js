@@ -1,6 +1,6 @@
 import { Field } from 'formik';
 import PropTypes from 'prop-types';
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, Row, Col } from 'antd';
 import Quota from '@/components/public/quota';
 import IntegrationSelect from './IntegrationSelect';
 import MakeField from '@/components/public/makeField';
@@ -47,18 +47,23 @@ const FormContent = ({
           setFieldValue('spec.quota', value);
         }}
       />
-      <div className="form-bottom-btn">
-        <Button type="primary" htmlType="submit">
-          {intl.get('operation.confirm')}
-        </Button>
-        <Button
-          onClick={() => {
-            history.push(`/project`);
-          }}
-        >
-          {intl.get('operation.cancel')}
-        </Button>
-      </div>
+      <Row>
+        <Col span={4} />
+        <Col span={12}>
+          <div className="form-bottom-btn">
+            <Button type="primary" htmlType="submit">
+              {intl.get('operation.confirm')}
+            </Button>
+            <Button
+              onClick={() => {
+                history.push(`/project`);
+              }}
+            >
+              {intl.get('operation.cancel')}
+            </Button>
+          </div>
+        </Col>
+      </Row>
     </Form>
   );
 };

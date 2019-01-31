@@ -126,7 +126,7 @@ class IntegrationSelect extends React.Component {
                 </Col>
               </Row>
               <Button
-                type="dashed"
+                type="default"
                 shape="circle"
                 icon="close"
                 onClick={() => handleRemove(o)}
