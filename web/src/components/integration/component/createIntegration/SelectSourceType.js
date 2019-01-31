@@ -11,10 +11,10 @@ const SelectSourceType = props => {
       onChange={props.handleSelectChange}
     >
       <Option value="scm">SCM</Option>
-      <Option value="dockerRegistry">
+      <Option value="DockerRegistry">
         {intl.get('integration.form.dockerregistry')}
       </Option>
-      <Option value="sonarQube">SonarQube</Option>
+      <Option value="SonarQube">SonarQube</Option>
     </Select>
   );
 };
