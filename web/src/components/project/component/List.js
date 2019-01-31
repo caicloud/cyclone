@@ -7,10 +7,6 @@ import MenuAction from './MenuAction';
 @inject('project')
 @observer
 class List extends React.Component {
-  /**
-   * TODO: list project
-   * submit crete form action
-   */
   static propTypes = {
     match: PropTypes.object,
     history: PropTypes.object,
@@ -44,7 +40,7 @@ class List extends React.Component {
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'metadata.name',
+        dataIndex: 'metadata.annotations["cyclone.io/alias"]',
         key: 'name',
       },
       {
