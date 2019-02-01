@@ -1,4 +1,7 @@
 name: Name
+value: Value
+path: Path
+configuration: Configuration
 action: Action
 creationTime: Creation time
 description: Description
@@ -84,6 +87,18 @@ template:
     unit-test: UnitTest
     image-build: ImageBuild
     code-scan: CodeScan
+stage:
+  inputs: Inputs
+  input:
+    arguments: Args
+  outputs: Outputs
+  spec:
+    container:
+      image: Image
+      envs: Env
+      env:
+        name: Key
+        value: Value
 validate:
   required: Reqiured
   positiveOrFloat: Two decimal allowed
