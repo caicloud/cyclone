@@ -28,7 +28,6 @@ const FormContent = props => {
     handleSubmit,
     setFieldValue,
     handleCancle,
-    errors,
   } = props;
   return (
     <Form onSubmit={handleSubmit}>
@@ -59,11 +58,6 @@ const FormContent = props => {
           wrapperCol: { span: 20 },
         }}
       >
-        {!_.isEmpty(errors) && (
-          <span className="tip-error">
-            {intl.get('integration.form.tip.error')}
-          </span>
-        )}
         <Button style={{ float: 'right' }} type="primary" htmlType="submit">
           {intl.get('integration.form.confirm')}
         </Button>
@@ -80,7 +74,6 @@ const FormContent = props => {
 
 FormContent.propTypes = {
   history: PropTypes.object,
-  errors: PropTypes.object,
   values: PropTypes.object,
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,

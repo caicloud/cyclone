@@ -60,8 +60,6 @@ integration:
       token: Please fill in the token information
       user: please enter username
       pwd: please enter password
-    tip:
-      error: There some error in form
 project:
   externalSystem: External system
   workflowCount: Workflow count

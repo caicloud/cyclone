@@ -60,8 +60,6 @@ integration:
       token: 请填写 token 信息
       user: 请填写用户名
       pwd: 请填写密码
-    tip:
-      error: 有错误存在!
 project:
   externalSystem: 外部系统
   workflowCount: 工作流数量
