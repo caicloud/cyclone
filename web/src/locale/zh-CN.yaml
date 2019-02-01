@@ -1,4 +1,7 @@
 name: 名称
+value: 值
+path: 路径
+configuration: 配置
 action: 操作
 creationTime: 创建时间
 description: 描述
@@ -120,7 +123,19 @@ template:
     unit-test: 单元测试
     image-build: 镜像构建
     code-scan: 代码扫描
-    cd: CD
+stage:
+  inputs: 输入
+  input:
+    arguments: 参数
+  outputs: 输出
+  spec:
+    container:
+      image: 镜像
+      envs: 环境变量
+      env:
+        name: 键
+        value: 值
+resources: 资源
 validate:
   required: 必填
   positiveOrFloat: 允许两位小数
