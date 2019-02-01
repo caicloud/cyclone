@@ -28,7 +28,6 @@ integration:
   desc: Description
   type: Type
   creationTime: Creation time
-  datasource: Data source
   addexternalsystem: Add external system
   updateexternalsystem: Update external system
   serviceAddress: Service address

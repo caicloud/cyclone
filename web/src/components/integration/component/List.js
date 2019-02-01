@@ -10,6 +10,7 @@ class List extends React.Component {
   static propTypes = {
     integration: PropTypes.object,
     history: PropTypes.object,
+    match: PropTypes.object,
   };
   state = { visible: false };
   componentDidMount() {
@@ -19,7 +20,7 @@ class List extends React.Component {
     this.props.history.push('/integration/add');
   };
   render() {
-    const { integration, history } = this.props;
+    const { integration, history, match } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -48,7 +49,6 @@ class List extends React.Component {
     return (
       <div>
         <div className="head-bar">
-          <h2>{intl.get('integration.datasource')}</h2>
           <Button type="primary" onClick={this.addDataSource}>
             {intl.get('operation.add')}
           </Button>
@@ -56,6 +56,15 @@ class List extends React.Component {
         <Table
           rowKey={record => record.metadata.name}
           columns={columns}
+          onRow={record => {
+            return {
+              onClick: () => {
+                this.props.history.push(
+                  `${match.path}/${record.metadata.name}`
+                );
+              },
+            };
+          }}
           dataSource={integration.integrationList}
         />
       </div>

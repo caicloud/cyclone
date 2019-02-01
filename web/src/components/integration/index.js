@@ -1,6 +1,7 @@
 import { Route, Switch } from 'react-router-dom';
 import Integration from './component/List';
 import CreateIntegration from './component/createIntegration';
+import IntegrationDetail from './component/detail';
 import PropTypes from 'prop-types';
 
 const IntegrationRoutes = ({ match }) => {
@@ -11,6 +12,10 @@ const IntegrationRoutes = ({ match }) => {
       <Route
         path={`${match.path}/:integrationName/update`}
         component={CreateIntegration}
+      />
+      <Route
+        path={`${match.path}/:integrationName`}
+        component={IntegrationDetail}
       />
     </Switch>
   );
