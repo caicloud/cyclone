@@ -3,7 +3,6 @@ import { Formik } from 'formik';
 import { inject, observer } from 'mobx-react';
 import { toJS } from 'mobx';
 import { Spin } from 'antd';
-import DevTools from 'mobx-react-devtools';
 import FormContent from './FormContent';
 
 @inject('integration')
@@ -200,7 +199,6 @@ export default class IntegrationForm extends React.Component {
             <FormContent {...props} handleCancle={this.handleCancle} />
           )}
         />
-        <DevTools />
       </div>
     );
   }
