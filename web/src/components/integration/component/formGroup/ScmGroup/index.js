@@ -23,7 +23,7 @@ const ScmGroup = props => {
   } = props;
   return (
     <div className="u-scm">
-      <h3>{intl.get('integration.form.scm.codeOrigin')}</h3>
+      <h3>{intl.get('integration.form.scm.name')}</h3>
       <Field
         label={intl.get('type')}
         name="spec.scm.type"

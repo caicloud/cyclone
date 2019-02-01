@@ -44,13 +44,15 @@ integration:
     pleaseClick: 请点击
     tokentip: 新建 Token，并勾选 repo 权限，然后将生成的 Token 复制粘贴到这里。
     scm:
-      codeOrigin: 代码源
+      name: 代码源
       serverAddress: 服务地址
       verificationMode: 验证方式
       usernamepwd: 用户名密码
     sonarQube: 
+      name: SonarQube 
       serverAddress: 服务地址 
     dockerRegistry:
+      name: 镜像仓库
       registryAddress: 仓库地址
       admin: 管理员账号
       adminpwd: 管理员密码
