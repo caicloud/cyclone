@@ -25,12 +25,12 @@ const FormContent = props => {
     values: {
       spec: { type },
     },
-    handleSubmit,
     setFieldValue,
     handleCancle,
+    submit,
   } = props;
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form>
       <Field
         label={intl.get('integration.name')}
         name="metadata.alias"
@@ -51,14 +51,14 @@ const FormContent = props => {
         }}
         component={SelectField}
       />
-      {type && renderWrapForm(type, { ...props })}
+      {type && renderWrapForm(type, props)}
       <FormItem
         {...{
           labelCol: { span: 8 },
           wrapperCol: { span: 20 },
         }}
       >
-        <Button style={{ float: 'right' }} type="primary" htmlType="submit">
+        <Button style={{ float: 'right' }} onClick={submit} type="primary">
           {intl.get('integration.form.confirm')}
         </Button>
         <Button
@@ -75,7 +75,7 @@ const FormContent = props => {
 FormContent.propTypes = {
   history: PropTypes.object,
   values: PropTypes.object,
-  handleSubmit: PropTypes.func,
+  submit: PropTypes.func,
   setFieldValue: PropTypes.func,
   handleCancle: PropTypes.func,
   update: PropTypes.bool,

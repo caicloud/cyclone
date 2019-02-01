@@ -1,5 +1,6 @@
 import { Field } from 'formik';
 import MakeField from '@/components/public/makeField';
+import PropTypes from 'prop-types';
 import { Radio, Form, Input, Row, Col } from 'antd';
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -9,13 +10,18 @@ const FormItem = Form.Item;
 const _RadioGroup = MakeField(RadioGroup);
 
 export default class ValidateSelect extends React.Component {
-  state = {
-    type: 'Token',
+  static propTypes = {
+    values: PropTypes.object,
+    field: PropTypes.object,
+    setFieldValue: PropTypes.func,
   };
   handleType = e => {
-    this.setState({
-      type: e.target.value,
-    });
+    const {
+      setFieldValue,
+      field: { name },
+    } = this.props;
+    const value = e.target.value;
+    setFieldValue(name, value);
   };
   render() {
     const validateMap = {
@@ -61,6 +67,13 @@ export default class ValidateSelect extends React.Component {
         </FormItem>
       ),
     };
+    const {
+      values: {
+        spec: {
+          scm: { validateType },
+        },
+      },
+    } = this.props;
     return (
       <div>
         <FormItem
@@ -73,8 +86,7 @@ export default class ValidateSelect extends React.Component {
           }}
         >
           <Field
-            name="validateType"
-            value={this.state.type}
+            name="spec.scm.validateType"
             component={_RadioGroup}
             onChange={this.handleType}
           >
@@ -84,7 +96,7 @@ export default class ValidateSelect extends React.Component {
             </RadioButton>
           </Field>
         </FormItem>
-        {validateMap[this.state.type]}
+        {validateMap[validateType]}
       </div>
     );
   }

@@ -24,6 +24,9 @@ export default class IntegrationForm extends React.Component {
     match: PropTypes.object,
     integration: PropTypes.object,
     initialFormData: PropTypes.object,
+    setTouched: PropTypes.func,
+    isValid: PropTypes.bool,
+    values: PropTypes.object,
   };
 
   handleCancle = () => {
@@ -41,6 +44,17 @@ export default class IntegrationForm extends React.Component {
     };
     const type = _.get(data, 'spec.type');
     const spec = _.pick(data.spec, [`${type}`, 'type']); // 只取type类型的表单
+    // TODO scm type form need optimization
+    if (type === 'scm') {
+      const scmValueMap = {
+        UserPwd: ['user', 'password', 'type'],
+        Token: ['token', 'server', 'type'],
+      };
+      const validateType = _.get(data, 'spec.scm.validateType');
+      const scmObj = _.pick(spec.scm, scmValueMap[validateType]);
+      spec['scm'] = scmObj;
+    }
+
     return { metadata, spec };
   };
 
@@ -58,6 +72,7 @@ export default class IntegrationForm extends React.Component {
       scm: {
         server: 'https://github.com',
         type: 'GitHub',
+        validateType: 'Token',
       },
       dockerRegistry: {
         server: '',
@@ -73,6 +88,14 @@ export default class IntegrationForm extends React.Component {
     const type = _.get(data, 'spec.type');
     const spec = _.get(data, 'spec');
     const specData = _.pick(spec, [`${type}`, 'type']);
+    if (type === 'scm') {
+      const token = _.get(data, 'spec.scm.token');
+      if (!token) {
+        specData.scm.validateType = 'UserPwd';
+      } else {
+        specData.scm.validateType = 'Token';
+      }
+    }
     return _.assign(defaultSpec, specData);
   };
 
@@ -95,6 +118,7 @@ export default class IntegrationForm extends React.Component {
     };
   };
 
+  // TODO validateForm need optimization
   validateForm = values => {
     const errors = {};
     const spec = {
@@ -113,21 +137,43 @@ export default class IntegrationForm extends React.Component {
     } else {
       const type = _.get(values, 'spec.type');
       if (type === 'scm') {
-        if (!values.spec.scm.server) {
-          spec.scm.server = intl.get('integration.form.error.server');
-          errors['spec'] = spec;
+        const scmType = _.get(values, 'spec.scm.type');
+        const scmValidateType = _.get(values, 'spec.scm.validateType');
+        if (scmType === 'GitHub' || scmType === 'GitLab') {
+          if (!values.spec.scm.server) {
+            spec.scm.server = intl.get('integration.form.error.server');
+            errors['spec'] = spec;
+          }
+          if (scmValidateType === 'Token') {
+            if (!values.spec.scm.token) {
+              spec.scm.token = intl.get('integration.form.error.token');
+              errors['spec'] = spec;
+            }
+          } else {
+            if (!values.spec.scm.user) {
+              spec.scm.user = intl.get('integration.form.error.user');
+              errors['spec'] = spec;
+            }
+            if (!values.spec.scm.password) {
+              spec.scm.password = intl.get('integration.form.error.pwd');
+              errors['spec'] = spec;
+            }
+          }
         }
-        if (!values.spec.scm.token) {
-          spec.scm.token = intl.get('integration.form.error.token');
-          errors['spec'] = spec;
-        }
-        if (!values.spec.scm.user) {
-          spec.scm.user = intl.get('integration.form.error.user');
-          errors['spec'] = spec;
-        }
-        if (!values.spec.scm.password) {
-          spec.scm.password = intl.get('integration.form.error.pwd');
-          errors['spec'] = spec;
+
+        if (scmType === 'SVN') {
+          if (!values.spec.scm.server) {
+            spec.scm.server = intl.get('integration.form.error.server');
+            errors['spec'] = spec;
+          }
+          if (!values.spec.scm.user) {
+            spec.scm.user = intl.get('integration.form.error.user');
+            errors['spec'] = spec;
+          }
+          if (!values.spec.scm.password) {
+            spec.scm.password = intl.get('integration.form.error.pwd');
+            errors['spec'] = spec;
+          }
         }
       }
 
@@ -162,20 +208,80 @@ export default class IntegrationForm extends React.Component {
     return errors;
   };
 
-  submit = values => {
-    const { integration } = this.props;
-    const submitData = this.generateData(values);
-    if (this.update) {
-      const {
-        match: { params },
-      } = this.props;
-      integration.updateIntegration(submitData, params.integrationName, () => {
-        this.props.history.replace(`/integration`);
-      });
+  submit = props => {
+    const { setTouched, isValid, values } = props;
+    const {
+      spec: { type },
+    } = values;
+
+    // TODO touchObj need optimization
+    if (!isValid) {
+      const touchObj = {
+        metadata: {
+          alias: true,
+        },
+        spec: {
+          type: true,
+        },
+      };
+      if (type === 'scm') {
+        const {
+          values: {
+            spec: {
+              scm: { validateType, type: scmTtype },
+            },
+          },
+        } = props;
+        const touchMap = {
+          Token: { token: true, server: true },
+          UserPwd: { user: true, password: true, server: true },
+        };
+        const scmTouchObj =
+          scmTtype !== 'SVN'
+            ? touchMap[validateType]
+            : {
+                server: true,
+                user: true,
+                password: true,
+              };
+        touchObj.spec.scm = scmTouchObj;
+      }
+
+      if (type === 'dockerRegistry') {
+        touchObj.spec.dockerRegistry = {
+          server: true,
+          user: true,
+          password: true,
+        };
+      }
+
+      if (type === 'sonarQube') {
+        touchObj.spec.sonarQube = {
+          server: true,
+          token: true,
+        };
+      }
+      setTouched(touchObj);
+      return;
     } else {
-      integration.createIntegration(submitData, () => {
-        this.props.history.replace(`/integration`);
-      });
+      const { integration } = this.props;
+      const submitData = this.generateData(values);
+      if (this.update) {
+        const {
+          match: { params },
+        } = this.props;
+        integration.updateIntegration(
+          submitData,
+          params.integrationName,
+          () => {
+            this.props.history.replace(`/integration`);
+          }
+        );
+      } else {
+        integration.createIntegration(submitData, () => {
+          this.props.history.replace(`/integration`);
+        });
+      }
     }
   };
 
@@ -194,9 +300,12 @@ export default class IntegrationForm extends React.Component {
           enableReinitialize={true}
           initialValues={initialValues}
           validate={this.validateForm}
-          onSubmit={this.submit}
           render={props => (
-            <FormContent {...props} handleCancle={this.handleCancle} />
+            <FormContent
+              {...props}
+              submit={this.submit.bind(this, props)}
+              handleCancle={this.handleCancle}
+            />
           )}
         />
       </div>

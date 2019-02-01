@@ -5,7 +5,7 @@ import ValidateSelect from './ValidateSelect';
 
 const InputField = MakeField(Input);
 
-const GitLab = () => {
+const GitLab = props => {
   return (
     <div>
       <Field
@@ -16,7 +16,8 @@ const GitLab = () => {
       />
       <Field
         label={intl.get('integration.form.scm.verificationMode')}
-        name="validateFunc"
+        {...props}
+        name="spec.scm.validateType"
         component={ValidateSelect}
       />
     </div>
