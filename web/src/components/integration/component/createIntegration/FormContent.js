@@ -28,6 +28,7 @@ const FormContent = props => {
     setFieldValue,
     handleCancle,
     submit,
+    update,
   } = props;
   return (
     <Form>
@@ -35,6 +36,7 @@ const FormContent = props => {
         label={intl.get('integration.name')}
         name="metadata.alias"
         component={InputField}
+        disabled={update}
         required
       />
       <Field
@@ -46,6 +48,7 @@ const FormContent = props => {
         label={intl.get('type')}
         name="spec.type"
         required
+        disabled={update}
         handleSelectChange={val => {
           setFieldValue('spec.type', val);
         }}

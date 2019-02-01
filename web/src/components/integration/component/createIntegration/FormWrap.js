@@ -312,6 +312,7 @@ export default class IntegrationForm extends React.Component {
               render={props => (
                 <FormContent
                   {...props}
+                  update={this.update}
                   submit={this.submit.bind(this, props)}
                   handleCancle={this.handleCancle}
                 />
