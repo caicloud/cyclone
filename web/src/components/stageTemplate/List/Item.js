@@ -1,4 +1,5 @@
 import defaultCover from '@/images/stage/template_default.png';
+import { Link } from 'react-router-dom';
 import { Card, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
 
@@ -8,32 +9,27 @@ const { Meta } = Card;
 
 const Item = ({ template }) => {
   return (
-    <Card
-      hoverable
-      className={styles['template-item']}
-      style={{ width: 224, margin: '0 16px 16px 0' }}
-      cover={
-        <img
-          height="104px"
-          alt="example"
-          src={defaultCover}
-          style={{ width: 'auto', margin: '8px auto' }}
+    <Link to={`/stageTemplate/${_.get(template, 'metadata.name')}`}>
+      <Card
+        hoverable
+        className={styles['template-item']}
+        style={{ width: 208, height: 208, margin: '0 16px 16px 0' }}
+        cover={<img height="104px" alt="example" src={defaultCover} />}
+      >
+        <Meta
+          title={
+            <Tooltip title={_.get(template, 'metadata.name')}>
+              {_.get(template, 'metadata.name')}
+            </Tooltip>
+          }
+          description={_.get(template, [
+            'metadata',
+            'annotations',
+            'cyclone.io/description',
+          ])}
         />
-      }
-    >
-      <Meta
-        title={
-          <Tooltip title={_.get(template, 'metadata.name')}>
-            {_.get(template, 'metadata.name')}
-          </Tooltip>
-        }
-        description={_.get(template, [
-          'metadata',
-          'annotations',
-          'cyclone.io/description',
-        ])}
-      />
-    </Card>
+      </Card>
+    </Link>
   );
 };
 
