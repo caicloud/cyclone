@@ -30,6 +30,7 @@ integration:
   creationTime: Creation time
   datasource: Data source
   addexternalsystem: Add external system
+  updateexternalsystem: Update external system
   serviceAddress: Service address
   confirm:
     tips: Do you Want to delete integration 

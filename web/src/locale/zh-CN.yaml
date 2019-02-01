@@ -29,6 +29,7 @@ integration:
   creationTime: 创建时间
   datasource: 数据源
   addexternalsystem: 新增外部系统
+  updateexternalsystem: 更新外部系统
   serviceAddress: 服务地址
   confirm:
     tips: 确定要删除集成对象
