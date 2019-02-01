@@ -7,11 +7,16 @@ const fetchApi = {
       return data;
     });
   },
+  // start template
   fetchStageTemplates(query) {
-    return http.get(`/templates`, query).then(data => {
+    return http.get('/templates', query).then(data => {
       return data;
     });
   },
+  getStageTemplate(template) {
+    return http.get(`/templates/${template}`).then(data => data);
+  },
+  // end template
   fetchIntegrationList(query) {
     return http.get(`/integrations`, query).then(data => {
       return data;
