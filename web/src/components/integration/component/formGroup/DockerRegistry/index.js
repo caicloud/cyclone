@@ -6,23 +6,24 @@ const InputField = MakeField(Input);
 
 const DockerRegistry = () => {
   return (
-    <div>
+    <div className="u-dockerRegistry">
+      <h3>{intl.get('integration.form.dockerRegistry.name')}</h3>
       <Field
         label={intl.get('integration.form.dockerRegistry.registryAddress')}
         required
-        name="registryAddress"
+        name="spec.dockerRegistry.server"
         component={InputField}
       />
       <Field
         label={intl.get('integration.form.dockerRegistry.admin')}
         required
-        name="adminUser"
+        name="spec.dockerRegistry.user"
         component={InputField}
       />
       <Field
         label={intl.get('integration.form.dockerRegistry.adminpwd')}
         required
-        name="adminPwd"
+        name="spec.dockerRegistry.password"
         component={InputField}
       />
     </div>

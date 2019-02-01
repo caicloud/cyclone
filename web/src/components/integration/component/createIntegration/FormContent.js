@@ -10,31 +10,33 @@ import SelectSourceType from './SelectSourceType';
 const { TextArea } = Input;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
-const renderWrapForm = (sourceType, props) => {
+const renderWrapForm = (type, props) => {
   const formMap = {
     scm: <ScmGroup {...props} />,
     dockerRegistry: <DockerRegistry {...props} />,
     sonarQube: <SonarQube {...props} />,
   };
-  return formMap[sourceType];
+  return formMap[type];
 };
 const SelectField = MakeField(SelectSourceType);
 const FormItem = Form.Item;
 const FormContent = props => {
   const {
-    values: { sourceType },
-    handleSubmit,
+    values: {
+      spec: { type },
+    },
     setFieldValue,
     handleCancle,
-    errors,
+    submit,
+    update,
   } = props;
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form>
       <Field
         label={intl.get('integration.name')}
-        name="metadata.name"
+        name="metadata.alias"
         component={InputField}
-        hasFeedback
+        disabled={update}
         required
       />
       <Field
@@ -43,22 +45,23 @@ const FormContent = props => {
         component={TextareaField}
       />
       <Field
-        label={intl.get('integration.type')}
-        name="sourceType"
+        label={intl.get('type')}
+        name="spec.type"
         required
+        disabled={update}
         handleSelectChange={val => {
-          setFieldValue('sourceType', val);
+          setFieldValue('spec.type', val);
         }}
         component={SelectField}
       />
-      {sourceType && renderWrapForm(sourceType, { ...props })}
+      {type && renderWrapForm(type, props)}
       <FormItem
         {...{
           labelCol: { span: 8 },
           wrapperCol: { span: 20 },
         }}
       >
-        <Button style={{ float: 'right' }} type="primary" htmlType="submit">
+        <Button style={{ float: 'right' }} onClick={submit} type="primary">
           {intl.get('integration.form.confirm')}
         </Button>
         <Button
@@ -68,16 +71,14 @@ const FormContent = props => {
           {intl.get('integration.form.cancel')}
         </Button>
       </FormItem>
-      {!_.isEmpty(errors) && <p>{intl.get('integration.form.tip.error')}</p>}
     </Form>
   );
 };
 
 FormContent.propTypes = {
   history: PropTypes.object,
-  errors: PropTypes.object,
   values: PropTypes.object,
-  handleSubmit: PropTypes.func,
+  submit: PropTypes.func,
   setFieldValue: PropTypes.func,
   handleCancle: PropTypes.func,
   update: PropTypes.bool,

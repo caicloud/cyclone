@@ -5,6 +5,8 @@ const Option = Select.Option;
 const SelectSourceType = props => {
   return (
     <Select
+      value={props.value}
+      disabled={props.disabled}
       placeholder={intl.get('integration.form.datasourcetype')}
       onChange={props.handleSelectChange}
     >
@@ -18,6 +20,8 @@ const SelectSourceType = props => {
 };
 SelectSourceType.propTypes = {
   handleSelectChange: PropTypes.func,
+  value: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 export default SelectSourceType;

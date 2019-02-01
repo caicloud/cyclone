@@ -12,7 +12,6 @@ class MenuAction extends React.Component {
     integration: PropTypes.object,
     history: PropTypes.object,
     name: PropTypes.string,
-    detail: PropTypes.bool,
   };
   removeIntegration = name => {
     const { integration, history } = this.props;
@@ -21,17 +20,26 @@ class MenuAction extends React.Component {
       onOk() {
         integration.deleteIntegration(name, () => {
           history.replace('/integration');
+          integration.getIntegrationList();
         });
       },
     });
+  };
+
+  updateIntegration = name => {
+    const { history } = this.props;
+    history.push(`/integration/${name}/update`);
   };
 
   render() {
     const { name } = this.props;
     return (
       <EllipsisMenu
-        menuText={[intl.get('operation.delete')]}
+        menuText={[intl.get('operation.modify'), intl.get('operation.delete')]}
         menuFunc={[
+          () => {
+            this.updateIntegration(name);
+          },
           () => {
             this.removeIntegration(name);
           },

@@ -27,8 +27,8 @@ integration:
   name: 名称
   desc: 描述
   creationTime: 创建时间
-  datasource: 数据源
   addexternalsystem: 新增外部系统
+  updateexternalsystem: 更新外部系统
   serviceAddress: 服务地址
   confirm:
     tips: 确定要删除集成对象
@@ -43,13 +43,15 @@ integration:
     pleaseClick: 请点击
     tokentip: 新建 Token，并勾选 repo 权限，然后将生成的 Token 复制粘贴到这里。
     scm:
-      codeOrigin: 代码源
+      name: 代码源
       serverAddress: 服务地址
       verificationMode: 验证方式
       usernamepwd: 用户名密码
     sonarQube: 
+      name: SonarQube 
       serverAddress: 服务地址 
     dockerRegistry:
+      name: 镜像仓库
       registryAddress: 仓库地址
       admin: 管理员账号
       adminpwd: 管理员密码
@@ -60,8 +62,6 @@ integration:
       token: 请填写 token 信息
       user: 请填写用户名
       pwd: 请填写密码
-    tip:
-      error: 有错误存在
 project:
   externalSystem: 外部系统
   workflowCount: 工作流数量

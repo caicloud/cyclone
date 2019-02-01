@@ -1,9 +1,6 @@
 import { Radio, Form } from 'antd';
 import { Field } from 'formik';
 import MakeField from '@/components/public/makeField';
-import GitHub from './Forms/GitHub';
-import GitLab from './Forms/GitLab';
-import SVN from './Forms/SVN';
 import PropTypes from 'prop-types';
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
@@ -11,18 +8,14 @@ const RadioGroup = Radio.Group;
 
 const _RadioGroup = MakeField(RadioGroup);
 
-const ScmMap = {
-  GitHub: <GitHub />,
-  GitLab: <GitLab />,
-  SVN: <SVN />,
-};
-
 export default class Selection extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
+    setTouched: PropTypes.func,
     field: PropTypes.object,
     values: PropTypes.object,
     label: PropTypes.string,
+    submitCount: PropTypes.number,
     onChange: PropTypes.func,
   };
   handleType = e => {
@@ -42,14 +35,7 @@ export default class Selection extends React.Component {
   };
 
   render() {
-    const {
-      label,
-      values: {
-        spec: {
-          scm: { type },
-        },
-      },
-    } = this.props;
+    const { label } = this.props;
     return (
       <div>
         <FormItem
@@ -74,7 +60,6 @@ export default class Selection extends React.Component {
             </div>
           </div>
         </FormItem>
-        {ScmMap[type]}
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
-import { IntegrationTypeMap } from '@/consts/const.js';
+import { FormatTime } from '@/lib/util';
 import MenuAction from './MenuAction';
 
 @inject('integration')
@@ -10,6 +10,7 @@ class List extends React.Component {
   static propTypes = {
     integration: PropTypes.object,
     history: PropTypes.object,
+    match: PropTypes.object,
   };
   state = { visible: false };
   componentDidMount() {
@@ -19,11 +20,11 @@ class List extends React.Component {
     this.props.history.push('/integration/add');
   };
   render() {
-    const { integration, history } = this.props;
+    const { integration, history, match } = this.props;
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'metadata.name',
+        dataIndex: 'metadata.annotations["cyclone.io/alias"]',
         key: 'name',
       },
       {
@@ -33,13 +34,9 @@ class List extends React.Component {
       },
       {
         title: intl.get('integration.creationTime'),
-        dataIndex: 'spec',
+        dataIndex: 'metadata.creationTimestamp',
         key: 'spec',
-        render: spec => (
-          <div>
-            {_.get(spec, `${IntegrationTypeMap[spec.type]}.creationTime`)}
-          </div>
-        ),
+        render: time => <div>{FormatTime(time)}</div>,
       },
       {
         title: intl.get('action'),
@@ -52,12 +49,24 @@ class List extends React.Component {
     return (
       <div>
         <div className="head-bar">
-          <h2>{intl.get('integration.datasource')}</h2>
           <Button type="primary" onClick={this.addDataSource}>
             {intl.get('operation.add')}
           </Button>
         </div>
-        <Table columns={columns} dataSource={integration.integrationList} />
+        <Table
+          rowKey={record => record.metadata.name}
+          columns={columns}
+          onRow={record => {
+            return {
+              onClick: () => {
+                this.props.history.push(
+                  `${match.path}/${record.metadata.name}`
+                );
+              },
+            };
+          }}
+          dataSource={integration.integrationList}
+        />
       </div>
     );
   }

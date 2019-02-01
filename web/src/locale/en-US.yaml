@@ -28,8 +28,8 @@ integration:
   desc: Description
   type: Type
   creationTime: Creation time
-  datasource: Data source
   addexternalsystem: Add external system
+  updateexternalsystem: Update external system
   serviceAddress: Service address
   confirm:
     tips: Do you Want to delete integration 
@@ -44,12 +44,15 @@ integration:
     pleaseClick: Click please
     tokentip: to create a new Token, check the repo permission, and copy and paste the generated Token here.
     scm:
+      name: Code origin
       serverAddress: Server address
       verificationMode: Verification mode
       usernamepwd: Username password
     sonarQube: 
+      name: SonarQube 
       serverAddress: Server address
     dockerRegistry:
+      name: DockerRegistry
       registryAddress: Registry address
       admin: Admin
       adminpwd: Admin password
@@ -60,8 +63,6 @@ integration:
       token: Please fill in the token information
       user: please enter username
       pwd: please enter password
-    tip:
-      error: There some error in form
 project:
   externalSystem: External system
   workflowCount: Workflow count

@@ -8,7 +8,9 @@ class Integration {
     SCM: [],
     DockerRegistry: [],
   };
-  @observable groupKeys = [];
+  @observable integrationDetail = null;
+  @observable detailLoading = false;
+
   @action.bound
   getIntegrationList() {
     fetchApi.fetchIntegrationList({}).then(data => {
@@ -49,10 +51,28 @@ class Integration {
     });
   }
   @action.bound
+  updateIntegration(data, name, cb) {
+    fetchApi.updateIntegration(data, name).then(() => {
+      cb();
+    });
+  }
+  @action.bound
   deleteIntegration(name, cb) {
     fetchApi.removeIntegration(name).then(() => {
       cb();
     });
+  }
+  @action.bound
+  getIntegration(name) {
+    this.detailLoading = true;
+    fetchApi.getIntegration(name).then(data => {
+      this.integrationDetail = data;
+      this.detailLoading = false;
+    });
+  }
+  @action.bound
+  resetIntegration() {
+    this.integrationDetail = null;
   }
 }
 
