@@ -21,7 +21,6 @@ const Configuration = ({ configuration = {} }) => {
   return _.map(containers, (container, index) => (
     <div key={container.name || index}>
       <KeyValue
-        tip="ss"
         cls={style['kv-item']}
         name={intl.get('stage.spec.container.image')}
         value={container.image}
