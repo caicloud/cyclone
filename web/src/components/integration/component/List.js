@@ -1,7 +1,7 @@
 import { Table, Button } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
-import { IntegrationTypeMap } from '@/consts/const.js';
+import { FormatTime } from '@/lib/util';
 import MenuAction from './MenuAction';
 
 @inject('integration')
@@ -33,13 +33,9 @@ class List extends React.Component {
       },
       {
         title: intl.get('integration.creationTime'),
-        dataIndex: 'spec',
+        dataIndex: 'metadata.creationTimestamp',
         key: 'spec',
-        render: spec => (
-          <div>
-            {_.get(spec, `${IntegrationTypeMap[spec.type]}.creationTime`)}
-          </div>
-        ),
+        render: time => <div>{FormatTime(time)}</div>,
       },
       {
         title: intl.get('action'),
