@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import { inject, observer } from 'mobx-react';
 import { toJS } from 'mobx';
-import { Spin } from 'antd';
+import { Row, Col, Spin } from 'antd';
 import FormContent from './FormContent';
 
 @inject('integration')
@@ -295,19 +295,30 @@ export default class IntegrationForm extends React.Component {
     }
     const initialValues = this.initFormValue();
     return (
-      <div>
-        <Formik
-          enableReinitialize={true}
-          initialValues={initialValues}
-          validate={this.validateForm}
-          render={props => (
-            <FormContent
-              {...props}
-              submit={this.submit.bind(this, props)}
-              handleCancle={this.handleCancle}
+      <div className="integration-form">
+        <div className="head-bar">
+          <h2>
+            {this.update
+              ? intl.get('integration.updateexternalsystem')
+              : intl.get('integration.addexternalsystem')}
+          </h2>
+        </div>
+        <Row>
+          <Col span={20}>
+            <Formik
+              enableReinitialize={true}
+              initialValues={initialValues}
+              validate={this.validateForm}
+              render={props => (
+                <FormContent
+                  {...props}
+                  submit={this.submit.bind(this, props)}
+                  handleCancle={this.handleCancle}
+                />
+              )}
             />
-          )}
-        />
+          </Col>
+        </Row>
       </div>
     );
   }

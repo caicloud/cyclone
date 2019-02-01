@@ -24,6 +24,17 @@ export default class ValidateSelect extends React.Component {
     setFieldValue(name, value);
   };
   render() {
+    const {
+      values: {
+        spec: {
+          scm: { type },
+        },
+      },
+    } = this.props;
+    const href =
+      type === 'GitLab'
+        ? 'https://gitlab.com/profile/personal_access_tokens'
+        : 'https://github.com/settings/tokens';
     const validateMap = {
       Token: (
         <FormItem>
@@ -37,11 +48,7 @@ export default class ValidateSelect extends React.Component {
             <Col offset={4} span={18}>
               <p className="token-tip">
                 {intl.get('integration.form.pleaseClick')}
-                <a
-                  href="https://github.com/settings/tokens"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
+                <a href={href} rel="noopener noreferrer" target="_blank">
                   [Access Token]
                 </a>
                 {intl.get('integration.form.tokentip')}
