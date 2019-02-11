@@ -5,6 +5,7 @@ import MakeField from '@/components/public/makeField';
 import ScmGroup from '../formGroup/ScmGroup';
 import SonarQube from '../formGroup/SonarQube';
 import DockerRegistry from '../formGroup/DockerRegistry';
+import Cluster from '../formGroup/Cluster';
 import SelectSourceType from './SelectSourceType';
 
 const { TextArea } = Input;
@@ -15,6 +16,7 @@ const renderWrapForm = (type, props) => {
     SCM: <ScmGroup {...props} />,
     DockerRegistry: <DockerRegistry {...props} />,
     SonarQube: <SonarQube {...props} />,
+    Cluster: <Cluster {...props} />,
   };
   return formMap[type];
 };

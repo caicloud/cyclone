@@ -4,6 +4,9 @@ export const validateForm = values => {
     scm: {},
     sonarQube: {},
     dockerRegistry: {},
+    cluster: {
+      credential: {},
+    },
     type: '',
   };
   if (!values.metadata.alias) {
@@ -79,6 +82,40 @@ export const validateForm = values => {
       if (!values.spec.dockerRegistry.password) {
         spec.dockerRegistry.password = intl.get('integration.form.error.pwd');
         errors['spec'] = spec;
+      }
+    }
+
+    if (type === 'Cluster') {
+      const clusterValidateType = _.get(
+        values,
+        'spec.cluster.credential.validateType'
+      );
+      if (!values.spec.cluster.credential.server) {
+        spec.cluster.credential.server = intl.get(
+          'integration.form.error.server'
+        );
+        errors['spec'] = spec;
+      }
+      if (clusterValidateType === 'Token') {
+        if (!values.spec.cluster.credential.bearerToken) {
+          spec.cluster.credential.bearerToken = intl.get(
+            'integration.form.error.token'
+          );
+          errors['spec'] = spec;
+        }
+      } else {
+        if (!values.spec.cluster.credential.user) {
+          spec.cluster.credential.user = intl.get(
+            'integration.form.error.user'
+          );
+          errors['spec'] = spec;
+        }
+        if (!values.spec.cluster.credential.password) {
+          spec.cluster.credential.password = intl.get(
+            'integration.form.error.pwd'
+          );
+          errors['spec'] = spec;
+        }
       }
     }
   }

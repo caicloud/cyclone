@@ -56,6 +56,24 @@ export default class IntegrationForm extends React.Component {
       spec[`${IntegrationTypeMap[type]}`] = scmObj;
     }
 
+    if (type === 'Cluster') {
+      const clusterValueMap = {
+        UserPwd: ['user', 'password', 'server'],
+        Token: ['bearerToken', 'server'],
+      };
+      const validateType = _.get(data, 'spec.cluster.credential.validateType');
+      const clusterObj = _.pick(
+        spec.cluster.credential,
+        clusterValueMap[validateType]
+      );
+      spec[`${IntegrationTypeMap[type]}`] = {
+        credential: clusterObj,
+        tlsClientConfig: {
+          insecure: true,
+        },
+      };
+    }
+
     return { metadata, spec };
   };
 
@@ -83,6 +101,12 @@ export default class IntegrationForm extends React.Component {
       sonarQube: {
         server: '',
         token: '',
+      },
+      cluster: {
+        credential: {
+          validateType: 'Token',
+          server: '',
+        },
       },
       type: '',
     };
@@ -170,6 +194,26 @@ export default class IntegrationForm extends React.Component {
         touchObj.spec.sonarQube = {
           server: true,
           token: true,
+        };
+      }
+
+      if (type === 'Cluster') {
+        const {
+          values: {
+            spec: {
+              cluster: {
+                credential: { validateType },
+              },
+            },
+          },
+        } = props;
+        const touchMap = {
+          Token: { bearerToken: true, server: true },
+          UserPwd: { user: true, password: true, server: true },
+        };
+        const clusterTouchObj = touchMap[validateType];
+        touchObj.spec.cluster = {
+          credential: clusterTouchObj,
         };
       }
       setTouched(touchObj);

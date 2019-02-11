@@ -55,6 +55,14 @@ integration:
       registryAddress: 仓库地址
       admin: 管理员账号
       adminpwd: 管理员密码
+    cluster: 
+      name: 集群
+      serverAddress: 服务地址
+      bearerToken: Token
+      verificationMode: 验证方式
+      usernamepwd: 用户名密码
+      user: 用户名
+      password: 密码
     error:
       alias: 名称不能为空
       sourceType: 请选择类型

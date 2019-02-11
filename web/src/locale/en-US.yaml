@@ -56,6 +56,14 @@ integration:
       registryAddress: Registry address
       admin: Admin
       adminpwd: Admin password
+    cluster: 
+      name: Cluster
+      serverAddress: Server address
+      verificationMode: Verification mode
+      bearerToken: Token
+      usernamepwd: Username password
+      user: User name
+      password: Password
     error:
       alias: Name is required
       sourceType: Please choose the type
