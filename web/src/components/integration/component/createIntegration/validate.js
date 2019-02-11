@@ -15,7 +15,7 @@ export const validateForm = values => {
     errors['spec'] = spec;
   } else {
     const type = _.get(values, 'spec.type');
-    if (type === 'scm') {
+    if (type === 'SCM') {
       const scmType = _.get(values, 'spec.scm.type');
       const scmValidateType = _.get(values, 'spec.scm.validateType');
       if (scmType === 'GitHub' || scmType === 'GitLab') {
@@ -56,7 +56,7 @@ export const validateForm = values => {
       }
     }
 
-    if (type === 'sonarQube') {
+    if (type === 'SonarQube') {
       if (!values.spec.sonarQube.server) {
         spec.sonarQube.server = intl.get('integration.form.error.server');
         errors['spec'] = spec;
@@ -67,7 +67,7 @@ export const validateForm = values => {
       }
     }
 
-    if (type === 'dockerRegistry') {
+    if (type === 'DockerRegistry') {
       if (!values.spec.dockerRegistry.server) {
         spec.dockerRegistry.server = intl.get('integration.form.error.server');
         errors['spec'] = spec;

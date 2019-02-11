@@ -4,6 +4,7 @@ import { inject, observer } from 'mobx-react';
 import { toJS } from 'mobx';
 import { Row, Col, Spin } from 'antd';
 import FormContent from './FormContent';
+import { IntegrationTypeMap } from '@/consts/const.js';
 import { validateForm } from './validate';
 
 @inject('integration')
@@ -44,15 +45,15 @@ export default class IntegrationForm extends React.Component {
       },
     };
     const type = _.get(data, 'spec.type');
-    const spec = _.pick(data.spec, [`${type}`, 'type']); // 只取type类型的表单
-    if (type === 'scm') {
+    const spec = _.pick(data.spec, [`${IntegrationTypeMap[type]}`, 'type']); // 只取type类型的表单
+    if (type === 'SCM') {
       const scmValueMap = {
         UserPwd: ['user', 'password', 'type'],
         Token: ['token', 'server', 'type'],
       };
       const validateType = _.get(data, 'spec.scm.validateType');
       const scmObj = _.pick(spec.scm, scmValueMap[validateType]);
-      spec['scm'] = scmObj;
+      spec[`${IntegrationTypeMap[type]}`] = scmObj;
     }
 
     return { metadata, spec };
@@ -87,8 +88,8 @@ export default class IntegrationForm extends React.Component {
     };
     const type = _.get(data, 'spec.type');
     const spec = _.get(data, 'spec');
-    const specData = _.pick(spec, [`${type}`, 'type']);
-    if (type === 'scm') {
+    const specData = _.pick(spec, [`${IntegrationTypeMap[type]}`, 'type']);
+    if (type === 'SCM') {
       const token = _.get(data, 'spec.scm.token');
       if (!token) {
         specData.scm.validateType = 'UserPwd';
@@ -134,7 +135,7 @@ export default class IntegrationForm extends React.Component {
           type: true,
         },
       };
-      if (type === 'scm') {
+      if (type === 'SCM') {
         const {
           values: {
             spec: {
@@ -157,7 +158,7 @@ export default class IntegrationForm extends React.Component {
         touchObj.spec.scm = scmTouchObj;
       }
 
-      if (type === 'dockerRegistry') {
+      if (type === 'DockerRegistry') {
         touchObj.spec.dockerRegistry = {
           server: true,
           user: true,
@@ -165,7 +166,7 @@ export default class IntegrationForm extends React.Component {
         };
       }
 
-      if (type === 'sonarQube') {
+      if (type === 'SonarQube') {
         touchObj.spec.sonarQube = {
           server: true,
           token: true,
