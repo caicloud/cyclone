@@ -58,6 +58,7 @@ integration:
     cluster: 
       name: 集群
       serverAddress: 服务地址
+      isControlCluster: 控制集群
       bearerToken: Token
       verificationMode: 验证方式
       usernamepwd: 用户名密码

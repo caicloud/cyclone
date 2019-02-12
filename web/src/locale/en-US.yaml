@@ -59,6 +59,7 @@ integration:
     cluster: 
       name: Cluster
       serverAddress: Server address
+      isControlCluster: isControlCluster
       verificationMode: Verification mode
       bearerToken: Token
       usernamepwd: Username password

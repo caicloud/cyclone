@@ -2,10 +2,13 @@ import { Field } from 'formik';
 import { Input } from 'antd';
 import MakeField from '@/components/public/makeField';
 import ValidateSelect from './ValidateSelect';
+import SwitchField from './SwitchField';
+import PropTypes from 'prop-types';
 
 const InputField = MakeField(Input);
 
 const Cluster = props => {
+  const { setFieldValue } = props;
   return (
     <div className="u-cluster">
       <Field
@@ -15,6 +18,15 @@ const Cluster = props => {
         component={InputField}
       />
       <Field
+        label={intl.get('integration.form.cluster.isControlCluster')}
+        {...props}
+        onChange={val => {
+          setFieldValue('spec.cluster.isControlCluster', val);
+        }}
+        name="spec.cluster.isControlCluster"
+        component={SwitchField}
+      />
+      <Field
         label={intl.get('integration.form.cluster.verificationMode')}
         {...props}
         name="spec.cluster.credential.validateType"
@@ -22,6 +34,10 @@ const Cluster = props => {
       />
     </div>
   );
+};
+
+Cluster.propTypes = {
+  setFieldValue: PropTypes.func,
 };
 
 export default Cluster;

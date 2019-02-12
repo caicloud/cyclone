@@ -66,11 +66,13 @@ export default class IntegrationForm extends React.Component {
         spec.cluster.credential,
         clusterValueMap[validateType]
       );
+      const isControlCluster = _.get(data, 'spec.cluster.isControlCluster');
       spec[`${IntegrationTypeMap[type]}`] = {
         credential: clusterObj,
         tlsClientConfig: {
           insecure: true,
         },
+        isControlCluster,
       };
     }
 
@@ -107,6 +109,7 @@ export default class IntegrationForm extends React.Component {
           validateType: 'Token',
           server: '',
         },
+        isControlCluster: false,
       },
       type: '',
     };
@@ -119,6 +122,14 @@ export default class IntegrationForm extends React.Component {
         specData.scm.validateType = 'UserPwd';
       } else {
         specData.scm.validateType = 'Token';
+      }
+    }
+    if (type === 'Cluster') {
+      const token = _.get(data, 'spec.cluster.credential.bearerToken');
+      if (!token) {
+        specData.cluster.credential.validateType = 'UserPwd';
+      } else {
+        specData.cluster.credential.validateType = 'Token';
       }
     }
     return _.assign(defaultSpec, specData);
