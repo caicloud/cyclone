@@ -1,0 +1,40 @@
+.item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin: 16px 0;
+  color: #666;
+
+  &:first-of-type {
+    margin-top: 0px;
+  }
+
+  &:last-of-type {
+    margin-bottom: 0px;
+  }
+}
+
+.name {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-right: 30px;
+  min-height: 32px;
+  letter-spacing: 0.34px;
+}
+
+.name-tip {
+  position: absolute;
+  right: -18px;
+  margin: 0px;
+  width: 12px;
+  height: 12px;
+}
+
+.value {
+  display: flex;
+  flex: 1;
+  min-height: 32px;
+  line-height: 32px;
+}
