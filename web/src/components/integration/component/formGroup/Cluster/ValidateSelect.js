@@ -46,6 +46,7 @@ export default class ValidateSelect extends React.Component {
           <Field
             label={intl.get('integration.form.pwd')}
             name="spec.cluster.credential.password"
+            type="password"
             required
             component={InputField}
           />

@@ -67,13 +67,20 @@ export default class IntegrationForm extends React.Component {
         clusterValueMap[validateType]
       );
       const isControlCluster = _.get(data, 'spec.cluster.isControlCluster');
+      const isWorkerCluster = _.get(data, 'spec.cluster.isWorkerCluster');
       spec[`${IntegrationTypeMap[type]}`] = {
         credential: clusterObj,
         tlsClientConfig: {
           insecure: true,
         },
         isControlCluster,
+        isWorkerCluster,
       };
+      if (isWorkerCluster) {
+        const namespace = _.get(data, 'spec.cluster.namespace', '');
+        const pvc = _.get(data, 'spec.cluster.pvc', '');
+        _.assignIn(spec[`${IntegrationTypeMap[type]}`], { namespace, pvc });
+      }
     }
 
     return { metadata, spec };
@@ -110,6 +117,7 @@ export default class IntegrationForm extends React.Component {
           server: '',
         },
         isControlCluster: false,
+        isWorkerCluster: false,
       },
       type: '',
     };
