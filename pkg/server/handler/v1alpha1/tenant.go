@@ -205,9 +205,14 @@ func CreateAdminTenant() error {
 		core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 	}
 
+	annotations := make(map[string]string)
+	annotations[common.AnnotationDescription] = "This is the administrator tenant."
+	annotations[common.AnnotationAlias] = common.AdminTenant
+
 	tenant := &api.Tenant{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name: common.AdminTenant,
+			Name:        common.AdminTenant,
+			Annotations: annotations,
 		},
 		Spec: api.TenantSpec{
 			// TODO(zhujian7) Use default StorageClass temporarily.
@@ -224,7 +229,8 @@ func CreateAdminTenant() error {
 
 func createControlClusterIntegration(tenant string) error {
 	annotations := make(map[string]string)
-	annotations[common.AnnotationDescription] = "This is cluster is integrated by cyclone while creating tenant."
+	annotations[common.AnnotationDescription] = "This cluster is integrated by cyclone while creating tenant."
+	annotations[common.AnnotationAlias] = common.ControlClusterName
 	in := &api.Integration{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:        common.ControlClusterName,
