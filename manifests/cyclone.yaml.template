@@ -51,6 +51,32 @@ data:
 
 ---
 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cyclone-server-config
+  namespace: default
+data:
+  cyclone-server.json: |
+    {
+      "logging": {
+        "level": "debug"
+      },
+      "cyclone_server_host": "0.0.0.0",
+      "cyclone_server_port": 7099,
+      "default_pvc_config": {
+        "size": "10G"
+      },
+      "worker_namespace_quota": {
+        "limits.cpu": "2",
+        "limits.memory": "4Gi",
+        "requests.cpu": "1",
+        "requests.memory": "2Gi"
+      }
+    }
+
+---
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
