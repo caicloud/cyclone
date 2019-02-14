@@ -13,6 +13,7 @@ import (
 
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 )
@@ -205,6 +206,15 @@ func CreateAdminTenant() error {
 		core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 	}
 
+	if config.Config.WorkerNamespaceQuota != nil {
+		quota = config.Config.WorkerNamespaceQuota
+	}
+
+	size := common.DefaultPVCSize
+	if config.Config.DefaultPVCConfig.Size != "" {
+		size = config.Config.DefaultPVCConfig.Size
+	}
+
 	annotations := make(map[string]string)
 	annotations[common.AnnotationDescription] = "This is the administrator tenant."
 	annotations[common.AnnotationAlias] = common.AdminTenant
@@ -215,13 +225,15 @@ func CreateAdminTenant() error {
 			Annotations: annotations,
 		},
 		Spec: api.TenantSpec{
-			// TODO(zhujian7) Use default StorageClass temporarily.
-			// Make it configurable
 			PersistentVolumeClaim: api.PersistentVolumeClaim{
-				Size: common.DefaultPVCSize,
+				Size: size,
 			},
 			ResourceQuota: quota,
 		},
+	}
+
+	if config.Config.DefaultPVCConfig.StorageClass != "" {
+		tenant.Spec.PersistentVolumeClaim.StorageClass = config.Config.DefaultPVCConfig.StorageClass
 	}
 
 	return createTenant(tenant)

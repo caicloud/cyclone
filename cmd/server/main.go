@@ -26,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
 	"github.com/caicloud/nirvana"
@@ -37,46 +38,49 @@ import (
 	pversion "github.com/caicloud/nirvana/plugins/version"
 )
 
-// APIServerOptions contains all options(config) for api server
-type APIServerOptions struct {
-	KubeHost   string
+// Options contains all options(config) for cyclone server
+type Options struct {
+	// KubeHost is Kube host address
+	KubeHost string
+	// KubeConfig represents the path of Kube config file
 	KubeConfig string
 
-	CyclonePort int
-	CycloneAddr string
-
-	Loglevel string
-
-	// StorageClass is used to create pvc for default tenant
-	StorageClass string
+	// ConfigMap that configures for cyclone server, default value is 'cyclone-server-config'
+	ConfigMap string
+	// Namespace that cyclone server will run in, default value is 'default'
+	Namespace string
 }
 
-// NewAPIServerOptions returns a new APIServerOptions
-func NewAPIServerOptions() *APIServerOptions {
-	return &APIServerOptions{
-		CycloneAddr: "",
-		CyclonePort: 7099,
-	}
+// NewOptions returns a new Options
+func NewOptions() *Options {
+	return &Options{}
 }
 
 // AddFlags adds flags to APIServerOptions.
-func (opts *APIServerOptions) AddFlags() {
-	flag.StringVar(&opts.KubeHost, config.FlagKubeHost, config.KubeHost, "Kube host address")
-	flag.StringVar(&opts.KubeConfig, config.FlagKubeConfig, config.KubeConfig, "Kube config file path")
-	flag.IntVar(&opts.CyclonePort, config.FlagCycloneServerPort, config.CycloneServerPort, "The port for the cyclone server to serve on")
-	flag.StringVar(&opts.CycloneAddr, config.FlagCycloneServerHost, config.CycloneServerHost, "The IP address for the cyclone server to serve on")
-	flag.StringVar(&opts.Loglevel, config.FlagLogLevel, config.LogLevel, "Log level")
-	flag.StringVar(&opts.StorageClass, config.FlagStrorageClass, config.StorageClass, "StorageClass is used to create pvc for default tenant")
+func (opts *Options) AddFlags() {
+	flag.StringVar(&opts.KubeHost, "kubehost", "", "Kube host address")
+	flag.StringVar(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
+	flag.StringVar(&opts.ConfigMap, "configmap", "cyclone-server-config", "ConfigMap that configures for cyclone server")
+	flag.StringVar(&opts.Namespace, "namespace", "default", "Namespace that cyclone server will run in")
 
 	flag.Parse()
 }
 
-func initialize(opts *APIServerOptions) {
+func initialize(opts *Options) {
 	// Init k8s client
 	log.Info("kube config:", opts.KubeConfig)
 	client, err := common.GetClient(opts.KubeHost, opts.KubeConfig)
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
+	}
+
+	// Load configuration from ConfigMap.
+	cm, err := client.CoreV1().ConfigMaps(opts.Namespace).Get(opts.ConfigMap, meta_v1.GetOptions{})
+	if err != nil {
+		log.Fatalf("Get ConfigMap %s error: %s", opts.ConfigMap, err)
+	}
+	if err = config.LoadConfig(cm); err != nil {
+		log.Fatalf("Load config from ConfigMap %s error: %s", opts.ConfigMap, err)
 	}
 
 	handler.InitHandlers(client)
@@ -93,24 +97,22 @@ func main() {
 	// Print Cyclone ascii art logo
 	log.Infoln(common.CycloneLogo)
 
-	opts := NewAPIServerOptions()
+	opts := NewOptions()
 	opts.AddFlags()
 
 	initialize(opts)
 
 	// Create nirvana command.
 	cmd := nconfig.NewNamedNirvanaCommand("cyclone-server", &nconfig.Option{
-		IP:   opts.CycloneAddr,
-		Port: uint16(opts.CyclonePort),
+		IP:   config.Config.CycloneServerHost,
+		Port: config.Config.CycloneServerPort,
 	})
 
 	// add flags
-	cmd.Add(&opts.KubeHost, config.FlagKubeHost, "", "Kube host address")
-	cmd.Add(&opts.KubeConfig, config.FlagKubeConfig, "", "Kube config file path")
-	cmd.Add(&opts.CyclonePort, config.FlagCycloneServerPort, "", "The port for the cyclone server to serve on")
-	cmd.Add(&opts.CycloneAddr, config.FlagCycloneServerHost, "", "The IP address for the cyclone server to serve on")
-	cmd.Add(&opts.Loglevel, config.FlagLogLevel, "", "Log level")
-	cmd.Add(&opts.StorageClass, config.FlagStrorageClass, "", "StorageClass is used to create pvc for default tenant")
+	cmd.Add(&opts.KubeHost, "kubehost", "", "Kube host address")
+	cmd.Add(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
+	cmd.Add(&opts.ConfigMap, "configmap", "", "ConfigMap that configures for cyclone server")
+	cmd.Add(&opts.Namespace, "namespace", "", "Namespace that cyclone server will run in")
 
 	// Create plugin options.
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
@@ -146,7 +148,7 @@ func main() {
 		},
 	})
 
-	log.Infof("Cyclone service listening on %s:%d", opts.CycloneAddr, opts.CyclonePort)
+	log.Infof("Cyclone service listening on %s:%d", config.Config.CycloneServerHost, config.Config.CycloneServerPort)
 
 	// Start with server config.
 	if err := cmd.ExecuteWithConfig(serverConfig); err != nil {

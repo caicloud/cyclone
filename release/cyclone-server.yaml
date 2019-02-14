@@ -41,4 +41,26 @@ _config:
       storage:
         request: 500Gi
         limit: 500Gi
+    configs:
+    - name: cyclone-server-config
+      data:
+      - key: cyclone-server.json
+        value: |
+          {
+            "logging": {
+              "level": "debug"
+            },
+            "cyclone_server_host": "0.0.0.0",
+            "cyclone_server_port": 7099,
+            "default_pvc_config": {
+              "storage_class": "heketi-storageclass",
+              "size": "10G"
+            },
+            "worker_namespace_quota": {
+              "limits.cpu": "2",
+              "limits.memory": "4Gi",
+              "requests.cpu": "1",
+              "requests.memory": "2Gi"
+            }
+          }
 
