@@ -20,7 +20,7 @@ import (
 
 // CreateTenant creates a cyclone tenant
 func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) {
-	modifiers := []CreationModifier{GenerateNameModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, TenantModifier}
 	for _, modifier := range modifiers {
 		err := modifier("", "", tenant)
 		if err != nil {

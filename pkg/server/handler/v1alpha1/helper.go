@@ -12,6 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/slugify"
 )
@@ -194,6 +195,25 @@ func GenerateNameModifier(project, tenant string, object interface{}) error {
 		name = slugify.Slugify(name, true, -1)
 	}
 	meta.Name = name
+
+	return nil
+}
+
+// TenantModifier is a modifier of create cyclone tenant.
+// This modifier will give some default value for tenant if it is nil.
+func TenantModifier(project, tenant string, object interface{}) error {
+	t, ok := object.(*api.Tenant)
+	if !ok {
+		return fmt.Errorf("resource type not support")
+	}
+
+	if t.Spec.PersistentVolumeClaim.Size == "" {
+		t.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
+	}
+
+	if t.Spec.ResourceQuota == nil {
+		t.Spec.ResourceQuota = config.Config.WorkerNamespaceQuota
+	}
 
 	return nil
 }
