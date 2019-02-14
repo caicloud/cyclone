@@ -38,26 +38,26 @@ import (
 	pversion "github.com/caicloud/nirvana/plugins/version"
 )
 
-// APIServerOptions contains all options(config) for api server
-type APIServerOptions struct {
+// Options contains all options(config) for cyclone server
+type Options struct {
 	// KubeHost is Kube host address
 	KubeHost string
 	// KubeConfig represents the path of Kube config file
 	KubeConfig string
 
-	// ConfigMap that configures for cyclone server
+	// ConfigMap that configures for cyclone server, default value is 'cyclone-server-config'
 	ConfigMap string
-	// Namespace that cyclone server will run in
+	// Namespace that cyclone server will run in, default value is 'default'
 	Namespace string
 }
 
-// NewAPIServerOptions returns a new APIServerOptions
-func NewAPIServerOptions() *APIServerOptions {
-	return &APIServerOptions{}
+// NewOptions returns a new Options
+func NewOptions() *Options {
+	return &Options{}
 }
 
 // AddFlags adds flags to APIServerOptions.
-func (opts *APIServerOptions) AddFlags() {
+func (opts *Options) AddFlags() {
 	flag.StringVar(&opts.KubeHost, "kubehost", "", "Kube host address")
 	flag.StringVar(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
 	flag.StringVar(&opts.ConfigMap, "configmap", "cyclone-server-config", "ConfigMap that configures for cyclone server")
@@ -66,7 +66,7 @@ func (opts *APIServerOptions) AddFlags() {
 	flag.Parse()
 }
 
-func initialize(opts *APIServerOptions) {
+func initialize(opts *Options) {
 	// Init k8s client
 	log.Info("kube config:", opts.KubeConfig)
 	client, err := common.GetClient(opts.KubeHost, opts.KubeConfig)
@@ -97,7 +97,7 @@ func main() {
 	// Print Cyclone ascii art logo
 	log.Infoln(common.CycloneLogo)
 
-	opts := NewAPIServerOptions()
+	opts := NewOptions()
 	opts.AddFlags()
 
 	initialize(opts)

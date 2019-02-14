@@ -72,11 +72,13 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 // validate validates some required configurations.
 func validate(config *CycloneServerConfig) bool {
 	if config.CycloneServerHost == "" {
-		log.Warningf("CycloneServerHost not configured, cyclone server can not listen API requests.")
+		log.Warningf("CycloneServerHost not configured, will use default value '0.0.0.0'")
+		config.CycloneServerHost = "0.0.0.0"
 	}
 
 	if config.CycloneServerPort == 0 {
-		log.Warningf("CycloneServerPort not configured, cyclone server can not listen API requests.")
+		log.Warningf("CycloneServerPort not configured, will use default value '7099'")
+		config.CycloneServerPort = 7099
 	}
 
 	return true
