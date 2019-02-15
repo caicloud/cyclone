@@ -61,33 +61,9 @@ var (
 	ErrorUnsupported = nerror.BadRequest.Build("ReasonUnsupported", "unsupported ${resource}: ${type}")
 	// ErrorNotImplemented defines some feature not implemented yet.
 	ErrorNotImplemented = nerror.InternalServerError.Build("ReasonNotImplemented", "not implement: ${feature}")
-)
 
-//func NewCreateError(name, errorMessage string) error {
-//	return ErrorCreateFailed.Error(name, errorMessage)
-//}
-//
-//func NewUpdateError(name, errorMessage string) error {
-//	return ErrorUpdateFailed.Error(name, errorMessage)
-//}
-//
-//func NewDeleteError(name, errorMessage string) error {
-//	return ErrorDeleteFailed.Error(name, errorMessage)
-//}
-//
-//func NewListError(name, errorMessage string) error {
-//	return ErrorListFailed.Error(name, errorMessage)
-//}
-//
-//func NewGetError(name, errorMessage string) error {
-//	return ErrorGetFailed.Error(name, errorMessage)
-//}
-//
-//// NewValidateError creates new ErrorValidationFailed
-//func NewValidateError(name, reason string) error {
-//	return ErrorValidationFailed.Error(name, reason)
-//}
-//
-//func NewNotFoundError(name string) error {
-//	return ErrorContentNotFound.Error(name)
-//}
+	// ErrorCreateIntegration defines error that failed to create integration,
+	// this error is used to indicate create control cluster integration failed while creating tenant.
+	ErrorCreateIntegration = nerror.InternalServerError.Build("ReasonCreateIntegration",
+		"tenant created, but the related control cluster integration created failed: ${error}")
+)
