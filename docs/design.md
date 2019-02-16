@@ -22,6 +22,14 @@ workflow DAG scheduling, resource lifecycle management.
 * WorkflowRun: Running record of a workflow.
 * WorkflowTrigger: Auto-trigger policy for workflow.
 
+## Functional Modules
+
+There are 3 main functional modules in Cyclone:
+
+* Integration Center: Integrates external systems like SCM, docker registry, S3.
+* Projects: Manages a group of workflows and their shared configs. 
+* Stage Templates: Manages built-in stage templates and customized templates.
+
 ## Implementation
 
 ### Workflow Engine
