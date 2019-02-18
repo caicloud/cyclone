@@ -21,6 +21,7 @@ const Cluster = props => {
       <Field
         label={intl.get('integration.form.cluster.isControlCluster')}
         {...props}
+        disabled
         onChange={val => {
           setFieldValue('spec.cluster.isControlCluster', val);
         }}

@@ -15,11 +15,12 @@ const FieldSwitch = props => {
     field: { value },
     formItemLayout,
     onChange,
+    disabled,
   } = props;
   const _formItemLayout = formItemLayout || defaultFormItemLayout;
   return (
     <FormItem label={label} {..._formItemLayout}>
-      <Switch defaultChecked={value} onChange={onChange} />
+      <Switch disabled={disabled} defaultChecked={value} onChange={onChange} />
     </FormItem>
   );
 };
@@ -29,6 +30,7 @@ FieldSwitch.propTypes = {
   field: PropTypes.object,
   formItemLayout: PropTypes.object,
   onChange: PropTypes.func,
+  disabled: PropTypes.bool,
 };
 
 export default FieldSwitch;
