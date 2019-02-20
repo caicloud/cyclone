@@ -238,8 +238,9 @@ func createControlClusterIntegration(tenant string) error {
 			IntegrationSource: api.IntegrationSource{
 				Cluster: &api.ClusterSource{
 					IsControlCluster: true,
-					IsWorkerCluster:  true,
-					Namespace:        common.TenantNamespace(tenant),
+					// do not open the control cluster to run workflow, just create the control cluster integration.
+					IsWorkerCluster: false,
+					Namespace:       common.TenantNamespace(tenant),
 				},
 			},
 		},
@@ -265,8 +266,6 @@ func createTenant(tenant *api.Tenant) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO(zhujian7): create built-in template-stage if tenant is admin
 
 	return nil
 }
