@@ -16,6 +16,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // CreateTenant creates a cyclone tenant
@@ -199,22 +200,6 @@ func CreateAdminTenant() error {
 		return nil
 	}
 
-	quota := map[core_v1.ResourceName]string{
-		core_v1.ResourceLimitsCPU:      common.QuotaCPULimit,
-		core_v1.ResourceLimitsMemory:   common.QuotaMemoryLimit,
-		core_v1.ResourceRequestsCPU:    common.QuotaCPURequest,
-		core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
-	}
-
-	if config.Config.WorkerNamespaceQuota != nil {
-		quota = config.Config.WorkerNamespaceQuota
-	}
-
-	size := common.DefaultPVCSize
-	if config.Config.DefaultPVCConfig.Size != "" {
-		size = config.Config.DefaultPVCConfig.Size
-	}
-
 	annotations := make(map[string]string)
 	annotations[common.AnnotationDescription] = "This is the administrator tenant."
 	annotations[common.AnnotationAlias] = common.AdminTenant
@@ -226,9 +211,9 @@ func CreateAdminTenant() error {
 		},
 		Spec: api.TenantSpec{
 			PersistentVolumeClaim: api.PersistentVolumeClaim{
-				Size: size,
+				Size: config.Config.DefaultPVCConfig.Size,
 			},
-			ResourceQuota: quota,
+			ResourceQuota: config.Config.WorkerNamespaceQuota,
 		},
 	}
 
@@ -253,15 +238,20 @@ func createControlClusterIntegration(tenant string) error {
 			IntegrationSource: api.IntegrationSource{
 				Cluster: &api.ClusterSource{
 					IsControlCluster: true,
-					IsWorkerCluster:  true,
-					Namespace:        common.TenantNamespace(tenant),
+					// do not open the control cluster to run workflow, just create the control cluster integration.
+					IsWorkerCluster: false,
+					Namespace:       common.TenantNamespace(tenant),
 				},
 			},
 		},
 	}
 
 	_, err := createIntegration(tenant, in)
-	return err
+	if err != nil {
+		return cerr.ErrorCreateIntegration.Error(err)
+	}
+
+	return nil
 }
 
 func createTenant(tenant *api.Tenant) error {
@@ -276,8 +266,6 @@ func createTenant(tenant *api.Tenant) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO(zhujian7): create built-in template-stage if tenant is admin
 
 	return nil
 }

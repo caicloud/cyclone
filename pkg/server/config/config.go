@@ -6,6 +6,8 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
+
+	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
 const (
@@ -61,25 +63,37 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 		return err
 	}
 
-	if !validate(&Config) {
-		return fmt.Errorf("validate config failed")
-	}
+	modifier(&Config)
 
 	log.Infof("cyclone server config: %v", Config)
 	return nil
 }
 
-// validate validates some required configurations.
-func validate(config *CycloneServerConfig) bool {
+// modifier modifies the config, give the config some default value if they are not set.
+func modifier(config *CycloneServerConfig) {
 	if config.CycloneServerHost == "" {
-		log.Warningf("CycloneServerHost not configured, will use default value '0.0.0.0'")
+		log.Warning("CycloneServerHost not configured, will use default value '0.0.0.0'")
 		config.CycloneServerHost = "0.0.0.0"
 	}
 
 	if config.CycloneServerPort == 0 {
-		log.Warningf("CycloneServerPort not configured, will use default value '7099'")
+		log.Warning("CycloneServerPort not configured, will use default value '7099'")
 		config.CycloneServerPort = 7099
 	}
 
-	return true
+	if config.DefaultPVCConfig.Size == "" {
+		log.Warning("DefaultPVCConfig.Size not configured, will use default value '5Gi'")
+		config.DefaultPVCConfig.Size = common.DefaultPVCSize
+	}
+
+	if config.WorkerNamespaceQuota == nil {
+		log.Warning("WorkerNamespaceQuota not configured, will use default quota")
+		config.WorkerNamespaceQuota = map[core_v1.ResourceName]string{
+			core_v1.ResourceLimitsCPU:      common.QuotaCPULimit,
+			core_v1.ResourceLimitsMemory:   common.QuotaMemoryLimit,
+			core_v1.ResourceRequestsCPU:    common.QuotaCPURequest,
+			core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
+		}
+	}
+
 }

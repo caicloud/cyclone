@@ -6,11 +6,13 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 )
@@ -133,7 +135,9 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		err = common.CreateNamespace(cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
-			return err
+			if !errors.IsAlreadyExists(err) {
+				return err
+			}
 		}
 	}
 
@@ -141,7 +145,9 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 	err = common.CreateResourceQuota(tenant, cluster.Namespace, client)
 	if err != nil {
 		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)
-		return err
+		if !errors.IsAlreadyExists(err) {
+			return err
+		}
 	}
 
 	if cluster.PVC != "" {
@@ -153,14 +159,16 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 	} else {
 		// create pvc
 		if tenant.Spec.PersistentVolumeClaim.Size == "" {
-			tenant.Spec.PersistentVolumeClaim.Size = common.DefaultPVCSize
+			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
 		}
 
 		err = common.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
-			return err
+			if !errors.IsAlreadyExists(err) {
+				return err
+			}
 		}
 
 		cluster.PVC = common.TenantPVC(tenant.Name)
