@@ -4,7 +4,7 @@ import MakeField from '@/components/public/makeField';
 import ValidateSelect from './ValidateSelect';
 import SwitchField from './SwitchField';
 import PropTypes from 'prop-types';
-import IsWorkerCluster from './IsWorkerCluster';
+import WorkerCluster from './WorkerCluster';
 
 const InputField = MakeField(Input);
 
@@ -28,7 +28,7 @@ const Cluster = props => {
         name="spec.cluster.isControlCluster"
         component={SwitchField}
       />
-      <IsWorkerCluster {...props} />
+      <WorkerCluster {...props} />
       <Field
         label={intl.get('integration.form.cluster.verificationMode')}
         {...props}

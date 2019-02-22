@@ -6,7 +6,7 @@ import SwitchField from './SwitchField';
 const InputField = MakeField(Input);
 const FormItem = Form.Item;
 
-export default class IsWorkerCluster extends React.Component {
+export default class WorkerCluster extends React.Component {
   static propTypes = {
     values: PropTypes.object,
     field: PropTypes.object,
