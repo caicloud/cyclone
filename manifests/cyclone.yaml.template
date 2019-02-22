@@ -65,7 +65,7 @@ data:
       "cyclone_server_host": "0.0.0.0",
       "cyclone_server_port": 7099,
       "default_pvc_config": {
-        "size": "10G"
+        "size": "10Gi"
       },
       "worker_namespace_quota": {
         "limits.cpu": "2",
