@@ -21,6 +21,7 @@ const SVN = () => {
       />
       <Field
         label={intl.get('integration.form.pwd')}
+        type="password"
         name="spec.scm.password"
         required
         component={InputField}

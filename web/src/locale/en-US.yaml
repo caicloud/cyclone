@@ -56,6 +56,18 @@ integration:
       registryAddress: Registry address
       admin: Admin
       adminpwd: Admin password
+    cluster: 
+      name: Cluster
+      serverAddress: Server address
+      isControlCluster: isControlCluster
+      isWorkerCluster: isWorkerCluster
+      verificationMode: Verification mode
+      bearerToken: Token
+      usernamepwd: Username password
+      user: User name
+      password: Password
+      namespace: Name space
+      pvc: Persistent Volumes
     error:
       alias: Name is required
       sourceType: Please choose the type

@@ -7,6 +7,7 @@ class Integration {
     SonarQube: [],
     SCM: [],
     DockerRegistry: [],
+    Cluster: [],
   };
   @observable integrationDetail = null;
   @observable detailLoading = false;

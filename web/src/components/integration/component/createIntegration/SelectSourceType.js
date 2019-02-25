@@ -15,6 +15,9 @@ const SelectSourceType = props => {
         {intl.get('integration.form.dockerregistry')}
       </Option>
       <Option value="SonarQube">SonarQube</Option>
+      <Option value="Cluster">
+        {intl.get('integration.form.cluster.name')}
+      </Option>
     </Select>
   );
 };
