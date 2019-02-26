@@ -5,15 +5,14 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 	"github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
@@ -178,7 +177,7 @@ func GenerateNameModifier(project, tenant string, object interface{}) error {
 	if name != "" {
 		_, err := getMetadata(tenant, name)
 		if err == nil {
-			return errors.NewAlreadyExists(schema.GroupResource{Group: v1alpha1.APIVersion, Resource: resource}, name)
+			return cerr.ErrorAlreadyExist.Error(fmt.Sprintf("%s %s", resource, name))
 		}
 		return nil
 	}
