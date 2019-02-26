@@ -52,7 +52,7 @@ DOCKER_CONFIG=$(cat <<-END
 {
   "auths": {
     "${REGISTRY%/*}": {
-        "auth": "$(echo -n $AUTH | base64)"
+        "auth": "$(echo -n $AUTH | base64 -w0)"
     }
   }
 }
@@ -64,7 +64,7 @@ if [ ! -e ./.generated ]; then
     mkdir ./.generated
 fi
 sed -e "s/__REGISTRY__/${REGISTRY/\//\\/}/g" \
-    -e "s/__REGISTRY_AUTH__/$(echo $DOCKER_CONFIG | base64)/g" \
+    -e "s/__REGISTRY_AUTH__/$(echo $DOCKER_CONFIG | base64 -w0)/g" \
     -e "s/__PVC__/${PVC}/g" \
     -e "s/__VERSION__/${VERSION}/g" \
     ./cyclone.yaml.template > ./.generated/cyclone.yaml
