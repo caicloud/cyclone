@@ -141,7 +141,19 @@ type SCMSource struct {
 	Password string `json:"password"`
 	// Token is the credential to access SCM.
 	Token string `json:"token"`
+	// AuthType is the type of auth way, can be Token or Password
+	AuthType SCMAuthType `json:"authType"`
 }
+
+// SCMAuthType represents the type of SCM auth, support password and token.
+type SCMAuthType string
+
+const (
+	// AuthTypePassword represents using password to auth
+	AuthTypePassword SCMAuthType = "Password"
+	// AuthTypeToken represents using token to auth
+	AuthTypeToken = "Token"
+)
 
 // ClusterSource contains info about clusters.
 type ClusterSource struct {
