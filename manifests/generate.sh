@@ -48,11 +48,15 @@ if [ -z ${AUTH+x} ]; then echo -e "$RED_COL Please provide auth with --auth=<aut
 if [ -z ${VERSION+x} ]; then echo -e "$RED_COL Please provide version with --version=<version> $NORMAL_COL"; exit 1; fi
 if [ -z ${PVC+x} ]; then echo -e "$RED_COL Please provide PVC with --pvc=<pvc> $NORMAL_COL"; exit 1; fi
 
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    BASE64_ARGS="-w0"
+fi
+
 DOCKER_CONFIG=$(cat <<-END
 {
   "auths": {
     "${REGISTRY%/*}": {
-        "auth": "$(echo -n $AUTH | base64)"
+        "auth": "$(echo -n $AUTH | base64 ${BASE64_ARGS:-})"
     }
   }
 }
@@ -64,7 +68,7 @@ if [ ! -e ./.generated ]; then
     mkdir ./.generated
 fi
 sed -e "s/__REGISTRY__/${REGISTRY/\//\\/}/g" \
-    -e "s/__REGISTRY_AUTH__/$(echo $DOCKER_CONFIG | base64)/g" \
+    -e "s/__REGISTRY_AUTH__/$(echo $DOCKER_CONFIG | base64 ${BASE64_ARGS:-})/g" \
     -e "s/__PVC__/${PVC}/g" \
     -e "s/__VERSION__/${VERSION}/g" \
     ./cyclone.yaml.template > ./.generated/cyclone.yaml
