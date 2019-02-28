@@ -4,6 +4,7 @@
     name: unit-test-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: unit-test
     annotations:
@@ -37,6 +38,7 @@
     name: golang-unit-test-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: unit-test
     annotations:
@@ -90,6 +92,7 @@
     name: maven-unit-test-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: unit-test
     annotations:
@@ -128,6 +131,7 @@
     name: gradle-unit-test-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: unit-test
     annotations:

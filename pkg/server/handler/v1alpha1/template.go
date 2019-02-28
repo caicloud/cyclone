@@ -41,10 +41,6 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagin
 			return nil, err
 		}
 
-		for _, publicTemplate := range publicTemplates.Items {
-			LabelBuiltinTemplate(&publicTemplate)
-		}
-
 		items = append(items, publicTemplates.Items...)
 	}
 
@@ -72,6 +68,7 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 	}
 
 	LabelStageTemplate(stage)
+	LabelCustomizedTemplate(stage)
 	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stage)
 }
 
@@ -89,7 +86,6 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 				log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
 				return nil, err
 			}
-			LabelBuiltinTemplate(publicTemplate)
 			return publicTemplate, nil
 		}
 

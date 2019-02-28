@@ -30,6 +30,9 @@ const (
 	// LabelTrueValue is the label value used to represent true
 	LabelTrueValue = "true"
 
+	// LabelFalseValue is the label value used to represent false
+	LabelFalseValue = "false"
+
 	// LabelOwner is the label key used to indicate namespaces created by cyclone
 	LabelOwner = "cyclone.io/owner"
 

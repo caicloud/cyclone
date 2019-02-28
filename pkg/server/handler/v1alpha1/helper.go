@@ -257,12 +257,12 @@ func UpdateAnnotations(oldm, newm map[string]string) map[string]string {
 	return newm
 }
 
-// LabelBuiltinTemplate gives a label to indicate that this is a built in template
-func LabelBuiltinTemplate(stage *v1alpha1.Stage) {
+// LabelCustomizedTemplate gives a label to indicate that this is a customized template
+func LabelCustomizedTemplate(stage *v1alpha1.Stage) {
 	if stage.Labels == nil {
 		stage.Labels = make(map[string]string)
 	}
-	stage.Labels[common.LabelBuiltin] = common.LabelTrueValue
+	stage.Labels[common.LabelBuiltin] = common.LabelFalseValue
 	return
 }
 

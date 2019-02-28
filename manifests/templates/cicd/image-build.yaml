@@ -4,6 +4,7 @@
     name: image-build-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: image-build
     annotations:
