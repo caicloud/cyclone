@@ -6,11 +6,11 @@
 http://<cyclone-web>:<port>/swagger
 ```
 
-For example, `http://localhost:3000/swagger` when run `Cyclone Web` locally.
+For example, `http://localhost:3000/swagger` when running `Cyclone Web` locally.
 
 ## Generate API Specification
 
-`Cyclone Server` is built with [Nirvana](https://github.com/caicloud/nirvana) framework, we can generate API specifications from source code conveniently by following steps:
+`Cyclone Server` is built with [Nirvana](https://github.com/caicloud/nirvana) framework, we can generate API specifications from source code conveniently by following these steps:
 
 1. Install nirvana cli and its dependencies:
 
@@ -19,7 +19,7 @@ $ go get -u github.com/caicloud/nirvana/cmd/nirvana
 $ go get -u github.com/golang/dep/cmd/dep
 ```
 
-2. Run following command Cyclone root directory:
+2. Run the following command at the Cyclone root directory:
 
 ```
 nirvana api --output ./ pkg/server/apis --serve=":8088"
