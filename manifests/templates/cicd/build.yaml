@@ -4,6 +4,7 @@
     name: build-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: build
     annotations:
@@ -37,6 +38,7 @@
     name: golang-build-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: build
     annotations:
@@ -75,6 +77,7 @@
     name: maven-build-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: build
     annotations:
@@ -113,6 +116,7 @@
     name: gradle-build-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: build
     annotations:

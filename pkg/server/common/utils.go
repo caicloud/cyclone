@@ -42,7 +42,7 @@ func SecretIntegration(s string) string {
 
 // WorkerClustersSelector is a selector for clusters which are use to perform workload
 func WorkerClustersSelector() string {
-	return LabelClusterOn + "=" + LabelClusterOnValue
+	return LabelClusterOn + "=" + LabelTrueValue
 }
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label

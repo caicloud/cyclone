@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/nirvana/log"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -39,6 +40,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagin
 			log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
 			return nil, err
 		}
+
 		items = append(items, publicTemplates.Items...)
 	}
 
@@ -65,12 +67,32 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 		}
 	}
 
+	LabelStageTemplate(stage)
+	LabelCustomizedTemplate(stage)
 	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stage)
 }
 
 // GetTemplate gets a stage template with the given template name under given tenant.
-func GetTemplate(ctx context.Context, tenant, template string) (*v1alpha1.Stage, error) {
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
+func GetTemplate(ctx context.Context, tenant, template string, includePublic bool) (*v1alpha1.Stage, error) {
+	stage, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return nil, err
+		}
+
+		if tenant != common.AdminTenant && includePublic {
+			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(common.AdminTenant)).Get(template, metav1.GetOptions{})
+			if err != nil {
+				log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
+				return nil, err
+			}
+			return publicTemplate, nil
+		}
+
+		return nil, err
+	}
+
+	return stage, nil
 }
 
 // UpdateTemplate updates a stage templates with the given tenant name and template name. If updated successfully, return

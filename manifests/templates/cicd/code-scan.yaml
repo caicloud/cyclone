@@ -4,6 +4,7 @@
     name: sonarqube-scan-template
     labels:
       cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
       cyclone.io/scene: cicd
       cyclone.io/template-kind: code-scan
     annotations:

@@ -78,6 +78,12 @@ var template = []definition.Descriptor{
 						Name:        httputil.TemplateNamePathParameterName,
 						Description: "Name of the stage template to get",
 					},
+					{
+						Source:      definition.Query,
+						Name:        httputil.IncludePublicQueryParameter,
+						Default:     true,
+						Description: "Whether include system level stage templates",
+					},
 				},
 				Results: definition.DataErrorResults("stage template gotten"),
 			},
