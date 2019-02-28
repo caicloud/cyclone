@@ -54,8 +54,13 @@ func CreateProject(ctx context.Context, tenant string, project *v1alpha1.Project
 }
 
 // GetProject gets a project with the given project name under given tenant.
-func GetProject(ctx context.Context, tenant, project string) (*v1alpha1.Project, error) {
-	return handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(project, metav1.GetOptions{})
+func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, error) {
+	project, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+	if err != nil {
+		log.Infof("get project %v of tenant %v error %v", name, tenant, err)
+		return nil, err
+	}
+	return project, nil
 }
 
 // UpdateProject updates a project with the given tenant name and project name. If updated successfully, return

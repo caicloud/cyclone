@@ -229,7 +229,7 @@ func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
 		worker := in.Spec.Cluster.IsWorkerCluster
 		if worker {
-			meta.Labels[common.LabelClusterOn] = common.LabelClusterOnValue
+			meta.Labels[common.LabelClusterOn] = common.LabelTrueValue
 		}
 	}
 

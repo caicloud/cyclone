@@ -27,14 +27,29 @@ const (
 	// LabelClusterOn is the label key used to indicate the cluster is a worker for the tenant
 	LabelClusterOn = "cyclone.io/cluster-worker"
 
-	// LabelClusterOnValue is the label value used to indicate the cluster is a worker for the tenant
-	LabelClusterOnValue = "true"
+	// LabelTrueValue is the label value used to represent true
+	LabelTrueValue = "true"
 
 	// LabelOwner is the label key used to indicate namespaces created by cyclone
 	LabelOwner = "cyclone.io/owner"
 
 	// OwnerCyclone is the label value used to indicate namespaces created by cyclone
 	OwnerCyclone = "cyclone"
+
+	// LabelBuiltin is the label key used to represent cyclone built in resources
+	LabelBuiltin = "cyclone.io/builtin"
+
+	// LabelScene is the label key used to indicate cyclone scenario
+	LabelScene = "cyclone.io/scene"
+
+	// SceneCICD is the label value used to indicate cyclone CI/CD scenario
+	SceneCICD = "cicd"
+
+	// SceneAI is the label value used to indicate cyclone AI scenario
+	SceneAI = "ai"
+
+	// LabelStageTemplate is the label key used to represent a stage is a stage template
+	LabelStageTemplate = "cyclone.io/stage-template"
 
 	// AnnotationAlias is the annotation key used to indicate the alias of resources
 	AnnotationAlias = "cyclone.io/alias"

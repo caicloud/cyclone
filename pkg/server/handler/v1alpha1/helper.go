@@ -256,3 +256,21 @@ func UpdateAnnotations(oldm, newm map[string]string) map[string]string {
 
 	return newm
 }
+
+// LabelBuiltinTemplate gives a label to indicate that this is a built in template
+func LabelBuiltinTemplate(stage *v1alpha1.Stage) {
+	if stage.Labels == nil {
+		stage.Labels = make(map[string]string)
+	}
+	stage.Labels[common.LabelBuiltin] = common.LabelTrueValue
+	return
+}
+
+// LabelStageTemplate gives a label to indicate that this stage is a stage template
+func LabelStageTemplate(stage *v1alpha1.Stage) {
+	if stage.Labels == nil {
+		stage.Labels = make(map[string]string)
+	}
+	stage.Labels[common.LabelStageTemplate] = common.LabelTrueValue
+	return
+}
