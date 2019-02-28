@@ -1,8 +1,8 @@
 # Cyclone Design
 
-Cyclone is a powerful workflow engine and end-to-end pipeline solution implemented with native Kubernetes resources. 
+Cyclone is a powerful workflow engine with end-to-end pipeline solutions (such as CI/CD and AI Devops) implemented with native Kubernetes resources. 
 Cyclone is architectured with a low-level workflow engine that is application agnostic, offering capabilities like
-workflow DAG scheduling, resource lifecycle management.
+workflow Directed Acyclic Graph (DAG) scheduling, resource lifecycle management, etc.
 
 ## Architecture
 
@@ -10,24 +10,24 @@ workflow DAG scheduling, resource lifecycle management.
 
 ### Components
 
-* Cyclone Web: UI of Cyclone helps users to easily use Cyclone.
-* Cyclone Server: API server of Cyclone provides a set of RESTful APIs to operate Cyclone resources.
-* Workflow Controller: Controller of Cyclone workflow engine, controls the execution of stages in workflows.
+* Cyclone Web: helps users to easily use Cyclone.
+* Cyclone Server: provides a set of RESTful APIs to operate Cyclone resources.
+* Workflow Controller: controls the execution of stages in workflows.
 
 ### Kubernetes CRDs
 
-* Stage: Minimum executable unit for workflow, it does some work on input resources and output results.
-* Resource: Resource is the data used by stages as input or output, such as git repository or docker images.
-* Workflow: Executable DAG graph composed of stages.
-* WorkflowRun: Running record of a workflow.
-* WorkflowTrigger: Auto-trigger policy for workflow.
+* Stage: the minimum executable unit for a workflow, which performs certain work on input resources and outputs results.
+* Resource: the data or artifacts used by stages as input or output, such as git repository or docker images.
+* Workflow: executable DAG graph composed of stages.
+* WorkflowRun: running record of a workflow.
+* WorkflowTrigger: auto-trigger policy for workflows.
 
 ## Functional Modules
 
 There are 3 main functional modules in Cyclone:
 
-* Integration Center: Integrates external systems like SCM, docker registry, S3.
-* Projects: Manages a group of workflows and their shared configs. 
+* Integration Center: integrates external systems like SCM, docker registry, S3, etc.
+* Project: manages a group of workflows and their shared configs. 
 * Stage Templates: Manages built-in stage templates and customized templates.
 
 ## Implementation
@@ -56,6 +56,8 @@ Each type of resource needs a resource resolver to handle their resources. Now C
 
 ### Workflow Executation
 
-Workflow is an executable DAG graph composed of stages, its stages can run serially and parallelly.
-If one stage has dependencies, it can only start to run after all its dependencies have finished.
-Stages can parallelly run if they have no direct or indirect dependency relationship.
+Workflow is an executable DAG graph composed of stages which can run
+either serially or in parallel according to the graph structure.  If
+one stage has dependencies, it can only start to run after all its
+dependencies have finished. Stages can run in parallel if they have no
+direct or indirect mutual dependency.
