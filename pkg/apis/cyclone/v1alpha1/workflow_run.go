@@ -112,9 +112,6 @@ type Status struct {
 
 	// StartTime is the start time of processing stage/workflowrun
 	StartTime metav1.Time `json:"startTime,omitempty"`
-
-	// EndTime is the end time of processing stage/workflowrun
-	EndTime metav1.Time `json:"endTime,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

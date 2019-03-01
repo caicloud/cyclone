@@ -243,7 +243,6 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
-			EndTime:            metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -269,7 +268,6 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	return &v1alpha1.Status{
 		Status:             v1alpha1.StatusCompleted,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
-		EndTime:            metav1.Time{Time: time.Now()},
 	}, nil
 }
 
@@ -325,7 +323,6 @@ func (o *operator) Reconcile() error {
 				Reason:             "GeneratePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to generate pod: %v", err),
-				EndTime:            metav1.Time{Time: time.Now()},
 			})
 			continue
 		}
@@ -340,7 +337,6 @@ func (o *operator) Reconcile() error {
 				Status:             v1alpha1.StatusError,
 				Reason:             "CreatePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
-				EndTime:            metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to create pod: %v", err),
 			})
 			continue

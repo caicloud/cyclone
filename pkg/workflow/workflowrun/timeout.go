@@ -129,7 +129,6 @@ func (m *TimeoutProcessor) process() {
 				Status:             v1alpha1.StatusError,
 				Reason:             "Timeout",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
-				EndTime:            metav1.Time{Time: time.Now()},
 			}
 
 			operator := operator{
