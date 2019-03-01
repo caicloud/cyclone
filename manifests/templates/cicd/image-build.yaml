@@ -22,8 +22,8 @@
         - name: image
           value: docker:18.03.1-ce-dind
         - name: cmd
-          value: |
-            cd /workspace
+          value: >-
+            cd /workspace;
             docker build -f {{ dockerfile-path }} -t {{ image-name }} {{ build-context }}
         resources:
         - name: code

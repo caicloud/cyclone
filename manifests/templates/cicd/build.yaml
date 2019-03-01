@@ -51,8 +51,7 @@
         - name: image
           value: golang:1.10-alpine3.8
         - name: cmd
-          value: |
-            # Replace <main-entrypoint-path> with the main package path, for example 'cyclone/cmd/workflow/controller'.
+          value: >-
             go build -o /go/bin/app <main-entrypoint-path>
         - name: output-artifact-path
           value: /go/bin/app
@@ -90,8 +89,8 @@
         - name: image
           value: maven:3.5.3-jdk-8-alpine
         - name: cmd
-          value: |
-            cd /workspace
+          value: >-
+            cd /workspace;
             mvn clean package -Dmaven.test.skip
         - name: output-artifact-path
           value: /workspace/target/<app>.jar
@@ -129,8 +128,8 @@
         - name: image
           value: gradle:3.4.1
         - name: cmd
-          value: |
-            cd /workspace
+          value: >-
+            cd /workspace;
             gradle build -x test
         - name: output-artifact-path
           value: /workspace/build/<app>.jar
