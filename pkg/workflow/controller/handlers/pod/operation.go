@@ -100,6 +100,7 @@ func (p *Operator) OnUpdated() error {
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusError,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
+				EndTime:            metav1.Time{Time: time.Now()},
 				Reason:             "PodFailed",
 			})
 		}
@@ -112,6 +113,7 @@ func (p *Operator) OnUpdated() error {
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 				Status:             v1alpha1.StatusCompleted,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
+				EndTime:            metav1.Time{Time: time.Now()},
 				Reason:             "PodSucceed",
 			})
 		}
@@ -161,6 +163,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			EndTime:            metav1.Time{Time: time.Now()},
 			Reason:             terminatedCoordinatorState.Reason,
 			Message:            terminatedCoordinatorState.Message,
 		})
@@ -172,6 +175,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
 			Status:             v1alpha1.StatusCompleted,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			EndTime:            metav1.Time{Time: time.Now()},
 			Reason:             "CoordinatorCompleted",
 			Message:            "Coordinator completed",
 		})
