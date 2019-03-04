@@ -566,6 +566,7 @@ func (in *StageStatus) DeepCopy() *StageStatus {
 func (in *Status) DeepCopyInto(out *Status) {
 	*out = *in
 	in.LastTransitionTime.DeepCopyInto(&out.LastTransitionTime)
+	in.StartTime.DeepCopyInto(&out.StartTime)
 	return
 }
 

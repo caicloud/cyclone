@@ -109,6 +109,9 @@ type Status struct {
 	// A human readable message indicating details about the transition.
 	// +optional
 	Message string `json:"message,omitempty"`
+
+	// StartTime is the start time of processing stage/workflowrun
+	StartTime metav1.Time `json:"startTime,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

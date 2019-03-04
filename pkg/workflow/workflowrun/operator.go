@@ -198,6 +198,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusPending,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          metav1.Time{Time: time.Now()},
 		}, nil
 	}
 
@@ -289,6 +290,7 @@ func (o *operator) Reconcile() error {
 			Status:             v1alpha1.StatusRunning,
 			Reason:             "StageInitialized",
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          metav1.Time{Time: time.Now()},
 		})
 	}
 	overall, err := o.OverallStatus()
