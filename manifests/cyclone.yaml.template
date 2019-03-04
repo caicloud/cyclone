@@ -46,7 +46,7 @@ data:
       },
       "pvc": "__PVC__",
       "secret": "cyclone-secrets",
-      "cyclone_server_addr": "native-cyclone-server.default.svc.cluster.local:7099"
+      "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099"
     }
 
 ---
@@ -120,17 +120,17 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: native-cyclone-server
+  name: cyclone-server
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: native-cyclone-server
+      app: cyclone-server
   template:
     metadata:
       labels:
-        app: native-cyclone-server
+        app: cyclone-server
     spec:
       containers:
       - name: server
@@ -144,10 +144,10 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: native-cyclone-server
+  name: cyclone-server
 spec:
   selector:
-    app: native-cyclone-server
+    app: cyclone-server
   ports:
   - protocol: TCP
     port: 7099

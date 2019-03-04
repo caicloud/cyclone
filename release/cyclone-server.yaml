@@ -1,7 +1,7 @@
 _config:
   _metadata:
-    description: native-cyclone
-    name: native-cyclone
+    description: cyclone-server
+    name: cyclone-server
     namespace: default
     template:
       type: template.caicloud.io/application
@@ -11,7 +11,7 @@ _config:
   - containers:
     - command:
       - /cyclone-server
-      image: '[[ registry_release ]]/native-cyclone-server:[[ imageTagFromGitTag ]]'
+      image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
       mounts:
       - name: cyclone-data
@@ -24,7 +24,7 @@ _config:
     pod:
       serviceAccountName: admin
     services:
-    - name: native-cyclone-server
+    - name: cyclone-server
       ports:
       - port: 7099
         protocol: TCP
@@ -39,8 +39,8 @@ _config:
         modes:
         - ReadWriteMany
       storage:
-        request: 500Gi
-        limit: 500Gi
+        request: 200Gi
+        limit: 200Gi
     configs:
     - name: cyclone-server-config
       data:

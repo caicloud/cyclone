@@ -52,6 +52,6 @@ _config:
                 "memory": "128Mi"
               }
             },
-            "pvc": "native-cyclone-server-server-v1-0-cyclone-data",
-            "cyclone_server_addr": "native-cyclone-server.default:7099"
+            "pvc": "cyclone-server-server-v1-0-cyclone-data",
+            "cyclone_server_addr": "cyclone-server.default:7099"
           }

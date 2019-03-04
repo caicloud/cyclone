@@ -23,7 +23,7 @@ const (
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
 
 	// DefaultCycloneServerAddr defines default Cyclone Server address
-	DefaultCycloneServerAddr = "native-cyclone-server"
+	DefaultCycloneServerAddr = "cyclone-server"
 
 	// CycloneSidecarPrefix defines container name prefixes for sidecar. There are two kinds of
 	// sidecars in workflow:
