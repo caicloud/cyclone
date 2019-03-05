@@ -6,7 +6,7 @@ services:
   - docker
 
 go:
-  - 1.9
+  - 1.11
 
 git:
   depth: 1
@@ -26,7 +26,7 @@ install:
 
 script:
   - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
-  - gometalinter ./pkg/... ./cmd/...
+  - gometalinter --deadline=300s ./pkg/... ./cmd/...
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile

@@ -116,10 +116,13 @@ type MockedRecorder struct {
 	mock.Mock
 }
 
-func (r *MockedRecorder) Event(object runtime.Object, eventtype, reason, message string) {}
+func (r *MockedRecorder) Event(object runtime.Object, eventtype, reason, message string) {
+}
 func (r *MockedRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
 }
 func (r *MockedRecorder) PastEventf(object runtime.Object, timestamp metav1.Time, eventtype, reason, messageFmt string, args ...interface{}) {
+}
+func (r *MockedRecorder) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
 }
 
 type TimeoutProcessorSuite struct {

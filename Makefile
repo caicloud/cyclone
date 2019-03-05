@@ -82,7 +82,7 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 .PHONY: lint test build container push
 
 lint: $(GOMETALINTER)
-	gometalinter ./pkg/... ./cmd/...
+	gometalinter --deadline=300s ./pkg/... ./cmd/...
 
 build: build-local
 
