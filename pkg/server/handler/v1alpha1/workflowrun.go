@@ -11,6 +11,7 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/gorilla/websocket"
+	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8s_types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
@@ -36,7 +37,19 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 		}
 	}
 
+	injectWfRef(tenant, workflow, wfr)
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
+}
+
+// injectWfRef injects workflowRef if it is nil
+func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
+	if wfr.Spec.WorkflowRef == nil {
+		wfr.Spec.WorkflowRef = &core_v1.ObjectReference{
+			Namespace: common.TenantNamespace(tenant),
+			Name:      workflow,
+			Kind:      "workflow.cyclone.io",
+		}
+	}
 }
 
 // ListWorkflowRuns ...
@@ -78,6 +91,7 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		newWfr := origin.DeepCopy()
 		newWfr.Spec = wfr.Spec
 		newWfr.Annotations = UpdateAnnotations(wfr.Annotations, newWfr.Annotations)
+		injectWfRef(tenant, workflow, wfr)
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(newWfr)
 		return err
 	})

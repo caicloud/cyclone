@@ -29,6 +29,10 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun create")
 
+	if !validate(originWfr) {
+		return
+	}
+
 	// AddOrRefresh adds a WorkflowRun to its corresponding queue, if the queue size exceed the
 	// maximum size, the oldest one would be deleted. And if the WorkflowRun already exists in
 	// the queue, its 'refresh' time field would be refreshed.
@@ -69,6 +73,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
 
+	if !validate(originWfr) {
+		return
+	}
+
 	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
 	h.LimitedQueues.Refresh(originWfr)
 
@@ -99,4 +107,15 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 // ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	return
+}
+
+// validate workflow run
+func validate(wfr *v1alpha1.WorkflowRun) bool {
+	// check workflowRef can not be nil
+	if wfr.Spec.WorkflowRef == nil {
+		log.WithField("name", wfr.Name).Error("WorkflowRef is nil")
+		return false
+	}
+
+	return true
 }
