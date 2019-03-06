@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
@@ -23,6 +24,16 @@ var wf = &v1alpha1.Workflow{
 		Name: "wf",
 	},
 	Spec: v1alpha1.WorkflowSpec{
+		Resources: &corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("64Mi"),
+				corev1.ResourceCPU:    resource.MustParse("50m"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("256Mi"),
+				corev1.ResourceCPU:    resource.MustParse("200m"),
+			},
+		},
 		Stages: []v1alpha1.StageItem{
 			{
 				Name: "stage1",
@@ -238,6 +249,17 @@ func (suite *PodBuilderSuite) SetupTest() {
 										Image:      "{{ image }}",
 										WorkingDir: "{{ dir }}",
 									},
+									{
+										Name: "workload-sidecar-c2",
+										Resources: corev1.ResourceRequirements{
+											Requests: corev1.ResourceList{
+												corev1.ResourceCPU: resource.MustParse("100m"),
+											},
+											Limits: corev1.ResourceList{
+												corev1.ResourceMemory: resource.MustParse("256Mi"),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -439,6 +461,62 @@ func (suite *PodBuilderSuite) TestResolveInputArtifacts() {
 			MountPath: "/tmp/art1",
 			SubPath:   common.ArtifactPath("wfr", "stage1", "art1") + "/artifact.tar",
 		})
+	}
+}
+
+func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
+	configured := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("32Mi"),
+			corev1.ResourceCPU:    resource.MustParse("25m"),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("32Mi"),
+			corev1.ResourceCPU:    resource.MustParse("25m"),
+		},
+	}
+	controller.Config = controller.WorkflowControllerConfig{}
+	controller.Config.ResourceRequirements = configured
+	defer func() {
+		controller.Config = controller.WorkflowControllerConfig{}
+	}()
+
+	builder := NewPodBuilder(suite.client, wf, wfr, "stage1")
+	assert.Nil(suite.T(), builder.Prepare())
+	assert.Nil(suite.T(), builder.ResolveArguments())
+	assert.Nil(suite.T(), builder.ResolveInputResources())
+
+	assert.Nil(suite.T(), builder.ApplyResourceRequirements())
+	for _, c := range builder.pod.Spec.InitContainers {
+		assert.Equal(suite.T(), configured, c.Resources)
+	}
+
+	for _, c := range builder.pod.Spec.Containers {
+		if c.Name == "c1" {
+			assert.Equal(suite.T(), corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("64Mi"),
+					corev1.ResourceCPU:    resource.MustParse("50m"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+					corev1.ResourceCPU:    resource.MustParse("200m"),
+				},
+			}, c.Resources)
+		}
+
+		if c.Name == "workload-sidecar-c2" {
+			assert.Equal(suite.T(), corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("64Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+					corev1.ResourceCPU:    resource.MustParse("200m"),
+				},
+			}, c.Resources)
+		}
 	}
 }
 

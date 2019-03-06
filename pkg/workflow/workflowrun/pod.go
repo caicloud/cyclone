@@ -96,12 +96,6 @@ func (m *PodBuilder) Prepare() error {
 	return nil
 }
 
-// ApplyTemplate ...
-// TODO(ChenDe): Implement stage template.
-func (m *PodBuilder) ApplyTemplate() error {
-	return nil
-}
-
 // ResolveArguments ...
 func (m *PodBuilder) ResolveArguments() error {
 	parameters := make(map[string]string)
@@ -598,27 +592,18 @@ func (m *PodBuilder) InjectEnvs() error {
 	return nil
 }
 
-// applyQuota applies default quota configured to a list of containers.
-func applyQuota(containers []corev1.Container) []corev1.Container {
+// applyResourceRequirements applies resource requirements to some selected containers.
+func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, selector common.ContainerSelector) []corev1.Container {
 	var results []corev1.Container
 	for _, c := range containers {
-		// If default limits are set in configuration, we would apply them
-		// to containers. While for containers already have limits specified,
-		// we will still use the specified values.
-		for k, v := range controller.Config.ResourceRequirements.Limits {
-			if c.Resources.Limits == nil {
-				c.Resources.Limits = make(map[corev1.ResourceName]resource.Quantity)
-			}
-
-			if _, ok := c.Resources.Limits[k]; !ok {
-				c.Resources.Limits[k] = v
-			}
+		// If the container is not selected, keep it untouched.
+		if !selector(c.Name) {
+			results = append(results, c)
+			continue
 		}
 
-		// If default requests are set in configuration, we would apply them
-		// to containers. While for containers already have requests specified,
-		// we will still use the specified values.
-		for k, v := range controller.Config.ResourceRequirements.Requests {
+		// Set resource requests if not set in the container yet.
+		for k, v := range requirements.Requests {
 			if c.Resources.Requests == nil {
 				c.Resources.Requests = make(map[corev1.ResourceName]resource.Quantity)
 			}
@@ -628,16 +613,38 @@ func applyQuota(containers []corev1.Container) []corev1.Container {
 			}
 		}
 
+		// Set resource limits if not set in the container yet.
+		for k, v := range requirements.Limits {
+			if c.Resources.Limits == nil {
+				c.Resources.Limits = make(map[corev1.ResourceName]resource.Quantity)
+			}
+
+			if _, ok := c.Resources.Limits[k]; !ok {
+				c.Resources.Limits[k] = v
+			}
+		}
+
 		results = append(results, c)
 	}
 
 	return results
 }
 
-// ApplyQuota applies default quota to all containers without quota specified in the pod.
-func (m *PodBuilder) ApplyQuota() error {
-	m.pod.Spec.InitContainers = applyQuota(m.pod.Spec.InitContainers)
-	m.pod.Spec.Containers = applyQuota(m.pod.Spec.Containers)
+// ApplyResourceRequirements applies resource requirements containers in the pod. Resource requirements can be specified
+// in three places (ordered by priority descending order):
+// - In the Stage spec
+// - In the Workflow spec
+// - In the Workflow Controller configurations as default values.
+// So requirements set in stage spec would have the highest priority.
+func (m *PodBuilder) ApplyResourceRequirements() error {
+	// Apply resource requirements from Workflow spec.
+	if m.wf.Spec.Resources != nil {
+		m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, m.wf.Spec.Resources, common.OnlyCustomContainer)
+	}
+
+	// Apply default resource requirements from Workflow Controller configuration.
+	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, &controller.Config.ResourceRequirements, common.AllContainers)
+	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, &controller.Config.ResourceRequirements, common.AllContainers)
 
 	return nil
 }
@@ -645,11 +652,6 @@ func (m *PodBuilder) ApplyQuota() error {
 // Build ...
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
-	if err != nil {
-		return nil, err
-	}
-
-	err = m.ApplyTemplate()
 	if err != nil {
 		return nil, err
 	}
@@ -694,7 +696,7 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 		return nil, err
 	}
 
-	err = m.ApplyQuota()
+	err = m.ApplyResourceRequirements()
 	if err != nil {
 		return nil, err
 	}

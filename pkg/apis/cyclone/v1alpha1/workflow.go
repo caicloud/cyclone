@@ -1,6 +1,9 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +genclient
 // +genclient:noStatus
@@ -18,7 +21,8 @@ type Workflow struct {
 
 // WorkflowSpec defines workflow specification.
 type WorkflowSpec struct {
-	Stages []StageItem `json:"stages"`
+	Resources *corev1.ResourceRequirements
+	Stages    []StageItem `json:"stages"`
 }
 
 // StageItem describes a stage in a workflow.
