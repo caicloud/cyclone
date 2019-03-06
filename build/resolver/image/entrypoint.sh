@@ -8,9 +8,8 @@ USAGE=$(cat <<-END
     Usage:
         $ docker run -it --rm \\
             -e IMAGE=docker.io/library/alpine:3.6 \\
-            -e IMAGE_FILE=image.tar.gz \\
+            -e AUTH=admin:Pwd123456 \\
             -v /var/run/docker.sock:/var/run/docker.sock \\
-            -v /config.json:/root/.docker/config.json \\
             image-resource-resolver:latest <COMMAND>
 
      Supported commands are:
@@ -18,11 +17,15 @@ USAGE=$(cat <<-END
      - pull Pull image from registry.
      - push Push image to registry.
 
-     Environment variables IMAGE must be set, and it should be a full name
-     in format <domain>/<project>/<repo>:<tag>. IMAGE_TAR is an optional
-     variable, if set, image will be loaded from this tar file.
+     Environment variables IMAGE should be a full name in format <domain>/<repo>:<tag>. If IMAGE is not set,
+     users should set REGISTRY, REPOSITORY and TAG to specify the image. If registry used is docker hub, registry
+     can be omitted.
 
-     You will need to mount /var/run/docker.sock and config.json to use it.
+     AUTH provides basic authentication information to the registry, it must be in format <username>:<password>
+
+     IMAGE_FILE is an optional variable, if set, image will be loaded from this tar file.
+
+     You will need to mount /var/run/docker.sock.
 END
 )
 
@@ -34,7 +37,33 @@ COMMAND=$1
 
 # Check whether required environment variables are set.
 if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
-if [ -z ${IMAGE+x} ]; then echo "IMAGE is unset"; exit 1; fi
+if [ -z ${IMAGE+x} ]; then
+    if [ -z ${REPOSITORY+x} ]; then echo "REPOSITORY should be set when IMAGE is unset"; exit 1; fi
+    if [ -z ${TAG+x} ]; then echo "TAG should be set when IMAGE is unset"; exit 1; fi
+    case ${REPOSITORY} in
+    */*);;
+    * ) REPOSITORY=library/${REPOSITORY};;
+    esac
+    IMAGE=${REGISTRY:=docker.io}/${REPOSITORY}:${TAG}
+fi
+echo  "Image: ${IMAGE}"
+
+# Generate config.json for docker registry
+if [ -n ${AUTH+x} ]; then
+    if [ ! -d /root/.docker ]; then
+        mkdir -p /root/.docker
+    fi
+    cat <<-END > /root/.docker/config.json
+{
+  "auths": {
+    "${IMAGE%/*}": {
+        "auth": "$(echo -n $AUTH | base64)"
+    }
+  }
+}
+END
+    ls /root/.docker/config.json
+fi
 
 pull() {
     docker pull $IMAGE
