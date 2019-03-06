@@ -148,6 +148,13 @@ container: build-linux
 	  done                                                                             \
 	done
 
+container-web-local: build-web-local
+	@for registry in $(REGISTRIES); do                                                 \
+	  imageName=$(IMAGE_PREFIX)web$(IMAGE_SUFFIX);                                     \
+	  docker build -t $${registry}/$${imageName}:$(VERSION)                            \
+	    -f $(BUILD_DIR)/web/Dockerfile.local .;                                        \
+	done
+
 container-local: build-local
 	@for target in $(TARGETS); do                                                      \
 	  for registry in $(REGISTRIES); do                                                \
@@ -167,6 +174,9 @@ push: container
 
 gen: clean-generated
 	bash tools/generator/autogenerate.sh
+
+swagger-local:
+	nirvana api --output web/public pkg/server/apis
 
 swagger:
 	docker run --rm                                                                   \

@@ -21,8 +21,9 @@ _config:
     services:
     - name: cyclone-web
       ports:
-      - port: 7090
-        protocol: TCP
+      - protocol: TCP
+        port: 80
+        nodePort: 30022
         targetPort: 80
-      type: ClusterIP
+      type: NodePort
     type: Deployment
