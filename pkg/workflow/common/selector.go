@@ -20,6 +20,17 @@ func OnlyWorkload(name string) bool {
 	return true
 }
 
+// AllContainers selects all containers, it returns true regardless of the container name.
+func AllContainers(string) bool {
+	return true
+}
+
+// OnlyCustomContainer judges whether a container is a custom container based on container name.
+// Containers added by Cyclone would have CycloneSidecarPrefix prefix in container names.
+func OnlyCustomContainer(name string) bool {
+	return !strings.HasPrefix(name, CycloneSidecarPrefix)
+}
+
 // NonWorkloadSidecar selects all containers except workload sidecars.
 func NonWorkloadSidecar(name string) bool {
 	if strings.HasPrefix(name, WorkloadSidecarPrefix) {
