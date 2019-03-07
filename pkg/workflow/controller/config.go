@@ -52,12 +52,8 @@ type WorkflowControllerConfig struct {
 	Limits LimitsConfig `json:"limits"`
 	// ResourceRequirements is default resource requirements for containers in stage Pod
 	ResourceRequirements corev1.ResourceRequirements `json:"default_resource_quota"`
-	// PVC used to transfer artifacts in WorkflowRun, and also to help share resources
-	// among stages within WorkflowRun. If no PVC is given here, input resources won't be
-	// shared among stages, but need to be pulled every time it's needed. And also if no
-	// PVC given, artifacts are not supported.
-	// TODO(ChenDe): Remove it when Cyclone can manage PVC for namespaces.
-	PVC string `json:"pvc"`
+	// ExecutionContext defines default namespace and pvc used to run workflow.
+	ExecutionContext ExecutionContext `json:"execution_context"`
 	// Secret is default secret used for Cyclone, auth of registry can be placed here. It's optional.
 	// TODO(ChenDe): Remove it when Cyclone can manage secrets for namespaces.
 	Secret string `json:"secret"`
@@ -68,6 +64,19 @@ type WorkflowControllerConfig struct {
 // LoggingConfig configures logging
 type LoggingConfig struct {
 	Level string `json:"level"`
+}
+
+// ExecutionContext defines default namespace and pvc used to run workflow.
+type ExecutionContext struct {
+	// Namespace is namespace where to run workflow.
+	Namespace string `json:"namespace"`
+	// PVC is pvc used to run workflow. It's used to transfer artifacts in WorkflowRun, and
+	// also to help share resources among stages within WorkflowRun. If no PVC is given here,
+	// input resources won't be shared among stages, but need to be pulled every time it's needed.
+	// And also if no PVC given, artifacts are not supported.
+	PVC string `json:"pvc"`
+	// ServiceAccount is the service account applied to the pod runed
+	ServiceAccount string `json:"service_account"`
 }
 
 // GCConfig configures GC
@@ -112,7 +121,7 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 
 // validate validates some required configurations.
 func validate(config *WorkflowControllerConfig) bool {
-	if config.PVC == "" {
+	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
 	}
 

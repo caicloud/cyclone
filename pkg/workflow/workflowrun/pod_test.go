@@ -329,7 +329,6 @@ func (suite *PodBuilderSuite) TestPrepare() {
 	assert.NotEmpty(suite.T(), builder.pod.Labels[common.WorkflowLabelName])
 	assert.Equal(suite.T(), "simple", builder.pod.Annotations[common.StageAnnotationName])
 	assert.Equal(suite.T(), "wfr", builder.pod.Annotations[common.WorkflowRunAnnotationName])
-	assert.Equal(suite.T(), "wfr", builder.pod.OwnerReferences[0].Name)
 }
 
 func (suite *PodBuilderSuite) TestResolveArguments() {
@@ -452,7 +451,7 @@ func (suite *PodBuilderSuite) TestResolveInputArtifacts() {
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Error(suite.T(), builder.ResolveInputArtifacts())
 
-	controller.Config.PVC = "pvc1"
+	builder.executionContext.PVC = "pvc1"
 	assert.Nil(suite.T(), builder.ResolveInputArtifacts())
 
 	for _, c := range builder.pod.Spec.Containers {

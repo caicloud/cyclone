@@ -44,7 +44,11 @@ data:
           "memory": "128Mi"
         }
       },
-      "pvc": "__PVC__",
+      "execution_context": {
+        "namespace": "default",
+        "pvc": "__PVC__",
+        "service_account": "",
+      },
       "secret": "cyclone-secrets",
       "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099"
     }

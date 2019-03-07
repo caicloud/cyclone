@@ -17,6 +17,8 @@ const (
 	EnvStageName = "STAGE_NAME"
 	// EnvWorkloadContainerName is an environment which represents the workload container name.
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
+	// EnvMetaNamespace is namespace of the Workflow, WorkflowRun, etc...
+	EnvMetaNamespace = "META_NAMESPACE"
 	// EnvNamespace is an environment which represents namespace.
 	EnvNamespace = "NAMESPACE"
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
@@ -63,6 +65,8 @@ const (
 	PodLabelSelector = "cyclone.io/workflow==true"
 	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to
 	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
+	// MetaNamespaceAnnotationName is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
+	MetaNamespaceAnnotationName = "cyclone.io/meta-namespace"
 	// GCAnnotationName is annotation applied to pod to indicate whether the pod is used for GC purpose
 	GCAnnotationName = "cyclone.io/gc"
 	// StageAnnotationName is annotation applied to pod to indicate which stage it related to

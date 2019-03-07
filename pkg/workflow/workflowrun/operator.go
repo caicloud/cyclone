@@ -329,7 +329,7 @@ func (o *operator) Reconcile() error {
 		log.WithField("stg", stage).Debug("Pod manifest created")
 
 		// Create the generated pod.
-		pod, err = o.client.CoreV1().Pods(o.wfr.Namespace).Create(pod)
+		pod, err = o.client.CoreV1().Pods(GetExecutionContext(o.wfr).Namespace).Create(pod)
 		if err != nil {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod for stage error: ", err)
 			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", stage, err)
@@ -395,64 +395,61 @@ func (o *operator) GC(lastTry bool) error {
 		}
 	}
 
-	// Create a gc pod to clean data on tmp PV.
-	gcPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("wfrgc--%s", o.wfr.Name),
-			Namespace: o.wfr.Namespace,
-			Labels: map[string]string{
-				common.WorkflowLabelName: "true",
-			},
-			Annotations: map[string]string{
-				common.WorkflowRunAnnotationName: o.wfr.Name,
-				common.GCAnnotationName:          "true",
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: v1alpha1.APIVersion,
-					Kind:       reflect.TypeOf(v1alpha1.WorkflowRun{}).Name(),
-					Name:       o.wfr.Name,
-					UID:        o.wfr.UID,
-				},
-			},
-		},
-		Spec: corev1.PodSpec{
-			RestartPolicy: corev1.RestartPolicyNever,
-			Containers: []corev1.Container{
-				{
-					Name:    common.GCContainerName,
-					Image:   controller.Config.Images[controller.GCImage],
-					Command: []string{"rm", "-rf", common.GCDataPath + "/" + o.wfr.Name},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      common.DefaultPvVolumeName,
-							MountPath: common.GCDataPath,
-							SubPath:   common.WorkflowRunsPath(),
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: common.DefaultPvVolumeName,
-					VolumeSource: corev1.VolumeSource{
-						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-							ClaimName: controller.Config.PVC,
-							ReadOnly:  false,
-						},
-					},
-				},
-			},
-		},
-	}
+	// Get exeuction context of the WorkflowRun, namespace and PVC are defined in the context.
+	executionContext := GetExecutionContext(o.wfr)
 
-	_, err := o.client.CoreV1().Pods(o.wfr.Namespace).Create(gcPod)
-	if err != nil {
-		log.WithField("wfr", o.wfr.Name).Warn("Create GC pod failed")
-		if !lastTry {
-			return err
+	// Create a gc pod to clean data on PV if PVC is configured.
+	if executionContext.PVC != "" {
+		gcPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("wfrgc--%s", o.wfr.Name),
+				Namespace: executionContext.Namespace,
+				Labels: map[string]string{
+					common.WorkflowLabelName: "true",
+				},
+				Annotations: map[string]string{
+					common.WorkflowRunAnnotationName: o.wfr.Name,
+					common.GCAnnotationName:          "true",
+				},
+			},
+			Spec: corev1.PodSpec{
+				RestartPolicy: corev1.RestartPolicyNever,
+				Containers: []corev1.Container{
+					{
+						Name:    common.GCContainerName,
+						Image:   controller.Config.Images[controller.GCImage],
+						Command: []string{"rm", "-rf", common.GCDataPath + "/" + o.wfr.Name},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      common.DefaultPvVolumeName,
+								MountPath: common.GCDataPath,
+								SubPath:   common.WorkflowRunsPath(),
+							},
+						},
+					},
+				},
+				Volumes: []corev1.Volume{
+					{
+						Name: common.DefaultPvVolumeName,
+						VolumeSource: corev1.VolumeSource{
+							PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+								ClaimName: executionContext.PVC,
+								ReadOnly:  false,
+							},
+						},
+					},
+				},
+			},
 		}
-		o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Create GC pod error: %v", err)
+
+		_, err := o.client.CoreV1().Pods(o.wfr.Namespace).Create(gcPod)
+		if err != nil {
+			log.WithField("wfr", o.wfr.Name).Warn("Create GC pod failed")
+			if !lastTry {
+				return err
+			}
+			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Create GC pod error: %v", err)
+		}
 	}
 
 	o.recorder.Event(o.wfr, corev1.EventTypeNormal, "GC", "GC is performed succeed.")
