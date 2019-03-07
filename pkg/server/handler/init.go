@@ -11,8 +11,8 @@ var (
 	K8sClient clientset.Interface
 )
 
-// InitHandlers initializes the server resources handlers.
-func InitHandlers(c clientset.Interface) {
+// Init initializes the server resources handlers.
+func Init(c clientset.Interface) {
 	K8sClient = c
 }
 

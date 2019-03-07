@@ -238,7 +238,7 @@ func createControlClusterIntegration(tenant string) error {
 			IntegrationSource: api.IntegrationSource{
 				Cluster: &api.ClusterSource{
 					IsControlCluster: true,
-					// do not open the control cluster to run workflow, just create the control cluster integration.
+					// Cluster by default is not enabled to run workflow, need users to enable it explicitly.
 					IsWorkerCluster: false,
 					Namespace:       common.TenantNamespace(tenant),
 				},
@@ -271,14 +271,31 @@ func createTenant(tenant *api.Tenant) error {
 }
 
 func createTenantNamespace(tenant *api.Tenant) error {
+	meta := tenant.ObjectMeta
+
+	// build namespace name
+	meta.Name = common.TenantNamespace(tenant.Name)
+
 	// marshal tenant and set it into namespace annotation
-	namespace, err := buildNamespace(tenant)
+	t, err := json.Marshal(tenant.Spec)
 	if err != nil {
-		log.Warningf("Build namespace for tenant %s error %v", tenant.Name, err)
+		log.Warningf("Marshal tenant %s error %v", tenant.Name, err)
 		return err
 	}
+	if meta.Annotations == nil {
+		meta.Annotations = make(map[string]string)
+	}
+	meta.Annotations[common.AnnotationTenant] = string(t)
 
-	_, err = handler.K8sClient.CoreV1().Namespaces().Create(namespace)
+	// set labels
+	if meta.Labels == nil {
+		meta.Labels = make(map[string]string)
+	}
+	meta.Labels[common.LabelOwner] = common.OwnerCyclone
+
+	_, err = handler.K8sClient.CoreV1().Namespaces().Create(&v1.Namespace{
+		ObjectMeta: meta,
+	})
 	if err != nil {
 		log.Errorf("Create namespace for tenant %s error %v", tenant.Name, err)
 		return err
@@ -314,33 +331,4 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 		return nil
 	})
 
-}
-
-func buildNamespace(tenant *api.Tenant) (*v1.Namespace, error) {
-	meta := tenant.ObjectMeta
-	// build namespace name
-	meta.Name = common.TenantNamespace(tenant.Name)
-	// marshal tenant and set it into namespace annotation
-	t, err := json.Marshal(tenant.Spec)
-	if err != nil {
-		log.Warningf("Marshal tenant %s error %v", tenant.Name, err)
-		return nil, err
-	}
-
-	if meta.Annotations == nil {
-		meta.Annotations = make(map[string]string)
-	}
-	meta.Annotations[common.AnnotationTenant] = string(t)
-
-	// set labels
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
-	}
-	meta.Labels[common.LabelOwner] = common.OwnerCyclone
-
-	namespace := &v1.Namespace{
-		ObjectMeta: meta,
-	}
-
-	return namespace, nil
 }

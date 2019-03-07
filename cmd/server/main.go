@@ -83,8 +83,8 @@ func initialize(opts *Options) {
 		log.Fatalf("Load config from ConfigMap %s error: %s", opts.ConfigMap, err)
 	}
 
-	handler.InitHandlers(client)
-	log.Info("Init k8s client success")
+	handler.Init(client)
+	log.Info("Init handlers succeed.")
 
 	err = v1alpha1.CreateAdminTenant()
 	if err != nil {
