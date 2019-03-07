@@ -49,7 +49,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		return
 	}
 
-	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time exipred.
+	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
 	h.TimeoutProcessor.Add(originWfr)
 
 	wfr := originWfr.DeepCopy()

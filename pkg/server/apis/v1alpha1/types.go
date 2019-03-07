@@ -74,21 +74,21 @@ type IntegrationSpec struct {
 // exactly one of its members must be set, and the member must equal with the integration's type.
 type IntegrationSource struct {
 	// SonarQube describes info about external system sonar qube, and is used for code scanning in CI.
-	SonarQube *SonarQubeSource `json:"sonarQube"`
+	SonarQube *SonarQubeSource `json:"sonarQube,omitempty"`
 
 	// DockerRegistry describes info about external system docker registry, and is used to manager containers.
-	DockerRegistry *DockerRegistrySource `json:"dockerRegistry"`
+	DockerRegistry *DockerRegistrySource `json:"dockerRegistry,omitempty"`
 
 	// SCM describes info about external Source Code Management system, and is used to manager code.
-	SCM *SCMSource `json:"scm"`
+	SCM *SCMSource `json:"scm,omitempty"`
 
 	// Cluster contains information about clusters.
 	// Users can define which cluster will be used to run workload,
 	// and clusters integrated here can be used to deploy application in CD tasks.
-	Cluster *ClusterSource `json:"cluster"`
+	Cluster *ClusterSource `json:"cluster,omitempty"`
 
 	// General contains parameters defined by users.
-	General []ParameterItem `json:"general"`
+	General []ParameterItem `json:"general,omitempty"`
 }
 
 // ParameterItem defines a parameter
