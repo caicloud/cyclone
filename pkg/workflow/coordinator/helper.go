@@ -11,14 +11,6 @@ func getPodName() string {
 	return os.Getenv(common.EnvStagePodName)
 }
 
-func getWorkflowrunName() string {
-	return os.Getenv(common.EnvWorkflowrunName)
-}
-
-func getStageName() string {
-	return os.Getenv(common.EnvStageName)
-}
-
 func getWorkloadContainer() string {
 	return os.Getenv(common.EnvWorkloadContainerName)
 }
@@ -33,15 +25,6 @@ func getCycloneServerAddr() string {
 
 func getNamespace() string {
 	n := os.Getenv(common.EnvNamespace)
-	if n == "" {
-		return "default"
-	}
-
-	return n
-}
-
-func getMetaNamespace() string {
-	n := os.Getenv(common.EnvMetaNamespace)
 	if n == "" {
 		return "default"
 	}

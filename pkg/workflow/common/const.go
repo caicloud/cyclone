@@ -11,6 +11,12 @@ const (
 
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"
+	// EnvStageInfo is an environment which represents stage information.
+	EnvStageInfo = "STAGE_INFO"
+	// EnvWorkflowRunInfo is an environment which represents workflowrun information.
+	EnvWorkflowRunInfo = "WORKFLOWRUN_INFO"
+	// EnvOutputResourcesInfo is an environment which represents output resources information.
+	EnvOutputResourcesInfo = "OUTPUT_RESOURCES_INFO"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
 	EnvWorkflowrunName = "WORKFLOWRUN_NAME"
 	// EnvStageName is an environment which represents stage name.

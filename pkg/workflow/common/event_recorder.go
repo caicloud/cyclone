@@ -15,8 +15,6 @@ import (
 const (
 	// EventSourceWfrController represents events send from workflowrun controller.
 	EventSourceWfrController string = "WorkflowRunController"
-	// EventSourceCoordinator represents events send from coordinator.
-	EventSourceCoordinator string = "CycloneCoordinator"
 )
 
 // EventRecorder is used to record events to k8s, controllers here would use it to record
