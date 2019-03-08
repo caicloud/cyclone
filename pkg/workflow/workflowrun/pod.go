@@ -29,6 +29,7 @@ type PodBuilder struct {
 	pod              *corev1.Pod
 	pvcVolumes       map[string]string
 	executionContext *v1alpha1.ExecutionContext
+	outputResources  []*v1alpha1.Resource
 }
 
 // NewPodBuilder creates a new pod builder.
@@ -331,6 +332,8 @@ func (m *PodBuilder) ResolveOutputResources() error {
 			return err
 		}
 
+		m.outputResources = append(m.outputResources, resource)
+
 		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
 		// the images configured, otherwise use images given in the resource spec.
 		var image string
@@ -506,7 +509,23 @@ func (m *PodBuilder) AddCoordinator() error {
 		break
 	}
 
-	log.Errorf("%s -- %s", m.executionContext.Namespace, m.wfr.Namespace)
+	stgInfo, err := json.Marshal(m.stg)
+	if err != nil {
+		log.Errorf("Marshal stage %s error %s", m.stg.Name, err)
+		return err
+	}
+
+	wfrInfo, err := json.Marshal(m.wfr)
+	if err != nil {
+		log.Errorf("Marshal workflowrun %s error %s", m.wfr.Name, err)
+		return err
+	}
+
+	rscInfo, err := json.Marshal(m.outputResources)
+	if err != nil {
+		log.Errorf("Marshal output resources error %s", err)
+		return err
+	}
 
 	coordinator := corev1.Container{
 		Name:  common.CoordinatorSidecarName,
@@ -517,20 +536,8 @@ func (m *PodBuilder) AddCoordinator() error {
 				Value: m.pod.Name,
 			},
 			{
-				Name:  common.EnvMetaNamespace,
-				Value: m.wfr.Namespace,
-			},
-			{
 				Name:  common.EnvNamespace,
 				Value: m.executionContext.Namespace,
-			},
-			{
-				Name:  common.EnvWorkflowrunName,
-				Value: m.wfr.Name,
-			},
-			{
-				Name:  common.EnvStageName,
-				Value: m.stage,
 			},
 			{
 				Name:  common.EnvWorkloadContainerName,
@@ -539,6 +546,18 @@ func (m *PodBuilder) AddCoordinator() error {
 			{
 				Name:  common.EnvCycloneServerAddr,
 				Value: controller.Config.CycloneServerAddr,
+			},
+			{
+				Name:  common.EnvStageInfo,
+				Value: string(stgInfo),
+			},
+			{
+				Name:  common.EnvWorkflowRunInfo,
+				Value: string(wfrInfo),
+			},
+			{
+				Name:  common.EnvOutputResourcesInfo,
+				Value: string(rscInfo),
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{

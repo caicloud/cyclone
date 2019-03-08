@@ -7,7 +7,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 
 	"github.com/caicloud/cyclone/pkg/common"
 	k8sclient "github.com/caicloud/cyclone/pkg/common"
@@ -33,7 +32,7 @@ func main() {
 	}
 
 	// New workflow stage coordinator.
-	c, err := coordinator.NewCoordinator(client, *kubeConfigPath)
+	c, err := coordinator.NewCoordinator(client)
 	if err != nil {
 		log.Errorf("New coornidator failed: %v", err)
 		os.Exit(1)
@@ -42,13 +41,11 @@ func main() {
 	defer func() {
 		if err != nil {
 			log.Error(message)
-			c.Recorder.Eventf(c.Wfr, corev1.EventTypeWarning, "StageFailed", message)
 			// Wait for sending event
 			time.Sleep(1 * time.Second)
 			os.Exit(1)
 		} else {
 			log.Info(message)
-			c.Recorder.Eventf(c.Wfr, corev1.EventTypeNormal, "StageSucceeded", message)
 			// Wait for sending event
 			time.Sleep(1 * time.Second)
 			os.Exit(0)

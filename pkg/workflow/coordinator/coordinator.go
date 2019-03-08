@@ -1,16 +1,13 @@
 package coordinator
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -22,71 +19,74 @@ import (
 // Coordinator is a struct which contains infomations
 // will be used in workflow sidecar named coordinator.
 type Coordinator struct {
-	runtimeExec       RuntimeExecutor
+	runtimeExec RuntimeExecutor
+	// workloadContainer represents name of the workload container.
 	workloadContainer string
-	// Stage which this run pod belonged to.
+	// Stage relate to this pod.
 	Stage *v1alpha1.Stage
-	// WorkflowRun which triggered this run pod.
+	// Wfr represents the WorkflowRun which triggered this pod.
 	Wfr *v1alpha1.WorkflowRun
-	// Event recorder.
-	Recorder record.EventRecorder
+	// OutputResources represents output resources the related stage configured.
+	OutputResources []*v1alpha1.Resource
 }
 
 // RuntimeExecutor is an interface defined some methods
 // to communicate with k8s container runtime.
 type RuntimeExecutor interface {
+	// WaitContainers waits selected containers to state.
 	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
+	// CollectLog collects container logs to cyclone server.
 	CollectLog(container, wrorkflowrun, stage string) error
+	// CopyFromContainer copy a file or directory from container:path to dst.
 	CopyFromContainer(container, path, dst string) error
+	// GetPod get the stage related pod.
 	GetPod() (*core_v1.Pod, error)
-	GetResource(name string) (*v1alpha1.Resource, error)
 }
 
 // NewCoordinator create a coordinator instance.
-func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, error) {
-	metaNamespace := getMetaNamespace()
-	namespace := getNamespace()
-	stageName := getStageName()
-	wfrName := getWorkflowrunName()
+func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
+	// Get stage from Env
 	var stage *v1alpha1.Stage
-	var wfr *v1alpha1.WorkflowRun
-
-	backoff := wait.Backoff{
-		Duration: time.Duration(time.Second),
-		Factor:   2,
-		Jitter:   1,
-		Steps:    3,
+	stageInfo := os.Getenv(common.EnvStageInfo)
+	if stageInfo == "" {
+		return nil, fmt.Errorf("get stage info from env failed")
 	}
 
-	err := wait.ExponentialBackoff(backoff, func() (done bool, err error) {
-		stage, err = client.CycloneV1alpha1().Stages(metaNamespace).Get(stageName, meta_v1.GetOptions{})
-		if err != nil {
-			log.WithField("error", err).
-				WithField("stageName", stageName).Info("Get stage error")
-			return false, nil
-		}
-
-		wfr, err = client.CycloneV1alpha1().WorkflowRuns(metaNamespace).Get(wfrName, meta_v1.GetOptions{})
-		if err != nil {
-			log.WithField("error", err).
-				WithField("wfrName", wfrName).Info("Get wfr error")
-			return false, nil
-		}
-
-		return true, nil
-	})
+	err := json.Unmarshal([]byte(stageInfo), &stage)
 	if err != nil {
-		log.WithField("stageName", stageName).WithField("wfrName", wfrName).
-			WithField("error", err).Error("Get stage or workflowrun failed")
-		return nil, err
+		return nil, fmt.Errorf("unmarshal stage info error %s", err)
+	}
+
+	// Get workflowrun from Env
+	var wfr *v1alpha1.WorkflowRun
+	wfrInfo := os.Getenv(common.EnvWorkflowRunInfo)
+	if stageInfo == "" {
+		return nil, fmt.Errorf("get workflowrun info from env failed")
+	}
+
+	err = json.Unmarshal([]byte(wfrInfo), &wfr)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal workflowrun info error %s", err)
+	}
+
+	// Get output resources from Env
+	var rscs []*v1alpha1.Resource
+	rscInfo := os.Getenv(common.EnvOutputResourcesInfo)
+	if rscInfo == "" {
+		return nil, fmt.Errorf("get output resources info from env failed")
+	}
+
+	err = json.Unmarshal([]byte(rscInfo), &rscs)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal output resources info error %s", err)
 	}
 
 	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, metaNamespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
+		runtimeExec:       k8sapi.NewK8sapiExecutor(client, getNamespace(), getPodName(), getCycloneServerAddr()),
 		workloadContainer: getWorkloadContainer(),
 		Stage:             stage,
 		Wfr:               wfr,
-		Recorder:          common.GetEventRecorder(client, common.EventSourceCoordinator),
+		OutputResources:   rscs,
 	}, nil
 }
 
@@ -240,28 +240,26 @@ func (co *Coordinator) CollectResources() error {
 		return fmt.Errorf("get stage output resources failed, stage pod nil")
 	}
 
-	reources := co.Stage.Spec.Pod.Outputs.Resources
-	if len(reources) == 0 {
+	resources := co.Stage.Spec.Pod.Outputs.Resources
+	if len(resources) == 0 {
 		log.Info("output resources empty, no need to collect.")
 		return nil
 	}
 
-	log.WithField("resources", reources).Info("start to collect.")
+	log.WithField("resources", resources).Info("start to collect.")
 
 	// Create the resources directory if not exist.
 	fileutil.CreateDirectory(common.CoordinatorResourcesPath)
 
-	for _, resource := range reources {
-		r, err := co.runtimeExec.GetResource(resource.Name)
-		if err != nil {
-			log.WithField("resource", r.Name).Error("Get resource error: ", err)
-			return err
-		}
-
-		// If the resource is persisted in PVC, no need to copy here, Cyclone
-		// will mount it to resolver container directly.
-		if r.Spec.Persistent != nil {
-			continue
+	for _, resource := range resources {
+		for _, r := range co.OutputResources {
+			if r.Name == resource.Name {
+				// If the resource is persisted in PVC, no need to copy here, Cyclone
+				// will mount it to resolver container directly.
+				if r.Spec.Persistent != nil {
+					continue
+				}
+			}
 		}
 
 		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
@@ -289,13 +287,13 @@ func (co *Coordinator) NotifyResolvers() error {
 		return fmt.Errorf("get stage output resources failed, stage pod nil")
 	}
 
-	reources := co.Stage.Spec.Pod.Outputs.Resources
-	if len(reources) == 0 {
+	resources := co.Stage.Spec.Pod.Outputs.Resources
+	if len(resources) == 0 {
 		log.Info("output resources empty, no need to notify resolver.")
 		return nil
 	}
 
-	log.WithField("resources", reources).Info("start to notify resolver.")
+	log.WithField("resources", resources).Info("start to notify resolver.")
 
 	exist := fileutil.CreateDirectory(common.CoordinatorResolverNotifyPath)
 	log.WithField("exist", exist).WithField("notifydir", common.CoordinatorResolverNotifyPath).Info()

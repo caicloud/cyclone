@@ -9,7 +9,6 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
@@ -18,21 +17,17 @@ import (
 // Executor ...
 type Executor struct {
 	client        clientset.Interface
-	kubeconfig    string
 	namespace     string
-	metaNamespace string
 	podName       string
 	cycloneClient cycloneserver.Client
 }
 
 // NewK8sapiExecutor ...
-func NewK8sapiExecutor(namespace, metaNamespace, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *Executor {
+func NewK8sapiExecutor(client clientset.Interface, namespace, pod string, cycloneServer string) *Executor {
 	return &Executor{
 		namespace:     namespace,
-		metaNamespace: metaNamespace,
 		podName:       pod,
 		client:        client,
-		kubeconfig:    kubecfg,
 		cycloneClient: cycloneserver.NewClient(cycloneServer),
 	}
 }
@@ -94,11 +89,6 @@ func (k *Executor) GetPod() (*core_v1.Pod, error) {
 	return k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
 }
 
-// GetResource get resource by its name
-func (k *Executor) GetResource(name string) (*v1alpha1.Resource, error) {
-	return k.client.CycloneV1alpha1().Resources(k.metaNamespace).Get(name, meta_v1.GetOptions{})
-}
-
 // CollectLog collects container logs.
 func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 	log.Infof("Start to collect %s log", container)
@@ -123,7 +113,7 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 	return nil
 }
 
-// CopyFromContainer copy a file/directory frome container:path to dst.
+// CopyFromContainer copy a file/directory from container:path to dst.
 func (k *Executor) CopyFromContainer(container, path, dst string) error {
 	//args := []string{"--kubeconfig", k.kubeconfig, "cp", fmt.Sprintf("%s/%s:%s", k.namespace, k.podName, path), "-c", container, dst}
 	//
