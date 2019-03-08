@@ -27,13 +27,13 @@ const (
 	TriggerTypeCron TriggerType = "Cron"
 
 	// TriggerTypeWebhook indicates webhook trigger
-	WebhookTrigger TriggerType = "Webhook"
+	TriggerTypeWebhook TriggerType = "Webhook"
 )
 
 // WorkflowTriggerSpec defines workflow trigger definition.
 type WorkflowTriggerSpec struct {
 	// Type of this trigger, Cron or Webhook
-	Type TriggerType `json:"triggerType"`
+	Type TriggerType `json:"type"`
 	// Parameters of the trigger to run workflow
 	Parameters []ParameterItem `json:"parameters"`
 	// CronTrigger represents cron trigger config.
@@ -46,7 +46,7 @@ type WorkflowTriggerSpec struct {
 
 // CronTrigger represents the cron trigger policy.
 type CronTrigger struct {
-	Schedule string `json:schedule`
+	Schedule string `json:"schedule"`
 }
 
 // WorkflowTriggerStatus describes status of a workflow trigger
