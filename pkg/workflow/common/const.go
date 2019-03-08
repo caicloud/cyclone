@@ -23,8 +23,6 @@ const (
 	EnvStageName = "STAGE_NAME"
 	// EnvWorkloadContainerName is an environment which represents the workload container name.
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
-	// EnvMetaNamespace is namespace of the Workflow, WorkflowRun, etc...
-	EnvMetaNamespace = "META_NAMESPACE"
 	// EnvNamespace is an environment which represents namespace.
 	EnvNamespace = "NAMESPACE"
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
@@ -37,13 +35,13 @@ const (
 	// sidecars in workflow:
 	// - Those added automatically by Cyclone such as coordinator, resource resolvers.
 	// - Those specified by users in stage spec as workload.
-	CycloneSidecarPrefix = "cyclone-sidecar-"
+	CycloneSidecarPrefix = "csc-"
 
 	// WorkloadSidecarPrefix defines workload sidecar container name prefix.
-	WorkloadSidecarPrefix = "workload-sidecar-"
+	WorkloadSidecarPrefix = "wsc-"
 
 	// CoordinatorSidecarName defines name of coordinator container.
-	CoordinatorSidecarName = CycloneSidecarPrefix + "coordinator"
+	CoordinatorSidecarName = CycloneSidecarPrefix + "co"
 
 	// ResolverDefaultWorkspacePath is workspace path in resource resolver containers.
 	// Following files or directories will be in this workspace.

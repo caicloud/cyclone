@@ -250,7 +250,7 @@ func (suite *PodBuilderSuite) SetupTest() {
 										WorkingDir: "{{ dir }}",
 									},
 									{
-										Name: "workload-sidecar-c2",
+										Name: "wsc-c2",
 										Resources: corev1.ResourceRequirements{
 											Requests: corev1.ResourceList{
 												corev1.ResourceCPU: resource.MustParse("100m"),
@@ -378,7 +378,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
 	initContainer := builder.pod.Spec.InitContainers[0]
-	assert.Equal(suite.T(), "git", initContainer.Name)
+	assert.Equal(suite.T(), "i1", initContainer.Name)
 	assert.Equal(suite.T(), GetResourceVolumeName("git"), initContainer.VolumeMounts[0].Name)
 	assert.Equal(suite.T(), "", initContainer.VolumeMounts[0].SubPath)
 	var envs []string
@@ -392,7 +392,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
 	initContainer = builder.pod.Spec.InitContainers[0]
-	assert.Equal(suite.T(), "git-persistent", initContainer.Name)
+	assert.Equal(suite.T(), "i1", initContainer.Name)
 	assert.Equal(suite.T(), common.InputResourceVolumeName("git-persistent"), initContainer.VolumeMounts[0].Name)
 	assert.Equal(suite.T(), "/persistent", initContainer.VolumeMounts[0].SubPath)
 	var resourceMount corev1.VolumeMount
@@ -416,7 +416,7 @@ func (suite *PodBuilderSuite) TestResolveOutputResources() {
 
 	var sidecar corev1.Container
 	for _, c := range builder.pod.Spec.Containers {
-		if c.Name == (common.CycloneSidecarPrefix + "image") {
+		if c.Name == OutputContainerName(1) {
 			sidecar = c
 			break
 		}

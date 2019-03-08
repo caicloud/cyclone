@@ -414,7 +414,7 @@ func (o *operator) GC(lastTry bool) error {
 	if executionContext.PVC != "" {
 		gcPod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("wfrgc--%s", o.wfr.Name),
+				Name:      GCPodName(o.wfr.Name),
 				Namespace: executionContext.Namespace,
 				Labels: map[string]string{
 					common.WorkflowLabelName: "true",
