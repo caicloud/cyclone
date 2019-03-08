@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,9 @@ func ListStages(ctx context.Context, project, tenant string, pagination *types.P
 
 // GetStage ...
 func GetStage(ctx context.Context, project, stage, tenant string) (*v1alpha1.Stage, error) {
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
+	stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
+
+	return stg, cerr.ConvertK8sError(err)
 }
 
 // UpdateStage ...
@@ -70,7 +73,7 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return stg, nil
@@ -78,5 +81,6 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 
 // DeleteStage ...
 func DeleteStage(ctx context.Context, project, stage, tenant string) error {
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(stage, nil)
+	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(stage, nil)
+	return cerr.ConvertK8sError(err)
 }

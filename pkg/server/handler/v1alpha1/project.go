@@ -12,6 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // ListProjects list projects the given tenant has access to.
@@ -58,7 +59,7 @@ func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, er
 	project, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
 	if err != nil {
 		log.Infof("get project %v of tenant %v error %v", name, tenant, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 	return project, nil
 }
@@ -79,7 +80,7 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return project, nil
@@ -87,5 +88,7 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 
 // DeleteProject deletes a project with the given tenant and project name.
 func DeleteProject(ctx context.Context, tenant, project string) error {
-	return handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
+	err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
+
+	return cerr.ConvertK8sError(err)
 }
