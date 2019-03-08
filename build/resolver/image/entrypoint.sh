@@ -49,8 +49,12 @@ if [ -z ${IMAGE+x} ]; then
 fi
 echo  "Image: ${IMAGE}"
 
-# Generate config.json for docker registry
-if [ -n ${USER+x} ]; then
+if [ -z ${USER+x} ]; then
+    echo "Warn: USER is unset, will $COMMAND image anonymously.";
+else
+    echo "To $COMMAND image as user $USER."
+
+    # Generate config.json for docker registry
     if [ ! -d /root/.docker ]; then
         mkdir -p /root/.docker
     fi
@@ -84,7 +88,7 @@ case $COMMAND in
         ;;
     push )
         wait_ok
-        if [ -e ${WORKDIR}/data/${IMAGE_FILE} ]; then
+        if [ ! -z ${IMAGE_FILE+x} ]; then
             echo "Load images from file ${IMAGE_FILE}"
             docker load -i ${WORKDIR}/data/${IMAGE_FILE}
         fi
