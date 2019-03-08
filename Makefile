@@ -51,6 +51,9 @@ SCENE ?= cicd
 # PVC used to run workflow
 PVC ?=
 
+# Namespace where workflow would run, the above PVC should belong to this namespace
+EXEC_NAMESPACE ?= default
+
 #
 # These variables should not need tweaking.
 #
@@ -193,11 +196,11 @@ swagger:
 	  nirvana api --output web/public pkg/server/apis"
 
 deploy:
-	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC}
+	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC} --execNamespace=${EXEC_NAMESPACE}
 	kubectl create -f ./manifests/.generated/cyclone.yaml
 
 undeploy:
-	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC}
+	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC} --execNamespace=${EXEC_NAMESPACE}
 	kubectl delete -f ./manifests/.generated/cyclone.yaml
 
 run_examples:

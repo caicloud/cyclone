@@ -20,14 +20,16 @@ type Executor struct {
 	client        clientset.Interface
 	kubeconfig    string
 	namespace     string
+	metaNamespace string
 	podName       string
 	cycloneClient cycloneserver.Client
 }
 
 // NewK8sapiExecutor ...
-func NewK8sapiExecutor(n string, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *Executor {
+func NewK8sapiExecutor(namespace, metaNamespace, pod string, client clientset.Interface, cycloneServer string, kubecfg string) *Executor {
 	return &Executor{
-		namespace:     n,
+		namespace:     namespace,
+		metaNamespace: metaNamespace,
 		podName:       pod,
 		client:        client,
 		kubeconfig:    kubecfg,
@@ -46,6 +48,7 @@ func (k *Executor) WaitContainers(expectState common.ContainerState, selectors .
 		case <-ticker.C:
 			pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
 			if err != nil {
+				log.WithField("ns", k.namespace).WithField("pod", k.podName).Error("get pod failed")
 				return err
 			}
 
@@ -93,7 +96,7 @@ func (k *Executor) GetPod() (*core_v1.Pod, error) {
 
 // GetResource get resource by its name
 func (k *Executor) GetResource(name string) (*v1alpha1.Resource, error) {
-	return k.client.CycloneV1alpha1().Resources(k.namespace).Get(name, meta_v1.GetOptions{})
+	return k.client.CycloneV1alpha1().Resources(k.metaNamespace).Get(name, meta_v1.GetOptions{})
 }
 
 // CollectLog collects container logs.

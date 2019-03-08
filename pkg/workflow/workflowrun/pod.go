@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -22,24 +21,26 @@ import (
 
 // PodBuilder is builder used to build pod for stage
 type PodBuilder struct {
-	client     clientset.Interface
-	wf         *v1alpha1.Workflow
-	wfr        *v1alpha1.WorkflowRun
-	stg        *v1alpha1.Stage
-	stage      string
-	pod        *corev1.Pod
-	pvcVolumes map[string]string
+	client           clientset.Interface
+	wf               *v1alpha1.Workflow
+	wfr              *v1alpha1.WorkflowRun
+	stg              *v1alpha1.Stage
+	stage            string
+	pod              *corev1.Pod
+	pvcVolumes       map[string]string
+	executionContext *v1alpha1.ExecutionContext
 }
 
 // NewPodBuilder creates a new pod builder.
 func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage string) *PodBuilder {
 	return &PodBuilder{
-		client:     client,
-		wf:         wf,
-		wfr:        wfr,
-		stage:      stage,
-		pod:        &corev1.Pod{},
-		pvcVolumes: make(map[string]string),
+		client:           client,
+		wf:               wf,
+		wfr:              wfr,
+		stage:            stage,
+		pod:              &corev1.Pod{},
+		pvcVolumes:       make(map[string]string),
+		executionContext: GetExecutionContext(wfr),
 	}
 }
 
@@ -75,21 +76,14 @@ func (m *PodBuilder) Prepare() error {
 	podName := fmt.Sprintf("%s-%s-%s", m.wf.Name, m.stage, strings.Replace(id.String(), "-", "", -1))
 	m.pod.ObjectMeta = metav1.ObjectMeta{
 		Name:      podName,
-		Namespace: m.wfr.Namespace,
+		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
 			common.WorkflowLabelName: "true",
 		},
 		Annotations: map[string]string{
-			common.WorkflowRunAnnotationName: m.wfr.Name,
-			common.StageAnnotationName:       m.stage,
-		},
-		OwnerReferences: []metav1.OwnerReference{
-			{
-				APIVersion: v1alpha1.APIVersion,
-				Kind:       reflect.TypeOf(v1alpha1.WorkflowRun{}).Name(),
-				Name:       m.wfr.Name,
-				UID:        m.wfr.UID,
-			},
+			common.WorkflowRunAnnotationName:   m.wfr.Name,
+			common.StageAnnotationName:         m.stage,
+			common.MetaNamespaceAnnotationName: m.wfr.Namespace,
 		},
 	}
 
@@ -144,11 +138,11 @@ func (m *PodBuilder) CreateVolumes() error {
 		},
 	})
 
-	// Add common PVC volume to pod if configured.
-	if controller.Config.PVC != "" {
-		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, controller.Config.PVC); n != common.DefaultPvVolumeName {
-			log.WithField("volume", n).Error("Another volume already exist for the PVC: ", controller.Config.PVC)
-			return fmt.Errorf("%s already in another volume %s", controller.Config.PVC, n)
+	// Add PVC volume to pod if configured.
+	if m.executionContext.PVC != "" {
+		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, m.executionContext.PVC); n != common.DefaultPvVolumeName {
+			log.WithField("volume", n).Error("Another volume already exist for the PVC: ", m.executionContext.PVC)
+			return fmt.Errorf("%s already in another volume %s", m.executionContext.PVC, n)
 		}
 	}
 
@@ -246,7 +240,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 		if persistent != nil {
 			subPath = persistent.Path
 			volumeName = m.CreatePVCVolume(common.InputResourceVolumeName(r.Name), persistent.PVC)
-		} else if controller.Config.PVC == "" {
+		} else if m.executionContext.PVC == "" {
 			volumeName = GetResourceVolumeName(resource.Name)
 			m.CreateEmptyDirVolume(volumeName)
 			subPath = ""
@@ -420,7 +414,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 
 // ResolveInputArtifacts mount each input artifact from PVC.
 func (m *PodBuilder) ResolveInputArtifacts() error {
-	if controller.Config.PVC == "" && len(m.stg.Spec.Pod.Inputs.Artifacts) > 0 {
+	if m.executionContext.PVC == "" && len(m.stg.Spec.Pod.Inputs.Artifacts) > 0 {
 		return fmt.Errorf("artifacts not supported when no PVC provided, but %d input artifacts found", len(m.stg.Spec.Pod.Inputs.Artifacts))
 	}
 
@@ -486,7 +480,7 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 
 // AddVolumeMounts add common PVC  to workload containers
 func (m *PodBuilder) AddVolumeMounts() error {
-	if controller.Config.PVC != "" {
+	if m.executionContext.PVC != "" {
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
 			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
@@ -512,6 +506,8 @@ func (m *PodBuilder) AddCoordinator() error {
 		break
 	}
 
+	log.Errorf("%s -- %s", m.executionContext.Namespace, m.wfr.Namespace)
+
 	coordinator := corev1.Container{
 		Name:  common.CoordinatorSidecarName,
 		Image: controller.Config.Images[controller.CoordinatorImage],
@@ -521,8 +517,12 @@ func (m *PodBuilder) AddCoordinator() error {
 				Value: m.pod.Name,
 			},
 			{
-				Name:  common.EnvNamespace,
+				Name:  common.EnvMetaNamespace,
 				Value: m.wfr.Namespace,
+			},
+			{
+				Name:  common.EnvNamespace,
+				Value: m.executionContext.Namespace,
 			},
 			{
 				Name:  common.EnvWorkflowrunName,
@@ -553,7 +553,7 @@ func (m *PodBuilder) AddCoordinator() error {
 		},
 		ImagePullPolicy: controller.ImagePullPolicy(),
 	}
-	if controller.Config.PVC != "" {
+	if m.executionContext.PVC != "" {
 		coordinator.VolumeMounts = append(coordinator.VolumeMounts, corev1.VolumeMount{
 			Name:      common.DefaultPvVolumeName,
 			MountPath: common.CoordinatorWorkspacePath + "artifacts",
@@ -576,10 +576,6 @@ func (m *PodBuilder) InjectEnvs() error {
 		{
 			Name:  common.EnvStageName,
 			Value: m.stage,
-		},
-		{
-			Name:  common.EnvNamespace,
-			Value: m.wfr.Namespace,
 		},
 	}
 	var containers []corev1.Container
@@ -649,6 +645,12 @@ func (m *PodBuilder) ApplyResourceRequirements() error {
 	return nil
 }
 
+// ApplyServiceAccount applies service account to pod
+func (m *PodBuilder) ApplyServiceAccount() error {
+	m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
+	return nil
+}
+
 // Build ...
 func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
@@ -697,6 +699,11 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	}
 
 	err = m.ApplyResourceRequirements()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ApplyServiceAccount()
 	if err != nil {
 		return nil, err
 	}

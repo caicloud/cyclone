@@ -29,7 +29,7 @@ type WorkflowRunSpec struct {
 	StartStages []string `json:"startStages"`
 	// Stages in the workflow to end execution
 	EndStages []string `json:"endStages"`
-	// Maximum time this workflow should run
+	// Maximum time this workflow can run
 	Timeout string `json:"timeout"`
 	// ServiceAccount used in the workflow execution
 	ServiceAccount string `json:"serviceAccount"`
@@ -37,14 +37,27 @@ type WorkflowRunSpec struct {
 	Resources []ParameterConfig `json:"resources"`
 	// Stage parameters
 	Stages []ParameterConfig `json:"stages"`
+	// Execution context which specifies namespace and PVC used
+	ExecutionContext *ExecutionContext `json:"executionContext"`
 }
 
 // ParameterConfig configures parameters of a resource or a stage.
 type ParameterConfig struct {
 	// Whose parameters to configure
 	Name string `json:"name"`
-	// Parameters
+	// Parameters ...
 	Parameters []ParameterItem `json:"parameters"`
+}
+
+// ExecutionContext is execution context of a workflow. Namespace, pvc
+// cluster info would be defined here.
+type ExecutionContext struct {
+	// TODO(ChenDe): Add multi-cluster support
+	// ...
+	// Namespace is namespace where to run workflow
+	Namespace string `json:"namespace"`
+	// PVC is the PVC used to run workflow
+	PVC string `json:"pvc"`
 }
 
 // WorkflowRunStatus records workflow running status.

@@ -44,6 +44,7 @@ type RuntimeExecutor interface {
 
 // NewCoordinator create a coordinator instance.
 func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, error) {
+	metaNamespace := getMetaNamespace()
 	namespace := getNamespace()
 	stageName := getStageName()
 	wfrName := getWorkflowrunName()
@@ -58,14 +59,14 @@ func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, e
 	}
 
 	err := wait.ExponentialBackoff(backoff, func() (done bool, err error) {
-		stage, err = client.CycloneV1alpha1().Stages(namespace).Get(stageName, meta_v1.GetOptions{})
+		stage, err = client.CycloneV1alpha1().Stages(metaNamespace).Get(stageName, meta_v1.GetOptions{})
 		if err != nil {
 			log.WithField("error", err).
 				WithField("stageName", stageName).Info("Get stage error")
 			return false, nil
 		}
 
-		wfr, err = client.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, meta_v1.GetOptions{})
+		wfr, err = client.CycloneV1alpha1().WorkflowRuns(metaNamespace).Get(wfrName, meta_v1.GetOptions{})
 		if err != nil {
 			log.WithField("error", err).
 				WithField("wfrName", wfrName).Info("Get wfr error")
@@ -81,7 +82,7 @@ func NewCoordinator(client clientset.Interface, kubecfg string) (*Coordinator, e
 	}
 
 	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
+		runtimeExec:       k8sapi.NewK8sapiExecutor(namespace, metaNamespace, getPodName(), client, getCycloneServerAddr(), kubecfg),
 		workloadContainer: getWorkloadContainer(),
 		Stage:             stage,
 		Wfr:               wfr,

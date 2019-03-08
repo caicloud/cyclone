@@ -40,6 +40,15 @@ func getNamespace() string {
 	return n
 }
 
+func getMetaNamespace() string {
+	n := os.Getenv(common.EnvMetaNamespace)
+	if n == "" {
+		return "default"
+	}
+
+	return n
+}
+
 // refineContainerID strips the 'docker://' prefix from k8s ContainerID string
 func refineContainerID(id string) string {
 	schemeIndex := strings.Index(id, "://")

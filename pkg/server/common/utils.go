@@ -15,7 +15,7 @@ func NamespaceTenant(n string) string {
 	return strings.TrimPrefix(n, TenantNamespacePrefix)
 }
 
-// TenantPVC returns pvc name related the tenant
+// TenantPVC returns pvc name related to the tenant
 func TenantPVC(tenant string) string {
 	return TenantPVCPrefix + tenant
 }

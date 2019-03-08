@@ -16,10 +16,11 @@ import (
 
 // Operator ...
 type Operator struct {
-	client      clientset.Interface
-	workflowRun string
-	stage       string
-	pod         *corev1.Pod
+	client        clientset.Interface
+	workflowRun   string
+	stage         string
+	metaNamespace string
+	pod           *corev1.Pod
 }
 
 // NewOperator ...
@@ -33,19 +34,24 @@ func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error)
 	if !ok {
 		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.StageAnnotationName)
 	}
+	metaNamespace, ok := annotations[common.MetaNamespaceAnnotationName]
+	if !ok {
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.MetaNamespaceAnnotationName)
+	}
 
 	return &Operator{
-		client:      client,
-		workflowRun: wfr,
-		stage:       stage,
-		pod:         pod,
+		client:        client,
+		workflowRun:   wfr,
+		stage:         stage,
+		metaNamespace: metaNamespace,
+		pod:           pod,
 	}, nil
 }
 
 // OnDelete handles the situation when a stage pod gotten delete. It updates
 // corresponding WorkflowRun's status.
 func (p *Operator) OnDelete() error {
-	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
+	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
@@ -73,9 +79,10 @@ func (p *Operator) OnDelete() error {
 
 // OnUpdated ...
 func (p *Operator) OnUpdated() error {
-	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.pod.Namespace).Get(p.workflowRun, metav1.GetOptions{})
+	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(p.workflowRun, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
+			log.WithField("wfr", p.workflowRun).WithField("ns", p.metaNamespace).Warn("wfr not found")
 			return nil
 		}
 		log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
