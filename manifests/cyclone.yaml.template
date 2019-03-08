@@ -45,9 +45,9 @@ data:
         }
       },
       "execution_context": {
-        "namespace": "default",
+        "namespace": "__EXE_NAMESPACE__",
         "pvc": "__PVC__",
-        "service_account": "",
+        "service_account": "cyclone-coordinator",
       },
       "secret": "cyclone-secrets",
       "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099"
@@ -191,3 +191,43 @@ spec:
       - hostPath:
           path: /etc/localtime
         name: local-timezone
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cyclone-coordinator
+  namespace: __EXE_NAMESPACE__
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cyclone-coordinator
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "watch", "list", "create", "update"]
+- apiGroups: ["cyclone.io"]
+  resources: ["*"]
+  verbs: ["get", "watch", "list"]
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cyclone-coordinator
+subjects:
+- kind: ServiceAccount
+  name: cyclone-coordinator
+  namespace: __EXE_NAMESPACE__
+roleRef:
+  kind: ClusterRole
+  name: cyclone-coordinator
+  apiGroup: rbac.authorization.k8s.io
