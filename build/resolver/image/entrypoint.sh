@@ -8,7 +8,8 @@ USAGE=$(cat <<-END
     Usage:
         $ docker run -it --rm \\
             -e IMAGE=docker.io/library/alpine:3.6 \\
-            -e AUTH=admin:Pwd123456 \\
+            -e USER=admin \\
+            -e PASSWORD=Pwd123456 \\
             -v /var/run/docker.sock:/var/run/docker.sock \\
             image-resource-resolver:latest <COMMAND>
 
@@ -21,7 +22,7 @@ USAGE=$(cat <<-END
      users should set REGISTRY, REPOSITORY and TAG to specify the image. If registry used is docker hub, registry
      can be omitted.
 
-     AUTH provides basic authentication information to the registry, it must be in format <username>:<password>
+     USER, Password provide basic authentication information to the registry.
 
      IMAGE_FILE is an optional variable, if set, image will be loaded from this tar file.
 
@@ -49,7 +50,7 @@ fi
 echo  "Image: ${IMAGE}"
 
 # Generate config.json for docker registry
-if [ -n ${AUTH+x} ]; then
+if [ -n ${USER+x} ]; then
     if [ ! -d /root/.docker ]; then
         mkdir -p /root/.docker
     fi
@@ -57,12 +58,12 @@ if [ -n ${AUTH+x} ]; then
 {
   "auths": {
     "${IMAGE%/*}": {
-        "auth": "$(echo -n $AUTH | base64)"
+        "auth": "$(echo -n $USER:${PASSWORD:-} | base64)"
     }
   }
 }
 END
-    ls /root/.docker/config.json
+    ls -al /root/.docker/config.json
 fi
 
 pull() {
