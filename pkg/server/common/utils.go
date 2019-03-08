@@ -47,5 +47,10 @@ func WorkerClustersSelector() string {
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
 func ProjectSelector(project string) string {
-	return LabelProject + "=" + project
+	return LabelProjectName + "=" + project
+}
+
+// WorkflowSelector is a selector for cyclone CRD resources which have corresponding workflow label
+func WorkflowSelector(workflow string) string {
+	return LabelWorkflowName + "=" + workflow
 }

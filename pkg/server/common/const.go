@@ -18,8 +18,11 @@ const (
 	// AnnotationTenant is the annotation key used for namespace to relate tenant information
 	AnnotationTenant = "cyclone.io/tenant-info"
 
-	// LabelProject is the label key used to indicate the project which the resources belongs to
-	LabelProject = "cyclone.io/project"
+	// LabelProjectName is the label key used to indicate the project which the resources belongs to
+	LabelProjectName = "cyclone.io/project-name"
+
+	// LabelWorkflowName is the label key used to indicate the workflow which the resources belongs to
+	LabelWorkflowName = "cyclone.io/workflow-name"
 
 	// LabelIntegrationType is the label key used to indicate type of integration
 	LabelIntegrationType = "cyclone.io/integration-type"

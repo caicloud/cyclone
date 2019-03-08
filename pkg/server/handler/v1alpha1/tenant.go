@@ -23,7 +23,7 @@ import (
 func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) {
 	modifiers := []CreationModifier{GenerateNameModifier, TenantModifier}
 	for _, modifier := range modifiers {
-		err := modifier("", "", tenant)
+		err := modifier("", "", "", tenant)
 		if err != nil {
 			return nil, err
 		}

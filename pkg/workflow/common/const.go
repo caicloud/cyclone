@@ -63,8 +63,8 @@ const (
 
 	// WorkflowLabelName is label to indicate resources created by Cyclone workflow engine
 	WorkflowLabelName = "cyclone.io/workflow"
-	// WorkflowRunLabelName is label applied to WorkflowRun to specify Workflow
-	WorkflowRunLabelName = "cyclone.io/workflow-name"
+	// WorkflowNameLabelName is label applied to WorkflowRun to specify Workflow
+	WorkflowNameLabelName = "cyclone.io/workflow-name"
 	// PodLabelSelector is selector used to select pod created by Cyclone stages
 	PodLabelSelector = "cyclone.io/workflow==true"
 	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to

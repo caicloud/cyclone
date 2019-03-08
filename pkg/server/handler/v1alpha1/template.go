@@ -61,7 +61,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagin
 func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
-		err := modifier("", tenant, stage)
+		err := modifier(tenant, "", "", stage)
 		if err != nil {
 			return nil, err
 		}

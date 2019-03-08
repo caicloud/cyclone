@@ -44,7 +44,7 @@ func ListProjects(ctx context.Context, tenant string, pagination *types.Paginati
 func CreateProject(ctx context.Context, tenant string, project *v1alpha1.Project) (*v1alpha1.Project, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
-		err := modifier("", tenant, project)
+		err := modifier(tenant, "", "", project)
 		if err != nil {
 			return nil, err
 		}

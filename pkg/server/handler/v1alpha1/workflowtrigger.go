@@ -17,7 +17,7 @@ import (
 func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
 	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
 	for _, modifier := range modifiers {
-		err := modifier(project, tenant, wft)
+		err := modifier(tenant, project, "", wft)
 		if err != nil {
 			return nil, err
 		}
