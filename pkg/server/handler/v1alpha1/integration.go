@@ -141,7 +141,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		}
 	}
 
-	// create resouce quota
+	// create resource quota
 	err = common.CreateResourceQuota(tenant, cluster.Namespace, client)
 	if err != nil {
 		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)

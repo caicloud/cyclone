@@ -48,7 +48,7 @@ type operator struct {
 	wfr      *v1alpha1.WorkflowRun
 }
 
-// Ensure *Handler has implemented handlers.Interface interface.
+// Ensure *operator has implemented Operator interface.
 var _ Operator = (*operator)(nil)
 
 // NewOperator create a new operator.
@@ -165,10 +165,16 @@ func (o *operator) UpdateStageStatus(stage string, status *v1alpha1.Status) {
 	}
 
 	if _, ok := o.wfr.Status.Stages[stage]; !ok {
-		o.wfr.Status.Stages[stage] = &v1alpha1.StageStatus{}
+		o.wfr.Status.Stages[stage] = &v1alpha1.StageStatus{
+			Status: *status,
+		}
+	} else {
+		// keep startTime unchanged
+		startTime := o.wfr.Status.Stages[stage].Status.StartTime
+		o.wfr.Status.Stages[stage].Status = *status
+		o.wfr.Status.Stages[stage].Status.StartTime = startTime
 	}
 
-	o.wfr.Status.Stages[stage].Status = *status
 }
 
 // UpdateStagePodInfo updates stage pod information to WorkflowRun.
@@ -193,12 +199,13 @@ func (o *operator) UpdateStagePodInfo(stage string, podInfo *v1alpha1.PodInfo) {
 // not calculated. So when we observed a WorkflowRun updated, we need to calculate its overall
 // status and update it if changed.
 func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
+	startTime := o.wfr.ObjectMeta.CreationTimestamp
 	// If the WorkflowRun has no stage status recorded yet, we resolve the overall status as pending.
 	if o.wfr.Status.Stages == nil || len(o.wfr.Status.Stages) == 0 {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusPending,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
-			StartTime:          metav1.Time{Time: time.Now()},
+			StartTime:          startTime,
 		}, nil
 	}
 
@@ -227,6 +234,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          startTime,
 		}, nil
 	}
 
@@ -235,6 +243,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusWaiting,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          startTime,
 		}, nil
 	}
 
@@ -243,6 +252,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          startTime,
 		}, nil
 	}
 
@@ -260,6 +270,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		return &v1alpha1.Status{
 			Status:             v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
+			StartTime:          startTime,
 		}, nil
 	}
 
@@ -268,6 +279,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	return &v1alpha1.Status{
 		Status:             v1alpha1.StatusCompleted,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
+		StartTime:          startTime,
 	}, nil
 }
 

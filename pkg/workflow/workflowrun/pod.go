@@ -210,7 +210,7 @@ func (m *PodBuilder) CreatePVCVolume(volumeName, pvc string) string {
 	return volumeName
 }
 
-// CreateEmptyDirVolume creats a EmptyDir volume for the pod with the given name
+// CreateEmptyDirVolume creates a EmptyDir volume for the pod with the given name
 func (m *PodBuilder) CreateEmptyDirVolume(volumeName string) {
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: volumeName,
