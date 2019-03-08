@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/cbroglie/mustache"
-	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 // PodBuilder is builder used to build pod for stage
@@ -69,14 +69,8 @@ func (m *PodBuilder) Prepare() error {
 		return fmt.Errorf("only one workload containers supported, others should be sidecars, stage: %s", m.stage)
 	}
 
-	// Generate pod name using UUID.
-	id := uuid.NewV1()
-	if err != nil {
-		return err
-	}
-	podName := fmt.Sprintf("%s-%s-%s", m.wf.Name, m.stage, strings.Replace(id.String(), "-", "", -1))
 	m.pod.ObjectMeta = metav1.ObjectMeta{
-		Name:      podName,
+		Name:      PodName(m.wf.Name, m.stage),
 		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
 			common.WorkflowLabelName: "true",
@@ -218,7 +212,7 @@ func (m *PodBuilder) CreateEmptyDirVolume(volumeName string) {
 // ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
 func (m *PodBuilder) ResolveInputResources() error {
-	for _, r := range m.stg.Spec.Pod.Inputs.Resources {
+	for index, r := range m.stg.Spec.Pod.Inputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
 		if err != nil {
@@ -285,7 +279,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 		}
 
 		container := corev1.Container{
-			Name:  r.Name,
+			Name:  InputContainerName(index + 1),
 			Image: image,
 			Args:  []string{common.ResourcePullCommand},
 			Env:   envs,
@@ -328,7 +322,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 
 // ResolveOutputResources add resource resolvers to pod spec.
 func (m *PodBuilder) ResolveOutputResources() error {
-	for _, r := range m.stg.Spec.Pod.Outputs.Resources {
+	for index, r := range m.stg.Spec.Pod.Outputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
 		if err != nil {
@@ -374,7 +368,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		}
 
 		container := corev1.Container{
-			Name:  common.CycloneSidecarPrefix + r.Name,
+			Name:  OutputContainerName(index + 1),
 			Image: image,
 			Args:  []string{common.ResourcePushCommand},
 			Env:   envs,
