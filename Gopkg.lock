@@ -2,6 +2,22 @@
 
 
 [[projects]]
+  digest = "1:56229084733e7170d8a034a4325bd1a379ca07fae091f476c6830e00cd54294c"
+  name = "github.com/PaesslerAG/gval"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "97464fb9879af57ae82181dadf98132c51c339ad"
+  version = "v0.1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:36b96b1deca237c47d44c7a7e08b6b22a2be493cb29ab82b9bf97d77d3ca7faa"
+  name = "github.com/PaesslerAG/jsonpath"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "13fe51c7d94052f3f4d91bf4495c2bde50c2dfac"
+
+[[projects]]
   branch = "master"
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
@@ -909,6 +925,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/PaesslerAG/jsonpath",
     "github.com/caicloud/nirvana",
     "github.com/caicloud/nirvana/config",
     "github.com/caicloud/nirvana/definition",

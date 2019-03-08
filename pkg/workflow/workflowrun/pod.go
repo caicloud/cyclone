@@ -274,9 +274,13 @@ func (m *PodBuilder) ResolveInputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
+			resolved, err := ResolveRefStringValue(value, m.client)
+			if err != nil {
+				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
+			}
 			envs = append(envs, corev1.EnvVar{
 				Name:  key,
-				Value: value,
+				Value: resolved,
 			})
 		}
 
@@ -359,9 +363,13 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
+			resolved, err := ResolveRefStringValue(value, m.client)
+			if err != nil {
+				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
+			}
 			envs = append(envs, corev1.EnvVar{
 				Name:  key,
-				Value: value,
+				Value: resolved,
 			})
 		}
 
