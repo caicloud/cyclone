@@ -84,6 +84,10 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   name = "k8s.io/gengo"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/PaesslerAG/jsonpath"
+  branch = "master"
+
 [[override]]
   name = "github.com/opencontainers/runtime-spec"
   revision = "1c7c27d043c2a5e513a44084d2b10d77d1402b8c"

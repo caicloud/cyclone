@@ -1,0 +1,8 @@
+language: go
+
+script: travis_wait ./test.sh
+
+go:
+  - "1.9"
+  - "1.10"
+  - "1.11"
