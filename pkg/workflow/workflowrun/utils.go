@@ -126,3 +126,26 @@ func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha
 
 	return nil
 }
+
+// ResolveRefStringValue resolves the given secret ref value, if it's not a ref value, return the origin value.
+// Ref value is in format of '$.<ns>.<secret>/<jsonpath>/...' to refer value in a secret.
+func ResolveRefStringValue(ref string, client clientset.Interface) (string, error) {
+	refValue := NewSecretRefValue()
+
+	// Return the origin value if not a valid ref
+	if err := refValue.Parse(ref); err != nil {
+		return ref, nil
+	}
+
+	v, err := refValue.Resolve(client)
+	if err != nil {
+		return "", err
+	}
+
+	strV, ok := v.(string)
+	if !ok {
+		return "", fmt.Errorf("expect string value: %v", v)
+	}
+
+	return strV, nil
+}
