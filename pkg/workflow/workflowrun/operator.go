@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -33,10 +34,11 @@ type Operator interface {
 	OverallStatus() (*v1alpha1.Status, error)
 	// Garbage collection on the WorkflowRun based on GC policy configured
 	// in Workflow Controller. Pod and data on PV would be cleaned.
-	// 'lastTry' indicates whether this is the last time to perform GC,
+	// - 'lastTry' indicates whether this is the last time to perform GC,
 	// if set to true, the WorkflowRun status will be marked as cleaned regardless
 	// whether the GC action succeeded or not.
-	GC(lastTry bool) error
+	// - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted.
+	GC(lastTry, wfrDeletion bool) error
 	// Run next stages in the Workflow and resolve overall status.
 	Reconcile() error
 }
@@ -382,9 +384,11 @@ func (o *operator) Reconcile() error {
 }
 
 // Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.
-// 'lastTry' indicates whether this is the last try to perform GC on this WorkflowRun object,
+// - 'lastTry' indicates whether this is the last try to perform GC on this WorkflowRun object,
 // if set to true, the WorkflowRun would be marked as cleaned regardless whether the GC succeeded or not.
-func (o *operator) GC(lastTry bool) error {
+// - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted. In this case,
+// GC would performed silently, without event recorded, withoug status update.
+func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
 		if status.Pod == nil {
@@ -403,8 +407,12 @@ func (o *operator) GC(lastTry bool) error {
 				WithField("stg", stg).
 				WithField("pod", status.Pod.Name).
 				Warn("Delete pod error: ", err)
-			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Delete pod '%s' error: %v", status.Pod.Name, err)
+
+			if !wfrDeletion {
+				o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Delete pod '%s' error: %v", status.Pod.Name, err)
+			}
 		}
+		log.WithField("ns", status.Pod.Namespace).WithField("pod", status.Pod.Name).Info("Pod deleted")
 	}
 
 	// Get exeuction context of the WorkflowRun, namespace and PVC are defined in the context.
@@ -438,6 +446,16 @@ func (o *operator) GC(lastTry bool) error {
 								SubPath:   common.WorkflowRunsPath(),
 							},
 						},
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("64Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("648Mi"),
+							},
+						},
 					},
 				},
 				Volumes: []corev1.Volume{
@@ -454,20 +472,25 @@ func (o *operator) GC(lastTry bool) error {
 			},
 		}
 
-		_, err := o.client.CoreV1().Pods(o.wfr.Namespace).Create(gcPod)
+		_, err := o.client.CoreV1().Pods(executionContext.Namespace).Create(gcPod)
 		if err != nil {
-			log.WithField("wfr", o.wfr.Name).Warn("Create GC pod failed")
+			log.WithField("wfr", o.wfr.Name).Warn("Create GC pod error: ", err)
 			if !lastTry {
 				return err
 			}
-			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Create GC pod error: %v", err)
+
+			if !wfrDeletion {
+				o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Create GC pod error: %v", err)
+			}
 		}
 	}
 
-	o.recorder.Event(o.wfr, corev1.EventTypeNormal, "GC", "GC is performed succeed.")
+	if !wfrDeletion {
+		o.recorder.Event(o.wfr, corev1.EventTypeNormal, "GC", "GC is performed succeed.")
 
-	o.wfr.Status.Cleaned = true
-	o.Update()
+		o.wfr.Status.Cleaned = true
+		o.Update()
+	}
 
 	return nil
 }
