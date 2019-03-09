@@ -89,6 +89,12 @@ func (p *Operator) OnUpdated() error {
 		return err
 	}
 
+	// If the WorkflowRun has already been in terminated state, skip it.
+	if origin.Status.Overall.Status == v1alpha1.StatusCompleted ||
+		origin.Status.Overall.Status == v1alpha1.StatusError {
+		return nil
+	}
+
 	wfr := origin.DeepCopy()
 	wfrOperator, err := workflowrun.NewOperator(p.client, wfr, origin.Namespace)
 	if err != nil {
@@ -158,8 +164,6 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 
 	// Now the workload containers and coordinator container have all been finished. We then:
 	// - Update the stage status in WorkflowRun based on coordinator's exit code.
-	// - TODO(ChenDe): Delete pod
-
 	if terminatedCoordinatorState.ExitCode != 0 {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
