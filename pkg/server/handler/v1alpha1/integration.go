@@ -271,6 +271,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		oldIn, err := getIntegration(tenant, name)
 		if err != nil {
 			log.Errorf("get integration %s error %v", name, err)
+			return nil, err
 		}
 
 		// turn on worker cluster
