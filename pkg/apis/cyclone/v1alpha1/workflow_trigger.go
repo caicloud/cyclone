@@ -23,23 +23,30 @@ type WorkflowTrigger struct {
 type TriggerType string
 
 const (
-	// ScheduledTrigger indicates scheduled trigger
-	ScheduledTrigger = "Schedule"
-	// WebhookTrigger indicates webhook trigger
-	WebhookTrigger = "Webhook"
+	// TriggerTypeCron indicates cron trigger
+	TriggerTypeCron TriggerType = "Cron"
+
+	// TriggerTypeWebhook indicates webhook trigger
+	TriggerTypeWebhook TriggerType = "Webhook"
 )
 
 // WorkflowTriggerSpec defines workflow trigger definition.
 type WorkflowTriggerSpec struct {
-	// Type of this trigger, Schedule or Webhook
-	Type TriggerType `json:"triggerType"`
-	// Parameters of the trigger, for Schedule type trigger, "schedule"
-	// parameter is required
+	// Type of this trigger, Cron or Webhook
+	Type TriggerType `json:"type"`
+	// Parameters of the trigger to run workflow
 	Parameters []ParameterItem `json:"parameters"`
+	// CronTrigger represents cron trigger config.
+	Cron CronTrigger `json:"cron,omitempty"`
 	// Whether this trigger is disabled, if set to true, no workflow will be triggered
 	Disabled bool `json:"disabled"`
 	// Spec to run the workflow
 	WorkflowRunSpec `json:",inline"`
+}
+
+// CronTrigger represents the cron trigger policy.
+type CronTrigger struct {
+	Schedule string `json:"schedule"`
 }
 
 // WorkflowTriggerStatus describes status of a workflow trigger
