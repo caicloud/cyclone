@@ -17,7 +17,7 @@ import (
 func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
 	for _, modifier := range modifiers {
-		err := modifier(project, tenant, stg)
+		err := modifier(tenant, project, "", stg)
 		if err != nil {
 			return nil, err
 		}

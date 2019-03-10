@@ -101,7 +101,7 @@ func (t *CronTrigger) Run() {
 	if t.WorkflowRun.Labels == nil {
 		t.WorkflowRun.Labels = make(map[string]string)
 	}
-	t.WorkflowRun.Labels[common.WorkflowRunLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
+	t.WorkflowRun.Labels[common.WorkflowNameLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
 
 	for {
 		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))

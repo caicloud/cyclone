@@ -29,9 +29,9 @@ import (
 
 // CreateWorkflowRun ...
 func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, WorkflowRunModifier}
 	for _, modifier := range modifiers {
-		err := modifier(project, tenant, wfr)
+		err := modifier(tenant, project, workflow, wfr)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +55,7 @@ func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
 // ListWorkflowRuns ...
 func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
 	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
 	})
 	if err != nil {
 		log.Errorf("Get workflowruns from k8s with tenant %s, project %s error: %v", tenant, project, err)

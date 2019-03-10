@@ -108,11 +108,11 @@ func getTenantMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 // CreationModifier is used in creating cyclone resources. It's used to modify cyclone resources.
-type CreationModifier func(project, tenant string, object interface{}) error
+type CreationModifier func(tenant, project, wf string, object interface{}) error
 
 // GenerateNameModifier is a modifier of create cyclone CRD resources.
 // It will give the resource a name if it is empty.
-func GenerateNameModifier(project, tenant string, object interface{}) error {
+func GenerateNameModifier(tenant, project, wf string, object interface{}) error {
 	var getMetadata GetMetadata
 	var meta *meta_v1.ObjectMeta
 	var resource string
@@ -200,7 +200,7 @@ func GenerateNameModifier(project, tenant string, object interface{}) error {
 
 // TenantModifier is a modifier of create cyclone tenant.
 // This modifier will give some default value for tenant if it is nil.
-func TenantModifier(project, tenant string, object interface{}) error {
+func TenantModifier(tenant, project, wf string, object interface{}) error {
 	t, ok := object.(*api.Tenant)
 	if !ok {
 		return fmt.Errorf("resource type not support")
@@ -218,8 +218,8 @@ func TenantModifier(project, tenant string, object interface{}) error {
 }
 
 // InjectProjectLabelModifier is a modifier of create cyclone CRD resources.
-// It will will add project labels for the resource.
-func InjectProjectLabelModifier(project, tenant string, object interface{}) error {
+// It will add project labels for the resource.
+func InjectProjectLabelModifier(tenant, project, wf string, object interface{}) error {
 	var meta *meta_v1.ObjectMeta
 	switch obj := object.(type) {
 	case *v1alpha1.Resource:
@@ -240,7 +240,23 @@ func InjectProjectLabelModifier(project, tenant string, object interface{}) erro
 	if meta.Labels == nil {
 		meta.Labels = make(map[string]string)
 	}
-	meta.Labels[common.LabelProject] = project
+	meta.Labels[common.LabelProjectName] = project
+	return nil
+}
+
+// WorkflowRunModifier is a modifier of create cyclone workflowrun resources.
+// It will add workflow labels for workflowrun.
+func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {
+	wfr, ok := object.(*v1alpha1.WorkflowRun)
+	if !ok {
+		return fmt.Errorf("resource type not support")
+	}
+
+	// Add workflow label
+	if wfr.Labels == nil {
+		wfr.Labels = make(map[string]string)
+	}
+	wfr.Labels[common.LabelWorkflowName] = wf
 	return nil
 }
 

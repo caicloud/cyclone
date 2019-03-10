@@ -74,7 +74,7 @@ func SecretToIntegration(secret *core_v1.Secret) (*api.Integration, error) {
 func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) (*api.Integration, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
-		err := modifier("", tenant, in)
+		err := modifier(tenant, "", "", in)
 		if err != nil {
 			return nil, err
 		}
