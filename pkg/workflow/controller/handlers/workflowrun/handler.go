@@ -104,8 +104,23 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 }
 
-// ObjectDeleted ...
+// ObjectDeleted handles the case when a WorkflowRun get deleted. It will perform GC immediately for this WorkflowRun.
 func (h *Handler) ObjectDeleted(obj interface{}) {
+	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+	if !ok {
+		log.Warning("unknown resource type")
+		return
+	}
+	log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
+
+	wfr := originWfr.DeepCopy()
+	operator, err := workflowrun.NewOperator(h.Client, wfr, wfr.Namespace)
+	if err != nil {
+		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
+		return
+	}
+
+	operator.GC(true, true)
 	return
 }
 

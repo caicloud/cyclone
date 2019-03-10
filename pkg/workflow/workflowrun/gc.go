@@ -98,7 +98,7 @@ func (p *GCProcessor) process() {
 			}
 			continue
 		}
-		if err = operator.GC(i.retry <= 0); err != nil {
+		if err = operator.GC(i.retry <= 0, false); err != nil {
 			log.WithField("wfr", i.name).Warn("GC error: ", err)
 			if i.retry <= 0 {
 				delete(p.items, i.String())

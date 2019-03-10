@@ -83,6 +83,13 @@ func (p *Operator) OnUpdated() error {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.WithField("wfr", p.workflowRun).WithField("ns", p.metaNamespace).Warn("wfr not found")
+			// Delete the pod if WorkflowRun not exists any more, there is possible that the pod been deleted elsewhere on WorkflowRun deletion,
+			// so if we delete pod failed here due to not found, just ignore it.
+			if err := p.client.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete orphan pod error: ", err)
+			} else {
+				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Orphan pod deleted")
+			}
 			return nil
 		}
 		log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)

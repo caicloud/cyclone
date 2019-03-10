@@ -44,6 +44,17 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 				Object:    new,
 			})
 		},
+		DeleteFunc: func(obj interface{}) {
+			key, err := cache.MetaNamespaceKeyFunc(obj)
+			if err != nil {
+				return
+			}
+			queue.Add(Event{
+				Key:       key,
+				EventType: DELETE,
+				Object:    obj,
+			})
+		},
 	})
 
 	return &Controller{
