@@ -25,10 +25,10 @@ _config:
         value: |
           {
             "images": {
-              "git-resolver": "[[ registry_release ]]/release/cyclone-resolver-git:[[ imageTagFromGitTag ]]",
-              "image-resolver": "[[ registry_release ]]/release/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
-              "kv-resolver": "[[ registry_release ]]/release/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
-              "coordinator": "[[ registry_release ]]/release/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
+              "git-resolver": "[[ registry_release ]]/cyclone-resolver-git:[[ imageTagFromGitTag ]]",
+              "image-resolver": "[[ registry_release ]]/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
+              "kv-resolver": "[[ registry_release ]]/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
+              "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
               "gc": "[[ registry_library ]]/alpine:3.7"
             },
             "logging": {
