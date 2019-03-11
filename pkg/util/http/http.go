@@ -52,6 +52,9 @@ const (
 	// WorkflowTriggerNamePathParameterName represents the name of the path parameter for workflowtrigger name.
 	WorkflowTriggerNamePathParameterName = "workflowtrigger"
 
+	// NamespaceQueryParameter represents namespace query parameter.
+	NamespaceQueryParameter = "namespace"
+
 	// StageNameQueryParameter represents the query param stage name.
 	StageNameQueryParameter = "stage"
 

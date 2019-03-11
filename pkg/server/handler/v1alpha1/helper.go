@@ -24,20 +24,19 @@ const (
 	logsFolderName = "logs"
 )
 
-func getLogFilePath(workflowrun, stage, container, namespace string) (string, error) {
-	if workflowrun == "" || stage == "" || container == "" {
-		return "", fmt.Errorf("workflowrun/stage/container/namespace can not be empty")
+func getLogFilePath(tenant, project, workflow, workflowrun, stage, container string) (string, error) {
+	rf, err := getLogFolder(tenant, project, workflow, workflowrun)
+	if err != nil {
+		return "", err
 	}
-
-	rf, _ := getLogFolder(workflowrun, stage, namespace)
-	return strings.Join([]string{rf, container}, string(os.PathSeparator)), nil
+	return strings.Join([]string{rf, fmt.Sprintf("%s_%s", stage, container)}, string(os.PathSeparator)), nil
 }
 
-func getLogFolder(workflowrun, stage, namespace string) (string, error) {
-	if workflowrun == "" || stage == "" || namespace == "" {
-		return "", fmt.Errorf("workflowrun/stage/namespace can not be empty")
+func getLogFolder(tenant, project, workflow, workflowrun string) (string, error) {
+	if tenant == "" || project == "" || workflow == "" || workflowrun == "" {
+		return "", fmt.Errorf("tenant/project/workflow/workflowrun can not be empty")
 	}
-	return strings.Join([]string{cycloneHome, namespace, workflowrun, stage, logsFolderName}, string(os.PathSeparator)), nil
+	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, logsFolderName}, string(os.PathSeparator)), nil
 }
 
 // GetMetadata gets metadata of a type of k8s resources

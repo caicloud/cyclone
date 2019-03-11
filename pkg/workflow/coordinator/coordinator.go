@@ -82,7 +82,7 @@ func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
 	}
 
 	return &Coordinator{
-		runtimeExec:       k8sapi.NewK8sapiExecutor(client, getNamespace(), getPodName(), getCycloneServerAddr()),
+		runtimeExec:       k8sapi.NewK8sapiExecutor(client, wfr.Namespace, getNamespace(), getPodName(), getCycloneServerAddr()),
 		workloadContainer: getWorkloadContainer(),
 		Stage:             stage,
 		Wfr:               wfr,
