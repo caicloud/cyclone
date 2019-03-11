@@ -225,7 +225,7 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/streamlogs",
+		Path: "/workflowruns/{workflowrun}/streamlogs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -234,19 +234,11 @@ var workflowrun = []definition.Descriptor{
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.WorkflowNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
 						Name:   httputil.WorkflowRunNamePathParameterName,
 					},
 					{
-						Source: definition.Header,
-						Name:   httputil.TenantHeaderName,
+						Source: definition.Query,
+						Name:   httputil.NamespaceQueryParameter,
 					},
 					{
 						Source: definition.Query,

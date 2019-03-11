@@ -20,12 +20,12 @@ import (
 const (
 	cycloneAPIVersion = "/apis/v1alpha1"
 
-	apiPathForLogStream = "/workflowruns/%s/stages/%s/streamlogs"
+	apiPathForLogStream = "/workflowruns/%s/streamlogs"
 )
 
 // Client ...
 type Client interface {
-	PushLogStream(workflowrun, stage, container string, reader io.Reader, close chan struct{}) error
+	PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close chan struct{}) error
 }
 
 type client struct {
@@ -76,14 +76,14 @@ func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.
 }
 
 // PushLogStream ...
-func (c *client) PushLogStream(workflowrun, stage, container string, reader io.Reader, close chan struct{}) error {
-	path := fmt.Sprintf(apiPathForLogStream, workflowrun, stage)
+func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close chan struct{}) error {
+	path := fmt.Sprintf(apiPathForLogStream, workflowrun)
 	host := strings.TrimPrefix(c.baseURL, "http://")
 	host = strings.TrimPrefix(host, "https://")
 	requestURL := url.URL{
 		Host:     host,
 		Path:     cycloneAPIVersion + path,
-		RawQuery: fmt.Sprintf("container=%s", container),
+		RawQuery: fmt.Sprintf("namespace=%s&stage=%s&container=%s", ns, stage, container),
 		Scheme:   "ws",
 	}
 

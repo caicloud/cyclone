@@ -131,7 +131,21 @@ func ContinueWorkflowRun(ctx context.Context, project, workflow, workflowrun, te
 }
 
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
-func ReceiveContainerLogStream(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string) error {
+func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stage, container string) error {
+	// get workflowrun
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
+	if err != nil {
+		log.Errorf("get wfr %s error %s", wfr, err)
+		return err
+	}
+
+	// get tenant, project, workflow from workflowrun
+	tenant := common.NamespaceTenant(namespace)
+	var project, workflow string
+	if wfr.Labels != nil {
+		project = wfr.Labels[common.LabelProjectName]
+		workflow = wfr.Labels[common.LabelWorkflowName]
+	}
 	request := contextutil.GetHTTPRequest(ctx)
 	writer := contextutil.GetHTTPResponseWriter(ctx)
 
@@ -143,8 +157,7 @@ func ReceiveContainerLogStream(ctx context.Context, project, workflow, workflowr
 	}
 	defer ws.Close()
 
-	namespace := common.TenantNamespace(tenant)
-	if err := receiveContainerLogStream(workflowrun, stage, container, namespace, ws); err != nil {
+	if err := receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, container, ws); err != nil {
 		log.Errorf("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
 			workflowrun, stage, container, err.Error())
 		return cerr.ErrorUnknownInternal.Error(err)
@@ -155,8 +168,8 @@ func ReceiveContainerLogStream(ctx context.Context, project, workflow, workflowr
 
 // receiveContainerLogStream receives the log stream for
 // one stage of the workflowrun, and stores it into log files.
-func receiveContainerLogStream(workflowrun, stage, container, namespace string, ws *websocket.Conn) error {
-	logFolder, err := getLogFolder(workflowrun, stage, namespace)
+func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, container string, ws *websocket.Conn) error {
+	logFolder, err := getLogFolder(tenant, project, workflow, workflowrun)
 	if err != nil {
 		log.Errorf("get log folder failed: %v", err)
 		return err
@@ -165,7 +178,7 @@ func receiveContainerLogStream(workflowrun, stage, container, namespace string, 
 	// create log folders.
 	fileutil.CreateDirectory(logFolder)
 
-	logFilePath, err := getLogFilePath(workflowrun, stage, container, namespace)
+	logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
 	if err != nil {
 		log.Errorf("get log path failed: %v", err)
 		return err
@@ -213,10 +226,9 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 	}
 	defer ws.Close()
 
-	namespace := common.TenantNamespace(tenant)
-	if err := getContainerLogStream(workflowrun, stage, container, namespace, ws); err != nil {
-		log.Errorf("Unable to get logstream for %s/%s/%s/%s for err: %s",
-			namespace, workflowrun, stage, container, err)
+	if err := getContainerLogStream(tenant, project, workflow, workflowrun, stage, container, ws); err != nil {
+		log.Errorf("Unable to get logstream for %s/%s/%s for err: %s",
+			workflowrun, stage, container, err)
 		return cerr.ErrorUnknownInternal.Error(err.Error())
 	}
 
@@ -224,8 +236,8 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 }
 
 // getContainerLogStream watches the log files and sends the content to the log stream.
-func getContainerLogStream(workflowrun, stage, container, namespace string, ws *websocket.Conn) error {
-	logFilePath, err := getLogFilePath(workflowrun, stage, container, namespace)
+func getContainerLogStream(tenant, project, workflow, workflowrun, stage, container string, ws *websocket.Conn) error {
+	logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
 	if err != nil {
 		log.Errorf("get log path failed: %v", err)
 		return err
@@ -282,9 +294,7 @@ func getContainerLogStream(workflowrun, stage, container, namespace string, ws *
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
 func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string, download bool) ([]byte, map[string]string, error) {
-	namespace := common.TenantNamespace(tenant)
-
-	logs, err := getContainerLogs(workflowrun, stage, container, namespace)
+	logs, err := getContainerLogs(tenant, project, workflow, workflowrun, stage, container)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -300,8 +310,8 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 }
 
 // getContainerLogs gets the stage container logs.
-func getContainerLogs(workflowrun, stage, container, namespace string) (string, error) {
-	logFilePath, err := getLogFilePath(workflowrun, stage, container, namespace)
+func getContainerLogs(tenant, project, workflow, workflowrun, stage, container string) (string, error) {
+	logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
 	if err != nil {
 		return "", err
 	}

@@ -17,14 +17,16 @@ import (
 // Executor ...
 type Executor struct {
 	client        clientset.Interface
+	metaNamespace string
 	namespace     string
 	podName       string
 	cycloneClient cycloneserver.Client
 }
 
 // NewK8sapiExecutor ...
-func NewK8sapiExecutor(client clientset.Interface, namespace, pod string, cycloneServer string) *Executor {
+func NewK8sapiExecutor(client clientset.Interface, metaNamespace, namespace, pod string, cycloneServer string) *Executor {
 	return &Executor{
+		metaNamespace: metaNamespace,
 		namespace:     namespace,
 		podName:       pod,
 		client:        client,
@@ -106,7 +108,7 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 		close(closeLog)
 	}()
 
-	k.cycloneClient.PushLogStream(workflowrun, stage, container, stream, closeLog)
+	k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream, closeLog)
 	if err != nil {
 		return err
 	}
