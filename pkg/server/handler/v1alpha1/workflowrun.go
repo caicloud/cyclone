@@ -146,6 +146,10 @@ func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stag
 		project = wfr.Labels[common.LabelProjectName]
 		workflow = wfr.Labels[common.LabelWorkflowName]
 	}
+	if project == "" || workflow == "" {
+		return fmt.Errorf("failed to get project or workflow from workflowrun labels")
+	}
+
 	request := contextutil.GetHTTPRequest(ctx)
 	writer := contextutil.GetHTTPResponseWriter(ctx)
 
