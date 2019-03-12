@@ -78,7 +78,9 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pag
 
 // GetWorkflowRun ...
 func GetWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+
+	return wfr, cerr.ConvertK8sError(err)
 }
 
 // UpdateWorkflowRun ...
@@ -97,7 +99,7 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return wfr, nil
@@ -105,7 +107,9 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 
 // DeleteWorkflowRun ...
 func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) error {
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
+	err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
+
+	return cerr.ConvertK8sError(err)
 }
 
 // PauseWorkflowRun updates the workflowrun overall status to Waiting.
@@ -116,7 +120,9 @@ func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenan
 		return nil, err
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+
+	return wfr, cerr.ConvertK8sError(err)
 }
 
 // ContinueWorkflowRun updates the workflowrun overall status to Running.
@@ -127,7 +133,9 @@ func ContinueWorkflowRun(ctx context.Context, project, workflow, workflowrun, te
 		return nil, err
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+
+	return wfr, cerr.ConvertK8sError(err)
 }
 
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.

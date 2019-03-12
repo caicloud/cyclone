@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // CreateResource ...
@@ -33,7 +34,7 @@ func ListResources(ctx context.Context, project, tenant string, pagination *type
 	})
 	if err != nil {
 		log.Errorf("Get resources from k8s with tenant %s, project %s error: %v", tenant, project, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	items := resources.Items
@@ -52,7 +53,9 @@ func ListResources(ctx context.Context, project, tenant string, pagination *type
 
 // GetResource ...
 func GetResource(ctx context.Context, project, resource, tenant string) (*v1alpha1.Resource, error) {
-	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(resource, metav1.GetOptions{})
+	rsc, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(resource, metav1.GetOptions{})
+
+	return rsc, cerr.ConvertK8sError(err)
 }
 
 // UpdateResource ...
@@ -70,7 +73,7 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return rsc, nil
@@ -78,5 +81,7 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 
 // DeleteResource ...
 func DeleteResource(ctx context.Context, project, resource, tenant string) error {
-	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Delete(resource, nil)
+	err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Delete(resource, nil)
+
+	return cerr.ConvertK8sError(err)
 }

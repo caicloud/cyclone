@@ -1,7 +1,11 @@
 package cerr
 
 import (
+	"fmt"
+
 	nerror "github.com/caicloud/nirvana/errors"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // defines reason types
@@ -67,3 +71,23 @@ var (
 	ErrorCreateIntegration = nerror.InternalServerError.Build("ReasonCreateIntegration",
 		"tenant created, but the related control cluster integration created failed: ${error}")
 )
+
+// ConvertK8sError converts k8s error to Cyclone errors.
+func ConvertK8sError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch t := err.(type) {
+	case k8serr.APIStatus:
+		details := t.Status().Details
+		switch t.Status().Reason {
+		case metav1.StatusReasonNotFound:
+			return ErrorContentNotFound.Error(fmt.Sprintf("%s %s", details.Kind, details.Name))
+		case metav1.StatusReasonConflict, metav1.StatusReasonAlreadyExists:
+			return ErrorAlreadyExist.Error(fmt.Sprintf("%s %s", details.Kind, details.Name))
+		}
+	}
+
+	return ErrorUnknownInternal.Error(err)
+}

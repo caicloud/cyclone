@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // ListIntegrations get integrations the given tenant has access to.
@@ -28,7 +29,7 @@ func ListIntegrations(ctx context.Context, tenant string, pagination *types.Pagi
 	})
 	if err != nil {
 		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	items := secrets.Items
@@ -101,25 +102,30 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 	_, err = handler.K8sClient.CoreV1().Secrets(ns).Create(secret)
 	if err != nil {
 		log.Errorf("Create secret %v for tenant %s error %v", secret.ObjectMeta.Name, tenant, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return in, nil
 }
 
 // OpenClusterForTenant opens cluster to run workload.
-func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
+func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err error) {
+	// Convert the returned error if it is a k8s error.
+	defer func() {
+		err = cerr.ConvertK8sError(err)
+	}()
+
 	// new cluster clientset
 	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client for tenant %s error %v", tenantName, err)
-		return err
+		return
 	}
 
 	tenant, err := getTenant(tenantName)
 	if err != nil {
 		log.Errorf("get tenant %s info error %v", tenantName, err)
-		return err
+		return
 	}
 
 	if cluster.Namespace != "" {
@@ -127,7 +133,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		_, err = client.CoreV1().Namespaces().Get(cluster.Namespace, meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("get namespace %s error %v", cluster.Namespace, err)
-			return err
+			return
 		}
 	} else {
 		// create namespace
@@ -136,7 +142,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		if err != nil {
 			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
-				return err
+				return
 			}
 		}
 	}
@@ -146,7 +152,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 	if err != nil {
 		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)
 		if !errors.IsAlreadyExists(err) {
-			return err
+			return
 		}
 	}
 
@@ -154,7 +160,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		_, err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(cluster.PVC, meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("get pvc %s error %v", cluster.PVC, err)
-			return err
+			return
 		}
 	} else {
 		// create pvc
@@ -167,7 +173,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
-				return err
+				return
 			}
 		}
 
@@ -179,12 +185,17 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) error {
 
 // CloseClusterForTenant close worker cluster for the tenant.
 // It is dangerous since all pvc data will lost.
-func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) error {
+func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error) {
+	// Convert the returned error if it is a k8s error.
+	defer func() {
+		err = cerr.ConvertK8sError(err)
+	}()
+
 	// new cluster clientset
 	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client error %v", err)
-		return err
+		return
 	}
 
 	// delete namespace which is created by cyclone
@@ -192,17 +203,17 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) error {
 		err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 		if err != nil {
 			log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
-			return err
+			return
 		}
 		// if namespace is been deleted, will exist.
-		return nil
+		return
 	}
 
 	// delete resource quota
 	err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
-		return err
+		return
 	}
 
 	// delete pvc which is created by cyclone
@@ -210,11 +221,11 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) error {
 		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
 			log.Errorf("delete pvc %s error %v", cluster.Namespace, err)
-			return err
+			return
 		}
-		return nil
+		return
 	}
-	return nil
+	return
 }
 
 func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
@@ -258,7 +269,7 @@ func getIntegration(tenant, name string) (*api.Integration, error) {
 	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
 		common.IntegrationSecret(name), meta_v1.GetOptions{})
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return SecretToIntegration(secret)
@@ -319,7 +330,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return in, nil
@@ -327,8 +338,10 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 // DeleteIntegration deletes a integration with the given tenant and name.
 func DeleteIntegration(ctx context.Context, tenant, name string) error {
-	return handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Delete(
+	err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Delete(
 		common.IntegrationSecret(name), &meta_v1.DeleteOptions{})
+
+	return cerr.ConvertK8sError(err)
 }
 
 // GetWokerClusters gets all clusters which are use to perform workload
@@ -338,7 +351,7 @@ func GetWokerClusters(tenant string) ([]api.Integration, error) {
 	})
 	if err != nil {
 		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	integrations := []api.Integration{}

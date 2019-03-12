@@ -39,7 +39,7 @@ func ListTenants(ctx context.Context, pagination *types.Pagination) (*types.List
 	})
 	if err != nil {
 		log.Errorf("List cyclone namespace error %v", err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	tenants := []api.Tenant{}
@@ -74,7 +74,7 @@ func getTenant(name string) (*api.Tenant, error) {
 	namespace, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		log.Errorf("Get namespace for tenant %s error %v", name, err)
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return NamespaceToTenant(namespace)
@@ -183,8 +183,9 @@ func DeleteTenant(ctx context.Context, name string) error {
 	err := handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)
-		return err
+		return cerr.ConvertK8sError(err)
 	}
+
 	return nil
 }
 
@@ -298,7 +299,7 @@ func createTenantNamespace(tenant *api.Tenant) error {
 	})
 	if err != nil {
 		log.Errorf("Create namespace for tenant %s error %v", tenant.Name, err)
-		return err
+		return cerr.ConvertK8sError(err)
 	}
 
 	return nil
@@ -316,7 +317,7 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 		origin, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace for tenant %s error %v", tenant.Name, err)
-			return err
+			return cerr.ConvertK8sError(err)
 		}
 
 		newNs := origin.DeepCopy()
@@ -326,7 +327,7 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 		_, err = handler.K8sClient.CoreV1().Namespaces().Update(newNs)
 		if err != nil {
 			log.Errorf("Update namespace for tenant %s error %v", tenant.Name, err)
-			return err
+			return cerr.ConvertK8sError(err)
 		}
 		return nil
 	})

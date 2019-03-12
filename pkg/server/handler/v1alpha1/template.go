@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
@@ -73,8 +74,13 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 }
 
 // GetTemplate gets a stage template with the given template name under given tenant.
-func GetTemplate(ctx context.Context, tenant, template string, includePublic bool) (*v1alpha1.Stage, error) {
-	stage, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
+func GetTemplate(ctx context.Context, tenant, template string, includePublic bool) (stage *v1alpha1.Stage, err error) {
+	// Convert the returned error if it is a k8s error.
+	defer func() {
+		cerr.ConvertK8sError(err)
+	}()
+
+	stage, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return nil, err
@@ -111,7 +117,7 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return stage, nil
@@ -119,5 +125,7 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 
 // DeleteTemplate deletes a stage template with the given tenant and template name.
 func DeleteTemplate(ctx context.Context, tenant, template string) error {
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(template, &metav1.DeleteOptions{})
+	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(template, &metav1.DeleteOptions{})
+
+	return cerr.ConvertK8sError(err)
 }

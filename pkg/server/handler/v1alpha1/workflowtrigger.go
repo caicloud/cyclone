@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // CreateWorkflowTrigger ...
@@ -52,7 +53,9 @@ func ListWorkflowTriggers(ctx context.Context, project, tenant string, paginatio
 
 // GetWorkflowTrigger ...
 func GetWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) (*v1alpha1.WorkflowTrigger, error) {
-	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
+	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
+
+	return wft, cerr.ConvertK8sError(err)
 }
 
 // UpdateWorkflowTrigger ...
@@ -70,7 +73,7 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cerr.ConvertK8sError(err)
 	}
 
 	return wft, nil
@@ -78,5 +81,7 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 
 // DeleteWorkflowTrigger ...
 func DeleteWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) error {
-	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+	err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+
+	return cerr.ConvertK8sError(err)
 }
