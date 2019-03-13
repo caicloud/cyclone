@@ -200,19 +200,25 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 
 	// delete namespace which is created by cyclone
 	if cluster.Namespace == common.TenantNamespace(tenant) {
-		err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
-		if err != nil {
-			log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
+		// cyclone can not support other clusters (except for control cluster)by now, so we can not delete the namespace,
+		// since there are metadata(cyclone resources, stage, workflow, workflowrun metadata) under it.
+
+		/*
+			err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
+			if err != nil {
+				log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
+				return
+			}
+			// if namespace is deleted, will exit, no need delete others resources.
 			return
-		}
-		// if namespace is been deleted, will exist.
-		return
+		*/
 	}
 
 	// delete resource quota
-	err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
+	quotaName := common.TenantResourceQuota(tenant)
+	err = client.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
-		log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
+		log.Errorf("delete resource quota %s error %v", quotaName, err)
 		return
 	}
 
@@ -294,7 +300,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 			}
 		}
 
-		// turn on worker cluster
+		// turn off worker cluster
 		if oldIn.Spec.Cluster.IsWorkerCluster && !in.Spec.Cluster.IsWorkerCluster {
 			// close cluster for the tenant, delete namespace
 			err := CloseClusterForTenant(in.Spec.Cluster, tenant)
