@@ -92,7 +92,8 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		}
 		newWfr := origin.DeepCopy()
 		newWfr.Spec = wfr.Spec
-		newWfr.Annotations = UpdateAnnotations(wfr.Annotations, newWfr.Annotations)
+		newWfr.Annotations = MergeMap(wfr.Annotations, newWfr.Annotations)
+		newWfr.Labels = MergeMap(wfr.Labels, newWfr.Labels)
 		injectWfRef(tenant, workflow, wfr)
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(newWfr)
 		return err

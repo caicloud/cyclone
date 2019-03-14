@@ -8,6 +8,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/api/core/v1"
 	core_v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
@@ -91,7 +92,7 @@ func NamespaceToTenant(namespace *core_v1.Namespace) (*api.Tenant, error) {
 	annotationTenant := namespace.Annotations[common.AnnotationTenant]
 	err := json.Unmarshal([]byte(annotationTenant), &tenant.Spec)
 	if err != nil {
-		log.Errorf("Unmarshal tenant annotation error %v", err)
+		log.Errorf("Unmarshal tenant annotation %s error %v", annotationTenant, err)
 		return tenant, err
 	}
 
@@ -320,6 +321,10 @@ func createTenantNamespace(tenant *api.Tenant) error {
 	})
 	if err != nil {
 		log.Errorf("Create namespace for tenant %s error %v", tenant.Name, err)
+		if errors.IsAlreadyExists(err) {
+			tenant.Labels = meta.Labels
+			return updateTenantNamespace(tenant)
+		}
 		return cerr.ConvertK8sError(err)
 	}
 
@@ -342,7 +347,8 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 		}
 
 		newNs := origin.DeepCopy()
-		newNs.Annotations = UpdateAnnotations(tenant.Annotations, newNs.Annotations)
+		newNs.Annotations = MergeMap(tenant.Annotations, newNs.Annotations)
+		newNs.Labels = MergeMap(tenant.Labels, newNs.Labels)
 		newNs.Annotations[common.AnnotationTenant] = string(t)
 
 		_, err = handler.K8sClient.CoreV1().Namespaces().Update(newNs)

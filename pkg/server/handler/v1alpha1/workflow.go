@@ -67,7 +67,8 @@ func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v
 		}
 		newWf := origin.DeepCopy()
 		newWf.Spec = wf.Spec
-		newWf.Annotations = UpdateAnnotations(wf.Annotations, newWf.Annotations)
+		newWf.Annotations = MergeMap(wf.Annotations, newWf.Annotations)
+		newWf.Labels = MergeMap(wf.Labels, newWf.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Update(newWf)
 		return err
 	})

@@ -329,7 +329,8 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 		newSecret := origin.DeepCopy()
 		newSecret.Data = secret.Data
-		newSecret.Annotations = UpdateAnnotations(secret.Annotations, newSecret.Annotations)
+		newSecret.Annotations = MergeMap(secret.Annotations, newSecret.Annotations)
+		newSecret.Labels = MergeMap(secret.Labels, newSecret.Labels)
 		newSecret.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
 		_, err = handler.K8sClient.CoreV1().Secrets(ns).Update(newSecret)
 		return err

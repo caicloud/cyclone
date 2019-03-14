@@ -111,7 +111,8 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 		}
 		newStage := origin.DeepCopy()
 		newStage.Spec = stage.Spec
-		newStage.Annotations = UpdateAnnotations(stage.Annotations, newStage.Annotations)
+		newStage.Annotations = MergeMap(stage.Annotations, newStage.Annotations)
+		newStage.Labels = MergeMap(stage.Labels, newStage.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStage)
 		return err
 	})

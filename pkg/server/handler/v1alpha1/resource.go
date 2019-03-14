@@ -67,7 +67,8 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 		}
 		newRsc := origin.DeepCopy()
 		newRsc.Spec = rsc.Spec
-		newRsc.Annotations = UpdateAnnotations(rsc.Annotations, newRsc.Annotations)
+		newRsc.Annotations = MergeMap(rsc.Annotations, newRsc.Annotations)
+		newRsc.Labels = MergeMap(rsc.Labels, newRsc.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Update(newRsc)
 		return err
 	})
