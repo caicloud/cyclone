@@ -67,7 +67,8 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 		}
 		newWft := origin.DeepCopy()
 		newWft.Spec = wft.Spec
-		newWft.Annotations = UpdateAnnotations(wft.Annotations, newWft.Annotations)
+		newWft.Annotations = MergeMap(wft.Annotations, newWft.Annotations)
+		newWft.Labels = MergeMap(wft.Labels, newWft.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
 		return err
 	})

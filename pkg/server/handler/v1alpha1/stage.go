@@ -67,7 +67,8 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 		}
 		newStg := origin.DeepCopy()
 		newStg.Spec = stg.Spec
-		newStg.Annotations = UpdateAnnotations(stg.Annotations, newStg.Annotations)
+		newStg.Annotations = MergeMap(stg.Annotations, newStg.Annotations)
+		newStg.Labels = MergeMap(stg.Labels, newStg.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStg)
 		return err
 	})

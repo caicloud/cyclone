@@ -103,7 +103,9 @@ func getTenantMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
-	return resource.ObjectMeta, nil
+
+	// if tenant exist, use it directly.
+	return resource.ObjectMeta, cerr.ErrorAlreadyExist.Error(fmt.Sprintf("%s %s", "namespaces", name))
 }
 
 // CreationModifier is used in creating cyclone resources. It's used to modify cyclone resources.
@@ -122,7 +124,7 @@ func GenerateNameModifier(tenant, project, wf string, object interface{}) error 
 		resource = "resources"
 	case *v1alpha1.Stage:
 		meta = &obj.ObjectMeta
-		getMetadata = getResourceMetadata
+		getMetadata = getStageMetadata
 		resource = "stages"
 	case *v1alpha1.Workflow:
 		meta = &obj.ObjectMeta
@@ -259,17 +261,20 @@ func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {
 	return nil
 }
 
-// UpdateAnnotations updates alias and description annotations
-func UpdateAnnotations(oldm, newm map[string]string) map[string]string {
-	if oldm != nil {
-		if newm == nil {
-			newm = make(map[string]string)
+// MergeMap merges map 'in' into map 'out', if there is an element in both 'in' and 'out',
+// we will use the value of 'in'.
+func MergeMap(in, out map[string]string) map[string]string {
+	if in != nil {
+		if out == nil {
+			out = make(map[string]string)
 		}
-		newm[common.AnnotationAlias] = oldm[common.AnnotationAlias]
-		newm[common.AnnotationDescription] = oldm[common.AnnotationDescription]
+
+		for k, v := range in {
+			out[k] = v
+		}
 	}
 
-	return newm
+	return out
 }
 
 // LabelCustomizedTemplate gives a label to indicate that this is a customized template
