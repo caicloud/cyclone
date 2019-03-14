@@ -303,10 +303,8 @@ func createTenantNamespace(tenant *api.Tenant) error {
 		if errors.IsAlreadyExists(err) {
 			tenant.Labels = meta.Labels
 			return updateTenantNamespace(tenant)
-		} else {
-			return cerr.ConvertK8sError(err)
 		}
-
+		return cerr.ConvertK8sError(err)
 	}
 
 	return nil
