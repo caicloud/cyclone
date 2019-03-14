@@ -299,6 +299,7 @@ var workflowrun = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
+				Produces:    []string{definition.MIMEText},
 				Function:    handler.GetContainerLogs,
 				Description: "Get log of containers",
 				Parameters: []definition.Parameter{
