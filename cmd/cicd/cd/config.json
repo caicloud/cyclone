@@ -1,0 +1,18 @@
+{
+  "cluster": {
+    "host": "127.0.0.1",
+    "user": "admin",
+    "password": "password"
+  },
+  "deployment": {
+    "type": "deployment",
+    "namespace": "default",
+    "name": "app"
+  },
+  "images": [
+    {
+      "container": "c1",
+      "image": "cargo.caicloud.xyz/release/web:v1.0"
+    }
+  ]
+}
