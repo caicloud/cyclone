@@ -180,7 +180,28 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 
 // DeleteTenant deletes a tenant
 func DeleteTenant(ctx context.Context, name string) error {
-	err := handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
+	// close workload cluster
+	integrations, err := GetWokerClusters(name)
+	if err != nil {
+		log.Errorf("get workload clusters for tenant %s error %v", name, err)
+		return err
+	}
+
+	for _, integration := range integrations {
+		cluster := integration.Spec.Cluster
+		if cluster == nil {
+			log.Warningf("cluster of integration %s is nil", integration.Name)
+			continue
+		}
+
+		err := CloseClusterForTenant(cluster, name)
+		if err != nil {
+			log.Warningf("close cluster %s for tenant %s error %v", integration.Name, name, err)
+			continue
+		}
+	}
+
+	err = handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)
 		return cerr.ConvertK8sError(err)
