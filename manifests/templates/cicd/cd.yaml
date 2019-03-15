@@ -1,0 +1,39 @@
+- apiVersion: cyclone.io/v1alpha1
+  kind: Stage
+  metadata:
+    name: cd-template
+    labels:
+      cyclone.io/stage-template: "true"
+      cyclone.io/builtin: "true"
+      cyclone.io/scene: cicd
+      cyclone.io/template-kind: cd
+    annotations:
+      cyclone.io/description: >
+        Continuous deployment
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+          value: zer0one/cyclone-cicd-cd:v0.9.4-alpha
+        - name: config
+          value: >-
+            {
+              "deployment": {
+                "type": "deployment",
+                "namespace": "default",
+                "name": "app-deployment"
+              },
+              "images": [
+                {
+                  "container": "app",
+                  "image": "nginx:1.15-alpine"
+                }
+              ]
+            }
+      spec:
+        containers:
+        - image: "{{ image }}"
+          env:
+          - name: _CONFIG_
+            value: {{ config }}
