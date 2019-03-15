@@ -69,7 +69,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - sleep 5; docker save -o ./image.tar __REGISTRY__/golang-example:v0.0.1
+        - while [ ! -S /var/run/docker.sock ]; do sleep 1; done; docker save -o ./image.tar __REGISTRY__/golang-example:v0.0.1
 
 ---
 
