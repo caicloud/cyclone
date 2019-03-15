@@ -31,6 +31,8 @@ const (
 	CoordinatorImage = "coordinator"
 	// GCImage is key of the GC image in config file
 	GCImage = "gc"
+	// DindImage is key of the docker-in-docker image in config file
+	DindImage = "dind"
 )
 
 // ResolverImageKeys maps resource type to resolver images

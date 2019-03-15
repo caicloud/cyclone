@@ -75,8 +75,6 @@ const (
 	GCAnnotationName = "cyclone.io/gc"
 	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
 	StageAnnotationName = "cyclone.io/stage"
-	// StageTemplateLabelName indicates whether a stage is used as stage template
-	StageTemplateLabelName = "cyclone.io/stage-template"
 	// StageTemplateLabelSelector is label selector to select stage templates
 	StageTemplateLabelSelector = "cyclone.io/stage-template=true"
 
@@ -97,13 +95,13 @@ const (
 	// sidecar containers, e.g. image resolvers. Coordinator would notify resolvers that workload
 	// containers have finished their work, so that resource resolvers can push resources.
 	CoordinatorSidecarVolumeName = "coordinator-sidecar-volume"
-	// DockerSockVolume is volume name to mount host /var/run/docker.sock to container, it's used by coordinator.
-	DockerSockVolume = "docker-sock"
+	// DockerInDockerSockVolume is volume used for docker-in-docker to share it's sock file with other containers.
+	DockerInDockerSockVolume = "docker-dind-sock"
 	// DockerConfigJSONVolume is volume for config.json in secret.
 	DockerConfigJSONVolume = "cyclone-docker-secret-volume"
 
-	// DockerSockPath is path of docker socket file
-	DockerSockPath = "/var/run/docker.sock"
+	// DockerSockPath is path of docker socket file in container
+	DockerSockPath = "/var/run"
 
 	// DockerConfigPath is path of docker config
 	DockerConfigPath = "/root/.docker"

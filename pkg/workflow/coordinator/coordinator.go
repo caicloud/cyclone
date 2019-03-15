@@ -262,6 +262,10 @@ func (co *Coordinator) CollectResources() error {
 			}
 		}
 
+		if len(resource.Path) == 0 {
+			continue
+		}
+
 		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
 		fileutil.CreateDirectory(dst)
 

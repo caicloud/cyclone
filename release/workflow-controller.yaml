@@ -29,7 +29,8 @@ _config:
               "image-resolver": "[[ registry_release ]]/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
               "kv-resolver": "[[ registry_release ]]/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
               "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
-              "gc": "[[ registry_library ]]/alpine:3.7"
+              "gc": "[[ registry_library ]]/alpine:3.7",
+              "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs"
             },
             "logging": {
               "level": "debug"

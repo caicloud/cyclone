@@ -362,7 +362,7 @@ func (suite *PodBuilderSuite) TestCreateVolumes() {
 		volumes = append(volumes, v.Name)
 	}
 	assert.Contains(suite.T(), volumes, common.CoordinatorSidecarVolumeName)
-	assert.Contains(suite.T(), volumes, common.DockerSockVolume)
+	assert.NotContains(suite.T(), volumes, common.DockerInDockerSockVolume)
 	assert.NotContains(suite.T(), volumes, common.DefaultPvVolumeName)
 	assert.NotContains(suite.T(), volumes, common.DockerConfigJSONVolume)
 }
@@ -436,7 +436,7 @@ func (suite *PodBuilderSuite) TestResolveOutputResources() {
 	}
 	assert.Contains(suite.T(), vms, common.CoordinatorSidecarVolumeName)
 	assert.Contains(suite.T(), mountPaths, common.ResolverDefaultDataPath)
-	assert.Contains(suite.T(), vms, common.DockerSockVolume)
+	assert.Contains(suite.T(), vms, common.DockerInDockerSockVolume)
 	assert.Contains(suite.T(), mountPaths, common.ResolverNotifyDirPath)
 }
 
