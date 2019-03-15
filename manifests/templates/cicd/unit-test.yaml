@@ -150,7 +150,6 @@
           value: maven:3.5.3-jdk-8-alpine
         - name: cmd
           value: >-
-            cd /workspace;
             mvn test
         - name: test-result-path
           value: /workspace/target/surefire-reports
@@ -164,6 +163,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e
@@ -189,7 +189,6 @@
           value: gradle:3.4.1
         - name: cmd
           value: >-
-            cd /workspace;
             gradle clean test
         - name: test-result-path
           value: /workspace/build/test-results
@@ -203,6 +202,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e

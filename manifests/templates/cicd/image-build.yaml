@@ -14,7 +14,9 @@
     pod:
       inputs:
         arguments:
-        - name: image-name
+        - name: registry
+        - name: repository
+        - name: tag
         - name: build-context
           value: .
         - name: dockerfile-path
@@ -23,8 +25,8 @@
           value: docker:18.03.1-ce-dind
         - name: cmd
           value: >-
-            cd /workspace;
-            docker build -f {{ dockerfile-path }} -t {{ image-name }} {{ build-context }}
+            while [ ! -S /var/run/docker.sock ]; do sleep 1; done;
+            docker build -f {{ dockerfile-path }} -t {{ registry }}/{{ repository }}:{{ tag }} {{ build-context }}
         resources:
         - name: code
           path: /workspace
@@ -34,6 +36,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e
