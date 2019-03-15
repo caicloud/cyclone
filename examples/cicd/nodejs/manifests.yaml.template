@@ -23,8 +23,6 @@ spec:
   parameters:
   - name: IMAGE
     value: __REGISTRY__/nodejs-example:v0.0.1
-  - name: IMAGE_FILE
-    value: image.tar
 
 ---
 
@@ -41,23 +39,15 @@ spec:
     outputs:
       resources:
       - name: nodejs-example-image
-        path: /workspace/examples/nodejs/image.tar
     spec:
       containers:
       - name: main
         image: __REGISTRY__/docker:18.03-dind
         workingDir: /workspace/examples/nodejs
-        securityContext:
-          privileged: true
         command:
         - /bin/sh
         - -c
-        - >-
-          dockerd &
-          sleep 5 ;
-          docker build -f ./Dockerfile -t __REGISTRY__/nodejs-example:v0.0.1 . ;
-          docker save -o ./image.tar __REGISTRY__/nodejs-example:v0.0.1 ;
-          ls -al ./image.tar
+        - while [ ! -S /var/run/docker.sock ]; do sleep 1; done; docker build -f ./Dockerfile -t __REGISTRY__/nodejs-example:v0.0.1 .
 
 ---
 

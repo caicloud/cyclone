@@ -141,18 +141,6 @@ func (m *PodBuilder) CreateVolumes() error {
 		}
 	}
 
-	// Create hostPath volume for /var/run/docker.sock
-	var hostPathSocket = corev1.HostPathSocket
-	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: common.DockerSockVolume,
-		VolumeSource: corev1.VolumeSource{
-			HostPath: &corev1.HostPathVolumeSource{
-				Path: common.DockerSockPath,
-				Type: &hostPathSocket,
-			},
-		},
-	})
-
 	// Create secret volume for use in resource resolvers.
 	if controller.Config.Secret != "" {
 		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
@@ -322,6 +310,10 @@ func (m *PodBuilder) ResolveInputResources() error {
 
 // ResolveOutputResources add resource resolvers to pod spec.
 func (m *PodBuilder) ResolveOutputResources() error {
+	// Indicate whether there is image type resource to output, if so, we need a docker-in-docker
+	// side-car.
+	var withImageOutput bool
+
 	for index, r := range m.stg.Spec.Pod.Outputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
@@ -398,8 +390,10 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		}
 
 		if resource.Spec.Type == v1alpha1.ImageResourceType {
+			withImageOutput = true
+
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-				Name:      common.DockerSockVolume,
+				Name:      common.DockerInDockerSockVolume,
 				MountPath: common.DockerSockPath,
 			})
 
@@ -412,6 +406,48 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		}
 
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
+	}
+
+	// Add a volume for docker socket file sharing if there are image type resource to output.
+	if withImageOutput {
+		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+			Name: common.DockerInDockerSockVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+	}
+
+	// Add a docker-in-docker sidecar when there are image type resource to output.
+	if withImageOutput {
+		var previleged = true
+		dind := corev1.Container{
+			Image:   controller.Config.Images[controller.DindImage],
+			Name:    "csc-dind",
+			Command: []string{"dockerd"},
+			SecurityContext: &corev1.SecurityContext{
+				Privileged: &previleged,
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      common.DockerInDockerSockVolume,
+					MountPath: common.DockerSockPath,
+				},
+			},
+		}
+		m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
+	}
+
+	// Mount docker socket file to workload container if there are image type resource to output.
+	if withImageOutput {
+		for i, c := range m.pod.Spec.Containers {
+			if common.OnlyCustomContainer(c.Name) {
+				m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
+					Name:      common.DockerInDockerSockVolume,
+					MountPath: common.DockerSockPath,
+				})
+			}
+		}
 	}
 
 	return nil
@@ -563,10 +599,6 @@ func (m *PodBuilder) AddCoordinator() error {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      common.DockerSockVolume,
-				MountPath: common.DockerSockPath,
-			},
 			{
 				Name:      common.CoordinatorSidecarVolumeName,
 				MountPath: common.CoordinatorResolverPath,

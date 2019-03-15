@@ -21,7 +21,8 @@ data:
         "image-resolver": "__REGISTRY__/cyclone-resolver-image:__VERSION__",
         "kv-resolver": "__REGISTRY__/cyclone-resolver-kv:__VERSION__",
         "coordinator": "__REGISTRY__/cyclone-workflow-coordinator:__VERSION__",
-        "gc": "alpine:3.8"
+        "gc": "alpine:3.8",
+        "dind": "docker:18.03-dind",
       },
       "logging": {
         "level": "debug"
