@@ -90,7 +90,6 @@
           value: maven:3.5.3-jdk-8-alpine
         - name: cmd
           value: >-
-            cd /workspace;
             mvn clean package -Dmaven.test.skip
         - name: output-artifact-path
           value: /workspace/target/<app>.jar
@@ -104,6 +103,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e
@@ -129,7 +129,6 @@
           value: gradle:3.4.1
         - name: cmd
           value: >-
-            cd /workspace;
             gradle build -x test
         - name: output-artifact-path
           value: /workspace/build/<app>.jar
@@ -143,6 +142,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e

@@ -21,7 +21,6 @@
           value: emeraldsquad/sonar-scanner:1.0.0
         - name: cmd
           value: >-
-            cd /workspace;
             sonar-scanner -Dsonar.projectName=<project-name> -Dsonar.projectKey=<project-key> -Dsonar.sources={{ scan-source }}
         resources:
         - name: code
@@ -32,6 +31,7 @@
       spec:
         containers:
         - image: "{{ image }}"
+          workingDir: /workspace
           command:
           - /bin/sh
           - -e

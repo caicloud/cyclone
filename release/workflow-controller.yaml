@@ -37,7 +37,7 @@ _config:
             },
             "gc": {
               "enabled": true,
-              "delay_seconds": 3600,
+              "delay_seconds": 0,
               "retry": 1
             },
             "limits": {

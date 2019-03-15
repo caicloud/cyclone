@@ -106,6 +106,16 @@ func (m *PodBuilder) ResolveArguments() error {
 			parameters[a.Name] = a.Value
 		}
 	}
+
+	for k, v := range parameters {
+		resolved, err := ResolveRefStringValue(v, m.client)
+		if err != nil {
+			log.WithField("key", k).WithField("value", v).Error("resolve ref failed:", err)
+			return err
+		}
+		parameters[k] = resolved
+	}
+
 	log.WithField("params", parameters).Debug("Parameters collected")
 	raw, err := json.Marshal(m.stg.Spec.Pod.Spec)
 	if err != nil {
@@ -423,7 +433,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 		var previleged = true
 		dind := corev1.Container{
 			Image:   controller.Config.Images[controller.DindImage],
-			Name:    "csc-dind",
+			Name:    common.DockerInDockerSidecarName,
 			Command: []string{"dockerd"},
 			SecurityContext: &corev1.SecurityContext{
 				Privileged: &previleged,

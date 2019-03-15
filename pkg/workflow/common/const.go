@@ -43,6 +43,9 @@ const (
 	// CoordinatorSidecarName defines name of coordinator container.
 	CoordinatorSidecarName = CycloneSidecarPrefix + "co"
 
+	// DockerInDockerSidecarName defines name of docker in docker container.
+	DockerInDockerSidecarName = CycloneSidecarPrefix + "dind"
+
 	// ResolverDefaultWorkspacePath is workspace path in resource resolver containers.
 	// Following files or directories will be in this workspace.
 	// - ${WORKFLOWRUN_NAME}-pulling.lock File lock determine which stage to pull the resource

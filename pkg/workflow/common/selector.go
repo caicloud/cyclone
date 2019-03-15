@@ -45,6 +45,11 @@ func NonCoordinator(name string) bool {
 	return name != CoordinatorSidecarName
 }
 
+// NonDockerInDocker selects all containers except docker:dind.
+func NonDockerInDocker(name string) bool {
+	return name != DockerInDockerSidecarName
+}
+
 // Pass check whether the given container name passes the given selectors.
 func Pass(name string, selectors []ContainerSelector) bool {
 	for _, s := range selectors {
