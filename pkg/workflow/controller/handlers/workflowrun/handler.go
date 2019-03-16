@@ -1,13 +1,28 @@
 package workflowrun
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"time"
+
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
+
+// controllerStartTime represents the start time of workflow controller,
+// use to avoid sending notifications for workflowruns finished before workflow controller starts.
+var controllerStartTime *metav1.Time
+
+func init() {
+	controllerStartTime = &metav1.Time{Time: time.Now()}
+}
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
@@ -84,11 +99,41 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	// the GC queue.
 	h.GCProcessor.Add(originWfr)
 
-	// If the WorkflowRun has already been terminated(Completed, Error, Cancel) or waiting for external events, skip it.
-	if originWfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
+	// If the WorkflowRun has already been terminated(Completed, Error, Cancel), send notifications if necessary,
+	// otherwise directly skip it.
 		originWfr.Status.Overall.Phase == v1alpha1.StatusError ||
 		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+		// No need to send notifications for workflowruns finished before workflow controller starts.
+		if originWfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
+			return
+		}
+
+		// Send notifications with workflowrun.
+		bodyBytes, err := json.Marshal(originWfr)
+		if err != nil {
+			log.WithField("wfr", originWfr.Name).Error("Failed to marshal workflowrun: ", err)
+			return
+		}
+		body := bytes.NewReader(bodyBytes)
+
+		for _, endpoint := range controller.Config.Notifications {
+			req, err := http.NewRequest(http.MethodPost, endpoint.URL, body)
+			if err != nil {
+				log.WithField("wfr", originWfr.Name).Error("Failed to new notification request: ", err)
+				continue
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				log.WithField("wfr", originWfr.Name).Error("Failed to send notification request: ", err)
+				continue
+			}
+			log.WithField("wfr", originWfr.Name).Info("Status code of send notification: ", resp.StatusCode)
+		}
+		return
+	}
+
+	// If the WorkflowRun has already been waiting for external events, skip it.
+	if originWfr.Status.Overall.Status == v1alpha1.StatusWaiting {
 		return
 	}
 
