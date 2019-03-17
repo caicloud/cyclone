@@ -18,7 +18,7 @@ import (
 
 const (
 	contentType string = "Content-Type"
-	contentJson string = "application/json"
+	contentJSON string = "application/json"
 )
 
 // controllerStartTime represents the start time of workflow controller,
@@ -128,7 +128,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 				continue
 			}
 			// Set Json content type in Http header.
-			req.Header.Set(contentType, contentJson)
+			req.Header.Set(contentType, contentJSON)
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {

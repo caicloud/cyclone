@@ -40,6 +40,7 @@ const (
 	NotificationPolicyFailure NotificationPolicy = "Failure"
 )
 
+// Notification represents notifications for workflowrun results.
 type Notification struct {
 	// Policy represents the policy to send notifications.
 	Policy NotificationPolicy `json:"policy"`
