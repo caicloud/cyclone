@@ -23,6 +23,48 @@ type Workflow struct {
 type WorkflowSpec struct {
 	Resources *corev1.ResourceRequirements
 	Stages    []StageItem `json:"stages"`
+
+	// Notification represents the notification config of workflowrun result.
+	Notification Notification `json:"notification,omitempty"`
+}
+
+// NotificationPolicy represents the policy to send notifications.
+type NotificationPolicy string
+
+const (
+	// NotificationPolicyAlways represents always sending notifications no matter what workflow results are.
+	NotificationPolicyAlways NotificationPolicy = "Always"
+	// NotificationPolicySuccess represents sending notifications only when workflows succeed.
+	NotificationPolicySuccess NotificationPolicy = "Success"
+	// NotificationPolicyFailure represents sending notifications only when workflows fail.
+	NotificationPolicyFailure NotificationPolicy = "Failure"
+)
+
+type Notification struct {
+	// Policy represents the policy to send notifications.
+	Policy NotificationPolicy `json:"policy"`
+	// Receivers represents the receivers of notifications.
+	Receivers []NotificationReceiver `json:"receivers"`
+}
+
+// NotificationType represents the way to send notifications.
+type NotificationType string
+
+const (
+	// NotificationTypeEmail represents sending notifications by email.
+	NotificationTypeEmail NotificationPolicy = "Email"
+	// NotificationTypeSlack represents sending notifications by Slack.
+	NotificationTypeSlack NotificationPolicy = "Slack"
+	// NotificationTypeWebhook represents sending notifications by webhook.
+	NotificationTypeWebhook NotificationPolicy = "Webhook"
+)
+
+// NotificationReceiver represents the receiver of notifications.
+type NotificationReceiver struct {
+	// Type represents the way to send notifications.
+	Type NotificationType `json:"type"`
+	// Addresses represents the addresses to receive notifications.
+	Addresses []string `json:"addresses"`
 }
 
 // StageItem describes a stage in a workflow.

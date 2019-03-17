@@ -16,6 +16,11 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
+const (
+	contentType string = "Content-Type"
+	contentJson string = "application/json"
+)
+
 // controllerStartTime represents the start time of workflow controller,
 // use to avoid sending notifications for workflowruns finished before workflow controller starts.
 var controllerStartTime *metav1.Time
@@ -122,6 +127,9 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 				log.WithField("wfr", originWfr.Name).Error("Failed to new notification request: ", err)
 				continue
 			}
+			// Set Json content type in Http header.
+			req.Header.Set(contentType, contentJson)
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				log.WithField("wfr", originWfr.Name).Error("Failed to send notification request: ", err)
