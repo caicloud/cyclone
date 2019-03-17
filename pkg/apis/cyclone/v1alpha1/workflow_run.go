@@ -80,23 +80,26 @@ type StageStatus struct {
 	Outputs []KeyValue `json:"outputs"`
 }
 
+// StatusPhase represents the phase of stage status or workflowrun status.
+type StatusPhase string
+
 const (
 	// StatusPending means stage is not executed yet when used for stage. When
 	// used for WorkflowRun overall status, it means no stages in WorkflowRun
 	// are started to execute.
-	StatusPending = "Pending"
+	StatusPending StatusPhase = "Pending"
 	// StatusRunning means Stage or WorkflowRun is running.
-	StatusRunning = "Running"
+	StatusRunning StatusPhase = "Running"
 	// StatusWaiting means Stage or WorkflowRun have finished, but need to wait
 	// for external events to continue. For example, a stage's executing result
 	// needs approval of users, so that following stages can preceeding.
-	StatusWaiting = "Waiting"
+	StatusWaiting StatusPhase = "Waiting"
 	// StatusCompleted means Stage or WorkflowRun gotten completed without errors.
-	StatusCompleted = "Completed"
+	StatusCompleted StatusPhase = "Completed"
 	// StatusError indicates something wrong in the execution of Stage or WorkflowRun.
-	StatusError = "Error"
+	StatusError StatusPhase = "Error"
 	// StatusCancelled indicates WorkflowRun have been cancelled.
-	StatusCancelled = "Cancelled"
+	StatusCancelled StatusPhase = "Cancelled"
 )
 
 // PodInfo describes the pod a stage created.
@@ -108,8 +111,8 @@ type PodInfo struct {
 // Status of a Stage in a WorkflowRun or the whole WorkflowRun.
 // +k8s:deepcopy-gen=true
 type Status struct {
-	// Status with value: Running, Waiting, Completed, Error
-	Status string `json:"status"`
+	// Phase with value: Running, Waiting, Completed, Error
+	Phase StatusPhase `json:"phase"`
 
 	// LastTransitionTime is the last time the status transitioned from one status to another.
 	// +optional

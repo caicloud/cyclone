@@ -149,7 +149,7 @@ func (o *operator) Update() error {
 			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(combined)
 			if err == nil {
 				log.WithField("wfr", latest.Name).
-					WithField("status", combined.Status.Overall.Status).
+					WithField("status", combined.Status.Overall.Phase).
 					WithField("cleaned", combined.Status.Cleaned).
 					Info("WorkflowRun status updated successfully.")
 			}
@@ -188,7 +188,7 @@ func (o *operator) UpdateStagePodInfo(stage string, podInfo *v1alpha1.PodInfo) {
 	if _, ok := o.wfr.Status.Stages[stage]; !ok {
 		o.wfr.Status.Stages[stage] = &v1alpha1.StageStatus{
 			Status: v1alpha1.Status{
-				Status: v1alpha1.StatusRunning,
+				Phase: v1alpha1.StatusRunning,
 			},
 		}
 	}
@@ -205,7 +205,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// If the WorkflowRun has no stage status recorded yet, we resolve the overall status as pending.
 	if o.wfr.Status.Stages == nil || len(o.wfr.Status.Stages) == 0 {
 		return &v1alpha1.Status{
-			Status:             v1alpha1.StatusPending,
+			Phase:              v1alpha1.StatusPending,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -213,7 +213,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 
 	var running, waiting, err bool
 	for stage, status := range o.wfr.Status.Stages {
-		switch status.Status.Status {
+		switch status.Status.Phase {
 		case v1alpha1.StatusPending:
 			log.WithField("stage", stage).Warn("Pending stage should not occur.")
 		case v1alpha1.StatusRunning:
@@ -225,7 +225,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		case v1alpha1.StatusCompleted:
 		default:
 			log.WithField("stg", stage).
-				WithField("status", status.Status.Status).
+				WithField("status", status.Status.Phase).
 				Error("Unknown stage status observed.")
 			err = true
 		}
@@ -234,7 +234,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// If there are running stages, resolve the overall status as running.
 	if running {
 		return &v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -243,7 +243,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Then if there are waiting stages, resolve the overall status as waiting.
 	if waiting {
 		return &v1alpha1.Status{
-			Status:             v1alpha1.StatusWaiting,
+			Phase:              v1alpha1.StatusWaiting,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -252,7 +252,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Then if there are failed stages, resolve the overall status as failed.
 	if err {
 		return &v1alpha1.Status{
-			Status:             v1alpha1.StatusError,
+			Phase:              v1alpha1.StatusError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -270,7 +270,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	next := len(NextStages(o.wf, o.wfr))
 	if next > 0 {
 		return &v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -279,7 +279,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Finally, all stages have been completed and no more stages to run. We mark the WorkflowRun
 	// overall stage as Completed.
 	return &v1alpha1.Status{
-		Status:             v1alpha1.StatusCompleted,
+		Phase:              v1alpha1.StatusCompleted,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
 		StartTime:          startTime,
 	}, nil
@@ -301,7 +301,7 @@ func (o *operator) Reconcile() error {
 
 	for _, stage := range nextStages {
 		o.UpdateStageStatus(stage, &v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			Reason:             "StageInitialized",
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          metav1.Time{Time: time.Now()},
@@ -333,7 +333,7 @@ func (o *operator) Reconcile() error {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod manifest for stage error: ", err)
 			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GeneratePodSpecError", "Generate pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Status:             v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusError,
 				Reason:             "GeneratePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to generate pod: %v", err),
@@ -348,7 +348,7 @@ func (o *operator) Reconcile() error {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod for stage error: ", err)
 			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Status:             v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusError,
 				Reason:             "CreatePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to create pod: %v", err),
@@ -358,7 +358,7 @@ func (o *operator) Reconcile() error {
 
 		o.recorder.Eventf(o.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", stage)
 		o.UpdateStageStatus(stage, &v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "StagePodCreated",
 		})

@@ -43,9 +43,9 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	h.GCProcessor.Add(originWfr)
 
 	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
-	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusError ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusWaiting {
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusError ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
 		return
 	}
 
@@ -85,10 +85,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	h.GCProcessor.Add(originWfr)
 
 	// If the WorkflowRun has already been terminated(Completed, Error, Cancel) or waiting for external events, skip it.
-	if originWfr.Status.Overall.Status == v1alpha1.StatusCompleted ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusError ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusWaiting ||
-		originWfr.Status.Overall.Status == v1alpha1.StatusCancelled {
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusError ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
 		return
 	}
 
