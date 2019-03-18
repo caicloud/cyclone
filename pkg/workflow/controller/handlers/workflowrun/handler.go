@@ -187,9 +187,9 @@ func sendNotifications(wfr *v1alpha1.WorkflowRun) {
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.WithField("wfr", wfr.Name).Error("Failed to send notification for %s: ", endpoint.Name, err)
+			log.WithField("wfr", wfr.Name).Errorf("Failed to send notification for %s: %v", endpoint.Name, err)
 			continue
 		}
-		log.WithField("wfr", wfr.Name).Info("Status code of notification for %s: ", endpoint.Name, resp.StatusCode)
+		log.WithField("wfr", wfr.Name).Infof("Status code of notification for %s: %d", endpoint.Name, resp.StatusCode)
 	}
 }

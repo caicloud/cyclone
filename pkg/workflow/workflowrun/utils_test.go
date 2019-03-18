@@ -284,7 +284,7 @@ func TestIsWorkflowRunTerminated(t *testing.T) {
 		wfr.Status.Overall.Phase = tc.phase
 		result := IsWorkflowRunTerminated(wfr)
 		if result != tc.expected {
-			t.Errorf("Fail to judge the status for %s: expect %v, but got %v", d, tc.expected, result)
+			t.Errorf("Fail to judge the status for %s: expect %t, but got %t", d, tc.expected, result)
 		}
 	}
 }
