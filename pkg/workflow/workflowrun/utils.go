@@ -149,3 +149,15 @@ func ResolveRefStringValue(ref string, client clientset.Interface) (string, erro
 
 	return strV, nil
 }
+
+// IsWorkflowRunTerminated judges whether the workflowrun has be terminated.
+// Return true if terminated, otherwise return false.
+func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
+	if wfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
+		wfr.Status.Overall.Phase == v1alpha1.StatusError ||
+		wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+		return true
+	}
+
+	return false
+}

@@ -61,6 +61,8 @@ type WorkflowControllerConfig struct {
 	Secret string `json:"secret"`
 	// CycloneServerAddr is address of the Cyclone Server
 	CycloneServerAddr string `json:"cyclone_server_addr"`
+	// Notifications represents the config to send notifications after workflowruns finish.
+	Notifications []NotificationEndpoint `json:"notifications"`
 }
 
 // LoggingConfig configures logging
@@ -96,6 +98,17 @@ type GCConfig struct {
 type LimitsConfig struct {
 	// Maximum WorkflowRuns to be kept for each Workflow
 	MaxWorkflowRuns int `json:"max_workflowruns"`
+}
+
+// NotificationEndpoint represents the config of notification endpoint.
+// Workflow controller will send notifications after workflowruns finish
+// if notification endpoints are configured.
+type NotificationEndpoint struct {
+	// Name represents the name of notification endpoint.
+	Name string `json:"name"`
+
+	// URL represents the URL to send the notification.
+	URL string `json:"url"`
 }
 
 // Config is Workflow Controller config instance
