@@ -58,6 +58,9 @@ const (
 	// StageNameQueryParameter represents the query param stage name.
 	StageNameQueryParameter = "stage"
 
+	// LabelQueryParameter represents the label query.
+	LabelQueryParameter = "label"
+
 	// ContainerNameQueryParameter represents the query param container name.
 	ContainerNameQueryParameter = "container"
 
