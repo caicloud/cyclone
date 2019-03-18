@@ -20,7 +20,7 @@ func CreateWorkflow(ctx context.Context, project, tenant string, wf *v1alpha1.Wo
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, "", wf)
 		if err != nil {
-			log.Infof("Failed to create workflow %s for tenant %s in project %s as error: %v", wf.Name, tenant, project, err)
+			log.Errorf("Failed to create workflow %s for tenant %s in project %s as error: %v", wf.Name, tenant, project, err)
 			return nil, err
 		}
 	}

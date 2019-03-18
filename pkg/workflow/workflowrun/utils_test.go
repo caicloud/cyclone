@@ -242,3 +242,49 @@ func TestResolveRefStringValue(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("cyclone", v)
 }
+
+func TestIsWorkflowRunTerminated(t *testing.T) {
+	wfr = &v1alpha1.WorkflowRun{
+		Status: v1alpha1.WorkflowRunStatus{
+			Overall: v1alpha1.Status{},
+		},
+	}
+
+	testCases := map[v1alpha1.StatusPhase]struct {
+		phase    v1alpha1.StatusPhase
+		expected bool
+	}{
+		v1alpha1.StatusPending: {
+			v1alpha1.StatusPending,
+			false,
+		},
+		v1alpha1.StatusRunning: {
+			v1alpha1.StatusRunning,
+			false,
+		},
+		v1alpha1.StatusWaiting: {
+			v1alpha1.StatusWaiting,
+			false,
+		},
+		v1alpha1.StatusCompleted: {
+			v1alpha1.StatusCompleted,
+			true,
+		},
+		v1alpha1.StatusError: {
+			v1alpha1.StatusError,
+			true,
+		},
+		v1alpha1.StatusCancelled: {
+			v1alpha1.StatusCancelled,
+			true,
+		},
+	}
+
+	for d, tc := range testCases {
+		wfr.Status.Overall.Phase = tc.phase
+		result := IsWorkflowRunTerminated(wfr)
+		if result != tc.expected {
+			t.Errorf("Fail to judge the status for %s: expect %v, but got %v", d, tc.expected, result)
+		}
+	}
+}

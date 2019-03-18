@@ -106,42 +106,14 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 
 	// If the WorkflowRun has already been terminated(Completed, Error, Cancel), send notifications if necessary,
 	// otherwise directly skip it.
-		originWfr.Status.Overall.Phase == v1alpha1.StatusError ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting ||
-		// No need to send notifications for workflowruns finished before workflow controller starts.
-		if originWfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
-			return
-		}
-
-		// Send notifications with workflowrun.
-		bodyBytes, err := json.Marshal(originWfr)
-		if err != nil {
-			log.WithField("wfr", originWfr.Name).Error("Failed to marshal workflowrun: ", err)
-			return
-		}
-		body := bytes.NewReader(bodyBytes)
-
-		for _, endpoint := range controller.Config.Notifications {
-			req, err := http.NewRequest(http.MethodPost, endpoint.URL, body)
-			if err != nil {
-				log.WithField("wfr", originWfr.Name).Error("Failed to new notification request: ", err)
-				continue
-			}
-			// Set Json content type in Http header.
-			req.Header.Set(contentType, contentJSON)
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				log.WithField("wfr", originWfr.Name).Error("Failed to send notification request: ", err)
-				continue
-			}
-			log.WithField("wfr", originWfr.Name).Info("Status code of send notification: ", resp.StatusCode)
-		}
+	if workflowrun.IsWorkflowRunTerminated(originWfr) {
+		// Send notification as workflowrun has been terminated.
+		sendNotifications(originWfr)
 		return
 	}
 
 	// If the WorkflowRun has already been waiting for external events, skip it.
-	if originWfr.Status.Overall.Status == v1alpha1.StatusWaiting {
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
 		return
 	}
 
@@ -186,4 +158,38 @@ func validate(wfr *v1alpha1.WorkflowRun) bool {
 	}
 
 	return true
+}
+
+// sendNotifications send notifications for workflowruns.
+// Will skip workflowruns have finished before workflow controller starts.
+func sendNotifications(wfr *v1alpha1.WorkflowRun) {
+	// No need to send notifications for workflowruns finished before workflow controller starts.
+	if wfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
+		return
+	}
+
+	// Send notifications with workflowrun.
+	bodyBytes, err := json.Marshal(wfr)
+	if err != nil {
+		log.WithField("wfr", wfr.Name).Error("Failed to marshal workflowrun: ", err)
+		return
+	}
+	body := bytes.NewReader(bodyBytes)
+
+	for _, endpoint := range controller.Config.Notifications {
+		req, err := http.NewRequest(http.MethodPost, endpoint.URL, body)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Error("Failed to new notification request: ", err)
+			continue
+		}
+		// Set Json content type in Http header.
+		req.Header.Set(contentType, contentJSON)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Error("Failed to send notification for %s: ", endpoint.Name, err)
+			continue
+		}
+		log.WithField("wfr", wfr.Name).Info("Status code of notification for %s: ", endpoint.Name, resp.StatusCode)
+	}
 }
