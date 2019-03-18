@@ -85,6 +85,12 @@ const (
 	// IncludePublicQueryParameter indicates whether include system level resources, for example, when list
 	// stage templates in a tenant, whether to include system level templates. Default is true.
 	IncludePublicQueryParameter = "includePublic"
+
+	// StartTimeQueryParameter represents the query param start time.
+	StartTimeQueryParameter string = "startTime"
+
+	// EndTimeQueryParameter represents the query param end time.
+	EndTimeQueryParameter string = "endTime"
 )
 
 // GetHTTPRequest gets request from context.
