@@ -21,13 +21,13 @@ func GetResourceVolumeName(resourceName string) string {
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
 	// If the latest status is already a terminated status (Completed, Error), no need to update
 	// update it, we just return the latest status.
-	if latest.Status == v1alpha1.StatusCompleted || latest.Status == v1alpha1.StatusError {
+	if latest.Phase == v1alpha1.StatusCompleted || latest.Phase == v1alpha1.StatusError {
 		return latest
 	}
 
 	// If the latest status is not a terminated status, but the reported status is, then we
 	// apply the reported status.
-	if update.Status == v1alpha1.StatusCompleted || update.Status == v1alpha1.StatusError {
+	if update.Phase == v1alpha1.StatusCompleted || update.Phase == v1alpha1.StatusError {
 		return update
 	}
 
@@ -54,7 +54,7 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		safeToRun := true
 		for _, d := range stage.Depends {
 			status, ok := wfr.Status.Stages[d]
-			if !(ok && status.Status.Status == v1alpha1.StatusCompleted) {
+			if !(ok && status.Status.Phase == v1alpha1.StatusCompleted) {
 				safeToRun = false
 				break
 			}

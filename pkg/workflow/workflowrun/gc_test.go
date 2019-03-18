@@ -18,7 +18,7 @@ func TestCheckGC(t *testing.T) {
 	wfr := &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusRunning,
+				Phase: v1alpha1.StatusRunning,
 			},
 			Cleaned: true,
 		},
@@ -28,7 +28,7 @@ func TestCheckGC(t *testing.T) {
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusRunning,
+				Phase: v1alpha1.StatusRunning,
 			},
 			Cleaned: false,
 		},
@@ -38,7 +38,7 @@ func TestCheckGC(t *testing.T) {
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusCompleted,
+				Phase: v1alpha1.StatusCompleted,
 			},
 			Cleaned: false,
 		},
@@ -48,7 +48,7 @@ func TestCheckGC(t *testing.T) {
 	wfr = &v1alpha1.WorkflowRun{
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusError,
+				Phase: v1alpha1.StatusError,
 			},
 			Cleaned: false,
 		},
@@ -81,7 +81,7 @@ func (s *GCProcessorSuite) TestAdd() {
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusRunning,
+				Phase: v1alpha1.StatusRunning,
 			},
 			Cleaned: true,
 		},
@@ -96,7 +96,7 @@ func (s *GCProcessorSuite) TestAdd() {
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusCompleted,
+				Phase: v1alpha1.StatusCompleted,
 			},
 			Cleaned: false,
 		},
@@ -111,7 +111,7 @@ func (s *GCProcessorSuite) TestAdd() {
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status: v1alpha1.StatusError,
+				Phase: v1alpha1.StatusError,
 			},
 			Cleaned: false,
 		},
@@ -134,7 +134,7 @@ func (s *GCProcessorSuite) TestProcess() {
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{
-				Status:             v1alpha1.StatusCompleted,
+				Phase:              v1alpha1.StatusCompleted,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 			},
 			Cleaned: false,

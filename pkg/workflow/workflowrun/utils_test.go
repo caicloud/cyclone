@@ -20,37 +20,37 @@ func TestGetResourceVolumeName(t *testing.T) {
 
 func TestResolveStatus(t *testing.T) {
 	latest := &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusCompleted,
 	}
 	update := &v1alpha1.Status{
-		Status: v1alpha1.StatusRunning,
+		Phase: v1alpha1.StatusRunning,
 	}
 	expected := &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusCompleted,
 	}
 	result := resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
 
 	latest = &v1alpha1.Status{
-		Status: v1alpha1.StatusRunning,
+		Phase: v1alpha1.StatusRunning,
 	}
 	update = &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusCompleted,
 	}
 	expected = &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusCompleted,
 	}
 	result = resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
 
 	latest = &v1alpha1.Status{
-		Status: v1alpha1.StatusError,
+		Phase: v1alpha1.StatusError,
 	}
 	update = &v1alpha1.Status{
-		Status: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusCompleted,
 	}
 	expected = &v1alpha1.Status{
-		Status: v1alpha1.StatusError,
+		Phase: v1alpha1.StatusError,
 	}
 	result = resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
@@ -58,15 +58,15 @@ func TestResolveStatus(t *testing.T) {
 	now := metav1.Time{Time: time.Now()}
 	old := metav1.Time{Time: time.Now().Add(-time.Second * 10)}
 	latest = &v1alpha1.Status{
-		Status:             v1alpha1.StatusRunning,
+		Phase:              v1alpha1.StatusRunning,
 		LastTransitionTime: now,
 	}
 	update = &v1alpha1.Status{
-		Status:             v1alpha1.StatusRunning,
+		Phase:              v1alpha1.StatusRunning,
 		LastTransitionTime: old,
 	}
 	expected = &v1alpha1.Status{
-		Status:             v1alpha1.StatusRunning,
+		Phase:              v1alpha1.StatusRunning,
 		LastTransitionTime: now,
 	}
 	result = resolveStatus(latest, update)
@@ -94,7 +94,7 @@ func TestNextStages(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Status: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
 				},
 			},
 		},
@@ -123,7 +123,7 @@ func TestNextStages(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Status: v1alpha1.StatusError},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusError},
 				},
 			},
 		},
@@ -152,7 +152,7 @@ func TestNextStages(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Status: v1alpha1.StatusRunning},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusRunning},
 				},
 			},
 		},
@@ -169,13 +169,13 @@ func TestStaticStatus(t *testing.T) {
 		Stages: map[string]*v1alpha1.StageStatus{
 			"A": {
 				Status: v1alpha1.Status{
-					Status:             v1alpha1.StatusRunning,
+					Phase:              v1alpha1.StatusRunning,
 					LastTransitionTime: now,
 				},
 			},
 		},
 		Overall: v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: now,
 		},
 	}
@@ -184,13 +184,13 @@ func TestStaticStatus(t *testing.T) {
 		Stages: map[string]*v1alpha1.StageStatus{
 			"A": {
 				Status: v1alpha1.Status{
-					Status:             v1alpha1.StatusRunning,
+					Phase:              v1alpha1.StatusRunning,
 					LastTransitionTime: zero,
 				},
 			},
 		},
 		Overall: v1alpha1.Status{
-			Status:             v1alpha1.StatusRunning,
+			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: zero,
 		},
 	}

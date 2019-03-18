@@ -125,9 +125,9 @@ func checkGC(wfr *v1alpha1.WorkflowRun) bool {
 	}
 
 	// If it's not in terminated state(Completed, Error, Cancel), skip it.
-	if wfr.Status.Overall.Status != v1alpha1.StatusCompleted &&
-		wfr.Status.Overall.Status != v1alpha1.StatusError &&
-		wfr.Status.Overall.Status != v1alpha1.StatusCancelled {
+	if wfr.Status.Overall.Phase != v1alpha1.StatusCompleted &&
+		wfr.Status.Overall.Phase != v1alpha1.StatusError &&
+		wfr.Status.Overall.Phase != v1alpha1.StatusCancelled {
 		return false
 	}
 

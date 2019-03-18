@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
@@ -49,9 +50,9 @@ type JSONPatch struct {
 }
 
 // BuildWfrStatusPatch builds patch for updating status of workflowrun
-func BuildWfrStatusPatch(status string) ([]byte, error) {
+func BuildWfrStatusPatch(statusPhase v1alpha1.StatusPhase) ([]byte, error) {
 	p := map[string]string{
-		"/status/overall/status": status,
+		"/status/overall/status": string(statusPhase),
 	}
 	return BuildPatch(p)
 }
