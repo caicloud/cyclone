@@ -12,9 +12,11 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/types"
 )
 
-// ListRunningPods lists running pods of workflowruns for one tenant.
-func ListRunningPods(ctx context.Context, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
-	pods, err := handler.K8sClient.CoreV1().Pods(common.TenantNamespace(tenant)).List(metav1.ListOptions{})
+// ListWorkingPods lists all pods of workflowruns.
+func ListWorkingPods(ctx context.Context, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+	pods, err := handler.K8sClient.CoreV1().Pods(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+		LabelSelector: common.PodLabelSelector,
+	})
 	if err != nil {
 		log.Errorf("Failed to list pods for tenant %s as error: %v", tenant, err)
 		return nil, err

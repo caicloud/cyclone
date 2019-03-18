@@ -13,13 +13,13 @@ func init() {
 
 var workload = []definition.Descriptor{
 	{
-		Path:        "/runningpods",
+		Path:        "/workingpods",
 		Description: "Workload APIs",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
-				Function:    handler.ListRunningPods,
-				Description: "List running pods",
+				Function:    handler.ListWorkingPods,
+				Description: "List all pods of workflowruns",
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Header,
