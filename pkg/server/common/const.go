@@ -77,4 +77,9 @@ const (
 
 	// ControlClusterName is the name of control cluster
 	ControlClusterName = "control-cluster"
+
+	// PodLabelSelector is selector used to select pod created by Cyclone stages
+	// TODO(robin) Copy from pkg/workflow/common/const.go, need to create package pkg/common
+	// to merge pkg/workflow/common and pkg/server/common.
+	PodLabelSelector = "cyclone.io/workflow==true"
 )
