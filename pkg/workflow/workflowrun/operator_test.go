@@ -51,7 +51,7 @@ func TestOverallStatus(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
 			},
 		},
@@ -73,10 +73,10 @@ func TestOverallStatus(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
 				"B": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
 			},
 		},
@@ -88,7 +88,7 @@ func TestOverallStatus(t *testing.T) {
 		wfr:      wfr,
 	}
 	overall, _ = o.OverallStatus()
-	assert.Equal(t, v1alpha1.StatusCompleted, overall.Phase)
+	assert.Equal(t, v1alpha1.StatusSucceeded, overall.Phase)
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -98,10 +98,10 @@ func TestOverallStatus(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
 				"B": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusError},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusFailed},
 				},
 			},
 		},
@@ -113,7 +113,7 @@ func TestOverallStatus(t *testing.T) {
 		wfr:      wfr,
 	}
 	overall, _ = o.OverallStatus()
-	assert.Equal(t, v1alpha1.StatusError, overall.Phase)
+	assert.Equal(t, v1alpha1.StatusFailed, overall.Phase)
 
 	wfr = &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -123,7 +123,7 @@ func TestOverallStatus(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusError},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusFailed},
 				},
 				"B": {
 					Status: v1alpha1.Status{Phase: v1alpha1.StatusRunning},

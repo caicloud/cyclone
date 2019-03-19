@@ -53,7 +53,7 @@ func Stats(list *v1alpha1.WorkflowRunList, startTime, endTime string) (*api.Stat
 
 	if statistics.Overview.Total != 0 {
 		statistics.Overview.SuccessRatio = fmt.Sprintf("%.2f%%",
-			float64(statistics.Overview.Completed)/float64(statistics.Overview.Total)*100)
+			float64(statistics.Overview.Succeeded)/float64(statistics.Overview.Total)*100)
 	}
 	return statistics, nil
 }
@@ -126,10 +126,10 @@ func formatTimeToDay(t time.Time) int64 {
 
 func statsStatus(s api.StatsPhase, recordStatus v1alpha1.StatusPhase) api.StatsPhase {
 	switch recordStatus {
-	case v1alpha1.StatusCompleted:
-		s.Completed++
-	case v1alpha1.StatusError:
-		s.Error++
+	case v1alpha1.StatusSucceeded:
+		s.Succeeded++
+	case v1alpha1.StatusFailed:
+		s.Failed++
 	case v1alpha1.StatusCancelled:
 		s.Cancelled++
 	case v1alpha1.StatusRunning:

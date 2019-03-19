@@ -220,9 +220,9 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 			running = true
 		case v1alpha1.StatusWaiting:
 			waiting = true
-		case v1alpha1.StatusError:
+		case v1alpha1.StatusFailed:
 			err = true
-		case v1alpha1.StatusCompleted:
+		case v1alpha1.StatusSucceeded:
 		default:
 			log.WithField("stg", stage).
 				WithField("status", status.Status.Phase).
@@ -252,7 +252,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Then if there are failed stages, resolve the overall status as failed.
 	if err {
 		return &v1alpha1.Status{
-			Phase:              v1alpha1.StatusError,
+			Phase:              v1alpha1.StatusFailed,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			StartTime:          startTime,
 		}, nil
@@ -279,7 +279,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	// Finally, all stages have been completed and no more stages to run. We mark the WorkflowRun
 	// overall stage as Completed.
 	return &v1alpha1.Status{
-		Phase:              v1alpha1.StatusCompleted,
+		Phase:              v1alpha1.StatusSucceeded,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
 		StartTime:          startTime,
 	}, nil
@@ -333,7 +333,7 @@ func (o *operator) Reconcile() error {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod manifest for stage error: ", err)
 			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GeneratePodSpecError", "Generate pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusFailed,
 				Reason:             "GeneratePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to generate pod: %v", err),
@@ -348,7 +348,7 @@ func (o *operator) Reconcile() error {
 			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod for stage error: ", err)
 			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", stage, err)
 			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusFailed,
 				Reason:             "CreatePodError",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Message:            fmt.Sprintf("Failed to create pod: %v", err),
