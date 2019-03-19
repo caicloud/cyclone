@@ -203,3 +203,45 @@ type TLSClientConfig struct {
 	// CAData takes precedence over CAFile
 	CAData []byte `json:"caData,omitempty" bson:"caData"`
 }
+
+// Statistic represents statistics of project or workflow.
+type Statistic struct {
+	// Overview statistics
+	Overview StatsOverview `json:"overview"`
+	// Details statistics
+	Details []*StatsDetail `json:"details"`
+}
+
+// StatsOverview represents overview statistics
+type StatsOverview struct {
+	// Total represents number of workflowruns
+	Total int `json:"total"`
+	// StatsPhase ...
+	StatsPhase `json:",inline"`
+	// SuccessRatio represents ratio of success workflowrun,
+	// SuccessRatio == CompletedCount / Total
+	SuccessRatio string `json:"successRatio"`
+}
+
+// StatsDetail represents detailed statistics
+type StatsDetail struct {
+	Timestamp int64 `json:"timestamp"`
+	// StatsPhase ...
+	StatsPhase `json:",inline"`
+}
+
+// StatsPhase ...
+type StatsPhase struct {
+	// Pending wfr count
+	Pending int `json:"pending"`
+	// Running wfr count
+	Running int `json:"running"`
+	// Waiting wfr count
+	Waiting int `json:"waiting"`
+	// Completed wfr count
+	Completed int `json:"completed"`
+	// Error wfr count
+	Error int `json:"error"`
+	// Cancelled wfr count
+	Cancelled int `json:"cancelled"`
+}

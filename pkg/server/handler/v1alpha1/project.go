@@ -9,6 +9,8 @@ import (
 	"github.com/caicloud/nirvana/log"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -92,4 +94,16 @@ func DeleteProject(ctx context.Context, tenant, project string) error {
 	err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
+}
+
+// GetProjectStatistics handles the request to get a project's statistics.
+func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.Statistic, error) {
+	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+		LabelSelector: common.ProjectSelector(project),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return statistic.Stats(wfrs, start, end)
 }

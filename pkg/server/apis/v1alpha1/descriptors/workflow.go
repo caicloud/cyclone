@@ -21,6 +21,7 @@ import (
 
 	handler "github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
+	"github.com/caicloud/nirvana/operators/validator"
 )
 
 func init() {
@@ -38,12 +39,12 @@ var workflow = []definition.Descriptor{
 				Description: "Create workflow",
 				Parameters: []definition.Parameter{
 					{
-						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
-					},
-					{
 						Source: definition.Header,
 						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source:      definition.Body,
@@ -58,12 +59,12 @@ var workflow = []definition.Descriptor{
 				Description: "List workflows",
 				Parameters: []definition.Parameter{
 					{
-						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
-					},
-					{
 						Source: definition.Header,
 						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source:      definition.Auto,
@@ -85,16 +86,16 @@ var workflow = []definition.Descriptor{
 				Description: "Get workflow",
 				Parameters: []definition.Parameter{
 					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
 						Source: definition.Path,
 						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Path,
 						Name:   httputil.WorkflowNamePathParameterName,
-					},
-					{
-						Source: definition.Header,
-						Name:   httputil.TenantHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("workflow"),
@@ -105,16 +106,16 @@ var workflow = []definition.Descriptor{
 				Description: "Update workflow",
 				Parameters: []definition.Parameter{
 					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
 						Source: definition.Path,
 						Name:   httputil.ProjectNamePathParameterName,
 					},
 					{
 						Source: definition.Path,
 						Name:   httputil.WorkflowNamePathParameterName,
-					},
-					{
-						Source: definition.Header,
-						Name:   httputil.TenantHeaderName,
 					},
 					{
 						Source:      definition.Body,
@@ -129,6 +130,37 @@ var workflow = []definition.Descriptor{
 				Description: "Delete workflow",
 				Parameters: []definition.Parameter{
 					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
+		Path:        "/projects/{project}/workflows/{workflow}/stats",
+		Description: "Workflow stats API",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.GetWFStatistics,
+				Description: "Get statistics of the workflow",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose project to stats",
+					},
+					{
 						Source: definition.Path,
 						Name:   httputil.ProjectNamePathParameterName,
 					},
@@ -137,11 +169,17 @@ var workflow = []definition.Descriptor{
 						Name:   httputil.WorkflowNamePathParameterName,
 					},
 					{
-						Source: definition.Header,
-						Name:   httputil.TenantHeaderName,
+						Source:    definition.Query,
+						Name:      httputil.StartTimeQueryParameter,
+						Operators: []definition.Operator{validator.String("required")},
+					},
+					{
+						Source:    definition.Query,
+						Name:      httputil.EndTimeQueryParameter,
+						Operators: []definition.Operator{validator.String("required")},
 					},
 				},
-				Results: []definition.Result{definition.ErrorResult()},
+				Results: definition.DataErrorResults("workflow stats"),
 			},
 		},
 	},

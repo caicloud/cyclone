@@ -8,6 +8,8 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -15,7 +17,7 @@ import (
 )
 
 // CreateWorkflow ...
-func CreateWorkflow(ctx context.Context, project, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func CreateWorkflow(ctx context.Context, tenant, project string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
 	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, "", wf)
@@ -29,7 +31,7 @@ func CreateWorkflow(ctx context.Context, project, tenant string, wf *v1alpha1.Wo
 }
 
 // ListWorkflows ...
-func ListWorkflows(ctx context.Context, project, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListWorkflows(ctx context.Context, tenant, project string, pagination *types.Pagination) (*types.ListResponse, error) {
 	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
@@ -53,14 +55,14 @@ func ListWorkflows(ctx context.Context, project, tenant string, pagination *type
 }
 
 // GetWorkflow ...
-func GetWorkflow(ctx context.Context, project, workflow, tenant string) (*v1alpha1.Workflow, error) {
+func GetWorkflow(ctx context.Context, tenant, project, workflow string) (*v1alpha1.Workflow, error) {
 	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
 
 	return wf, cerr.ConvertK8sError(err)
 }
 
 // UpdateWorkflow ...
-func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func UpdateWorkflow(ctx context.Context, tenant, project, workflow string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		origin, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
 		if err != nil {
@@ -82,9 +84,21 @@ func UpdateWorkflow(ctx context.Context, project, workflow, tenant string, wf *v
 }
 
 // DeleteWorkflow ...
-func DeleteWorkflow(ctx context.Context, project, workflow, tenant string) error {
+func DeleteWorkflow(ctx context.Context, tenant, project, workflow string) error {
 	err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(workflow, nil)
 
 	return cerr.ConvertK8sError(err)
 
+}
+
+// GetWFStatistics handles the request to get a workflow's statistics.
+func GetWFStatistics(ctx context.Context, tenant, project, workflow string, start, end string) (*api.Statistic, error) {
+	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return statistic.Stats(wfrs, start, end)
 }
