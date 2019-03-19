@@ -32,17 +32,50 @@ const (
 	// AnnotationTenant is the annotation key used for namespace to relate tenant information
 	AnnotationTenant = "cyclone.io/tenant-info"
 
+	// AnnotationAlias is the annotation key used to indicate the alias of resources
+	AnnotationAlias = "cyclone.io/alias"
+
+	// AnnotationDescription is the annotation key used to describe resources
+	AnnotationDescription = "cyclone.io/description"
+
+	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to
+	WorkflowRunAnnotationName = "workflowrun.cyclone.io"
+
+	// MetaNamespaceAnnotationName is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
+	MetaNamespaceAnnotationName = "cyclone.io/meta-namespace"
+
+	// GCAnnotationName is annotation applied to pod to indicate whether the pod is used for GC purpose
+	GCAnnotationName = "cyclone.io/gc"
+
+	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
+	StageAnnotationName = "stage.cyclone.io"
+
 	// LabelProjectName is the label key used to indicate the project which the resources belongs to
-	LabelProjectName = "cyclone.io/project-name"
+	LabelProjectName = "project.cyclone.io/name"
 
 	// LabelWorkflowName is the label key used to indicate the workflow which the resources belongs to
-	LabelWorkflowName = "cyclone.io/workflow-name"
+	LabelWorkflowName = "workflow.cyclone.io/name"
 
 	// LabelIntegrationType is the label key used to indicate type of integration
-	LabelIntegrationType = "cyclone.io/integration-type"
+	LabelIntegrationType = "integration.cyclone.io/type"
 
 	// LabelClusterOn is the label key used to indicate the cluster is a worker for the tenant
 	LabelClusterOn = "cyclone.io/cluster-worker"
+
+	// LabelStageTemplate is the label key used to represent a stage is a stage template
+	LabelStageTemplate = "stage.cyclone.io/template"
+
+	// WorkflowLabelName is label to indicate resources created by Cyclone workflow engine
+	WorkflowLabelName = "workflow.cyclone.io"
+	// WorkflowNameLabelName is label applied to WorkflowRun to specify Workflow
+	// Deprecated, use LabelWorkflowName instead.
+	WorkflowNameLabelName = "cyclone.io/workflow-name"
+	// PodLabelSelector is selector used to select pod created by Cyclone stages
+	// Deprecated.
+	PodLabelSelector = "cyclone.io/workflow==true"
+	// StageTemplateLabelSelector is label selector to select stage templates
+	// Deprecated.
+	StageTemplateLabelSelector = "cyclone.io/stage-template=true"
 
 	// LabelTrueValue is the label value used to represent true
 	LabelTrueValue = "true"
@@ -67,15 +100,6 @@ const (
 
 	// SceneAI is the label value used to indicate cyclone AI scenario
 	SceneAI = "ai"
-
-	// LabelStageTemplate is the label key used to represent a stage is a stage template
-	LabelStageTemplate = "cyclone.io/stage-template"
-
-	// AnnotationAlias is the annotation key used to indicate the alias of resources
-	AnnotationAlias = "cyclone.io/alias"
-
-	// AnnotationDescription is the annotation key used to describe resources
-	AnnotationDescription = "cyclone.io/description"
 
 	// QuotaCPULimit represents default value of 'limits.cpu'
 	QuotaCPULimit = "2"
@@ -149,23 +173,6 @@ const (
 	ResourcePullCommand = "pull"
 	// ResourcePushCommand indicates push resource
 	ResourcePushCommand = "push"
-
-	// WorkflowLabelName is label to indicate resources created by Cyclone workflow engine
-	WorkflowLabelName = "cyclone.io/workflow"
-	// WorkflowNameLabelName is label applied to WorkflowRun to specify Workflow
-	WorkflowNameLabelName = "cyclone.io/workflow-name"
-	// PodLabelSelector is selector used to select pod created by Cyclone stages
-	PodLabelSelector = "cyclone.io/workflow==true"
-	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to
-	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
-	// MetaNamespaceAnnotationName is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
-	MetaNamespaceAnnotationName = "cyclone.io/meta-namespace"
-	// GCAnnotationName is annotation applied to pod to indicate whether the pod is used for GC purpose
-	GCAnnotationName = "cyclone.io/gc"
-	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
-	StageAnnotationName = "cyclone.io/stage"
-	// StageTemplateLabelSelector is label selector to select stage templates
-	StageTemplateLabelSelector = "cyclone.io/stage-template=true"
 
 	// CoordinatorResolverPath ...
 	CoordinatorResolverPath = "/workspace/resolvers"
