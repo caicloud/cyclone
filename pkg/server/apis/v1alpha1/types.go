@@ -238,10 +238,10 @@ type StatsPhase struct {
 	Running int `json:"running"`
 	// Waiting wfr count
 	Waiting int `json:"waiting"`
-	// Completed wfr count
-	Completed int `json:"completed"`
-	// Error wfr count
-	Error int `json:"error"`
+	// Succeeded wfr count
+	Succeeded int `json:"succeeded"`
+	// Failed wfr count
+	Failed int `json:"failed"`
 	// Cancelled wfr count
 	Cancelled int `json:"cancelled"`
 }
