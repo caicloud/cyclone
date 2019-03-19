@@ -91,7 +91,7 @@ func DeleteWorkflow(ctx context.Context, tenant, project, workflow string) error
 }
 
 // GetWFStatistics handles the request to get a workflow's statistics.
-func GetWFStatistics(ctx context.Context, tenant, project, workflow string, start, end string) (*api.StatusStats, error) {
+func GetWFStatistics(ctx context.Context, tenant, project, workflow string, start, end string) (*api.Statistic, error) {
 	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
 	})

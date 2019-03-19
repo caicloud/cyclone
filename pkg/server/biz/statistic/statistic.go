@@ -12,14 +12,14 @@ import (
 )
 
 // Stats counts every StatusPhase number of wfrs, and calculate success ratio of the workflowruns.
-func Stats(list *v1alpha1.WorkflowRunList, startTime, endTime string) (*api.StatusStats, error) {
+func Stats(list *v1alpha1.WorkflowRunList, startTime, endTime string) (*api.Statistic, error) {
 	start, end, err := checkAndTransTimes(startTime, endTime)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Infof("stats wfrs length: %d, start time: %s, end time: %s", len(list.Items), start.String(), end.String())
-	// filter all wfr by : start < creationTimestamp end
+	// filter all wfr by : start < creationTimestamp < end
 	wfrs := make([]v1alpha1.WorkflowRun, 0)
 	for _, wfr := range list.Items {
 		t := wfr.CreationTimestamp.Time
@@ -28,7 +28,7 @@ func Stats(list *v1alpha1.WorkflowRunList, startTime, endTime string) (*api.Stat
 		}
 	}
 
-	statistics := &api.StatusStats{
+	statistics := &api.Statistic{
 		Overview: api.StatsOverview{
 			Total:        len(wfrs),
 			SuccessRatio: "0.00%",
@@ -42,13 +42,13 @@ func Stats(list *v1alpha1.WorkflowRunList, startTime, endTime string) (*api.Stat
 		for _, detail := range statistics.Details {
 			if detail.Timestamp == formatTimeToDay(wfr.CreationTimestamp.Time) {
 				// set details status
-				detail.Statistic = statsStatus(detail.Statistic, wfr.Status.Overall.Phase)
+				detail.StatsPhase = statsStatus(detail.StatsPhase, wfr.Status.Overall.Phase)
 			}
 
 		}
 
 		// set overview status
-		statistics.Overview.Statistic = statsStatus(statistics.Overview.Statistic, wfr.Status.Overall.Phase)
+		statistics.Overview.StatsPhase = statsStatus(statistics.Overview.StatsPhase, wfr.Status.Overall.Phase)
 	}
 
 	if statistics.Overview.Total != 0 {
@@ -98,7 +98,7 @@ func transTimes(start, end string) (time.Time, time.Time, error) {
 	return startTime, endTime, nil
 }
 
-func initStatsDetails(statistics *api.StatusStats, start, end time.Time) {
+func initStatsDetails(statistics *api.Statistic, start, end time.Time) {
 	for ; !start.After(end); start = start.Add(24 * time.Hour) {
 		detail := &api.StatsDetail{
 			Timestamp: formatTimeToDay(start),
@@ -124,7 +124,7 @@ func formatTimeToDay(t time.Time) int64 {
 	return timestamp - (timestamp % 86400)
 }
 
-func statsStatus(s api.Statistic, recordStatus v1alpha1.StatusPhase) api.Statistic {
+func statsStatus(s api.StatsPhase, recordStatus v1alpha1.StatusPhase) api.StatsPhase {
 	switch recordStatus {
 	case v1alpha1.StatusCompleted:
 		s.Completed++

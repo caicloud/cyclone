@@ -97,7 +97,7 @@ func DeleteProject(ctx context.Context, tenant, project string) error {
 }
 
 // GetProjectStatistics handles the request to get a project's statistics.
-func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.StatusStats, error) {
+func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.Statistic, error) {
 	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
