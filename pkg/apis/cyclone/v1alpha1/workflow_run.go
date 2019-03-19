@@ -94,10 +94,10 @@ const (
 	// for external events to continue. For example, a stage's executing result
 	// needs approval of users, so that following stages can preceeding.
 	StatusWaiting StatusPhase = "Waiting"
-	// StatusCompleted means Stage or WorkflowRun gotten completed without errors.
-	StatusCompleted StatusPhase = "Completed"
-	// StatusError indicates something wrong in the execution of Stage or WorkflowRun.
-	StatusError StatusPhase = "Error"
+	// StatusSucceeded means Stage or WorkflowRun gotten completed without errors.
+	StatusSucceeded StatusPhase = "Succeeded"
+	// StatusFailed indicates something wrong in the execution of Stage or WorkflowRun.
+	StatusFailed StatusPhase = "Failed"
 	// StatusCancelled indicates WorkflowRun have been cancelled.
 	StatusCancelled StatusPhase = "Cancelled"
 )

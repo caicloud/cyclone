@@ -68,7 +68,7 @@ func (p *Operator) OnDelete() error {
 	status, ok := wfr.Status.Stages[p.stage]
 	if !ok || status.Status.Phase == v1alpha1.StatusRunning {
 		operator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusError,
+			Phase:              v1alpha1.StatusFailed,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "PodDeleted",
 		})
@@ -97,8 +97,8 @@ func (p *Operator) OnUpdated() error {
 	}
 
 	// If the WorkflowRun has already been in terminated state, skip it.
-	if origin.Status.Overall.Phase == v1alpha1.StatusCompleted ||
-		origin.Status.Overall.Phase == v1alpha1.StatusError {
+	if origin.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+		origin.Status.Overall.Phase == v1alpha1.StatusFailed {
 		return nil
 	}
 
@@ -112,25 +112,25 @@ func (p *Operator) OnUpdated() error {
 
 	switch p.pod.Status.Phase {
 	case corev1.PodFailed:
-		if !ok || status.Status.Phase != v1alpha1.StatusError {
+		if !ok || status.Status.Phase != v1alpha1.StatusFailed {
 			log.WithField("wfr", wfr.Name).
 				WithField("stg", p.stage).
-				WithField("status", v1alpha1.StatusError).
+				WithField("status", v1alpha1.StatusFailed).
 				Info("To update stage status")
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusFailed,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "PodFailed",
 			})
 		}
 	case corev1.PodSucceeded:
-		if !ok || status.Status.Phase != v1alpha1.StatusCompleted {
+		if !ok || status.Status.Phase != v1alpha1.StatusSucceeded {
 			log.WithField("wfr", wfr.Name).
 				WithField("stage", p.stage).
-				WithField("status", v1alpha1.StatusCompleted).
+				WithField("status", v1alpha1.StatusSucceeded).
 				Info("To update stage status")
 			wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusCompleted,
+				Phase:              v1alpha1.StatusSucceeded,
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "PodSucceed",
 			})
@@ -174,10 +174,10 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	if terminatedCoordinatorState.ExitCode != 0 {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
-			WithField("status", v1alpha1.StatusError).
+			WithField("status", v1alpha1.StatusFailed).
 			Info("To update stage status")
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusError,
+			Phase:              v1alpha1.StatusFailed,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             terminatedCoordinatorState.Reason,
 			Message:            terminatedCoordinatorState.Message,
@@ -185,10 +185,10 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	} else {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
-			WithField("status", v1alpha1.StatusCompleted).
+			WithField("status", v1alpha1.StatusSucceeded).
 			Info("To update stage status")
 		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusCompleted,
+			Phase:              v1alpha1.StatusSucceeded,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "CoordinatorCompleted",
 			Message:            "Coordinator completed",

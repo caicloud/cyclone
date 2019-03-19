@@ -20,13 +20,13 @@ func TestGetResourceVolumeName(t *testing.T) {
 
 func TestResolveStatus(t *testing.T) {
 	latest := &v1alpha1.Status{
-		Phase: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusSucceeded,
 	}
 	update := &v1alpha1.Status{
 		Phase: v1alpha1.StatusRunning,
 	}
 	expected := &v1alpha1.Status{
-		Phase: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusSucceeded,
 	}
 	result := resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
@@ -35,22 +35,22 @@ func TestResolveStatus(t *testing.T) {
 		Phase: v1alpha1.StatusRunning,
 	}
 	update = &v1alpha1.Status{
-		Phase: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusSucceeded,
 	}
 	expected = &v1alpha1.Status{
-		Phase: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusSucceeded,
 	}
 	result = resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
 
 	latest = &v1alpha1.Status{
-		Phase: v1alpha1.StatusError,
+		Phase: v1alpha1.StatusFailed,
 	}
 	update = &v1alpha1.Status{
-		Phase: v1alpha1.StatusCompleted,
+		Phase: v1alpha1.StatusSucceeded,
 	}
 	expected = &v1alpha1.Status{
-		Phase: v1alpha1.StatusError,
+		Phase: v1alpha1.StatusFailed,
 	}
 	result = resolveStatus(latest, update)
 	assert.Equal(t, expected, result)
@@ -94,7 +94,7 @@ func TestNextStages(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusCompleted},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
 			},
 		},
@@ -123,7 +123,7 @@ func TestNextStages(t *testing.T) {
 		Status: v1alpha1.WorkflowRunStatus{
 			Stages: map[string]*v1alpha1.StageStatus{
 				"A": {
-					Status: v1alpha1.Status{Phase: v1alpha1.StatusError},
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusFailed},
 				},
 			},
 		},
@@ -266,12 +266,12 @@ func TestIsWorkflowRunTerminated(t *testing.T) {
 			v1alpha1.StatusWaiting,
 			false,
 		},
-		v1alpha1.StatusCompleted: {
-			v1alpha1.StatusCompleted,
+		v1alpha1.StatusSucceeded: {
+			v1alpha1.StatusSucceeded,
 			true,
 		},
-		v1alpha1.StatusError: {
-			v1alpha1.StatusError,
+		v1alpha1.StatusFailed: {
+			v1alpha1.StatusFailed,
 			true,
 		},
 		v1alpha1.StatusCancelled: {

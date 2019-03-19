@@ -126,9 +126,9 @@ func formatTimeToDay(t time.Time) int64 {
 
 func statsStatus(s api.StatsPhase, recordStatus v1alpha1.StatusPhase) api.StatsPhase {
 	switch recordStatus {
-	case v1alpha1.StatusCompleted:
+	case v1alpha1.StatusSucceeded:
 		s.Completed++
-	case v1alpha1.StatusError:
+	case v1alpha1.StatusFailed:
 		s.Error++
 	case v1alpha1.StatusCancelled:
 		s.Cancelled++

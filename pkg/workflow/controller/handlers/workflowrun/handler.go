@@ -63,8 +63,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	h.GCProcessor.Add(originWfr)
 
 	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
-	if originWfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusError ||
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
 		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
 		return
 	}

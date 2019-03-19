@@ -124,9 +124,9 @@ func (m *TimeoutProcessor) process() {
 		}
 		m.recorder.Event(wfr, corev1.EventTypeWarning, "Timeout", "WorkflowRun execution timeout")
 
-		if wfr.Status.Overall.Phase != v1alpha1.StatusError && wfr.Status.Overall.Phase != v1alpha1.StatusCompleted {
+		if wfr.Status.Overall.Phase != v1alpha1.StatusFailed && wfr.Status.Overall.Phase != v1alpha1.StatusSucceeded {
 			wfr.Status.Overall = v1alpha1.Status{
-				Phase:              v1alpha1.StatusError,
+				Phase:              v1alpha1.StatusFailed,
 				Reason:             "Timeout",
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 			}

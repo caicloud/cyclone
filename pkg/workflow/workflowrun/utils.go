@@ -21,13 +21,13 @@ func GetResourceVolumeName(resourceName string) string {
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
 	// If the latest status is already a terminated status (Completed, Error), no need to update
 	// update it, we just return the latest status.
-	if latest.Phase == v1alpha1.StatusCompleted || latest.Phase == v1alpha1.StatusError {
+	if latest.Phase == v1alpha1.StatusSucceeded || latest.Phase == v1alpha1.StatusFailed {
 		return latest
 	}
 
 	// If the latest status is not a terminated status, but the reported status is, then we
 	// apply the reported status.
-	if update.Phase == v1alpha1.StatusCompleted || update.Phase == v1alpha1.StatusError {
+	if update.Phase == v1alpha1.StatusSucceeded || update.Phase == v1alpha1.StatusFailed {
 		return update
 	}
 
@@ -54,7 +54,7 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		safeToRun := true
 		for _, d := range stage.Depends {
 			status, ok := wfr.Status.Stages[d]
-			if !(ok && status.Status.Phase == v1alpha1.StatusCompleted) {
+			if !(ok && status.Status.Phase == v1alpha1.StatusSucceeded) {
 				safeToRun = false
 				break
 			}
@@ -153,8 +153,8 @@ func ResolveRefStringValue(ref string, client clientset.Interface) (string, erro
 // IsWorkflowRunTerminated judges whether the workflowrun has be terminated.
 // Return true if terminated, otherwise return false.
 func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
-	if wfr.Status.Overall.Phase == v1alpha1.StatusCompleted ||
-		wfr.Status.Overall.Phase == v1alpha1.StatusError ||
+	if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+		wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
 		wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
 		return true
 	}
