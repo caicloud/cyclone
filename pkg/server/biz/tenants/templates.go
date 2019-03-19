@@ -6,8 +6,8 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/server/biz/templates"
-	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 )
 

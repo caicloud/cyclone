@@ -26,6 +26,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
+	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
@@ -40,8 +41,6 @@ import (
 
 // Options contains all options(config) for cyclone server
 type Options struct {
-	// KubeHost is Kube host address
-	KubeHost string
 	// KubeConfig represents the path of Kube config file
 	KubeConfig string
 
@@ -58,7 +57,6 @@ func NewOptions() *Options {
 
 // AddFlags adds flags to APIServerOptions.
 func (opts *Options) AddFlags() {
-	flag.StringVar(&opts.KubeHost, "kubehost", "", "Kube host address")
 	flag.StringVar(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
 	flag.StringVar(&opts.ConfigMap, "configmap", "cyclone-server-config", "ConfigMap that configures for cyclone server")
 	flag.StringVar(&opts.Namespace, "namespace", "default", "Namespace that cyclone server will run in")
@@ -69,7 +67,7 @@ func (opts *Options) AddFlags() {
 func initialize(opts *Options) {
 	// Init k8s client
 	log.Info("kube config:", opts.KubeConfig)
-	client, err := common.GetClient(opts.KubeHost, opts.KubeConfig)
+	client, err := utilk8s.GetClient(opts.KubeConfig)
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
@@ -109,7 +107,6 @@ func main() {
 	})
 
 	// add flags
-	cmd.Add(&opts.KubeHost, "kubehost", "", "Kube host address")
 	cmd.Add(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
 	cmd.Add(&opts.ConfigMap, "configmap", "", "ConfigMap that configures for cyclone server")
 	cmd.Add(&opts.Namespace, "namespace", "", "Namespace that cyclone server will run in")

@@ -10,8 +10,9 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	utilcluster "github.com/caicloud/cyclone/pkg/server/cluster"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -116,7 +117,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 	}()
 
 	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+	client, err := utilcluster.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client for tenant %s error %v", tenantName, err)
 		return
@@ -138,7 +139,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 	} else {
 		// create namespace
 		cluster.Namespace = common.TenantNamespace(tenant.Name)
-		err = common.CreateNamespace(cluster.Namespace, client)
+		err = utilcluster.CreateNamespace(cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
@@ -148,7 +149,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 	}
 
 	// create resource quota
-	err = common.CreateResourceQuota(tenant, cluster.Namespace, client)
+	err = utilcluster.CreateResourceQuota(tenant, cluster.Namespace, client)
 	if err != nil {
 		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)
 		if !errors.IsAlreadyExists(err) {
@@ -168,7 +169,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
 		}
 
-		err = common.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
+		err = utilcluster.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
@@ -192,7 +193,7 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 	}()
 
 	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+	client, err := utilcluster.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 	if err != nil {
 		log.Errorf("new cluster client error %v", err)
 		return

@@ -14,8 +14,9 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
@@ -76,7 +77,7 @@ func newFromName(client clientset.Interface, wfr, namespace string) (Operator, e
 
 	return &operator{
 		client:   client,
-		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
+		recorder: wfcommon.GetEventRecorder(client, wfcommon.EventSourceWfrController),
 		wfr:      w,
 	}, nil
 }
@@ -90,7 +91,7 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 
 	return &operator{
 		client:   client,
-		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
+		recorder: wfcommon.GetEventRecorder(client, wfcommon.EventSourceWfrController),
 		wf:       f,
 		wfr:      wfr,
 	}, nil

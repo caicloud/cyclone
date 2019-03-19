@@ -1,4 +1,4 @@
-package common
+package cluster
 
 import (
 	"github.com/caicloud/nirvana/log"
@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 )
 
@@ -101,9 +102,9 @@ func CreateNamespace(name string, client *kubernetes.Clientset) error {
 func buildNamespace(tenant string) (*core_v1.Namespace, error) {
 	// set labels
 	label := make(map[string]string)
-	label[LabelOwner] = OwnerCyclone
+	label[common.LabelOwner] = common.OwnerCyclone
 
-	nsname := TenantNamespace(tenant)
+	nsname := common.TenantNamespace(tenant)
 	namespace := &core_v1.Namespace{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:   nsname,
@@ -116,7 +117,7 @@ func buildNamespace(tenant string) (*core_v1.Namespace, error) {
 
 // CreateResourceQuota creates resource quota for tenant
 func CreateResourceQuota(tenant *api.Tenant, namespace string, client *kubernetes.Clientset) error {
-	nsname := TenantNamespace(tenant.Name)
+	nsname := common.TenantNamespace(tenant.Name)
 	if namespace != "" {
 		nsname = namespace
 	}
@@ -144,7 +145,7 @@ func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
 		return nil, err
 	}
 
-	quotaName := TenantResourceQuota(tenant.Name)
+	quotaName := common.TenantResourceQuota(tenant.Name)
 	quota := &core_v1.ResourceQuota{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: quotaName,
@@ -159,7 +160,7 @@ func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
 
 // UpdateResourceQuota updates resource quota for tenant
 func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernetes.Clientset) error {
-	nsname := TenantNamespace(tenant.Name)
+	nsname := common.TenantNamespace(tenant.Name)
 	if namespace != "" {
 		nsname = namespace
 	}
@@ -173,7 +174,7 @@ func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		quota, err := client.CoreV1().ResourceQuotas(nsname).Get(
-			TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
+			common.TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err
@@ -203,8 +204,8 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 	resources[core_v1.ResourceStorage] = quantity
 
 	// create pvc
-	pvcName := TenantPVC(tenantName)
-	nsname := TenantNamespace(tenantName)
+	pvcName := common.TenantPVC(tenantName)
+	nsname := common.TenantNamespace(tenantName)
 	if namespace != "" {
 		nsname = namespace
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
 
-	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/common"
 )
 
 const (

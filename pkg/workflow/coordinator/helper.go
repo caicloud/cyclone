@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/common"
 )
 
 func getPodName() string {

@@ -12,8 +12,9 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	utilcluster "github.com/caicloud/cyclone/pkg/server/cluster"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -125,13 +126,13 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
-			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+			client, err := utilcluster.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Name, err)
 				continue
 			}
 
-			err = common.UpdateResourceQuota(newTenant, cluster.Namespace, client)
+			err = utilcluster.UpdateResourceQuota(newTenant, cluster.Namespace, client)
 			if err != nil {
 				log.Errorf("Update resource quota for tenant %s error %v", name, err)
 				return nil, err
@@ -155,14 +156,14 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
-			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+			client, err := utilcluster.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Name, err)
 				continue
 			}
 
 			newPVC := newTenant.Spec.PersistentVolumeClaim
-			err = common.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
+			err = utilcluster.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
 			if err != nil {
 				log.Errorf("Update resource quota for tenant %s error %v", name, err)
 				return nil, err

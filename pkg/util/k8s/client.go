@@ -8,11 +8,11 @@ import (
 )
 
 // GetClient creates a client for k8s cluster
-func GetClient(masterURL, kubeConfigPath string) (clientset.Interface, error) {
+func GetClient(kubeConfigPath string) (clientset.Interface, error) {
 	var config *rest.Config
 	var err error
 	if kubeConfigPath != "" {
-		config, err = clientcmd.BuildConfigFromFlags(masterURL, kubeConfigPath)
+		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 		if err != nil {
 			return nil, err
 		}

@@ -5,7 +5,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/common"
 )
 
 // PodName generates a pod name from Workflow name and Stage name

@@ -10,9 +10,9 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
 
