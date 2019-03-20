@@ -36,4 +36,4 @@
         - image: "{{ image }}"
           env:
           - name: _CONFIG_
-            value: {{ config }}
+            value: "{{ config }}"
