@@ -116,17 +116,28 @@ func (m *PodBuilder) ResolveArguments() error {
 		parameters[k] = resolved
 	}
 
+	// Escape double quotes
+	for k, v := range parameters {
+		parameters[k] = strings.Replace(v, "\"", "\\\"", -1)
+	}
+
 	log.WithField("params", parameters).Debug("Parameters collected")
-	raw, err := json.Marshal(m.stg.Spec.Pod.Spec)
+	b, err := json.Marshal(m.stg.Spec.Pod.Spec)
 	if err != nil {
 		return err
 	}
-	rendered, err := mustache.Render(string(raw), parameters)
+
+	rendered, err := mustache.Render(string(b), parameters)
 	if err != nil {
 		return err
 	}
+
 	renderedSpec := corev1.PodSpec{}
-	json.Unmarshal([]byte(rendered), &renderedSpec)
+	err = json.Unmarshal([]byte(rendered), &renderedSpec)
+	if err != nil {
+		log.Errorf("Unmarshal rendered pod spec %s error: %v", rendered, err)
+		return err
+	}
 	m.pod.Spec = renderedSpec
 	m.pod.Spec.RestartPolicy = corev1.RestartPolicyNever
 
