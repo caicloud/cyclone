@@ -245,3 +245,8 @@ type StatsPhase struct {
 	// Cancelled wfr count
 	Cancelled int `json:"cancelled"`
 }
+
+// HealthStatus ...
+type HealthStatus struct {
+	Status string `json:"status"`
+}
