@@ -6,14 +6,14 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/server/biz/templates"
 	"github.com/caicloud/cyclone/pkg/server/common"
-	"github.com/caicloud/cyclone/pkg/server/handler"
 )
 
 // InitStageTemplates loads and creates stage templates for the given scene.
 // scene - Workflow scene, for example, 'cicd', empty value indicates all scenes.
-func InitStageTemplates(scene string) {
+func InitStageTemplates(client clientset.Interface, scene string) {
 	// Only admin tenant will hold these public build-in stage templates.
 	adminNamespace := common.TenantNamespace(common.AdminTenant)
 
@@ -29,7 +29,7 @@ func InitStageTemplates(scene string) {
 
 	// Create all stage templates
 	for _, stg := range stages {
-		_, err := handler.K8sClient.CycloneV1alpha1().Stages(adminNamespace).Create(stg)
+		_, err := client.CycloneV1alpha1().Stages(adminNamespace).Create(stg)
 		if err != nil {
 			if errors.IsAlreadyExists(err) {
 				log.Infof("Stage template '%s' already exist, skip it.", stg.Name)

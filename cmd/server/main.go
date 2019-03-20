@@ -90,7 +90,7 @@ func initialize(opts *Options) {
 	if err != nil {
 		log.Fatalf("Create default tenant cyclone error %v", err)
 	}
-	tenants.InitStageTemplates("")
+	tenants.InitStageTemplates(client, "")
 }
 
 func main() {
