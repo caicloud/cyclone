@@ -1,4 +1,4 @@
-package workflowrun
+package pod
 
 import (
 	"testing"

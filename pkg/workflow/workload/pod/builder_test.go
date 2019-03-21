@@ -1,4 +1,4 @@
-package workflowrun
+package pod
 
 import (
 	"testing"
@@ -314,15 +314,13 @@ func (suite *PodBuilderSuite) SetupTest() {
 	suite.client = client
 }
 
-func (suite *PodBuilderSuite) TestPrepare() {
-	invalidStages := []string{"non-exist", "no-pod", "multi-workload"}
-	for _, stage := range invalidStages {
-		builder := NewPodBuilder(suite.client, wf, wfr, stage)
-		err := builder.Prepare()
-		assert.Error(suite.T(), err)
-	}
+func getStage(client clientset.Interface, stage string) *v1alpha1.Stage {
+	stg, _ := client.CycloneV1alpha1().Stages("").Get(stage, metav1.GetOptions{})
+	return stg
+}
 
-	builder := NewPodBuilder(suite.client, wf, wfr, "simple")
+func (suite *PodBuilderSuite) TestPrepare() {
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "simple"))
 	err := builder.Prepare()
 	assert.Nil(suite.T(), err)
 	assert.NotEmpty(suite.T(), builder.pod.Name)
@@ -332,13 +330,13 @@ func (suite *PodBuilderSuite) TestPrepare() {
 }
 
 func (suite *PodBuilderSuite) TestResolveArguments() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "unresolvable-argument")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "unresolvable-argument"))
 	err := builder.Prepare()
 	assert.Nil(suite.T(), err)
 	err = builder.ResolveArguments()
 	assert.Error(suite.T(), err)
 
-	builder = NewPodBuilder(suite.client, wf, wfr, "stage1")
+	builder = NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	err = builder.Prepare()
 	assert.Nil(suite.T(), err)
 	err = builder.ResolveArguments()
@@ -349,7 +347,7 @@ func (suite *PodBuilderSuite) TestResolveArguments() {
 }
 
 func (suite *PodBuilderSuite) TestCreateVolumes() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage1")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	err := builder.Prepare()
 	assert.Nil(suite.T(), err)
 	err = builder.ResolveArguments()
@@ -368,13 +366,13 @@ func (suite *PodBuilderSuite) TestCreateVolumes() {
 }
 
 func (suite *PodBuilderSuite) TestCreatePVCVolume() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage1")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	assert.Equal(suite.T(), "v1", builder.CreatePVCVolume("v1", "pvc1"))
 	assert.Equal(suite.T(), "v1", builder.CreatePVCVolume("v2", "pvc1"))
 }
 
 func (suite *PodBuilderSuite) TestResolveInputResources() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage1")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
 	initContainer := builder.pod.Spec.InitContainers[0]
@@ -387,7 +385,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 	}
 	assert.Contains(suite.T(), envs, "p1")
 
-	builder = NewPodBuilder(suite.client, wf, wfr, "stage2")
+	builder = NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
@@ -409,7 +407,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 }
 
 func (suite *PodBuilderSuite) TestResolveOutputResources() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage2")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveOutputResources())
@@ -446,7 +444,7 @@ func (suite *PodBuilderSuite) TestResolveInputArtifacts() {
 		controller.Config = controller.WorkflowControllerConfig{}
 	}()
 
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage2")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Error(suite.T(), builder.ResolveInputArtifacts())
@@ -480,7 +478,7 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 		controller.Config = controller.WorkflowControllerConfig{}
 	}()
 
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage1")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
@@ -520,7 +518,7 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 }
 
 func (suite *PodBuilderSuite) TestArtifactFileName() {
-	builder := NewPodBuilder(suite.client, wf, wfr, "stage2")
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
 	name, _ := builder.ArtifactFileName("stage1", "art1")
 	assert.Equal(suite.T(), "artifact.tar", name)
 }

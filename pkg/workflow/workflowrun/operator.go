@@ -22,6 +22,8 @@ import (
 // Operator is used to perform operations on a WorkflowRun instance, such
 // as update status, run next stages, garbage collection, etc.
 type Operator interface {
+	// Get Recorder
+	GetRecorder() record.EventRecorder
 	// Get WorkflowRun instance.
 	GetWorkflowRun() *v1alpha1.WorkflowRun
 	// Update WorkflowRun, mainly the status.
@@ -99,6 +101,11 @@ func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespa
 // GetWorkflowRun returns the WorkflowRun object.
 func (o *operator) GetWorkflowRun() *v1alpha1.WorkflowRun {
 	return o.wfr
+}
+
+// GetRecorder returns the event recorder.
+func (o *operator) GetRecorder() record.EventRecorder {
+	return o.recorder
 }
 
 // Update the WorkflowRun status, it retrieves the latest WorkflowRun and apply changes to
@@ -327,46 +334,16 @@ func (o *operator) Reconcile() error {
 	for _, stage := range nextStages {
 		log.WithField("stg", stage).Info("Start to run stage")
 
-		// Generate pod for this stage.
-		pod, err := NewPodBuilder(o.client, o.wf, o.wfr, stage).Build()
+		stg, err := o.client.CycloneV1alpha1().Stages(o.wfr.Namespace).Get(stage, metav1.GetOptions{})
 		if err != nil {
-			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod manifest for stage error: ", err)
-			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GeneratePodSpecError", "Generate pod for stage '%s' error: %v", stage, err)
-			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusFailed,
-				Reason:             "GeneratePodError",
-				LastTransitionTime: metav1.Time{Time: time.Now()},
-				Message:            fmt.Sprintf("Failed to generate pod: %v", err),
-			})
-			continue
-		}
-		log.WithField("stg", stage).Debug("Pod manifest created")
-
-		// Create the generated pod.
-		pod, err = o.client.CoreV1().Pods(GetExecutionContext(o.wfr).Namespace).Create(pod)
-		if err != nil {
-			log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Create pod for stage error: ", err)
-			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", stage, err)
-			o.UpdateStageStatus(stage, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusFailed,
-				Reason:             "CreatePodError",
-				LastTransitionTime: metav1.Time{Time: time.Now()},
-				Message:            fmt.Sprintf("Failed to create pod: %v", err),
-			})
 			continue
 		}
 
-		o.recorder.Eventf(o.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", stage)
-		o.UpdateStageStatus(stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusRunning,
-			LastTransitionTime: metav1.Time{Time: time.Now()},
-			Reason:             "StagePodCreated",
-		})
-
-		o.UpdateStagePodInfo(stage, &v1alpha1.PodInfo{
-			Name:      pod.Name,
-			Namespace: pod.Namespace,
-		})
+		err = NewWorkloadProcessor(o.client, o.wf, o.wfr, stg, o).Process()
+		if err != nil {
+			log.WithField("stg", stage).Error("Process workload error: ", err)
+			continue
+		}
 	}
 
 	overall, err = o.OverallStatus()
