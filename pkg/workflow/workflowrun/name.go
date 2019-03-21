@@ -27,3 +27,8 @@ func InputContainerName(index int) string {
 func OutputContainerName(index int) string {
 	return fmt.Sprintf("%so%d", common.CycloneSidecarPrefix, index)
 }
+
+// ContainerName generate container names for pod.
+func ContainerName(index int) string {
+	return fmt.Sprintf("c%d", index)
+}
