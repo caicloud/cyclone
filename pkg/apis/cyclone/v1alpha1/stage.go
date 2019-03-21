@@ -24,6 +24,8 @@ type Stage struct {
 type StageSpec struct {
 	// Pod kind workload
 	Pod *PodWorkload `json:"pod,omitempty"`
+	// Delegation kind workload, this stage would be executed externally.
+	Delegation *DelegationWorkload `json:"delegation,omitempty"`
 }
 
 // PodWorkload describes pod type workload, a complete pod spec is included.
@@ -34,6 +36,16 @@ type PodWorkload struct {
 	Outputs Outputs `json:"outputs,omitempty"`
 	// Stage workload specification
 	Spec corev1.PodSpec `json:"spec"`
+}
+
+// DelegationWorkload describes workload delegated to external services.
+type DelegationWorkload struct {
+	// Type identifies what kind of workload this is, for example 'notification', Cyclone doesn't need to understand it.
+	Type string `json:"type"`
+	// URL of the target service. Cyclone would send POST request to this URL.
+	URL string `json:"url"`
+	// Config is a json string that configure how to run this workload, it's interpreted by external services.
+	Config string `json:"config"`
 }
 
 // Argument defines a argument.
@@ -66,5 +78,5 @@ type Outputs struct {
 type StageList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Stage `json:"items"`
+	Items []Stage   `json:"items"`
 }
