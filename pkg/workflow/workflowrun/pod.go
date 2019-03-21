@@ -144,6 +144,16 @@ func (m *PodBuilder) ResolveArguments() error {
 	return nil
 }
 
+// EnsureContainerNames ensures all containers have names.
+func (m *PodBuilder) EnsureContainerNames() error {
+	for i := range m.pod.Spec.Containers {
+		if len(m.pod.Spec.Containers[i].Name) == 0 {
+			m.pod.Spec.Containers[i].Name = ContainerName(i)
+		}
+	}
+	return nil
+}
+
 // CreateVolumes ...
 func (m *PodBuilder) CreateVolumes() error {
 	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
@@ -733,6 +743,11 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 	}
 
 	err = m.ResolveArguments()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.EnsureContainerNames()
 	if err != nil {
 		return nil, err
 	}
