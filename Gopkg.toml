@@ -9,10 +9,6 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   version = "1.2.0"
 
 [[constraint]]
-  name = "github.com/google/go-github"
-  version = "3.0.0"
-
-[[constraint]]
   name = "github.com/gorilla/websocket"
   version = "1.2.0"
 
@@ -33,12 +29,12 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   version = "1.2.2"
 
 [[constraint]]
-  name = "github.com/xanzy/go-gitlab"
-  version = "0.4.0"
+  name = "github.com/google/go-github"
+  version = "24.0.1"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/zoumo/logdog"
+  name = "github.com/xanzy/go-gitlab"
+  version = "0.16.1"
 
 [[constraint]]
   branch = "master"
@@ -55,10 +51,6 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 [[constraint]]
   name = "gopkg.in/h2non/gock.v1"
   version = "1.0.8"
-
-[[constraint]]
-  branch = "v2"
-  name = "gopkg.in/mgo.v2"
 
 [[constraint]]
   name = "gopkg.in/urfave/cli.v1"

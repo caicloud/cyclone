@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -88,6 +89,13 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// open cluster for the tenant, create namespace and pvc
 		err := OpenClusterForTenant(in.Spec.Cluster, tenant)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if in.Spec.Type == api.SCM && in.Spec.SCM != nil {
+		err := scm.GenerateSCMToken(in.Spec.SCM)
 		if err != nil {
 			return nil, err
 		}
@@ -311,6 +319,13 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 		// TODO(zhujian7): namespace or pvc changed
 		if oldIn.Spec.Cluster.IsWorkerCluster && in.Spec.Cluster.IsWorkerCluster {
+		}
+	}
+
+	if in.Spec.Type == api.SCM && in.Spec.SCM != nil {
+		err := scm.GenerateSCMToken(in.Spec.SCM)
+		if err != nil {
+			return nil, err
 		}
 	}
 
