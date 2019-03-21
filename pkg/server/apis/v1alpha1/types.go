@@ -152,7 +152,7 @@ const (
 	// AuthTypePassword represents using password to auth
 	AuthTypePassword SCMAuthType = "Password"
 	// AuthTypeToken represents using token to auth
-	AuthTypeToken = "Token"
+	AuthTypeToken SCMAuthType = "Token"
 )
 
 // ClusterSource contains info about clusters.

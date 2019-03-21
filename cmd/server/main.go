@@ -18,17 +18,6 @@ package main
 import (
 	"flag"
 
-	"github.com/caicloud/cyclone/pkg/common"
-	"github.com/caicloud/cyclone/pkg/server/apis"
-	"github.com/caicloud/cyclone/pkg/server/apis/filters"
-	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
-	"github.com/caicloud/cyclone/pkg/server/config"
-	"github.com/caicloud/cyclone/pkg/server/handler"
-	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/version"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
 	"github.com/caicloud/nirvana"
 	nconfig "github.com/caicloud/nirvana/config"
 	"github.com/caicloud/nirvana/log"
@@ -36,6 +25,20 @@ import (
 	"github.com/caicloud/nirvana/plugins/metrics"
 	"github.com/caicloud/nirvana/plugins/reqlog"
 	pversion "github.com/caicloud/nirvana/plugins/version"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/common"
+	"github.com/caicloud/cyclone/pkg/server/apis"
+	"github.com/caicloud/cyclone/pkg/server/apis/filters"
+	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
+	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
+	"github.com/caicloud/cyclone/pkg/server/config"
+	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/version"
 )
 
 // Options contains all options(config) for cyclone server
