@@ -1,4 +1,4 @@
-package workflowrun
+package pod
 
 import (
 	"encoding/json"
@@ -19,8 +19,8 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
-// PodBuilder is builder used to build pod for stage
-type PodBuilder struct {
+// Builder is builder used to build pod for stage
+type Builder struct {
 	client           clientset.Interface
 	wf               *v1alpha1.Workflow
 	wfr              *v1alpha1.WorkflowRun
@@ -32,13 +32,14 @@ type PodBuilder struct {
 	outputResources  []*v1alpha1.Resource
 }
 
-// NewPodBuilder creates a new pod builder.
-func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage string) *PodBuilder {
-	return &PodBuilder{
+// NewBuilder creates a new pod builder.
+func NewBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stg *v1alpha1.Stage) *Builder {
+	return &Builder{
 		client:           client,
 		wf:               wf,
 		wfr:              wfr,
-		stage:            stage,
+		stage:            stg.Name,
+		stg:              stg,
 		pod:              &corev1.Pod{},
 		pvcVolumes:       make(map[string]string),
 		executionContext: GetExecutionContext(wfr),
@@ -46,21 +47,15 @@ func NewPodBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alp
 }
 
 // Prepare ...
-func (m *PodBuilder) Prepare() error {
-	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(m.stage, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	m.stg = stage
-
-	if stage.Spec.Pod == nil {
+func (m *Builder) Prepare() error {
+	if m.stg.Spec.Pod == nil {
 		return fmt.Errorf("pod must be defined in stage spec, stage: %s", m.stage)
 	}
 
 	// Only one workload container supported, others should be sidecar marked by special
 	// container name prefix.
 	var workloadContainers int
-	for _, c := range stage.Spec.Pod.Spec.Containers {
+	for _, c := range m.stg.Spec.Pod.Spec.Containers {
 		if !strings.HasPrefix(c.Name, common.WorkloadSidecarPrefix) {
 			workloadContainers++
 		}
@@ -70,7 +65,7 @@ func (m *PodBuilder) Prepare() error {
 	}
 
 	m.pod.ObjectMeta = metav1.ObjectMeta{
-		Name:      PodName(m.wf.Name, m.stage),
+		Name:      Name(m.wf.Name, m.stage),
 		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
 			common.WorkflowLabelName: "true",
@@ -86,7 +81,7 @@ func (m *PodBuilder) Prepare() error {
 }
 
 // ResolveArguments ...
-func (m *PodBuilder) ResolveArguments() error {
+func (m *Builder) ResolveArguments() error {
 	parameters := make(map[string]string)
 	for _, s := range m.wfr.Spec.Stages {
 		if s.Name == m.stage {
@@ -145,7 +140,7 @@ func (m *PodBuilder) ResolveArguments() error {
 }
 
 // EnsureContainerNames ensures all containers have names.
-func (m *PodBuilder) EnsureContainerNames() error {
+func (m *Builder) EnsureContainerNames() error {
 	for i := range m.pod.Spec.Containers {
 		if len(m.pod.Spec.Containers[i].Name) == 0 {
 			m.pod.Spec.Containers[i].Name = ContainerName(i)
@@ -155,7 +150,7 @@ func (m *PodBuilder) EnsureContainerNames() error {
 }
 
 // CreateVolumes ...
-func (m *PodBuilder) CreateVolumes() error {
+func (m *Builder) CreateVolumes() error {
 	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: common.CoordinatorSidecarVolumeName,
@@ -198,7 +193,7 @@ func (m *PodBuilder) CreateVolumes() error {
 // will be returned. If a volume of the given PVC already exists, return name of  the volume,
 // note that in this case, the returned volume name is usually different to the provided
 // 'volumeName' argument.
-func (m *PodBuilder) CreatePVCVolume(volumeName, pvc string) string {
+func (m *Builder) CreatePVCVolume(volumeName, pvc string) string {
 	// PVC --> Volume Name
 	if volume, ok := m.pvcVolumes[pvc]; ok {
 		return volume
@@ -219,7 +214,7 @@ func (m *PodBuilder) CreatePVCVolume(volumeName, pvc string) string {
 }
 
 // CreateEmptyDirVolume creates a EmptyDir volume for the pod with the given name
-func (m *PodBuilder) CreateEmptyDirVolume(volumeName string) {
+func (m *Builder) CreateEmptyDirVolume(volumeName string) {
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
@@ -230,7 +225,7 @@ func (m *PodBuilder) CreateEmptyDirVolume(volumeName string) {
 
 // ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
-func (m *PodBuilder) ResolveInputResources() error {
+func (m *Builder) ResolveInputResources() error {
 	for index, r := range m.stg.Spec.Pod.Inputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
@@ -340,7 +335,7 @@ func (m *PodBuilder) ResolveInputResources() error {
 }
 
 // ResolveOutputResources add resource resolvers to pod spec.
-func (m *PodBuilder) ResolveOutputResources() error {
+func (m *Builder) ResolveOutputResources() error {
 	// Indicate whether there is image type resource to output, if so, we need a docker-in-docker
 	// side-car.
 	var withImageOutput bool
@@ -485,7 +480,7 @@ func (m *PodBuilder) ResolveOutputResources() error {
 }
 
 // ResolveInputArtifacts mount each input artifact from PVC.
-func (m *PodBuilder) ResolveInputArtifacts() error {
+func (m *Builder) ResolveInputArtifacts() error {
 	if m.executionContext.PVC == "" && len(m.stg.Spec.Pod.Inputs.Artifacts) > 0 {
 		return fmt.Errorf("artifacts not supported when no PVC provided, but %d input artifacts found", len(m.stg.Spec.Pod.Inputs.Artifacts))
 	}
@@ -551,7 +546,7 @@ func (m *PodBuilder) ResolveInputArtifacts() error {
 }
 
 // AddVolumeMounts add common PVC  to workload containers
-func (m *PodBuilder) AddVolumeMounts() error {
+func (m *Builder) AddVolumeMounts() error {
 	if m.executionContext.PVC != "" {
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
@@ -570,7 +565,7 @@ func (m *PodBuilder) AddVolumeMounts() error {
 
 // AddCoordinator adds coordinator container as sidecar to pod. Coordinator is used
 // to collect logs, artifacts and notify resource resolvers to push resources.
-func (m *PodBuilder) AddCoordinator() error {
+func (m *Builder) AddCoordinator() error {
 	// Get workload container name, for the moment, we support only one workload container.
 	var workloadContainer string
 	for _, c := range m.stg.Spec.Pod.Spec.Containers {
@@ -651,7 +646,7 @@ func (m *PodBuilder) AddCoordinator() error {
 
 // InjectEnvs injects environment variables to containers, such as WorkflowRun name
 // stage name, namespace.
-func (m *PodBuilder) InjectEnvs() error {
+func (m *Builder) InjectEnvs() error {
 	envs := []corev1.EnvVar{
 		{
 			Name:  common.EnvWorkflowrunName,
@@ -716,7 +711,7 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 // - In the Workflow spec
 // - In the Workflow Controller configurations as default values.
 // So requirements set in stage spec would have the highest priority.
-func (m *PodBuilder) ApplyResourceRequirements() error {
+func (m *Builder) ApplyResourceRequirements() error {
 	// Apply resource requirements from Workflow spec.
 	if m.wf.Spec.Resources != nil {
 		m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, m.wf.Spec.Resources, common.OnlyCustomContainer)
@@ -730,13 +725,13 @@ func (m *PodBuilder) ApplyResourceRequirements() error {
 }
 
 // ApplyServiceAccount applies service account to pod
-func (m *PodBuilder) ApplyServiceAccount() error {
+func (m *Builder) ApplyServiceAccount() error {
 	m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
 	return nil
 }
 
 // Build ...
-func (m *PodBuilder) Build() (*corev1.Pod, error) {
+func (m *Builder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
 	if err != nil {
 		return nil, err
@@ -801,7 +796,7 @@ func (m *PodBuilder) Build() (*corev1.Pod, error) {
 }
 
 // ArtifactFileName gets artifact file name from artifacts path.
-func (m *PodBuilder) ArtifactFileName(stageName, artifactName string) (string, error) {
+func (m *Builder) ArtifactFileName(stageName, artifactName string) (string, error) {
 	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("stg", stageName).Error("Get stage error: ", err)

@@ -92,7 +92,7 @@ const (
 	StatusRunning StatusPhase = "Running"
 	// StatusWaiting means Stage or WorkflowRun have finished, but need to wait
 	// for external events to continue. For example, a stage's executing result
-	// needs approval of users, so that following stages can preceeding.
+	// needs approval of users, so that following stages can proceed.
 	StatusWaiting StatusPhase = "Waiting"
 	// StatusSucceeded means Stage or WorkflowRun gotten completed without errors.
 	StatusSucceeded StatusPhase = "Succeeded"

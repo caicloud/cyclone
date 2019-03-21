@@ -11,11 +11,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
 
-// GetResourceVolumeName generates a volume name for a resource.
-func GetResourceVolumeName(resourceName string) string {
-	return fmt.Sprintf("rsc-%s", resourceName)
-}
-
 // resolveStatus determines the final status from two given status, one is latest status, and
 // another one is the new status reported.
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
@@ -127,29 +122,6 @@ func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha
 	return nil
 }
 
-// ResolveRefStringValue resolves the given secret ref value, if it's not a ref value, return the origin value.
-// Ref value is in format of '$.<ns>.<secret>/<jsonpath>/...' to refer value in a secret.
-func ResolveRefStringValue(ref string, client clientset.Interface) (string, error) {
-	refValue := NewSecretRefValue()
-
-	// Return the origin value if not a valid ref
-	if err := refValue.Parse(ref); err != nil {
-		return ref, nil
-	}
-
-	v, err := refValue.Resolve(client)
-	if err != nil {
-		return "", err
-	}
-
-	strV, ok := v.(string)
-	if !ok {
-		return "", fmt.Errorf("expect string value: %v", v)
-	}
-
-	return strV, nil
-}
-
 // IsWorkflowRunTerminated judges whether the workflowrun has be terminated.
 // Return true if terminated, otherwise return false.
 func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
@@ -160,4 +132,9 @@ func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
 	}
 
 	return false
+}
+
+// GCPodName generates a pod name for GC pod
+func GCPodName(wfr string) string {
+	return fmt.Sprintf("wfrgc--%s", wfr)
 }
