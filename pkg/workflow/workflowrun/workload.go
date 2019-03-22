@@ -119,7 +119,7 @@ func (p *WorkloadProcessor) processDelegation() error {
 		return err
 	}
 
-	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "DelegationSucceed", "Delegate stage %s to %s succeeded", p.stg.Name, p.stg.Spec.Delegation.URL, err)
+	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "DelegationSucceed", "Delegate stage %s to %s succeeded", p.stg.Name, p.stg.Spec.Delegation.URL)
 	p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 		Phase:              v1alpha1.StatusWaiting,
 		LastTransitionTime: metav1.Time{Time: time.Now()},
