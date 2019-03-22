@@ -71,13 +71,13 @@ var wfr = &v1alpha1.WorkflowRun{
 				},
 			},
 		},
-		PresetVolumes: []v1alpha1.PresetVolumeConfig{
-			v1alpha1.PresetVolumeConfig{
+		PresetVolumes: []v1alpha1.PresetVolume{
+			{
 				Type:       v1alpha1.PresetVolumeTypePV,
 				VolumePath: "etc",
 				Path:       "/tmp",
 			},
-			v1alpha1.PresetVolumeConfig{
+			{
 				Type:       v1alpha1.PresetVolumeTypeHostPath,
 				VolumePath: "etc",
 				Path:       "/tmp",

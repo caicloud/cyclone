@@ -41,25 +41,3 @@ type KeyValue struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
-
-// PresetVolumeConfig defines a preset volume
-type PresetVolumeConfig struct {
-	// Type of the volume
-	Type PresetVolumeType `json:"type"`
-	// VolumePath is the path of volume. with HostPath type volume, it is the path of the host,
-	// with PV type volume, it is the path of the pv.
-	VolumePath string `json:"volumePath"`
-	// Path in the pod where the VolumePath will mount to
-	Path string `json:"path"`
-}
-
-// PresetVolumeType is one type of stages preset mount volumes, there are some kinds of preset volume
-// supported to mount to a workload pod: HostPath, PV.
-type PresetVolumeType string
-
-const (
-	// PresetVolumeTypeHostPath ...
-	PresetVolumeTypeHostPath PresetVolumeType = "HostPath"
-	// PresetVolumeTypePV ...
-	PresetVolumeTypePV PresetVolumeType = "PV"
-)
