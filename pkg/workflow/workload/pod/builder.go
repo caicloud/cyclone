@@ -185,6 +185,26 @@ func (m *Builder) CreateVolumes() error {
 		})
 	}
 
+	// Add common volume to pod if configured
+	i := 1
+	for _, v := range m.wfr.Spec.PresetVolumes {
+		switch v.Type {
+		case v1alpha1.PresetVolumeTypeHostPath:
+			m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+				Name: common.PresetVolumeName(i),
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: v.VolumePath,
+					},
+				},
+			})
+			i++
+		case v1alpha1.PresetVolumeTypePV:
+			log.WithField("type", v.Type).Warning("Common volume type pv, will use default pv volume")
+		default:
+			log.WithField("type", v.Type).Warning("Common volume type not supported")
+		}
+	}
 	return nil
 }
 
@@ -563,6 +583,37 @@ func (m *Builder) AddVolumeMounts() error {
 	return nil
 }
 
+// AddCommonVolumes add volumes defined in workflowrun Volumes for all stages
+func (m *Builder) AddCommonVolumes() error {
+	i := 1
+	var containers []corev1.Container
+	for _, c := range m.pod.Spec.Containers {
+		for _, v := range m.wfr.Spec.PresetVolumes {
+			switch v.Type {
+			case v1alpha1.PresetVolumeTypeHostPath:
+				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+					Name:      common.PresetVolumeName(i),
+					MountPath: v.Path,
+					ReadOnly:  true,
+				})
+				i++
+			case v1alpha1.PresetVolumeTypePV:
+				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+					Name:      common.DefaultPvVolumeName,
+					MountPath: v.Path,
+					SubPath:   v.VolumePath,
+				})
+			default:
+				log.WithField("type", v.Type).Warning("Common volume type not supported")
+			}
+		}
+		containers = append(containers, c)
+	}
+
+	m.pod.Spec.Containers = containers
+	return nil
+}
+
 // AddCoordinator adds coordinator container as sidecar to pod. Coordinator is used
 // to collect logs, artifacts and notify resource resolvers to push resources.
 func (m *Builder) AddCoordinator() error {
@@ -768,6 +819,11 @@ func (m *Builder) Build() (*corev1.Pod, error) {
 	}
 
 	err = m.AddVolumeMounts()
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.AddCommonVolumes()
 	if err != nil {
 		return nil, err
 	}
