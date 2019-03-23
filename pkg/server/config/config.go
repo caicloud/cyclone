@@ -35,6 +35,9 @@ type CycloneServerConfig struct {
 	// WebhookURL represents the Cyclone server path to receive webhook requests.
 	// If Cyclone server can be accessed by external systems, it would like be `https://{cyclone-server}/apis/v1alpha1`.
 	WebhookURL string `json:"webhook_url"`
+
+	// StorageUsageWatcher configures PVC storage usage watchers.
+	StorageUsageWatcher StorageUsageWatcher `json:"storage_usage_watcher"`
 }
 
 // PVCConfig contains the PVC information
@@ -50,6 +53,16 @@ type PVCConfig struct {
 // LoggingConfig configures logging
 type LoggingConfig struct {
 	Level string `json:"level"`
+}
+
+// StorageUsageWatcher configures PVC storage usage watchers.
+type StorageUsageWatcher struct {
+	// Image is image for the storage usage watcher, for example 'busybox:1.30.0'
+	Image string `json:"image"`
+	// ReportURL is url where to report the usage
+	ReportURL string `json:"report_url"`
+	// IntervalSeconds is intervals to report storage usage
+	IntervalSeconds string `json:"interval_seconds"`
 }
 
 // Config is Workflow Controller config instance
