@@ -34,7 +34,7 @@ import (
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
-	"github.com/caicloud/cyclone/pkg/server/biz/tenants"
+	"github.com/caicloud/cyclone/pkg/server/biz/templates"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
@@ -93,7 +93,7 @@ func initialize(opts *Options) {
 	if err != nil {
 		log.Fatalf("Create default tenant cyclone error %v", err)
 	}
-	tenants.InitStageTemplates(client, "")
+	templates.InitStageTemplates(client, "")
 }
 
 func main() {

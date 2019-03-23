@@ -1,4 +1,4 @@
-package tenants
+package templates
 
 import (
 	"os"
@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/server/biz/templates"
 	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
@@ -19,7 +18,7 @@ func InitStageTemplates(client clientset.Interface, scene string) {
 
 	// Load all stage templates. Template files path is given by environment variable
 	// TEMPLATES_PATH, if not set, use default one "/root/templates"
-	loader := &templates.StageTemplatesLoader{TemplatesDir: os.Getenv(templates.TemplatesPathEnvName)}
+	loader := &StageTemplatesLoader{TemplatesDir: os.Getenv(TemplatesPathEnvName)}
 	stages, err := loader.LoadStageTemplates(scene)
 	if err != nil {
 		log.Errorf("Load stage templates error: %v", err)
