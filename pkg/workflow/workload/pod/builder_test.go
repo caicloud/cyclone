@@ -71,6 +71,18 @@ var wfr = &v1alpha1.WorkflowRun{
 				},
 			},
 		},
+		PresetVolumes: []v1alpha1.PresetVolume{
+			{
+				Type:       v1alpha1.PresetVolumeTypePV,
+				VolumePath: "etc",
+				Path:       "/tmp",
+			},
+			{
+				Type:       v1alpha1.PresetVolumeTypeHostPath,
+				VolumePath: "etc",
+				Path:       "/tmp",
+			},
+		},
 	},
 }
 
@@ -359,7 +371,9 @@ func (suite *PodBuilderSuite) TestCreateVolumes() {
 	for _, v := range builder.pod.Spec.Volumes {
 		volumes = append(volumes, v.Name)
 	}
+
 	assert.Contains(suite.T(), volumes, common.CoordinatorSidecarVolumeName)
+	assert.Contains(suite.T(), volumes, common.PresetVolumeName(1))
 	assert.NotContains(suite.T(), volumes, common.DockerInDockerSockVolume)
 	assert.NotContains(suite.T(), volumes, common.DefaultPvVolumeName)
 	assert.NotContains(suite.T(), volumes, common.DockerConfigJSONVolume)
@@ -521,6 +535,28 @@ func (suite *PodBuilderSuite) TestArtifactFileName() {
 	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
 	name, _ := builder.ArtifactFileName("stage1", "art1")
 	assert.Equal(suite.T(), "artifact.tar", name)
+}
+
+func (suite *PodBuilderSuite) TestAddCommonVolumes() {
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage2"))
+	assert.Nil(suite.T(), builder.Prepare())
+	assert.Nil(suite.T(), builder.ResolveArguments())
+	assert.Nil(suite.T(), builder.CreateVolumes())
+	assert.Nil(suite.T(), builder.AddCommonVolumes())
+
+	for _, c := range builder.pod.Spec.Containers {
+		assert.Contains(suite.T(), c.VolumeMounts, corev1.VolumeMount{
+			Name:      common.DefaultPvVolumeName,
+			SubPath:   "etc",
+			MountPath: "/tmp",
+		})
+
+		assert.Contains(suite.T(), c.VolumeMounts, corev1.VolumeMount{
+			Name:      common.PresetVolumeName(1),
+			MountPath: "/tmp",
+			ReadOnly:  true,
+		})
+	}
 }
 
 func TestPodBuilderSuite(t *testing.T) {

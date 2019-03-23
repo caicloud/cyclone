@@ -1,6 +1,9 @@
 package common
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // ContainerState represents container state.
 type ContainerState string
@@ -132,4 +135,9 @@ func InputResourceVolumeName(name string) string {
 // OutputResourceVolumeName ...
 func OutputResourceVolumeName(name string) string {
 	return "output-" + name
+}
+
+// PresetVolumeName ...
+func PresetVolumeName(index int) string {
+	return fmt.Sprintf("preset-v%d", index)
 }
