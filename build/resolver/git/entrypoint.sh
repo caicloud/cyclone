@@ -18,11 +18,20 @@ USAGE=$(cat <<-END
      - pull Pull git source to $WORKDIR/data, "/workspace/data" by default.
      - push Push git source to remote git server. (Not implemented yet)
 
-     Environment variables GIT_URL, GIT_REVISION must be set. Only HTTPS is
-     supported now for GIT_URL. And revision supports branch and tag, but not
-     commit id. PULL_POLICY indicates whether pull resources when there already
-     are old data, if set to IfNotPresent, will make use of the old data and
-     perform incremental pull, otherwise old data would be removed.
+     Arguments:
+     - GIT_URL [Required] URL of the git repository, for the moment, only HTTP/
+       HTTPS are supported.
+     - GIT_REVISION [Required] Revision of the source code. It has two different
+       format. a) Single revision, such as branch 'master', tag 'v1.0'; b). Composite
+       such as pull requests, 'develop:master' indicates merge 'develop' branch to
+       'master'. For GitHub, pull requests can use the single revision form, such as
+       'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
+       'refs/merge-requests/1/head:master'.
+     - GIT_TOKEN [Optional] For public repository, no need provide this token, but for
+       private repository, this should be provided.
+     - PULL_POLICY [Optional] Indicate whether pull resources when there already
+       are old data, if set to IfNotPresent, will make use of the old data and
+       perform incremental pull, otherwise old data would be removed.
 END
 )
 
@@ -82,6 +91,18 @@ wrapPull() {
     fi
 }
 
+# Revision can be in two different format:
+# - Single revision. For example, 'master', 'develop' as branch, 'v1.0' as tag, etc.
+# - Composite revision. For example, 'develop->master', it means merge branch 'develop' to 'master'. It's used in merge
+#   request in GitLab.
+# This function parses the composite revision to get the source and target branches. For example,
+#   'develop->master' --> ['develop', 'master']
+parseRevision() {
+    SOURCE_BRANCH=${GIT_REVISION%%:*}
+    TARGET_BRANCH=${GIT_REVISION##*:}
+}
+parseRevision
+
 pull() {
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
     if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
@@ -103,11 +124,27 @@ pull() {
         cd $WORKDIR
 
         # Add token to url if provided and clone git repo
-        if [ -z ${GIT_TOKEN+x} ]; then
-            git clone -v -b $GIT_REVISION --single-branch ${GIT_URL} data
-        else
-            git clone -v -b $GIT_REVISION --single-branch ${GIT_URL/\/\//\/\/${GIT_TOKEN}@} data
+        if [ ! -z ${GIT_TOKEN+x} ]; then
+            GIT_URL=${GIT_URL/\/\//\/\/oauth2:${GIT_TOKEN}@}
         fi
+
+        if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
+            echo "Clone $SOURCE_BRANCH..."
+            git clone -v -b master --single-branch --recursive ${GIT_URL} data
+            cd data
+            git fetch origin $SOURCE_BRANCH
+            git checkout -qf FETCH_HEAD
+        else
+            echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
+            git clone -v -b $TARGET_BRANCH --single-branch --recursive ${GIT_URL} data
+            cd data
+            git config user.email "cicd@cyclone.io"
+            git config user.name "cicd"
+            git fetch origin $SOURCE_BRANCH
+            git merge FETCH_HEAD --no-ff --no-commit
+        fi
+
+        ls -al
     fi
 }
 
