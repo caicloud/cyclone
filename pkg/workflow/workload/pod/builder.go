@@ -185,24 +185,21 @@ func (m *Builder) CreateVolumes() error {
 		})
 	}
 
-	// Add common volume to pod if configured
-	i := 1
-	for _, v := range m.wfr.Spec.PresetVolumes {
+	// Add preset volumes to pod if configured
+	for i, v := range m.wfr.Spec.PresetVolumes {
 		switch v.Type {
 		case v1alpha1.PresetVolumeTypeHostPath:
 			m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 				Name: common.PresetVolumeName(i),
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{
-						Path: v.VolumePath,
+						Path: v.Path,
 					},
 				},
 			})
-			i++
 		case v1alpha1.PresetVolumeTypePV:
-			log.WithField("type", v.Type).Warning("Common volume type pv, will use default pv volume")
 		default:
-			log.WithField("type", v.Type).Warning("Common volume type not supported")
+			log.WithField("type", v.Type).Warning("Unknown preset volume type.")
 		}
 	}
 	return nil
@@ -583,25 +580,23 @@ func (m *Builder) AddVolumeMounts() error {
 	return nil
 }
 
-// AddCommonVolumes add volumes defined in workflowrun Volumes for all stages
-func (m *Builder) AddCommonVolumes() error {
-	i := 1
+// MountPresetVolumes add preset volumes defined in WorkflowRun.
+func (m *Builder) MountPresetVolumes() error {
 	var containers []corev1.Container
 	for _, c := range m.pod.Spec.Containers {
-		for _, v := range m.wfr.Spec.PresetVolumes {
+		for i, v := range m.wfr.Spec.PresetVolumes {
 			switch v.Type {
 			case v1alpha1.PresetVolumeTypeHostPath:
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      common.PresetVolumeName(i),
-					MountPath: v.Path,
+					MountPath: v.MountPath,
 					ReadOnly:  true,
 				})
-				i++
 			case v1alpha1.PresetVolumeTypePV:
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      common.DefaultPvVolumeName,
-					MountPath: v.Path,
-					SubPath:   v.VolumePath,
+					MountPath: v.MountPath,
+					SubPath:   v.Path,
 				})
 			default:
 				log.WithField("type", v.Type).Warning("Common volume type not supported")
@@ -823,7 +818,7 @@ func (m *Builder) Build() (*corev1.Pod, error) {
 		return nil, err
 	}
 
-	err = m.AddCommonVolumes()
+	err = m.MountPresetVolumes()
 	if err != nil {
 		return nil, err
 	}

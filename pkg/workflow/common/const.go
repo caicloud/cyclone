@@ -139,5 +139,5 @@ func OutputResourceVolumeName(name string) string {
 
 // PresetVolumeName ...
 func PresetVolumeName(index int) string {
-	return fmt.Sprintf("preset-v%d", index)
+	return fmt.Sprintf("preset-%d", index)
 }

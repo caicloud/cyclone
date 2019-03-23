@@ -39,13 +39,9 @@ type WorkflowRunSpec struct {
 	Stages []ParameterConfig `json:"stages"`
 	// Execution context which specifies namespace and PVC used
 	ExecutionContext *ExecutionContext `json:"executionContext"`
-	// PresetVolumes will mount to pod of all stages. There are some kinds of preset volumes supported to mount to
-	// a workload pod: HostPath, PV. With HostPath, you can mount your host timezone file to all stages to ensure
-	// they are in the same timezone with the host, and you cna mount certificate file to stages for authentication;
-	// With PV, you can share things amount stages.
-	// Notes:
-	// - Only useful with Pod type stages, Delegation type stages will ignore;
-	// - HostPath type volume will only have Read access to the host.
+	// PresetVolumes volumes are preset volumes that will be mounted to all stage pods. For the moment, two kinds
+	// of volumes supported, namely HostPath, PV. Users can make use of preset volumes to inject timezone, certificates
+	// from host to containers, or mount data from PV to be used in containers.
 	PresetVolumes []PresetVolume `json:"volumes,omitempty"`
 }
 
@@ -53,15 +49,13 @@ type WorkflowRunSpec struct {
 type PresetVolume struct {
 	// Type of the volume
 	Type PresetVolumeType `json:"type"`
-	// VolumePath is the path of volume. with HostPath type volume, it is the path of the host,
-	// with PV type volume, it is the path of the pv.
-	VolumePath string `json:"volumePath"`
-	// Path in the pod where the VolumePath will mount to
+	// Path is path in host, or PV.
 	Path string `json:"path"`
+	// MountPath is path in container that this preset volume will be mounted.
+	MountPath string `json:"mountPath"`
 }
 
-// PresetVolumeType is one type of stages preset mount volumes, there are some kinds of preset volume
-// supported to mount to a workload pod: HostPath, PV.
+// PresetVolumeType is type of preset volumes, HostPath, PV supported.
 type PresetVolumeType string
 
 const (

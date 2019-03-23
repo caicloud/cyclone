@@ -73,14 +73,14 @@ var wfr = &v1alpha1.WorkflowRun{
 		},
 		PresetVolumes: []v1alpha1.PresetVolume{
 			{
-				Type:       v1alpha1.PresetVolumeTypePV,
-				VolumePath: "etc",
-				Path:       "/tmp",
+				Type:      v1alpha1.PresetVolumeTypePV,
+				Path:      "etc",
+				MountPath: "/tmp",
 			},
 			{
-				Type:       v1alpha1.PresetVolumeTypeHostPath,
-				VolumePath: "etc",
-				Path:       "/tmp",
+				Type:      v1alpha1.PresetVolumeTypeHostPath,
+				Path:      "/etc",
+				MountPath: "/tmp",
 			},
 		},
 	},
@@ -542,7 +542,7 @@ func (suite *PodBuilderSuite) TestAddCommonVolumes() {
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.CreateVolumes())
-	assert.Nil(suite.T(), builder.AddCommonVolumes())
+	assert.Nil(suite.T(), builder.MountPresetVolumes())
 
 	for _, c := range builder.pod.Spec.Containers {
 		assert.Contains(suite.T(), c.VolumeMounts, corev1.VolumeMount{
