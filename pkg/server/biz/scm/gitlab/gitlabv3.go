@@ -18,6 +18,7 @@ package gitlab
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	v3 "github.com/xanzy/go-gitlab"
@@ -124,4 +125,57 @@ func (g *V3) ListDockerfiles(repo string) ([]string, error) {
 	// FYI:
 	// https://stackoverflow.com/questions/25127695/search-filenames-with-gitlab-api
 	return nil, fmt.Errorf("list gitlab v3 dockerfiles not implemented")
+}
+
+// CreateWebhook creates webhook for specified repo.
+func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
+	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
+		return fmt.Errorf("The webhook %v is not correct", webhook)
+	}
+
+	enableState, disableState := true, false
+	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
+	hook := v3.AddProjectHookOptions{
+		PushEvents: &disableState,
+	}
+
+	for _, e := range webhook.Events {
+		switch e {
+		case scm.PullRequestEventType:
+			hook.MergeRequestsEvents = &enableState
+		case scm.PullRequestCommentEventType:
+			hook.NoteEvents = &enableState
+		case scm.PushEventType:
+			hook.PushEvents = &enableState
+		case scm.TagReleaseEventType:
+			hook.TagPushEvents = &enableState
+		default:
+			log.Errorf("The event type %s is not supported, will be ignored", e)
+			return nil
+		}
+	}
+	hook.URL = &webhook.URL
+
+	onwer, name := scm.ParseRepo(repo)
+	_, _, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
+	log.Error(err)
+	return err
+}
+
+// DeleteWebhook deletes webhook from specified repo.
+func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
+	owner, name := scm.ParseRepo(repo)
+	hooks, _, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if strings.HasPrefix(hook.URL, webhookURL) {
+			_, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID)
+			return nil
+		}
+	}
+
+	return nil
 }

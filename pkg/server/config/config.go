@@ -31,6 +31,10 @@ type CycloneServerConfig struct {
 	// WorkerNamespaceQuota describes the resource quota of the namespace which will be used to run workflows,
 	// eg map[core_v1.ResourceName]string{"cpu": "2", "memory": "4Gi"}
 	WorkerNamespaceQuota map[core_v1.ResourceName]string `json:"worker_namespace_quota"`
+
+	// WebhookURL represents the Cyclone server path to receive webhook requests.
+	// If Cyclone server can be accessed by external systems, it would like be `https://{cyclone-server}/apis/v1alpha1`.
+	WebhookURL string `json:"webhook_url"`
 }
 
 // PVCConfig contains the PVC information

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +21,14 @@ func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1a
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, "", wft)
 		if err != nil {
+			return nil, err
+		}
+	}
+
+	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
+		// Create webhook for integrated SCM.
+		SCMTrigger := wft.Spec.SCM
+		if err := registerSCMWebhook(tenant, wft.Name, SCMTrigger.Secret, SCMTrigger.Repo); err != nil {
 			return nil, err
 		}
 	}
@@ -82,7 +91,162 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 
 // DeleteWorkflowTrigger ...
 func DeleteWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) error {
-	err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+	wft, err := GetWorkflowTrigger(ctx, project, workflowtrigger, tenant)
+	if err != nil {
+		return cerr.ConvertK8sError(err)
+	}
+
+	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
+		// Unregister webhook for integrated SCM.
+		SCMTrigger := wft.Spec.SCM
+		if err := unregisterSCMWebhook(tenant, wft.Name, SCMTrigger.Secret, SCMTrigger.Repo); err != nil {
+			return err
+		}
+	}
+
+	err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
 
 	return cerr.ConvertK8sError(err)
+}
+
+func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
+		common.IntegrationSecret(secretName), metav1.GetOptions{})
+	if err != nil {
+		return cerr.ConvertK8sError(err)
+	}
+
+	repos := map[string][]string{}
+	if d, ok := secret.Data[common.SecretKeyRepos]; ok {
+		log.Infof("repos data of secret %s: %s\n", secretName, d)
+		if err = json.Unmarshal(d, &repos); err != nil {
+			log.Errorf("Failed to unmarshal repos from secret")
+			return err
+		}
+	}
+
+	found := false
+	wfts, ok := repos[repo]
+	if ok {
+		for _, wft := range wfts {
+			if wft == wftName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			wfts = append(wfts, wftName)
+			repos[repo] = wfts
+		}
+	} else {
+		// Create webhook for this repo.
+		log.Infof("Create webhook for repo %s", repo)
+		integration, err := SecretToIntegration(secret)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+		err = CreateSCMWebhook(integration.Spec.SCM, tenant, secretName, repo)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+		repos[repo] = []string{wftName}
+	}
+
+	if found {
+		log.Warningf("Found wft %s for repo %s in secret %s", wftName, repo, secretName)
+		return nil
+	}
+
+	reposStr, err := json.Marshal(repos)
+	if err != nil {
+		log.Errorf("Failed to marshal repos for secret")
+		return err
+	}
+
+	secret.Data[common.SecretKeyRepos] = reposStr
+
+	secret, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
+	if err != nil {
+		return cerr.ConvertK8sError(err)
+	}
+
+	return nil
+}
+
+func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
+		common.IntegrationSecret(secretName), metav1.GetOptions{})
+	if err != nil {
+		return cerr.ConvertK8sError(err)
+	}
+
+	repos := map[string][]string{}
+	if d, ok := secret.Data[common.SecretKeyRepos]; ok {
+		log.Infof("repos data of secret %s: %s\n", secretName, d)
+		if err = json.Unmarshal(d, &repos); err != nil {
+			log.Errorf("Failed to unmarshal repos from secret")
+			return err
+		}
+	}
+
+	found := false
+	wfts, ok := repos[repo]
+	if ok {
+		if len(wfts) == 1 {
+			if wfts[0] == wftName {
+				found = true
+				// Delete webhook for repo.
+				log.Infoln("Delete webhook.")
+				integration, err := SecretToIntegration(secret)
+				if err != nil {
+					log.Error(err)
+					return err
+				}
+
+				err = DeleteSCMWebhook(integration.Spec.SCM, tenant, secretName, repo)
+				if err != nil {
+					log.Error(err)
+					return err
+				}
+
+				delete(repos, repo)
+			}
+		} else {
+			for i, wft := range wfts {
+				if wft == wftName {
+					found = true
+					wfts = append(wfts[:i], wfts[i+1:]...)
+					break
+				}
+			}
+
+			if found {
+				repos[repo] = wfts
+			}
+		}
+
+	}
+
+	if !found {
+		log.Warningf("Not found wft %s for repo %s in secret %s", wftName, repo, secretName)
+		return nil
+	}
+
+	reposStr, err := json.Marshal(repos)
+	if err != nil {
+		log.Errorf("Failed to marshal repos for secret")
+		return err
+	}
+
+	secret.Data[common.SecretKeyRepos] = reposStr
+	secret, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
+	if err != nil {
+		return cerr.ConvertK8sError(err)
+	}
+
+	return nil
 }

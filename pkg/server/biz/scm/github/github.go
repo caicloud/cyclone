@@ -19,6 +19,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,6 +30,17 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+)
+
+const (
+	// branchRefTemplate represents reference template for branches.
+	branchRefTemplate = "refs/heads/%s"
+
+	// tagRefTemplate represents reference template for tags.
+	tagRefTemplate = "refs/tags/%s"
+
+	// pullRefTemplate represents reference template for pull request.
+	pullRefTemplate = "refs/pull/%d/merge"
 )
 
 func init() {
@@ -304,4 +316,108 @@ func newClientByToken(token string) *github.Client {
 	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
 	return github.NewClient(httpClient)
+}
+
+// CreateWebhook creates webhook for specified repo.
+func (g *Github) CreateWebhook(repo string, webhook *scm.Webhook) error {
+	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
+		return fmt.Errorf("the webhook %v is not correct", webhook)
+	}
+
+	// Hook name must be passed as "web".
+	// Ref: https://developer.github.com/v3/repos/hooks/#create-a-hook
+	hook := github.Hook{
+		Events: convertToGithubEvents(webhook.Events),
+		Config: map[string]interface{}{
+			"url":          webhook.URL,
+			"content_type": "json",
+		},
+	}
+	owner, name := scm.ParseRepo(repo)
+	_, _, err := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+	return err
+}
+
+// convertToGithubEvents converts the defined event types to Github event types.
+func convertToGithubEvents(events []scm.EventType) []string {
+	var ge []string
+	for _, e := range events {
+		switch e {
+		case scm.PullRequestEventType:
+			ge = append(ge, "pull_request")
+		case scm.PullRequestCommentEventType:
+			ge = append(ge, "issue_comment")
+		case scm.PushEventType:
+			ge = append(ge, "push")
+		case scm.TagReleaseEventType:
+			ge = append(ge, "release")
+		default:
+			log.Errorf("The event type %s is not supported, will be ignored", e)
+		}
+	}
+
+	return ge
+}
+
+// DeleteWebhook deletes webhook from specified repo.
+func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
+	owner, name := scm.ParseRepo(repo)
+	hooks, _, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if hookurl, ok := hook.Config["url"].(string); ok {
+			if strings.HasPrefix(hookurl, webhookURL) {
+				_, err = g.client.Repositories.DeleteHook(g.ctx, owner, name, *hook.ID)
+				return nil
+			}
+		}
+	}
+
+	return nil
+}
+
+// ParseEvent parses data from Github events.
+func ParseEvent(request *http.Request) (*scm.EventData, error) {
+	payload, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to read the request body")
+	}
+
+	event, err := github.ParseWebHook(github.WebHookType(request), payload)
+	if err != nil {
+		return nil, err
+	}
+
+	switch event := event.(type) {
+	case *github.ReleaseEvent:
+		return &scm.EventData{
+			Type: scm.TagReleaseEventType,
+			Repo: *event.Repo.FullName,
+			Ref:  fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
+		}, nil
+	case *github.PullRequestEvent:
+		return &scm.EventData{
+			Type: scm.PullRequestEventType,
+			Repo: *event.Repo.FullName,
+			Ref:  fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
+		}, nil
+	case *github.IssueCommentEvent:
+		return &scm.EventData{
+			Type:    scm.PullRequestCommentEventType,
+			Repo:    *event.Repo.FullName,
+			Ref:     fmt.Sprintf(pullRefTemplate, *event.Issue.Number),
+			Comment: *event.Comment.Body,
+		}, nil
+	case *github.PushEvent:
+		return &scm.EventData{
+			Type: scm.PushEventType,
+			Repo: *event.Repo.FullName,
+			Ref:  *event.Ref,
+		}, nil
+	default:
+		return nil, fmt.Errorf("Unsupported github event")
+	}
 }

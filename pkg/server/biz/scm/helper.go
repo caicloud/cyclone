@@ -26,12 +26,15 @@ func ParseServerURL(url string) string {
 	return strs[1]
 }
 
-// ParseRepoURL is a helper func to parse the repo url, such as https://github.com/caicloud/test.git
-// to return owner(caicloud) and name(test).
-func ParseRepoURL(url string) (string, string) {
+// ParseRepo parses owner and name from full repo name.
+// For example, parse caicloud/cyclone will return owner(caicloud) and name(cyclone).
+func ParseRepo(url string) (string, string) {
 	strs := strings.SplitN(url, "/", -1)
-	name := strings.SplitN(strs[4], ".", -1)
-	return strs[3], name[0]
+	if len(strs) < 2 {
+		return strs[0], ""
+	}
+
+	return strs[0], strs[1]
 }
 
 // Repository represents the information of a repository.

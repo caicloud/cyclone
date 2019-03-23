@@ -74,6 +74,9 @@ const (
 
 	// SecretKeyIntegration is the key of the secret dada to indicate its value is about integration information.
 	SecretKeyIntegration = "integration"
+	// SecretKeyRepos is the key of the secret dada to records webhooks created for workflowtriggers.
+	// Only for SCM integration secrets.
+	SecretKeyRepos = "repos"
 
 	// ControlClusterName is the name of control cluster
 	ControlClusterName = "control-cluster"
