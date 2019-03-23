@@ -48,7 +48,7 @@ data:
       "execution_context": {
         "namespace": "__EXE_NAMESPACE__",
         "pvc": "__PVC__",
-        "service_account": "cyclone-coordinator",
+        "service_account": "cyclone-coordinator"
       },
       "secret": "cyclone-secrets",
       "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099"
