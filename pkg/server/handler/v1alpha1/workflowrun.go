@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -38,6 +39,7 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 	}
 
 	injectWfRef(tenant, workflow, wfr)
+	accelerator.NewAccelerator(project, wfr).Accelerate()
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
 }
 

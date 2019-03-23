@@ -299,26 +299,33 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 			return nil, err
 		}
 
+		oldCluster := oldIn.Spec.Cluster
+		cluster := in.Spec.Cluster
+		if cluster.Namespace == "" {
+			cluster.Namespace = oldCluster.Namespace
+		} else if cluster.Namespace == oldCluster.Namespace && cluster.PVC == "" {
+			cluster.PVC = oldCluster.PVC
+		}
 		// turn on worker cluster
-		if !oldIn.Spec.Cluster.IsWorkerCluster && in.Spec.Cluster.IsWorkerCluster {
+		if !oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
 			// open cluster for the tenant, create namespace and pvc
-			err := OpenClusterForTenant(in.Spec.Cluster, tenant)
+			err := OpenClusterForTenant(cluster, tenant)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// turn off worker cluster
-		if oldIn.Spec.Cluster.IsWorkerCluster && !in.Spec.Cluster.IsWorkerCluster {
+		if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
 			// close cluster for the tenant, delete namespace
-			err := CloseClusterForTenant(in.Spec.Cluster, tenant)
+			err := CloseClusterForTenant(oldCluster, tenant)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// TODO(zhujian7): namespace or pvc changed
-		if oldIn.Spec.Cluster.IsWorkerCluster && in.Spec.Cluster.IsWorkerCluster {
+		if oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
 		}
 	}
 
