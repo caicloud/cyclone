@@ -158,7 +158,6 @@ func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 
 	onwer, name := scm.ParseRepo(repo)
 	_, _, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
-	log.Error(err)
 	return err
 }
 
@@ -172,8 +171,9 @@ func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
 
 	for _, hook := range hooks {
 		if strings.HasPrefix(hook.URL, webhookURL) {
-			_, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID)
-			return nil
+			if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -33,8 +33,11 @@ import (
 )
 
 const (
+	// EventTypeHeader represents the header key for event type of Github.
+	EventTypeHeader = "X-Github-Event"
+
 	// branchRefTemplate represents reference template for branches.
-	branchRefTemplate = "refs/heads/%s"
+	// branchRefTemplate = "refs/heads/%s"
 
 	// tagRefTemplate represents reference template for tags.
 	tagRefTemplate = "refs/tags/%s"
@@ -380,15 +383,17 @@ func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
 }
 
 // ParseEvent parses data from Github events.
-func ParseEvent(request *http.Request) (*scm.EventData, error) {
+func ParseEvent(request *http.Request) *scm.EventData {
 	payload, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to read the request body")
+		log.Errorln(err)
+		return nil
 	}
 
 	event, err := github.ParseWebHook(github.WebHookType(request), payload)
 	if err != nil {
-		return nil, err
+		log.Errorf("Failed to parse Github webhook as %v", err)
+		return nil
 	}
 
 	switch event := event.(type) {
@@ -397,27 +402,51 @@ func ParseEvent(request *http.Request) (*scm.EventData, error) {
 			Type: scm.TagReleaseEventType,
 			Repo: *event.Repo.FullName,
 			Ref:  fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
-		}, nil
+		}
 	case *github.PullRequestEvent:
+		// Only handle when the pull request are created.
+		action := *event.Action
+		if action != "opened" && action != "synchronize" {
+			log.Warningf("Skip unsupported action %s of Github pull request event, only support opened and synchronize action.", action)
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.PullRequestEventType,
 			Repo: *event.Repo.FullName,
 			Ref:  fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
-		}, nil
+		}
 	case *github.IssueCommentEvent:
+		if event.Issue.PullRequestLinks == nil {
+			log.Warningln("Only handle comments on pull requests.")
+			return nil
+		}
+
+		// Only handle when the pull request comments are created.
+		if *event.Action != "created" {
+			log.Warningln("Only handle comments when they are created.")
+			return nil
+		}
+
+		if *event.Issue.State != "open" {
+			log.Warningln("Only handle comments on opened pull requests.")
+			return nil
+		}
+
 		return &scm.EventData{
 			Type:    scm.PullRequestCommentEventType,
 			Repo:    *event.Repo.FullName,
 			Ref:     fmt.Sprintf(pullRefTemplate, *event.Issue.Number),
 			Comment: *event.Comment.Body,
-		}, nil
+		}
 	case *github.PushEvent:
 		return &scm.EventData{
-			Type: scm.PushEventType,
-			Repo: *event.Repo.FullName,
-			Ref:  *event.Ref,
-		}, nil
+			Type:   scm.PushEventType,
+			Repo:   *event.Repo.FullName,
+			Ref:    *event.Ref,
+			Branch: *event.Ref,
+		}
 	default:
-		return nil, fmt.Errorf("Unsupported github event")
+		log.Warningln("Skip unsupported Github event")
+		return nil
 	}
 }

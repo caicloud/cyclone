@@ -75,9 +75,12 @@ func (s *SVN) CheckToken() bool {
 	return true
 }
 
-func (s *SVN) CreateWebhook(repoURL string, webHook *scm.Webhook) error {
+// CreateWebhook ...
+func (s *SVN) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	return cerr.ErrorNotImplemented.Error("create svn webhook")
 }
-func (s *SVN) DeleteWebhook(repoURL string, webHookUrl string) error {
+
+// DeleteWebhook ...
+func (s *SVN) DeleteWebhook(repo string, webhookURL string) error {
 	return cerr.ErrorNotImplemented.Error("delete svn webhook")
 }

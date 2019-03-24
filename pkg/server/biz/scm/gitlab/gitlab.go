@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/golang/glog"
+	"github.com/caicloud/nirvana/log"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 	v4 "gopkg.in/xanzy/go-gitlab.v0"
@@ -272,6 +272,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	return "", err
 }
 
+// MergeCommentEvent ...
 type MergeCommentEvent struct {
 	ObjectKind string `json:"object_kind"`
 	//User       *User  `json:"user"`
@@ -312,6 +313,7 @@ type MergeCommentEvent struct {
 	MergeRequest *MergeRequest `json:"merge_request"`
 }
 
+// MergeRequest ...
 type MergeRequest struct {
 	ID             int    `json:"id"`
 	IID            int    `json:"iid"`
@@ -382,18 +384,22 @@ type MergeRequest struct {
 }
 
 const (
-	// eventTypeHeader represents the Gitlab header key used to pass the event type.
-	eventTypeHeader = "X-Gitlab-Event"
+	// EventTypeHeader represents the header key for event type of Gitlab.
+	EventTypeHeader = "X-Gitlab-Event"
 
-	NoteHookEvent         = "Note Hook"
+	// NoteHookEvent represents comments event.
+	NoteHookEvent = "Note Hook"
+	// MergeRequestHookEvent represents merge request event.
 	MergeRequestHookEvent = "Merge Request Hook"
-	TagPushHookEvent      = "Tag Push Hook"
-	PushHookEvent         = "Push Hook"
+	// TagPushHookEvent represents tag push event.
+	TagPushHookEvent = "Tag Push Hook"
+	// PushHookEvent represents commit push event.
+	PushHookEvent = "Push Hook"
 )
 
-// ParseWebHook parses the body from webhook requeset.
-func ParseWebHook(r *http.Request) (payload interface{}, err error) {
-	eventType := r.Header.Get(eventTypeHeader)
+// parseWebhook parses the body from webhook requeset.
+func parseWebhook(r *http.Request) (payload interface{}, err error) {
+	eventType := r.Header.Get(EventTypeHeader)
 	switch eventType {
 	case NoteHookEvent:
 		//payload = &gitlab.MergeCommentEvent{}
@@ -424,10 +430,11 @@ func ParseWebHook(r *http.Request) (payload interface{}, err error) {
 }
 
 // ParseEvent parses data from Gitlab events.
-func ParseEvent(request *http.Request) (*scm.EventData, error) {
-	event, err := ParseWebHook(request)
+func ParseEvent(request *http.Request) *scm.EventData {
+	event, err := parseWebhook(request)
 	if err != nil {
-		return nil, err
+		log.Errorln(err)
+		return nil
 	}
 
 	switch event := event.(type) {
@@ -436,27 +443,38 @@ func ParseEvent(request *http.Request) (*scm.EventData, error) {
 			Type: scm.TagReleaseEventType,
 			Repo: event.Project.PathWithNamespace,
 			Ref:  strings.Split(event.Ref, "/")[2],
-		}, nil
+		}
 	case *gitlab.MergeEvent:
 		objectAttributes := event.ObjectAttributes
+		if objectAttributes.Action != "open" && objectAttributes.Action != "update" {
+			log.Warningf("Skip unsupported action %s of Gitlab merge event, only support open and update action.", objectAttributes.Action)
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.PullRequestEventType,
 			Repo: event.Project.PathWithNamespace,
 			Ref:  fmt.Sprintf(mergeRefTemplate, objectAttributes.IID, objectAttributes.TargetBranch),
-		}, nil
+		}
+	case *MergeCommentEvent:
+		if event.MergeRequest == nil {
+			log.Warningln("Only handle comments on merge requests.")
+			return nil
+		}
+		return &scm.EventData{
+			Type:    scm.PullRequestCommentEventType,
+			Repo:    event.Project.PathWithNamespace,
+			Ref:     fmt.Sprintf(mergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
+			Comment: event.ObjectAttributes.Note,
+		}
 	case *gitlab.PushEvent:
 		return &scm.EventData{
-			Type: scm.PushEventType,
-			Repo: event.Project.PathWithNamespace,
-			Ref:  event.Ref,
-		}, nil
-	case *MergeCommentEvent:
-		return &scm.EventData{
-			Type: scm.PullRequestCommentEventType,
-			Repo: event.Project.PathWithNamespace,
-			Ref:  fmt.Sprintf(mergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
-		}, nil
+			Type:   scm.PushEventType,
+			Repo:   event.Project.PathWithNamespace,
+			Ref:    event.Ref,
+			Branch: event.Ref,
+		}
 	default:
-		return nil, fmt.Errorf("Unsupported github event")
+		log.Warningln("Skip unsupported Gitlab event")
+		return nil
 	}
 }

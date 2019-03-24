@@ -130,13 +130,18 @@ type Webhook struct {
 	URL    string
 }
 
+// EventType represents event types of SCM.
 type EventType string
 
 const (
-	PullRequestEventType        EventType = "PullRequest"
+	// PullRequestEventType represents pull request events.
+	PullRequestEventType EventType = "PullRequest"
+	// PullRequestCommentEventType represents pull request comment events.
 	PullRequestCommentEventType EventType = "PullRequestComment"
-	PushEventType               EventType = "Push"
-	TagReleaseEventType         EventType = "TagRelease"
+	// PushEventType represents commit push events.
+	PushEventType EventType = "Push"
+	// TagReleaseEventType represents tag release events.
+	TagReleaseEventType EventType = "TagRelease"
 )
 
 // EventData represents the data parsed from SCM events.

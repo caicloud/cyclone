@@ -78,6 +78,38 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 		newWft.Spec = wft.Spec
 		newWft.Annotations = MergeMap(wft.Annotations, newWft.Annotations)
 		newWft.Labels = MergeMap(wft.Labels, newWft.Labels)
+
+		// Handle trigger type change and repo change when SCM type.
+		// Do not care about the change of secret.
+		oldSpec := origin.Spec
+		newSpec := wft.Spec
+		unregisterOld, registerNew := false, false
+		if oldSpec.Type == v1alpha1.TriggerTypeSCM {
+			// Need to unregister old SCM webhook only when:
+			// * new trigger is not SCM type
+			// * repo of new trigger is different from old
+			if newSpec.Type == v1alpha1.TriggerTypeCron {
+				unregisterOld = true
+			} else if oldSpec.SCM.Repo != newSpec.SCM.Repo {
+				unregisterOld = true
+				registerNew = true
+			}
+		} else if newSpec.Type == v1alpha1.TriggerTypeSCM {
+			registerNew = true
+		}
+
+		if unregisterOld {
+			if err = unregisterSCMWebhook(tenant, wft.Name, oldSpec.SCM.Secret, oldSpec.SCM.Repo); err != nil {
+				return err
+			}
+		}
+
+		if registerNew {
+			if err = registerSCMWebhook(tenant, wft.Name, newSpec.SCM.Secret, newSpec.SCM.Repo); err != nil {
+				return err
+			}
+		}
+
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
 		return err
 	})
@@ -200,7 +232,7 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 			if wfts[0] == wftName {
 				found = true
 				// Delete webhook for repo.
-				log.Infoln("Delete webhook.")
+				log.Infof("Delete webhook for repo %s", repo)
 				integration, err := SecretToIntegration(secret)
 				if err != nil {
 					log.Error(err)

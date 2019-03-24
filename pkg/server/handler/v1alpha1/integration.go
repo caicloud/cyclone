@@ -343,10 +343,15 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 
 		newSecret := origin.DeepCopy()
-		newSecret.Data = secret.Data
 		newSecret.Annotations = MergeMap(secret.Annotations, newSecret.Annotations)
 		newSecret.Labels = MergeMap(secret.Labels, newSecret.Labels)
 		newSecret.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
+
+		// Only use new datas to overwrite old ones, and keep others not needed to be overwritten, such as repos.
+		for key, value := range secret.Data {
+			newSecret.Data[key] = value
+		}
+
 		_, err = handler.K8sClient.CoreV1().Secrets(ns).Update(newSecret)
 		return err
 	})
@@ -391,7 +396,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 				return err
 			}
 
-			for repo, _ := range repos {
+			for repo := range repos {
 				if err = DeleteSCMWebhook(integration.Spec.SCM, tenant, isName, repo); err != nil {
 					// Only try best to cleanup webhooks, if there are errors, will not block the process.
 					log.Error(err)

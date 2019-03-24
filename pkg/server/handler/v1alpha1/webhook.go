@@ -3,8 +3,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"regexp"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
@@ -17,7 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
-	cerr "github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 type webhookResponse struct {
@@ -27,132 +25,76 @@ type webhookResponse struct {
 const (
 	succeededMsg = "Successfully triggered"
 
-	IgnoredMsg = "Is ignored"
+	ignoredMsg = "Is ignored"
 )
 
-const (
-	// branchRefTemplate represents reference template for branches.
-	branchRefTemplate = "refs/heads/%s"
-
-	// tagRefTemplate represents reference template for tags.
-	tagRefTemplate = "refs/tags/%s"
-
-	// githubPullRefTemplate represents reference template for Github pull request.
-	githubPullRefTemplate = "refs/pull/%d/merge"
-
-	// gitlabMergeRefTemplate represents reference template for Gitlab merge request and merge target branch
-	gitlabMergeRefTemplate = "refs/merge-requests/%d/head:%s"
-
-	// gitlabEventTypeHeader represents the Gitlab header key used to pass the event type.
-	gitlabEventTypeHeader = "X-Gitlab-Event"
-
-	// githubEventTypeHeader represents the Github header key used to pass the event type.
-	githubEventTypeHeader = "X-Github-Event"
-)
-
-// githubRepoNameRegexp represents the regexp of github status url.
-var githubStatusURLRegexp *regexp.Regexp
-
-func init() {
-	var statusURLRegexp = `^https://api.github.com/repos/[\S]+/[\S]+/statuses/([\w]+)$`
-	githubStatusURLRegexp = regexp.MustCompile(statusURLRegexp)
+func newWebhookResponse(msg string) webhookResponse {
+	return webhookResponse{msg}
 }
 
 // HandleWebhook handles webhooks from integrated systems.
 func HandleWebhook(ctx context.Context, tenant, integration string) (webhookResponse, error) {
-	response := webhookResponse{}
 	request := service.HTTPContextFrom(ctx).Request()
 
 	repos, err := getReposFromSecret(tenant, integration)
 	if err != nil {
 		log.Error(err)
-		return response, nil
+		return newWebhookResponse(err.Error()), err
 	}
 
 	if len(repos) == 0 {
-		return response, nil
+		return newWebhookResponse(ignoredMsg), nil
 	}
 
-	if request.Header.Get(githubEventTypeHeader) != "" {
-		data, err := github.ParseEvent(request)
-		if err != nil {
-			return response, err
-		}
-
-		if wfts, ok := repos[data.Repo]; ok {
-			for _, wft := range wfts {
-				// handleGithubEvent(wft, params)
-				log.Infof("Trigger workflow trigger %s\n", wft)
-				if err = createWorkflowRun(tenant, wft, data); err != nil {
-					log.Error(err)
-					return response, nil
+	triggered := false
+	if request.Header.Get(github.EventTypeHeader) != "" {
+		if data := github.ParseEvent(request); data != nil {
+			if wfts, ok := repos[data.Repo]; ok {
+				for _, wft := range wfts {
+					log.Infof("Trigger workflow trigger %s", wft)
+					if err = createWorkflowRun(tenant, wft, data); err != nil {
+						log.Error(err)
+					}
 				}
 			}
+			triggered = true
 		}
 	}
 
-	if request.Header.Get(gitlabEventTypeHeader) != "" {
-		data, err := gitlab.ParseEvent(request)
-		if err != nil {
-			return response, err
-		}
-
-		if wfts, ok := repos[data.Repo]; ok {
-			for _, wft := range wfts {
-				// handleGithubEvent(wft, params)
-				log.Infof("Trigger workflow trigger %s\n", wft)
-				if err = createWorkflowRun(tenant, wft, data); err != nil {
-					log.Error(err)
-					return response, nil
+	if request.Header.Get(gitlab.EventTypeHeader) != "" {
+		if data := gitlab.ParseEvent(request); data != nil {
+			if wfts, ok := repos[data.Repo]; ok {
+				for _, wft := range wfts {
+					log.Infof("Trigger workflow trigger %s", wft)
+					if err = createWorkflowRun(tenant, wft, data); err != nil {
+						log.Error(err)
+					}
 				}
 			}
+			triggered = true
 		}
 	}
 
-	return response, nil
-}
+	if triggered {
+		return newWebhookResponse(succeededMsg), nil
+	}
 
-// return repo, params, error
-// func parseGithubEvent(request *http.Request) (string, error) {
-// 	payload, err := ioutil.ReadAll(request.Body)
-// 	if err != nil {
-// 		return "", fmt.Errorf("Fail to read the request body")
-// 	}
-
-// 	event, err := github.ParseWebHook(github.WebHookType(request), payload)
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	switch event := event.(type) {
-// 	case *github.ReleaseEvent:
-// 		log.Infof("release tag: %s\n", *event.Release.TagName)
-// 		return *event.Repo.FullName, nil
-// 	case *github.PullRequestEvent:
-// 		log.Infof("pull request: %s\n", *event.PullRequest.Number)
-// 	}
-
-// 	switch request.Header.Get(githubEventTypeHeader) {
-// 	case "release":
-// 		return "release", nil
-// 	}
-
-// 	// log.Infof("Github webhook event: %v", event)
-// 	return "", nil
-// }
-
-func handleGithubEvent(wfts v1alpha1.WorkflowTrigger, event string) (webhookResponse, error) {
-	// Trigger workflows for these workflowtriggers according to event data.
-	log.Infoln("Trigger workflow")
-	return webhookResponse{}, nil
+	return newWebhookResponse(ignoredMsg), nil
 }
 
 func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
-	log.Infof("data: %v\n", data)
 	ns := common.TenantNamespace(tenant)
 	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(ns).Get(wftName, metav1.GetOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
+	}
+
+	var project string
+	if wft.Labels != nil {
+		project = wft.Labels[common.LabelProjectName]
+	}
+	if project == "" {
+		return fmt.Errorf("Failed to get project from workflowtrigger labels")
 	}
 
 	wfName := wft.Spec.WorkflowRef.Name
@@ -191,10 +133,6 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	if !trigger {
 		return nil
 	}
-	// wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(ns).Get(wfName, metav1.GetOptions{})
-	// if err != nil {
-	// 	return cerr.ConvertK8sError(err)
-	// }
 
 	log.Infof("Trigger wft %s with event data: %v", wftName, data)
 
@@ -206,15 +144,23 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: tag,
+			Labels: map[string]string{
+				common.LabelProjectName:  project,
+				common.LabelWorkflowName: wfName,
+			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
 	}
 
-	// Set "Tag" for all resource configs.
+	// Set "Tag" and "GIT_REVISION" for all resource configs if they are empty.
 	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
 		for i, p := range r.Parameters {
 			if p.Name == "TAG" && p.Value == "" {
 				r.Parameters[i].Value = tag
+			}
+
+			if p.Name == "GIT_REVISION" && p.Value == "" {
+				r.Parameters[i].Value = data.Ref
 			}
 		}
 	}
@@ -233,11 +179,5 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		return cerr.ConvertK8sError(err)
 	}
 
-	log.Infoln("Create workflowrun by workflow trigger")
 	return nil
-}
-
-// getHttpRequest gets request from context.
-func getHttpRequest(ctx context.Context) *http.Request {
-	return service.HTTPContextFrom(ctx).Request()
 }
