@@ -79,9 +79,15 @@ data:
         "requests.memory": "2Gi"
       },
       "storage_usage_watcher": {
-        "image": "busybox:1.30.0",
+        "image": "__REGISTRY__/cyclone-watcher:__VERSION__",
         "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storages",
-        "interval_seconds": "30"
+        "interval_seconds": "30",
+        "resource_requirements": {
+          "limits.cpu": "100m",
+          "limits.memory": "64Mi",
+          "requests.cpu": "50m",
+          "requests.memory": "32Mi"
+        }
       }
     }
 

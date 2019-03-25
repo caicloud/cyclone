@@ -3,13 +3,14 @@ package statistic
 import (
 	"fmt"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/config"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/config"
 )
 
 const (
@@ -19,6 +20,11 @@ const (
 	HeartbeatIntervalEnvName = "HEARTBEAT_INTERVAL"
 	// NamespaceEnvName ...
 	NamespaceEnvName = "NAMESPACE"
+
+	// PVCWatcherLabelName ...
+	PVCWatcherLabelName = "pod.cyclone.io/name"
+	// PVCWatcherLabelValue ...
+	PVCWatcherLabelValue = "pvc-watcher"
 )
 
 // Usage represents usage of some resources, for example storage
@@ -51,10 +57,18 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.Execut
 			Namespace: context.Namespace,
 		},
 		Spec: v1beta1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					PVCWatcherLabelName: PVCWatcherLabelValue,
+				},
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      PVCWatcherName,
 					Namespace: context.Namespace,
+					Labels: map[string]string{
+						PVCWatcherLabelName: PVCWatcherLabelValue,
+					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
@@ -75,27 +89,21 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.Execut
 									Value: context.Namespace,
 								},
 							},
-							Command: []string{
-								"/bin/sh",
-								"-c",
-								`while [ true ]; do wget -q --header="Content-Type:application/json" --header="X-Namespace:$NAMESPACE" --post-data="{data: $(stat -tf /data | grep "/data" | awk '{ print $5":"$6":"$7 }')}" $REPORT_URL; sleep $HEARTBEAT_INTERVAL; done`,
-							},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("50m"),
-									corev1.ResourceMemory: resource.MustParse("32Mi"),
+									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsCPU, "50m")),
+									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsMemory, "32Mi")),
 								},
 								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("100m"),
-									corev1.ResourceMemory: resource.MustParse("64Mi"),
+									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsCPU, "100m")),
+									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "64Mi")),
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "cv",
 									ReadOnly:  true,
-									MountPath: "/data",
-									SubPath:   "caches",
+									MountPath: "/pvc-data",
 								},
 							},
 						},
@@ -118,4 +126,14 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.Execut
 	})
 
 	return err
+}
+
+// getOrDefault gets resource requirement from config, if not set, use default value.
+func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.ResourceName, defaultValue string) string {
+	v, ok := watcherConfig.ResourceRequirements[key]
+	if ok {
+		return v
+	}
+
+	return defaultValue
 }

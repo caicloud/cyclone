@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
@@ -14,25 +15,21 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
-	"github.com/caicloud/nirvana/log"
 )
 
 // ReportStorageUsage reports storage usage of a namespace.
 func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.StorageUsage) error {
-	log.Infof("update storage usuage, namespace: %s, usage: %s", namespace, request.Data)
-	usage, err := parseUsageData(request.Data)
+	log.Infof("update pvc storage usage, namespace: %s, usage: %s/%s", namespace, request.Used, request.Total)
+	b, err := json.Marshal(request)
 	if err != nil {
-		return err
-	}
-
-	b, err := json.Marshal(usage)
-	if err != nil {
+		log.Warningf("Marshal usage error: %v", err)
 		return fmt.Errorf("marshal usage error: %v", err)
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		ns, err := handler.K8sClient.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
 		if err != nil {
+			log.Errorf("Get namespace '%s' error: %v", namespace, err)
 			return err
 		}
 
@@ -43,6 +40,9 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 		ns.Annotations[common.AnnotationStorageUsage] = string(b)
 
 		_, err = handler.K8sClient.CoreV1().Namespaces().Update(ns)
+		if err != nil {
+			log.Warningf("Update namespace '%s' error: %v", namespace, err)
+		}
 		return err
 	})
 }

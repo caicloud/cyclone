@@ -241,6 +241,12 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 		return
 	}
 
+	// Delete the PVC wathcer deployment.
+	err = client.ExtensionsV1beta1().Deployments(cluster.Namespace).Delete(statistic.PVCWatcherName, &meta_v1.DeleteOptions{})
+	if err != nil {
+		log.Warningf("Delete PVC watcher '%s' error: %v", statistic.PVCWatcherName, err)
+	}
+
 	// delete pvc which is created by cyclone
 	if cluster.PVC == common.TenantPVC(tenant) {
 		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})

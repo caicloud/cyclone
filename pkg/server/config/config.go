@@ -63,6 +63,8 @@ type StorageUsageWatcher struct {
 	ReportURL string `json:"report_url"`
 	// IntervalSeconds is intervals to report storage usage
 	IntervalSeconds string `json:"interval_seconds"`
+	// ResourceRequirements specifies resource requirements of the watcher container.
+	ResourceRequirements map[core_v1.ResourceName]string `json:"resource_requirements"`
 }
 
 // Config is Workflow Controller config instance

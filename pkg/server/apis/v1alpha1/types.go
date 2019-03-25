@@ -263,5 +263,7 @@ type WebhookResponse struct {
 
 // StorageUsage defines usage of PVC storage
 type StorageUsage struct {
-	Data string `json:"data"`
+	Total string            `json:"total"`
+	Used  string            `json:"used"`
+	Items map[string]string `json:"items"`
 }
