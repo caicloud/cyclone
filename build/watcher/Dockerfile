@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM bash:4.1.17
 
 LABEL maintainer="chende@caicloud.io"
 
