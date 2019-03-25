@@ -1,0 +1,139 @@
+package statistic
+
+import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/config"
+)
+
+const (
+	// ReportURLEnvName ...
+	ReportURLEnvName = "REPORT_URL"
+	// HeartbeatIntervalEnvName ...
+	HeartbeatIntervalEnvName = "HEARTBEAT_INTERVAL"
+	// NamespaceEnvName ...
+	NamespaceEnvName = "NAMESPACE"
+
+	// PVCWatcherLabelName ...
+	PVCWatcherLabelName = "pod.cyclone.io/name"
+	// PVCWatcherLabelValue ...
+	PVCWatcherLabelValue = "pvc-watcher"
+)
+
+// Usage represents usage of some resources, for example storage
+type Usage struct {
+	Total int64 `json:"total"`
+	Used  int64 `json:"used"`
+}
+
+// PVCUsage represents PVC usages in a tenant
+type PVCUsage struct {
+	// Overall is overall usage of the PVC storage
+	Overall Usage `json:"overall"`
+	// Projects are storage used by each project
+	Projects map[string]int64 `json:"projects"`
+}
+
+// PVCWatcherName is name of the PVC watcher deployment and pod
+const PVCWatcherName = "pvc-watchdog"
+
+// LaunchPVCUsageWatcher launches a pod in a given namespace to report PVC usage regularly.
+func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.ExecutionContext) error {
+	if len(context.PVC) == 0 {
+		return fmt.Errorf("no pvc in execution namespace %s", context.Namespace)
+	}
+
+	watcherConfig := config.Config.StorageUsageWatcher
+	_, err := client.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      PVCWatcherName,
+			Namespace: context.Namespace,
+		},
+		Spec: v1beta1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					PVCWatcherLabelName: PVCWatcherLabelValue,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      PVCWatcherName,
+					Namespace: context.Namespace,
+					Labels: map[string]string{
+						PVCWatcherLabelName: PVCWatcherLabelValue,
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "c0",
+							Image: watcherConfig.Image,
+							Env: []corev1.EnvVar{
+								{
+									Name:  ReportURLEnvName,
+									Value: watcherConfig.ReportURL,
+								},
+								{
+									Name:  HeartbeatIntervalEnvName,
+									Value: watcherConfig.IntervalSeconds,
+								},
+								{
+									Name:  NamespaceEnvName,
+									Value: context.Namespace,
+								},
+							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsCPU, "50m")),
+									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsMemory, "32Mi")),
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsCPU, "100m")),
+									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "64Mi")),
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "cv",
+									ReadOnly:  true,
+									MountPath: "/pvc-data",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "cv",
+							VolumeSource: corev1.VolumeSource{
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: context.PVC,
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					RestartPolicy: corev1.RestartPolicyAlways,
+				},
+			},
+		},
+	})
+
+	return err
+}
+
+// getOrDefault gets resource requirement from config, if not set, use default value.
+func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.ResourceName, defaultValue string) string {
+	v, ok := watcherConfig.ResourceRequirements[key]
+	if ok {
+		return v
+	}
+
+	return defaultValue
+}

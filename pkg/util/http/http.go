@@ -70,6 +70,9 @@ const (
 	// TenantHeaderName is name of tenant header name in http reqeust
 	TenantHeaderName = "X-Tenant"
 
+	// NamespaceHeaderName is name of namespace header
+	NamespaceHeaderName = "X-Namespace"
+
 	// HeaderContentType represents the the key of Content-Type.
 	HeaderContentType = "Content-Type"
 

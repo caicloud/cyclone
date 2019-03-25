@@ -77,6 +77,17 @@ data:
         "limits.memory": "4Gi",
         "requests.cpu": "1",
         "requests.memory": "2Gi"
+      },
+      "storage_usage_watcher": {
+        "image": "__REGISTRY__/cyclone-watcher:__VERSION__",
+        "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
+        "interval_seconds": "30",
+        "resource_requirements": {
+          "limits.cpu": "100m",
+          "limits.memory": "64Mi",
+          "requests.cpu": "50m",
+          "requests.memory": "32Mi"
+        }
       }
     }
 

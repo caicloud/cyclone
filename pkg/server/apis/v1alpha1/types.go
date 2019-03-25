@@ -260,3 +260,10 @@ type HealthStatus struct {
 type WebhookResponse struct {
 	Message string `json:"message,omitempty"`
 }
+
+// StorageUsage defines usage of PVC storage
+type StorageUsage struct {
+	Total string            `json:"total"`
+	Used  string            `json:"used"`
+	Items map[string]string `json:"items"`
+}

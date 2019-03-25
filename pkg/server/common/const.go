@@ -66,6 +66,9 @@ const (
 	// AnnotationDescription is the annotation key used to describe resources
 	AnnotationDescription = "cyclone.io/description"
 
+	// AnnotationStorageUsage is annotation to store storage usuage information
+	AnnotationStorageUsage = "storage.cyclone.io/usage"
+
 	// QuotaCPULimit represents default value of 'limits.cpu'
 	QuotaCPULimit = "2"
 	// QuotaCPURequest represents default value of 'requests.cpu'
