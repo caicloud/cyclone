@@ -49,7 +49,7 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		safeToRun := true
 		for _, d := range stage.Depends {
 			status, ok := wfr.Status.Stages[d]
-			if !(ok && status.Status.Phase == v1alpha1.StatusSucceeded) {
+			if !(ok && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)))) {
 				safeToRun = false
 				break
 			}
@@ -61,6 +61,17 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 	}
 
 	return nextStages
+}
+
+// IsTrivial returns whether a stage is trivial in a workflow
+func IsTrivial(wf *v1alpha1.Workflow, stage string) bool {
+	for _, s := range wf.Spec.Stages {
+		if s.Name == stage {
+			return s.Trivial
+		}
+	}
+
+	return false
 }
 
 // staticStatus masks timestamp in status, safe for comparision of status.
