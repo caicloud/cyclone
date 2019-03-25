@@ -65,6 +65,31 @@ func TestResolveStatus(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+func TestIsTrivial(t *testing.T) {
+	wf := &v1alpha1.Workflow{
+		Spec: v1alpha1.WorkflowSpec{
+			Stages: []v1alpha1.StageItem{
+				{
+					Name:    "A",
+					Trivial: false,
+				},
+				{
+					Name:    "B",
+					Trivial: false,
+					Depends: []string{"A"},
+				},
+				{
+					Name:    "C",
+					Trivial: true,
+				},
+			},
+		},
+	}
+	assert.Equal(t, false, IsTrivial(wf, "A"))
+	assert.Equal(t, false, IsTrivial(wf, "B"))
+	assert.Equal(t, true, IsTrivial(wf, "C"))
+}
+
 func TestNextStages(t *testing.T) {
 	wf := &v1alpha1.Workflow{
 		Spec: v1alpha1.WorkflowSpec{

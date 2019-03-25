@@ -74,8 +74,12 @@ type StageItem struct {
 	Name string `json:"name"`
 	// Input artifacts that this stage needed, we bind the artifacts source here.
 	Artifacts []ArtifactItem `json:"artifacts"`
-	// Stages that this stage depends on
+	// Stages that this stage depends on.
 	Depends []string `json:"depends"`
+	// Trivial indicates whether this stage is critical in the workflow. If set to true, it means the workflow
+	// can tolerate failure of this stage. In this case, all other stages can continue to execute and the overall
+	// status of the workflow execution can still be succeed.
+	Trivial bool `json:"trivial"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
