@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
@@ -18,22 +19,20 @@ import (
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
-type webhookResponse struct {
-	Message string `json:"message,omitempty"`
-}
-
 const (
 	succeededMsg = "Successfully triggered"
 
 	ignoredMsg = "Is ignored"
 )
 
-func newWebhookResponse(msg string) webhookResponse {
-	return webhookResponse{msg}
+func newWebhookResponse(msg string) api.WebhookResponse {
+	return api.WebhookResponse{
+		Message: msg,
+	}
 }
 
 // HandleWebhook handles webhooks from integrated systems.
-func HandleWebhook(ctx context.Context, tenant, integration string) (webhookResponse, error) {
+func HandleWebhook(ctx context.Context, tenant, integration string) (api.WebhookResponse, error) {
 	request := service.HTTPContextFrom(ctx).Request()
 
 	repos, err := getReposFromSecret(tenant, integration)

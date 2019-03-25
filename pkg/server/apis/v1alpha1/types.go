@@ -255,3 +255,8 @@ type StatsPhase struct {
 type HealthStatus struct {
 	Status string `json:"status"`
 }
+
+// WebhookResponse represents response for webhooks.
+type WebhookResponse struct {
+	Message string `json:"message,omitempty"`
+}
