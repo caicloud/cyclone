@@ -56,7 +56,7 @@ type CronTrigger struct {
 
 // WorkflowTriggerStatus describes status of a workflow trigger.
 type WorkflowTriggerStatus struct {
-	// How many times this trigger got triggered.
+	// Count represents triggered times.
 	Count int `json:"count"`
 }
 

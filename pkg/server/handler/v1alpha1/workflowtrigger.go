@@ -88,7 +88,7 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 			// Need to unregister old SCM webhook only when:
 			// * new trigger is not SCM type
 			// * repo of new trigger is different from old
-			if newSpec.Type == v1alpha1.TriggerTypeCron {
+			if newSpec.Type != v1alpha1.TriggerTypeSCM {
 				unregisterOld = true
 			} else if oldSpec.SCM.Repo != newSpec.SCM.Repo {
 				unregisterOld = true
@@ -148,9 +148,10 @@ func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
 		return cerr.ConvertK8sError(err)
 	}
 
+	// Record webhook triggers by repo name.
 	repos := map[string][]string{}
 	if d, ok := secret.Data[common.SecretKeyRepos]; ok {
-		log.Infof("repos data of secret %s: %s\n", secretName, d)
+		log.Infof("repos data of secret %s: %s", secretName, d)
 		if err = json.Unmarshal(d, &repos); err != nil {
 			log.Errorf("Failed to unmarshal repos from secret")
 			return err
@@ -218,7 +219,7 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 	repos := map[string][]string{}
 	if d, ok := secret.Data[common.SecretKeyRepos]; ok {
-		log.Infof("repos data of secret %s: %s\n", secretName, d)
+		log.Infof("repos data of secret %s: %s", secretName, d)
 		if err = json.Unmarshal(d, &repos); err != nil {
 			log.Errorf("Failed to unmarshal repos from secret")
 			return err
@@ -270,7 +271,7 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 	reposStr, err := json.Marshal(repos)
 	if err != nil {
-		log.Errorf("Failed to marshal repos for secret")
+		log.Errorf("Failed to marshal repos for secret %s", secretName)
 		return err
 	}
 
