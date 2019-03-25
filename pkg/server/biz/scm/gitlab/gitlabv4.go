@@ -17,6 +17,9 @@ limitations under the License.
 package gitlab
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/caicloud/nirvana/log"
 	"gopkg.in/xanzy/go-gitlab.v0"
 
@@ -163,4 +166,57 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+// CreateWebhook creates webhook for specified repo.
+func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
+	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
+		return fmt.Errorf("The webhook %v is not correct", webhook)
+	}
+
+	enableState, disableState := true, false
+	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
+	hook := gitlab.AddProjectHookOptions{
+		PushEvents: &disableState,
+	}
+
+	for _, e := range webhook.Events {
+		switch e {
+		case scm.PullRequestEventType:
+			hook.MergeRequestsEvents = &enableState
+		case scm.PullRequestCommentEventType:
+			hook.NoteEvents = &enableState
+		case scm.PushEventType:
+			hook.PushEvents = &enableState
+		case scm.TagReleaseEventType:
+			hook.TagPushEvents = &enableState
+		default:
+			log.Errorf("The event type %s is not supported, will be ignored", e)
+			return nil
+		}
+	}
+	hook.URL = &webhook.URL
+
+	onwer, name := scm.ParseRepo(repo)
+	_, _, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
+	return err
+}
+
+// DeleteWebhook deletes webhook from specified repo.
+func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
+	owner, name := scm.ParseRepo(repo)
+	hooks, _, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if strings.HasPrefix(hook.URL, webhookURL) {
+			if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

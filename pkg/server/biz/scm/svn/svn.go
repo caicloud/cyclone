@@ -23,6 +23,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 func init() {
@@ -72,4 +73,14 @@ func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
 // CheckToken ...
 func (s *SVN) CheckToken() bool {
 	return true
+}
+
+// CreateWebhook ...
+func (s *SVN) CreateWebhook(repo string, webhook *scm.Webhook) error {
+	return cerr.ErrorNotImplemented.Error("create svn webhook")
+}
+
+// DeleteWebhook ...
+func (s *SVN) DeleteWebhook(repo string, webhookURL string) error {
+	return cerr.ErrorNotImplemented.Error("delete svn webhook")
 }

@@ -1,9 +1,12 @@
 package descriptors
 
 import (
-	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/middlewares"
+	"fmt"
 
 	def "github.com/caicloud/nirvana/definition"
+
+	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/middlewares"
 )
 
 // descriptors describe APIs of current version.
@@ -17,8 +20,8 @@ func register(ds ...def.Descriptor) {
 // Descriptor returns a combined descriptor for current version.
 func Descriptor() def.Descriptor {
 	return def.Descriptor{
-		Description: "v1alpha1 APIs",
-		Path:        "/v1alpha1",
+		Description: fmt.Sprintf("%s APIs", v1alpha1.APIVersion),
+		Path:        fmt.Sprintf("/%s", v1alpha1.APIVersion),
 		Middlewares: middlewares.Middlewares(),
 		Children:    descriptors,
 	}

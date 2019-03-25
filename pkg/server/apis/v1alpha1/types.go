@@ -6,6 +6,11 @@ import (
 	cmd_api "k8s.io/client-go/tools/clientcmd/api"
 )
 
+const (
+	// APIVersion represents API version.
+	APIVersion = "v1alpha1"
+)
+
 // Tenant contains information about tenant
 type Tenant struct {
 	// Metadata for the particular object, including name, namespace, labels, etc
@@ -249,4 +254,9 @@ type StatsPhase struct {
 // HealthStatus ...
 type HealthStatus struct {
 	Status string `json:"status"`
+}
+
+// WebhookResponse represents response for webhooks.
+type WebhookResponse struct {
+	Message string `json:"message,omitempty"`
 }

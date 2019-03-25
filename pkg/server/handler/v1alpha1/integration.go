@@ -350,10 +350,15 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 
 		newSecret := origin.DeepCopy()
-		newSecret.Data = secret.Data
 		newSecret.Annotations = MergeMap(secret.Annotations, newSecret.Annotations)
 		newSecret.Labels = MergeMap(secret.Labels, newSecret.Labels)
 		newSecret.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
+
+		// Only use new datas to overwrite old ones, and keep others not needed to be overwritten, such as repos.
+		for key, value := range secret.Data {
+			newSecret.Data[key] = value
+		}
+
 		_, err = handler.K8sClient.CoreV1().Secrets(ns).Update(newSecret)
 		return err
 	})
@@ -367,8 +372,48 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 // DeleteIntegration deletes a integration with the given tenant and name.
 func DeleteIntegration(ctx context.Context, tenant, name string) error {
-	err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Delete(
-		common.IntegrationSecret(name), &meta_v1.DeleteOptions{})
+	isName := common.IntegrationSecret(name)
+	in, err := getIntegration(tenant, isName)
+	if err != nil {
+		return err
+	}
+
+	if in.Spec.Type == api.SCM {
+		// Cleanup SCM webhooks for integrated SCM.
+		secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
+			isName, meta_v1.GetOptions{})
+		if err != nil {
+			return cerr.ConvertK8sError(err)
+		}
+
+		repos := map[string][]string{}
+		if d, ok := secret.Data[common.SecretKeyRepos]; ok {
+			log.Infof("repos data of secret %s: %s\n", secret.Name, d)
+			if err = json.Unmarshal(d, &repos); err != nil {
+				log.Errorf("Failed to unmarshal repos from secret")
+				return err
+			}
+		}
+
+		if len(repos) > 0 {
+			log.Infoln("Delete webhook.")
+			integration, err := SecretToIntegration(secret)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
+
+			for repo := range repos {
+				if err = DeleteSCMWebhook(integration.Spec.SCM, tenant, isName, repo); err != nil {
+					// Only try best to cleanup webhooks, if there are errors, will not block the process.
+					log.Error(err)
+				}
+			}
+		}
+	}
+
+	err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Delete(
+		isName, &meta_v1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
 }

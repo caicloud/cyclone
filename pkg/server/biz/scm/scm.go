@@ -51,6 +51,8 @@ type Provider interface {
 	ListTags(repo string) ([]string, error)
 	ListDockerfiles(repo string) ([]string, error)
 	CheckToken() bool
+	CreateWebhook(repo string, webhook *Webhook) error
+	DeleteWebhook(repo string, webhookURL string) error
 }
 
 // GetSCMProvider gets the SCM provider by the type.
@@ -120,4 +122,33 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 	config.Password = ""
 
 	return nil
+}
+
+// Webhook represents the params for SCM webhook.
+type Webhook struct {
+	Events []EventType
+	URL    string
+}
+
+// EventType represents event types of SCM.
+type EventType string
+
+const (
+	// PullRequestEventType represents pull request events.
+	PullRequestEventType EventType = "PullRequest"
+	// PullRequestCommentEventType represents pull request comment events.
+	PullRequestCommentEventType EventType = "PullRequestComment"
+	// PushEventType represents commit push events.
+	PushEventType EventType = "Push"
+	// TagReleaseEventType represents tag release events.
+	TagReleaseEventType EventType = "TagRelease"
+)
+
+// EventData represents the data parsed from SCM events.
+type EventData struct {
+	Type    EventType
+	Repo    string
+	Ref     string
+	Branch  string
+	Comment string
 }
