@@ -135,13 +135,13 @@ type EventType string
 
 const (
 	// PullRequestEventType represents pull request events.
-	PullRequestEventType EventType = "PullRequest"
+	PullRequestEventType EventType = "scm-pull-request"
 	// PullRequestCommentEventType represents pull request comment events.
-	PullRequestCommentEventType EventType = "PullRequestComment"
+	PullRequestCommentEventType EventType = "scm-pull-request-comment"
 	// PushEventType represents commit push events.
-	PushEventType EventType = "Push"
+	PushEventType EventType = "scm-push"
 	// TagReleaseEventType represents tag release events.
-	TagReleaseEventType EventType = "TagRelease"
+	TagReleaseEventType EventType = "scm-tag-release"
 )
 
 // EventData represents the data parsed from SCM events.
