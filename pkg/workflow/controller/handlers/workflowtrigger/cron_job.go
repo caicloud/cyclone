@@ -11,6 +11,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	s_common "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
@@ -94,6 +95,7 @@ func (t *CronTrigger) Run() {
 		t.WorkflowRun.Labels = make(map[string]string)
 	}
 	t.WorkflowRun.Labels[common.WorkflowNameLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
+	t.WorkflowRun.Annotations[s_common.AnnotationTrigger] = s_common.CronTimerTrigger
 
 	for {
 		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))

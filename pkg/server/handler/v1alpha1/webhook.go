@@ -143,6 +143,9 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: tag,
+			Annotations: map[string]string{
+				common.AnnotationTrigger: string(data.Type),
+			},
 			Labels: map[string]string{
 				common.LabelProjectName:  project,
 				common.LabelWorkflowName: wfName,
