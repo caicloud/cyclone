@@ -39,7 +39,7 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 	}
 
 	injectWfRef(tenant, workflow, wfr)
-	accelerator.NewAccelerator(project, wfr).Accelerate()
+	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
 }
 

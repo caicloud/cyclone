@@ -68,7 +68,7 @@ func TestAccelerate(t *testing.T) {
 	}
 
 	for k, tc := range testcase {
-		NewAccelerator(project, tc.wfr).Accelerate()
+		NewAccelerator("test", project, tc.wfr).Accelerate()
 		if !reflect.DeepEqual(tc.expect.Spec.PresetVolumes, tc.wfr.Spec.PresetVolumes) {
 			t.Errorf("test %s failed, expect not equal to return", k)
 		}

@@ -1,4 +1,4 @@
-package statistic
+package usage
 
 import (
 	"fmt"
@@ -26,20 +26,6 @@ const (
 	// PVCWatcherLabelValue ...
 	PVCWatcherLabelValue = "pvc-watcher"
 )
-
-// Usage represents usage of some resources, for example storage
-type Usage struct {
-	Total int64 `json:"total"`
-	Used  int64 `json:"used"`
-}
-
-// PVCUsage represents PVC usages in a tenant
-type PVCUsage struct {
-	// Overall is overall usage of the PVC storage
-	Overall Usage `json:"overall"`
-	// Projects are storage used by each project
-	Projects map[string]int64 `json:"projects"`
-}
 
 // PVCWatcherName is name of the PVC watcher deployment and pod
 const PVCWatcherName = "pvc-watchdog"

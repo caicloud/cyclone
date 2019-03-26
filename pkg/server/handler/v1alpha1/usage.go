@@ -4,15 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 )
@@ -45,30 +42,4 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 		}
 		return err
 	})
-}
-
-// parseUsageData parses the raw usage data, the data is in format: <block-size-in-byte>:<total-blocks>:<free-blocks>
-func parseUsageData(data string) (*statistic.Usage, error) {
-	parts := strings.Split(data, ":")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid usage string: %s", data)
-	}
-
-	blockSize, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid usage string: %s", data)
-	}
-	total, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid usage string: %s", data)
-	}
-	free, err := strconv.ParseInt(parts[2], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid usage string: %s", data)
-	}
-
-	return &statistic.Usage{
-		Total: total * blockSize,
-		Used:  (total - free) * blockSize,
-	}, nil
 }
