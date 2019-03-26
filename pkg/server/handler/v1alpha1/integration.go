@@ -13,7 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
-	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
+	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -191,7 +191,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 	}
 
 	// Launch PVC usage watcher to watch the usage of PVC.
-	err = statistic.LaunchPVCUsageWatcher(client, v1alpha1.ExecutionContext{
+	err = usage.LaunchPVCUsageWatcher(client, v1alpha1.ExecutionContext{
 		Namespace: cluster.Namespace,
 		PVC:       cluster.PVC,
 	})
@@ -242,9 +242,9 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 	}
 
 	// Delete the PVC wathcer deployment.
-	err = client.ExtensionsV1beta1().Deployments(cluster.Namespace).Delete(statistic.PVCWatcherName, &meta_v1.DeleteOptions{})
+	err = client.ExtensionsV1beta1().Deployments(cluster.Namespace).Delete(usage.PVCWatcherName, &meta_v1.DeleteOptions{})
 	if err != nil {
-		log.Warningf("Delete PVC watcher '%s' error: %v", statistic.PVCWatcherName, err)
+		log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
 	}
 
 	// delete pvc which is created by cyclone
