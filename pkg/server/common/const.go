@@ -75,6 +75,9 @@ const (
 	// AnnotationTrigger is the annotation key used to indicate the trigger of workflowruns.
 	AnnotationTrigger = "cyclone.io/trigger"
 
+	// CronTimerTrigger represents the trigger of workflowruns triggered by cron timer.
+	CronTimerTrigger = "cron-timer"
+
 	// QuotaCPULimit represents default value of 'limits.cpu'
 	QuotaCPULimit = "2"
 	// QuotaCPURequest represents default value of 'requests.cpu'
