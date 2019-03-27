@@ -38,6 +38,9 @@ type CycloneServerConfig struct {
 
 	// StorageUsageWatcher configures PVC storage usage watchers.
 	StorageUsageWatcher StorageUsageWatcher `json:"storage_usage_watcher"`
+
+	// CreateBuiltinTemplates configures whether to create builtin stage templates while cyclone server start up.
+	CreateBuiltinTemplates bool `json:"create_builtin_templates"`
 }
 
 // PVCConfig contains the PVC information

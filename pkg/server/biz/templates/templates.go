@@ -8,11 +8,17 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 )
 
 // InitStageTemplates loads and creates stage templates for the given scene.
 // scene - Workflow scene, for example, 'cicd', empty value indicates all scenes.
 func InitStageTemplates(client clientset.Interface, scene string) {
+	if !config.Config.CreateBuiltinTemplates {
+		log.Info("create_builtin_templates is false, skip")
+		return
+	}
+
 	// Only admin tenant will hold these public build-in stage templates.
 	adminNamespace := common.TenantNamespace(common.AdminTenant)
 

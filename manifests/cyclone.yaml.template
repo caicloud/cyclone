@@ -78,6 +78,7 @@ data:
         "requests.cpu": "1",
         "requests.memory": "2Gi"
       },
+      "create_builtin_templates": true,
       "storage_usage_watcher": {
         "image": "__REGISTRY__/cyclone-watcher:__VERSION__",
         "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
