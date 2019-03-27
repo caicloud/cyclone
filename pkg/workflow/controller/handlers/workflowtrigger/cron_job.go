@@ -7,6 +7,7 @@ import (
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -91,17 +92,9 @@ func (t *CronTrigger) getKeyFromTrigger() string {
 
 // Run triggers the workflows.
 func (t *CronTrigger) Run() {
-	if t.WorkflowRun.Labels == nil {
-		t.WorkflowRun.Labels = make(map[string]string)
-	}
-	t.WorkflowRun.Labels[common.WorkflowNameLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
-	if t.WorkflowRun.Annotations == nil {
-		t.WorkflowRun.Annotations = make(map[string]string)
-	}
-	t.WorkflowRun.Annotations[s_common.AnnotationTrigger] = s_common.CronTimerTrigger
-
 	for {
 		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))
+		t.WorkflowRun.Annotations[s_common.AnnotationAlias] = t.WorkflowRun.Name
 		_, err := t.Manage.Client.CycloneV1alpha1().WorkflowRuns(t.Namespace).Create(t.WorkflowRun)
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
@@ -135,7 +128,21 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 	}
 
 	wfr := &v1alpha1.WorkflowRun{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Annotations: map[string]string{
+				s_common.AnnotationTrigger: s_common.CronTimerTrigger,
+			},
+			Labels: map[string]string{
+				common.WorkflowNameLabelName: wft.Spec.WorkflowRunSpec.WorkflowRef.Name,
+			},
+		},
 		Spec: wft.Spec.WorkflowRunSpec,
+	}
+
+	if wft.Labels != nil {
+		if projectName, ok := wft.Labels[s_common.LabelProjectName]; ok {
+			wfr.Labels[s_common.LabelProjectName] = projectName
+		}
 	}
 
 	ct.WorkflowRun = wfr
