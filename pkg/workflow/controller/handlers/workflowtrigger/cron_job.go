@@ -95,6 +95,9 @@ func (t *CronTrigger) Run() {
 		t.WorkflowRun.Labels = make(map[string]string)
 	}
 	t.WorkflowRun.Labels[common.WorkflowNameLabelName] = t.WorkflowRun.Spec.WorkflowRef.Name
+	if t.WorkflowRun.Annotations == nil {
+		t.WorkflowRun.Annotations = make(map[string]string)
+	}
 	t.WorkflowRun.Annotations[s_common.AnnotationTrigger] = s_common.CronTimerTrigger
 
 	for {
