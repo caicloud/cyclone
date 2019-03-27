@@ -28,7 +28,7 @@ func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stag
 }
 
 // ListStages ...
-func ListStages(ctx context.Context, project, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListStages(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	stages, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
@@ -39,16 +39,16 @@ func ListStages(ctx context.Context, project, tenant string, pagination *types.P
 
 	items := stages.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // GetStage ...

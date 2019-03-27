@@ -37,7 +37,7 @@ func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1a
 }
 
 // ListWorkflowTriggers ...
-func ListWorkflowTriggers(ctx context.Context, project, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListWorkflowTriggers(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
@@ -48,16 +48,16 @@ func ListWorkflowTriggers(ctx context.Context, project, tenant string, paginatio
 
 	items := workflowTriggers.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowTrigger{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // GetWorkflowTrigger ...

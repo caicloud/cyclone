@@ -2,10 +2,15 @@ package types
 
 import "reflect"
 
-// Pagination describes pagination of request, start and limit defined.
-type Pagination struct {
-	Start int64 `source:"query,start,default=0"`
-	Limit int64 `source:"query,limit,default=99999"`
+// QueryParams describes pagination of request, start and limit defined.
+type QueryParams struct {
+	Start  int64  `source:"query,start,default=0"`
+	Limit  int64  `source:"query,limit,default=99999"`
+	Filter string `source:"query,filter"`
+	// SortBy represents the order of results. For example:
+	// creationTime: desc order by creationTime
+	// -creationTime: asc order by creationTime
+	SortBy string `source:"query,sortBy"`
 }
 
 // ListMeta describes the structure of list metadata

@@ -28,7 +28,7 @@ func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.R
 }
 
 // ListResources ...
-func ListResources(ctx context.Context, project, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListResources(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	resources, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
@@ -39,16 +39,16 @@ func ListResources(ctx context.Context, project, tenant string, pagination *type
 
 	items := resources.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Resource{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // GetResource ...

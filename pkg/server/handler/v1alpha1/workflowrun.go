@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/caicloud/nirvana/log"
@@ -55,7 +56,7 @@ func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
 }
 
 // ListWorkflowRuns ...
-func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
 	})
@@ -65,17 +66,63 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, pag
 	}
 
 	items := workflowruns.Items
-	size := int64(len(items))
-	if pagination.Start >= size {
+	results := []v1alpha1.WorkflowRun{}
+	if query.Filter == "" {
+		results = items
+	} else {
+		// Support multiple filters rules, separated with comma.
+		filterParts := strings.Split(query.Filter, ",")
+		filters := make(map[string]string)
+		for _, part := range filterParts {
+			kv := strings.Split(part, "=")
+			if len(kv) != 2 {
+				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
+			}
+
+			filters[kv[0]] = kv[1]
+		}
+
+		var selected bool
+		for _, item := range items {
+			selected = true
+			for key, value := range filters {
+				switch key {
+				case "name":
+					if !strings.Contains(item.Name, strings.ToLower(value)) {
+						selected = false
+					}
+				case "alias":
+					if item.Annotations != nil {
+						if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+							if !strings.Contains(alias, strings.ToLower(value)) {
+								selected = false
+							}
+						}
+					}
+				case "status":
+					if strings.ToLower(string(item.Status.Overall.Phase)) != strings.ToLower(value) {
+						selected = false
+					}
+				}
+			}
+
+			if selected {
+				results = append(results, item)
+			}
+		}
+	}
+
+	size := int64(len(results))
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), results[query.Start:end]), nil
 }
 
 // GetWorkflowRun ...

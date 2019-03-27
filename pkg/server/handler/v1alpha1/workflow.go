@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +32,7 @@ func CreateWorkflow(ctx context.Context, tenant, project string, wf *v1alpha1.Wo
 }
 
 // ListWorkflows ...
-func ListWorkflows(ctx context.Context, tenant, project string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListWorkflows(ctx context.Context, tenant, project string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.ProjectSelector(project),
 	})
@@ -41,17 +42,49 @@ func ListWorkflows(ctx context.Context, tenant, project string, pagination *type
 	}
 
 	items := workflows.Items
-	size := int64(len(items))
-	if pagination.Start >= size {
+	results := []v1alpha1.Workflow{}
+	if query.Filter == "" {
+		results = items
+	} else {
+		// Only support filter by name or alias.
+		kv := strings.Split(query.Filter, "=")
+		if len(kv) != 2 {
+			return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
+		}
+
+		if kv[0] == "name" {
+			for _, item := range items {
+				if strings.Contains(item.Name, strings.ToLower(kv[1])) {
+					results = append(results, item)
+				}
+			}
+		} else if kv[0] == "alias" {
+			for _, item := range items {
+				if item.Annotations != nil {
+					if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+						if strings.Contains(alias, strings.ToLower(kv[1])) {
+							results = append(results, item)
+						}
+					}
+				}
+			}
+		} else {
+			// Will not filter results.
+			results = items
+		}
+	}
+
+	size := int64(len(results))
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Workflow{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), results[query.Start:end]), nil
 }
 
 // GetWorkflow ...
