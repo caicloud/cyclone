@@ -54,5 +54,11 @@ _config:
               }
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
-            "cyclone_server_addr": "cyclone-server.default:7099"
+            "cyclone_server_addr": "cyclone-server.default:7099",
+            "notification": [
+              {
+                "name": "devops",
+                "url": "http://devops-admin.default.svc.cluster.local:7088/apis/v2/pipeline/notifications"
+              }
+            ]
           }
