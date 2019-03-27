@@ -52,7 +52,7 @@ _config:
             },
             "cyclone_server_host": "0.0.0.0",
             "cyclone_server_port": 7099,
-            "webhook_url": '[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2',
+            "webhook_url": "[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2",
             "default_pvc_config": {
               "storage_class": "heketi-storageclass",
               "size": "10Gi"
