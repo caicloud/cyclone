@@ -46,21 +46,31 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 	if query.Filter == "" {
 		results = items
 	} else {
-		// Only support filter by name.
+		// Only support filter by name or alias.
 		kv := strings.Split(query.Filter, "=")
 		if len(kv) != 2 {
 			return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
 		}
 
-		if kv[0] != "name" {
-			// Will not filter results.
-			results = items
-		} else {
+		if kv[0] == "name" {
 			for _, item := range items {
 				if strings.Contains(item.Name, strings.ToLower(kv[1])) {
 					results = append(results, item)
 				}
 			}
+		} else if kv[0] == "alias" {
+			for _, item := range items {
+				if item.Annotations != nil {
+					if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+						if strings.Contains(alias, strings.ToLower(kv[1])) {
+							results = append(results, item)
+						}
+					}
+				}
+			}
+		} else {
+			// Will not filter results.
+			results = items
 		}
 	}
 

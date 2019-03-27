@@ -91,6 +91,14 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 					if !strings.Contains(item.Name, strings.ToLower(value)) {
 						selected = false
 					}
+				case "alias":
+					if item.Annotations != nil {
+						if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+							if !strings.Contains(alias, strings.ToLower(value)) {
+								selected = false
+							}
+						}
+					}
 				case "status":
 					if strings.ToLower(string(item.Status.Overall.Phase)) != strings.ToLower(value) {
 						selected = false
