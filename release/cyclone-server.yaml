@@ -52,6 +52,7 @@ _config:
             },
             "cyclone_server_host": "0.0.0.0",
             "cyclone_server_port": 7099,
+            "webhook_url": '[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2',
             "default_pvc_config": {
               "storage_class": "heketi-storageclass",
               "size": "10Gi"
@@ -63,7 +64,7 @@ _config:
               "requests.memory": "2Gi"
             },
             "storage_usage_watcher": {
-              "image": "__REGISTRY__/cyclone-watcher:__VERSION__",
+              "image": "[[ registry_release ]]/cyclone-watcher:[[ imageTagFromGitTag ]]",
               "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
               "interval_seconds": "30",
               "resource_requirements": {
