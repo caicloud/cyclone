@@ -3,10 +3,9 @@ package v1alpha1
 import (
 	"context"
 
+	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
-
-	"github.com/caicloud/nirvana/log"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
@@ -20,8 +19,8 @@ import (
 // ListProjects list projects the given tenant has access to.
 // - ctx Context of the reqeust
 // - tenant Tenant
-// - pagination Pagination with page and limit.
-func ListProjects(ctx context.Context, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+// - query Query params includes start, limit and filter.
+func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
 	projects, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).List(metav1.ListOptions{})
 	if err != nil {
@@ -30,17 +29,17 @@ func ListProjects(ctx context.Context, tenant string, pagination *types.Paginati
 	}
 
 	items := projects.Items
-
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Project{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // CreateProject creates a project for the tenant.

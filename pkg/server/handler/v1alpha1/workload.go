@@ -13,7 +13,7 @@ import (
 )
 
 // ListWorkingPods lists all pods of workflowruns.
-func ListWorkingPods(ctx context.Context, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	pods, err := handler.K8sClient.CoreV1().Pods(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: common.PodLabelSelector,
 	})
@@ -24,14 +24,14 @@ func ListWorkingPods(ctx context.Context, tenant string, pagination *types.Pagin
 
 	items := pods.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []core_v1.Pod{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }

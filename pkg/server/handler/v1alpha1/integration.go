@@ -24,8 +24,8 @@ import (
 // ListIntegrations get integrations the given tenant has access to.
 // - ctx Context of the reqeust
 // - tenant Tenant
-// - pagination Pagination with page and limit.
-func ListIntegrations(ctx context.Context, tenant string, pagination *types.Pagination) (*types.ListResponse, error) {
+// - query Query params includes start, limit and filter.
+func ListIntegrations(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
 	secrets, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).List(meta_v1.ListOptions{
 		LabelSelector: common.LabelIntegrationType,
@@ -38,11 +38,11 @@ func ListIntegrations(ctx context.Context, tenant string, pagination *types.Pagi
 	items := secrets.Items
 	integrations := []api.Integration{}
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), integrations), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
@@ -55,7 +55,7 @@ func ListIntegrations(ctx context.Context, tenant string, pagination *types.Pagi
 		integrations = append(integrations, *integration)
 	}
 
-	return types.NewListResponse(int(size), integrations[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), integrations[query.Start:end]), nil
 }
 
 // SecretToIntegration translates secret to integration

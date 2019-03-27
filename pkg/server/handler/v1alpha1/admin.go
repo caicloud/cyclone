@@ -13,7 +13,7 @@ import (
 )
 
 // AllWorkflows lists all workflows matched the provided label from all projects and tenants.
-func AllWorkflows(ctx context.Context, label string, pagination *types.Pagination) (*types.ListResponse, error) {
+func AllWorkflows(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows("").List(metav1.ListOptions{
 		LabelSelector: label,
 	})
@@ -24,20 +24,20 @@ func AllWorkflows(ctx context.Context, label string, pagination *types.Paginatio
 
 	items := workflows.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Workflow{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // AllStages lists all stages matched the provided label from all projects and tenants.
-func AllStages(ctx context.Context, label string, pagination *types.Pagination) (*types.ListResponse, error) {
+func AllStages(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
 	stages, err := handler.K8sClient.CycloneV1alpha1().Stages("").List(metav1.ListOptions{
 		LabelSelector: label,
 	})
@@ -48,20 +48,20 @@ func AllStages(ctx context.Context, label string, pagination *types.Pagination) 
 
 	items := stages.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // AllResources lists all resources matched the provided label from all projects and tenants.
-func AllResources(ctx context.Context, label string, pagination *types.Pagination) (*types.ListResponse, error) {
+func AllResources(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
 	resources, err := handler.K8sClient.CycloneV1alpha1().Resources("").List(metav1.ListOptions{
 		LabelSelector: label,
 	})
@@ -72,20 +72,20 @@ func AllResources(ctx context.Context, label string, pagination *types.Paginatio
 
 	items := resources.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Resource{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // AllWorkflowRuns lists all workflowruns matched the provided label from all projects and tenants.
-func AllWorkflowRuns(ctx context.Context, label string, pagination *types.Pagination) (*types.ListResponse, error) {
+func AllWorkflowRuns(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns("").List(metav1.ListOptions{
 		LabelSelector: label,
 	})
@@ -96,20 +96,20 @@ func AllWorkflowRuns(ctx context.Context, label string, pagination *types.Pagina
 
 	items := workflowruns.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // AllWorkflowTriggers lists all workflow triggers matched the provided label from all projects and tenants.
-func AllWorkflowTriggers(ctx context.Context, label string, pagination *types.Pagination) (*types.ListResponse, error) {
+func AllWorkflowTriggers(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
 	triggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers("").List(metav1.ListOptions{
 		LabelSelector: label,
 	})
@@ -120,14 +120,14 @@ func AllWorkflowTriggers(ctx context.Context, label string, pagination *types.Pa
 
 	items := triggers.Items
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowTrigger{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }

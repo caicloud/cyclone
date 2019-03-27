@@ -25,6 +25,8 @@ var (
 	ErrorURLParamNotFound = nerror.BadRequest.Build(ReasonRequest, "can't find parameter ${parameter} in request url query")
 	// ErrorHeaderParamNotFound defines request header error
 	ErrorHeaderParamNotFound = nerror.BadRequest.Build(ReasonRequest, "can't find parameter ${parameter} in request header")
+	// ErrorQueryParamNotCorrect defines request query param error
+	ErrorQueryParamNotCorrect = nerror.BadRequest.Build(ReasonRequest, "bad request as query ${parameter} is not correct")
 
 	// ErrorValidationFailed defines validation failed error
 	ErrorValidationFailed = nerror.BadRequest.Build(ReasonRequest, "failed to validate ${field}: ${error}")

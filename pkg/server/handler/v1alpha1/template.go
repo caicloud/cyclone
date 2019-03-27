@@ -3,11 +3,10 @@ package v1alpha1
 import (
 	"context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/retry"
-
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -21,8 +20,8 @@ import (
 // - ctx Context of the reqeust
 // - tenant Tenant
 // - includePublic Whether to include system level stage templates, default to true
-// - pagination Pagination with page and limit.
-func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagination *types.Pagination) (*types.ListResponse, error) {
+// - query Query params includes start, limit and filter.
+func ListTemplates(ctx context.Context, tenant string, includePublic bool, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
 	templates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: wfcommon.StageTemplateLabelSelector,
@@ -46,15 +45,16 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, pagin
 	}
 
 	size := int64(len(items))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
-	return types.NewListResponse(int(size), items[pagination.Start:end]), nil
+
+	return types.NewListResponse(int(size), items[query.Start:end]), nil
 }
 
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates

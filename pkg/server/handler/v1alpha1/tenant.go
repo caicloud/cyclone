@@ -34,7 +34,7 @@ func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) 
 }
 
 // ListTenants list all tenants' information
-func ListTenants(ctx context.Context, pagination *types.Pagination) (*types.ListResponse, error) {
+func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResponse, error) {
 	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
 		LabelSelector: common.LabelOwnerCyclone(),
 	})
@@ -54,16 +54,16 @@ func ListTenants(ctx context.Context, pagination *types.Pagination) (*types.List
 	}
 
 	size := int64(len(tenants))
-	if pagination.Start >= size {
+	if query.Start >= size {
 		return types.NewListResponse(int(size), []api.Tenant{}), nil
 	}
 
-	end := pagination.Start + pagination.Limit
+	end := query.Start + query.Limit
 	if end > size {
 		end = size
 	}
 
-	return types.NewListResponse(int(size), tenants[pagination.Start:end]), nil
+	return types.NewListResponse(int(size), tenants[query.Start:end]), nil
 }
 
 // GetTenant gets information for a specific tenant
