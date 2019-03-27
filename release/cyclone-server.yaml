@@ -63,6 +63,7 @@ _config:
               "requests.cpu": "1",
               "requests.memory": "2Gi"
             },
+            "create_builtin_templates": false,
             "storage_usage_watcher": {
               "image": "[[ registry_release ]]/cyclone-watcher:[[ imageTagFromGitTag ]]",
               "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
