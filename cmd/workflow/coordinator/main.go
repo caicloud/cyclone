@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -23,46 +22,50 @@ func main() {
 
 	var err error
 	var message string
+	defer func() {
+		if err != nil {
+			log.Error(message)
+			os.Exit(1)
+		} else {
+			log.Info(message)
+			os.Exit(0)
+		}
+	}()
 
 	// Create k8s clientset and registry system signals for exit.
 	client, err := k8sclient.GetClient("", *kubeConfigPath)
 	if err != nil {
 		log.Errorf("Get k8s client error: %v", err)
-		os.Exit(1)
+		return
 	}
 
 	// New workflow stage coordinator.
 	c, err := coordinator.NewCoordinator(client)
 	if err != nil {
 		log.Errorf("New coornidator failed: %v", err)
-		os.Exit(1)
+		return
 	}
-
-	defer func() {
-		if err != nil {
-			log.Error(message)
-			// Wait for sending event
-			time.Sleep(1 * time.Second)
-			os.Exit(1)
-		} else {
-			log.Info(message)
-			// Wait for sending event
-			time.Sleep(1 * time.Second)
-			os.Exit(0)
-		}
-	}()
 
 	// Wait all containers running, so we can start to collect logs.
 	log.Info("Wait all containers running ... ")
-	c.WaitRunning()
+	err = c.WaitRunning()
+	if err != nil {
+		return
+	}
 
 	// Collect real-time container logs using goroutines.
 	log.Info("Start to collect logs.")
-	c.CollectLogs()
+	err = c.CollectLogs()
+	if err != nil {
+		return
+	}
 
 	// Wait workload containers completion, so we can notify output resolvers.
 	log.Info("Wait workload containers completion ... ")
-	c.WaitWorkloadTerminate()
+	err = c.WaitWorkloadTerminate()
+	if err != nil {
+		return
+	}
 
 	// Check if the workload is succeeded.
 	if !c.WorkLoadSuccess() {
@@ -98,15 +101,17 @@ func main() {
 	// Wait all others container completion. Coordinator will be the last one
 	// to quit since it need to collect other containers' logs.
 	log.Info("Wait for all other containers completion ... ")
-	c.WaitAllOthersTerminate()
-
-	// Check if the workload and resolver containers are succeeded.
-	if c.StageSuccess() {
-		message = fmt.Sprintf("Stage %s succeeded", c.Stage.Name)
+	err = c.WaitAllOthersTerminate()
+	if err != nil {
 		return
 	}
 
-	message = fmt.Sprintf("Stage %s failed, resolver exit code is not 0", c.Stage.Name)
-	err = fmt.Errorf(message)
-	return
+	// Check if the workload and resolver containers are succeeded.
+	if !c.StageSuccess() {
+		message = fmt.Sprintf("Stage %s failed, some containers exited with code non-zero", c.Stage.Name)
+		err = fmt.Errorf(message)
+		return
+	}
+
+	message = fmt.Sprintf("Stage %s succeeded", c.Stage.Name)
 }

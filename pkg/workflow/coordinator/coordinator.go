@@ -91,10 +91,10 @@ func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
 }
 
 // CollectLogs collects all containers' logs except for the coordinator container itself.
-func (co *Coordinator) CollectLogs() {
+func (co *Coordinator) CollectLogs() error {
 	cs, err := co.getAllOtherContainers()
 	if err != nil {
-		return
+		return err
 	}
 
 	for _, c := range cs {
@@ -106,35 +106,36 @@ func (co *Coordinator) CollectLogs() {
 		}(c, co.Wfr.Name, co.Stage.Name)
 	}
 
+	return nil
 }
 
 // WaitRunning waits all containers to start run.
-func (co *Coordinator) WaitRunning() {
+func (co *Coordinator) WaitRunning() error {
 	err := co.runtimeExec.WaitContainers(common.ContainerStateInitialized)
 	if err != nil {
 		log.Errorf("Wait containers to running error: %v", err)
-		return
 	}
+	return err
 }
 
 // WaitWorkloadTerminate waits all workload containers to be Terminated status.
-func (co *Coordinator) WaitWorkloadTerminate() {
+func (co *Coordinator) WaitWorkloadTerminate() error {
 	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated, common.OnlyWorkload)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
-		return
 	}
+	return err
 }
 
 // WaitAllOthersTerminate waits all containers except for
 // the coordinator container itself to become Terminated status.
-func (co *Coordinator) WaitAllOthersTerminate() {
+func (co *Coordinator) WaitAllOthersTerminate() error {
 	err := co.runtimeExec.WaitContainers(common.ContainerStateTerminated,
 		common.NonWorkloadSidecar, common.NonCoordinator, common.NonDockerInDocker)
 	if err != nil {
 		log.Errorf("Wait containers to completion error: %v", err)
-		return
 	}
+	return err
 }
 
 // StageSuccess checks if the workload and resolver containers are succeeded.
