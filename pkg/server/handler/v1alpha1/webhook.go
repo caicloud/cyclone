@@ -136,11 +136,9 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	log.Infof("Trigger wft %s with event data: %v", wftName, data)
 
 	name := fmt.Sprintf("%s-%s", wfName, rand.String(5))
-	var alias string
+	alias := name
 	if tag != "" {
 		alias = tag
-	} else {
-		alias = name
 	}
 
 	// Create workflowrun.
