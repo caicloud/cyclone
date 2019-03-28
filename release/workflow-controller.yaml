@@ -30,7 +30,7 @@ _config:
               "kv-resolver": "[[ registry_release ]]/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
               "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
               "gc": "[[ registry_library ]]/alpine:3.7",
-              "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs"
+              "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs.1"
             },
             "logging": {
               "level": "debug"
@@ -55,10 +55,10 @@ _config:
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "cyclone-server.default:7099",
-            "notification": [
+            "notifications": [
               {
                 "name": "devops",
-                "url": "http://devops-admin.default.svc.cluster.local:7088/apis/v2/pipeline/notifications"
+                "url": "http://devops-admin.default.svc.cluster.local:7088/api/v2/pipeline/notifications"
               }
             ]
           }

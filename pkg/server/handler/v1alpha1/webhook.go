@@ -145,6 +145,7 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 			Name: tag,
 			Annotations: map[string]string{
 				common.AnnotationTrigger: string(data.Type),
+				common.AnnotationAlias:   tag,
 			},
 			Labels: map[string]string{
 				common.LabelProjectName:  project,
