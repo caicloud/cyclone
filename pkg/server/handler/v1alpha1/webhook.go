@@ -135,17 +135,21 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 
 	log.Infof("Trigger wft %s with event data: %v", wftName, data)
 
-	if tag == "" {
-		tag = fmt.Sprintf("%s-%s", wfName, rand.String(5))
+	name := fmt.Sprintf("%s-%s", wfName, rand.String(5))
+	var alias string
+	if tag != "" {
+		alias = tag
+	} else {
+		alias = name
 	}
 
 	// Create workflowrun.
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: tag,
+			Name: name,
 			Annotations: map[string]string{
 				common.AnnotationTrigger: string(data.Type),
-				common.AnnotationAlias:   tag,
+				common.AnnotationAlias:   alias,
 			},
 			Labels: map[string]string{
 				common.LabelProjectName:  project,
