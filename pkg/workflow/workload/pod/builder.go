@@ -465,9 +465,9 @@ func (m *Builder) ResolveOutputResources() error {
 	if withImageOutput {
 		var previleged = true
 		dind := corev1.Container{
-			Image:   controller.Config.Images[controller.DindImage],
-			Name:    common.DockerInDockerSidecarName,
-			Command: []string{"dockerd"},
+			Image: controller.Config.Images[controller.DindImage],
+			Name:  common.DockerInDockerSidecarName,
+			Args:  []string{"dockerd"},
 			SecurityContext: &corev1.SecurityContext{
 				Privileged: &previleged,
 			},
