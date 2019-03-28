@@ -228,7 +228,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		case v1alpha1.StatusWaiting:
 			waiting = true
 		case v1alpha1.StatusFailed:
-			err = true
+			err = !IsTrivial(o.wf, stage)
 		case v1alpha1.StatusSucceeded:
 		default:
 			log.WithField("stg", stage).
