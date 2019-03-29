@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caicloud/cyclone/pkg/common"
-	k8sclient "github.com/caicloud/cyclone/pkg/common"
+	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
 )
 
@@ -33,7 +33,7 @@ func main() {
 	}()
 
 	// Create k8s clientset and registry system signals for exit.
-	client, err := k8sclient.GetClient("", *kubeConfigPath)
+	client, err := utilk8s.GetClient(*kubeConfigPath)
 	if err != nil {
 		log.Errorf("Get k8s client error: %v", err)
 		return
