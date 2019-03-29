@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
+	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
 )
@@ -26,7 +27,7 @@ func main() {
 	fmt.Println(common.CycloneLogo)
 
 	// Create k8s clientset and registry system signals for exit.
-	client, err := common.GetClient("", *kubeConfigPath)
+	client, err := utilk8s.GetClient(*kubeConfigPath)
 	if err != nil {
 		log.Fatal("Create k8s clientset error: ", err)
 	}
