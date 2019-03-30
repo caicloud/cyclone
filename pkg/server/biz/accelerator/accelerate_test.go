@@ -8,6 +8,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
@@ -22,13 +23,13 @@ func TestAccelerate(t *testing.T) {
 			wfr: &v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{common.LabelAcceleration: common.LabelTrueValue},
+					Labels: map[string]string{meta.LabelAcceleration: meta.TrueValue},
 				},
 			},
 			expect: v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{common.LabelAcceleration: common.LabelTrueValue},
+					Labels: map[string]string{meta.LabelAcceleration: meta.TrueValue},
 				},
 				Spec: v1alpha1.WorkflowRunSpec{
 					PresetVolumes: []v1alpha1.PresetVolume{
@@ -55,13 +56,13 @@ func TestAccelerate(t *testing.T) {
 			wfr: &v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{common.LabelAcceleration: common.LabelFalseValue},
+					Labels: map[string]string{meta.LabelAcceleration: meta.FalseValue},
 				},
 			},
 			expect: v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{common.LabelAcceleration: common.LabelTrueValue},
+					Labels: map[string]string{meta.LabelAcceleration: meta.TrueValue},
 				},
 			},
 		},

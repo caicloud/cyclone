@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
@@ -123,9 +124,9 @@ func getUsage(client clientset.Interface, tenant string) (*PVCUsage, error) {
 		return nil, fmt.Errorf("get namesapce %s for tenant %s error: %v", name, tenant, err)
 	}
 
-	raw, ok := ns.Annotations[common.AnnotationStorageUsage]
+	raw, ok := ns.Annotations[meta.AnnotationTenantStorageUsage]
 	if !ok {
-		return nil, fmt.Errorf("annotation %s not foud in namespace %s", common.AnnotationStorageUsage, name)
+		return nil, fmt.Errorf("annotation %s not foud in namespace %s", meta.AnnotationTenantStorageUsage, name)
 	}
 
 	usage := &PVCUsage{}

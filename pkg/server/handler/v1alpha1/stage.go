@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -30,7 +31,7 @@ func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stag
 // ListStages ...
 func ListStages(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	stages, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
 		log.Errorf("Get stages from k8s with tenant %s, project %s error: %v", tenant, project, err)

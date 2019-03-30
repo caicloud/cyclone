@@ -7,6 +7,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -15,7 +16,7 @@ import (
 // ListWorkingPods lists all pods of workflowruns.
 func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	pods, err := handler.K8sClient.CoreV1().Pods(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.PodLabelSelector,
+		LabelSelector: meta.LabelExistsSelector(meta.LabelWorkflowRunName),
 	})
 	if err != nil {
 		log.Errorf("Failed to list pods for tenant %s as error: %v", tenant, err)

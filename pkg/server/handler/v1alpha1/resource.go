@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -30,7 +31,7 @@ func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.R
 // ListResources ...
 func ListResources(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	resources, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
 		log.Errorf("Get resources from k8s with tenant %s, project %s error: %v", tenant, project, err)

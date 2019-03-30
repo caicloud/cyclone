@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 )
 
@@ -99,15 +100,13 @@ func CreateNamespace(name string, client *kubernetes.Clientset) error {
 }
 
 func buildNamespace(tenant string) (*core_v1.Namespace, error) {
-	// set labels
-	label := make(map[string]string)
-	label[LabelOwner] = OwnerCyclone
-
 	nsname := TenantNamespace(tenant)
 	namespace := &core_v1.Namespace{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name:   nsname,
-			Labels: label,
+			Name: nsname,
+			Labels: map[string]string{
+				meta.LabelTenantName: tenant,
+			},
 		},
 	}
 

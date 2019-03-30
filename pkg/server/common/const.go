@@ -15,65 +15,11 @@ const (
 	// DefaultPVCSize is the default size of pvc
 	DefaultPVCSize = "5Gi"
 
-	// AnnotationTenant is the annotation key used for namespace to relate tenant information
-	AnnotationTenant = "cyclone.io/tenant-info"
-
-	// LabelProjectName is the label key used to indicate the project which the resources belongs to
-	LabelProjectName = "cyclone.io/project-name"
-
-	// LabelWorkflowName is the label key used to indicate the workflow which the resources belongs to
-	LabelWorkflowName = "cyclone.io/workflow-name"
-
-	// LabelIntegrationType is the label key used to indicate type of integration
-	LabelIntegrationType = "cyclone.io/integration-type"
-
-	// LabelClusterOn is the label key used to indicate the cluster is a worker for the tenant
-	LabelClusterOn = "cyclone.io/cluster-worker"
-
-	// LabelTrueValue is the label value used to represent true
-	LabelTrueValue = "true"
-
-	// LabelFalseValue is the label value used to represent false
-	LabelFalseValue = "false"
-
-	// LabelOwner is the label key used to indicate namespaces created by cyclone
-	LabelOwner = "cyclone.io/owner"
-
-	// OwnerCyclone is the label value used to indicate namespaces created by cyclone
-	OwnerCyclone = "cyclone"
-
-	// LabelBuiltin is the label key used to represent cyclone built in resources
-	LabelBuiltin = "cyclone.io/builtin"
-
-	// LabelScene is the label key used to indicate cyclone scenario
-	LabelScene = "cyclone.io/scene"
-
 	// SceneCICD is the label value used to indicate cyclone CI/CD scenario
 	SceneCICD = "cicd"
 
 	// SceneAI is the label value used to indicate cyclone AI scenario
 	SceneAI = "ai"
-
-	// LabelStageTemplate is the label key used to represent a stage is a stage template
-	LabelStageTemplate = "cyclone.io/stage-template"
-
-	// LabelAcceleration is the label key used to indicate a workflowrun turned on acceleration
-	LabelAcceleration = "workflowrun.cyclone.io/acceleration"
-
-	// AnnotationAlias is the annotation key used to indicate the alias of resources
-	AnnotationAlias = "cyclone.io/alias"
-
-	// AnnotationDescription is the annotation key used to describe resources
-	AnnotationDescription = "cyclone.io/description"
-
-	// AnnotationStorageUsage is annotation to store storage usuage information
-	AnnotationStorageUsage = "storage.cyclone.io/usage"
-
-	// AnnotationOwner is the annotation key used to indicate the owner of resources.
-	AnnotationOwner = "cyclone.io/owner"
-
-	// AnnotationTrigger is the annotation key used to indicate the trigger of workflowruns.
-	AnnotationTrigger = "cyclone.io/trigger"
 
 	// CronTimerTrigger represents the trigger of workflowruns triggered by cron timer.
 	CronTimerTrigger = "cron-timer"
@@ -95,11 +41,6 @@ const (
 
 	// ControlClusterName is the name of control cluster
 	ControlClusterName = "control-cluster"
-
-	// PodLabelSelector is selector used to select pod created by Cyclone stages
-	// TODO(robin) Copy from pkg/workflow/common/const.go, need to create package pkg/common
-	// to merge pkg/workflow/common and pkg/server/common.
-	PodLabelSelector = "cyclone.io/workflow==true"
 
 	// CachePrefixPath is the prefix path of acceleration caches
 	CachePrefixPath = "caches"

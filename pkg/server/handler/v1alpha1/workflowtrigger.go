@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -39,7 +40,7 @@ func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1a
 // ListWorkflowTriggers ...
 func ListWorkflowTriggers(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
 		log.Errorf("Get workflowtrigger from k8s with tenant %s, project %s error: %v", tenant, project, err)

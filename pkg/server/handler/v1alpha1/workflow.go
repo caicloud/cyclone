@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -34,7 +35,7 @@ func CreateWorkflow(ctx context.Context, tenant, project string, wf *v1alpha1.Wo
 // ListWorkflows ...
 func ListWorkflows(ctx context.Context, tenant, project string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
 		log.Errorf("Get workflows from k8s with tenant %s, project %s error: %v", tenant, project, err)
@@ -61,7 +62,7 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 		} else if kv[0] == "alias" {
 			for _, item := range items {
 				if item.Annotations != nil {
-					if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+					if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
 						if strings.Contains(alias, strings.ToLower(kv[1])) {
 							results = append(results, item)
 						}
@@ -127,7 +128,7 @@ func DeleteWorkflow(ctx context.Context, tenant, project, workflow string) error
 // GetWFStatistics handles the request to get a workflow's statistics.
 func GetWFStatistics(ctx context.Context, tenant, project, workflow string, start, end string) (*api.Statistic, error) {
 	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
+		LabelSelector: meta.ProjectSelector(project) + "," + meta.WorkflowSelector(workflow),
 	})
 	if err != nil {
 		return nil, err

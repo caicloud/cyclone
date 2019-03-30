@@ -10,6 +10,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -118,64 +119,64 @@ type CreationModifier func(tenant, project, wf string, object interface{}) error
 // It will give the resource a name if it is empty.
 func GenerateNameModifier(tenant, project, wf string, object interface{}) error {
 	var getMetadata GetMetadata
-	var meta *meta_v1.ObjectMeta
+	var objectMeta *meta_v1.ObjectMeta
 	var resource string
 	switch obj := object.(type) {
 	case *v1alpha1.Resource:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getResourceMetadata
 		resource = "resources"
 	case *v1alpha1.Stage:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getStageMetadata
 		resource = "stages"
 	case *v1alpha1.Workflow:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getWfMetadata
 		resource = "workflows"
 	case *v1alpha1.WorkflowRun:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getWfrMetadata
 		resource = "workflowruns"
 	case *v1alpha1.WorkflowTrigger:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getWftMetadata
 		resource = "workflowtriggers"
 	case *api.Tenant:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getTenantMetadata
 		resource = "tenants"
 	case *api.Integration:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getIntegrationMetadata
 		resource = "integrations"
 	case *v1alpha1.Project:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 		getMetadata = getProjectMetadata
 		resource = "projects"
 	default:
 		return fmt.Errorf("resource type not support")
 	}
 
-	if meta.Name == "" && (meta.Annotations == nil || meta.Annotations[common.AnnotationAlias] == "") {
+	if objectMeta.Name == "" && (objectMeta.Annotations == nil || objectMeta.Annotations[meta.AnnotationAlias] == "") {
 		return fmt.Errorf("name and metadata.annotations[cyclone.io/alias] can not both be empty")
 	}
 
 	// Get name and alias, if alias not set, use name as alias
-	name := meta.Name
+	name := objectMeta.Name
 	alias := ""
-	if meta.Annotations != nil {
-		alias = meta.Annotations[common.AnnotationAlias]
+	if objectMeta.Annotations != nil {
+		alias = objectMeta.Annotations[meta.AnnotationAlias]
 	}
 	if alias == "" {
 		alias = name
 	}
 
 	// Add alias annotation if not set
-	if meta.Annotations == nil {
-		meta.Annotations = make(map[string]string)
+	if objectMeta.Annotations == nil {
+		objectMeta.Annotations = make(map[string]string)
 	}
-	meta.Annotations[common.AnnotationAlias] = alias
+	objectMeta.Annotations[meta.AnnotationAlias] = alias
 
 	// If resource name set, check whether name conflict exists.
 	if name != "" {
@@ -197,7 +198,7 @@ func GenerateNameModifier(tenant, project, wf string, object interface{}) error 
 	if err == nil {
 		name = slugify.Slugify(name, true, -1)
 	}
-	meta.Name = name
+	objectMeta.Name = name
 
 	return nil
 }
@@ -224,27 +225,27 @@ func TenantModifier(tenant, project, wf string, object interface{}) error {
 // InjectProjectLabelModifier is a modifier of create cyclone CRD resources.
 // It will add project labels for the resource.
 func InjectProjectLabelModifier(tenant, project, wf string, object interface{}) error {
-	var meta *meta_v1.ObjectMeta
+	var objectMeta *meta_v1.ObjectMeta
 	switch obj := object.(type) {
 	case *v1alpha1.Resource:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 	case *v1alpha1.Stage:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 	case *v1alpha1.Workflow:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 	case *v1alpha1.WorkflowRun:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 	case *v1alpha1.WorkflowTrigger:
-		meta = &obj.ObjectMeta
+		objectMeta = &obj.ObjectMeta
 	default:
 		return fmt.Errorf("resource type not support")
 	}
 
 	// Add project label
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
+	if objectMeta.Labels == nil {
+		objectMeta.Labels = make(map[string]string)
 	}
-	meta.Labels[common.LabelProjectName] = project
+	objectMeta.Labels[meta.LabelProjectName] = project
 	return nil
 }
 
@@ -260,7 +261,7 @@ func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {
 	if wfr.Labels == nil {
 		wfr.Labels = make(map[string]string)
 	}
-	wfr.Labels[common.LabelWorkflowName] = wf
+	wfr.Labels[meta.LabelWorkflowName] = wf
 	return nil
 }
 
@@ -278,24 +279,6 @@ func MergeMap(in, out map[string]string) map[string]string {
 	}
 
 	return out
-}
-
-// LabelCustomizedTemplate gives a label to indicate that this is a customized template
-func LabelCustomizedTemplate(stage *v1alpha1.Stage) {
-	if stage.Labels == nil {
-		stage.Labels = make(map[string]string)
-	}
-	stage.Labels[common.LabelBuiltin] = common.LabelFalseValue
-	return
-}
-
-// LabelStageTemplate gives a label to indicate that this stage is a stage template
-func LabelStageTemplate(stage *v1alpha1.Stage) {
-	if stage.Labels == nil {
-		stage.Labels = make(map[string]string)
-	}
-	stage.Labels[common.LabelStageTemplate] = common.LabelTrueValue
-	return
 }
 
 // CreateSCMWebhook creates webhook for SCM repo.

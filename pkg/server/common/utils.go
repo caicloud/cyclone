@@ -25,11 +25,6 @@ func TenantResourceQuota(tenant string) string {
 	return tenant
 }
 
-// LabelOwnerCyclone returns a label string describes resource belongs to cyclone
-func LabelOwnerCyclone() string {
-	return LabelOwner + "=" + OwnerCyclone
-}
-
 // IntegrationSecret returns secret name related to the integration
 func IntegrationSecret(i string) string {
 	return i
@@ -38,19 +33,4 @@ func IntegrationSecret(i string) string {
 // SecretIntegration returns integration name related to the secret
 func SecretIntegration(s string) string {
 	return s
-}
-
-// WorkerClustersSelector is a selector for clusters which are use to perform workload
-func WorkerClustersSelector() string {
-	return LabelClusterOn + "=" + LabelTrueValue
-}
-
-// ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
-func ProjectSelector(project string) string {
-	return LabelProjectName + "=" + project
-}
-
-// WorkflowSelector is a selector for cyclone CRD resources which have corresponding workflow label
-func WorkflowSelector(workflow string) string {
-	return LabelWorkflowName + "=" + workflow
 }

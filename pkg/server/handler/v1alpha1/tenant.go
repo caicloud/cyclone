@@ -12,6 +12,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
@@ -36,7 +37,7 @@ func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) 
 // ListTenants list all tenants' information
 func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResponse, error) {
 	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
-		LabelSelector: common.LabelOwnerCyclone(),
+		LabelSelector: meta.LabelExistsSelector(meta.LabelTenantName),
 	})
 	if err != nil {
 		log.Errorf("List cyclone namespace error %v", err)
@@ -89,7 +90,7 @@ func NamespaceToTenant(namespace *core_v1.Namespace) (*api.Tenant, error) {
 
 	// retrieve tenant name
 	tenant.Name = common.NamespaceTenant(namespace.Name)
-	annotationTenant := namespace.Annotations[common.AnnotationTenant]
+	annotationTenant := namespace.Annotations[meta.AnnotationTenantInfo]
 	err := json.Unmarshal([]byte(annotationTenant), &tenant.Spec)
 	if err != nil {
 		log.Errorf("Unmarshal tenant annotation %s error %v", annotationTenant, err)
@@ -97,7 +98,7 @@ func NamespaceToTenant(namespace *core_v1.Namespace) (*api.Tenant, error) {
 	}
 
 	// delete tenant annotation
-	delete(tenant.Annotations, common.AnnotationTenant)
+	delete(tenant.Annotations, meta.AnnotationTenantInfo)
 	return tenant, nil
 }
 
@@ -113,7 +114,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 	integrations := []api.Integration{}
 	// update resource quota if necessary
 	if !reflect.DeepEqual(tenant.Spec.ResourceQuota, newTenant.Spec.ResourceQuota) {
-		integrations, err = GetWokerClusters(name)
+		integrations, err = GetSchedulableClusters(name)
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +143,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 	// update pvc if necessary
 	if !reflect.DeepEqual(tenant.Spec.PersistentVolumeClaim, newTenant.Spec.PersistentVolumeClaim) {
 		if len(integrations) == 0 {
-			integrations, err = GetWokerClusters(name)
+			integrations, err = GetSchedulableClusters(name)
 			if err != nil {
 				return nil, err
 			}
@@ -182,7 +183,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 // DeleteTenant deletes a tenant
 func DeleteTenant(ctx context.Context, name string) error {
 	// close workload cluster
-	integrations, err := GetWokerClusters(name)
+	integrations, err := GetSchedulableClusters(name)
 	if err != nil {
 		log.Errorf("get workload clusters for tenant %s error %v", name, err)
 		return err
@@ -224,8 +225,8 @@ func CreateAdminTenant() error {
 	}
 
 	annotations := make(map[string]string)
-	annotations[common.AnnotationDescription] = "This is the administrator tenant."
-	annotations[common.AnnotationAlias] = common.AdminTenant
+	annotations[meta.AnnotationDescription] = "This is the administrator tenant."
+	annotations[meta.AnnotationAlias] = common.AdminTenant
 
 	tenant := &api.Tenant{
 		ObjectMeta: meta_v1.ObjectMeta{
@@ -249,8 +250,8 @@ func CreateAdminTenant() error {
 
 func createControlClusterIntegration(tenant string) error {
 	annotations := make(map[string]string)
-	annotations[common.AnnotationDescription] = "This cluster is integrated by cyclone while creating tenant."
-	annotations[common.AnnotationAlias] = common.ControlClusterName
+	annotations[meta.AnnotationDescription] = "This cluster is integrated by cyclone while creating tenant."
+	annotations[meta.AnnotationAlias] = common.ControlClusterName
 	in := &api.Integration{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:        common.ControlClusterName,
@@ -294,10 +295,10 @@ func createTenant(tenant *api.Tenant) error {
 }
 
 func createTenantNamespace(tenant *api.Tenant) error {
-	meta := tenant.ObjectMeta
+	objectMeta := tenant.ObjectMeta
 
 	// build namespace name
-	meta.Name = common.TenantNamespace(tenant.Name)
+	objectMeta.Name = common.TenantNamespace(tenant.Name)
 
 	// marshal tenant and set it into namespace annotation
 	t, err := json.Marshal(tenant.Spec)
@@ -305,24 +306,24 @@ func createTenantNamespace(tenant *api.Tenant) error {
 		log.Warningf("Marshal tenant %s error %v", tenant.Name, err)
 		return err
 	}
-	if meta.Annotations == nil {
-		meta.Annotations = make(map[string]string)
+	if objectMeta.Annotations == nil {
+		objectMeta.Annotations = make(map[string]string)
 	}
-	meta.Annotations[common.AnnotationTenant] = string(t)
+	objectMeta.Annotations[meta.AnnotationTenantInfo] = string(t)
 
 	// set labels
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
+	if objectMeta.Labels == nil {
+		objectMeta.Labels = make(map[string]string)
 	}
-	meta.Labels[common.LabelOwner] = common.OwnerCyclone
+	objectMeta.Labels[meta.LabelTenantName] = tenant.Name
 
 	_, err = handler.K8sClient.CoreV1().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: meta,
+		ObjectMeta: objectMeta,
 	})
 	if err != nil {
 		log.Errorf("Create namespace for tenant %s error %v", tenant.Name, err)
 		if errors.IsAlreadyExists(err) {
-			tenant.Labels = meta.Labels
+			tenant.Labels = objectMeta.Labels
 			return updateTenantNamespace(tenant)
 		}
 		return cerr.ConvertK8sError(err)
@@ -349,7 +350,7 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 		newNs := origin.DeepCopy()
 		newNs.Annotations = MergeMap(tenant.Annotations, newNs.Annotations)
 		newNs.Labels = MergeMap(tenant.Labels, newNs.Labels)
-		newNs.Annotations[common.AnnotationTenant] = string(t)
+		newNs.Annotations[meta.AnnotationTenantInfo] = string(t)
 
 		_, err = handler.K8sClient.CoreV1().Namespaces().Update(newNs)
 		if err != nil {

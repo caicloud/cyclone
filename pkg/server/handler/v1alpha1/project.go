@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -98,7 +99,7 @@ func DeleteProject(ctx context.Context, tenant, project string) error {
 // GetProjectStatistics handles the request to get a project's statistics.
 func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.Statistic, error) {
 	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
 		return nil, err

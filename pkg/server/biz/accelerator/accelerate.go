@@ -7,6 +7,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -53,7 +54,7 @@ func (a *Accelerator) Accelerate() {
 		return
 	}
 
-	if a.wfr.Labels != nil && a.wfr.Labels[common.LabelAcceleration] == common.LabelTrueValue {
+	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelAcceleration] == meta.TrueValue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
 				Type:      v1alpha1.PresetVolumeTypePV,

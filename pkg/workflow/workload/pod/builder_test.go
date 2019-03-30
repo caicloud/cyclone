@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -336,9 +337,9 @@ func (suite *PodBuilderSuite) TestPrepare() {
 	err := builder.Prepare()
 	assert.Nil(suite.T(), err)
 	assert.NotEmpty(suite.T(), builder.pod.Name)
-	assert.NotEmpty(suite.T(), builder.pod.Labels[common.WorkflowLabelName])
-	assert.Equal(suite.T(), "simple", builder.pod.Annotations[common.StageAnnotationName])
-	assert.Equal(suite.T(), "wfr", builder.pod.Annotations[common.WorkflowRunAnnotationName])
+	assert.NotEmpty(suite.T(), builder.pod.Labels[meta.LabelWorkflowRunName])
+	assert.Equal(suite.T(), "simple", builder.pod.Annotations[meta.AnnotationStageName])
+	assert.Equal(suite.T(), "wfr", builder.pod.Annotations[meta.AnnotationWorkflowRunName])
 }
 
 func (suite *PodBuilderSuite) TestResolveArguments() {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/k8s/informers"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
 )
@@ -18,7 +19,7 @@ func NewPodController(client clientset.Interface) *Controller {
 		client,
 		common.ResyncPeriod,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = common.PodLabelSelector
+			options.LabelSelector = meta.LabelExistsSelector(meta.LabelWorkflowRunName)
 		}),
 	)
 
