@@ -2,8 +2,8 @@ package meta
 
 import (
 	"fmt"
-	"github.com/caicloud/nirvana/log"
 
+	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
