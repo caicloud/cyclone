@@ -141,6 +141,11 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		log.Warningf("Set env GIT_HTTP_LOW_SPEED_TIME error: %+v", err)
 	}
 
+	err = os.Setenv("GIT_SSL_NO_VERIFY", "true")
+	if err != nil {
+		log.Warningf("Set env GIT_SSL_NO_VERIFY error: %+v", err)
+	}
+
 	log.Infof("ENV_GIT_HTTP_LOW_SPEED_LIMIT : %v", os.Getenv(ENV_GIT_HTTP_LOW_SPEED_LIMIT))
 	log.Infof("ENV_GIT_HTTP_LOW_SPEED_TIME : %v", os.Getenv(ENV_GIT_HTTP_LOW_SPEED_TIME))
 
