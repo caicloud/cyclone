@@ -17,6 +17,8 @@ limitations under the License.
 package github
 
 import (
+	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -50,12 +52,12 @@ func NewGithub(scmCfg *api.SCMConfig) (scm.SCMProvider, error) {
 	var client *github.Client
 	var err error
 	if scmCfg.Token == "" {
-		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Password)
+		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Password, scmCfg.Server)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Token)
+		client, err = newClientByBasicAuth(scmCfg.Username, scmCfg.Token, scmCfg.Server)
 		if err != nil {
 			return nil, err
 		}
@@ -324,33 +326,86 @@ func (g *Github) DeleteWebHook(repoURL string, webHookUrl string) error {
 // newClientByBasicAuth news Github client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
-func newClientByBasicAuth(username, password string) (*github.Client, error) {
+func newClientByBasicAuth(username, password, server string) (*github.Client, error) {
 	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
 				req.SetBasicAuth(username, password)
 				return nil, nil
 			},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
+	c := github.NewClient(client)
+	if !strings.Contains(server, "https://github.com") {
+		server = strings.TrimSuffix(server, "/")
+		server += "/api/v3"
+		baseEndpoint, err := url.Parse(server)
+		if err != nil {
+			return nil, err
+		}
+		if !strings.HasSuffix(baseEndpoint.Path, "/") {
+			baseEndpoint.Path += "/"
+		}
 
-	return github.NewClient(client), nil
+		uploadEndpoint, err := url.Parse(server)
+		if err != nil {
+			return nil, err
+		}
+		if !strings.HasSuffix(uploadEndpoint.Path, "/") {
+			uploadEndpoint.Path += "/"
+		}
+
+		c.BaseURL = baseEndpoint
+		c.UploadURL = uploadEndpoint
+	}
+	return c, nil
 }
 
 // newClientByToken news Github client by token.
-func newClientByToken(token string) *github.Client {
+func newClientByToken(token, server string) (*github.Client, error) {
 	// Use token to new Github client.
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
-	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	ctx := context.WithValue(context.TODO(), oauth2.HTTPClient, client)
+	httpClient := oauth2.NewClient(ctx, tokenSource)
 
-	return github.NewClient(httpClient)
+	c := github.NewClient(httpClient)
+
+	if !strings.Contains(server, "https://github.com") {
+		server = strings.TrimSuffix(server, "/")
+		server += "/api/v3"
+		baseEndpoint, err := url.Parse(server)
+		if err != nil {
+			return nil, err
+		}
+		if !strings.HasSuffix(baseEndpoint.Path, "/") {
+			baseEndpoint.Path += "/"
+		}
+
+		uploadEndpoint, err := url.Parse(server)
+		if err != nil {
+			return nil, err
+		}
+		if !strings.HasSuffix(uploadEndpoint.Path, "/") {
+			uploadEndpoint.Path += "/"
+		}
+
+		c.BaseURL = baseEndpoint
+		c.UploadURL = uploadEndpoint
+	}
+	return c, nil
 }
 
 // NewTagFromLatest generate a new tag.
 func (g *Github) NewTagFromLatest(tagName, description, commitID, url string) error {
-	client := newClientByToken(g.scmCfg.Token)
+	client, _ := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
 
 	objecttype := "commit"
 	curtime := time.Now()
@@ -494,7 +549,7 @@ func (g *Github) CreateStatus(recordStatus api.Status, targetURL, repoURL, commi
 	}
 
 	owner, repo := provider.ParseRepoURL(repoURL)
-	client := newClientByToken(g.scmCfg.Token)
+	client, _ := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
 	email := "cyclone@caicloud.io"
 	name := "cyclone"
 	context := "continuous-integration/cyclone"

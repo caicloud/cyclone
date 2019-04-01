@@ -121,6 +121,7 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		}
 
 		cmds = []cmd{
+			// cmd{destPath, []string{"config", "--global", "http.sslVerify", "false"}},
 			cmd{dir, []string{"clone", "-b", targetRef, "--single-branch", "--recursive", url, base}},
 			cmd{destPath, []string{"fetch", "origin", sourceRef}},
 			cmd{destPath, []string{"config", "user.email", "devops@caicloud.com"}},
@@ -139,6 +140,11 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 	err = os.Setenv(ENV_GIT_HTTP_LOW_SPEED_TIME, VALUE_GIT_HTTP_LOW_SPEED_TIME)
 	if err != nil {
 		log.Warningf("Set env GIT_HTTP_LOW_SPEED_TIME error: %+v", err)
+	}
+
+	err = os.Setenv("GIT_SSL_NO_VERIFY", "true")
+	if err != nil {
+		log.Warningf("Set env GIT_SSL_NO_VERIFY error: %+v", err)
 	}
 
 	log.Infof("ENV_GIT_HTTP_LOW_SPEED_LIMIT : %v", os.Getenv(ENV_GIT_HTTP_LOW_SPEED_LIMIT))
