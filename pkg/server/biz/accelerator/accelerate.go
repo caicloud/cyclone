@@ -54,7 +54,7 @@ func (a *Accelerator) Accelerate() {
 	}
 
 	if a.wfr.Labels != nil && a.wfr.Labels[common.LabelAcceleration] == common.LabelTrueValue {
-		a.wfr.Spec.PresetVolumes = []v1alpha1.PresetVolume{
+		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
 				Type:      v1alpha1.PresetVolumeTypePV,
 				Path:      fmt.Sprintf("%s/%s/m2", common.CachePrefixPath, a.project),
@@ -70,7 +70,7 @@ func (a *Accelerator) Accelerate() {
 				Path:      fmt.Sprintf("%s/%s/npm", common.CachePrefixPath, a.project),
 				MountPath: "/root/.npm",
 			},
-		}
+		}...)
 	}
 }
 
