@@ -121,7 +121,6 @@ func (g *Git) Clone(token, url, ref, destPath string) (string, error) {
 		}
 
 		cmds = []cmd{
-			// cmd{destPath, []string{"config", "--global", "http.sslVerify", "false"}},
 			cmd{dir, []string{"clone", "-b", targetRef, "--single-branch", "--recursive", url, base}},
 			cmd{destPath, []string{"fetch", "origin", sourceRef}},
 			cmd{destPath, []string{"config", "user.email", "devops@caicloud.com"}},

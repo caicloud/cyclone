@@ -405,7 +405,10 @@ func newClientByToken(token, server string) (*github.Client, error) {
 
 // NewTagFromLatest generate a new tag.
 func (g *Github) NewTagFromLatest(tagName, description, commitID, url string) error {
-	client, _ := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
+	client, err := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
+	if err != nil {
+		return err
+	}
 
 	objecttype := "commit"
 	curtime := time.Now()
@@ -427,7 +430,7 @@ func (g *Github) NewTagFromLatest(tagName, description, commitID, url string) er
 	}
 
 	owner, repo := provider.ParseRepoURL(url)
-	_, _, err := client.Git.CreateTag(owner, repo, tag)
+	_, _, err = client.Git.CreateTag(owner, repo, tag)
 	if err != nil {
 		return err
 	}
@@ -549,7 +552,10 @@ func (g *Github) CreateStatus(recordStatus api.Status, targetURL, repoURL, commi
 	}
 
 	owner, repo := provider.ParseRepoURL(repoURL)
-	client, _ := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
+	client, err := newClientByToken(g.scmCfg.Token, g.scmCfg.Server)
+	if err != nil {
+		return err
+	}
 	email := "cyclone@caicloud.io"
 	name := "cyclone"
 	context := "continuous-integration/cyclone"
@@ -565,7 +571,7 @@ func (g *Github) CreateStatus(recordStatus api.Status, targetURL, repoURL, commi
 		Creator:     &creator,
 	}
 	//var owner, repo, ref string
-	_, _, err := client.Repositories.CreateStatus(owner, repo, commitSHA, status)
+	_, _, err = client.Repositories.CreateStatus(owner, repo, commitSHA, status)
 	log.Error(err)
 	return err
 }
