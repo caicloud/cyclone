@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	httputil "github.com/caicloud/cyclone/pkg/util/http"
 )
 
 // Request is request sent to delegation service.
@@ -30,7 +31,7 @@ func Delegate(request *Request) error {
 		return fmt.Errorf("marshal request error: %v", err)
 	}
 
-	rsp, err := http.DefaultClient.Post(delegation.URL, "application/json", bytes.NewReader(raw))
+	rsp, err := http.DefaultClient.Post(httputil.EnsureProtocolScheme(delegation.URL), "application/json", bytes.NewReader(raw))
 	if err != nil {
 		return fmt.Errorf("POST %s error: %v", delegation.URL, err)
 	}
