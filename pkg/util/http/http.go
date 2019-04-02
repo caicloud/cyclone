@@ -19,6 +19,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/caicloud/nirvana/service"
 )
@@ -99,4 +100,12 @@ const (
 // GetHTTPRequest gets request from context.
 func GetHTTPRequest(ctx context.Context) *http.Request {
 	return service.HTTPContextFrom(ctx).Request()
+}
+
+// EnsureProtocolScheme ensures URL has protocol sheme set
+func EnsureProtocolScheme(url string) string {
+	if !strings.Contains(url, "://") {
+		return "http://" + url
+	}
+	return url
 }
