@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestPodKindString(t *testing.T) {
+	testCases := map[string]struct {
+		kind     PodKind
+		expected string
+	}{
+		"gc": {
+			PodKindGC,
+			"gc",
+		},
+	}
+
+	var result string
+	for d, tc := range testCases {
+		result = tc.kind.String()
+		if result != tc.expected {
+			t.Errorf("Test case %s failed: expected %s, but got %s", d, tc.expected, result)
+		}
+	}
+}
+
 func TestExistsLabelSelector(t *testing.T) {
 	testCases := map[string]struct {
 		label    string

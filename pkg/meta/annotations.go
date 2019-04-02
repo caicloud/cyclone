@@ -28,7 +28,4 @@ const (
 	// AnnotationMetaNamespace is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
 	// TODO(robin) What is better?
 	AnnotationMetaNamespace = "cyclone.dev/meta-namespace"
-
-	// AnnotationGCPod is annotation applied to pod to indicate whether the pod is used for GC purpose
-	AnnotationGCPod = "gc.cyclone.dev"
 )

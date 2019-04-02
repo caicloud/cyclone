@@ -20,8 +20,8 @@ const (
 	// LabelWorkflowRunName is the label key used to indicate the workflowrun which the resources belongs to
 	LabelWorkflowRunName = "workflowrun.cyclone.dev/name"
 
-	// LabelWorkflowRunAccelerated is the label key used to indicate a workflowrun turned on acceleration
-	LabelWorkflowRunAccelerated = "workflowrun.cyclone.dev/accelerated"
+	// LabelWorkflowRunAcceleration is the label key used to indicate a workflowrun turned on acceleration
+	LabelWorkflowRunAcceleration = "workflowrun.cyclone.dev/acceleration"
 
 	// LabelStageTemplate is the label key used to represent a stage is a stage template
 	LabelStageTemplate = "stage.cyclone.dev/template"
@@ -29,8 +29,14 @@ const (
 	// LabelIntegrationType is the label key used to indicate type of integration
 	LabelIntegrationType = "integration.cyclone.dev/type"
 
-	// LabelIntegrationClusterSchedulable is the label key used to indicate the cluster is schedulable for workflowruns in this tenant
-	LabelIntegrationClusterSchedulable = "integration.cyclone.dev/cluster-schedulable"
+	// LabelIntegrationSchedulableCluster is the label key used to indicate the cluster is schedulable for workflowruns in this tenant
+	LabelIntegrationSchedulableCluster = "integration.cyclone.dev/schedulable-cluster"
+
+	// LabelPodKind is the label key applied to pod to indicate whether the pod is used for GC purpose.
+	LabelPodKind = "pod.kubernetes.io/kind"
+
+	// LabelPodCreatedBy is the label key applied to pod to indicate who the pod is created by.
+	LabelPodCreatedBy = "pod.kubernetes.io/created-by"
 
 	// LabelBuiltin is the label key used to represent cyclone built in resources
 	LabelBuiltin = "cyclone.dev/builtin"
@@ -43,6 +49,21 @@ const (
 
 	// FalseValue is the label value used to represent false
 	FalseValue = "false"
+
+	// CycloneCreator is the label value used to represent the resources created by Cyclone.
+	CycloneCreator = "cyclone"
+)
+
+// PodKind represents the type of pods created by Cyclone.
+type PodKind string
+
+func (pk PodKind) String() string {
+	return string(pk)
+}
+
+const (
+	// PodKindGC represents the pod is used for GC purpose.
+	PodKindGC PodKind = "gc"
 )
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
@@ -57,7 +78,7 @@ func WorkflowSelector(workflow string) string {
 
 // SchedulableClusterSelector is a selector for clusters which are use to perform workload
 func SchedulableClusterSelector() string {
-	return fmt.Sprintf("%s=%s", LabelIntegrationClusterSchedulable, TrueValue)
+	return fmt.Sprintf("%s=%s", LabelIntegrationSchedulableCluster, TrueValue)
 }
 
 // AddSchedulableClusterLabel adds schedulable label for integrated cluster to run workload.
@@ -66,7 +87,7 @@ func AddSchedulableClusterLabel(labels map[string]string) map[string]string {
 		labels = make(map[string]string)
 	}
 
-	labels[LabelIntegrationClusterSchedulable] = TrueValue
+	labels[LabelIntegrationSchedulableCluster] = TrueValue
 	return labels
 }
 

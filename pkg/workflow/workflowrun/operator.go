@@ -404,10 +404,11 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				Namespace: executionContext.Namespace,
 				Labels: map[string]string{
 					meta.LabelWorkflowRunName: o.wfr.Name,
+					meta.LabelPodKind:         meta.PodKindGC.String(),
+					meta.LabelPodCreatedBy:    meta.CycloneCreator,
 				},
 				Annotations: map[string]string{
 					meta.AnnotationWorkflowRunName: o.wfr.Name,
-					meta.AnnotationGCPod:           meta.TrueValue,
 				},
 			},
 			Spec: corev1.PodSpec{

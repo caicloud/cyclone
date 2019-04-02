@@ -23,13 +23,13 @@ func TestAccelerate(t *testing.T) {
 			wfr: &v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{meta.LabelWorkflowRunAccelerated: meta.TrueValue},
+					Labels: map[string]string{meta.LabelWorkflowRunAcceleration: meta.TrueValue},
 				},
 			},
 			expect: v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{meta.LabelWorkflowRunAccelerated: meta.TrueValue},
+					Labels: map[string]string{meta.LabelWorkflowRunAcceleration: meta.TrueValue},
 				},
 				Spec: v1alpha1.WorkflowRunSpec{
 					PresetVolumes: []v1alpha1.PresetVolume{
@@ -56,13 +56,13 @@ func TestAccelerate(t *testing.T) {
 			wfr: &v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{meta.LabelWorkflowRunAccelerated: meta.FalseValue},
+					Labels: map[string]string{meta.LabelWorkflowRunAcceleration: meta.FalseValue},
 				},
 			},
 			expect: v1alpha1.WorkflowRun{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name:   "test1",
-					Labels: map[string]string{meta.LabelWorkflowRunAccelerated: meta.TrueValue},
+					Labels: map[string]string{meta.LabelWorkflowRunAcceleration: meta.TrueValue},
 				},
 			},
 		},
