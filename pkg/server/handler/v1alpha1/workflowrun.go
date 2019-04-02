@@ -194,7 +194,7 @@ func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stag
 	// get workflowrun
 	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
 	if err != nil {
-		log.Errorf("get wfr %s error %s", wfr, err)
+		log.Errorf("get wfr %s/%s error %s", namespace, workflowrun, err)
 		return err
 	}
 
