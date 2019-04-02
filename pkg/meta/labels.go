@@ -9,34 +9,34 @@ import (
 
 const (
 	// LabelTenantName is the label key used to indicate the tenant which the resources belongs to
-	LabelTenantName = "tenant.cyclone.io/name"
+	LabelTenantName = "tenant.cyclone.dev/name"
 
 	// LabelProjectName is the label key used to indicate the project which the resources belongs to
-	LabelProjectName = "project.cyclone.io/name"
+	LabelProjectName = "project.cyclone.dev/name"
 
 	// LabelWorkflowName is the label key used to indicate the workflow which the resources belongs to
-	LabelWorkflowName = "workflow.cyclone.io/name"
+	LabelWorkflowName = "workflow.cyclone.dev/name"
 
 	// LabelWorkflowRunName is the label key used to indicate the workflowrun which the resources belongs to
-	LabelWorkflowRunName = "workflowrun.cyclone.io/name"
+	LabelWorkflowRunName = "workflowrun.cyclone.dev/name"
 
-	// LabelAcceleration is the label key used to indicate a workflowrun turned on acceleration
-	LabelAcceleration = "workflowrun.cyclone.io/acceleration"
+	// LabelWorkflowRunAccelerated is the label key used to indicate a workflowrun turned on acceleration
+	LabelWorkflowRunAccelerated = "workflowrun.cyclone.dev/accelerated"
 
 	// LabelStageTemplate is the label key used to represent a stage is a stage template
-	LabelStageTemplate = "stage.cyclone.io/template"
+	LabelStageTemplate = "stage.cyclone.dev/template"
 
 	// LabelIntegrationType is the label key used to indicate type of integration
-	LabelIntegrationType = "integration.cyclone.io/type"
+	LabelIntegrationType = "integration.cyclone.dev/type"
 
 	// LabelIntegrationClusterSchedulable is the label key used to indicate the cluster is schedulable for workflowruns in this tenant
-	LabelIntegrationClusterSchedulable = "integration.cyclone.io/cluster-schedulable"
+	LabelIntegrationClusterSchedulable = "integration.cyclone.dev/cluster-schedulable"
 
 	// LabelBuiltin is the label key used to represent cyclone built in resources
-	LabelBuiltin = "cyclone.io/builtin"
+	LabelBuiltin = "cyclone.dev/builtin"
 
 	// LabelScene is the label key used to indicate cyclone scenario
-	LabelScene = "cyclone.io/scene"
+	LabelScene = "cyclone.dev/scene"
 
 	// TrueValue is the label value used to represent true
 	TrueValue = "true"

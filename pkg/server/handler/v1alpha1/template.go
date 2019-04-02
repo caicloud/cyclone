@@ -58,7 +58,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 }
 
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates
-// are special stages, with 'cyclone.io/stage-template' label. If created successfully, return the create template.
+// are special stages, with 'stage.cyclone.dev/template' label. If created successfully, return the create template.
 func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {

@@ -51,7 +51,7 @@ func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
 		wfr.Spec.WorkflowRef = &core_v1.ObjectReference{
 			Namespace: common.TenantNamespace(tenant),
 			Name:      workflow,
-			Kind:      "workflow.cyclone.io",
+			Kind:      "workflow.cyclone.dev",
 		}
 	}
 }

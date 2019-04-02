@@ -22,9 +22,9 @@ type FakeWorkflowRuns struct {
 	ns   string
 }
 
-var workflowrunsResource = schema.GroupVersionResource{Group: "cyclone.io", Version: "v1alpha1", Resource: "workflowruns"}
+var workflowrunsResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: "v1alpha1", Resource: "workflowruns"}
 
-var workflowrunsKind = schema.GroupVersionKind{Group: "cyclone.io", Version: "v1alpha1", Kind: "WorkflowRun"}
+var workflowrunsKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "WorkflowRun"}
 
 // Get takes name of the workflowRun, and returns the corresponding workflowRun object, and an error if there is any.
 func (c *FakeWorkflowRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {

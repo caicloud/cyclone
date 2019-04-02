@@ -43,7 +43,7 @@ func NewAccelerator(tenant, project string, wfr *api.WorkflowRun) *Accelerator {
 	}
 }
 
-// Accelerate will check if the workflowrun has label 'workflowrun.cyclone.io/acceleration=true',
+// Accelerate will check if the workflowrun has label 'workflowrun.cyclone.dev/accelerated=true',
 // True will mount some volumes into all stages under the related workflow to cache building dependencies.
 // volumes including:
 // - '/root/.m2'  maven dependency path
@@ -54,7 +54,7 @@ func (a *Accelerator) Accelerate() {
 		return
 	}
 
-	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelAcceleration] == meta.TrueValue {
+	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAccelerated] == meta.TrueValue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
 				Type:      v1alpha1.PresetVolumeTypePV,

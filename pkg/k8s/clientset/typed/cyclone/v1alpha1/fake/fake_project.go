@@ -22,9 +22,9 @@ type FakeProjects struct {
 	ns   string
 }
 
-var projectsResource = schema.GroupVersionResource{Group: "cyclone.io", Version: "v1alpha1", Resource: "projects"}
+var projectsResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: "v1alpha1", Resource: "projects"}
 
-var projectsKind = schema.GroupVersionKind{Group: "cyclone.io", Version: "v1alpha1", Kind: "Project"}
+var projectsKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "Project"}
 
 // Get takes name of the project, and returns the corresponding project object, and an error if there is any.
 func (c *FakeProjects) Get(name string, options v1.GetOptions) (result *v1alpha1.Project, err error) {

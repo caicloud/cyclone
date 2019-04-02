@@ -11,7 +11,7 @@ import (
 )
 
 // IsGCPod judges whether a pod is a GC pod by check whether it has
-// annotation "gc.cyclone.io".
+// annotation "gc.cyclone.dev".
 func IsGCPod(pod *corev1.Pod) bool {
 	if pod == nil || pod.Annotations == nil {
 		return false

@@ -22,9 +22,9 @@ type FakeWorkflowTriggers struct {
 	ns   string
 }
 
-var workflowtriggersResource = schema.GroupVersionResource{Group: "cyclone.io", Version: "v1alpha1", Resource: "workflowtriggers"}
+var workflowtriggersResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: "v1alpha1", Resource: "workflowtriggers"}
 
-var workflowtriggersKind = schema.GroupVersionKind{Group: "cyclone.io", Version: "v1alpha1", Kind: "WorkflowTrigger"}
+var workflowtriggersKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "WorkflowTrigger"}
 
 // Get takes name of the workflowTrigger, and returns the corresponding workflowTrigger object, and an error if there is any.
 func (c *FakeWorkflowTriggers) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowTrigger, err error) {

@@ -7,7 +7,7 @@ import (
 )
 
 // GroupName is the group name use in this package
-const GroupName = "cyclone.io"
+const GroupName = "cyclone.dev"
 
 // Version is version of the CRD
 const Version = "v1alpha1"

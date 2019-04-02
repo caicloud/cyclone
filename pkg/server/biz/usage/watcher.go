@@ -22,7 +22,7 @@ const (
 	NamespaceEnvName = "NAMESPACE"
 
 	// PVCWatcherLabelName ...
-	PVCWatcherLabelName = "pod.cyclone.io/name"
+	PVCWatcherLabelName = "pod.cyclone.dev/name"
 	// PVCWatcherLabelValue ...
 	PVCWatcherLabelValue = "pvc-watcher"
 )

@@ -159,7 +159,7 @@ func GenerateNameModifier(tenant, project, wf string, object interface{}) error 
 	}
 
 	if objectMeta.Name == "" && (objectMeta.Annotations == nil || objectMeta.Annotations[meta.AnnotationAlias] == "") {
-		return fmt.Errorf("name and metadata.annotations[cyclone.io/alias] can not both be empty")
+		return fmt.Errorf("name and metadata.annotations[cyclone.dev/alias] can not both be empty")
 	}
 
 	// Get name and alias, if alias not set, use name as alias
