@@ -2,6 +2,7 @@ package workflowtrigger
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/robfig/cron"
@@ -147,11 +148,23 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	ct.WorkflowRun = wfr
 
-	c := cron.New()
-	if err := c.AddJob(wft.Spec.Cron.Schedule, ct); err != nil {
-		log.Errorf("can not create Cron job: %s", err)
+	var schedule cron.Schedule
+	var err error
+	schedExpr := wft.Spec.Cron.Schedule
+	parts := strings.Fields(schedExpr)
+	if len(parts) == 5 {
+		schedule, err = cron.ParseStandard(schedExpr)
+	} else {
+		schedule, err = cron.Parse(schedExpr)
+	}
+
+	if err != nil {
+		log.Errorf("can not parse cron expression %s: %s", schedExpr, err)
 		return
 	}
+
+	c := cron.New()
+	c.Schedule(schedule, ct)
 
 	ct.Cron = c
 	ct.Manage = m
