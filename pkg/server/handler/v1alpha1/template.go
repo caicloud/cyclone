@@ -34,11 +34,11 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 
 	items := templates.Items
 	if includePublic {
-		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(config.Config.SystemNamespace).List(metav1.ListOptions{
+		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(config.GetSystemNamespace()).List(metav1.ListOptions{
 			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
 		})
 		if err != nil {
-			log.Errorf("Get templates from system namespace %s error: %v", config.Config.SystemNamespace, err)
+			log.Errorf("Get templates from system namespace %s error: %v", config.GetSystemNamespace(), err)
 			return nil, err
 		}
 
@@ -87,9 +87,9 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 		}
 
 		if includePublic {
-			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(config.Config.SystemNamespace).Get(template, metav1.GetOptions{})
+			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(config.GetSystemNamespace()).Get(template, metav1.GetOptions{})
 			if err != nil {
-				log.Errorf("Get templates from system namespace %s error: %v", config.Config.SystemNamespace, err)
+				log.Errorf("Get templates from system namespace %s error: %v", config.GetSystemNamespace(), err)
 				return nil, err
 			}
 			return publicTemplate, nil

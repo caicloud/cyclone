@@ -43,7 +43,8 @@ type CycloneServerConfig struct {
 	// CreateBuiltinTemplates configures whether to create builtin stage templates while cyclone server start up.
 	CreateBuiltinTemplates bool `json:"create_builtin_templates"`
 
-	// SystemNamespace is the cyclone components installed namespace.
+	// SystemNamespace is the namespace where the Cyclone components installed in, and cyclone built-in
+	// resources(such as stage templates) will be stored in the namespace too.
 	SystemNamespace string `json:"system_namespace"`
 }
 
@@ -92,8 +93,7 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 	modifier(&Config)
 
 	log.Infof("cyclone server config: %v", Config)
-
-	return validate(&Config)
+	return nil
 }
 
 // modifier modifies the config, give the config some default value if they are not set.
@@ -124,16 +124,17 @@ func modifier(config *CycloneServerConfig) {
 	}
 
 	if config.SystemNamespace == "" {
-		log.Warningf("SystemNamespace not configured, try to retrieve value from ENV ")
-		config.SystemNamespace = os.Getenv(common.EnvSystemNamespace)
+		log.Warningf("SystemNamespace not configured, will use default value 'default'")
+		config.SystemNamespace = "default"
 	}
 }
 
-// validate the cyclone server config
-func validate(config *CycloneServerConfig) error {
-	if config.SystemNamespace == "" {
-		return fmt.Errorf("SystemNamespace can not be empty")
+// GetSystemNamespace ...
+func GetSystemNamespace() string {
+	envNamespace := os.Getenv(common.EnvSystemNamespace)
+	if envNamespace != "" {
+		return envNamespace
 	}
 
-	return nil
+	return Config.SystemNamespace
 }

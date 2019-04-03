@@ -93,9 +93,9 @@ func initialize(opts *Options) {
 	}
 
 	if config.Config.CreateBuiltinTemplates {
-		templates.InitStageTemplates(client, config.Config.SystemNamespace, "")
+		templates.InitStageTemplates(client, config.GetSystemNamespace(), "")
 	} else {
-		log.Info("create_builtin_templates is false, skip")
+		log.Info("create_builtin_templates is false, skip create built-in stage templates")
 	}
 }
 
