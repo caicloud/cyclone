@@ -87,9 +87,13 @@ func initialize(opts *Options) {
 	handler.Init(client)
 	log.Info("Init handlers succeed.")
 
-	err = v1alpha1.CreateAdminTenant()
-	if err != nil {
-		log.Fatalf("Create default tenant cyclone error %v", err)
+	if config.Config.InitDefaultTenant {
+		err = v1alpha1.CreateDefaultTenant()
+		if err != nil {
+			log.Fatalf("Create default cyclone tenant error %v", err)
+		}
+	} else {
+		log.Info("init_default_tenant is false, skip create default tenant")
 	}
 
 	if config.Config.CreateBuiltinTemplates {
