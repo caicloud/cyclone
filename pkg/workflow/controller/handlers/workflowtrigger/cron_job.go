@@ -148,20 +148,19 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 
 	ct.WorkflowRun = wfr
 
+	var schedule cron.Schedule
+	var err error
 	schedExpr := wft.Spec.Cron.Schedule
 	parts := strings.Fields(schedExpr)
-	schedule, err := cron.Parse(schedExpr)
+	if len(parts) == 5 {
+		schedule, err = cron.ParseStandard(schedExpr)
+	} else {
+		schedule, err = cron.Parse(schedExpr)
+	}
+
 	if err != nil {
 		log.Errorf("can not parse cron expression %s: %s", schedExpr, err)
 		return
-	}
-
-	if len(parts) == 5 {
-		schedule, err = cron.ParseStandard(schedExpr)
-		if err != nil {
-			log.Errorf("can not parse cron expression %s: %s", schedExpr, err)
-			return
-		}
 	}
 
 	c := cron.New()
