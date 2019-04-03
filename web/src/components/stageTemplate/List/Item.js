@@ -30,7 +30,7 @@ const Item = ({ template }) => {
         description={_.get(template, [
           'metadata',
           'annotations',
-          'cyclone.io/description',
+          'cyclone.dev/description',
         ])}
       />
     </Card>

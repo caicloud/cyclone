@@ -9,8 +9,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 )
 
@@ -34,7 +34,7 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 			ns.Annotations = make(map[string]string)
 		}
 
-		ns.Annotations[common.AnnotationStorageUsage] = string(b)
+		ns.Annotations[meta.AnnotationTenantStorageUsage] = string(b)
 
 		_, err = handler.K8sClient.CoreV1().Namespaces().Update(ns)
 		if err != nil {

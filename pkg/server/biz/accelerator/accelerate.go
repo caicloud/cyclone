@@ -7,6 +7,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	api "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -42,7 +43,7 @@ func NewAccelerator(tenant, project string, wfr *api.WorkflowRun) *Accelerator {
 	}
 }
 
-// Accelerate will check if the workflowrun has label 'workflowrun.cyclone.io/acceleration=true',
+// Accelerate will check if the workflowrun has label 'workflowrun.cyclone.dev/acceleration=true',
 // True will mount some volumes into all stages under the related workflow to cache building dependencies.
 // volumes including:
 // - '/root/.m2'  maven dependency path
@@ -53,7 +54,7 @@ func (a *Accelerator) Accelerate() {
 		return
 	}
 
-	if a.wfr.Labels != nil && a.wfr.Labels[common.LabelAcceleration] == common.LabelTrueValue {
+	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAcceleration] == meta.TrueValue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
 				Type:      v1alpha1.PresetVolumeTypePV,

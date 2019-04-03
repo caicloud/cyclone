@@ -12,8 +12,8 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	s_common "github.com/caicloud/cyclone/pkg/server/common"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/meta"
+	common "github.com/caicloud/cyclone/pkg/server/common"
 )
 
 const (
@@ -94,7 +94,7 @@ func (t *CronTrigger) getKeyFromTrigger() string {
 func (t *CronTrigger) Run() {
 	for {
 		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))
-		t.WorkflowRun.Annotations[s_common.AnnotationAlias] = t.WorkflowRun.Name
+		t.WorkflowRun.Annotations[meta.AnnotationAlias] = t.WorkflowRun.Name
 		_, err := t.Manage.Client.CycloneV1alpha1().WorkflowRuns(t.Namespace).Create(t.WorkflowRun)
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
@@ -130,18 +130,18 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 	wfr := &v1alpha1.WorkflowRun{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Annotations: map[string]string{
-				s_common.AnnotationTrigger: s_common.CronTimerTrigger,
+				meta.AnnotationWorkflowRunTrigger: common.CronTimerTrigger,
 			},
 			Labels: map[string]string{
-				common.WorkflowNameLabelName: wft.Spec.WorkflowRunSpec.WorkflowRef.Name,
+				meta.LabelWorkflowName: wft.Spec.WorkflowRunSpec.WorkflowRef.Name,
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
 	}
 
 	if wft.Labels != nil {
-		if projectName, ok := wft.Labels[s_common.LabelProjectName]; ok {
-			wfr.Labels[s_common.LabelProjectName] = projectName
+		if projectName, ok := wft.Labels[meta.LabelProjectName]; ok {
+			wfr.Labels[meta.LabelProjectName] = projectName
 		}
 	}
 

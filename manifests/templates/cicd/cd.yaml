@@ -1,14 +1,14 @@
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: cd-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: cd
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: cd
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Continuous deployment
   spec:
     pod:

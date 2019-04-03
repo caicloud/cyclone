@@ -1,14 +1,14 @@
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: build-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: build
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: build
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Build source code
   spec:
     pod:
@@ -32,17 +32,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: golang-build-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: build
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: build
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Build Golang source code
   spec:
     pod:
@@ -70,17 +70,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: maven-build-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: build
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: build
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Build Java source code with Maven
   spec:
     pod:
@@ -109,17 +109,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: gradle-build-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: build
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: build
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Build Java source code with Gradle
   spec:
     pod:

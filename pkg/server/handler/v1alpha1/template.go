@@ -9,11 +9,11 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
-	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
 // ListTemplates get templates the given tenant has access to.
@@ -24,7 +24,7 @@ import (
 func ListTemplates(ctx context.Context, tenant string, includePublic bool, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
 	templates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: wfcommon.StageTemplateLabelSelector,
+		LabelSelector: meta.StageTemplateSelector(),
 	})
 	if err != nil {
 		log.Errorf("Get templates from k8s with tenant %s error: %v", tenant, err)
@@ -34,7 +34,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	items := templates.Items
 	if tenant != common.AdminTenant && includePublic {
 		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(common.AdminTenant)).List(metav1.ListOptions{
-			LabelSelector: wfcommon.StageTemplateLabelSelector,
+			LabelSelector: meta.StageTemplateSelector(),
 		})
 		if err != nil {
 			log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
@@ -58,7 +58,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 }
 
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates
-// are special stages, with 'cyclone.io/stage-template' label. If created successfully, return the create template.
+// are special stages, with 'stage.cyclone.dev/template' label. If created successfully, return the create template.
 func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
@@ -68,8 +68,7 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 		}
 	}
 
-	LabelStageTemplate(stage)
-	LabelCustomizedTemplate(stage)
+	stage.Labels = meta.AddStageTemplateLabel(stage.Labels)
 	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stage)
 }
 

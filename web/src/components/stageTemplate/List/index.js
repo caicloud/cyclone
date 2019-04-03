@@ -22,7 +22,7 @@ class StageTemplate extends React.Component {
       const kind = _.get(item, [
         'metadata',
         'labels',
-        'cyclone.io/template-kind',
+        'stage.cyclone.dev/template-kind',
       ]);
       !kinds.includes(kind) && kinds.push(kind);
     });
@@ -38,7 +38,7 @@ class StageTemplate extends React.Component {
       : _.filter(list, item => {
           return (
             kind ===
-            _.get(item, ['metadata', 'labels', 'cyclone.io/template-kind'])
+            _.get(item, ['metadata', 'labels', 'stage.cyclone.dev/template-kind'])
           );
         });
   };

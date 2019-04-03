@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
 // Operator ...
@@ -26,17 +28,17 @@ type Operator struct {
 // NewOperator ...
 func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
-	wfr, ok := annotations[common.WorkflowRunAnnotationName]
+	wfr, ok := annotations[meta.AnnotationWorkflowRunName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.WorkflowRunAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", meta.AnnotationWorkflowRunName)
 	}
-	stage, ok := annotations[common.StageAnnotationName]
+	stage, ok := annotations[meta.AnnotationStageName]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.StageAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", meta.AnnotationStageName)
 	}
-	metaNamespace, ok := annotations[common.MetaNamespaceAnnotationName]
+	metaNamespace, ok := annotations[meta.AnnotationMetaNamespace]
 	if !ok {
-		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", common.MetaNamespaceAnnotationName)
+		return nil, fmt.Errorf("invalid workflow pod, without annotation %s", meta.AnnotationMetaNamespace)
 	}
 
 	return &Operator{

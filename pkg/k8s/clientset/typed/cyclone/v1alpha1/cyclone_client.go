@@ -23,7 +23,7 @@ type CycloneV1alpha1Interface interface {
 	WorkflowTriggersGetter
 }
 
-// CycloneV1alpha1Client is used to interact with features provided by the cyclone.io group.
+// CycloneV1alpha1Client is used to interact with features provided by the cyclone.dev group.
 type CycloneV1alpha1Client struct {
 	restClient rest.Interface
 }

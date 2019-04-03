@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -50,7 +51,7 @@ func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
 		wfr.Spec.WorkflowRef = &core_v1.ObjectReference{
 			Namespace: common.TenantNamespace(tenant),
 			Name:      workflow,
-			Kind:      "workflow.cyclone.io",
+			Kind:      "workflow.cyclone.dev",
 		}
 	}
 }
@@ -58,7 +59,7 @@ func injectWfRef(tenant, workflow string, wfr *v1alpha1.WorkflowRun) {
 // ListWorkflowRuns ...
 func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: common.ProjectSelector(project) + "," + common.WorkflowSelector(workflow),
+		LabelSelector: meta.ProjectSelector(project) + "," + meta.WorkflowSelector(workflow),
 	})
 	if err != nil {
 		log.Errorf("Get workflowruns from k8s with tenant %s, project %s error: %v", tenant, project, err)
@@ -93,7 +94,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 					}
 				case "alias":
 					if item.Annotations != nil {
-						if alias, ok := item.Annotations[common.AnnotationAlias]; ok {
+						if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
 							if !strings.Contains(alias, strings.ToLower(value)) {
 								selected = false
 							}
@@ -201,8 +202,8 @@ func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stag
 	tenant := common.NamespaceTenant(namespace)
 	var project, workflow string
 	if wfr.Labels != nil {
-		project = wfr.Labels[common.LabelProjectName]
-		workflow = wfr.Labels[common.LabelWorkflowName]
+		project = wfr.Labels[meta.LabelProjectName]
+		workflow = wfr.Labels[meta.LabelWorkflowName]
 	}
 	if project == "" || workflow == "" {
 		return fmt.Errorf("failed to get project or workflow from workflowrun labels")

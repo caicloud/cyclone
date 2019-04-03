@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
@@ -90,7 +91,7 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 
 	var project string
 	if wft.Labels != nil {
-		project = wft.Labels[common.LabelProjectName]
+		project = wft.Labels[meta.LabelProjectName]
 	}
 	if project == "" {
 		return fmt.Errorf("Failed to get project from workflowtrigger labels")
@@ -146,12 +147,12 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Annotations: map[string]string{
-				common.AnnotationTrigger: string(data.Type),
-				common.AnnotationAlias:   alias,
+				meta.AnnotationWorkflowRunTrigger: string(data.Type),
+				meta.AnnotationAlias:              alias,
 			},
 			Labels: map[string]string{
-				common.LabelProjectName:  project,
-				common.LabelWorkflowName: wfName,
+				meta.LabelProjectName:  project,
+				meta.LabelWorkflowName: wfName,
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,

@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
@@ -28,7 +29,7 @@ import (
 func ListIntegrations(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
 	secrets, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).List(meta_v1.ListOptions{
-		LabelSelector: common.LabelIntegrationType,
+		LabelSelector: meta.LabelIntegrationType,
 	})
 	if err != nil {
 		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)
@@ -260,18 +261,18 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 }
 
 func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
-	meta := in.ObjectMeta
+	objectMeta := in.ObjectMeta
 	// build secret name
-	meta.Name = common.IntegrationSecret(in.Name)
-	if meta.Labels == nil {
-		meta.Labels = make(map[string]string)
+	objectMeta.Name = common.IntegrationSecret(in.Name)
+	if objectMeta.Labels == nil {
+		objectMeta.Labels = make(map[string]string)
 	}
 
-	meta.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
+	objectMeta.Labels[meta.LabelIntegrationType] = string(in.Spec.Type)
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
 		worker := in.Spec.Cluster.IsWorkerCluster
 		if worker {
-			meta.Labels[common.LabelClusterOn] = common.LabelTrueValue
+			objectMeta.Labels = meta.AddSchedulableClusterLabel(objectMeta.Labels)
 		}
 	}
 
@@ -284,7 +285,7 @@ func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 	data[common.SecretKeyIntegration] = integration
 
 	secret := &core_v1.Secret{
-		ObjectMeta: meta,
+		ObjectMeta: objectMeta,
 		Data:       data,
 	}
 
@@ -369,7 +370,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		newSecret := origin.DeepCopy()
 		newSecret.Annotations = MergeMap(secret.Annotations, newSecret.Annotations)
 		newSecret.Labels = MergeMap(secret.Labels, newSecret.Labels)
-		newSecret.Labels[common.LabelIntegrationType] = string(in.Spec.Type)
+		newSecret.Labels[meta.LabelIntegrationType] = string(in.Spec.Type)
 
 		// Only use new datas to overwrite old ones, and keep others not needed to be overwritten, such as repos.
 		for key, value := range secret.Data {
@@ -435,10 +436,10 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 	return cerr.ConvertK8sError(err)
 }
 
-// GetWokerClusters gets all clusters which are use to perform workload
-func GetWokerClusters(tenant string) ([]api.Integration, error) {
+// GetSchedulableClusters gets all clusters which are used to perform workload for this tenant.
+func GetSchedulableClusters(tenant string) ([]api.Integration, error) {
 	secrets, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).List(meta_v1.ListOptions{
-		LabelSelector: common.WorkerClustersSelector(),
+		LabelSelector: meta.SchedulableClusterSelector(),
 	})
 	if err != nil {
 		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)

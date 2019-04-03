@@ -50,7 +50,7 @@ class ProjectDetail extends React.Component {
         }
       >
         <DetailHead
-          headName={_.get(detail, 'metadata.annotations["cyclone.io/alias"]')}
+          headName={_.get(detail, 'metadata.annotations["cyclone.dev/alias"]')}
         >
           <DetailHeadItem
             name={intl.get('creationTime')}

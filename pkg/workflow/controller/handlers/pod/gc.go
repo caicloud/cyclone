@@ -7,17 +7,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/meta"
 )
 
 // IsGCPod judges whether a pod is a GC pod by check whether it has
-// annotation "cyclone.io/gc".
+// annotation "gc.cyclone.dev".
 func IsGCPod(pod *corev1.Pod) bool {
-	if pod == nil || pod.Annotations == nil {
+	if pod == nil || pod.Labels == nil {
 		return false
 	}
 
-	if _, ok := pod.Annotations[common.GCAnnotationName]; !ok {
+	if kind := pod.Labels[meta.LabelPodKind]; kind != meta.PodKindGC.String() {
 		return false
 	}
 

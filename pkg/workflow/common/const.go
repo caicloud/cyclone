@@ -67,23 +67,6 @@ const (
 	// ResourcePushCommand indicates push resource
 	ResourcePushCommand = "push"
 
-	// WorkflowLabelName is label to indicate resources created by Cyclone workflow engine
-	WorkflowLabelName = "cyclone.io/workflow"
-	// WorkflowNameLabelName is label applied to WorkflowRun to specify Workflow
-	WorkflowNameLabelName = "cyclone.io/workflow-name"
-	// PodLabelSelector is selector used to select pod created by Cyclone stages
-	PodLabelSelector = "cyclone.io/workflow==true"
-	// WorkflowRunAnnotationName is annotation applied to pod to specify WorkflowRun the pod belongs to
-	WorkflowRunAnnotationName = "cyclone.io/workflowrun"
-	// MetaNamespaceAnnotationName is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
-	MetaNamespaceAnnotationName = "cyclone.io/meta-namespace"
-	// GCAnnotationName is annotation applied to pod to indicate whether the pod is used for GC purpose
-	GCAnnotationName = "cyclone.io/gc"
-	// StageAnnotationName is annotation applied to pod to indicate which stage it related to
-	StageAnnotationName = "cyclone.io/stage"
-	// StageTemplateLabelSelector is label selector to select stage templates
-	StageTemplateLabelSelector = "cyclone.io/stage-template=true"
-
 	// CoordinatorResolverPath ...
 	CoordinatorResolverPath = "/workspace/resolvers"
 	// CoordinatorResourcesPath ...

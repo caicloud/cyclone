@@ -22,9 +22,9 @@ type FakeStages struct {
 	ns   string
 }
 
-var stagesResource = schema.GroupVersionResource{Group: "cyclone.io", Version: "v1alpha1", Resource: "stages"}
+var stagesResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: "v1alpha1", Resource: "stages"}
 
-var stagesKind = schema.GroupVersionKind{Group: "cyclone.io", Version: "v1alpha1", Kind: "Stage"}
+var stagesKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "Stage"}
 
 // Get takes name of the stage, and returns the corresponding stage object, and an error if there is any.
 func (c *FakeStages) Get(name string, options v1.GetOptions) (result *v1alpha1.Stage, err error) {

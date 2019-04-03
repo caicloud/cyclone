@@ -138,7 +138,7 @@ pull() {
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
             git clone -v -b $TARGET_BRANCH --single-branch --recursive ${GIT_URL} data
             cd data
-            git config user.email "cicd@cyclone.io"
+            git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
             git fetch origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit

@@ -15,6 +15,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -402,11 +403,12 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				Name:      GCPodName(o.wfr.Name),
 				Namespace: executionContext.Namespace,
 				Labels: map[string]string{
-					common.WorkflowLabelName: "true",
+					meta.LabelWorkflowRunName: o.wfr.Name,
+					meta.LabelPodKind:         meta.PodKindGC.String(),
+					meta.LabelPodCreatedBy:    meta.CycloneCreator,
 				},
 				Annotations: map[string]string{
-					common.WorkflowRunAnnotationName: o.wfr.Name,
-					common.GCAnnotationName:          "true",
+					meta.AnnotationWorkflowRunName: o.wfr.Name,
 				},
 			},
 			Spec: corev1.PodSpec{

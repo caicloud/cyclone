@@ -1,14 +1,14 @@
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: sonarqube-scan-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: code-scan
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: code-scan
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Source code statistically scan with SonarQube
   spec:
     pod:

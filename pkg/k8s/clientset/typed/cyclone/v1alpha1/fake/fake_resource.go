@@ -22,9 +22,9 @@ type FakeResources struct {
 	ns   string
 }
 
-var resourcesResource = schema.GroupVersionResource{Group: "cyclone.io", Version: "v1alpha1", Resource: "resources"}
+var resourcesResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: "v1alpha1", Resource: "resources"}
 
-var resourcesKind = schema.GroupVersionKind{Group: "cyclone.io", Version: "v1alpha1", Kind: "Resource"}
+var resourcesKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "Resource"}
 
 // Get takes name of the resource, and returns the corresponding resource object, and an error if there is any.
 func (c *FakeResources) Get(name string, options v1.GetOptions) (result *v1alpha1.Resource, err error) {

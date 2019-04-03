@@ -15,6 +15,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -68,12 +69,12 @@ func (m *Builder) Prepare() error {
 		Name:      Name(m.wf.Name, m.stage),
 		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
-			common.WorkflowLabelName: "true",
+			meta.LabelWorkflowRunName: m.wfr.Name,
 		},
 		Annotations: map[string]string{
-			common.WorkflowRunAnnotationName:   m.wfr.Name,
-			common.StageAnnotationName:         m.stage,
-			common.MetaNamespaceAnnotationName: m.wfr.Namespace,
+			meta.AnnotationWorkflowRunName: m.wfr.Name,
+			meta.AnnotationStageName:       m.stage,
+			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
 		},
 	}
 
