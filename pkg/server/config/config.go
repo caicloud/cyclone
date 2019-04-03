@@ -46,6 +46,9 @@ type CycloneServerConfig struct {
 	// SystemNamespace is the namespace where the Cyclone components installed in, and cyclone built-in
 	// resources(such as stage templates) will be stored in the namespace too.
 	SystemNamespace string `json:"system_namespace"`
+
+	// InitDefaultTenant configures whether to create cyclone default tenant while cyclone server start up.
+	InitDefaultTenant bool `json:"init_default_tenant"`
 }
 
 // PVCConfig contains the PVC information

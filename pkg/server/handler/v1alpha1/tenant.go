@@ -212,12 +212,11 @@ func DeleteTenant(ctx context.Context, name string) error {
 	return nil
 }
 
-// CreateAdminTenant creates cyclone admin tenant and initialize the tenant:
+// CreateDefaultTenant creates cyclone default tenant and initialize the tenant:
 // - Create namespace
 // - Create PVC
-// - Load and create stage templates
-func CreateAdminTenant() error {
-	ns := common.TenantNamespace(common.AdminTenant)
+func CreateDefaultTenant() error {
+	ns := common.TenantNamespace(common.DefaultTenant)
 	_, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
 	if err == nil {
 		log.Infof("Default namespace %s already exist", ns)
@@ -225,12 +224,12 @@ func CreateAdminTenant() error {
 	}
 
 	annotations := make(map[string]string)
-	annotations[meta.AnnotationDescription] = "This is the administrator tenant."
-	annotations[meta.AnnotationAlias] = common.AdminTenant
+	annotations[meta.AnnotationDescription] = "This is the cyclone default tenant."
+	annotations[meta.AnnotationAlias] = common.DefaultTenant
 
 	tenant := &api.Tenant{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name:        common.AdminTenant,
+			Name:        common.DefaultTenant,
 			Annotations: annotations,
 		},
 		Spec: api.TenantSpec{
