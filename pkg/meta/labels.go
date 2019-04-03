@@ -106,6 +106,11 @@ func StageTemplateSelector() string {
 	return fmt.Sprintf("%s=%s", LabelStageTemplate, TrueValue)
 }
 
+// BuiltinLabelSelector returns a label selector to query cyclone built-in resources.
+func BuiltinLabelSelector() string {
+	return fmt.Sprintf("%s=%s", LabelBuiltin, TrueValue)
+}
+
 // LabelExistsSelector returns a label selector to query resources with label key exists.
 func LabelExistsSelector(key string) string {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{

@@ -34,7 +34,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	items := templates.Items
 	if tenant != common.AdminTenant && includePublic {
 		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(common.AdminTenant)).List(metav1.ListOptions{
-			LabelSelector: meta.StageTemplateSelector(),
+			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
 		})
 		if err != nil {
 			log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
