@@ -79,6 +79,7 @@ data:
         "requests.memory": "2Gi"
       },
       "create_builtin_templates": true,
+      "system_namespace": "default",
       "storage_usage_watcher": {
         "image": "__REGISTRY__/cyclone-watcher:__VERSION__",
         "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
@@ -153,6 +154,11 @@ spec:
       - name: server
         image: __REGISTRY__/cyclone-server:__VERSION__
         imagePullPolicy: IfNotPresent
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         ports:
         - containerPort: 7099
 

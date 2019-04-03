@@ -91,7 +91,12 @@ func initialize(opts *Options) {
 	if err != nil {
 		log.Fatalf("Create default tenant cyclone error %v", err)
 	}
-	templates.InitStageTemplates(client, "")
+
+	if config.Config.CreateBuiltinTemplates {
+		templates.InitStageTemplates(client, config.GetSystemNamespace(), "")
+	} else {
+		log.Info("create_builtin_templates is false, skip create built-in stage templates")
+	}
 }
 
 func main() {
