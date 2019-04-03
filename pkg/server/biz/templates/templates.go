@@ -7,21 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/server/common"
-	"github.com/caicloud/cyclone/pkg/server/config"
 )
 
 // InitStageTemplates loads and creates stage templates for the given scene.
 // scene - Workflow scene, for example, 'cicd', empty value indicates all scenes.
-func InitStageTemplates(client clientset.Interface, scene string) {
-	if !config.Config.CreateBuiltinTemplates {
-		log.Info("create_builtin_templates is false, skip")
-		return
-	}
-
-	// Only admin tenant will hold these public build-in stage templates.
-	adminNamespace := common.TenantNamespace(common.AdminTenant)
-
+func InitStageTemplates(client clientset.Interface, systemNamespace, scene string) {
 	// Load all stage templates. Template files path is given by environment variable
 	// TEMPLATES_PATH, if not set, use default one "/root/templates"
 	loader := &StageTemplatesLoader{TemplatesDir: os.Getenv(TemplatesPathEnvName)}
@@ -34,7 +24,7 @@ func InitStageTemplates(client clientset.Interface, scene string) {
 
 	// Create all stage templates
 	for _, stg := range stages {
-		_, err := client.CycloneV1alpha1().Stages(adminNamespace).Create(stg)
+		_, err := client.CycloneV1alpha1().Stages(systemNamespace).Create(stg)
 		if err != nil {
 			if errors.IsAlreadyExists(err) {
 				log.Infof("Stage template '%s' already exist, skip it.", stg.Name)

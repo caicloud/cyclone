@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -32,12 +33,12 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	}
 
 	items := templates.Items
-	if tenant != common.AdminTenant && includePublic {
-		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(common.AdminTenant)).List(metav1.ListOptions{
+	if includePublic {
+		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(config.Config.SystemNamespace).List(metav1.ListOptions{
 			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
 		})
 		if err != nil {
-			log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
+			log.Errorf("Get templates from system namespace %s error: %v", config.Config.SystemNamespace, err)
 			return nil, err
 		}
 
@@ -85,10 +86,10 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 			return nil, err
 		}
 
-		if tenant != common.AdminTenant && includePublic {
-			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(common.AdminTenant)).Get(template, metav1.GetOptions{})
+		if includePublic {
+			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(config.Config.SystemNamespace).Get(template, metav1.GetOptions{})
 			if err != nil {
-				log.Errorf("Get templates from k8s with tenant %s error: %v", common.AdminTenant, err)
+				log.Errorf("Get templates from system namespace %s error: %v", config.Config.SystemNamespace, err)
 				return nil, err
 			}
 			return publicTemplate, nil

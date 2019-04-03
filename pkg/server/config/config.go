@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -41,6 +42,9 @@ type CycloneServerConfig struct {
 
 	// CreateBuiltinTemplates configures whether to create builtin stage templates while cyclone server start up.
 	CreateBuiltinTemplates bool `json:"create_builtin_templates"`
+
+	// SystemNamespace is the cyclone components installed namespace.
+	SystemNamespace string `json:"system_namespace"`
 }
 
 // PVCConfig contains the PVC information
@@ -88,7 +92,8 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 	modifier(&Config)
 
 	log.Infof("cyclone server config: %v", Config)
-	return nil
+
+	return validate(&Config)
 }
 
 // modifier modifies the config, give the config some default value if they are not set.
@@ -118,4 +123,17 @@ func modifier(config *CycloneServerConfig) {
 		}
 	}
 
+	if config.SystemNamespace == "" {
+		log.Warningf("SystemNamespace not configured, try to retrieve value from ENV ")
+		config.SystemNamespace = os.Getenv(common.EnvSystemNamespace)
+	}
+}
+
+// validate the cyclone server config
+func validate(config *CycloneServerConfig) error {
+	if config.SystemNamespace == "" {
+		return fmt.Errorf("SystemNamespace can not be empty")
+	}
+
+	return nil
 }
