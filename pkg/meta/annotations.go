@@ -26,6 +26,5 @@ const (
 	AnnotationTenantStorageUsage = "tenant.cyclone.dev/storage-usage"
 
 	// AnnotationMetaNamespace is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
-	// TODO(robin) What is better?
 	AnnotationMetaNamespace = "cyclone.dev/meta-namespace"
 )

@@ -40,8 +40,8 @@ export default class IntegrationForm extends React.Component {
     const metadata = {
       creationTime: Date.now().toString(),
       annotations: {
-        'cyclone.io/description': _.get(data, 'metadata.description', ''),
-        'cyclone.io/alias': _.get(data, 'metadata.alias', ''),
+        'cyclone.dev/description': _.get(data, 'metadata.description', ''),
+        'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
       },
     };
     const type = _.get(data, 'spec.type');
@@ -146,12 +146,12 @@ export default class IntegrationForm extends React.Component {
   mapRequestFormToInitForm = data => {
     const alias = _.get(
       data,
-      ['metadata', 'annotations', 'cyclone.io/alias'],
+      ['metadata', 'annotations', 'cyclone.dev/alias'],
       ''
     );
     const description = _.get(
       data,
-      ['metadata', 'annotations', 'cyclone.io/description'],
+      ['metadata', 'annotations', 'cyclone.dev/description'],
       ''
     );
     const creationTime = _.get(data, 'metadata.creationTimestamp', '');

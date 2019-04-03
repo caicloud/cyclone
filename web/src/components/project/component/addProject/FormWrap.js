@@ -37,8 +37,8 @@ class AddProject extends React.Component {
     });
     data.metadata = {
       annotations: {
-        'cyclone.io/description': _.get(values, 'metadata.description', ''),
-        'cyclone.io/alias': _.get(values, 'metadata.alias', ''),
+        'cyclone.dev/description': _.get(values, 'metadata.description', ''),
+        'cyclone.dev/alias': _.get(values, 'metadata.alias', ''),
       },
     };
     if (update) {
@@ -86,8 +86,8 @@ class AddProject extends React.Component {
         n => `${n.type}/${n.name}`
       );
       values.metadata = {
-        alias: _.get(metadata, 'cyclone.io/alias', ''),
-        description: _.get(metadata, 'cyclone.io/description', ''),
+        alias: _.get(metadata, 'cyclone.dev/alias', ''),
+        description: _.get(metadata, 'cyclone.dev/description', ''),
       };
       defaultValue = _.merge(defaultValue, values);
     }

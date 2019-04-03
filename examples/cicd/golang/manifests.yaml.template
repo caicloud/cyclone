@@ -1,6 +1,6 @@
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: Resource
 metadata:
   name: golang-example-codes
@@ -14,7 +14,7 @@ spec:
 
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: Resource
 metadata:
   name: golang-example-image
@@ -26,7 +26,7 @@ spec:
 
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: Stage
 metadata:
   name: golang-build
@@ -48,7 +48,7 @@ spec:
 
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: Stage
 metadata:
   name: golang-image-build
@@ -73,7 +73,7 @@ spec:
 
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: Workflow
 metadata:
   name: ci-golang
@@ -86,13 +86,13 @@ spec:
 
 ---
 
-apiVersion: cyclone.io/v1alpha1
+apiVersion: cyclone.dev/v1alpha1
 kind: WorkflowRun
 metadata:
   name: ci-wfr-golang
 spec:
   workflowRef:
-    kind: workflow.cyclone.io
+    kind: workflow.cyclone.dev
     name: ci-golang
   timeout: 1h
 

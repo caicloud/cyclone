@@ -226,7 +226,7 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["get", "watch", "list", "create", "update"]
-- apiGroups: ["cyclone.io"]
+- apiGroups: ["cyclone.dev"]
   resources: ["*"]
   verbs: ["get", "watch", "list"]
 

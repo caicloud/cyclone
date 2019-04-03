@@ -1,14 +1,14 @@
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: unit-test-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: unit-test
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: unit-test
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Unit test for the project
   spec:
     pod:
@@ -32,17 +32,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: golang-unit-test-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: unit-test
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: unit-test
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Unit test for Golang project
   spec:
     pod:
@@ -79,17 +79,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: golang-unit-test-report-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: unit-test
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: unit-test
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Unit test for Golang project with test report
   spec:
     pod:
@@ -130,17 +130,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: maven-unit-test-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: unit-test
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: unit-test
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Unit test for Java project with Maven
   spec:
     pod:
@@ -169,17 +169,17 @@
           - -e
           - -c
           - "{{ cmd }}"
-- apiVersion: cyclone.io/v1alpha1
+- apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
     name: gradle-unit-test-template
     labels:
-      cyclone.io/stage-template: "true"
-      cyclone.io/builtin: "true"
-      cyclone.io/scene: cicd
-      cyclone.io/template-kind: unit-test
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: unit-test
     annotations:
-      cyclone.io/description: >
+      cyclone.dev/description: >
         Unit test for Java project with Gradle
   spec:
     pod:
