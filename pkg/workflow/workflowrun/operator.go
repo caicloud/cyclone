@@ -109,6 +109,23 @@ func (o *operator) GetRecorder() record.EventRecorder {
 	return o.recorder
 }
 
+// InitStagesStatus initializes all missing stages' status to pending.
+func (o *operator) InitStagesStatus() {
+	if o.wfr.Status.Stages == nil {
+		o.wfr.Status.Stages = make(map[string]*v1alpha1.StageStatus)
+	}
+
+	for _, stg := range o.wf.Spec.Stages {
+		if _, ok := o.wfr.Status.Stages[stg.Name]; !ok {
+			o.wfr.Status.Stages[stg.Name] = &v1alpha1.StageStatus{
+				Status: v1alpha1.Status{
+					Phase: v1alpha1.StatusPending,
+				},
+			}
+		}
+	}
+}
+
 // Update the WorkflowRun status, it retrieves the latest WorkflowRun and apply changes to
 // it, then update it with retry.
 func (o *operator) Update() error {
@@ -180,11 +197,12 @@ func (o *operator) UpdateStageStatus(stage string, status *v1alpha1.Status) {
 		}
 	} else {
 		// keep startTime unchanged
-		startTime := o.wfr.Status.Stages[stage].Status.StartTime
+		originStatus := o.wfr.Status.Stages[stage].Status
 		o.wfr.Status.Stages[stage].Status = *status
-		o.wfr.Status.Stages[stage].Status.StartTime = startTime
+		if originStatus.Phase != v1alpha1.StatusPending {
+			o.wfr.Status.Stages[stage].Status.StartTime = originStatus.StartTime
+		}
 	}
-
 }
 
 // UpdateStagePodInfo updates stage pod information to WorkflowRun.
@@ -222,14 +240,13 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	var running, waiting, err bool
 	for stage, status := range o.wfr.Status.Stages {
 		switch status.Status.Phase {
-		case v1alpha1.StatusPending:
-			log.WithField("stage", stage).Warn("Pending stage should not occur.")
 		case v1alpha1.StatusRunning:
 			running = true
 		case v1alpha1.StatusWaiting:
 			waiting = true
 		case v1alpha1.StatusFailed:
 			err = !IsTrivial(o.wf, stage)
+		case v1alpha1.StatusPending:
 		case v1alpha1.StatusSucceeded:
 		default:
 			log.WithField("stg", stage).
@@ -296,7 +313,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 // Reconcile finds next stages in the workflow to run and resolve WorkflowRun's overall status.
 func (o *operator) Reconcile() error {
 	if o.wfr.Status.Stages == nil {
-		o.wfr.Status.Stages = make(map[string]*v1alpha1.StageStatus)
+		o.InitStagesStatus()
 	}
 
 	// Get next stages that need to be run.

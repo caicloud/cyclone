@@ -39,8 +39,8 @@ func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
 func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 	var nextStages []string
 	for _, stage := range wf.Spec.Stages {
-		// If this stage already have status set, it means it's already been started, skip it.
-		if _, ok := wfr.Status.Stages[stage.Name]; ok {
+		// If this stage already have status set and not pending, it means it's already been started, skip it.
+		if s, ok := wfr.Status.Stages[stage.Name]; ok && s.Status.Phase != v1alpha1.StatusPending {
 			continue
 		}
 
