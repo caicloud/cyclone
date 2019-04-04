@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -15,6 +16,14 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+)
+
+const (
+	// TemplateTypeBuildin represents the type of buildin templates.
+	TemplateTypeBuildin = "buildin"
+
+	// TemplateTypeCustom represents the type of custom templates.
+	TemplateTypeCustom = "custom"
 )
 
 // ListTemplates get templates the given tenant has access to.
@@ -45,7 +54,53 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 		items = append(items, publicTemplates.Items...)
 	}
 
-	size := int64(len(items))
+	results := []v1alpha1.Stage{}
+	if query.Filter == "" {
+		results = items
+	} else {
+		// Support multiple filters rules: name and type, separated with comma.
+		filterParts := strings.Split(query.Filter, ",")
+		filters := make(map[string]string)
+		for _, part := range filterParts {
+			kv := strings.Split(part, "=")
+			if len(kv) != 2 {
+				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
+			}
+
+			filters[kv[0]] = kv[1]
+		}
+
+		var selected bool
+		for _, item := range items {
+			selected = true
+			for key, value := range filters {
+				switch key {
+				case "name":
+					if !strings.Contains(item.Name, strings.ToLower(value)) {
+						selected = false
+					}
+				case "type":
+					if item.Labels != nil {
+						// Templates will be skipped when meet one of the conditions:
+						// * there is buildin label, and the query type is custom
+						// * there is no buildin label, but the query type is buildin
+						label, ok := item.Labels[meta.LabelBuiltin]
+						log.Infof("label: %s, value: %s", label, value)
+						if (ok && value == TemplateTypeCustom) || (!ok && value == TemplateTypeBuildin) {
+							selected = false
+							log.Infof("selected: %t", selected)
+						}
+					}
+				}
+			}
+
+			if selected {
+				results = append(results, item)
+			}
+		}
+	}
+
+	size := int64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}
@@ -55,7 +110,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 		end = size
 	}
 
-	return types.NewListResponse(int(size), items[query.Start:end]), nil
+	return types.NewListResponse(int(size), results[query.Start:end]), nil
 }
 
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates
