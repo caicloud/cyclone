@@ -336,3 +336,33 @@ func getReposFromSecret(tenant, secretName string) (map[string][]string, error) 
 
 	return repos, nil
 }
+
+func listSCMRepos(scmSource *api.SCMSource) ([]scm.Repository, error) {
+	sp, err := scm.GetSCMProvider(scmSource)
+	if err != nil {
+		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
+		return nil, err
+	}
+
+	return sp.ListRepos()
+}
+
+func listSCMBranches(scmSource *api.SCMSource, repo string) ([]string, error) {
+	sp, err := scm.GetSCMProvider(scmSource)
+	if err != nil {
+		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
+		return nil, err
+	}
+
+	return sp.ListBranches(repo)
+}
+
+func listSCMTags(scmSource *api.SCMSource, repo string) ([]string, error) {
+	sp, err := scm.GetSCMProvider(scmSource)
+	if err != nil {
+		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
+		return nil, err
+	}
+
+	return sp.ListTags(repo)
+}

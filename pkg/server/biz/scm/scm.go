@@ -47,6 +47,7 @@ func RegisterProvider(scmType v1alpha1.SCMType, pFunc newProviderFunc) error {
 // Provider represents the interface of SCM provider.
 type Provider interface {
 	GetToken() (string, error)
+	ListRepos() ([]Repository, error)
 	ListBranches(repo string) ([]string, error)
 	ListTags(repo string) ([]string, error)
 	ListDockerfiles(repo string) ([]string, error)

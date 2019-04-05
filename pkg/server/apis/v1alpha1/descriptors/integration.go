@@ -117,4 +117,89 @@ var integration = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/integrations/{integration}/scmrepos",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListSCMRepos,
+				Description: "List repos for integrated SCM",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to get",
+					},
+				},
+				Results: definition.DataErrorResults("repos gotten for integrated SCM"),
+			},
+		},
+	},
+	{
+		// TODO (robin) Nirvana framework does not allow path parameters to include `/` or `%2F`, which does not support SCM repo.
+		// Need to submit feature request for Nirvana.
+		// Path:        "/integrations/{integration}/scmrepos/{repo}/branches",
+		Path:        "/integrations/{integration}/branches",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListSCMBranches,
+				Description: "List branches for integrated SCM",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to get",
+					},
+					{
+						Source:      definition.Query,
+						Name:        "repo",
+						Description: "Name of SCM repo",
+					},
+				},
+				Results: definition.DataErrorResults("branches gotten for integrated SCM"),
+			},
+		},
+	},
+	{
+		Path:        "/integrations/{integration}/tags",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListSCMTags,
+				Description: "List tags for integrated SCM",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to get",
+					},
+					{
+						Source:      definition.Query,
+						Name:        "repo",
+						Description: "Name of SCM repo",
+					},
+				},
+				Results: definition.DataErrorResults("tags gotten for integrated SCM"),
+			},
+		},
+	},
 }

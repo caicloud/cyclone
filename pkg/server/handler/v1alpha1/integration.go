@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -456,4 +457,67 @@ func GetSchedulableClusters(tenant string) ([]api.Integration, error) {
 	}
 
 	return integrations, nil
+}
+
+func getSCMSourceFromIntegration(tenant, integrationName string) (*api.SCMSource, error) {
+	integration, err := getIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	if integration.Spec.Type != api.SCM {
+		return nil, cerr.ErrorValidationFailed.Error(fmt.Sprintf("type of integration %s", integration.Name),
+			fmt.Sprintf("only support %s type", api.SCM))
+	}
+
+	return integration.Spec.SCM, nil
+}
+
+// ListSCMRepos lists repos for integrated SCM under given tenant.
+func ListSCMRepos(ctx context.Context, tenant, integrationName string) (*types.ListResponse, error) {
+	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	repos, err := listSCMRepos(scmSource)
+	if err != nil {
+		log.Errorf("Failed to list repos for integration %s as %v", integrationName, err)
+		return nil, err
+	}
+
+	return types.NewListResponse(len(repos), repos), nil
+
+}
+
+// ListSCMBranches lists branches for specified repo of integrated SCM under given tenant.
+func ListSCMBranches(ctx context.Context, tenant, integrationName, repo string) (*types.ListResponse, error) {
+	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	branches, err := listSCMBranches(scmSource, repo)
+	if err != nil {
+		log.Errorf("Failed to list branches for integration %s's repo %s as %v", integrationName, repo, err)
+		return nil, err
+	}
+
+	return types.NewListResponse(len(branches), branches), nil
+}
+
+// ListSCMTags lists tags for specified repo of integrated SCM under given tenant.
+func ListSCMTags(ctx context.Context, tenant, integrationName, repo string) (*types.ListResponse, error) {
+	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := listSCMTags(scmSource, repo)
+	if err != nil {
+		log.Errorf("Failed to list tags for integration %s's repo %s as %v", integrationName, repo, err)
+		return nil, err
+	}
+
+	return types.NewListResponse(len(tags), tags), nil
 }
