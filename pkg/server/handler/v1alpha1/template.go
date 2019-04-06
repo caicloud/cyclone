@@ -58,51 +58,9 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	if query.Filter == "" {
 		results = items
 	} else {
-		// Support multiple filters rules: name or alias, and type, separated with comma.
-		filterParts := strings.Split(query.Filter, ",")
-		filters := make(map[string]string)
-		for _, part := range filterParts {
-			kv := strings.Split(part, "=")
-			if len(kv) != 2 {
-				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
-			}
-
-			filters[kv[0]] = strings.ToLower(kv[1])
-		}
-
-		var selected bool
-		for _, item := range items {
-			selected = true
-			for key, value := range filters {
-				switch key {
-				case "name":
-					if !strings.Contains(item.Name, value) {
-						selected = false
-					}
-				case "alias":
-					if item.Annotations != nil {
-						if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
-							if !strings.Contains(alias, value) {
-								selected = false
-							}
-						}
-					}
-				case "type":
-					if item.Labels != nil {
-						// Templates will be skipped when meet one of the conditions:
-						// * there is buildin label, and the query type is custom
-						// * there is no buildin label, but the query type is buildin
-						_, ok := item.Labels[meta.LabelBuiltin]
-						if (ok && value == TemplateTypeCustom) || (!ok && value == TemplateTypeBuildin) {
-							selected = false
-						}
-					}
-				}
-			}
-
-			if selected {
-				results = append(results, item)
-			}
+		results, err = filterTemplates(items, query.Filter)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -117,6 +75,60 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil
+}
+
+func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, error) {
+	results := []v1alpha1.Stage{}
+	// Support multiple filters rules: name or alias, and type, separated with comma.
+	filterParts := strings.Split(filter, ",")
+	filters := make(map[string]string)
+	for _, part := range filterParts {
+		kv := strings.Split(part, "=")
+		if len(kv) != 2 {
+			return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
+		}
+
+		filters[kv[0]] = strings.ToLower(kv[1])
+	}
+
+	var selected bool
+	for _, item := range stages {
+		selected = true
+		for key, value := range filters {
+			switch key {
+			case "name":
+				if !strings.Contains(item.Name, value) {
+					selected = false
+				}
+			case "alias":
+				if item.Annotations != nil {
+					if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
+						if strings.Contains(alias, value) {
+							continue
+						}
+					}
+				}
+
+				selected = false
+			case "type":
+				if item.Labels != nil {
+					// Templates will be skipped when meet one of the conditions:
+					// * there is buildin label, and the query type is custom
+					// * there is no buildin label, but the query type is buildin
+					_, ok := item.Labels[meta.LabelBuiltin]
+					if (ok && value == TemplateTypeCustom) || (!ok && value == TemplateTypeBuildin) {
+						selected = false
+					}
+				}
+			}
+		}
+
+		if selected {
+			results = append(results, item)
+		}
+	}
+
+	return results, nil
 }
 
 // CreateTemplate creates a stage template for the tenant. 'stage' describe the template to create. Stage templates

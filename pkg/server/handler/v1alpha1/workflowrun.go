@@ -71,45 +71,9 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	if query.Filter == "" {
 		results = items
 	} else {
-		// Support multiple filters rules, separated with comma.
-		filterParts := strings.Split(query.Filter, ",")
-		filters := make(map[string]string)
-		for _, part := range filterParts {
-			kv := strings.Split(part, "=")
-			if len(kv) != 2 {
-				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
-			}
-
-			filters[kv[0]] = strings.ToLower(kv[1])
-		}
-
-		var selected bool
-		for _, item := range items {
-			selected = true
-			for key, value := range filters {
-				switch key {
-				case "name":
-					if !strings.Contains(item.Name, value) {
-						selected = false
-					}
-				case "alias":
-					if item.Annotations != nil {
-						if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
-							if !strings.Contains(alias, value) {
-								selected = false
-							}
-						}
-					}
-				case "status":
-					if strings.ToLower(string(item.Status.Overall.Phase)) != value {
-						selected = false
-					}
-				}
-			}
-
-			if selected {
-				results = append(results, item)
-			}
+		results, err = filterWorkflowRuns(items, query.Filter)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -124,6 +88,53 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil
+}
+
+func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.WorkflowRun, error) {
+	results := []v1alpha1.WorkflowRun{}
+	// Support multiple filters rules, separated with comma.
+	filterParts := strings.Split(filter, ",")
+	filters := make(map[string]string)
+	for _, part := range filterParts {
+		kv := strings.Split(part, "=")
+		if len(kv) != 2 {
+			return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
+		}
+
+		filters[kv[0]] = strings.ToLower(kv[1])
+	}
+
+	var selected bool
+	for _, wfr := range wfrs {
+		selected = true
+		for key, value := range filters {
+			switch key {
+			case "name":
+				if !strings.Contains(wfr.Name, value) {
+					selected = false
+				}
+			case "alias":
+				if wfr.Annotations != nil {
+					if alias, ok := wfr.Annotations[meta.AnnotationAlias]; ok {
+						if strings.Contains(alias, value) {
+							continue
+						}
+					}
+				}
+				selected = false
+			case "status":
+				if strings.ToLower(string(wfr.Status.Overall.Phase)) != value {
+					selected = false
+				}
+			}
+		}
+
+		if selected {
+			results = append(results, wfr)
+		}
+	}
+
+	return results, nil
 }
 
 // GetWorkflowRun ...
