@@ -80,7 +80,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
 			}
 
-			filters[kv[0]] = kv[1]
+			filters[kv[0]] = strings.ToLower(kv[1])
 		}
 
 		var selected bool
@@ -89,19 +89,19 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 			for key, value := range filters {
 				switch key {
 				case "name":
-					if !strings.Contains(item.Name, strings.ToLower(value)) {
+					if !strings.Contains(item.Name, value) {
 						selected = false
 					}
 				case "alias":
 					if item.Annotations != nil {
 						if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
-							if !strings.Contains(alias, strings.ToLower(value)) {
+							if !strings.Contains(alias, value) {
 								selected = false
 							}
 						}
 					}
 				case "status":
-					if strings.ToLower(string(item.Status.Overall.Phase)) != strings.ToLower(value) {
+					if strings.ToLower(string(item.Status.Overall.Phase)) != value {
 						selected = false
 					}
 				}

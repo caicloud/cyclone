@@ -58,7 +58,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	if query.Filter == "" {
 		results = items
 	} else {
-		// Support multiple filters rules: name and type, separated with comma.
+		// Support multiple filters rules: name or alias, and type, separated with comma.
 		filterParts := strings.Split(query.Filter, ",")
 		filters := make(map[string]string)
 		for _, part := range filterParts {
@@ -67,7 +67,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 				return nil, cerr.ErrorQueryParamNotCorrect.Error(query.Filter)
 			}
 
-			filters[kv[0]] = kv[1]
+			filters[kv[0]] = strings.ToLower(kv[1])
 		}
 
 		var selected bool
@@ -76,19 +76,25 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 			for key, value := range filters {
 				switch key {
 				case "name":
-					if !strings.Contains(item.Name, strings.ToLower(value)) {
+					if !strings.Contains(item.Name, value) {
 						selected = false
+					}
+				case "alias":
+					if item.Annotations != nil {
+						if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
+							if !strings.Contains(alias, value) {
+								selected = false
+							}
+						}
 					}
 				case "type":
 					if item.Labels != nil {
 						// Templates will be skipped when meet one of the conditions:
 						// * there is buildin label, and the query type is custom
 						// * there is no buildin label, but the query type is buildin
-						label, ok := item.Labels[meta.LabelBuiltin]
-						log.Infof("label: %s, value: %s", label, value)
+						_, ok := item.Labels[meta.LabelBuiltin]
 						if (ok && value == TemplateTypeCustom) || (!ok && value == TemplateTypeBuildin) {
 							selected = false
-							log.Infof("selected: %t", selected)
 						}
 					}
 				}
