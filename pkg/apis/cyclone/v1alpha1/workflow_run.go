@@ -92,6 +92,8 @@ type WorkflowRunStatus struct {
 	Overall Status `json:"overall"`
 	// Whether gc is performed on this WorkflowRun, such as deleting pods.
 	Cleaned bool `json:"cleaned"`
+	// Notifications represents the status of sending notifications.
+	Notifications map[string]NotificationStatus `json:"notifications,omitempty"`
 }
 
 // StageStatus describes status of a stage execution.
@@ -152,6 +154,25 @@ type Status struct {
 
 	// StartTime is the start time of processing stage/workflowrun
 	StartTime metav1.Time `json:"startTime,omitempty"`
+}
+
+// NotificationResult represents the result of sending notifications.
+type NotificationResult string
+
+const (
+	// NotificationResultSucceeded means success result of sending notifications.
+	NotificationResultSucceeded NotificationResult = "Succeeded"
+
+	// NotificationResultFailed means failure result of sending notifications.
+	NotificationResultFailed NotificationResult = "Failed"
+)
+
+// NotificationStatus represents the status of sending notifications.
+type NotificationStatus struct {
+	// Result represents the result of sending notifications.
+	Result NotificationResult `json:"result"`
+	// Message represents the detailed message for result.
+	Message string `json:"message"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
