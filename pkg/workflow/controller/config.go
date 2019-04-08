@@ -144,11 +144,31 @@ func validate(config *WorkflowControllerConfig) bool {
 		log.Warn("Secret not configured, no auth information would be available, e.g. docker registry auth.")
 	}
 
+	if !validateNotification(config.Notifications) {
+		return false
+	}
+
 	for _, k := range []string{GitResolverImage, ImageResolverImage, KvResolverImage, CoordinatorImage} {
 		_, ok := config.Images[k]
 		if !ok {
 			return false
 		}
+	}
+
+	return true
+}
+
+// validateNotification validates notification configurations.
+// The names of notification endpoints must be unique.
+func validateNotification(nes []NotificationEndpoint) bool {
+	names := map[string]struct{}{}
+	for _, ne := range nes {
+		if _, ok := names[ne.Name]; ok {
+			log.Errorf("There are multiple notification endpoints with same name: %s", ne.Name)
+			return false
+		}
+
+		names[ne.Name] = struct{}{}
 	}
 
 	return true
