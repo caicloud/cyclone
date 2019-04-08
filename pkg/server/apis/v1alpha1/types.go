@@ -267,3 +267,8 @@ type StorageUsage struct {
 	Used  string            `json:"used"`
 	Items map[string]string `json:"items"`
 }
+
+// StorageCleanup defines storage paths to clean
+type StorageCleanup struct {
+	Paths []string `json:"paths"`
+}

@@ -35,4 +35,27 @@ var usages = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/storage/cleanup",
+		Description: "Clean storage paths",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Create,
+				Function:    handler.Cleanup,
+				Description: "Clean storage paths",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose storage to clean",
+					},
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe paths to clean",
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
 }
