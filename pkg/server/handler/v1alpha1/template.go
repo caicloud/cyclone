@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
@@ -19,8 +20,8 @@ import (
 )
 
 const (
-	// TemplateTypeBuildin represents the type of buildin templates.
-	TemplateTypeBuildin = "buildin"
+	// TemplateTypeBuiltin represents the type of builtin templates.
+	TemplateTypeBuiltin = "builtin"
 
 	// TemplateTypeCustom represents the type of custom templates.
 	TemplateTypeCustom = "custom"
@@ -88,6 +89,12 @@ func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, 
 			return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
 		}
 
+		if kv[0] == "type" {
+			if kv[1] != TemplateTypeBuiltin && kv[1] != TemplateTypeCustom {
+				return nil, cerr.ErrorValidationFailed.Error(filter, fmt.Errorf("template types only support: %s, %s", TemplateTypeBuiltin, TemplateTypeCustom))
+			}
+		}
+
 		filters[kv[0]] = strings.ToLower(kv[1])
 	}
 
@@ -113,10 +120,10 @@ func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, 
 			case "type":
 				if item.Labels != nil {
 					// Templates will be skipped when meet one of the conditions:
-					// * there is buildin label, and the query type is custom
-					// * there is no buildin label, but the query type is buildin
+					// * there is builtin label, and the query type is custom
+					// * there is no builtin label, but the query type is builtin
 					_, ok := item.Labels[meta.LabelBuiltin]
-					if (ok && value == TemplateTypeCustom) || (!ok && value == TemplateTypeBuildin) {
+					if (ok && (value == TemplateTypeCustom)) || (!ok && (value == TemplateTypeBuiltin)) {
 						selected = false
 					}
 				}
