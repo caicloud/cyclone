@@ -91,6 +91,9 @@ data:
           "requests.cpu": "50m",
           "requests.memory": "32Mi"
         }
+      },
+      "images": {
+        "gc": "alpine:3.8"
       }
     }
 
