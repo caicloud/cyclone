@@ -93,10 +93,10 @@ wrapPull() {
 
 # Revision can be in two different format:
 # - Single revision. For example, 'master', 'develop' as branch, 'v1.0' as tag, etc.
-# - Composite revision. For example, 'develop->master', it means merge branch 'develop' to 'master'. It's used in merge
+# - Composite revision. For example, 'develop:master', it means merge branch 'develop' to 'master'. It's used in merge
 #   request in GitLab.
 # This function parses the composite revision to get the source and target branches. For example,
-#   'develop->master' --> ['develop', 'master']
+#   'develop:master' --> ['develop', 'master']
 parseRevision() {
     SOURCE_BRANCH=${GIT_REVISION%%:*}
     TARGET_BRANCH=${GIT_REVISION##*:}
