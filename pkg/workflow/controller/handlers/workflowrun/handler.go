@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -130,7 +129,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 				return err
 			}
 
-			if !reflect.DeepEqual(latest.Status.Notifications, status) {
+			if latest.Status.Notifications == nil {
 				latest.Status.Notifications = status
 				_, err = h.Client.CycloneV1alpha1().WorkflowRuns(originWfr.Namespace).Update(latest)
 				return err
@@ -186,16 +185,18 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 // sendNotifications send notifications for workflowruns when:
 // * its workflow has notification config
 // * finish time after workflow controller starts
-// * notification status of workflowrun is not nil
+// * notification status of workflowrun is nil
 // If the returned notification status is nil, it means that there is no need to send notification.
 func (h *Handler) sendNotifications(wfr *v1alpha1.WorkflowRun) (map[string]v1alpha1.NotificationStatus, error) {
-	// No need to send notifications for workflowruns finished before workflow controller starts.
-	if wfr.Spec.WorkflowRef == nil || wfr.Status.Notifications != nil ||
+	if wfr.Status.Notifications != nil ||
 		wfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
 		return nil, nil
 	}
 
 	wfRef := wfr.Spec.WorkflowRef
+	if wfRef == nil {
+		return nil, fmt.Errorf("Workflow reference of workflow run %s/%s is empty", wfr.Namespace, wfr.Name)
+	}
 	wf, err := h.Client.CycloneV1alpha1().Workflows(wfRef.Namespace).Get(wfRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
