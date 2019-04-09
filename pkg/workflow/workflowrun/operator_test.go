@@ -53,6 +53,9 @@ func TestOverallStatus(t *testing.T) {
 				"A": {
 					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
 				},
+				"B": {
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusPending},
+				},
 			},
 		},
 	}
