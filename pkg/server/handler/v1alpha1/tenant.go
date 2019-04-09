@@ -203,6 +203,11 @@ func DeleteTenant(ctx context.Context, name string) error {
 		}
 	}
 
+	err = deleteCollections(name)
+	if err != nil {
+		return err
+	}
+
 	err = handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)

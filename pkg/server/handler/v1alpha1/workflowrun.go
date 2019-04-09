@@ -169,8 +169,12 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 
 // DeleteWorkflowRun ...
 func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) error {
-	err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
+	err := deleteCollections(tenant, project, workflow, workflowrun)
+	if err != nil {
+		return err
+	}
 
+	err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
 	return cerr.ConvertK8sError(err)
 }
 
