@@ -13,6 +13,13 @@ _config:
       - /workspace/controller
       image: '[[ registry_release ]]/cyclone-workflow-controller:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
+      resources:
+        limits:
+          cpu: 2
+          memory: 2Gi
+        requests:
+          cpu: 250m
+          memory: 256Mi
     controller:
       replica: 1
     pod:

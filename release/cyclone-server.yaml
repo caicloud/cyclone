@@ -19,6 +19,13 @@ _config:
       ports:
       - port: 7099
         protocol: TCP
+      resources:
+        limits:
+          cpu: 2
+          memory: 2Gi
+        requests:
+          cpu: 250m
+          memory: 256Mi
     controller:
       replica: 1
     pod:
