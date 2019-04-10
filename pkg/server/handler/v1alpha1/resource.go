@@ -17,7 +17,7 @@ import (
 
 // CreateResource ...
 func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.Resource) (*v1alpha1.Resource, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectProjectOwnerRefModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, "", rsc)
 		if err != nil {
