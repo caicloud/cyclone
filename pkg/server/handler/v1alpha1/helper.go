@@ -43,6 +43,36 @@ func getLogFolder(tenant, project, workflow, workflowrun string) (string, error)
 	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, logsFolderName}, string(os.PathSeparator)), nil
 }
 
+// deleteCollections deletes collections in the sub paths of a tenant in the pvc, collections including:
+// - logs
+// - artifacts (WIP)
+// subpaths could be:
+// - project
+// - workflow
+// - workflowrun
+func deleteCollections(tenant string, subpaths ...string) error {
+	if tenant == "" {
+		return fmt.Errorf("tenant can not be empty")
+	}
+
+	// get collection folder
+	folder := getCollectionFolder(tenant, subpaths...)
+
+	// remove collection folder
+	if err := os.RemoveAll(folder); err != nil {
+		log.Errorf("remove folder %s error:%v", folder, err)
+		return err
+	}
+
+	return nil
+}
+
+func getCollectionFolder(tenant string, subpaths ...string) string {
+	paths := []string{cycloneHome, tenant}
+	paths = append(paths, subpaths...)
+	return strings.Join(paths, string(os.PathSeparator))
+}
+
 // GetMetadata gets metadata of a type of k8s resources
 type GetMetadata func(string, string) (meta_v1.ObjectMeta, error)
 

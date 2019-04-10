@@ -120,8 +120,12 @@ func UpdateWorkflow(ctx context.Context, tenant, project, workflow string, wf *v
 
 // DeleteWorkflow ...
 func DeleteWorkflow(ctx context.Context, tenant, project, workflow string) error {
-	err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(workflow, nil)
+	err := deleteCollections(tenant, project, workflow)
+	if err != nil {
+		return err
+	}
 
+	err = handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Delete(workflow, nil)
 	return cerr.ConvertK8sError(err)
 
 }

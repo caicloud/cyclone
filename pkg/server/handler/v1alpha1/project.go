@@ -91,8 +91,12 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 
 // DeleteProject deletes a project with the given tenant and project name.
 func DeleteProject(ctx context.Context, tenant, project string) error {
-	err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
+	err := deleteCollections(tenant, project)
+	if err != nil {
+		return err
+	}
 
+	err = handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 
