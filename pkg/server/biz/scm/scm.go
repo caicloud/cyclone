@@ -49,7 +49,9 @@ func RegisterProvider(scmType v1alpha1.SCMType, pFunc newProviderFunc) error {
 type Provider interface {
 	GetToken() (string, error)
 	ListRepos() ([]Repository, error)
+	// ListBranches list branches of repo, repo format must be {owner}/{repo}.
 	ListBranches(repo string) ([]string, error)
+	// ListTags list tags of repo, repo format must be {owner}/{repo}.
 	ListTags(repo string) ([]string, error)
 	ListDockerfiles(repo string) ([]string, error)
 	CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSHA string) error

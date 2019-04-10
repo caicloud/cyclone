@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
 	"sort"
+=======
+	"net/url"
+>>>>>>> refact: scm list api enhancement
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -503,6 +507,10 @@ func ListSCMBranches(ctx context.Context, tenant, integrationName, repo string) 
 		return nil, err
 	}
 
+	repo, err = url.PathUnescape(repo)
+	if err != nil {
+		return nil, err
+	}
 	branches, err := listSCMBranches(scmSource, repo)
 	if err != nil {
 		log.Errorf("Failed to list branches for integration %s's repo %s as %v", integrationName, repo, err)
@@ -519,6 +527,10 @@ func ListSCMTags(ctx context.Context, tenant, integrationName, repo string) (*ty
 		return nil, err
 	}
 
+	repo, err = url.PathUnescape(repo)
+	if err != nil {
+		return nil, err
+	}
 	tags, err := listSCMTags(scmSource, repo)
 	if err != nil {
 		log.Errorf("Failed to list tags for integration %s's repo %s as %v", integrationName, repo, err)
