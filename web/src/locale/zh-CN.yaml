@@ -4,6 +4,10 @@ creationTime: 创建时间
 description: 描述
 memory: 内存
 type: 类型
+next: 下一步
+prev: 上一步
+confirm: 确定
+cancel: 取消
 operation:
   add: 新增
   delete: 删除
@@ -23,6 +27,9 @@ workflow:
   recentVersion: 最近版本
   creator: 创建者
   creationTime: 创建时间
+  basicInfo: 基础信息
+  task: 任务
+  setting: 设置
 integration:
   name: 名称
   desc: 描述
@@ -47,15 +54,15 @@ integration:
       serverAddress: 服务地址
       verificationMode: 验证方式
       usernamepwd: 用户名密码
-    sonarQube: 
-      name: SonarQube 
-      serverAddress: 服务地址 
+    sonarQube:
+      name: SonarQube
+      serverAddress: 服务地址
     dockerRegistry:
       name: 镜像仓库
       registryAddress: 仓库地址
       admin: 管理员账号
       adminpwd: 管理员密码
-    cluster: 
+    cluster:
       name: 集群
       serverAddress: 服务地址
       isControlCluster: 控制集群
@@ -96,6 +103,7 @@ template:
     unit-test: 单元测试
     image-build: 镜像构建
     code-scan: 代码扫描
+    cd: 持续部署
 validate:
   required: 必填
   positiveOrFloat: 允许两位小数
