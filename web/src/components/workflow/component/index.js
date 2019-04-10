@@ -1,2 +1,2 @@
-import CreateWorkFlow from './createWorkFlow';
+import CreateWorkFlow from './CreateWorkFlow';
 export default CreateWorkFlow;

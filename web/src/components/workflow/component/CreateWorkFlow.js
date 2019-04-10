@@ -1,4 +1,4 @@
-import Graph from './graph';
+import Graph from './Graph';
 export default class CreateWorkFlow extends React.Component {
   render() {
     return (
