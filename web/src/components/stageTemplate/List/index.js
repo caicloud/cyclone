@@ -38,7 +38,11 @@ class StageTemplate extends React.Component {
       : _.filter(list, item => {
           return (
             kind ===
-            _.get(item, ['metadata', 'labels', 'stage.cyclone.dev/template-kind'])
+            _.get(item, [
+              'metadata',
+              'labels',
+              'stage.cyclone.dev/template-kind',
+            ])
           );
         });
   };
