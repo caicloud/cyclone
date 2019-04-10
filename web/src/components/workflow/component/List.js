@@ -13,10 +13,15 @@ class List extends React.Component {
       workflowList: MobxPropTypes.observableArray,
       getWorkflowList: PropTypes.func,
     }),
+    history: PropTypes.object,
+    match: PropTypes.object,
   };
   componentDidMount() {
     this.props.workflow.getWorkflowList();
   }
+  addWorkFlow = () => {
+    this.props.history.push('/workflow/add');
+  };
   render() {
     const {
       workflow: { workflowList },
@@ -51,7 +56,9 @@ class List extends React.Component {
     return (
       <div>
         <div className="head-bar">
-          <Button type="primary">{intl.get('operation.add')}</Button>
+          <Button type="primary" onClick={this.addWorkFlow}>
+            {intl.get('operation.add')}
+          </Button>
           <Search
             placeholder="input search text"
             onSearch={() => {}}
