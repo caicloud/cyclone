@@ -237,7 +237,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		}, nil
 	}
 
-	var running, waiting, err bool
+	var running, waiting, pending, err bool
 	for stage, status := range o.wfr.Status.Stages {
 		switch status.Status.Phase {
 		case v1alpha1.StatusRunning:
@@ -247,6 +247,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		case v1alpha1.StatusFailed:
 			err = !IsTrivial(o.wf, stage)
 		case v1alpha1.StatusPending:
+			pending = true
 		case v1alpha1.StatusSucceeded:
 		default:
 			log.WithField("stg", stage).
@@ -283,17 +284,9 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		}, nil
 	}
 
-	// If all recorded stages are in completed status, we still need to check whether there other
-	// stages that are not executed yet.
-	var e error
-	if o.wf == nil {
-		o.wf, e = o.client.CycloneV1alpha1().Workflows(o.wfr.Namespace).Get(o.wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
-		if e != nil {
-			return nil, e
-		}
-	}
-	next := len(NextStages(o.wf, o.wfr))
-	if next > 0 {
+	// If there are still stages waiting for running, we set status to Running.
+	// Here we assumed all stage statues have be initialized to Pending before wfr execution.
+	if pending {
 		return &v1alpha1.Status{
 			Phase:              v1alpha1.StatusRunning,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
