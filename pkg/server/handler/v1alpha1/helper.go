@@ -311,6 +311,33 @@ func InjectProjectOwnerRefModifier(tenant, project, wf string, object interface{
 	return nil
 }
 
+// InjectWorkflowOwnerRefModifier is a modifier of creating cyclone CRD resources.
+// It will add workflow owner reference for the resource.
+func InjectWorkflowOwnerRefModifier(tenant, project, wf string, object interface{}) error {
+	var objectMeta *meta_v1.ObjectMeta
+	switch obj := object.(type) {
+	case *v1alpha1.WorkflowRun:
+		objectMeta = &obj.ObjectMeta
+	case *v1alpha1.WorkflowTrigger:
+		objectMeta = &obj.ObjectMeta
+	default:
+		return fmt.Errorf("resource type not support")
+	}
+
+	wfMeta, err := getWfMetadata(tenant, wf)
+	if err != nil {
+		return err
+	}
+	// Add project OwnerReferences
+	objectMeta.OwnerReferences = append(objectMeta.OwnerReferences, meta_v1.OwnerReference{
+		APIVersion: v1alpha1.APIVersion,
+		Kind:       reflect.TypeOf(v1alpha1.Workflow{}).Name(),
+		Name:       wfMeta.Name,
+		UID:        wfMeta.UID,
+	})
+	return nil
+}
+
 // WorkflowRunModifier is a modifier of create cyclone workflowrun resources.
 // It will add workflow labels for workflowrun.
 func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {

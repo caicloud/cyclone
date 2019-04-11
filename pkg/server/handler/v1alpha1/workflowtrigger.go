@@ -3,7 +3,6 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
-
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
@@ -17,14 +16,16 @@ import (
 )
 
 // CreateWorkflowTrigger ...
-func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectProjectOwnerRefModifier}
+func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowOwnerRefModifier}
 	for _, modifier := range modifiers {
-		err := modifier(tenant, project, "", wft)
+		err := modifier(tenant, project, workflow, wft)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	injectWorkflowReference(tenant, workflow, wft.Spec.WorkflowRef)
 
 	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
 		// Create webhook for integrated SCM.
@@ -38,7 +39,7 @@ func CreateWorkflowTrigger(ctx context.Context, project, tenant string, wft *v1a
 }
 
 // ListWorkflowTriggers ...
-func ListWorkflowTriggers(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
+func ListWorkflowTriggers(ctx context.Context, tenant, project, workflow string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project),
 	})
@@ -62,14 +63,13 @@ func ListWorkflowTriggers(ctx context.Context, project, tenant string, query *ty
 }
 
 // GetWorkflowTrigger ...
-func GetWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) (*v1alpha1.WorkflowTrigger, error) {
+func GetWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflowtrigger string) (*v1alpha1.WorkflowTrigger, error) {
 	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
-
 	return wft, cerr.ConvertK8sError(err)
 }
 
 // UpdateWorkflowTrigger ...
-func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
+func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflowtrigger string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
 		if err != nil {
@@ -79,6 +79,7 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 		newWft.Spec = wft.Spec
 		newWft.Annotations = MergeMap(wft.Annotations, newWft.Annotations)
 		newWft.Labels = MergeMap(wft.Labels, newWft.Labels)
+		injectWorkflowReference(tenant, workflow, newWft.Spec.WorkflowRef)
 
 		// Handle trigger type change and repo change when SCM type.
 		// Do not care about the change of secret.
@@ -123,8 +124,8 @@ func UpdateWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant
 }
 
 // DeleteWorkflowTrigger ...
-func DeleteWorkflowTrigger(ctx context.Context, project, workflowtrigger, tenant string) error {
-	wft, err := GetWorkflowTrigger(ctx, project, workflowtrigger, tenant)
+func DeleteWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflowtrigger string) error {
+	wft, err := GetWorkflowTrigger(ctx, tenant, project, workflow, workflowtrigger)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
