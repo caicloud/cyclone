@@ -14,6 +14,13 @@ _config:
       ports:
       - port: 80
         protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
     controller:
       replica: 1
     pod:
