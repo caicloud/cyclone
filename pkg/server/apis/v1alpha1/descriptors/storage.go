@@ -36,6 +36,25 @@ var usages = []definition.Descriptor{
 		},
 	},
 	{
+		Path:        "/storage/usages",
+		Description: "Storage usages APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.GetStorageUsage,
+				Description: "Get storage usages",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Tenant name",
+					},
+				},
+				Results: definition.DataErrorResults("storage usage"),
+			},
+		},
+	},
+	{
 		Path:        "/storage/cleanup",
 		Description: "Clean storage paths",
 		Definitions: []definition.Definition{

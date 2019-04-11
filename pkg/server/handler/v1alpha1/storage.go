@@ -28,6 +28,27 @@ const (
 	GCDefaultImage = "alpine:3.8"
 )
 
+// GetStorageUsage gets storage usage of the tenant
+func GetStorageUsage(ctx context.Context, tenant string) (*v1alpha1.StorageUsage, error) {
+	ns, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant), metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("get namespace for tenant '%s' error: %v", tenant, err)
+	}
+
+	if ns.Annotations == nil || len(ns.Annotations[meta.AnnotationTenantStorageUsage]) == 0 {
+		return nil, fmt.Errorf("no annotation %s found in namespace %s", meta.AnnotationTenantStorageUsage, common.TenantNamespace(tenant))
+	}
+
+	data := ns.Annotations[meta.AnnotationTenantStorageUsage]
+	usage := &v1alpha1.StorageUsage{}
+	err = json.Unmarshal([]byte(data), usage)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %v", data, err)
+	}
+
+	return usage, nil
+}
+
 // ReportStorageUsage reports storage usage of a namespace.
 func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.StorageUsage) error {
 	log.Infof("update pvc storage usage, namespace: %s, usage: %s/%s", namespace, request.Used, request.Total)
@@ -67,6 +88,9 @@ func Cleanup(ctx context.Context, tenant string, request v1alpha1.StorageCleanup
 	if len(integrations) != 1 {
 		return fmt.Errorf("expect one schedulable cluster, but %d found", len(integrations))
 	}
+
+	// TODO(ChenDe): Before cleanup the specific paths, we need to check whether the storage path
+	// is being using by pods. If some pods are using them, we can't clean them up.
 
 	cluster := integrations[0].Spec.Cluster
 	if cluster == nil {
