@@ -111,6 +111,11 @@ func BuiltinLabelSelector() string {
 	return fmt.Sprintf("%s=%s", LabelBuiltin, TrueValue)
 }
 
+// CyclonePodSelector selects pods that are created by Cyclone, for example, stage execution pods, GC pods.
+func CyclonePodSelector() string {
+	return fmt.Sprintf("%s=%s", LabelPodCreatedBy, CycloneCreator)
+}
+
 // LabelExistsSelector returns a label selector to query resources with label key exists.
 func LabelExistsSelector(key string) string {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{

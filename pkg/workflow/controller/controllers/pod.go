@@ -19,7 +19,7 @@ func NewPodController(client clientset.Interface) *Controller {
 		client,
 		common.ResyncPeriod,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = meta.LabelExistsSelector(meta.LabelWorkflowRunName)
+			options.LabelSelector = meta.CyclonePodSelector()
 		}),
 	)
 

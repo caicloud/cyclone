@@ -70,6 +70,7 @@ func (m *Builder) Prepare() error {
 		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
 			meta.LabelWorkflowRunName: m.wfr.Name,
+			meta.LabelPodCreatedBy:    meta.CycloneCreator,
 		},
 		Annotations: map[string]string{
 			meta.AnnotationWorkflowRunName: m.wfr.Name,
