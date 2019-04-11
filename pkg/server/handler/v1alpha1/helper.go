@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
@@ -276,6 +277,37 @@ func InjectProjectLabelModifier(tenant, project, wf string, object interface{}) 
 		objectMeta.Labels = make(map[string]string)
 	}
 	objectMeta.Labels[meta.LabelProjectName] = project
+	return nil
+}
+
+// InjectProjectOwnerRefModifier is a modifier of creating cyclone CRD resources.
+// It will add project owner reference for the resource.
+func InjectProjectOwnerRefModifier(tenant, project, wf string, object interface{}) error {
+	var objectMeta *meta_v1.ObjectMeta
+	switch obj := object.(type) {
+	case *v1alpha1.Resource:
+		objectMeta = &obj.ObjectMeta
+	case *v1alpha1.Stage:
+		objectMeta = &obj.ObjectMeta
+	case *v1alpha1.Workflow:
+		objectMeta = &obj.ObjectMeta
+	case *v1alpha1.WorkflowTrigger:
+		objectMeta = &obj.ObjectMeta
+	default:
+		return fmt.Errorf("resource type not support")
+	}
+
+	projectMeta, err := getProjectMetadata(tenant, project)
+	if err != nil {
+		return err
+	}
+	// Add project OwnerReferences
+	objectMeta.OwnerReferences = append(objectMeta.OwnerReferences, meta_v1.OwnerReference{
+		APIVersion: v1alpha1.APIVersion,
+		Kind:       reflect.TypeOf(v1alpha1.Project{}).Name(),
+		Name:       projectMeta.Name,
+		UID:        projectMeta.UID,
+	})
 	return nil
 }
 

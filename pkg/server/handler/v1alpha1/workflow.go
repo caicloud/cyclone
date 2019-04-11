@@ -20,7 +20,7 @@ import (
 
 // CreateWorkflow ...
 func CreateWorkflow(ctx context.Context, tenant, project string, wf *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectProjectOwnerRefModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, "", wf)
 		if err != nil {
