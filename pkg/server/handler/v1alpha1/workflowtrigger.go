@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
@@ -25,7 +26,9 @@ func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string
 		}
 	}
 
-	injectWorkflowReference(tenant, workflow, wft.Spec.WorkflowRef)
+	if wft.Spec.WorkflowRef == nil {
+		wft.Spec.WorkflowRef = workflowReference(tenant, workflow)
+	}
 
 	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
 		// Create webhook for integrated SCM.
@@ -79,7 +82,9 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		newWft.Spec = wft.Spec
 		newWft.Annotations = MergeMap(wft.Annotations, newWft.Annotations)
 		newWft.Labels = MergeMap(wft.Labels, newWft.Labels)
-		injectWorkflowReference(tenant, workflow, newWft.Spec.WorkflowRef)
+		if newWft.Spec.WorkflowRef == nil {
+			newWft.Spec.WorkflowRef = workflowReference(tenant, workflow)
+		}
 
 		// Handle trigger type change and repo change when SCM type.
 		// Do not care about the change of secret.

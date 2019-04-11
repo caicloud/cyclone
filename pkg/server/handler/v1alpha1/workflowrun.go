@@ -41,21 +41,21 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 		}
 	}
 
-	injectWorkflowReference(tenant, workflow, wfr.Spec.WorkflowRef)
+	if wfr.Spec.WorkflowRef == nil {
+		wfr.Spec.WorkflowRef = workflowReference(tenant, workflow)
+	}
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
 }
 
-// injectWorkflowReference injects workflowRef if it is nil
-func injectWorkflowReference(tenant, workflow string, ref *core_v1.ObjectReference) {
-	if ref == nil {
-		ref = &core_v1.ObjectReference{
-			APIVersion: v1alpha1.APIVersion,
-			Kind:       reflect.TypeOf(v1alpha1.Workflow{}).Name(),
-			Namespace:  common.TenantNamespace(tenant),
-			Name:       workflow,
-		}
+// workflowReference returns a workflowRef
+func workflowReference(tenant, workflow string) *core_v1.ObjectReference {
+	return &core_v1.ObjectReference{
+		APIVersion: v1alpha1.APIVersion,
+		Kind:       reflect.TypeOf(v1alpha1.Workflow{}).Name(),
+		Namespace:  common.TenantNamespace(tenant),
+		Name:       workflow,
 	}
 }
 
@@ -158,7 +158,10 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		newWfr.Spec = wfr.Spec
 		newWfr.Annotations = MergeMap(wfr.Annotations, newWfr.Annotations)
 		newWfr.Labels = MergeMap(wfr.Labels, newWfr.Labels)
-		injectWorkflowReference(tenant, workflow, newWfr.Spec.WorkflowRef)
+		if newWfr.Spec.WorkflowRef == nil {
+			newWfr.Spec.WorkflowRef = workflowReference(tenant, workflow)
+		}
+
 		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(newWfr)
 		return err
 	})
