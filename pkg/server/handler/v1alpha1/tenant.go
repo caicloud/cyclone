@@ -10,6 +10,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/meta"
@@ -19,6 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 // CreateTenant creates a cyclone tenant
@@ -44,8 +46,23 @@ func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResp
 		return nil, cerr.ConvertK8sError(err)
 	}
 
-	tenants := []api.Tenant{}
-	for _, namespace := range namespaces.Items {
+	items := namespaces.Items
+	if query.Sort {
+		unsortedResults := make([]core_v1.Namespace, len(items))
+		objects := make([]runtime.Object, len(items))
+		for i := range items {
+			unsortedResults[i] = items[i]
+			objects[i] = &items[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range items {
+			items[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
+	}
+
+	tenants := make([]api.Tenant, 0)
+	for _, namespace := range items {
 		t, err := NamespaceToTenant(&namespace)
 		if err != nil {
 			log.Errorf("Unmarshal tenant annotation error %v", err)

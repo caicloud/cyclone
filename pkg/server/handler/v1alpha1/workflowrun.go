@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	k8s_types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 
@@ -28,6 +29,7 @@ import (
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
@@ -88,6 +90,20 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		unsortedResults := make([]v1alpha1.WorkflowRun, len(results))
+		objects := make([]runtime.Object, len(results))
+		for i := range results {
+			unsortedResults[i] = results[i]
+			objects[i] = &results[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range results {
+			results[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil

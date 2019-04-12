@@ -6,6 +6,7 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -16,6 +17,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 // CreateWorkflow ...
@@ -84,6 +86,20 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		unsortedResults := make([]v1alpha1.Workflow, len(results))
+		objects := make([]runtime.Object, len(results))
+		for i := range results {
+			unsortedResults[i] = results[i]
+			objects[i] = &results[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range results {
+			results[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil

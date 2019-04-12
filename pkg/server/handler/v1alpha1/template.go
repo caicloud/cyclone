@@ -8,6 +8,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -17,6 +18,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 const (
@@ -55,7 +57,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 		items = append(items, publicTemplates.Items...)
 	}
 
-	results := []v1alpha1.Stage{}
+	results := make([]v1alpha1.Stage, 0)
 	if query.Filter == "" {
 		results = items
 	} else {
@@ -73,6 +75,20 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		unsortedResults := make([]v1alpha1.Stage, len(results))
+		objects := make([]runtime.Object, len(results))
+		for i := range results {
+			unsortedResults[i] = results[i]
+			objects[i] = &results[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range results {
+			results[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil

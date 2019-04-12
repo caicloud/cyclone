@@ -9,6 +9,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -21,6 +22,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 // ListIntegrations get integrations the given tenant has access to.
@@ -38,7 +40,7 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	}
 
 	items := secrets.Items
-	integrations := []api.Integration{}
+	integrations := make([]api.Integration, 0)
 	size := int64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), integrations), nil
@@ -47,6 +49,20 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		unsortedResults := make([]core_v1.Secret, len(items))
+		objects := make([]runtime.Object, len(items))
+		for i := range items {
+			unsortedResults[i] = items[i]
+			objects[i] = &items[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range items {
+			items[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
 	}
 
 	for _, secret := range items {

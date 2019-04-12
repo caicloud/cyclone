@@ -7,10 +7,10 @@ type QueryParams struct {
 	Start  int64  `source:"query,start,default=0"`
 	Limit  int64  `source:"query,limit,default=99999"`
 	Filter string `source:"query,filter"`
-	// SortBy represents the order of results. For example:
-	// creationTime: desc order by creationTime
-	// -creationTime: asc order by creationTime
-	SortBy string `source:"query,sortBy"`
+	// Sort will sorts the resoults by metadata.creationTimestamp
+	Sort bool `source:"query,sort"`
+	// Ascending will sorts the resoults by ascending order, otherwise by descending order
+	Ascending bool `source:"query,ascending"`
 }
 
 // ListMeta describes the structure of list metadata

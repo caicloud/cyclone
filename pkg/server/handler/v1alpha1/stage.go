@@ -5,6 +5,7 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -13,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 // CreateStage ...
@@ -47,6 +49,20 @@ func ListStages(ctx context.Context, project, tenant string, query *types.QueryP
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		unsortedResults := make([]v1alpha1.Stage, len(items))
+		objects := make([]runtime.Object, len(items))
+		for i := range items {
+			unsortedResults[i] = items[i]
+			objects[i] = &items[i]
+		}
+
+		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
+		for i := range items {
+			items[i] = unsortedResults[sorter.OriginalPosition(i)]
+		}
 	}
 
 	return types.NewListResponse(int(size), items[query.Start:end]), nil
