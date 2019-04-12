@@ -49,6 +49,9 @@ type CycloneServerConfig struct {
 
 	// InitDefaultTenant configures whether to create cyclone default tenant while cyclone server start up.
 	InitDefaultTenant bool `json:"init_default_tenant"`
+
+	// Images that used in cyclone, such as GC image.
+	Images map[string]string `json:"images"`
 }
 
 // PVCConfig contains the PVC information

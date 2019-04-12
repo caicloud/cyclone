@@ -83,5 +83,8 @@ _config:
                 "requests.cpu": "50m",
                 "requests.memory": "32Mi"
               }
+            },
+            "images": {
+              "gc": "[[ registry_library ]]/alpine:3.7"
             }
           }
