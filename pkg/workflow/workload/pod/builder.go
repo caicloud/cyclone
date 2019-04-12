@@ -760,14 +760,13 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 // - In the Workflow Controller configurations as default values.
 // So requirements set in stage spec would have the highest priority.
 func (m *Builder) ApplyResourceRequirements() error {
-	// Apply resource requirements from Workflow spec.
+	requirements := &controller.Config.ResourceRequirements
 	if m.wf.Spec.Resources != nil {
-		m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, m.wf.Spec.Resources, common.OnlyCustomContainer)
+		requirements = m.wf.Spec.Resources
 	}
 
-	// Apply default resource requirements from Workflow Controller configuration.
-	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, &controller.Config.ResourceRequirements, common.AllContainers)
-	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, &controller.Config.ResourceRequirements, common.AllContainers)
+	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, requirements, common.AllContainers)
+	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, requirements, common.AllContainers)
 
 	return nil
 }

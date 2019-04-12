@@ -500,7 +500,7 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 
 	assert.Nil(suite.T(), builder.ApplyResourceRequirements())
 	for _, c := range builder.pod.Spec.InitContainers {
-		assert.Equal(suite.T(), configured, c.Resources)
+		assert.Equal(suite.T(), wf.Spec.Resources, &c.Resources)
 	}
 
 	for _, c := range builder.pod.Spec.Containers {
