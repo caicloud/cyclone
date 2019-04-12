@@ -487,6 +487,14 @@
   version = "v1.2.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:65f1892563ba517032595bed04148e0ab8e82535f80917fe0a3bff5f283ef451"
+  name = "github.com/thedevsaddam/gojsonq"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "352ba8e918c5ca9bb73d4e920d508c43af53f538"
+
+[[projects]]
   digest = "1:e362dddd08e6e894835074b6de49515939dbfb590c7198980639291bab62db4f"
   name = "github.com/xanzy/go-gitlab"
   packages = ["."]
@@ -973,6 +981,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/suite",
+    "github.com/thedevsaddam/gojsonq",
     "github.com/xanzy/go-gitlab",
     "golang.org/x/oauth2",
     "gopkg.in/xanzy/go-gitlab.v0",

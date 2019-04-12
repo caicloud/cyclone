@@ -77,6 +77,10 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   branch = "master"
 
 [[constraint]]
+  name = "github.com/thedevsaddam/gojsonq"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/PaesslerAG/jsonpath"
   branch = "master"
 
