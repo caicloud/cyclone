@@ -23,6 +23,9 @@ const (
 	// LabelWorkflowRunAcceleration is the label key used to indicate a workflowrun turned on acceleration
 	LabelWorkflowRunAcceleration = "workflowrun.cyclone.dev/acceleration"
 
+	// LabelWorkflowRunNotificationSent is the label key used to indicate a workflowrun has been sent as notification
+	LabelWorkflowRunNotificationSent = "workflowrun.cyclone.dev/notification-sent"
+
 	// LabelStageTemplate is the label key used to represent a stage is a stage template
 	LabelStageTemplate = "stage.cyclone.dev/template"
 
@@ -91,6 +94,16 @@ func AddSchedulableClusterLabel(labels map[string]string) map[string]string {
 	return labels
 }
 
+// AddNotificationSentLabel adds notification sent label for workflowruns.
+func AddNotificationSentLabel(labels map[string]string) map[string]string {
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+
+	labels[LabelWorkflowRunNotificationSent] = TrueValue
+	return labels
+}
+
 // AddStageTemplateLabel adds template label for stages.
 func AddStageTemplateLabel(labels map[string]string) map[string]string {
 	if labels == nil {
@@ -131,4 +144,14 @@ func LabelExistsSelector(key string) string {
 		log.Errorf("Fail to new label exists selector")
 	}
 	return selector.String()
+}
+
+// LabelExists checks the existence of expected label, return true if exists, otherwise return false.
+func LabelExists(labels map[string]string, expectedLabel string) bool {
+	if labels == nil {
+		return false
+	}
+
+	_, ok := labels[expectedLabel]
+	return ok
 }

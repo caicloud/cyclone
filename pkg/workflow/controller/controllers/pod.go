@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"reflect"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -37,6 +39,9 @@ func NewPodController(client clientset.Interface) *Controller {
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
+			if reflect.DeepEqual(old, new) {
+				return
+			}
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				return

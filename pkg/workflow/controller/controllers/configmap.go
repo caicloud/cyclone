@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,9 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
+			if reflect.DeepEqual(old, new) {
+				return
+			}
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				return
