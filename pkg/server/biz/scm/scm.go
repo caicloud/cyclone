@@ -51,7 +51,7 @@ type Provider interface {
 	ListBranches(repo string) ([]string, error)
 	ListTags(repo string) ([]string, error)
 	ListDockerfiles(repo string) ([]string, error)
-	CheckToken() bool
+	CheckToken() error
 	CreateWebhook(repo string, webhook *Webhook) error
 	DeleteWebhook(repo string, webhookURL string) error
 }
@@ -115,8 +115,11 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 
 	if generatedToken != "" && config.AuthType == v1alpha1.AuthTypePassword {
 		config.Token = generatedToken
-	} else if !provider.CheckToken() {
-		return fmt.Errorf("token unauthorized to repos")
+	} else {
+		err := provider.CheckToken()
+		if err != nil {
+			return fmt.Errorf("token unauthorized to repos, error:%v", err)
+		}
 	}
 
 	// Cleanup the password for security.

@@ -17,8 +17,6 @@ limitations under the License.
 package svn
 
 import (
-	"fmt"
-
 	"github.com/caicloud/nirvana/log"
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
@@ -52,27 +50,27 @@ func (s *SVN) GetToken() (string, error) {
 
 // ListRepos ...
 func (s *SVN) ListRepos() ([]scm.Repository, error) {
-	return nil, fmt.Errorf("list svn repos unsupported")
+	return nil, cerr.ErrorNotImplemented.Error("list svn repos")
 }
 
 // ListBranches ...
 func (s *SVN) ListBranches(repo string) ([]string, error) {
-	return nil, fmt.Errorf("list svn branches unsupported")
+	return nil, cerr.ErrorNotImplemented.Error("list svn branches")
 }
 
 // ListTags ...
 func (s *SVN) ListTags(repo string) ([]string, error) {
-	return nil, fmt.Errorf("list svn tags unsupported")
+	return nil, cerr.ErrorNotImplemented.Error("list svn tags")
 }
 
 // ListDockerfiles ...
 func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
-	return nil, fmt.Errorf("list svn dockerfiles unsupported")
+	return nil, cerr.ErrorNotImplemented.Error("list svn dockerfiles")
 }
 
 // CheckToken ...
-func (s *SVN) CheckToken() bool {
-	return true
+func (s *SVN) CheckToken() error {
+	return nil
 }
 
 // CreateWebhook ...
