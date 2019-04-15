@@ -379,6 +379,17 @@ func (o *operator) Reconcile() error {
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
+		// For non-terminated stage, update status to cancelled.
+		if status.Status.Phase == v1alpha1.StatusPending ||
+			status.Status.Phase == v1alpha1.StatusRunning ||
+			status.Status.Phase == v1alpha1.StatusWaiting {
+			o.UpdateStageStatus(stg, &v1alpha1.Status{
+				Phase:              v1alpha1.StatusCancelled,
+				Reason:             "GC",
+				LastTransitionTime: metav1.Time{Time: time.Now()},
+			})
+		}
+
 		if status.Pod == nil {
 			log.WithField("wfr", o.wfr.Name).
 				WithField("stg", stg).
@@ -399,8 +410,9 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 			if !wfrDeletion {
 				o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Delete pod '%s' error: %v", status.Pod.Name, err)
 			}
+		} else {
+			log.WithField("ns", status.Pod.Namespace).WithField("pod", status.Pod.Name).Info("Pod deleted")
 		}
-		log.WithField("ns", status.Pod.Namespace).WithField("pod", status.Pod.Name).Info("Pod deleted")
 	}
 
 	// Get exeuction context of the WorkflowRun, namespace and PVC are defined in the context.

@@ -184,6 +184,19 @@ func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 	return cerr.ConvertK8sError(err)
 }
 
+// StopWorkflowRun stops a WorkflowRun.
+func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusCancelled)
+	if err != nil {
+		log.Errorf("Stop WorkflowRun %s error %s", workflowrun, err)
+		return nil, err
+	}
+
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+
+	return wfr, cerr.ConvertK8sError(err)
+}
+
 // PauseWorkflowRun updates the workflowrun overall status to Waiting.
 func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
 	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting)
@@ -197,8 +210,8 @@ func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenan
 	return wfr, cerr.ConvertK8sError(err)
 }
 
-// ContinueWorkflowRun updates the workflowrun overall status to Running.
-func ContinueWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
+// ResumeWorkflowRun updates the workflowrun overall status to Running.
+func ResumeWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
 	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning)
 	if err != nil {
 		log.Errorf("continue workflowrun %s error %s", workflowrun, err)

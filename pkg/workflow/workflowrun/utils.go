@@ -14,15 +14,15 @@ import (
 // resolveStatus determines the final status from two given status, one is latest status, and
 // another one is the new status reported.
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
-	// If the latest status is already a terminated status (Completed, Error), no need to update
+	// If the latest status is already a terminated status (Completed, Failed, Cancelled), no need to
 	// update it, we just return the latest status.
-	if latest.Phase == v1alpha1.StatusSucceeded || latest.Phase == v1alpha1.StatusFailed {
+	if latest.Phase == v1alpha1.StatusSucceeded || latest.Phase == v1alpha1.StatusFailed || latest.Phase == v1alpha1.StatusCancelled {
 		return latest
 	}
 
 	// If the latest status is not a terminated status, but the reported status is, then we
 	// apply the reported status.
-	if update.Phase == v1alpha1.StatusSucceeded || update.Phase == v1alpha1.StatusFailed {
+	if update.Phase == v1alpha1.StatusSucceeded || update.Phase == v1alpha1.StatusFailed || latest.Phase == v1alpha1.StatusCancelled {
 		return update
 	}
 
@@ -133,7 +133,7 @@ func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha
 	return nil
 }
 
-// IsWorkflowRunTerminated judges whether the workflowrun has be terminated.
+// IsWorkflowRunTerminated judges whether the WorkflowRun has be terminated.
 // Return true if terminated, otherwise return false.
 func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
 	if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||

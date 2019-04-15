@@ -107,7 +107,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	// the GC queue.
 	h.GCProcessor.Add(originWfr)
 
-	// If the WorkflowRun has already been terminated(Completed, Error, Cancel), send notifications if necessary,
+	// If the WorkflowRun has already been terminated(Completed, Failed, Cancelled), send notifications if necessary,
 	// otherwise directly skip it.
 	if workflowrun.IsWorkflowRunTerminated(originWfr) {
 		// Send notification after workflowrun terminated.
@@ -145,8 +145,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 		return
 	}
 
-	// If the WorkflowRun has already been waiting for external events, skip it.
-	if originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
+	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
+		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
 		return
 	}
 
@@ -218,7 +220,7 @@ func (h *Handler) sendNotifications(wfr *v1alpha1.WorkflowRun) (map[string]v1alp
 	for _, endpoint := range controller.Config.Notifications {
 		req, err := http.NewRequest(http.MethodPost, endpoint.URL, body)
 		if err != nil {
-			err = fmt.Errorf("Failed to new notification request: %v", err)
+			err = fmt.Errorf("failed to new notification request: %v", err)
 			log.WithField("wfr", wfr.Name).Error(err)
 			status[endpoint.Name] = v1alpha1.NotificationStatus{
 				Result:  v1alpha1.NotificationResultFailed,
