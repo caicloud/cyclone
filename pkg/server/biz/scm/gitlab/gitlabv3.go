@@ -25,6 +25,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 // V3 represents the SCM provider of API V3 GitLab.
@@ -39,11 +40,11 @@ func (g *V3) GetToken() (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
-func (g *V3) CheckToken() bool {
+func (g *V3) CheckToken() error {
 	if _, err := g.listReposInner(false); err != nil {
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 // ListRepos lists the repos by the SCM config.
@@ -66,6 +67,9 @@ func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		projects, resp, err := g.client.Projects.ListProjects(opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return nil, err
 		}
 
@@ -87,9 +91,12 @@ func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 
 // ListBranches lists the branches for specified repo.
 func (g *V3) ListBranches(repo string) ([]string, error) {
-	branches, _, err := g.client.Branches.ListBranches(repo, nil)
+	branches, resp, err := g.client.Branches.ListBranches(repo, nil)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
+		if resp.StatusCode == 500 {
+			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
 		return nil, err
 	}
 
@@ -103,9 +110,12 @@ func (g *V3) ListBranches(repo string) ([]string, error) {
 
 // ListTags lists the tags for specified repo.
 func (g *V3) ListTags(repo string) ([]string, error) {
-	tags, _, err := g.client.Tags.ListTags(repo, nil)
+	tags, resp, err := g.client.Tags.ListTags(repo, nil)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
+		if resp.StatusCode == 500 {
+			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
 		return nil, err
 	}
 
@@ -157,21 +167,28 @@ func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	hook.URL = &webhook.URL
 
 	onwer, name := scm.ParseRepo(repo)
-	_, _, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
+	_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
+	if resp.StatusCode == 500 {
+		return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+	}
 	return err
 }
 
 // DeleteWebhook deletes webhook from specified repo.
 func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
 	owner, name := scm.ParseRepo(repo)
-	hooks, _, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
 	if err != nil {
+		if resp.StatusCode == 500 {
+			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
 		return err
 	}
 
 	for _, hook := range hooks {
 		if strings.HasPrefix(hook.URL, webhookURL) {
 			if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+				log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
 				return err
 			}
 		}

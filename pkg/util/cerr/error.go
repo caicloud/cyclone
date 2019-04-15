@@ -72,6 +72,10 @@ var (
 	// this error is used to indicate create control cluster integration failed while creating tenant.
 	ErrorCreateIntegration = nerror.InternalServerError.Build("ReasonCreateIntegration",
 		"tenant created, but the related control cluster integration created failed: ${error}")
+
+	// ErrorSCMServerInternalError defines error that occurred in SCM(GitHub GitLab SVN) server side.
+	ErrorSCMServerInternalError = nerror.InternalServerError.Build("SCMServerInternalError",
+		"SCM server ${server} internal error: ${error}, Maybe the SCM server is not running well, Please contact your SCM administrator if this problem persists.")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.

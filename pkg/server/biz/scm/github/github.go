@@ -30,6 +30,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 const (
@@ -93,14 +94,20 @@ func (g *Github) GetToken() (string, error) {
 	for {
 		auths, resp, err := g.client.Authorizations.List(g.ctx, opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return "", err
 		}
 
 		for _, auth := range auths {
 			if *auth.App.Name == oauthAppName {
 				// The token of existed authorization can not be got, so delete it and recreate a new one.
-				if _, err := g.client.Authorizations.Delete(g.ctx, *auth.ID); err != nil {
+				if dresp, err := g.client.Authorizations.Delete(g.ctx, *auth.ID); err != nil {
 					log.Errorf("Fail to delete the token for %s as %s", oauthAppName, err.Error())
+					if dresp.StatusCode == 500 {
+						return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+					}
 					return "", err
 				}
 
@@ -119,8 +126,11 @@ func (g *Github) GetToken() (string, error) {
 		Scopes: []github.Scope{github.ScopeRepo},
 		Note:   &oauthAppName,
 	}
-	auth, _, err := g.client.Authorizations.Create(g.ctx, authReq)
+	auth, cresp, err := g.client.Authorizations.Create(g.ctx, authReq)
 	if err != nil {
+		if cresp.StatusCode == 500 {
+			return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
 		return "", err
 	}
 
@@ -128,11 +138,11 @@ func (g *Github) GetToken() (string, error) {
 }
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token
-func (g *Github) CheckToken() bool {
+func (g *Github) CheckToken() error {
 	if _, err := g.listReposInner(false); err != nil {
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 // ListRepos lists the repos by the SCM config.
@@ -156,6 +166,9 @@ func (g *Github) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		repos, resp, err := g.client.Repositories.List(g.ctx, "", opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return nil, err
 		}
 		allRepos = append(allRepos, repos...)
@@ -195,6 +208,9 @@ func (g *Github) ListBranches(repo string) ([]string, error) {
 	for {
 		branches, resp, err := g.client.Repositories.ListBranches(g.ctx, owner, repo, opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return nil, err
 		}
 		allBranches = append(allBranches, branches...)
@@ -233,6 +249,9 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	for {
 		tags, resp, err := g.client.Repositories.ListTags(g.ctx, owner, repo, opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return nil, err
 		}
 		allTags = append(allTags, tags...)
@@ -274,6 +293,9 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	for {
 		csr, resp, err := g.client.Search.Code(g.ctx, q, opt)
 		if err != nil {
+			if resp.StatusCode == 500 {
+				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+			}
 			return nil, err
 		}
 
@@ -337,8 +359,14 @@ func (g *Github) CreateWebhook(repo string, webhook *scm.Webhook) error {
 		},
 	}
 	owner, name := scm.ParseRepo(repo)
-	_, _, err := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
-	return err
+	_, resp, err := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+	if err != nil {
+		if resp.StatusCode == 500 {
+			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
+		return err
+	}
+	return nil
 }
 
 // convertToGithubEvents converts the defined event types to Github event types.
@@ -365,8 +393,11 @@ func convertToGithubEvents(events []scm.EventType) []string {
 // DeleteWebhook deletes webhook from specified repo.
 func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
 	owner, name := scm.ParseRepo(repo)
-	hooks, _, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	hooks, resp, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
 	if err != nil {
+		if resp.StatusCode == 500 {
+			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
 		return err
 	}
 
@@ -374,7 +405,8 @@ func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
 		if hookurl, ok := hook.Config["url"].(string); ok {
 			if strings.HasPrefix(hookurl, webhookURL) {
 				_, err = g.client.Repositories.DeleteHook(g.ctx, owner, name, *hook.ID)
-				return nil
+				log.Errorf("delete hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+				return err
 			}
 		}
 	}
