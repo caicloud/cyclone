@@ -18,14 +18,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
-// controllerStartTime represents the start time of workflow controller,
-// use to avoid sending notifications for workflowruns finished before workflow controller starts.
-// var controllerStartTime *metav1.Time
-
-// func init() {
-// 	controllerStartTime = &metav1.Time{Time: time.Now()}
-// }
-
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
 	Client           clientset.Interface
