@@ -3,12 +3,12 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -16,9 +16,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
-	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 const (
@@ -78,17 +78,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	}
 
 	if query.Sort {
-		unsortedResults := make([]v1alpha1.Stage, len(results))
-		objects := make([]runtime.Object, len(results))
-		for i := range results {
-			unsortedResults[i] = results[i]
-			objects[i] = &results[i]
-		}
-
-		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
-		for i := range results {
-			results[i] = unsortedResults[sorter.OriginalPosition(i)]
-		}
+		sort.Sort(sorter.NewStageSorter(items, query.Ascending))
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil

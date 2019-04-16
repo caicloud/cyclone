@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"sort"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/api/core/v1"
 	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/meta"
@@ -18,9 +18,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
-	"github.com/caicloud/cyclone/pkg/util/sort"
 )
 
 // CreateTenant creates a cyclone tenant
@@ -48,17 +48,7 @@ func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResp
 
 	items := namespaces.Items
 	if query.Sort {
-		unsortedResults := make([]core_v1.Namespace, len(items))
-		objects := make([]runtime.Object, len(items))
-		for i := range items {
-			unsortedResults[i] = items[i]
-			objects[i] = &items[i]
-		}
-
-		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
-		for i := range items {
-			items[i] = unsortedResults[sorter.OriginalPosition(i)]
-		}
+		sort.Sort(sorter.NewNamespaceSorter(items, query.Ascending))
 	}
 
 	tenants := make([]api.Tenant, 0)

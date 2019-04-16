@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/gorilla/websocket"
 	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	k8s_types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 
@@ -24,12 +24,12 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/cyclone/pkg/util/sort"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
@@ -93,17 +93,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	}
 
 	if query.Sort {
-		unsortedResults := make([]v1alpha1.WorkflowRun, len(results))
-		objects := make([]runtime.Object, len(results))
-		for i := range results {
-			unsortedResults[i] = results[i]
-			objects[i] = &results[i]
-		}
-
-		sorter := sorter.NewRuntimeSort(objects, query.Ascending)
-		for i := range results {
-			results[i] = unsortedResults[sorter.OriginalPosition(i)]
-		}
+		sort.Sort(sorter.NewWorkflowRunSorter(results, query.Ascending))
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil
