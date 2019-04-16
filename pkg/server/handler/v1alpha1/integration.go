@@ -40,7 +40,7 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	}
 
 	items := secrets.Items
-	integrations := make([]api.Integration, 0)
+	var integrations []api.Integration
 	size := int64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), integrations), nil

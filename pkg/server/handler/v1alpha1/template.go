@@ -57,7 +57,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 		items = append(items, publicTemplates.Items...)
 	}
 
-	results := make([]v1alpha1.Stage, 0)
+	var results []v1alpha1.Stage
 	if query.Filter == "" {
 		results = items
 	} else {

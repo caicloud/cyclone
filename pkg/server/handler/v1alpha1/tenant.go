@@ -51,7 +51,7 @@ func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResp
 		sort.Sort(sorter.NewNamespaceSorter(items, query.Ascending))
 	}
 
-	tenants := make([]api.Tenant, 0)
+	var tenants []api.Tenant
 	for _, namespace := range items {
 		t, err := NamespaceToTenant(&namespace)
 		if err != nil {

@@ -45,7 +45,7 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 	}
 
 	items := workflows.Items
-	results := []v1alpha1.Workflow{}
+	var results []v1alpha1.Workflow
 	if query.Filter == "" {
 		results = items
 	} else {

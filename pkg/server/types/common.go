@@ -7,9 +7,9 @@ type QueryParams struct {
 	Start  int64  `source:"query,start,default=0"`
 	Limit  int64  `source:"query,limit,default=99999"`
 	Filter string `source:"query,filter"`
-	// Sort will sorts the resoults by metadata.creationTimestamp
+	// Sort will sorts the results by metadata.creationTimestamp
 	Sort bool `source:"query,sort"`
-	// Ascending will sorts the resoults by ascending order, otherwise by descending order
+	// Ascending will sort the results by ascending order, otherwise by descending order
 	Ascending bool `source:"query,ascending"`
 }
 

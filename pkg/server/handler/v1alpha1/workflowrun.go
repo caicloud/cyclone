@@ -72,7 +72,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	}
 
 	items := workflowruns.Items
-	results := []v1alpha1.WorkflowRun{}
+	var results []v1alpha1.WorkflowRun
 	if query.Filter == "" {
 		results = items
 	} else {
