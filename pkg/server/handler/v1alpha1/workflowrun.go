@@ -192,13 +192,25 @@ func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 
 // StopWorkflowRun stops a WorkflowRun.
 func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+	if err != nil {
+		return nil, cerr.ConvertK8sError(err)
+	}
+
+	// If wfr already in terminated state, skip it
+	if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+		wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
+		wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+		return wfr, nil
+	}
+
 	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusCancelled)
 	if err != nil {
 		log.Errorf("Stop WorkflowRun %s error %s", workflowrun, err)
 		return nil, err
 	}
 
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
 
 	return wfr, cerr.ConvertK8sError(err)
 }
