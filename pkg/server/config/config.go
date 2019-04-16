@@ -55,6 +55,9 @@ type CycloneServerConfig struct {
 
 	// Notifications represents the config to send notifications after workflowruns finish.
 	Notifications []NotificationEndpoint `json:"notifications"`
+
+	// RecordWebURLTemplate represents the URL template to generate web URLs for workflowruns.
+	RecordWebURLTemplate string `json:"record_web_url_template"`
 }
 
 // PVCConfig contains the PVC information

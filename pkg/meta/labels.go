@@ -95,12 +95,17 @@ func AddSchedulableClusterLabel(labels map[string]string) map[string]string {
 }
 
 // AddNotificationSentLabel adds notification sent label for workflowruns.
-func AddNotificationSentLabel(labels map[string]string) map[string]string {
+func AddNotificationSentLabel(labels map[string]string, sent bool) map[string]string {
 	if labels == nil {
 		labels = make(map[string]string)
 	}
 
-	labels[LabelWorkflowRunNotificationSent] = TrueValue
+	if sent {
+		labels[LabelWorkflowRunNotificationSent] = TrueValue
+	} else {
+		labels[LabelWorkflowRunNotificationSent] = FalseValue
+	}
+
 	return labels
 }
 

@@ -17,7 +17,7 @@ var notification = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
-				Function:    handler.ReceiveWorkflowRunNotification,
+				Function:    handler.HandleWorkflowRunNotification,
 				Description: "Handle notifications about workflowruns from workflow controller",
 				Parameters: []definition.Parameter{
 					{

@@ -23,6 +23,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"gopkg.in/xanzy/go-gitlab.v0"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -179,6 +180,33 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+// CreateStatus generate a new status for repository.
+func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
+	state, description := transStatus(status)
+
+	owner, project := scm.ParseRepo(repoURL)
+	context := "continuous-integration/cyclone"
+	opt := &gitlab.SetCommitStatusOptions{
+		State:       gitlab.BuildStateValue(gitlab.BuildStateValue(state)),
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+	}
+	_, _, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
+	return err
+}
+
+// GetPullRequestSHA gets latest commit SHA of pull request.
+func (g *V4) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	owner, name := scm.ParseRepo(repoURL)
+	mr, _, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return mr.SHA, nil
 }
 
 // CreateWebhook creates webhook for specified repo.

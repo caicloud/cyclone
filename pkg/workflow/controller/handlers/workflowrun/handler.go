@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,11 +20,11 @@ import (
 
 // controllerStartTime represents the start time of workflow controller,
 // use to avoid sending notifications for workflowruns finished before workflow controller starts.
-var controllerStartTime *metav1.Time
+// var controllerStartTime *metav1.Time
 
-func init() {
-	controllerStartTime = &metav1.Time{Time: time.Now()}
-}
+// func init() {
+// 	controllerStartTime = &metav1.Time{Time: time.Now()}
+// }
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
@@ -151,58 +150,58 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 
 // sendNotification sends notifications for workflowruns when:
 // * notification endpoint is configured
-// * finish time after workflow controller starts
 // * without notification sent label
 func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
-	url := controller.Config.NotificationURL
-	if url == "" || wfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
-		return nil
-	}
-
 	if meta.LabelExists(wfr.Labels, meta.LabelWorkflowRunNotificationSent) {
 		return nil
 	}
 
-	// Send notifications with workflowrun.
-	bodyBytes, err := json.Marshal(wfr)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Errorf("Failed to marshal workflowrun: %v", err)
-		return err
-	}
-	body := bytes.NewReader(bodyBytes)
+	sent := false
+	defer func() {
+		// Update WorkflowRun notification status with retry.
+		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			// Get latest WorkflowRun.
+			latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
 
-	req, err := http.NewRequest(http.MethodPost, url, body)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Errorf("Failed to new notification request: %v", err)
-		return err
-	}
-	// Set Json content type in Http header.
-	req.Header.Set(utilhttp.HeaderContentType, utilhttp.HeaderContentTypeJSON)
+			latest.Labels = meta.AddNotificationSentLabel(latest.Labels, sent)
+			_, err = h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
+			return err
+		})
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Errorf("Failed to send notification: %v", err)
-		return err
-	}
-
-	log.WithField("wfr", wfr.Name).Infof("Status code of notification: %d", resp.StatusCode)
-
-	// Update WorkflowRun notification status with retry.
-	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		// Get latest WorkflowRun.
-		latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
 		if err != nil {
+			log.WithField("name", wfr.Name).Error("Update workflowrun notification sent label error: ", err)
+		}
+	}()
+
+	url := controller.Config.NotificationURL
+	if url != "" {
+		// Send notifications with workflowrun.
+		bodyBytes, err := json.Marshal(wfr)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Errorf("Failed to marshal workflowrun: %v", err)
+			return err
+		}
+		body := bytes.NewReader(bodyBytes)
+
+		req, err := http.NewRequest(http.MethodPost, url, body)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Errorf("Failed to new notification request: %v", err)
+			return err
+		}
+		// Set Json content type in Http header.
+		req.Header.Set(utilhttp.HeaderContentType, utilhttp.HeaderContentTypeJSON)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Errorf("Failed to send notification: %v", err)
 			return err
 		}
 
-		latest.Labels = meta.AddNotificationSentLabel(latest.Labels)
-		_, err = h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
-		return err
-	})
-
-	if err != nil {
-		log.WithField("name", wfr.Name).Error("Update workflowrun notification sent label error: ", err)
-		return err
+		log.WithField("wfr", wfr.Name).Infof("Status code of notification: %d", resp.StatusCode)
+		sent = true
 	}
 
 	return nil

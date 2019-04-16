@@ -1,11 +1,13 @@
 package v1alpha1
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
+	"text/template"
 
 	"github.com/caicloud/nirvana/log"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -454,4 +456,69 @@ func listSCMTags(scmSource *api.SCMSource, repo string) ([]string, error) {
 	}
 
 	return sp.ListTags(repo)
+}
+
+func createSCMStatus(scmSource *api.SCMSource, status v1alpha1.StatusPhase, recordURL string, event *scm.EventData) error {
+	sp, err := scm.GetSCMProvider(scmSource)
+	if err != nil {
+		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
+		return err
+	}
+
+	return sp.CreateStatus(status, recordURL, event.Repo, event.CommitSHA)
+}
+
+func generateRecordURL(tenant, project, wfName, wfrName string) (string, error) {
+	type urlData struct {
+		Tenant          string
+		ProjectName     string
+		WorkflowName    string
+		WorkflowRunName string
+	}
+
+	data := urlData{
+		tenant,
+		project,
+		wfName,
+		wfrName,
+	}
+	tmpl, err := template.New("recordURL").Parse(config.Config.RecordWebURLTemplate)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	return buf.String(), err
+}
+
+func setSCMEventData(annos map[string]string, event *scm.EventData) (map[string]string, error) {
+	bs, err := json.Marshal(event)
+	if err != nil {
+		return nil, err
+	}
+
+	if annos == nil {
+		annos = make(map[string]string)
+	}
+
+	annos[meta.AnnotationWorkflowRunSCMEvent] = string(bs)
+	return annos, err
+}
+
+func getSCMEventData(annos map[string]string) (*scm.EventData, error) {
+	if annos == nil {
+		return nil, fmt.Errorf("Failed to parse SCM event as annotations are nil")
+	}
+
+	eventStr, ok := annos[meta.AnnotationWorkflowRunSCMEvent]
+	if !ok {
+		return nil, fmt.Errorf("Failed to parse SCM event as annotations do not have key %s", meta.AnnotationWorkflowRunSCMEvent)
+	}
+
+	event := &scm.EventData{}
+	if err := json.Unmarshal([]byte(eventStr), event); err != nil {
+		return nil, fmt.Errorf("Failed to parse SCM event as %v", err)
+	}
+
+	return event, nil
 }

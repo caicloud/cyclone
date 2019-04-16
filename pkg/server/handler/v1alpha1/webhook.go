@@ -46,9 +46,14 @@ func HandleWebhook(ctx context.Context, tenant, integration string) (api.Webhook
 		return newWebhookResponse(ignoredMsg), nil
 	}
 
+	in, err := getIntegration(tenant, integration)
+	if err != nil {
+		return newWebhookResponse(err.Error()), err
+	}
+
 	triggered := false
 	if request.Header.Get(github.EventTypeHeader) != "" {
-		if data := github.ParseEvent(request); data != nil {
+		if data := github.ParseEvent(in.Spec.SCM, request); data != nil {
 			if wfts, ok := repos[data.Repo]; ok {
 				for _, wft := range wfts {
 					log.Infof("Trigger workflow trigger %s", wft)
@@ -156,6 +161,11 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
+	}
+
+	wfr.Annotations, err = setSCMEventData(wfr.Annotations, data)
+	if err != nil {
+		return err
 	}
 
 	// Set "Tag" and "GIT_REVISION" for all resource configs if they are empty.
