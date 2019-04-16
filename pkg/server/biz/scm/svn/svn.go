@@ -71,12 +71,12 @@ func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
 
 // CreateStatus ...
 func (s *SVN) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
-	return cerr.ErrorNotImplemented.Error("create status unsupported")
+	return cerr.ErrorNotImplemented.Error("create status")
 }
 
 // GetPullRequestSHA ...
 func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
-	return "", cerr.ErrorNotImplemented.Error("get pull request SHA unsupported")
+	return "", cerr.ErrorNotImplemented.Error("get pull request SHA")
 }
 
 // CheckToken ...

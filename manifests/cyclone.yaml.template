@@ -51,7 +51,8 @@ data:
         "service_account": "cyclone-coordinator"
       },
       "secret": "cyclone-secrets",
-      "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099"
+      "cyclone_server_addr": "cyclone-server.default.svc.cluster.local:7099",
+      "notification_url": "http://cyclone-server.default:7099/apis/v1alpha1/notifications"
     }
 
 ---

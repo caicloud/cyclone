@@ -42,6 +42,7 @@ func HandleWorkflowRunNotification(ctx context.Context, wfr *v1alpha1.WorkflowRu
 
 // sendNotifications send notifications to subscribe systems, and record the results in status.
 func sendNotifications(wfr *v1alpha1.WorkflowRun) error {
+	// If already there are notification status, no need to send notifications again.
 	if wfr.Status.Notifications != nil {
 		return nil
 	}

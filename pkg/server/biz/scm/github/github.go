@@ -364,7 +364,6 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		Context:     &context,
 		Creator:     &creator,
 	}
-	//var owner, repo, ref string
 	_, _, err := client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
 	return err
 }

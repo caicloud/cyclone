@@ -62,5 +62,5 @@ _config:
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "cyclone-server.default:7099",
-            "notification_url": "http://cyclone-server.default:7099/apis/v1alpha1/notifications/workflowruns"
+            "notification_url": "http://cyclone-server.default:7099/apis/v1alpha1/notifications"
           }

@@ -12,7 +12,7 @@ func init() {
 
 var notification = []definition.Descriptor{
 	{
-		Path:        "/notifications/workflowruns",
+		Path:        "/notifications",
 		Description: "Notification APIs",
 		Definitions: []definition.Definition{
 			{
