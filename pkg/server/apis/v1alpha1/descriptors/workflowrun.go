@@ -167,6 +167,35 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/stop",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Update,
+				Function:    handler.StopWorkflowRun,
+				Description: "Stop a workflowrun",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+				},
+				Results: definition.DataErrorResults("workflowrun"),
+			},
+		},
+	},
+	{
 		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/pause",
 		Definitions: []definition.Definition{
 			{
@@ -196,12 +225,12 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
-		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/continue",
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/resume",
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Update,
-				Function:    handler.ContinueWorkflowRun,
-				Description: "Continue ro run workflowrun",
+				Function:    handler.ResumeWorkflowRun,
+				Description: "Continue ro run WorkflowRun",
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,

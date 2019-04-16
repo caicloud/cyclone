@@ -100,7 +100,8 @@ func (p *Operator) OnUpdated() error {
 
 	// If the WorkflowRun has already been in terminated state, skip it.
 	if origin.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-		origin.Status.Overall.Phase == v1alpha1.StatusFailed {
+		origin.Status.Overall.Phase == v1alpha1.StatusFailed ||
+		origin.Status.Overall.Phase == v1alpha1.StatusCancelled {
 		return nil
 	}
 
