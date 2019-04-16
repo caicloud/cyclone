@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"sort"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
@@ -38,6 +40,10 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		sort.Sort(sorter.NewProjectSorter(items, query.Ascending))
 	}
 
 	return types.NewListResponse(int(size), items[query.Start:end]), nil

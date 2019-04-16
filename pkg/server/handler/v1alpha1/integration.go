@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -19,6 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
@@ -38,7 +40,7 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	}
 
 	items := secrets.Items
-	integrations := []api.Integration{}
+	var integrations []api.Integration
 	size := int64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), integrations), nil
@@ -47,6 +49,10 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		sort.Sort(sorter.NewSecretSorter(items, query.Ascending))
 	}
 
 	for _, secret := range items {

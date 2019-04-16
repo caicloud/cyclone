@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"sort"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/api/core/v1"
@@ -17,6 +18,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
@@ -44,8 +46,13 @@ func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResp
 		return nil, cerr.ConvertK8sError(err)
 	}
 
-	tenants := []api.Tenant{}
-	for _, namespace := range namespaces.Items {
+	items := namespaces.Items
+	if query.Sort {
+		sort.Sort(sorter.NewNamespaceSorter(items, query.Ascending))
+	}
+
+	var tenants []api.Tenant
+	for _, namespace := range items {
 		t, err := NamespaceToTenant(&namespace)
 		if err != nil {
 			log.Errorf("Unmarshal tenant annotation error %v", err)

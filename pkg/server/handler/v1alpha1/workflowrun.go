@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
@@ -70,7 +72,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	}
 
 	items := workflowruns.Items
-	results := []v1alpha1.WorkflowRun{}
+	var results []v1alpha1.WorkflowRun
 	if query.Filter == "" {
 		results = items
 	} else {
@@ -88,6 +90,10 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	end := query.Start + query.Limit
 	if end > size {
 		end = size
+	}
+
+	if query.Sort {
+		sort.Sort(sorter.NewWorkflowRunSorter(results, query.Ascending))
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil
