@@ -15,11 +15,19 @@ _config:
       imagePullPolicy: Always
       resources:
         limits:
-          cpu: 2
-          memory: 2Gi
+          cpu: "2"
+          memory: "2Gi"
         requests:
-          cpu: 250m
-          memory: 256Mi
+          cpu: "250m"
+          memory: "256Mi"
+      mounts:
+      - path: /etc/localtime
+        name: timezone
+    volumes:
+    - name: timezone
+      type: HostPath
+      source:
+        path: /etc/localtime
     controller:
       replica: 1
     pod:
