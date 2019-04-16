@@ -77,7 +77,7 @@ type Definition struct {
 	Produces []string
 	// ErrorProduces is used to generate data for error. If this field is empty,
 	// it means that this field equals to Produces.
-	// In some cases, succeessful data and error data should be generated in
+	// In some cases, successful data and error data should be generated in
 	// different ways.
 	ErrorProduces []string
 	// Function is a function handler. It must be func type.

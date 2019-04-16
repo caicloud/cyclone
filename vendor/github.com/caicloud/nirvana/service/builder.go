@@ -312,7 +312,7 @@ func (s *service) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 	ctx := newHTTPContext(resp, req)
 
-	executor, err := s.root.Match(ctx, &ctx.container, req.URL.Path)
+	executor, err := s.root.Match(ctx, &ctx.container, req.URL.EscapedPath())
 	if err != nil {
 		if err := writeError(ctx, s.producers, err); err != nil {
 			s.logger.Error(err)

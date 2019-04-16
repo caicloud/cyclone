@@ -9,7 +9,6 @@
     "goconst",
     "goimports",
     "varcheck",
-    "megacheck",
     "lll",
     "unconvert",
     "misspell",

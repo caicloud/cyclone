@@ -36,7 +36,7 @@ type Analyzer struct {
 	fileset      *token.FileSet
 }
 
-// NewAnalyzer creates a code ananlyzer.
+// NewAnalyzer creates a code analyzer.
 func NewAnalyzer(root string) *Analyzer {
 	return &Analyzer{
 		root:         root,

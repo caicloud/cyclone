@@ -126,8 +126,8 @@ func (c *Comments) LineComments() string {
 	return buf.String()
 }
 
-// Rename repalce the first word of this comments. If the its first word is
-// not same as origin, the method returns false.
+// Rename replaces the first word of this comments. If its first word is
+// not the same as origin, the method returns false.
 func (c *Comments) Rename(origin, target string) bool {
 	if len(c.lines) > 0 {
 		line := c.lines[0]
@@ -160,7 +160,6 @@ func (c *Comments) CleanOptions() {
 	c.options = map[string][]string{}
 }
 
-// String returns comments.
 // String returns comments.
 func (c *Comments) String() string {
 	return strings.Join(c.lines, "\n")

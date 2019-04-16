@@ -17,6 +17,7 @@ limitations under the License.
 package service
 
 import (
+	"fmt"
 	"mime"
 	"net/http"
 	"strconv"
@@ -130,18 +131,34 @@ func parseAcceptTypes(v string) ([]string, error) {
 	factors := []float64{}
 	strs := strings.Split(v, ",")
 	for _, str := range strs {
-		str := strings.Trim(str, " ")
-		tf := strings.Split(str, ";")
-		types = append(types, tf[0])
+		fields := strings.Split(str, ";")
 		factor := 1.0
-		if len(tf) == 2 {
-			qp := strings.Split(tf[1], "=")
-			q, err := strconv.ParseFloat(qp[1], 32)
-			if err != nil {
-				return nil, err
+		ctFields := make([]string, 0, len(fields))
+		for _, field := range fields {
+			index := strings.IndexByte(field, '=')
+			key := ""
+			value := ""
+			if index >= 0 {
+				key = strings.TrimSpace(field[:index])
+				value = strings.TrimSpace(field[index+1:])
+				if key == "q" && len(value) > 0 {
+					q, err := strconv.ParseFloat(value, 32)
+					if err != nil {
+						return nil, err
+					}
+					factor = q
+					continue
+				}
+			} else {
+				key = strings.TrimSpace(field)
 			}
-			factor = q
+			if value == "" {
+				ctFields = append(ctFields, key)
+			} else {
+				ctFields = append(ctFields, fmt.Sprintf("%s=%s", key, value))
+			}
 		}
+		types = append(types, strings.Join(ctFields, ";"))
 		factors = append(factors, factor)
 	}
 	if len(types) <= 1 {
