@@ -16,16 +16,18 @@ _config:
       mounts:
       - name: cyclone-data
         path: /var/lib/cyclone
+      - path: /etc/localtime
+        name: timezone
       ports:
       - port: 7099
         protocol: TCP
       resources:
         limits:
-          cpu: 2
-          memory: 2Gi
+          cpu: "2"
+          memory: "2Gi"
         requests:
-          cpu: 250m
-          memory: 256Mi
+          cpu: "250m"
+          memory: "256Mi"
     controller:
       replica: 1
     pod:
@@ -39,6 +41,10 @@ _config:
       type: ClusterIP
     type: Deployment
     volumes:
+    - name: timezone
+      type: HostPath
+      source:
+        path: /etc/localtime
     - name: cyclone-data
       type: Dynamic
       source:
