@@ -74,8 +74,11 @@ const (
 	// NamespaceHeaderName is name of namespace header
 	NamespaceHeaderName = "X-Namespace"
 
-	// HeaderContentType represents the the key of Content-Type.
+	// HeaderContentType represents the key of Content-Type.
 	HeaderContentType = "Content-Type"
+
+	// HeaderContentTypeJSON represents the JSON Content-Type value.
+	HeaderContentTypeJSON = "application/json"
 
 	// DefaultNamespace represents the default namespace 'default'.
 	DefaultNamespace = "default"

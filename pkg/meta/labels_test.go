@@ -25,7 +25,7 @@ func TestPodKindString(t *testing.T) {
 	}
 }
 
-func TestExistsLabelSelector(t *testing.T) {
+func TestLabelExistsSelector(t *testing.T) {
 	testCases := map[string]struct {
 		label    string
 		expected string
@@ -45,6 +45,43 @@ func TestExistsLabelSelector(t *testing.T) {
 		result = LabelExistsSelector(tc.label)
 		if result != tc.expected {
 			t.Errorf("Test case %s failed: expected %s, but got %s", d, tc.expected, result)
+		}
+	}
+}
+
+func TestLabelExists(t *testing.T) {
+	testCases := map[string]struct {
+		labels         map[string]string
+		expectedLabel  string
+		expectedResult bool
+	}{
+		"empty labels": {
+			nil,
+			LabelProjectName,
+			false,
+		},
+		"label exists": {
+			map[string]string{
+				LabelProjectName:  "devops",
+				LabelWorkflowName: "test",
+			},
+			LabelProjectName,
+			true,
+		},
+		"label does not exists": {
+			map[string]string{
+				LabelWorkflowName: "test",
+			},
+			LabelProjectName,
+			false,
+		},
+	}
+
+	var result bool
+	for d, tc := range testCases {
+		result = LabelExists(tc.labels, tc.expectedLabel)
+		if result != tc.expectedResult {
+			t.Errorf("Test case %s failed: expected %t, but got %t", d, tc.expectedResult, result)
 		}
 	}
 }

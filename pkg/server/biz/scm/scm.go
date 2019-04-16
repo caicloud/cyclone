@@ -22,6 +22,7 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 )
 
@@ -51,6 +52,8 @@ type Provider interface {
 	ListBranches(repo string) ([]string, error)
 	ListTags(repo string) ([]string, error)
 	ListDockerfiles(repo string) ([]string, error)
+	CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSHA string) error
+	GetPullRequestSHA(repoURL string, number int) (string, error)
 	CheckToken() error
 	CreateWebhook(repo string, webhook *Webhook) error
 	DeleteWebhook(repo string, webhookURL string) error
@@ -150,9 +153,10 @@ const (
 
 // EventData represents the data parsed from SCM events.
 type EventData struct {
-	Type    EventType
-	Repo    string
-	Ref     string
-	Branch  string
-	Comment string
+	Type      EventType
+	Repo      string
+	Ref       string
+	Branch    string
+	Comment   string
+	CommitSHA string
 }

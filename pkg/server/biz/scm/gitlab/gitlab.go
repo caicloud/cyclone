@@ -29,6 +29,7 @@ import (
 	"golang.org/x/oauth2"
 	v4 "gopkg.in/xanzy/go-gitlab.v0"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 )
@@ -451,9 +452,10 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			return nil
 		}
 		return &scm.EventData{
-			Type: scm.PullRequestEventType,
-			Repo: event.Project.PathWithNamespace,
-			Ref:  fmt.Sprintf(mergeRefTemplate, objectAttributes.IID, objectAttributes.TargetBranch),
+			Type:      scm.PullRequestEventType,
+			Repo:      event.Project.PathWithNamespace,
+			Ref:       fmt.Sprintf(mergeRefTemplate, objectAttributes.IID, objectAttributes.TargetBranch),
+			CommitSHA: objectAttributes.LastCommit.ID,
 		}
 	case *MergeCommentEvent:
 		if event.MergeRequest == nil {
@@ -461,10 +463,11 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			return nil
 		}
 		return &scm.EventData{
-			Type:    scm.PullRequestCommentEventType,
-			Repo:    event.Project.PathWithNamespace,
-			Ref:     fmt.Sprintf(mergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
-			Comment: event.ObjectAttributes.Note,
+			Type:      scm.PullRequestCommentEventType,
+			Repo:      event.Project.PathWithNamespace,
+			Ref:       fmt.Sprintf(mergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
+			Comment:   event.ObjectAttributes.Note,
+			CommitSHA: event.MergeRequest.LastCommit.ID,
 		}
 	case *gitlab.PushEvent:
 		return &scm.EventData{
@@ -477,4 +480,30 @@ func ParseEvent(request *http.Request) *scm.EventData {
 		log.Warningln("Skip unsupported Gitlab event")
 		return nil
 	}
+}
+
+// transStatus trans api.Status to state and description of gitlab statuses.
+func transStatus(status c_v1alpha1.StatusPhase) (string, string) {
+	// GitLab : pending, running, success, failed, canceled.
+	state := "pending"
+	description := ""
+
+	switch status {
+	case c_v1alpha1.StatusRunning:
+		state = "running"
+		description = "The Cyclone CI build is in progress."
+	case c_v1alpha1.StatusSucceeded:
+		state = "success"
+		description = "The Cyclone CI build passed."
+	case c_v1alpha1.StatusFailed:
+		state = "failed"
+		description = "The Cyclone CI build failed."
+	case c_v1alpha1.StatusCancelled:
+		state = "canceled"
+		description = "The Cyclone CI build failed."
+	default:
+		log.Errorf("not supported state:%s", status)
+	}
+
+	return state, description
 }

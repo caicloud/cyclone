@@ -17,12 +17,17 @@ limitations under the License.
 package gitlab
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	v3 "github.com/xanzy/go-gitlab"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -135,6 +140,77 @@ func (g *V3) ListDockerfiles(repo string) ([]string, error) {
 	// FYI:
 	// https://stackoverflow.com/questions/25127695/search-filenames-with-gitlab-api
 	return nil, fmt.Errorf("list gitlab v3 dockerfiles not implemented")
+}
+
+// CreateStatus generate a new status for repository.
+func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
+	state, description := transStatus(status)
+
+	owner, project := scm.ParseRepo(repoURL)
+	context := "continuous-integration/cyclone"
+	opt := &v3.SetCommitStatusOptions{
+		State:       *v3.BuildState(v3.BuildStateValue(state)),
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+	}
+	_, _, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
+	return err
+}
+
+// GetPullRequestSHA gets latest commit SHA of pull request.
+func (g *V3) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	owner, name := scm.ParseRepo(repoURL)
+	path := fmt.Sprintf("%s/api/%s/projects/%s/merge_requests?iid=%d",
+		strings.TrimSuffix(g.scmCfg.Server, "/"), v3APIVersion, url.QueryEscape(owner+"/"+name), number)
+	req, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if len(g.scmCfg.User) == 0 {
+		req.Header.Set("PRIVATE-TOKEN", g.scmCfg.Token)
+	} else {
+		req.Header.Set("Authorization", "Bearer "+g.scmCfg.Token)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Fail to get project merge request as %s", err.Error())
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Fail to get project merge request as %s", err.Error())
+		return "", err
+	}
+
+	if resp.StatusCode/100 == 2 {
+		mr := []mergeRequestResponse{}
+		err := json.Unmarshal(body, &mr)
+		if err != nil {
+			return "", err
+		}
+		if len(mr) > 0 {
+			return mr[0].SHA, nil
+		}
+		return "", fmt.Errorf("Merge request %d not found ", number)
+	}
+
+	err = fmt.Errorf("Fail to get merge request %d as %s ", number, body)
+	return "", err
+}
+
+// mergeRequestResponse represents the response of Gitlab merge request API.
+type mergeRequestResponse struct {
+	ID           int    `json:"id"`
+	IID          int    `json:"iid"`
+	TargetBranch string `json:"target_branch"`
+	SHA          string `json:"sha"`
 }
 
 // CreateWebhook creates webhook for specified repo.

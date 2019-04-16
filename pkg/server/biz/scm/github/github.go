@@ -22,12 +22,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -45,6 +47,11 @@ const (
 
 	// pullRefTemplate represents reference template for pull request.
 	pullRefTemplate = "refs/pull/%d/merge"
+)
+
+var (
+	statusURLRegexpStr = `^https://api.github.com/repos/[\S]+/[\S]+/statuses/([\w]+)$`
+	statusURLRegexp    = regexp.MustCompile(statusURLRegexpStr)
 )
 
 func init() {
@@ -316,6 +323,62 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	return crs, nil
 }
 
+// CreateStatus generate a new status for repository.
+func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSHA string) error {
+	// GitHub : error, failure, pending, or success.
+	state := "pending"
+	description := ""
+
+	switch status {
+	case c_v1alpha1.StatusRunning:
+		state = "pending"
+		description = "Cyclone CI is in progress."
+	case c_v1alpha1.StatusSucceeded:
+		state = "success"
+		description = "Cyclone CI passed."
+	case c_v1alpha1.StatusFailed:
+		state = "failure"
+		description = "Cyclone CI failed."
+	case c_v1alpha1.StatusCancelled:
+		state = "failure"
+		description = "Cyclone CI failed."
+	default:
+		err := fmt.Errorf("not supported state:%s", status)
+		log.Error(err)
+		return err
+	}
+
+	owner, repo := scm.ParseRepo(repoURL)
+	client := newClientByToken(g.scmCfg.Token)
+	email := "cyclone@caicloud.dev"
+	name := "cyclone"
+	context := "continuous-integration/cyclone"
+	creator := github.User{
+		Name:  &name,
+		Email: &email,
+	}
+	repoStatus := &github.RepoStatus{
+		State:       &state,
+		Description: &description,
+		TargetURL:   &targetURL,
+		Context:     &context,
+		Creator:     &creator,
+	}
+	_, _, err := client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
+	return err
+}
+
+// GetPullRequestSHA gets latest commit SHA of pull request.
+func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	owner, repo := scm.ParseRepo(repoURL)
+	pr, _, err := g.client.PullRequests.Get(g.ctx, owner, repo, number)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return *pr.Head.SHA, nil
+}
+
 // newClientByBasicAuth news Github client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
@@ -415,7 +478,7 @@ func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
 }
 
 // ParseEvent parses data from Github events.
-func ParseEvent(request *http.Request) *scm.EventData {
+func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventData {
 	payload, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.Errorln(err)
@@ -442,10 +505,16 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			log.Warningf("Skip unsupported action %s of Github pull request event, only support opened and synchronize action.", action)
 			return nil
 		}
+		commitSHA, err := extractCommitSHA(*event.PullRequest.StatusesURL)
+		if err != nil {
+			log.Errorf("Fail to get commit SHA: %v", err)
+			return nil
+		}
 		return &scm.EventData{
-			Type: scm.PullRequestEventType,
-			Repo: *event.Repo.FullName,
-			Ref:  fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
+			Type:      scm.PullRequestEventType,
+			Repo:      *event.Repo.FullName,
+			Ref:       fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
+			CommitSHA: commitSHA,
 		}
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
@@ -464,11 +533,19 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			return nil
 		}
 
+		issueNumber := *event.Issue.Number
+		commitSHA, err := getLastCommitSHA(scmCfg, *event.Repo.FullName, issueNumber)
+		if err != nil {
+			log.Errorf("Failed to get latest commit SHA for issue %d", issueNumber)
+			return nil
+		}
+
 		return &scm.EventData{
-			Type:    scm.PullRequestCommentEventType,
-			Repo:    *event.Repo.FullName,
-			Ref:     fmt.Sprintf(pullRefTemplate, *event.Issue.Number),
-			Comment: *event.Comment.Body,
+			Type:      scm.PullRequestCommentEventType,
+			Repo:      *event.Repo.FullName,
+			Ref:       fmt.Sprintf(pullRefTemplate, issueNumber),
+			Comment:   *event.Comment.Body,
+			CommitSHA: commitSHA,
 		}
 	case *github.PushEvent:
 		return &scm.EventData{
@@ -481,4 +558,23 @@ func ParseEvent(request *http.Request) *scm.EventData {
 		log.Warningln("Skip unsupported Github event")
 		return nil
 	}
+}
+
+// input   : `https://api.github.com/repos/aaa/bbb/statuses/ccc`
+// output  : ccc
+func extractCommitSHA(url string) (string, error) {
+	results := statusURLRegexp.FindStringSubmatch(url)
+	if len(results) < 2 {
+		return "", fmt.Errorf("statusesURL is invalid")
+	}
+	return results[1], nil
+}
+
+func getLastCommitSHA(scmCfg *v1alpha1.SCMSource, repo string, number int) (string, error) {
+	p, err := scm.GetSCMProvider(scmCfg)
+	if err != nil {
+		return "", err
+	}
+
+	return p.GetPullRequestSHA(repo, number)
 }

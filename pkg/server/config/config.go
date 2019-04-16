@@ -52,6 +52,12 @@ type CycloneServerConfig struct {
 
 	// Images that used in cyclone, such as GC image.
 	Images map[string]string `json:"images"`
+
+	// Notifications represents the config to send notifications after workflowruns finish.
+	Notifications []NotificationEndpoint `json:"notifications"`
+
+	// RecordWebURLTemplate represents the URL template to generate web URLs for workflowruns.
+	RecordWebURLTemplate string `json:"record_web_url_template"`
 }
 
 // PVCConfig contains the PVC information
@@ -81,6 +87,17 @@ type StorageUsageWatcher struct {
 	ResourceRequirements map[core_v1.ResourceName]string `json:"resource_requirements"`
 }
 
+// NotificationEndpoint represents the config of notification endpoint.
+// Server will send notifications about finished workflowruns
+// if notification endpoints are configured.
+type NotificationEndpoint struct {
+	// Name represents the name of notification endpoint.
+	Name string `json:"name"`
+
+	// URL represents the URL to send the notification.
+	URL string `json:"url"`
+}
+
 // Config is Workflow Controller config instance
 var Config CycloneServerConfig
 
@@ -96,10 +113,39 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 		return err
 	}
 
+	if !validate(&Config) {
+		return fmt.Errorf("validate config failed")
+	}
+
 	modifier(&Config)
 
 	log.Infof("cyclone server config: %v", Config)
 	return nil
+}
+
+// validate validates some required configurations.
+func validate(config *CycloneServerConfig) bool {
+	if !validateNotification(config.Notifications) {
+		return false
+	}
+
+	return true
+}
+
+// validateNotification validates notification configurations.
+// The names of notification endpoints must be unique.
+func validateNotification(nes []NotificationEndpoint) bool {
+	names := map[string]struct{}{}
+	for _, ne := range nes {
+		if _, ok := names[ne.Name]; ok {
+			log.Errorf("There are multiple notification endpoints with same name: %s", ne.Name)
+			return false
+		}
+
+		names[ne.Name] = struct{}{}
+	}
+
+	return true
 }
 
 // modifier modifies the config, give the config some default value if they are not set.

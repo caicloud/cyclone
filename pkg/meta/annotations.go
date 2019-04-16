@@ -19,6 +19,9 @@ const (
 	// AnnotationWorkflowRunTrigger is the annotation key used to indicate the trigger of workflowruns.
 	AnnotationWorkflowRunTrigger = "workflowrun.cyclone.dev/trigger"
 
+	// AnnotationWorkflowRunSCMEvent is the annotation key used to indicate the SCM event data to trigger workflowruns.
+	AnnotationWorkflowRunSCMEvent = "workflowrun.cyclone.dev/scm-event"
+
 	// AnnotationTenantInfo is the annotation key used for namespace to relate tenant information
 	AnnotationTenantInfo = "tenant.cyclone.dev/info"
 

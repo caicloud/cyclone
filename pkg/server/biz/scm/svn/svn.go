@@ -19,6 +19,7 @@ package svn
 import (
 	"github.com/caicloud/nirvana/log"
 
+	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -66,6 +67,16 @@ func (s *SVN) ListTags(repo string) ([]string, error) {
 // ListDockerfiles ...
 func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
 	return nil, cerr.ErrorNotImplemented.Error("list svn dockerfiles")
+}
+
+// CreateStatus ...
+func (s *SVN) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
+	return cerr.ErrorNotImplemented.Error("create status")
+}
+
+// GetPullRequestSHA ...
+func (s *SVN) GetPullRequestSHA(repoURL string, number int) (string, error) {
+	return "", cerr.ErrorNotImplemented.Error("get pull request SHA")
 }
 
 // CheckToken ...

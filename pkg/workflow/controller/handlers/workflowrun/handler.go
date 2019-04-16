@@ -3,10 +3,7 @@ package workflowrun
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,23 +11,12 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
+	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
-
-const (
-	contentType string = "Content-Type"
-	contentJSON string = "application/json"
-)
-
-// controllerStartTime represents the start time of workflow controller,
-// use to avoid sending notifications for workflowruns finished before workflow controller starts.
-var controllerStartTime *metav1.Time
-
-func init() {
-	controllerStartTime = &metav1.Time{Time: time.Now()}
-}
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
@@ -111,37 +97,7 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	// otherwise directly skip it.
 	if workflowrun.IsWorkflowRunTerminated(originWfr) {
 		// Send notification after workflowrun terminated.
-		status, err := h.sendNotifications(originWfr)
-		if err != nil {
-			log.WithField("name", originWfr.Name).Error("Send notification error: ", err)
-			return
-		}
-		// If notification status is nil, then no notification is sent.
-		if status == nil {
-			return
-		}
-
-		// Update WorkflowRun notification status with retry.
-		err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			// Get latest WorkflowRun.
-			latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(originWfr.Namespace).Get(originWfr.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
-			if latest.Status.Notifications == nil {
-				latest.Status.Notifications = status
-				_, err = h.Client.CycloneV1alpha1().WorkflowRuns(originWfr.Namespace).Update(latest)
-				return err
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			log.WithField("name", originWfr.Name).Error("Update workflowrun notification status error: ", err)
-		}
-
+		h.sendNotification(originWfr)
 		return
 	}
 
@@ -184,81 +140,63 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 	return
 }
 
-// sendNotifications send notifications for workflowruns when:
-// * its workflow has notification config
-// * finish time after workflow controller starts
-// * notification status of workflowrun is nil
-// If the returned notification status is nil, it means that there is no need to send notification.
-func (h *Handler) sendNotifications(wfr *v1alpha1.WorkflowRun) (map[string]v1alpha1.NotificationStatus, error) {
-	if wfr.Status.Notifications != nil ||
-		wfr.Status.Overall.LastTransitionTime.Before(controllerStartTime) {
-		return nil, nil
+// sendNotification sends notifications for workflowruns when:
+// * notification endpoint is configured
+// * without notification sent label
+func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
+	if meta.LabelExists(wfr.Labels, meta.LabelWorkflowRunNotificationSent) {
+		return nil
 	}
 
-	wfRef := wfr.Spec.WorkflowRef
-	if wfRef == nil {
-		return nil, fmt.Errorf("Workflow reference of workflow run %s/%s is empty", wfr.Namespace, wfr.Name)
-	}
-	wf, err := h.Client.CycloneV1alpha1().Workflows(wfRef.Namespace).Get(wfRef.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(wf.Spec.Notification.Receivers) == 0 {
-		return nil, nil
-	}
-
-	// Send notifications with workflowrun.
-	bodyBytes, err := json.Marshal(wfr)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Error("Failed to marshal workflowrun: ", err)
-		return nil, err
-	}
-	body := bytes.NewReader(bodyBytes)
-
-	status := make(map[string]v1alpha1.NotificationStatus)
-	for _, endpoint := range controller.Config.Notifications {
-		req, err := http.NewRequest(http.MethodPost, endpoint.URL, body)
-		if err != nil {
-			err = fmt.Errorf("failed to new notification request: %v", err)
-			log.WithField("wfr", wfr.Name).Error(err)
-			status[endpoint.Name] = v1alpha1.NotificationStatus{
-				Result:  v1alpha1.NotificationResultFailed,
-				Message: err.Error(),
+	sent := false
+	defer func() {
+		// Update WorkflowRun notification status with retry.
+		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			// Get latest WorkflowRun.
+			latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
 			}
-			continue
+
+			latest.Labels = meta.AddNotificationSentLabel(latest.Labels, sent)
+			_, err = h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
+			return err
+		})
+
+		if err != nil {
+			log.WithField("name", wfr.Name).Error("Update workflowrun notification sent label error: ", err)
+		}
+	}()
+
+	url := controller.Config.NotificationURL
+	if url != "" {
+		// Send notifications with workflowrun.
+		bodyBytes, err := json.Marshal(wfr)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Errorf("Failed to marshal workflowrun: %v", err)
+			return err
+		}
+		body := bytes.NewReader(bodyBytes)
+
+		req, err := http.NewRequest(http.MethodPost, url, body)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Errorf("Failed to new notification request: %v", err)
+			return err
 		}
 		// Set Json content type in Http header.
-		req.Header.Set(contentType, contentJSON)
+		req.Header.Set(utilhttp.HeaderContentType, utilhttp.HeaderContentTypeJSON)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			s := v1alpha1.NotificationStatus{
-				Result: v1alpha1.NotificationResultFailed,
-			}
-
-			log.WithField("wfr", wfr.Name).Errorf("Failed to send notification for %s: %v", endpoint.Name, err)
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Error(err)
-				s.Message = err.Error()
-			} else {
-				s.Message = fmt.Sprintf("Status code: %d, error: %s", resp.StatusCode, body)
-			}
-
-			status[endpoint.Name] = s
-			continue
+			log.WithField("wfr", wfr.Name).Errorf("Failed to send notification: %v", err)
+			return err
 		}
 
-		log.WithField("wfr", wfr.Name).Infof("Status code of notification for %s: %d", endpoint.Name, resp.StatusCode)
-		status[endpoint.Name] = v1alpha1.NotificationStatus{
-			Result:  v1alpha1.NotificationResultSucceeded,
-			Message: fmt.Sprintf("Status code: %d", resp.StatusCode),
-		}
+		log.WithField("wfr", wfr.Name).Infof("Status code of notification: %d", resp.StatusCode)
+		sent = true
 	}
 
-	return status, nil
+	return nil
 }
 
 // validate workflow run

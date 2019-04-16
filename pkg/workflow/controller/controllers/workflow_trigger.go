@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -35,6 +36,9 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
+			if reflect.DeepEqual(old, new) {
+				return
+			}
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				return
