@@ -60,6 +60,7 @@ _config:
             "cyclone_server_host": "0.0.0.0",
             "cyclone_server_port": 7099,
             "webhook_url": "[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2",
+            "record_web_url_template": "[[ compassWebEndpoint ]]/devops/pipeline/{{.WorkflowName}}/record/{{.WorkflowRunName}}?workspace={{.ProjectName}}&tenant={{.Tenant}}",
             "default_pvc_config": {
               "storage_class": "heketi-storageclass",
               "size": "10Gi"
@@ -86,5 +87,11 @@ _config:
             },
             "images": {
               "gc": "[[ registry_library ]]/alpine:3.7"
-            }
+            },
+            "notifications": [
+              {
+                "name": "devops",
+                "url": "http://devops-admin.default.svc.cluster.local:7088/api/v2/pipeline/notifications"
+              }
+            ]
           }
