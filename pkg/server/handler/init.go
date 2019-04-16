@@ -52,7 +52,7 @@ type JSONPatch struct {
 // BuildWfrStatusPatch builds patch for updating status of workflowrun
 func BuildWfrStatusPatch(statusPhase v1alpha1.StatusPhase) ([]byte, error) {
 	p := map[string]string{
-		"/status/overall/status": string(statusPhase),
+		"/status/overall/phase": string(statusPhase),
 	}
 	return BuildPatch(p)
 }
