@@ -1,6 +1,6 @@
 # Cyclone Design
 
-Cyclone is a powerful workflow engine with end-to-end pipeline solutions (such as CI/CD and AI Devops) implemented with native Kubernetes resources. 
+Cyclone is a powerful workflow engine with end-to-end pipeline solutions (such as CI/CD and AI DevOps) implemented with native Kubernetes resources. 
 Cyclone is architectured with a low-level workflow engine that is application agnostic, offering capabilities like
 workflow Directed Acyclic Graph (DAG) scheduling, resource lifecycle management, etc.
 
@@ -27,7 +27,7 @@ workflow Directed Acyclic Graph (DAG) scheduling, resource lifecycle management,
 There are 3 main functional modules in Cyclone:
 
 * Integration Center: integrates external systems like SCM, docker registry, S3, etc.
-* Project: manages a group of workflows and their shared configs. 
+* Project: manages a group of workflows and their shared configs.
 * Stage Templates: Manages built-in stage templates and customized templates.
 
 ## Implementation
