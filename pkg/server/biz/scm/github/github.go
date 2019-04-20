@@ -406,29 +406,60 @@ func newClientByToken(token string) *github.Client {
 	return github.NewClient(httpClient)
 }
 
+// GetWebhook gets webhook from specified repo.
+func (g *Github) GetWebhook(repo string, webhookURL string) (*github.Hook, error) {
+	owner, name := scm.ParseRepo(repo)
+	hooks, resp, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	if err != nil {
+		if resp.StatusCode == 500 {
+			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
+		return nil, err
+	}
+
+	for _, hook := range hooks {
+		if hookurl, ok := hook.Config["url"].(string); ok {
+			if hookurl == webhookURL {
+				return hook, nil
+			}
+		}
+	}
+
+	return nil, cerr.ErrorContentNotFound.Error(fmt.Sprintf("webhook url %s", webhookURL))
+}
+
 // CreateWebhook creates webhook for specified repo.
 func (g *Github) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
 		return fmt.Errorf("the webhook %v is not correct", webhook)
 	}
 
-	// Hook name must be passed as "web".
-	// Ref: https://developer.github.com/v3/repos/hooks/#create-a-hook
-	hook := github.Hook{
-		Events: convertToGithubEvents(webhook.Events),
-		Config: map[string]interface{}{
-			"url":          webhook.URL,
-			"content_type": "json",
-		},
-	}
-	owner, name := scm.ParseRepo(repo)
-	_, resp, err := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+	_, err := g.GetWebhook(repo, webhook.URL)
 	if err != nil {
-		if resp.StatusCode == 500 {
-			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		if yes := cerr.ErrorContentNotFound.Derived(err); yes {
+			// Hook name must be passed as "web".
+			// Ref: https://developer.github.com/v3/repos/hooks/#create-a-hook
+			hook := github.Hook{
+				Events: convertToGithubEvents(webhook.Events),
+				Config: map[string]interface{}{
+					"url":          webhook.URL,
+					"content_type": "json",
+				},
+			}
+			owner, name := scm.ParseRepo(repo)
+			_, resp, hErr := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+			if hErr != nil {
+				if resp.StatusCode == 500 {
+					return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
+				}
+				return hErr
+			}
+			return nil
 		}
 		return err
 	}
+
+	log.Warningf("Webhook already existed: %+v", webhook)
 	return nil
 }
 
@@ -455,23 +486,15 @@ func convertToGithubEvents(events []scm.EventType) []string {
 
 // DeleteWebhook deletes webhook from specified repo.
 func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
-	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	hook, err := g.GetWebhook(repo, webhookURL)
 	if err != nil {
-		if resp.StatusCode == 500 {
-			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
 		return err
 	}
 
-	for _, hook := range hooks {
-		if hookurl, ok := hook.Config["url"].(string); ok {
-			if strings.HasPrefix(hookurl, webhookURL) {
-				_, err = g.client.Repositories.DeleteHook(g.ctx, owner, name, *hook.ID)
-				log.Errorf("delete hook %s for %s/%s error: %v", hook.ID, owner, name, err)
-				return err
-			}
-		}
+	owner, name := scm.ParseRepo(repo)
+	if _, err = g.client.Repositories.DeleteHook(g.ctx, owner, name, *hook.ID); err != nil {
+		log.Errorf("delete hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+		return err
 	}
 
 	return nil

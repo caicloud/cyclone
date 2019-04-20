@@ -213,15 +213,73 @@ type mergeRequestResponse struct {
 	SHA          string `json:"sha"`
 }
 
+// GetWebhook gets webhook from specified repo.
+func (g *V3) GetWebhook(repo string, webhookURL string) (*v3.ProjectHook, error) {
+	owner, name := scm.ParseRepo(repo)
+	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	if err != nil {
+		if resp.StatusCode == 500 {
+			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
+		return nil, err
+	}
+
+	for _, hook := range hooks {
+		if hook.URL == webhookURL {
+			return hook, nil
+		}
+	}
+
+	return nil, cerr.ErrorContentNotFound.Error(fmt.Sprintf("webhook url %s", webhookURL))
+}
+
 // CreateWebhook creates webhook for specified repo.
 func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webhook)
 	}
 
+	_, err := g.GetWebhook(repo, webhook.URL)
+	if err != nil {
+		if yes := cerr.ErrorContentNotFound.Derived(err); yes {
+			onwer, name := scm.ParseRepo(repo)
+			hook := generateV3ProjectHook(webhook)
+			_, resp, hErr := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+			if hErr != nil {
+				if resp.StatusCode == 500 {
+					return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
+				}
+				return hErr
+			}
+			return nil
+		}
+		return err
+	}
+
+	log.Warningf("Webhook already existed: %+v", webhook)
+	return err
+}
+
+// DeleteWebhook deletes webhook from specified repo.
+func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
+	hook, err := g.GetWebhook(repo, webhookURL)
+	if err != nil {
+		return err
+	}
+
+	owner, name := scm.ParseRepo(repo)
+	if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+		return err
+	}
+
+	return nil
+}
+
+func generateV3ProjectHook(webhook *scm.Webhook) *v3.AddProjectHookOptions {
 	enableState, disableState := true, false
 	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
-	hook := v3.AddProjectHookOptions{
+	hook := &v3.AddProjectHookOptions{
 		PushEvents: &disableState,
 	}
 
@@ -242,33 +300,5 @@ func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	}
 	hook.URL = &webhook.URL
 
-	onwer, name := scm.ParseRepo(repo)
-	_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
-	if resp.StatusCode == 500 {
-		return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-	}
-	return err
-}
-
-// DeleteWebhook deletes webhook from specified repo.
-func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
-	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
-	if err != nil {
-		if resp.StatusCode == 500 {
-			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return err
-	}
-
-	for _, hook := range hooks {
-		if strings.HasPrefix(hook.URL, webhookURL) {
-			if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
-				log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
-				return err
-			}
-		}
-	}
-
-	return nil
+	return hook
 }

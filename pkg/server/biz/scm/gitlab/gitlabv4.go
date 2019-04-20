@@ -18,10 +18,9 @@ package gitlab
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/caicloud/nirvana/log"
-	"gopkg.in/xanzy/go-gitlab.v0"
+	v4 "gopkg.in/xanzy/go-gitlab.v0"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
@@ -32,7 +31,7 @@ import (
 // V4 represents the SCM provider of API V4 GitLab.
 type V4 struct {
 	scmCfg *v1alpha1.SCMSource
-	client *gitlab.Client
+	client *v4.Client
 }
 
 func newGitlabV4(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
@@ -68,15 +67,15 @@ func (g *V4) ListRepos() ([]scm.Repository, error) {
 // otherwise, list projects by default 'provider.ListPerPageOpt' number.
 func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 	trueVar := true
-	opt := &gitlab.ListProjectsOptions{
-		ListOptions: gitlab.ListOptions{
+	opt := &v4.ListProjectsOptions{
+		ListOptions: v4.ListOptions{
 			PerPage: scm.ListPerPageOpt,
 		},
 		Membership: &trueVar,
 	}
 
 	// Get all pages of results.
-	var allProjects []*gitlab.Project
+	var allProjects []*v4.Project
 	for {
 		projects, resp, err := g.client.Projects.ListProjects(opt)
 		if err != nil {
@@ -104,7 +103,7 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 
 // ListBranches lists the branches for specified repo.
 func (g *V4) ListBranches(repo string) ([]string, error) {
-	opts := &gitlab.ListBranchesOptions{}
+	opts := &v4.ListBranchesOptions{}
 	branches, resp, err := g.client.Branches.ListBranches(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
@@ -124,7 +123,7 @@ func (g *V4) ListBranches(repo string) ([]string, error) {
 
 // ListTags lists the tags for specified repo.
 func (g *V4) ListTags(repo string) ([]string, error) {
-	opts := &gitlab.ListTagsOptions{}
+	opts := &v4.ListTagsOptions{}
 	tags, resp, err := g.client.Tags.ListTags(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
@@ -145,14 +144,14 @@ func (g *V4) ListTags(repo string) ([]string, error) {
 // ListDockerfiles lists the Dockerfiles for specified repo.
 func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 	recursive := true
-	opt := &gitlab.ListTreeOptions{
+	opt := &v4.ListTreeOptions{
 		Recursive: &recursive,
-		ListOptions: gitlab.ListOptions{
+		ListOptions: v4.ListOptions{
 			PerPage: 100,
 		},
 	}
 
-	treeNodes := []*gitlab.TreeNode{}
+	treeNodes := []*v4.TreeNode{}
 	for {
 		treeNode, resp, err := g.client.Repositories.ListTree(repo, opt)
 		if err != nil {
@@ -188,8 +187,8 @@ func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, com
 
 	owner, project := scm.ParseRepo(repoURL)
 	context := "continuous-integration/cyclone"
-	opt := &gitlab.SetCommitStatusOptions{
-		State:       gitlab.BuildStateValue(gitlab.BuildStateValue(state)),
+	opt := &v4.SetCommitStatusOptions{
+		State:       v4.BuildStateValue(state),
 		Description: &description,
 		TargetURL:   &targetURL,
 		Context:     &context,
@@ -209,15 +208,73 @@ func (g *V4) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	return mr.SHA, nil
 }
 
+// GetWebhook gets webhook from specified repo.
+func (g *V4) GetWebhook(repo string, webhookURL string) (*v4.ProjectHook, error) {
+	owner, name := scm.ParseRepo(repo)
+	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	if err != nil {
+		if resp.StatusCode == 500 {
+			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
+		}
+		return nil, err
+	}
+
+	for _, hook := range hooks {
+		if hook.URL == webhookURL {
+			return hook, nil
+		}
+	}
+
+	return nil, cerr.ErrorContentNotFound.Error(fmt.Sprintf("webhook url %s", webhookURL))
+}
+
 // CreateWebhook creates webhook for specified repo.
 func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webhook)
 	}
 
+	_, err := g.GetWebhook(repo, webhook.URL)
+	if err != nil {
+		if yes := cerr.ErrorContentNotFound.Derived(err); yes {
+			onwer, name := scm.ParseRepo(repo)
+			hook := generateV4ProjectHook(webhook)
+			_, resp, hErr := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+			if hErr != nil {
+				if resp.StatusCode == 500 {
+					return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
+				}
+				return hErr
+			}
+			return nil
+		}
+		return err
+	}
+
+	log.Warningf("Webhook already existed: %+v", webhook)
+	return err
+}
+
+// DeleteWebhook deletes webhook from specified repo.
+func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
+	hook, err := g.GetWebhook(repo, webhookURL)
+	if err != nil {
+		return err
+	}
+
+	owner, name := scm.ParseRepo(repo)
+	if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+		return err
+	}
+
+	return nil
+}
+
+func generateV4ProjectHook(webhook *scm.Webhook) *v4.AddProjectHookOptions {
 	enableState, disableState := true, false
 	// Push event is enable for Gitlab webhook in default, so need to remove this default option.
-	hook := gitlab.AddProjectHookOptions{
+	hook := &v4.AddProjectHookOptions{
 		PushEvents: &disableState,
 	}
 
@@ -238,36 +295,5 @@ func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 	}
 	hook.URL = &webhook.URL
 
-	onwer, name := scm.ParseRepo(repo)
-	_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, &hook)
-	if err != nil {
-		if resp.StatusCode == 500 {
-			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return err
-	}
-	return nil
-}
-
-// DeleteWebhook deletes webhook from specified repo.
-func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
-	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
-	if err != nil {
-		if resp.StatusCode == 500 {
-			return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return err
-	}
-
-	for _, hook := range hooks {
-		if strings.HasPrefix(hook.URL, webhookURL) {
-			if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
-				log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
-				return err
-			}
-		}
-	}
-
-	return nil
+	return hook
 }
