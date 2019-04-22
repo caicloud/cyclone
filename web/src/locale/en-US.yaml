@@ -118,6 +118,27 @@ allocation:
   middle: Medium configuration
   high: Advanced configuration
 template:
+  form:
+    name: 名称
+    desc: 描述
+    inputs:
+      name: 输入
+    config:
+      name: 配置
+      registory: 镜像
+      entryPoint: Entry point
+      CMD: CMD
+      env:
+        name: 环境变量
+        key: 健
+        value: 值
+    outputs:
+      name: 输出
+    newResourceType: 
+      name: 新建资源类型
+      placeholder: 新增资源
+      SCM: SCM
+      images: 镜像
   kinds:
     all: All
     build: Build
