@@ -16,7 +16,7 @@ workflow DAG scheduling, resource lifecycle management and most importantly, a p
 extending the core APIs. Above which, Cyclone provides built-in support for high-level functionalities, with CI/CD
 pipelines and AI DevOps being two notable examples, and it is possible to expand to more use cases as well.
 
-With Cyclone, users end up with the flexibility of workflow orchestration and the usability of complete CI/CD and AI Devops solutions.
+With Cyclone, users end up with the flexibility of workflow orchestration and the usability of complete CI/CD and AI DevOps solutions.
 
 ## Features
 
@@ -28,7 +28,7 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 - Multi-cluster: workflow can be executed in different clusters from where Cyclone is running
 - Multi-tenancy: resource manifests and workflow executions are grouped and isolated per tenant
 - Garbage Collection: automatic resource cleanup after workflow execution
-- Logging: logs are persisted and indpendent from workflow lifecycle, enabling offline inspection
+- Logging: logs are persisted and independent from workflow lifecycle, enabling offline inspection
 - Built-in Pipeline: curated DAG templates and stage runtimes for running DevOps pipelines for both regular software and AI development
 
 ## Quick Start
