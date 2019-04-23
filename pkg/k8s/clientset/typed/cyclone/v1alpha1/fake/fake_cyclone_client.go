@@ -16,6 +16,10 @@ type FakeCycloneV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeCycloneV1alpha1) ExecutionClusters() v1alpha1.ExecutionClusterInterface {
+	return &FakeExecutionClusters{c}
+}
+
 func (c *FakeCycloneV1alpha1) Projects(namespace string) v1alpha1.ProjectInterface {
 	return &FakeProjects{c, namespace}
 }

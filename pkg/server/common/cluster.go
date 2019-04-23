@@ -11,19 +11,20 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 )
 
 // NewClusterClient creates a client for k8s cluster
-func NewClusterClient(c *api.ClusterCredential, inCluster bool) (*kubernetes.Clientset, error) {
+func NewClusterClient(c *v1alpha1.ClusterCredential, inCluster bool) (*kubernetes.Clientset, error) {
 	if inCluster {
-		return newInclusterK8sClient()
+		return newInclusterK8sClient()w
 	}
 	return newK8sClient(c)
 }
 
-func newK8sClient(c *api.ClusterCredential) (*kubernetes.Clientset, error) {
+func newK8sClient(c *v1alpha1.ClusterCredential) (*kubernetes.Clientset, error) {
 	var config *rest.Config
 	var err error
 
@@ -36,7 +37,7 @@ func newK8sClient(c *api.ClusterCredential) (*kubernetes.Clientset, error) {
 		}
 	} else {
 		if c.TLSClientConfig == nil {
-			c.TLSClientConfig = &api.TLSClientConfig{Insecure: true}
+			c.TLSClientConfig = &v1alpha1.TLSClientConfig{Insecure: true}
 		}
 
 		config = &rest.Config{

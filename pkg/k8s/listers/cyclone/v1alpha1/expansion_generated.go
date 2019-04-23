@@ -6,6 +6,10 @@ Copyright 2019 caicloud authors. All rights reserved.
 
 package v1alpha1
 
+// ExecutionClusterListerExpansion allows custom methods to be added to
+// ExecutionClusterLister.
+type ExecutionClusterListerExpansion interface{}
+
 // ProjectListerExpansion allows custom methods to be added to
 // ProjectLister.
 type ProjectListerExpansion interface{}

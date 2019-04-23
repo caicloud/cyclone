@@ -15,6 +15,7 @@ import (
 
 type CycloneV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ExecutionClustersGetter
 	ProjectsGetter
 	ResourcesGetter
 	StagesGetter
@@ -26,6 +27,10 @@ type CycloneV1alpha1Interface interface {
 // CycloneV1alpha1Client is used to interact with features provided by the cyclone.dev group.
 type CycloneV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *CycloneV1alpha1Client) ExecutionClusters() ExecutionClusterInterface {
+	return newExecutionClusters(c)
 }
 
 func (c *CycloneV1alpha1Client) Projects(namespace string) ProjectInterface {
