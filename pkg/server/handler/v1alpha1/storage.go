@@ -13,9 +13,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
@@ -30,13 +31,13 @@ const (
 
 // GetStorageUsage gets storage usage of the tenant
 func GetStorageUsage(ctx context.Context, tenant string) (*v1alpha1.StorageUsage, error) {
-	ns, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant), metav1.GetOptions{})
+	ns, err := handler.K8sClient.CoreV1().Namespaces().Get(svrcommon.TenantNamespace(tenant), metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("get namespace for tenant '%s' error: %v", tenant, err)
 	}
 
 	if ns.Annotations == nil || len(ns.Annotations[meta.AnnotationTenantStorageUsage]) == 0 {
-		return nil, fmt.Errorf("no annotation %s found in namespace %s", meta.AnnotationTenantStorageUsage, common.TenantNamespace(tenant))
+		return nil, fmt.Errorf("no annotation %s found in namespace %s", meta.AnnotationTenantStorageUsage, svrcommon.TenantNamespace(tenant))
 	}
 
 	data := ns.Annotations[meta.AnnotationTenantStorageUsage]

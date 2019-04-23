@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -18,21 +19,23 @@ import (
 // With pod, Cyclone would create a pod to run the stage. With delegation, Cyclone would send
 // a POST request to the given URL in the workload spec.
 type WorkloadProcessor struct {
-	client  clientset.Interface
-	wf      *v1alpha1.Workflow
-	wfr     *v1alpha1.WorkflowRun
-	stg     *v1alpha1.Stage
-	wfrOper Operator
+	clusterClient kubernetes.Interface
+	client        clientset.Interface
+	wf            *v1alpha1.Workflow
+	wfr           *v1alpha1.WorkflowRun
+	stg           *v1alpha1.Stage
+	wfrOper       Operator
 }
 
 // NewWorkloadProcessor ...
-func NewWorkloadProcessor(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage *v1alpha1.Stage, wfrOperator Operator) *WorkloadProcessor {
+func NewWorkloadProcessor(clusterClient kubernetes.Interface, client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage *v1alpha1.Stage, wfrOperator Operator) *WorkloadProcessor {
 	return &WorkloadProcessor{
-		client:  client,
-		wf:      wf,
-		wfr:     wfr,
-		stg:     stage,
-		wfrOper: wfrOperator,
+		client:        client,
+		clusterClient: clusterClient,
+		wf:            wf,
+		wfr:           wfr,
+		stg:           stage,
+		wfrOper:       wfrOperator,
 	}
 }
 
@@ -73,7 +76,7 @@ func (p *WorkloadProcessor) processPod() error {
 	log.WithField("stg", p.stg.Name).Debug("Pod manifest created")
 
 	// Create the generated pod.
-	po, err = p.client.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
+	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
 	if err != nil {
 		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)

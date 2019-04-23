@@ -54,3 +54,12 @@ type TLSClientConfig struct {
 	// CAData takes precedence over CAFile
 	CAData []byte `json:"caData,omitempty" bson:"caData"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ExecutionClusterList describes an array of ExecutionCluster instances.
+type ExecutionClusterList struct {
+	meta_v1.TypeMeta `json:",inline"`
+	meta_v1.ListMeta `json:"metadata"`
+	Items            []ExecutionCluster `json:"items"`
+}

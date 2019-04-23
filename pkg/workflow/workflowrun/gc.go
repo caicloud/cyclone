@@ -4,6 +4,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -89,13 +90,28 @@ func (p *GCProcessor) process() {
 
 	for _, i := range expired {
 		i.retry--
+		if i.retry < 0 {
+			log.WithField("wfr", i.name).Warn("No more retry, skip")
+			delete(p.items, i.String())
+			continue
+		}
+
 		log.WithField("wfr", i.name).Info("Start GC")
-		operator, err := NewOperator(p.client, i.name, i.namespace)
+		wfr, err := p.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
+		if err != nil {
+			log.WithField("wfr", i.name).Error("Get wfr error: ", err)
+			continue
+		}
+
+		clusterClient := common.GetExecutionClusterClient(wfr)
+		if clusterClient == nil {
+			log.WithField("wfr", i.name).Error("No execution cluster client found")
+			continue
+		}
+
+		operator, err := NewOperator(clusterClient, p.client, wfr, i.namespace)
 		if err != nil {
 			log.WithField("wfr", i.name).Warn("Create operator for gc error: ", err)
-			if i.retry <= 0 {
-				delete(p.items, i.String())
-			}
 			continue
 		}
 		if err = operator.GC(i.retry <= 0, false); err != nil {

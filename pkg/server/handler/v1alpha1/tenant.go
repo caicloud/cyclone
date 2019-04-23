@@ -13,9 +13,10 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -80,7 +81,7 @@ func GetTenant(ctx context.Context, name string) (*api.Tenant, error) {
 }
 
 func getTenant(name string) (*api.Tenant, error) {
-	namespace, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
+	namespace, err := handler.K8sClient.CoreV1().Namespaces().Get(svrcommon.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		log.Errorf("Get namespace for tenant %s error %v", name, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -96,7 +97,7 @@ func NamespaceToTenant(namespace *core_v1.Namespace) (*api.Tenant, error) {
 	}
 
 	// retrieve tenant name
-	tenant.Name = common.NamespaceTenant(namespace.Name)
+	tenant.Name = svrcommon.NamespaceTenant(namespace.Name)
 	annotationTenant := namespace.Annotations[meta.AnnotationTenantInfo]
 	err := json.Unmarshal([]byte(annotationTenant), &tenant.Spec)
 	if err != nil {
@@ -139,7 +140,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
-			err = common.UpdateResourceQuota(newTenant, cluster.Namespace, client)
+			err = svrcommon.UpdateResourceQuota(newTenant, cluster.Namespace, client)
 			if err != nil {
 				log.Errorf("Update resource quota for tenant %s error %v", name, err)
 				return nil, err
@@ -170,7 +171,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 			}
 
 			newPVC := newTenant.Spec.PersistentVolumeClaim
-			err = common.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
+			err = svrcommon.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
 			if err != nil {
 				log.Errorf("Update resource quota for tenant %s error %v", name, err)
 				return nil, err
@@ -203,7 +204,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 			continue
 		}
 
-		err := CloseClusterForTenant(cluster, name)
+		err := CloseClusterForTenant(&integration, name)
 		if err != nil {
 			log.Warningf("close cluster %s for tenant %s error %v", integration.Name, name, err)
 			continue
@@ -215,7 +216,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 		return err
 	}
 
-	err = handler.K8sClient.CoreV1().Namespaces().Delete(common.TenantNamespace(name), &meta_v1.DeleteOptions{})
+	err = handler.K8sClient.CoreV1().Namespaces().Delete(svrcommon.TenantNamespace(name), &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)
 		return cerr.ConvertK8sError(err)
@@ -228,7 +229,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 // - Create namespace
 // - Create PVC
 func CreateDefaultTenant() error {
-	ns := common.TenantNamespace(common.DefaultTenant)
+	ns := svrcommon.TenantNamespace(svrcommon.DefaultTenant)
 	_, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
 	if err == nil {
 		log.Infof("Default namespace %s already exist", ns)
@@ -237,11 +238,11 @@ func CreateDefaultTenant() error {
 
 	annotations := make(map[string]string)
 	annotations[meta.AnnotationDescription] = "This is the cyclone default tenant."
-	annotations[meta.AnnotationAlias] = common.DefaultTenant
+	annotations[meta.AnnotationAlias] = svrcommon.DefaultTenant
 
 	tenant := &api.Tenant{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name:        common.DefaultTenant,
+			Name:        svrcommon.DefaultTenant,
 			Annotations: annotations,
 		},
 		Spec: api.TenantSpec{
@@ -275,7 +276,7 @@ func createControlClusterIntegration(tenant string) error {
 					IsControlCluster: true,
 					// Cluster by default is not enabled to run workflow, need users to enable it explicitly.
 					IsWorkerCluster: false,
-					Namespace:       common.TenantNamespace(tenant),
+					Namespace:       svrcommon.TenantNamespace(tenant),
 				},
 			},
 		},
@@ -309,7 +310,7 @@ func createTenantNamespace(tenant *api.Tenant) error {
 	objectMeta := tenant.ObjectMeta
 
 	// build namespace name
-	objectMeta.Name = common.TenantNamespace(tenant.Name)
+	objectMeta.Name = svrcommon.TenantNamespace(tenant.Name)
 
 	// marshal tenant and set it into namespace annotation
 	t, err := json.Marshal(tenant.Spec)
@@ -352,7 +353,7 @@ func updateTenantNamespace(tenant *api.Tenant) error {
 
 	// update namespace annotation with retry
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Name), meta_v1.GetOptions{})
+		origin, err := handler.K8sClient.CoreV1().Namespaces().Get(svrcommon.TenantNamespace(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace for tenant %s error %v", tenant.Name, err)
 			return cerr.ConvertK8sError(err)

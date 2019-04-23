@@ -38,9 +38,6 @@ const (
 	// Only for SCM integration secrets.
 	SecretKeyRepos = "repos"
 
-	// ControlClusterName is the name of control cluster
-	ControlClusterName = "control-cluster"
-
 	// CachePrefixPath is the prefix path of acceleration caches
 	CachePrefixPath = "caches"
 

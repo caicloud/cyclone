@@ -124,6 +124,12 @@ func (m *TimeoutProcessor) process() {
 		}
 		m.recorder.Event(wfr, corev1.EventTypeWarning, "Timeout", "WorkflowRun execution timeout")
 
+		clusterClient := common.GetExecutionClusterClient(wfr)
+		if clusterClient == nil {
+			log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+			continue
+		}
+
 		if wfr.Status.Overall.Phase != v1alpha1.StatusFailed && wfr.Status.Overall.Phase != v1alpha1.StatusSucceeded {
 			wfr.Status.Overall = v1alpha1.Status{
 				Phase:              v1alpha1.StatusFailed,
@@ -132,8 +138,9 @@ func (m *TimeoutProcessor) process() {
 			}
 
 			operator := operator{
-				client: m.client,
-				wfr:    wfr,
+				clusterClient: clusterClient,
+				client:        m.client,
+				wfr:           wfr,
 			}
 			if err = operator.Update(); err != nil {
 				log.WithField("wfr", wfr.Name).Error("Update WorkflowRun status error: ", err)
@@ -152,7 +159,7 @@ func (m *TimeoutProcessor) process() {
 					WithField("pod", status.Pod.Name).
 					WithField("stg", stage).
 					Info("To delete pod for expired WorkflowRun")
-				err = m.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+				err = clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 				if err != nil {
 					log.Error("Delete pod error: ", err)
 				}

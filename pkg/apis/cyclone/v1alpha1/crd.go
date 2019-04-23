@@ -36,15 +36,16 @@ func EnsureCRDCreated(masterURL, kubeConfigPath string) {
 		log.WithField("error", err).Fatal("new kube ext client error")
 	}
 
-	createCRD("resource", "resources", "Resource", []string{"rsc"}, client)
-	createCRD("stage", "stages", "Stage", []string{"stg"}, client)
-	createCRD("workflow", "workflows", "Workflow", []string{"wf"}, client)
-	createCRD("workflowrun", "workflowruns", "WorkflowRun", []string{"wfr"}, client)
-	createCRD("workflowtrigger", "workflowtriggers", "WorkflowTrigger", []string{"wft"}, client)
-	createCRD("project", "projects", "Project", []string{"proj"}, client)
+	createCRD("resource", "resources", "Resource", []string{"rsc"}, v1beta1.NamespaceScoped, client)
+	createCRD("stage", "stages", "Stage", []string{"stg"}, v1beta1.NamespaceScoped, client)
+	createCRD("workflow", "workflows", "Workflow", []string{"wf"}, v1beta1.NamespaceScoped, client)
+	createCRD("workflowrun", "workflowruns", "WorkflowRun", []string{"wfr"}, v1beta1.NamespaceScoped, client)
+	createCRD("workflowtrigger", "workflowtriggers", "WorkflowTrigger", []string{"wft"}, v1beta1.NamespaceScoped, client)
+	createCRD("project", "projects", "Project", []string{"proj"}, v1beta1.NamespaceScoped, client)
+	createCRD("executioncluster", "executionclusters", "ExecutionCluster", []string{"ec"}, v1beta1.ClusterScoped, client)
 }
 
-func createCRD(singular, plural, kind string, shortNames []string, client apiextensionsclient.Interface) {
+func createCRD(singular, plural, kind string, shortNames []string, scope v1beta1.ResourceScope, client apiextensionsclient.Interface) {
 	crdName := plural + "." + GroupName
 	_, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
 	if err == nil {
@@ -71,7 +72,7 @@ func createCRD(singular, plural, kind string, shortNames []string, client apiext
 		Spec: v1beta1.CustomResourceDefinitionSpec{
 			Group:   GroupName,
 			Version: Version,
-			Scope:   v1beta1.NamespaceScoped,
+			Scope:   scope,
 			Names: v1beta1.CustomResourceDefinitionNames{
 				Kind:       kind,
 				Plural:     plural,

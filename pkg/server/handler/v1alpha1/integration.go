@@ -13,11 +13,12 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -31,7 +32,7 @@ import (
 // - query Query params includes start, limit and filter.
 func ListIntegrations(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
-	secrets, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).List(meta_v1.ListOptions{
+	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
 		LabelSelector: meta.LabelIntegrationType,
 	})
 	if err != nil {
@@ -73,8 +74,8 @@ func SecretToIntegration(secret *core_v1.Secret) (*api.Integration, error) {
 	}
 
 	// retrieve integration name
-	integration.Name = common.SecretIntegration(secret.Name)
-	err := json.Unmarshal(secret.Data[common.SecretKeyIntegration], &integration.Spec)
+	integration.Name = svrcommon.SecretIntegration(secret.Name)
+	err := json.Unmarshal(secret.Data[svrcommon.SecretKeyIntegration], &integration.Spec)
 	if err != nil {
 		return integration, err
 	}
@@ -98,7 +99,7 @@ func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) 
 func createIntegration(tenant string, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// open cluster for the tenant, create namespace and pvc
-		err := OpenClusterForTenant(in.Spec.Cluster, tenant)
+		err := OpenClusterForTenant(in, tenant)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +117,7 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 		return nil, err
 	}
 
-	ns := common.TenantNamespace(tenant)
+	ns := svrcommon.TenantNamespace(tenant)
 	_, err = handler.K8sClient.CoreV1().Secrets(ns).Create(secret)
 	if err != nil {
 		log.Errorf("Create secret %v for tenant %s error %v", secret.ObjectMeta.Name, tenant, err)
@@ -127,11 +128,13 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 }
 
 // OpenClusterForTenant opens cluster to run workload.
-func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err error) {
+func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
 	// Convert the returned error if it is a k8s error.
 	defer func() {
 		err = cerr.ConvertK8sError(err)
 	}()
+
+	cluster := in.Spec.Cluster
 
 	// new cluster clientset
 	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
@@ -155,8 +158,8 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 		}
 	} else {
 		// create namespace
-		cluster.Namespace = common.TenantNamespace(tenant.Name)
-		err = common.CreateNamespace(cluster.Namespace, client)
+		cluster.Namespace = svrcommon.TenantNamespace(tenant.Name)
+		err = svrcommon.CreateNamespace(cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
@@ -166,7 +169,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 	}
 
 	// create resource quota
-	err = common.CreateResourceQuota(tenant, cluster.Namespace, client)
+	err = svrcommon.CreateResourceQuota(tenant, cluster.Namespace, client)
 	if err != nil {
 		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)
 		if !errors.IsAlreadyExists(err) {
@@ -186,7 +189,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
 		}
 
-		err = common.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
+		err = svrcommon.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
@@ -195,7 +198,7 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 			}
 		}
 
-		cluster.PVC = common.TenantPVC(tenant.Name)
+		cluster.PVC = svrcommon.TenantPVC(tenant.Name)
 	}
 
 	// Launch PVC usage watcher to watch the usage of PVC.
@@ -207,16 +210,32 @@ func OpenClusterForTenant(cluster *api.ClusterSource, tenantName string) (err er
 		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", cluster.Namespace, cluster.PVC, err)
 	}
 
-	return nil
+	// Create ExecutionCluster resource for Workflow Engine to use
+	_, err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Create(&v1alpha1.ExecutionCluster{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Name: in.Name,
+		},
+		Spec: v1alpha1.ExecutionClusterSpec{
+			Credential: cluster.Credential,
+		},
+	})
+
+	if err != nil && errors.IsAlreadyExists(err) {
+		log.Warningf("ExecutionCluster resource for %s already exist", in.Name)
+		return nil
+	}
+
+	return err
 }
 
 // CloseClusterForTenant close worker cluster for the tenant.
 // It is dangerous since all pvc data will lost.
-func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error) {
+func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 	// Convert the returned error if it is a k8s error.
 	defer func() {
 		err = cerr.ConvertK8sError(err)
 	}()
+	cluster := in.Spec.Cluster
 
 	// new cluster clientset
 	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
@@ -226,7 +245,7 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 	}
 
 	// delete namespace which is created by cyclone
-	if cluster.Namespace == common.TenantNamespace(tenant) {
+	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
 		// cyclone can not support other clusters (except for control cluster)by now, so we can not delete the namespace,
 		// since there are metadata(cyclone resources, stage, workflow, workflowrun metadata) under it.
 
@@ -242,7 +261,7 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 	}
 
 	// delete resource quota
-	quotaName := common.TenantResourceQuota(tenant)
+	quotaName := svrcommon.TenantResourceQuota(tenant)
 	err = client.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("delete resource quota %s error %v", quotaName, err)
@@ -256,7 +275,7 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 	}
 
 	// delete pvc which is created by cyclone
-	if cluster.PVC == common.TenantPVC(tenant) {
+	if cluster.PVC == svrcommon.TenantPVC(tenant) {
 		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
 			log.Errorf("delete pvc %s error %v", cluster.Namespace, err)
@@ -264,13 +283,20 @@ func CloseClusterForTenant(cluster *api.ClusterSource, tenant string) (err error
 		}
 		return
 	}
+
+	err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Delete(in.Name, &meta_v1.DeleteOptions{})
+	if err != nil {
+		log.Warningf("Delete ExecutionCluster resource error: %v", err)
+		return nil
+	}
+
 	return
 }
 
 func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 	objectMeta := in.ObjectMeta
 	// build secret name
-	objectMeta.Name = common.IntegrationSecret(in.Name)
+	objectMeta.Name = svrcommon.IntegrationSecret(in.Name)
 	if objectMeta.Labels == nil {
 		objectMeta.Labels = make(map[string]string)
 	}
@@ -289,7 +315,7 @@ func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 		return nil, err
 	}
 	data := make(map[string][]byte)
-	data[common.SecretKeyIntegration] = integration
+	data[svrcommon.SecretKeyIntegration] = integration
 
 	secret := &core_v1.Secret{
 		ObjectMeta: objectMeta,
@@ -305,8 +331,8 @@ func GetIntegration(ctx context.Context, tenant, name string) (*api.Integration,
 }
 
 func getIntegration(tenant, name string) (*api.Integration, error) {
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
-		common.IntegrationSecret(name), meta_v1.GetOptions{})
+	secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
+		svrcommon.IntegrationSecret(name), meta_v1.GetOptions{})
 	if err != nil {
 		return nil, cerr.ConvertK8sError(err)
 	}
@@ -334,7 +360,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		// turn on worker cluster
 		if !oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
 			// open cluster for the tenant, create namespace and pvc
-			err := OpenClusterForTenant(cluster, tenant)
+			err := OpenClusterForTenant(in, tenant)
 			if err != nil {
 				return nil, err
 			}
@@ -343,7 +369,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		// turn off worker cluster
 		if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
 			// close cluster for the tenant, delete namespace
-			err := CloseClusterForTenant(oldCluster, tenant)
+			err := CloseClusterForTenant(oldIn, tenant)
 			if err != nil {
 				return nil, err
 			}
@@ -361,7 +387,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 	}
 
-	ns := common.TenantNamespace(tenant)
+	ns := svrcommon.TenantNamespace(tenant)
 	secret, err := buildSecret(tenant, in)
 	if err != nil {
 		return nil, err
@@ -369,7 +395,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		origin, err := handler.K8sClient.CoreV1().Secrets(ns).Get(
-			common.IntegrationSecret(name), meta_v1.GetOptions{})
+			svrcommon.IntegrationSecret(name), meta_v1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -397,7 +423,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 
 // DeleteIntegration deletes a integration with the given tenant and name.
 func DeleteIntegration(ctx context.Context, tenant, name string) error {
-	isName := common.IntegrationSecret(name)
+	isName := svrcommon.IntegrationSecret(name)
 	in, err := getIntegration(tenant, isName)
 	if err != nil {
 		return err
@@ -405,14 +431,14 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 
 	if in.Spec.Type == api.SCM {
 		// Cleanup SCM webhooks for integrated SCM.
-		secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
+		secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
 			isName, meta_v1.GetOptions{})
 		if err != nil {
 			return cerr.ConvertK8sError(err)
 		}
 
 		repos := map[string][]string{}
-		if d, ok := secret.Data[common.SecretKeyRepos]; ok {
+		if d, ok := secret.Data[svrcommon.SecretKeyRepos]; ok {
 			log.Infof("repos data of secret %s: %s\n", secret.Name, d)
 			if err = json.Unmarshal(d, &repos); err != nil {
 				log.Errorf("Failed to unmarshal repos from secret")
@@ -437,7 +463,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 		}
 	}
 
-	err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Delete(
+	err = handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Delete(
 		isName, &meta_v1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
@@ -445,7 +471,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 
 // GetSchedulableClusters gets all clusters which are used to perform workload for this tenant.
 func GetSchedulableClusters(tenant string) ([]api.Integration, error) {
-	secrets, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).List(meta_v1.ListOptions{
+	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
 		LabelSelector: meta.SchedulableClusterSelector(),
 	})
 	if err != nil {

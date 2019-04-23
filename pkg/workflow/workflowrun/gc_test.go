@@ -10,8 +10,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
 
 func TestCheckGC(t *testing.T) {
@@ -63,6 +65,9 @@ type GCProcessorSuite struct {
 
 func (s *GCProcessorSuite) SetupTest() {
 	client := fake.NewSimpleClientset()
+	store.ControllerRegistry[common.ControlClusterName] = &store.ClusterController{
+		Client: client,
+	}
 	recorder := new(MockedRecorder)
 	recorder.On("Event", mock.Anything).Return()
 	s.processor = &GCProcessor{
@@ -131,6 +136,11 @@ func (s *GCProcessorSuite) TestProcess() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test1",
 			Namespace: "default",
+		},
+		Spec: v1alpha1.WorkflowRunSpec{
+			ExecutionContext: &v1alpha1.ExecutionContext{
+				Cluster: common.ControlClusterName,
+			},
 		},
 		Status: v1alpha1.WorkflowRunStatus{
 			Overall: v1alpha1.Status{

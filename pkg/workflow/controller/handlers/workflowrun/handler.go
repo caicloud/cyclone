@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
+	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
@@ -62,7 +63,13 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	h.TimeoutProcessor.Add(originWfr)
 
 	wfr := originWfr.DeepCopy()
-	operator, err := workflowrun.NewOperator(h.Client, wfr, wfr.Namespace)
+	clusterClient := common.GetExecutionClusterClient(wfr)
+	if clusterClient == nil {
+		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+		return
+	}
+
+	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
 		return
@@ -109,7 +116,13 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	}
 
 	wfr := originWfr.DeepCopy()
-	operator, err := workflowrun.NewOperator(h.Client, wfr, wfr.Namespace)
+	clusterClient := common.GetExecutionClusterClient(wfr)
+	if clusterClient == nil {
+		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+		return
+	}
+
+	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
 		return
@@ -130,7 +143,13 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 	log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
 
 	wfr := originWfr.DeepCopy()
-	operator, err := workflowrun.NewOperator(h.Client, wfr, wfr.Namespace)
+	clusterClient := common.GetExecutionClusterClient(wfr)
+	if clusterClient == nil {
+		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+		return
+	}
+
+	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
 		return
