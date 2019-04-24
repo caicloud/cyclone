@@ -13,6 +13,9 @@ _config:
       - /workspace/controller
       image: '[[ registry_release ]]/cyclone-workflow-controller:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
+      env:
+      - name: DEVELOP_MODE
+        value: "false"
       resources:
         limits:
           cpu: "2"
