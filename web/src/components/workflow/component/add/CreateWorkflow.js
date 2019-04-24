@@ -2,8 +2,9 @@ import { Steps, Button, message, Form } from 'antd';
 
 import Graph from './Graph';
 import BasicInfo from './BasicInfo';
-import styles from './index.module.less';
+import styles from '../index.module.less';
 import classNames from 'classnames/bind';
+import PropTypes from 'prop-types';
 
 const styleCls = classNames.bind(styles);
 const Step = Steps.Step;
@@ -17,13 +18,14 @@ const steps = [
     title: '任务', //intl.get('workflow.task'),
     content: <Graph />,
   },
-  {
-    title: '设置', // intl.get('workflow.setting'),
-    content: 'Last-content',
-  },
 ];
 
 class App extends React.Component {
+  static propTypes = {
+    setFieldValue: PropTypes.func,
+    values: PropTypes.object,
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -41,6 +43,21 @@ class App extends React.Component {
     this.setState({ current });
   }
 
+  getStepContent = current => {
+    const { setFieldValue, values } = this.props;
+    switch (current) {
+      case 0: {
+        return <BasicInfo />;
+      }
+      case 1: {
+        return <Graph setFieldValue={setFieldValue} values={values} />;
+      }
+      default: {
+        return null;
+      }
+    }
+  };
+
   render() {
     const { current } = this.state;
     return (
@@ -55,7 +72,7 @@ class App extends React.Component {
             graph: current === 1,
           })}
         >
-          {steps[current].content}
+          {this.getStepContent(current)}
         </div>
         <div className="steps-action">
           {current < steps.length - 1 && (

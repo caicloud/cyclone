@@ -8,6 +8,14 @@ next: Next
 prev: Previous
 confirm: Confirm
 cancel: Cancel
+config: Config
+input: Input
+output: Output
+image: Image
+env: Env
+key: Key
+value: Value
+path: Path
 operation:
   add: Add
   delete: Delete
@@ -30,6 +38,15 @@ workflow:
   basicInfo: Basic info
   task: Task
   setting: Setting
+  addResource: Add resource
+  resourceType: Resource type
+  existResource: Existing resource
+  addMethod: Add method
+  usePath: Use path
+  selectTemplate: Select Template
+  stageCreation: Stage creation method
+  addEnv: Add env
+  addArtifact: Add artifact
 integration:
   name: Name
   desc: Description
@@ -104,6 +121,7 @@ template:
     unit-test: UnitTest
     image-build: ImageBuild
     code-scan: CodeScan
+    cd: CD
 validate:
   required: Reqiured
   positiveOrFloat: Two decimal allowed

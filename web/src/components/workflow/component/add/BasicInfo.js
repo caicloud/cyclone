@@ -12,7 +12,7 @@ class BasicInfo extends React.Component {
       <Form>
         <Field
           label={intl.get('name')}
-          name="metadata.alias"
+          name="metadata.name"
           component={InputField}
           hasFeedback
           required

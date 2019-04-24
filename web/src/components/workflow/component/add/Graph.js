@@ -7,8 +7,10 @@ import GraphConfig, {
   EMPTY_EDGE_TYPE,
   SPECIAL_EDGE_TYPE,
 } from './graph-config'; // Configures node/edge types
+import AddStage from '../stage/AddStage';
 import classNames from 'classnames';
-import styles from './index.module.less';
+import styles from '../index.module.less';
+import PropTypes from 'prop-types';
 
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
@@ -25,6 +27,7 @@ class Graph extends React.Component {
         edges: [],
         nodes: [],
       },
+      nodePosition: {},
       selected: null,
       visible: false,
     };
@@ -57,31 +60,71 @@ class Graph extends React.Component {
   }
 
   onClose = () => {
-    const { graph, selected } = this.state;
-    // using a new array like this creates a new memory reference
-    // this will force a re-render
-    if (!selected) {
-      graph.nodes = [
-        {
-          id: Date.now(), // NOTE: stage id
-          title: '代码构建',
-          type: STAGE,
-          x: 100, // 动态随机定位
-          y: 100,
-        },
-        ...this.state.graph.nodes,
-      ];
-    }
+    const { graph, selected, nodePosition } = this.state;
+    const { values, setFieldValue } = this.props;
 
-    this.setState({
+    let _state = {
       graph,
       visible: false,
-    });
+      nodePosition,
+    };
+
+    const stages = _.get(values, 'stages', []);
+    const currentStage = _.get(values, 'currentStage', '');
+    const number = currentStage.split('_')[1] - 1;
+    // using a new array like this creates a new memory reference
+    // this will force a re-render
+    if (!selected && !stages.includes(currentStage)) {
+      const position = {
+        x: 100 + number * 140, // 动态随机定位
+        y: 100 + number * 60,
+      };
+      _state.graph.nodes = [
+        {
+          id: currentStage, // NOTE: stage id
+          title: _.get(values, `${currentStage}.name`),
+          type: STAGE,
+          ...position,
+        },
+        ...graph.nodes,
+      ];
+      _state.nodePosition[currentStage] = position;
+      setFieldValue('stages', [...stages, currentStage]);
+    }
+
+    this.setState(_state);
+  };
+
+  getStageId = array => {
+    const number = array.map(o => o.split('_')[1]);
+    const max = number.sort(function(a, b) {
+      return b - a;
+    })[0];
+    return max * 1 || 0;
   };
 
   addStartNode = () => {
+    const { setFieldValue, values } = this.props;
     // show Drawer
     this.setState({ visible: true, selected: null });
+    // TODO(qme): stage id random
+    const stageId = `stage_${this.getStageId(_.get(values, 'stages')) + 1}`;
+    setFieldValue('currentStage', stageId);
+    setFieldValue(stageId, {
+      inputs: {
+        resources: [],
+      },
+      spec: {
+        containers: [
+          {
+            args: [],
+            command: [],
+            image: '',
+            env: [],
+          },
+        ],
+      },
+    });
   };
 
   /*
@@ -93,15 +136,26 @@ class Graph extends React.Component {
   onUpdateNode = viewNode => {
     const graph = this.state.graph;
     const i = this.getNodeIndex(viewNode);
-
     graph.nodes[i] = viewNode;
+
     this.setState({ graph });
   };
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
+    const { nodePosition } = this.state;
     // Deselect events will send Null viewNode
-    this.setState({ selected: viewNode, visible: true });
+    let state = { selected: viewNode, nodePosition };
+    const nodeId = _.get(viewNode, 'id');
+    const moved =
+      _.get(nodePosition, `${nodeId}.x`) !== _.get(viewNode, 'x') ||
+      _.get(nodePosition, `${nodeId}.y`) !== _.get(viewNode, 'y');
+    if (viewNode && !moved) {
+      state.visible = true;
+    } else {
+      state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
+    }
+    this.setState(state);
   };
 
   // Edge 'mouseUp' handler
@@ -120,7 +174,6 @@ class Graph extends React.Component {
       x,
       y,
     };
-
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
   };
@@ -237,6 +290,7 @@ class Graph extends React.Component {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
+    const { values } = this.props;
 
     return (
       <div id="graph" className={styles['graph']}>
@@ -274,11 +328,20 @@ class Graph extends React.Component {
           visible={this.state.visible}
           width={600}
         >
-          <p>Some contents...</p>
+          <AddStage
+            key={_.get(values, 'currentStage')}
+            setFieldValue={this.props.setFieldValue}
+            values={this.props.values}
+          />
         </Drawer>
       </div>
     );
   }
 }
+
+Graph.propTypes = {
+  values: PropTypes.object,
+  setFieldValue: PropTypes.func,
+};
 
 export default Graph;

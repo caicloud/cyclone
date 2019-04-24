@@ -1,13 +1,9 @@
 import React from 'react';
 import { Form } from 'antd';
 import PropTypes from 'prop-types';
+import { defaultFormItemLayout, noLabelItemLayout } from '@/lib/const';
 
 const FormItem = Form.Item;
-
-const defaultFormItemLayout = {
-  labelCol: { span: 4 },
-  wrapperCol: { span: 16 },
-};
 
 export default function makeField(Component) {
   return function FieldWithProps(props) {
@@ -31,7 +27,8 @@ export default function makeField(Component) {
     } = props;
     const name = field.name;
     const hasError = _.get(touched, name) && _.get(errors, name);
-    const _formItemLayout = formItemLayout || defaultFormItemLayout;
+    const _formItemLayout =
+      formItemLayout || (label ? defaultFormItemLayout : noLabelItemLayout);
     return (
       <FormItem
         label={label}

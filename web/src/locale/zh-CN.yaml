@@ -8,6 +8,14 @@ next: 下一步
 prev: 上一步
 confirm: 确定
 cancel: 取消
+config: 配置
+input: 输入
+output: 输出
+image: 镜像
+env: 环境变量
+key: 健
+value: 值
+path: 路径
 operation:
   add: 新增
   delete: 删除
@@ -30,6 +38,15 @@ workflow:
   basicInfo: 基础信息
   task: 任务
   setting: 设置
+  addResource: 添加资源
+  resourceType: 资源类型
+  existResource: 已有资源
+  addMethod: 添加方式
+  usePath: 使用路径
+  selectTemplate: 选择模版
+  stageCreation: 创建阶段方式
+  addEnv: 添加环境变量
+  addArtifact: 添加 Artifact
 integration:
   name: 名称
   desc: 描述
@@ -103,7 +120,7 @@ template:
     unit-test: 单元测试
     image-build: 镜像构建
     code-scan: 代码扫描
-    cd: 持续部署
+    cd: CD
 validate:
   required: 必填
   positiveOrFloat: 允许两位小数

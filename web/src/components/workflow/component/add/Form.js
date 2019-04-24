@@ -13,7 +13,9 @@ class AddWorkflow extends React.Component {
 
   getInitialValues = () => {
     let defaultValue = {
-      metadata: { alias: '', description: '' },
+      metadata: { name: '', description: '' },
+      stages: [],
+      currentStage: '',
     };
     return defaultValue;
   };
