@@ -75,7 +75,7 @@ var (
 
 	// ErrorSCMServerInternalError defines error that occurred in SCM(GitHub GitLab SVN) server side.
 	ErrorSCMServerInternalError = nerror.InternalServerError.Build("SCMServerInternalError",
-		"SCM server ${server} internal error: ${error}, Maybe the SCM server is not running well, Please contact your SCM administrator if this problem persists.")
+		"SCM server internal error: ${error}, Maybe the SCM server is not running well, Please contact your SCM administrator if this problem persists.")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.

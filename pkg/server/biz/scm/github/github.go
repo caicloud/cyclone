@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -47,6 +48,9 @@ const (
 
 	// pullRefTemplate represents reference template for pull request.
 	pullRefTemplate = "refs/pull/%d/merge"
+
+	// errorFieldResponse represents the field `Response` of Github error.
+	errorFieldResponse = "Response"
 )
 
 var (
@@ -101,21 +105,15 @@ func (g *Github) GetToken() (string, error) {
 	for {
 		auths, resp, err := g.client.Authorizations.List(g.ctx, opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return "", err
+			return "", convertGithubError(err)
 		}
 
 		for _, auth := range auths {
 			if *auth.App.Name == oauthAppName {
 				// The token of existed authorization can not be got, so delete it and recreate a new one.
-				if dresp, err := g.client.Authorizations.Delete(g.ctx, *auth.ID); err != nil {
+				if _, err = g.client.Authorizations.Delete(g.ctx, *auth.ID); err != nil {
 					log.Errorf("Fail to delete the token for %s as %s", oauthAppName, err.Error())
-					if dresp.StatusCode == 500 {
-						return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-					}
-					return "", err
+					return "", convertGithubError(err)
 				}
 
 				break
@@ -133,12 +131,9 @@ func (g *Github) GetToken() (string, error) {
 		Scopes: []github.Scope{github.ScopeRepo},
 		Note:   &oauthAppName,
 	}
-	auth, cresp, err := g.client.Authorizations.Create(g.ctx, authReq)
+	auth, _, err := g.client.Authorizations.Create(g.ctx, authReq)
 	if err != nil {
-		if cresp.StatusCode == 500 {
-			return "", cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return "", err
+		return "", convertGithubError(err)
 	}
 
 	return *auth.Token, nil
@@ -173,10 +168,7 @@ func (g *Github) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		repos, resp, err := g.client.Repositories.List(g.ctx, "", opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGithubError(err)
 		}
 		allRepos = append(allRepos, repos...)
 		if resp.NextPage == 0 || !listAll {
@@ -215,10 +207,7 @@ func (g *Github) ListBranches(repo string) ([]string, error) {
 	for {
 		branches, resp, err := g.client.Repositories.ListBranches(g.ctx, owner, repo, opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGithubError(err)
 		}
 		allBranches = append(allBranches, branches...)
 		if resp.NextPage == 0 {
@@ -256,10 +245,7 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	for {
 		tags, resp, err := g.client.Repositories.ListTags(g.ctx, owner, repo, opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGithubError(err)
 		}
 		allTags = append(allTags, tags...)
 		if resp.NextPage == 0 {
@@ -300,10 +286,7 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	for {
 		csr, resp, err := g.client.Search.Code(g.ctx, q, opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGithubError(err)
 		}
 
 		allCodeResult = append(allCodeResult, csr.CodeResults...)
@@ -450,12 +433,9 @@ func (g *Github) CreateWebhook(repo string, webhook *scm.Webhook) error {
 			},
 		}
 		owner, name := scm.ParseRepo(repo)
-		_, resp, hErr := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
-		if hErr != nil {
-			if resp.StatusCode == 500 {
-				return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
-			}
-			return hErr
+		_, _, err = g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+		if err != nil {
+			return convertGithubError(err)
 		}
 		return nil
 	}
@@ -495,7 +475,7 @@ func (g *Github) DeleteWebhook(repo string, webhookURL string) error {
 	owner, name := scm.ParseRepo(repo)
 	if _, err = g.client.Repositories.DeleteHook(g.ctx, owner, name, *hook.ID); err != nil {
 		log.Errorf("delete hook %s for %s/%s error: %v", hook.ID, owner, name, err)
-		return err
+		return convertGithubError(err)
 	}
 
 	return nil
@@ -601,4 +581,28 @@ func getLastCommitSHA(scmCfg *v1alpha1.SCMSource, repo string, number int) (stri
 	}
 
 	return p.GetPullRequestSHA(repo, number)
+}
+
+func convertGithubError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	value := reflect.ValueOf(err).Elem()
+	respField := value.FieldByName(errorFieldResponse)
+	if !respField.IsValid() {
+		log.Warningf("response filed of Github error is invalid: %v", err)
+		return err
+	}
+
+	resp, ok := respField.Interface().(*http.Response)
+	if !ok {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorSCMServerInternalError.Error(err)
+	}
+
+	return err
 }

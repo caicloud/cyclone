@@ -18,6 +18,7 @@ package gitlab
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/caicloud/nirvana/log"
 	v4 "gopkg.in/xanzy/go-gitlab.v0"
@@ -79,10 +80,7 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		projects, resp, err := g.client.Projects.ListProjects(opt)
 		if err != nil {
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGitlabV4Error(err, resp)
 		}
 
 		allProjects = append(allProjects, projects...)
@@ -107,10 +105,7 @@ func (g *V4) ListBranches(repo string) ([]string, error) {
 	branches, resp, err := g.client.Branches.ListBranches(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
-		if resp.StatusCode == 500 {
-			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return nil, err
+		return nil, convertGitlabV4Error(err, resp)
 	}
 
 	branchNames := make([]string, len(branches))
@@ -127,10 +122,7 @@ func (g *V4) ListTags(repo string) ([]string, error) {
 	tags, resp, err := g.client.Tags.ListTags(repo, opts)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
-		if resp.StatusCode == 500 {
-			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return nil, err
+		return nil, convertGitlabV4Error(err, resp)
 	}
 
 	tagNames := make([]string, len(tags))
@@ -156,10 +148,7 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 		treeNode, resp, err := g.client.Repositories.ListTree(repo, opt)
 		if err != nil {
 			log.Errorf("Fail to list dockerfile for %s", repo)
-			if resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-			}
-			return nil, err
+			return nil, convertGitlabV4Error(err, resp)
 		}
 
 		treeNodes = append(treeNodes, treeNode...)
@@ -193,16 +182,16 @@ func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, com
 		TargetURL:   &targetURL,
 		Context:     &context,
 	}
-	_, _, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
-	return err
+	_, resp, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
+	return convertGitlabV4Error(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
 func (g *V4) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	owner, name := scm.ParseRepo(repoURL)
-	mr, _, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number, nil)
+	mr, resp, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number, nil)
 	if err != nil {
-		return "", err
+		return "", convertGitlabV4Error(err, resp)
 	}
 
 	return mr.SHA, nil
@@ -213,10 +202,7 @@ func (g *V4) GetWebhook(repo string, webhookURL string) (*v4.ProjectHook, error)
 	owner, name := scm.ParseRepo(repo)
 	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
 	if err != nil {
-		if resp.StatusCode == 500 {
-			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return nil, err
+		return nil, convertGitlabV4Error(err, resp)
 	}
 
 	for _, hook := range hooks {
@@ -242,12 +228,9 @@ func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 
 		onwer, name := scm.ParseRepo(repo)
 		hook := generateV4ProjectHook(webhook)
-		_, resp, hErr := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
-		if hErr != nil {
-			if resp.StatusCode == 500 {
-				return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
-			}
-			return hErr
+		_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+		if err != nil {
+			return convertGitlabV4Error(err, resp)
 		}
 		return nil
 	}
@@ -264,9 +247,9 @@ func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
 	}
 
 	owner, name := scm.ParseRepo(repo)
-	if _, err = g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
+	if resp, err := g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
 		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
-		return err
+		return convertGitlabV4Error(err, resp)
 	}
 
 	return nil
@@ -297,4 +280,16 @@ func generateV4ProjectHook(webhook *scm.Webhook) *v4.AddProjectHookOptions {
 	hook.URL = &webhook.URL
 
 	return hook
+}
+
+func convertGitlabV4Error(err error, resp *v4.Response) error {
+	if err == nil {
+		return err
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorSCMServerInternalError.Error(err)
+	}
+
+	return err
 }
