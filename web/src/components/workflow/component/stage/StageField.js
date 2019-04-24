@@ -80,78 +80,101 @@ class StageField extends React.Component {
           </FormItem>
         </SectionCard>
         <SectionCard title={intl.get('config')}>
-          <Field
-            label={intl.get('image')}
-            name={`${currentStage}.spec.containers.image`}
-            component={InputField}
-            hasFeedback
-            required
+          <FieldArray
+            name={`${currentStage}.spec.containers`}
+            render={() => (
+              <div>
+                {_.get(values, `${currentStage}.spec.containers`, []).map(
+                  (a, index) => (
+                    <Fragment key={index}>
+                      <Field
+                        label={intl.get('image')}
+                        name={`${currentStage}.spec.containers.${index}.image`}
+                        component={InputField}
+                        hasFeedback
+                        required
+                      />
+                      <Field
+                        label={'ENTRYPOINT'}
+                        name={`${currentStage}.spec.containers.${index}.command`}
+                        component={TextareaField}
+                        hasFeedback
+                        required
+                      />
+                      <Field
+                        label={'ENTRYPOINT'}
+                        name={`${currentStage}.spec.containers.${index}.args`}
+                        component={TextareaField}
+                        hasFeedback
+                        required
+                      />
+                      <FormItem
+                        label={intl.get('env')}
+                        {...defaultFormItemLayout}
+                      >
+                        <FieldArray
+                          name={`${currentStage}.spec.containers.${index}.env`}
+                          render={arrayHelpers => (
+                            <div>
+                              {_.get(
+                                values,
+                                `${currentStage}.spec.containers.${index}.env`,
+                                []
+                              ).length > 0 && (
+                                <Row gutter={16}>
+                                  <Col span={11}>{intl.get('key')}</Col>
+                                  <Col span={11}>{intl.get('value')}</Col>
+                                </Row>
+                              )}
+                              {_.get(
+                                values,
+                                `${currentStage}.spec.containers.${index}.env`,
+                                []
+                              ).map((a, i) => (
+                                <Row key={i} gutter={16}>
+                                  <Col span={11}>
+                                    <Field
+                                      key={a.name}
+                                      name={`${currentStage}.spec.containers.${index}.env.${i}.name`}
+                                      component={InputField}
+                                      hasFeedback
+                                    />
+                                  </Col>
+                                  <Col span={11}>
+                                    <Field
+                                      key={a.value}
+                                      name={`${currentStage}.spec.containers.${index}.env.${i}.value`}
+                                      component={InputField}
+                                      hasFeedback
+                                    />
+                                  </Col>
+                                  <Col span={2}>
+                                    <Button
+                                      type="circle"
+                                      icon="delete"
+                                      onClick={() => arrayHelpers.remove(i)}
+                                    />
+                                  </Col>
+                                </Row>
+                              ))}
+                              <Button
+                                ico="plus"
+                                onClick={() =>
+                                  arrayHelpers.push({ name: '', value: '' })
+                                }
+                              >
+                                {intl.get('workflow.addEnv')}
+                              </Button>
+                            </div>
+                          )}
+                        />
+                      </FormItem>
+                    </Fragment>
+                  )
+                )}
+              </div>
+            )}
           />
-          <Field
-            label={'ENTRYPOINT'}
-            name={`${currentStage}.spec.containers.command`}
-            component={TextareaField}
-            hasFeedback
-            required
-          />
-          <Field
-            label={'ENTRYPOINT'}
-            name={`${currentStage}.spec.containers.args`}
-            component={TextareaField}
-            hasFeedback
-            required
-          />
-          <FormItem label={intl.get('env')} {...defaultFormItemLayout}>
-            <FieldArray
-              name={`${currentStage}.spec.containers.env`}
-              render={arrayHelpers => (
-                <div>
-                  {_.get(values, `${currentStage}.spec.containers.env`, [])
-                    .length > 0 && (
-                    <Row gutter={16}>
-                      <Col span={11}>{intl.get('key')}</Col>
-                      <Col span={11}>{intl.get('value')}</Col>
-                    </Row>
-                  )}
-                  {_.get(values, `${currentStage}.spec.containers.env`, []).map(
-                    (a, i) => (
-                      <Row key={i} gutter={16}>
-                        <Col span={11}>
-                          <Field
-                            key={a.name}
-                            name={`${currentStage}.spec.containers.env.${i}.name`}
-                            component={InputField}
-                            hasFeedback
-                          />
-                        </Col>
-                        <Col span={11}>
-                          <Field
-                            key={a.value}
-                            name={`${currentStage}.spec.containers.env.${i}.value`}
-                            component={InputField}
-                            hasFeedback
-                          />
-                        </Col>
-                        <Col span={2}>
-                          <Button
-                            type="circle"
-                            icon="delete"
-                            onClick={() => arrayHelpers.remove(i)}
-                          />
-                        </Col>
-                      </Row>
-                    )
-                  )}
-                  <Button
-                    ico="plus"
-                    onClick={() => arrayHelpers.push({ name: '', value: '' })}
-                  >
-                    {intl.get('workflow.addEnv')}
-                  </Button>
-                </div>
-              )}
-            />
-          </FormItem>
         </SectionCard>
         <SectionCard title={intl.get('output')}>
           <FormItem
