@@ -436,27 +436,28 @@ func (g *Github) CreateWebhook(repo string, webhook *scm.Webhook) error {
 
 	_, err := g.GetWebhook(repo, webhook.URL)
 	if err != nil {
-		if yes := cerr.ErrorContentNotFound.Derived(err); yes {
-			// Hook name must be passed as "web".
-			// Ref: https://developer.github.com/v3/repos/hooks/#create-a-hook
-			hook := github.Hook{
-				Events: convertToGithubEvents(webhook.Events),
-				Config: map[string]interface{}{
-					"url":          webhook.URL,
-					"content_type": "json",
-				},
-			}
-			owner, name := scm.ParseRepo(repo)
-			_, resp, hErr := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
-			if hErr != nil {
-				if resp.StatusCode == 500 {
-					return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
-				}
-				return hErr
-			}
-			return nil
+		if !cerr.ErrorContentNotFound.Derived(err) {
+			return err
 		}
-		return err
+
+		// Hook name must be passed as "web".
+		// Ref: https://developer.github.com/v3/repos/hooks/#create-a-hook
+		hook := github.Hook{
+			Events: convertToGithubEvents(webhook.Events),
+			Config: map[string]interface{}{
+				"url":          webhook.URL,
+				"content_type": "json",
+			},
+		}
+		owner, name := scm.ParseRepo(repo)
+		_, resp, hErr := g.client.Repositories.CreateHook(g.ctx, owner, name, &hook)
+		if hErr != nil {
+			if resp.StatusCode == 500 {
+				return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
+			}
+			return hErr
+		}
+		return nil
 	}
 
 	log.Warningf("Webhook already existed: %+v", webhook)

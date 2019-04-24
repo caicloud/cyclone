@@ -236,19 +236,20 @@ func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 
 	_, err := g.GetWebhook(repo, webhook.URL)
 	if err != nil {
-		if yes := cerr.ErrorContentNotFound.Derived(err); yes {
-			onwer, name := scm.ParseRepo(repo)
-			hook := generateV4ProjectHook(webhook)
-			_, resp, hErr := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
-			if hErr != nil {
-				if resp.StatusCode == 500 {
-					return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
-				}
-				return hErr
-			}
-			return nil
+		if !cerr.ErrorContentNotFound.Derived(err) {
+			return err
 		}
-		return err
+
+		onwer, name := scm.ParseRepo(repo)
+		hook := generateV4ProjectHook(webhook)
+		_, resp, hErr := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+		if hErr != nil {
+			if resp.StatusCode == 500 {
+				return cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, hErr)
+			}
+			return hErr
+		}
+		return nil
 	}
 
 	log.Warningf("Webhook already existed: %+v", webhook)
