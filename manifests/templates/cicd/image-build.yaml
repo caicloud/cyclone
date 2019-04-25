@@ -29,10 +29,12 @@
             docker build -f {{ dockerfile-path }} -t {{ registry }}/{{ repository }}:{{ tag }} {{ build-context }}
         resources:
         - name: code
+          type: Git
           path: /workspace
       outputs:
         resources:
         - name: image
+          type: Image
       spec:
         containers:
         - image: "{{ image }}"
