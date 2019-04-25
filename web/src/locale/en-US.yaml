@@ -4,6 +4,18 @@ creationTime: Creation time
 description: Description
 memory: Memory
 type: Type
+next: Next
+prev: Previous
+confirm: Confirm
+cancel: Cancel
+config: Config
+input: Input
+output: Output
+image: Image
+env: Env
+key: Key
+value: Value
+path: Path
 operation:
   add: Add
   delete: Delete
@@ -23,6 +35,18 @@ workflow:
   recentVersion: Recent version
   creator: Creator
   creationTime: Creation time
+  basicInfo: Basic info
+  task: Task
+  setting: Setting
+  addResource: Add resource
+  resourceType: Resource type
+  existResource: Existing resource
+  addMethod: Add method
+  usePath: Use path
+  selectTemplate: Select Template
+  stageCreation: Stage creation method
+  addEnv: Add env
+  addArtifact: Add artifact
 integration:
   name: Name
   desc: Description
@@ -32,7 +56,7 @@ integration:
   updateexternalsystem: Update external system
   serviceAddress: Service address
   confirm:
-    tips: Do you Want to delete integration 
+    tips: Do you Want to delete integration
   form:
     dockerregistry: Docker registry
     registryaddress: Registry Address
@@ -48,15 +72,15 @@ integration:
       serverAddress: Server address
       verificationMode: Verification mode
       usernamepwd: Username password
-    sonarQube: 
-      name: SonarQube 
+    sonarQube:
+      name: SonarQube
       serverAddress: Server address
     dockerRegistry:
       name: DockerRegistry
       registryAddress: Registry address
       admin: Admin
       adminpwd: Admin password
-    cluster: 
+    cluster:
       name: Cluster
       serverAddress: Server address
       isControlCluster: isControlCluster
@@ -97,6 +121,7 @@ template:
     unit-test: UnitTest
     image-build: ImageBuild
     code-scan: CodeScan
+    cd: CD
 validate:
   required: Reqiured
   positiveOrFloat: Two decimal allowed

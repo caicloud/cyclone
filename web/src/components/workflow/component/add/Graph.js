@@ -1,14 +1,16 @@
 import * as React from 'react';
-
+import { Button, Drawer } from 'antd';
 import { GraphView } from 'react-digraph';
 import GraphConfig, {
-  EMPTY_EDGE_TYPE,
-  EMPTY_TYPE,
   NODE_KEY,
+  STAGE,
+  EMPTY_EDGE_TYPE,
   SPECIAL_EDGE_TYPE,
-  SPECIAL_TYPE,
-  SKINNY_TYPE,
 } from './graph-config'; // Configures node/edge types
+import AddStage from '../stage/AddStage';
+import classNames from 'classnames';
+import styles from '../index.module.less';
+import PropTypes from 'prop-types';
 
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
@@ -25,8 +27,9 @@ class Graph extends React.Component {
         edges: [],
         nodes: [],
       },
-      layoutEngineType: undefined,
+      nodePosition: {},
       selected: null,
+      visible: false,
     };
 
     this.GraphView = React.createRef();
@@ -56,32 +59,71 @@ class Graph extends React.Component {
     return this.state.graph.nodes[i];
   }
 
-  addStartNode = () => {
-    const graph = this.state.graph;
+  onClose = () => {
+    const { graph, selected, nodePosition } = this.state;
+    const { values, setFieldValue } = this.props;
+
+    let _state = {
+      graph,
+      visible: false,
+      nodePosition,
+    };
+
+    const stages = _.get(values, 'stages', []);
+    const currentStage = _.get(values, 'currentStage', '');
+    const number = currentStage.split('_')[1] - 1;
     // using a new array like this creates a new memory reference
     // this will force a re-render
-    graph.nodes = [
-      {
-        id: Date.now(),
-        title: 'Node ELLIOT',
-        type: SKINNY_TYPE,
-        x: 100,
-        y: 100,
-      },
-      ...this.state.graph.nodes,
-    ];
-    this.setState({
-      graph,
-    });
+    if (!selected && !stages.includes(currentStage)) {
+      const position = {
+        x: 100 + number * 140, // 动态随机定位
+        y: 100 + number * 60,
+      };
+      _state.graph.nodes = [
+        {
+          id: currentStage, // NOTE: stage id
+          title: _.get(values, `${currentStage}.name`),
+          type: STAGE,
+          ...position,
+        },
+        ...graph.nodes,
+      ];
+      _state.nodePosition[currentStage] = position;
+      setFieldValue('stages', [...stages, currentStage]);
+    }
+
+    this.setState(_state);
   };
-  deleteStartNode = () => {
-    const graph = this.state.graph;
-    graph.nodes.splice(0, 1);
-    // using a new array like this creates a new memory reference
-    // this will force a re-render
-    graph.nodes = [...this.state.graph.nodes];
-    this.setState({
-      graph,
+
+  getStageId = array => {
+    const number = array.map(o => o.split('_')[1]);
+    const max = number.sort(function(a, b) {
+      return b - a;
+    })[0];
+    return max * 1 || 0;
+  };
+
+  addStartNode = () => {
+    const { setFieldValue, values } = this.props;
+    // show Drawer
+    this.setState({ visible: true, selected: null });
+    // TODO(qme): stage id random
+    const stageId = `stage_${this.getStageId(_.get(values, 'stages')) + 1}`;
+    setFieldValue('currentStage', stageId);
+    setFieldValue(stageId, {
+      inputs: {
+        resources: [],
+      },
+      spec: {
+        containers: [
+          {
+            args: [],
+            command: [],
+            image: '',
+            env: [],
+          },
+        ],
+      },
     });
   };
 
@@ -94,15 +136,26 @@ class Graph extends React.Component {
   onUpdateNode = viewNode => {
     const graph = this.state.graph;
     const i = this.getNodeIndex(viewNode);
-
     graph.nodes[i] = viewNode;
+
     this.setState({ graph });
   };
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
+    const { nodePosition } = this.state;
     // Deselect events will send Null viewNode
-    this.setState({ selected: viewNode });
+    let state = { selected: viewNode, nodePosition };
+    const nodeId = _.get(viewNode, 'id');
+    const moved =
+      _.get(nodePosition, `${nodeId}.x`) !== _.get(viewNode, 'x') ||
+      _.get(nodePosition, `${nodeId}.y`) !== _.get(viewNode, 'y');
+    if (viewNode && !moved) {
+      state.visible = true;
+    } else {
+      state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
+    }
+    this.setState(state);
   };
 
   // Edge 'mouseUp' handler
@@ -114,20 +167,13 @@ class Graph extends React.Component {
   onCreateNode = (x, y) => {
     const graph = this.state.graph;
 
-    // This is just an example - any sort of logic
-    // could be used here to determine node type
-    // There is also support for subtypes. (see 'sample' above)
-    // The subtype geometry will underlay the 'type' geometry for a node
-    const type = Math.random() < 0.25 ? SPECIAL_TYPE : EMPTY_TYPE;
-
     const viewNode = {
       id: Date.now(),
       title: '',
-      type,
+      type: STAGE,
       x,
       y,
     };
-
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
   };
@@ -143,7 +189,6 @@ class Graph extends React.Component {
     });
     graph.nodes = nodeArr;
     graph.edges = newEdges;
-
     this.setState({ graph, selected: null });
   };
 
@@ -153,9 +198,7 @@ class Graph extends React.Component {
     // This is just an example - any sort of logic
     // could be used here to determine edge type
     const type =
-      sourceViewNode.type === SPECIAL_TYPE
-        ? SPECIAL_EDGE_TYPE
-        : EMPTY_EDGE_TYPE;
+      sourceViewNode.type === STAGE ? SPECIAL_EDGE_TYPE : EMPTY_EDGE_TYPE;
 
     const viewEdge = {
       source: sourceViewNode[NODE_KEY],
@@ -201,14 +244,6 @@ class Graph extends React.Component {
     });
   };
 
-  onUndo = () => {
-    // Not implemented
-    console.warn('Undo is not currently implemented in the example.'); //eslint-disable-line
-    // In order to undo it one would simply call the inverse of the action performed. For instance, if someone
-    // called onDeleteEdge with (viewEdge, i, edges) then an undelete would be a splicing the original viewEdge
-    // into the edges array at position i.
-  };
-
   onCopySelected = () => {
     if (this.state.selected.source) {
       console.warn('Cannot copy selected edges, try selecting a node instead.'); //eslint-disable-line
@@ -231,8 +266,20 @@ class Graph extends React.Component {
     this.forceUpdate();
   };
 
-  handleChangeLayoutEngineType = event => {
-    this.setState({ layoutEngineType: event.target.value });
+  // render note text
+  renderNodeText = (data, id, isSelected) => {
+    const lineOffset = 6;
+    const cls = classNames('node-text', { selected: isSelected });
+    return (
+      <text className={cls} textAnchor="middle">
+        {!!data.typeText && <tspan opacity="0.5">{data.typeText}</tspan>}
+        {data.title && (
+          <tspan x={0} dy={lineOffset} fontSize="16px">
+            {data.title}
+          </tspan>
+        )}
+      </text>
+    );
   };
 
   /*
@@ -243,23 +290,14 @@ class Graph extends React.Component {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
+    const { values } = this.props;
 
     return (
-      <div id="graph" style={{ height: '1000px' }}>
+      <div id="graph" className={styles['graph']}>
         <div className="graph-header">
-          <button onClick={this.addStartNode}>Add Node</button>
-          <button onClick={this.deleteStartNode}>Delete Node</button>
-          <div className="layout-engine">
-            <span>Layout Engine:</span>
-            <select
-              name="layout-engine-type"
-              onChange={this.handleChangeLayoutEngineType}
-            >
-              <option value={undefined}>None</option>
-              <option value={'SnapToGrid'}>Snap to Grid</option>
-              <option value={'VerticalTree'}>Vertical Tree</option>
-            </select>
-          </div>
+          <Button type="primary" onClick={this.addStartNode}>
+            添加 stage
+          </Button>
         </div>
         <GraphView
           ref={el => (this.GraphView = el)}
@@ -278,14 +316,32 @@ class Graph extends React.Component {
           onCreateEdge={this.onCreateEdge}
           onSwapEdge={this.onSwapEdge}
           onDeleteEdge={this.onDeleteEdge}
-          onUndo={this.onUndo}
           onCopySelected={this.onCopySelected}
           onPasteSelected={this.onPasteSelected}
-          layoutEngineType={this.state.layoutEngineType}
+          renderNodeText={this.renderNodeText}
         />
+        <Drawer
+          title="Basic Drawer"
+          placement="right"
+          closable={false}
+          onClose={this.onClose}
+          visible={this.state.visible}
+          width={600}
+        >
+          <AddStage
+            key={_.get(values, 'currentStage')}
+            setFieldValue={this.props.setFieldValue}
+            values={this.props.values}
+          />
+        </Drawer>
       </div>
     );
   }
 }
+
+Graph.propTypes = {
+  values: PropTypes.object,
+  setFieldValue: PropTypes.func,
+};
 
 export default Graph;

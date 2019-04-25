@@ -7490,8 +7490,8 @@ react-dev-utils@^6.0.0:
 
 react-digraph@^6.2.2:
   version "6.2.2"
-  resolved "http://npm.caicloud.xyz/react-digraph/-/react-digraph-6.2.2.tgz#485fda10572423458983fad95c6818b272ce72e4"
-  integrity sha512-D9HfiNaiEcla2WdChqzUT9m0QzHL7oylTDc4BiO33TFfD+puhVzZSoyxadE5Ntk4Gt88uPXC2sG6lleUPL4J8w==
+  resolved "http://registry.npm.taobao.org/react-digraph/download/react-digraph-6.2.2.tgz#485fda10572423458983fad95c6818b272ce72e4"
+  integrity sha1-SF/aEFckI0WJg/rZXGgYsnLOcuQ=
   dependencies:
     d3 "^5.7.0"
     dagre "^0.8.2"

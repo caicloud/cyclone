@@ -3,6 +3,7 @@ import { Form, Button } from 'antd';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 import { IntegrationTypeMap } from '@/consts/const.js';
+import { defaultFormItemLayout } from '@/lib/const';
 
 const FormItem = Form.Item;
 const { Option, OptGroup } = Select;
@@ -60,10 +61,7 @@ class IntegrationSelect extends React.Component {
         validateStatus={hasError ? 'error' : 'success'}
         hasFeedback={hasFeedback && hasError}
         help={hasError && errors[name]}
-        {...{
-          labelCol: { span: 4 },
-          wrapperCol: { span: 16 },
-        }}
+        {...defaultFormItemLayout}
       >
         <Select
           mode="multiple"
