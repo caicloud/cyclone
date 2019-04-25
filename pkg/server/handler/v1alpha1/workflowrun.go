@@ -100,7 +100,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 }
 
 func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.WorkflowRun, error) {
-	results := []v1alpha1.WorkflowRun{}
+	var results []v1alpha1.WorkflowRun
 	// Support multiple filters rules, separated with comma.
 	filterParts := strings.Split(filter, ",")
 	filters := make(map[string]string)
@@ -135,6 +135,15 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 				if strings.ToLower(string(wfr.Status.Overall.Phase)) != value {
 					selected = false
 				}
+			case "trigger":
+				if wfr.Annotations != nil {
+					if trigger, ok := wfr.Annotations[meta.AnnotationWorkflowRunTrigger]; ok {
+						if strings.Contains(trigger, value) {
+							continue
+						}
+					}
+				}
+				selected = false
 			}
 		}
 
