@@ -16,6 +16,9 @@ const fetchApi = {
   getStageTemplate(template) {
     return http.get(`/templates/${template}`).then(data => data);
   },
+  createStageTemplate(data) {
+    return http.post('/templates', data);
+  },
   // end template
   fetchIntegrationList(query) {
     return http.get(`/integrations`, query).then(data => {

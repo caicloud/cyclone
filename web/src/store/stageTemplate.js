@@ -14,6 +14,13 @@ class StageTemplate {
   }
 
   @action
+  createStageTemplate(data, cb) {
+    fetchApi.createStageTemplate(data).then(() => {
+      cb();
+    });
+  }
+
+  @action
   getTemplateList() {
     this.templateList = [];
     this.templateListLoading = true;

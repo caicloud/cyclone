@@ -1,6 +1,6 @@
 import List from './List/index';
 import Detail from './Detail/index';
-import CreateStageTemplate from './CreateStageTemplate/index';
+import CreateStageTemplate from './add/index';
 import { Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
