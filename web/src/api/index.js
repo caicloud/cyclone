@@ -19,6 +19,12 @@ const fetchApi = {
   createStageTemplate(data) {
     return http.post('/templates', data);
   },
+  updateStageTemplate(data, name) {
+    return http.put(`/templates/${name}`, data);
+  },
+  removeStageTemplate(name) {
+    return http.delete(`/templates/${name}`);
+  },
   // end template
   fetchIntegrationList(query) {
     return http.get(`/integrations`, query).then(data => {

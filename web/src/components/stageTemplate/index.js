@@ -9,6 +9,11 @@ const TemplateRoute = ({ match }) => {
     <Switch>
       <Route path="/stageTemplate" exact component={List} />
       <Route path={`${match.path}/add`} exact component={CreateStageTemplate} />
+      <Route
+        path={`${match.path}/add/:templateName`}
+        exact
+        component={CreateStageTemplate}
+      />
       <Route path={`${match.path}/:templateName`} exact component={Detail} />
     </Switch>
   );

@@ -17,8 +17,6 @@ output: 输出
 image: 镜像
 env: 环境变量
 key: 健
-value: 值
-path: 路径
 operation:
   add: 新增
   delete: 删除
@@ -117,18 +115,17 @@ allocation:
   middle: 中等配置
   high: 高级配置
 template:
+  deletetips: 确定删除模板？
   create: 创建模板
   update: 更新模板
   form:
-    name: 名称
-    desc: 描述
     inputs:
       name: 输入
     config:
       name: 配置
-      registory: 镜像
+      image: 镜像
       entryPoint: Entry point
-      CMD: CMD
+      cmd: CMD
       env:
         name: 环境变量
         key: 健

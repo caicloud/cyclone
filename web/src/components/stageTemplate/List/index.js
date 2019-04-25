@@ -55,6 +55,7 @@ class StageTemplate extends React.Component {
     const {
       location = {},
       stageTemplate: { templateList = [] },
+      history,
     } = this.props;
     const kinds = this.getKinds(templateList.items);
     // get kind from querystring
@@ -74,12 +75,15 @@ class StageTemplate extends React.Component {
           <KindFilter activeKind={query.kind || ''} kinds={kinds} />
         </Sider>
         <Content>
-          <Button type="primary" onClick={this.addStageTemplate}>
-            {intl.get('operation.add')}
-          </Button>
+          <div className="head-bar">
+            <Button type="primary" onClick={this.addStageTemplate}>
+              {intl.get('operation.add')}
+            </Button>
+          </div>
           <div className={styles['template-list']}>
             {_.map(actualList, template => (
               <Item
+                history={history}
                 template={template}
                 key={_.get(template, 'metadata.name')}
               />

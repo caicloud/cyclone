@@ -21,6 +21,20 @@ class StageTemplate {
   }
 
   @action
+  updateStageTemplate(data, name, cb) {
+    fetchApi.updateStageTemplate(data, name).then(() => {
+      cb();
+    });
+  }
+
+  @action.bound
+  deleteStageTemplate(name, cb) {
+    fetchApi.removeStageTemplate(name).then(() => {
+      cb();
+    });
+  }
+
+  @action
   getTemplateList() {
     this.templateList = [];
     this.templateListLoading = true;
@@ -37,6 +51,10 @@ class StageTemplate {
   fetchStageTemplatesSuccess(templateList) {
     this.templateListLoading = false;
     this.templateList = templateList;
+  }
+  @action.bound
+  resetTemplate() {
+    this.template = null;
   }
 }
 

@@ -20,3 +20,8 @@ export const resourceParametersField = {
     { name: 'PASSWORD', value: '' },
   ],
 };
+
+export const argumentsParamtersField = [
+  { name: 'image', value: '' },
+  { name: 'cmd', value: '' },
+];

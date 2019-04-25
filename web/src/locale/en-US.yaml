@@ -17,8 +17,6 @@ output: Output
 image: Image
 env: Env
 key: Key
-value: Value
-path: Path
 operation:
   add: Add
   delete: Delete
@@ -118,16 +116,17 @@ allocation:
   middle: Medium configuration
   high: Advanced configuration
 template:
+  deletetips: Are you sure to delete the template?
+  create: Create
+  update: Update
   form:
-    name: 名称
-    desc: 描述
     inputs:
       name: 输入
     config:
       name: 配置
-      registory: 镜像
+      image: 镜像
       entryPoint: Entry point
-      CMD: CMD
+      cmd: CMD
       env:
         name: 环境变量
         key: 健
