@@ -443,7 +443,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 		return &scm.EventData{
 			Type: scm.TagReleaseEventType,
 			Repo: event.Project.PathWithNamespace,
-			Ref:  strings.Split(event.Ref, "/")[2],
+			Ref:  event.Ref,
 		}
 	case *gitlab.MergeEvent:
 		objectAttributes := event.ObjectAttributes

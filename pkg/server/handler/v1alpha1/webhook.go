@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
@@ -115,6 +116,10 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		if st.TagRelease.Enabled {
 			trigger = true
 			tag = data.Ref
+			splitTags := strings.Split(data.Ref, "/")
+			if len(splitTags) == 3 {
+				tag = splitTags[2]
+			}
 		}
 	case scm.PushEventType:
 		for _, branch := range st.Push.Branches {
