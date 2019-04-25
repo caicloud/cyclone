@@ -26,7 +26,8 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
-  digest = "1:3f9cd786cb3e5a69ffd41528631b87f278842ac4ee389f1e2dfcca9e8d206a0f"
+  branch = "master"
+  digest = "1:babe400f8d4d884a95c4f9ad3a5024681f2e14b6a31b55f978a5f8fe15b0e7ab"
   name = "github.com/caicloud/nirvana"
   packages = [
     ".",
@@ -45,8 +46,7 @@
     "utils/printer",
   ]
   pruneopts = "UT"
-  revision = "35f5d634795a3a804c2937abb6cb2c249fe88e46"
-  version = "v0.2.0"
+  revision = "32ebf1fc87109bcda0a109951a427d7ac82b5b58"
 
 [[projects]]
   digest = "1:c08f898868838e16e9f6caa00ea6eeb2bcbfcd8a374f602c3e3b305092079a3f"

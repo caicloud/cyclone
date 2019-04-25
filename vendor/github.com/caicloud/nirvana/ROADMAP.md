@@ -3,6 +3,12 @@
 ### Long Term
 - SOA Governance
 
+### 0.3
+- Optimize the performance of service (Go Reflect)
+- Improve OpenAPI and Client generation usability
+- Refine profiling/metrics/tracing plugins
+- Add more documents
+
 ### 0.2
 - Update compiler to golang 1.10 ([#202](https://github.com/caicloud/nirvana/issues/202))
 - Plugins 
@@ -26,3 +32,5 @@
   - Chinese
   - English
 
+# 0.1
+- Basic Framework

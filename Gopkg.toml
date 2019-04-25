@@ -94,7 +94,7 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 
 [[override]]
   name = "github.com/caicloud/nirvana"
-  version = "v0.2.0"
+  branch = "master"
 
 [[override]]
   name = "github.com/spf13/pflag"

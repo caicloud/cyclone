@@ -142,10 +142,7 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
-		// TODO (robin) Nirvana framework does not allow path parameters to include `/` or `%2F`, which does not support SCM repo.
-		// Need to submit feature request for Nirvana.
-		// Path:        "/integrations/{integration}/scmrepos/{repo}/branches",
-		Path:        "/integrations/{integration}/branches",
+		Path:        "/integrations/{integration}/scmrepos/{repo}/branches",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
 			{
@@ -164,7 +161,7 @@ var integration = []definition.Descriptor{
 						Description: "Name of the integration to get",
 					},
 					{
-						Source:      definition.Query,
+						Source:      definition.Path,
 						Name:        "repo",
 						Description: "Name of SCM repo",
 					},
@@ -174,7 +171,7 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/integrations/{integration}/tags",
+		Path:        "/integrations/{integration}/scmrepos/{repo}/tags",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
 			{
@@ -193,7 +190,7 @@ var integration = []definition.Descriptor{
 						Description: "Name of the integration to get",
 					},
 					{
-						Source:      definition.Query,
+						Source:      definition.Path,
 						Name:        "repo",
 						Description: "Name of SCM repo",
 					},

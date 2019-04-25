@@ -83,7 +83,7 @@ func newMetricsMiddleware(namespace string) definition.Middleware {
 		httpCtx := service.HTTPContextFrom(ctx)
 		req := httpCtx.Request()
 		resp := httpCtx.ResponseWriter()
-		path := req.URL.Path
+		path := httpCtx.RoutePath()
 		elapsed := float64((time.Since(startTime)) / time.Millisecond)
 
 		requestCounter.WithLabelValues(req.Method, path, getHTTPClient(req), req.Header.Get("Content-Type"), strconv.Itoa(resp.StatusCode())).Inc()
