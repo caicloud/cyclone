@@ -19,6 +19,7 @@
         - name: output-artifact-path
         resources:
         - name: code
+          type: Git
           path: /workspace
       outputs:
         artifacts:
@@ -57,6 +58,7 @@
           value: /go/bin/app
         resources:
         - name: code
+          type: Git
           path: /go/src
       outputs:
         artifacts:
@@ -95,6 +97,7 @@
           value: /workspace/target/<app>.jar
         resources:
         - name: code
+          type: Git
           path: /workspace
       outputs:
         artifacts:
@@ -134,6 +137,7 @@
           value: /workspace/build/<app>.jar
         resources:
         - name: code
+          type: Git
           path: /workspace
       outputs:
         artifacts:
