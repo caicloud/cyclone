@@ -90,9 +90,9 @@ func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
 	}, nil
 }
 
-// CollectLogs collects all containers' logs except for the coordinator container itself.
+// CollectLogs collects all containers' logs.
 func (co *Coordinator) CollectLogs() error {
-	cs, err := co.getAllOtherContainers()
+	cs, err := co.getAllContainers()
 	if err != nil {
 		return err
 	}
@@ -313,17 +313,18 @@ func (co *Coordinator) NotifyResolvers() error {
 	return nil
 }
 
-func (co *Coordinator) getAllOtherContainers() ([]string, error) {
+func (co *Coordinator) getAllContainers() ([]string, error) {
 	var cs []string
 	pod, err := co.runtimeExec.GetPod()
 	if err != nil {
 		return cs, err
 	}
 
+	for _, c := range pod.Spec.InitContainers {
+		cs = append(cs, c.Name)
+	}
 	for _, c := range pod.Spec.Containers {
-		if c.Name != common.CoordinatorSidecarName {
-			cs = append(cs, c.Name)
-		}
+		cs = append(cs, c.Name)
 	}
 
 	return cs, nil
