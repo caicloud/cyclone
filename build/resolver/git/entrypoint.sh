@@ -28,7 +28,9 @@ USAGE=$(cat <<-END
        'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
        'refs/merge-requests/1/head:master'.
      - GIT_TOKEN [Optional] For public repository, no need provide this token, but for
-       private repository, this should be provided.
+       private repository, this should be provided. Token here support 2 different formats:
+       a. <user>:<password>
+       b. <token>
      - PULL_POLICY [Optional] Indicate whether pull resources when there already
        are old data, if set to IfNotPresent, will make use of the old data and
        perform incremental pull, otherwise old data would be removed.
@@ -59,6 +61,23 @@ releaseLock() {
 
 # Make sure the lock file is deleted if created by this resolver.
 trap releaseLock EXIT
+
+urlencode() {
+    local string="${1}"
+    local strlen=${#string}
+    local encoded=""
+    local pos c o
+
+    for (( pos=0 ; pos<strlen ; pos++ )); do
+        c=${string:$pos:1}
+        case "$c" in
+            [-_.~a-zA-Z0-9] ) o="${c}" ;;
+            * )               printf -v o '%%%02x' "'$c"
+         esac
+        encoded+="${o}"
+    done
+    echo "${encoded}"
+}
 
 wrapPull() {
     # If there is already data, we should just wait for the data to be ready.
@@ -123,9 +142,20 @@ pull() {
         fi
         cd $WORKDIR
 
-        # Add token to url if provided and clone git repo
+        # Add token to url if provided and clone git repo. If GIT_TOKEN is in format '<user>:<password>', then url
+        # encode each part of it and get '<encoded_user>:<encoded_password>'. If GIT_TOKEN is in format '<token>',
+        # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
         if [ ! -z ${GIT_TOKEN+x} ]; then
-            GIT_URL=${GIT_URL/\/\//\/\/oauth2:${GIT_TOKEN}@}
+            LEFT=${GIT_TOKEN%%:*}
+            RIGHT=${GIT_TOKEN##*:}
+            if [[ "$LEFT" == "$GIT_TOKEN" ]]; then
+                GIT_TOKEN="oauth2:$(urlencode "$GIT_TOKEN")"
+            else
+                GIT_TOKEN="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
+            fi
+
+            GIT_URL=${GIT_URL/\/\//\/\/${GIT_TOKEN}@}
+            echo "GIT_URL: $GIT_URL"
         fi
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
