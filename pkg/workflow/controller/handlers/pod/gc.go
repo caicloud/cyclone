@@ -5,8 +5,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 )
 
@@ -25,7 +25,7 @@ func IsGCPod(pod *corev1.Pod) bool {
 }
 
 // GCPodUpdated handles GC pod update. If GC pod is terminated, it will be deleted.
-func GCPodUpdated(client clientset.Interface, pod *corev1.Pod) {
+func GCPodUpdated(client kubernetes.Interface, pod *corev1.Pod) {
 	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 		if err := client.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			if errors.IsNotFound(err) {

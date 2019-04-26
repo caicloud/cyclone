@@ -14,6 +14,7 @@ import (
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
@@ -61,10 +62,18 @@ func main() {
 	wfrController := controllers.NewWorkflowRunController(client)
 	go wfrController.Run(ctx.Done())
 
-	// Create and start Pod controller.
-	podController := controllers.NewPodController(client)
-	go podController.Run(ctx.Done())
+	// Create and start execution cluster controller.
+	clusterController := controllers.NewExecutionClusterController(client)
+	go clusterController.Run(ctx.Done())
 
-	// Wait forever.
-	select {}
+	// Watch for execution cluster, start pod controller for it.
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cluster := <-store.NewClusterChan:
+			podController := controllers.NewPodController(cluster.Client, client)
+			go podController.Run(cluster.StopCh)
+		}
+	}
 }

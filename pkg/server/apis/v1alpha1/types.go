@@ -3,7 +3,8 @@ package v1alpha1
 import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	cmd_api "k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 )
 
 const (
@@ -163,7 +164,7 @@ const (
 // ClusterSource contains info about clusters.
 type ClusterSource struct {
 	// Credential is the credential info of the cluster
-	Credential ClusterCredential `json:"credential"`
+	Credential v1alpha1.ClusterCredential `json:"credential"`
 	// IsControlCluster describes whether the cluster is the control cluster itself
 	IsControlCluster bool `json:"isControlCluster,omitempty"`
 	// IsWorkerCluster defines whether this cluster can be used to run workflow.
@@ -178,35 +179,6 @@ type ClusterSource struct {
 	// use this pvc and not to create another one.
 	// It's used when 'IsWorkerCluster' is True.
 	PVC string `json:"pvc"`
-}
-
-// ClusterCredential contains credential info about cluster
-type ClusterCredential struct {
-	// Server represents the address of cluster.
-	Server string `json:"server"`
-	// User is a user of the cluster.
-	User string `json:"user"`
-	// Password is the password of the corresponding user.
-	Password string `json:"password"`
-	// BearerToken is the credential to access cluster.
-	BearerToken string `json:"bearerToken"`
-	// TLSClientConfig is the config about TLS
-	TLSClientConfig *TLSClientConfig `json:"tlsClientConfig,omitempty"`
-	// KubeConfig is the config about kube config
-	KubeConfig *cmd_api.Config `json:"kubeConfig,omitempty"`
-}
-
-// TLSClientConfig contains settings to enable transport layer security
-type TLSClientConfig struct {
-	// Server should be accessed without verifying the TLS certificate. For testing only.
-	Insecure bool `json:"insecure,omitempty" bson:"insecure"`
-
-	// CAFile is the trusted root certificates for server
-	CAFile string `json:"caFile,omitempty" bson:"caFile"`
-
-	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
-	// CAData takes precedence over CAFile
-	CAData []byte `json:"caData,omitempty" bson:"caData"`
 }
 
 // Statistic represents statistics of project or workflow.

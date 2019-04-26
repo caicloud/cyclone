@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -19,6 +20,7 @@ import (
 // Operator ...
 type Operator struct {
 	client        clientset.Interface
+	clusterClient kubernetes.Interface
 	workflowRun   string
 	stage         string
 	metaNamespace string
@@ -26,7 +28,7 @@ type Operator struct {
 }
 
 // NewOperator ...
-func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
+func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
 	wfr, ok := annotations[meta.AnnotationWorkflowRunName]
 	if !ok {
@@ -42,6 +44,7 @@ func NewOperator(client clientset.Interface, pod *corev1.Pod) (*Operator, error)
 	}
 
 	return &Operator{
+		clusterClient: clusterClient,
 		client:        client,
 		workflowRun:   wfr,
 		stage:         stage,
@@ -63,7 +66,7 @@ func (p *Operator) OnDelete() error {
 	}
 
 	wfr := origin.DeepCopy()
-	operator, err := workflowrun.NewOperator(p.client, wfr, origin.Namespace)
+	operator, err := workflowrun.NewOperator(p.clusterClient, p.client, wfr, origin.Namespace)
 	if err != nil {
 		return err
 	}
@@ -87,7 +90,7 @@ func (p *Operator) OnUpdated() error {
 			log.WithField("wfr", p.workflowRun).WithField("ns", p.metaNamespace).Warn("wfr not found")
 			// Delete the pod if WorkflowRun not exists any more, there is possible that the pod been deleted elsewhere on WorkflowRun deletion,
 			// so if we delete pod failed here due to not found, just ignore it.
-			if err := p.client.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+			if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete orphan pod error: ", err)
 			} else {
 				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Orphan pod deleted")
@@ -106,7 +109,7 @@ func (p *Operator) OnUpdated() error {
 	}
 
 	wfr := origin.DeepCopy()
-	wfrOperator, err := workflowrun.NewOperator(p.client, wfr, origin.Namespace)
+	wfrOperator, err := workflowrun.NewOperator(p.clusterClient, p.client, wfr, origin.Namespace)
 	if err != nil {
 		return err
 	}

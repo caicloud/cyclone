@@ -10,4 +10,7 @@ const (
 \____/\__, /\___/_/\____/_/ /_/\___/ 
      /____/
 `
+
+	// ControlClusterName is name of the master cluster
+	ControlClusterName = "cyclone-control-cluster"
 )

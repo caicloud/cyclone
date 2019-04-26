@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 
@@ -47,23 +48,24 @@ type Operator interface {
 }
 
 type operator struct {
-	client   clientset.Interface
-	recorder record.EventRecorder
-	wf       *v1alpha1.Workflow
-	wfr      *v1alpha1.WorkflowRun
+	clusterClient kubernetes.Interface
+	client        clientset.Interface
+	recorder      record.EventRecorder
+	wf            *v1alpha1.Workflow
+	wfr           *v1alpha1.WorkflowRun
 }
 
 // Ensure *operator has implemented Operator interface.
 var _ Operator = (*operator)(nil)
 
 // NewOperator create a new operator.
-func NewOperator(client clientset.Interface, wfr interface{}, namespace string) (Operator, error) {
+func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface, wfr interface{}, namespace string) (Operator, error) {
 	if w, ok := wfr.(string); ok {
-		return newFromName(client, w, namespace)
+		return newFromName(clusterClient, client, w, namespace)
 	}
 
 	if w, ok := wfr.(*v1alpha1.WorkflowRun); ok {
-		return newFromValue(client, w, namespace)
+		return newFromValue(clusterClient, client, w, namespace)
 	}
 
 	return nil, fmt.Errorf("invalid parameter 'wfr' provided: %v", wfr)
@@ -71,31 +73,33 @@ func NewOperator(client clientset.Interface, wfr interface{}, namespace string) 
 
 // When create Operator from WorkflowRun name, we only get WorkflowRun value, but not for
 // Workflow.
-func newFromName(client clientset.Interface, wfr, namespace string) (Operator, error) {
+func newFromName(clusterClient kubernetes.Interface, client clientset.Interface, wfr, namespace string) (Operator, error) {
 	w, err := client.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfr, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return &operator{
-		client:   client,
-		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
-		wfr:      w,
+		clusterClient: clusterClient,
+		client:        client,
+		recorder:      common.GetEventRecorder(client, common.EventSourceWfrController),
+		wfr:           w,
 	}, nil
 }
 
 // When create Operator from WorkflowRun value, we will also get Workflow value.
-func newFromValue(client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespace string) (Operator, error) {
+func newFromValue(clusterClient kubernetes.Interface, client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespace string) (Operator, error) {
 	f, err := client.CycloneV1alpha1().Workflows(namespace).Get(wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return &operator{
-		client:   client,
-		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
-		wf:       f,
-		wfr:      wfr,
+		clusterClient: clusterClient,
+		client:        client,
+		recorder:      common.GetEventRecorder(client, common.EventSourceWfrController),
+		wf:            f,
+		wfr:           wfr,
 	}, nil
 }
 
@@ -350,7 +354,7 @@ func (o *operator) Reconcile() error {
 			continue
 		}
 
-		err = NewWorkloadProcessor(o.client, o.wf, o.wfr, stg, o).Process()
+		err = NewWorkloadProcessor(o.clusterClient, o.client, o.wf, o.wfr, stg, o).Process()
 		if err != nil {
 			log.WithField("stg", stage).Error("Process workload error: ", err)
 			continue
@@ -396,7 +400,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				Warn("Pod information is missing, can't clean the pod.")
 			continue
 		}
-		err := o.client.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+		err := o.clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			// If the pod not exist, just skip it without complain.
 			if errors.IsNotFound(err) {
@@ -470,7 +474,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 			},
 		}
 
-		_, err := o.client.CoreV1().Pods(executionContext.Namespace).Create(gcPod)
+		_, err := o.clusterClient.CoreV1().Pods(executionContext.Namespace).Create(gcPod)
 		if err != nil {
 			log.WithField("wfr", o.wfr.Name).Warn("Create GC pod error: ", err)
 			if !lastTry {

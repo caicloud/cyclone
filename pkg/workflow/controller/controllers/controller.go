@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -16,11 +17,12 @@ import (
 
 // Controller ...
 type Controller struct {
-	name         string
-	clientSet    clientset.Interface
-	queue        workqueue.RateLimitingInterface
-	informer     cache.SharedIndexInformer
-	eventHandler handlers.Interface
+	name          string
+	clusterClient kubernetes.Interface
+	clientSet     clientset.Interface
+	queue         workqueue.RateLimitingInterface
+	informer      cache.SharedIndexInformer
+	eventHandler  handlers.Interface
 }
 
 // EventType ...

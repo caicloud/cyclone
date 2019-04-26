@@ -3,6 +3,7 @@ package pod
 import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
@@ -10,7 +11,8 @@ import (
 
 // Handler ...
 type Handler struct {
-	Client clientset.Interface
+	ClusterClient kubernetes.Interface
+	Client        clientset.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -43,7 +45,7 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 		return
 	}
 
-	operator, err := NewOperator(h.Client, pod)
+	operator, err := NewOperator(h.ClusterClient, h.Client, pod)
 	if err != nil {
 		log.Error("Create operator error: ", err)
 		return
@@ -65,12 +67,12 @@ func (h *Handler) onUpdate(obj interface{}) {
 
 	// Check whether it's GC pod.
 	if IsGCPod(pod) {
-		GCPodUpdated(h.Client, pod)
+		GCPodUpdated(h.ClusterClient, pod)
 		return
 	}
 
 	// For stage pod, create operator to handle it.
-	operator, err := NewOperator(h.Client, pod)
+	operator, err := NewOperator(h.ClusterClient, h.Client, pod)
 	if err != nil {
 		log.Error("Create operator error: ", err)
 		return

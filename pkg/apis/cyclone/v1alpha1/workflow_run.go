@@ -76,8 +76,8 @@ type ParameterConfig struct {
 // ExecutionContext is execution context of a workflow. Namespace, pvc
 // cluster info would be defined here.
 type ExecutionContext struct {
-	// TODO(ChenDe): Add multi-cluster support
-	// ...
+	// Name of the execution cluster
+	Cluster string `json:"cluster"`
 	// Namespace is namespace where to run workflow
 	Namespace string `json:"namespace"`
 	// PVC is the PVC used to run workflow

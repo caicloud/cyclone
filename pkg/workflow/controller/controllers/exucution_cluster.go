@@ -3,30 +3,24 @@ package controllers
 import (
 	"reflect"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/k8s/informers"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
-	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/pod"
+	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/executioncluster"
 )
 
-// NewPodController ...
-func NewPodController(clusterClient kubernetes.Interface, client clientset.Interface) *Controller {
+// NewExecutionClusterController ...
+func NewExecutionClusterController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
-		clusterClient,
+		client,
 		common.ResyncPeriod,
-		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = meta.CyclonePodSelector()
-		}),
 	)
 
-	informer := factory.Core().V1().Pods().Informer()
+	informer := factory.Cyclone().V1alpha1().ExecutionClusters().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
@@ -67,14 +61,12 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 	})
 
 	return &Controller{
-		name:          "Workflow Pod Controller",
-		clientSet:     client,
-		clusterClient: clusterClient,
-		informer:      informer,
-		queue:         queue,
-		eventHandler: &pod.Handler{
-			ClusterClient: clusterClient,
-			Client:        client,
+		name:      "Execution Cluster Controller",
+		clientSet: client,
+		informer:  informer,
+		queue:     queue,
+		eventHandler: &executioncluster.Handler{
+			Client: client,
 		},
 	}
 }

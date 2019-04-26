@@ -6,6 +6,8 @@ Copyright 2019 caicloud authors. All rights reserved.
 
 package v1alpha1
 
+type ExecutionClusterExpansion interface{}
+
 type ProjectExpansion interface{}
 
 type ResourceExpansion interface{}

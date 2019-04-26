@@ -12,6 +12,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// ExecutionClusters returns a ExecutionClusterInformer.
+	ExecutionClusters() ExecutionClusterInformer
 	// Projects returns a ProjectInformer.
 	Projects() ProjectInformer
 	// Resources returns a ResourceInformer.
@@ -35,6 +37,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// ExecutionClusters returns a ExecutionClusterInformer.
+func (v *version) ExecutionClusters() ExecutionClusterInformer {
+	return &executionClusterInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // Projects returns a ProjectInformer.
