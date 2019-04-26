@@ -133,6 +133,8 @@ const (
 	GitHub = "GitHub"
 	// SVN is the SVN scm
 	SVN = "SVN"
+	// Bitbucket is the Bitbucket scm
+	Bitbucket = "Bitbucket"
 )
 
 // SCMSource represents Source Code Management to manage code.

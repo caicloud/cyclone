@@ -31,6 +31,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis"
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
