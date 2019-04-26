@@ -17,6 +17,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/pvc"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
@@ -190,7 +191,7 @@ func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
 			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
 		}
 
-		err = svrcommon.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
+		err = pvc.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
 			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
@@ -200,15 +201,6 @@ func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
 		}
 
 		cluster.PVC = svrcommon.TenantPVC(tenant.Name)
-	}
-
-	// Launch PVC usage watcher to watch the usage of PVC.
-	err = usage.LaunchPVCUsageWatcher(client, v1alpha1.ExecutionContext{
-		Namespace: cluster.Namespace,
-		PVC:       cluster.PVC,
-	})
-	if err != nil {
-		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", cluster.Namespace, cluster.PVC, err)
 	}
 
 	clusterName := in.Spec.Cluster.ClusterName
@@ -254,10 +246,8 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 
 	// delete namespace which is created by cyclone
 	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-		// cyclone can not support other clusters (except for control cluster)by now, so we can not delete the namespace,
-		// since there are metadata(cyclone resources, stage, workflow, workflowrun metadata) under it.
-
-		/*
+		// if is a user cluster, delete its namespace directly
+		if !cluster.IsControlCluster {
 			err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 			if err != nil {
 				log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
@@ -265,7 +255,7 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 			}
 			// if namespace is deleted, will exit, no need delete others resources.
 			return
-		*/
+		}
 	}
 
 	// delete resource quota
@@ -349,43 +339,59 @@ func getIntegration(tenant, name string) (*api.Integration, error) {
 	return SecretToIntegration(secret)
 }
 
+func updateClusterIntegration(tenant, name string, in *api.Integration) error {
+	oldIn, err := getIntegration(tenant, name)
+	if err != nil {
+		log.Errorf("get integration %s error %v", name, err)
+		return err
+	}
+
+	oldCluster := oldIn.Spec.Cluster
+	cluster := in.Spec.Cluster
+	if cluster.Namespace == "" {
+		cluster.Namespace = oldCluster.Namespace
+	} else if cluster.Namespace == oldCluster.Namespace && cluster.PVC == "" {
+		cluster.PVC = oldCluster.PVC
+	}
+	// turn on worker cluster
+	if !oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
+		// open cluster for the tenant, create namespace and pvc
+		err := OpenClusterForTenant(in, tenant)
+		if err != nil {
+			return err
+		}
+	}
+
+	// turn off worker cluster
+	if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
+		// close cluster for the tenant, delete namespace
+		err := CloseClusterForTenant(oldIn, tenant)
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO(zhujian7): namespace or pvc changed
+	if oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
+		if oldCluster.Namespace != cluster.Namespace {
+			log.Info("can not process updating namespace, namespace changed from %s to %s", oldCluster.Namespace, cluster.Namespace)
+		}
+
+		if oldCluster.PVC != cluster.PVC {
+			log.Info("can not process updating pvc, pvc changed from %s to %s", oldCluster.PVC, cluster.PVC)
+		}
+	}
+
+	return nil
+}
+
 // UpdateIntegration updates an integration with the given tenant name and integration name.
 // If updated successfully, return the updated integration.
 func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
-		oldIn, err := getIntegration(tenant, name)
+		err := updateClusterIntegration(tenant, name, in)
 		if err != nil {
-			log.Errorf("get integration %s error %v", name, err)
 			return nil, err
-		}
-
-		oldCluster := oldIn.Spec.Cluster
-		cluster := in.Spec.Cluster
-		if cluster.Namespace == "" {
-			cluster.Namespace = oldCluster.Namespace
-		} else if cluster.Namespace == oldCluster.Namespace && cluster.PVC == "" {
-			cluster.PVC = oldCluster.PVC
-		}
-		// turn on worker cluster
-		if !oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
-			// open cluster for the tenant, create namespace and pvc
-			err := OpenClusterForTenant(in, tenant)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// turn off worker cluster
-		if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
-			// close cluster for the tenant, delete namespace
-			err := CloseClusterForTenant(oldIn, tenant)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// TODO(zhujian7): namespace or pvc changed
-		if oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
 		}
 	}
 

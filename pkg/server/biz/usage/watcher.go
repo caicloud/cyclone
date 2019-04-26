@@ -123,3 +123,11 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 
 	return defaultValue
 }
+
+// DeletePVCUsageWatcher delete the pvc usage watcher deployment
+func DeletePVCUsageWatcher(client *kubernetes.Clientset, namespace string) error {
+	foreground := metav1.DeletePropagationForeground
+	return client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
+		PropagationPolicy: &foreground,
+	})
+}

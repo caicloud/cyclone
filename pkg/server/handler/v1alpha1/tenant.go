@@ -16,6 +16,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/pvc"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -134,6 +135,11 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
+			if !cluster.IsWorkerCluster {
+				log.Infof("%s is not worker cluster, skip", integration.Name)
+				continue
+			}
+
 			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Name, err)
@@ -142,7 +148,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 
 			err = svrcommon.UpdateResourceQuota(newTenant, cluster.Namespace, client)
 			if err != nil {
-				log.Errorf("Update resource quota for tenant %s error %v", name, err)
+				log.Errorf("update resource quota for tenant %s error %v", name, err)
 				return nil, err
 			}
 		}
@@ -164,16 +170,23 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 				continue
 			}
 
+			if !cluster.IsWorkerCluster {
+				log.Infof("%s is not worker cluster, skip", integration.Name)
+				continue
+			}
+
 			client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
 			if err != nil {
 				log.Warningf("new cluster client for integration %s error %v", integration.Name, err)
 				continue
 			}
 
+			log.Infof("old PersistentVolumeClaim: %+v ", tenant.Spec.PersistentVolumeClaim)
+			log.Infof("new PersistentVolumeClaim: %+v ", newTenant.Spec.PersistentVolumeClaim)
 			newPVC := newTenant.Spec.PersistentVolumeClaim
-			err = svrcommon.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
+			err = pvc.UpdatePVC(tenant.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
 			if err != nil {
-				log.Errorf("Update resource quota for tenant %s error %v", name, err)
+				log.Errorf("update pvc for tenant %s error %v", name, err)
 				return nil, err
 			}
 		}
