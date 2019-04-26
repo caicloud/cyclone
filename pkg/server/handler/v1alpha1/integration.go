@@ -211,18 +211,25 @@ func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
 		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", cluster.Namespace, cluster.PVC, err)
 	}
 
+	clusterName := in.Spec.Cluster.ClusterName
+	if in.Spec.Cluster.IsControlCluster {
+		clusterName = common.ControlClusterName
+	}
+
 	// Create ExecutionCluster resource for Workflow Engine to use
 	_, err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Create(&v1alpha1.ExecutionCluster{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name: in.Name,
+			Name: clusterName,
 		},
 		Spec: v1alpha1.ExecutionClusterSpec{
 			Credential: cluster.Credential,
 		},
 	})
 
+	// Execution cluster is system level, so different tenants may try to create ExecutionCluster CR for the same
+	// cluster, so if the CR already exists, just ignore it.
 	if err != nil && errors.IsAlreadyExists(err) {
-		log.Warningf("ExecutionCluster resource for %s already exist", in.Name)
+		log.Infof("ExecutionCluster resource for %s already exist", in.Name)
 		return nil
 	}
 
@@ -285,11 +292,12 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 		return
 	}
 
-	err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Delete(in.Name, &meta_v1.DeleteOptions{})
-	if err != nil {
-		log.Warningf("Delete ExecutionCluster resource error: %v", err)
-		return nil
-	}
+	// TODO(ChenDe): Different tenants may use the same execution cluster, so we can't delete the ExecutionCluster simply here.
+	//err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Delete(in.Spec.Cluster.ClusterName, &meta_v1.DeleteOptions{})
+	//if err != nil {
+	//	log.Warningf("Delete ExecutionCluster resource error: %v", err)
+	//	return nil
+	//}
 
 	return
 }

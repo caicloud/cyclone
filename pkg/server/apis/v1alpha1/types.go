@@ -163,6 +163,8 @@ const (
 
 // ClusterSource contains info about clusters.
 type ClusterSource struct {
+	// ClusterName is ID to unique identify the cluster
+	ClusterName string `json:"clusterName"`
 	// Credential is the credential info of the cluster
 	Credential v1alpha1.ClusterCredential `json:"credential"`
 	// IsControlCluster describes whether the cluster is the control cluster itself
