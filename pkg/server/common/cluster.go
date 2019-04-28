@@ -126,50 +126,6 @@ func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 
 }
 
-// CreatePVC creates pvc for tenant
-func CreatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
-	// parse quantity
-	resources := make(map[core_v1.ResourceName]resource.Quantity)
-	quantity, err := resource.ParseQuantity(size)
-	if err != nil {
-		log.Errorf("Parse Quantity %s error %v", size, err)
-		return err
-	}
-	resources[core_v1.ResourceStorage] = quantity
-
-	// create pvc
-	pvcName := TenantPVC(tenantName)
-	nsname := TenantNamespace(tenantName)
-	if namespace != "" {
-		nsname = namespace
-	}
-	volume := &core_v1.PersistentVolumeClaim{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      pvcName,
-			Namespace: nsname,
-		},
-		Spec: core_v1.PersistentVolumeClaimSpec{
-			AccessModes: []core_v1.PersistentVolumeAccessMode{core_v1.ReadWriteMany},
-			Resources: core_v1.ResourceRequirements{
-				Limits:   resources,
-				Requests: resources,
-			},
-		},
-	}
-
-	if storageClass != "" {
-		volume.Spec.StorageClassName = &storageClass
-	}
-
-	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Create(volume)
-	if err != nil {
-		log.Errorf("Create persistent volume claim %s error %v", pvcName, err)
-		return err
-	}
-
-	return nil
-}
-
 // ParseResourceList parse resouces from 'map[string]string' to 'ResourceList'
 func ParseResourceList(resources map[core_v1.ResourceName]string) (map[core_v1.ResourceName]resource.Quantity, error) {
 	rl := make(map[core_v1.ResourceName]resource.Quantity)
@@ -184,11 +140,4 @@ func ParseResourceList(resources map[core_v1.ResourceName]string) (map[core_v1.R
 	}
 
 	return rl, nil
-}
-
-// UpdatePVC delete the old pvc and recreate another one, so the data of the pvc will lost.
-func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
-	// TODO(zhujian7) Need to implement
-
-	return nil
 }

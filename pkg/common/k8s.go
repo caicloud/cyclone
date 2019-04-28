@@ -12,7 +12,10 @@ import (
 // NewClusterClient creates a client for k8s cluster
 func NewClusterClient(c *v1alpha1.ClusterCredential, inCluster bool) (*kubernetes.Clientset, error) {
 	if inCluster {
-		return newInclusterK8sClient()
+		client, err := newInclusterK8sClient()
+		if err == nil {
+			return client, nil
+		}
 	}
 	return newK8sClient(c)
 }
