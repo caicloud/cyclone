@@ -28,12 +28,17 @@ var (
 	// ErrorQueryParamNotCorrect defines request query param error
 	ErrorQueryParamNotCorrect = nerror.BadRequest.Build(ReasonRequest, "bad request as query ${parameter} is not correct")
 
+	// ErrorIntegrationTypeNotCorrect defines wrong integration type error
+	ErrorIntegrationTypeNotCorrect = nerror.BadRequest.Build(ReasonRequest, "type of ${integration} should be ${expect}, but got ${real}")
+
 	// ErrorValidationFailed defines validation failed error
 	ErrorValidationFailed = nerror.BadRequest.Build(ReasonRequest, "failed to validate ${field}: ${error}")
 	// ErrorContentNotFound defines not found error
 	ErrorContentNotFound = nerror.NotFound.Build(ReasonRequest, "content ${content} not found")
 	// ErrorQuotaExceeded defines quota exceeded error, creating or updating was not allowed
 	ErrorQuotaExceeded = nerror.Forbidden.Build(ReasonRequest, "${resource} quota exceeded")
+	// ErrorClusterNotClosed defines error that represents some operations are forbidden while cluster is not closed
+	ErrorClusterNotClosed = nerror.Forbidden.Build(ReasonRequest, "should close cluster integration ${integration} firstly")
 	// ErrorAlreadyExist defines conflict error.
 	ErrorAlreadyExist = nerror.Conflict.Build(ReasonRequest, "conflict: ${resource} already exist")
 

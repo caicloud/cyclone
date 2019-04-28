@@ -118,6 +118,54 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
+		Path:        "/integrations/{integration}/opencluster",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Update,
+				Function:    handler.OpenCluster,
+				Description: "Open cluster type integration to execute workflow",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to operate",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to operate",
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
+		Path:        "/integrations/{integration}/closecluster",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Update,
+				Function:    handler.CloseCluster,
+				Description: "Close cluster type integration that used to execute workflow",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to operate",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to operate",
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
 		Path:        "/integrations/{integration}/scmrepos",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
