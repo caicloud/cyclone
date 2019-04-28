@@ -12,7 +12,7 @@ export const resourceParametersField = {
   scm: [
     { name: 'GIT_URL', value: '' },
     { name: 'GIT_RESIVION', value: '' },
-    { name: 'GIT_TOKEN', value: '' },
+    { name: 'GIT_AUTH', value: '' },
   ],
   image: [
     { name: 'IMAGE', value: '' },

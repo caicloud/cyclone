@@ -9,7 +9,7 @@ USAGE=$(cat <<-END
         $ docker run -it --rm \\
             -e GIT_URL=https://github.com/caicloud/cyclone.git \\
             -e GIT_REVISION=master \\
-            -e GIT_TOKEN=xxxx \\
+            -e GIT_AUTH=xxxx \\
             -e PULL_POLICY=IfNotPresent \\
             git-resource-resolver:latest <COMMAND>
 
@@ -27,8 +27,8 @@ USAGE=$(cat <<-END
        'master'. For GitHub, pull requests can use the single revision form, such as
        'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
        'refs/merge-requests/1/head:master'.
-     - GIT_TOKEN [Optional] For public repository, no need provide this token, but for
-       private repository, this should be provided. Token here support 2 different formats:
+     - GIT_AUTH [Optional] For public repository, no need provide auth, but for
+       private repository, this should be provided. Auth here supports 2 different formats:
        a. <user>:<password>
        b. <token>
      - PULL_POLICY [Optional] Indicate whether pull resources when there already
@@ -47,7 +47,7 @@ COMMAND=$1
 if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${GIT_URL+x} ]; then echo "GIT_URL is unset"; exit 1; fi
 if [ -z ${GIT_REVISION+x} ]; then echo "GIT_REVISION is unset"; exit 1; fi
-if [ -z ${GIT_TOKEN+x} ]; then echo "WARN: GIT_TOKEN is unset"; fi
+if [ -z ${GIT_AUTH+x} ]; then echo "WARN: GIT_AUTH is unset"; fi
 
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
@@ -142,19 +142,19 @@ pull() {
         fi
         cd $WORKDIR
 
-        # Add token to url if provided and clone git repo. If GIT_TOKEN is in format '<user>:<password>', then url
-        # encode each part of it and get '<encoded_user>:<encoded_password>'. If GIT_TOKEN is in format '<token>',
+        # Add auth to url if provided and clone git repo. If GIT_AUTH is in format '<user>:<password>', then url
+        # encode each part of it and get '<encoded_user>:<encoded_password>'. If GIT_AUTH is in format '<token>',
         # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
-        if [ ! -z ${GIT_TOKEN+x} ]; then
-            LEFT=${GIT_TOKEN%%:*}
-            RIGHT=${GIT_TOKEN##*:}
-            if [[ "$LEFT" == "$GIT_TOKEN" ]]; then
-                GIT_TOKEN="oauth2:$(urlencode "$GIT_TOKEN")"
+        if [ ! -z ${GIT_AUTH+x} ]; then
+            LEFT=${GIT_AUTH%%:*}
+            RIGHT=${GIT_AUTH##*:}
+            if [[ "$LEFT" == "$GIT_AUTH" ]]; then
+                GIT_AUTH="oauth2:$(urlencode "$GIT_AUTH")"
             else
-                GIT_TOKEN="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
+                GIT_AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
             fi
 
-            GIT_URL=${GIT_URL/\/\//\/\/${GIT_TOKEN}@}
+            GIT_URL=${GIT_URL/\/\//\/\/${GIT_AUTH}@}
             echo "GIT_URL: $GIT_URL"
         fi
 
