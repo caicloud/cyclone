@@ -9,7 +9,7 @@ USAGE=$(cat <<-END
         $ docker run -it --rm \\
             -e GIT_URL=https://github.com/caicloud/cyclone.git \\
             -e GIT_REVISION=master \\
-            -e GIT_TOKEN=xxxx \\
+            -e GIT_AUTH=xxxx \\
             -e PULL_POLICY=IfNotPresent \\
             git-resource-resolver:latest <COMMAND>
 
@@ -27,8 +27,10 @@ USAGE=$(cat <<-END
        'master'. For GitHub, pull requests can use the single revision form, such as
        'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
        'refs/merge-requests/1/head:master'.
-     - GIT_TOKEN [Optional] For public repository, no need provide this token, but for
-       private repository, this should be provided.
+     - GIT_AUTH [Optional] For public repository, no need provide auth, but for
+       private repository, this should be provided. Auth here supports 2 different formats:
+       a. <user>:<password>
+       b. <token>
      - PULL_POLICY [Optional] Indicate whether pull resources when there already
        are old data, if set to IfNotPresent, will make use of the old data and
        perform incremental pull, otherwise old data would be removed.
@@ -45,7 +47,7 @@ COMMAND=$1
 if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${GIT_URL+x} ]; then echo "GIT_URL is unset"; exit 1; fi
 if [ -z ${GIT_REVISION+x} ]; then echo "GIT_REVISION is unset"; exit 1; fi
-if [ -z ${GIT_TOKEN+x} ]; then echo "WARN: GIT_TOKEN is unset"; fi
+if [ -z ${GIT_AUTH+x} ]; then echo "WARN: GIT_AUTH is unset"; fi
 
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
@@ -59,6 +61,23 @@ releaseLock() {
 
 # Make sure the lock file is deleted if created by this resolver.
 trap releaseLock EXIT
+
+urlencode() {
+    local string="${1}"
+    local strlen=${#string}
+    local encoded=""
+    local pos c o
+
+    for (( pos=0 ; pos<strlen ; pos++ )); do
+        c=${string:$pos:1}
+        case "$c" in
+            [-_.~a-zA-Z0-9] ) o="${c}" ;;
+            * )               printf -v o '%%%02x' "'$c"
+         esac
+        encoded+="${o}"
+    done
+    echo "${encoded}"
+}
 
 wrapPull() {
     # If there is already data, we should just wait for the data to be ready.
@@ -123,9 +142,20 @@ pull() {
         fi
         cd $WORKDIR
 
-        # Add token to url if provided and clone git repo
-        if [ ! -z ${GIT_TOKEN+x} ]; then
-            GIT_URL=${GIT_URL/\/\//\/\/oauth2:${GIT_TOKEN}@}
+        # Add auth to url if provided and clone git repo. If GIT_AUTH is in format '<user>:<password>', then url
+        # encode each part of it and get '<encoded_user>:<encoded_password>'. If GIT_AUTH is in format '<token>',
+        # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
+        if [ ! -z ${GIT_AUTH+x} ]; then
+            LEFT=${GIT_AUTH%%:*}
+            RIGHT=${GIT_AUTH##*:}
+            if [[ "$LEFT" == "$GIT_AUTH" ]]; then
+                GIT_AUTH="oauth2:$(urlencode "$GIT_AUTH")"
+            else
+                GIT_AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
+            fi
+
+            GIT_URL=${GIT_URL/\/\//\/\/${GIT_AUTH}@}
+            echo "GIT_URL: $GIT_URL"
         fi
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
