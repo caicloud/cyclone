@@ -172,12 +172,12 @@ func updatePullRequestStatus(wfr *v1alpha1.WorkflowRun) error {
 }
 
 func getSCMSourceFromWorkflowRun(wfr *v1alpha1.WorkflowRun) (*s_v1alpha1.SCMSource, error) {
-	// Parse "GIT_AUTH" from resource parameters. ONLY support one SCM git resource.
+	// Parse "SCM_AUTH" from resource parameters. ONLY support one SCM git resource.
 	var gitToken string
 	found := false
 	for _, r := range wfr.Spec.Resources {
 		for i, p := range r.Parameters {
-			if p.Name == "GIT_AUTH" {
+			if p.Name == "SCM_AUTH" {
 				gitToken = *r.Parameters[i].Value
 				found = true
 				break

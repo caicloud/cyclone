@@ -24,6 +24,8 @@ const (
 	ImageResourceType = "Image"
 	// GitResourceType represents git repo in SCM
 	GitResourceType = "Git"
+	// SvnResourceType represents svn repo in SCM
+	SvnResourceType = "Svn"
 	// KVResourceType represents a set of key-values
 	KVResourceType = "KV"
 	// GeneralResourceType represents general resource

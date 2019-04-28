@@ -107,7 +107,7 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 		}
 	}
 
-	if in.Spec.Type == api.SCM && in.Spec.SCM != nil {
+	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
 		err := scm.GenerateSCMToken(in.Spec.SCM)
 		if err != nil {
 			return nil, err

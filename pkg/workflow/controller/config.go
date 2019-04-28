@@ -23,6 +23,8 @@ const (
 
 	// GitResolverImage is key of git source resolver image in config file
 	GitResolverImage = "git-resolver"
+	// SvnResolverImage is key of svn source resolver image in config file
+	SvnResolverImage = "svn-resolver"
 	// ImageResolverImage is key of image source resolver image in config file
 	ImageResolverImage = "image-resolver"
 	// KvResolverImage is key of kv source resolver image in config file
@@ -38,6 +40,7 @@ const (
 // ResolverImageKeys maps resource type to resolver images
 var ResolverImageKeys = map[v1alpha1.ResourceType]string{
 	v1alpha1.GitResourceType:   GitResolverImage,
+	v1alpha1.SvnResourceType:   SvnResolverImage,
 	v1alpha1.ImageResourceType: ImageResolverImage,
 	v1alpha1.KVResourceType:    KvResolverImage,
 }

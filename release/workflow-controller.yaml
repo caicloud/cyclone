@@ -44,6 +44,7 @@ _config:
           {
             "images": {
               "git-resolver": "[[ registry_release ]]/cyclone-resolver-git:[[ imageTagFromGitTag ]]",
+              "svn-resolver": "[[ registry_release ]]/cyclone-resolver-svn:[[ imageTagFromGitTag ]]",
               "image-resolver": "[[ registry_release ]]/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
               "kv-resolver": "[[ registry_release ]]/cyclone-resolver-kv:[[ imageTagFromGitTag ]]",
               "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
