@@ -65,6 +65,9 @@ const (
 
 	// WorkerTimeout ...
 	WorkerTimeout = 2 * time.Hour
+
+	// DinDParameter represents the cyclone worker DinD starting parameter, e.g. --bip=192.168.1.5/24
+	DinDParameter = "DIND_PARAMETER"
 )
 
 // WorkerOptions ...
@@ -94,6 +97,9 @@ type WorkerOptions struct {
 	DockerHost   string
 
 	Quota Quota
+
+	// DinDParameter represents the cyclone worker DinD starting parameter, e.g. --bip=192.168.1.5/24
+	DinDParameter string
 }
 
 // AddFlags adds flags to app.Flags
@@ -187,6 +193,13 @@ func (opts *WorkerOptions) AddFlags(app *cli.App) {
 			Usage:       "worker used docker host",
 			EnvVar:      DockerHost,
 			Destination: &opts.DockerHost,
+		},
+		cli.StringFlag{
+			Name:        "dind-parameter",
+			Value:       "",
+			Usage:       "the cyclone worker DinD starting parameter, e.g. --bip=192.168.1.5/24",
+			EnvVar:      DinDParameter,
+			Destination: &opts.DinDParameter,
 		},
 	}
 	app.Flags = append(app.Flags, flags...)
