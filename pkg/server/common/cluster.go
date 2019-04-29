@@ -14,21 +14,21 @@ import (
 )
 
 // CreateNamespace creates a namespace
-func CreateNamespace(name string, client *kubernetes.Clientset) error {
-	namespace, err := buildNamespace(name)
+func CreateNamespace(tenant string, client *kubernetes.Clientset) error {
+	namespace, err := buildNamespace(tenant)
 	if err != nil {
-		log.Warningf("Build namespace %s error %v", name, err)
+		log.Warningf("Build namespace %s error %v", namespace.Name, err)
 		return err
 	}
 
 	_, err = client.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
-			log.Info("namespace %s already exists", name)
+			log.Infof("namespace %s already exists", namespace.Name)
 			return nil
 		}
 
-		log.Errorf("Create namespace %s error %v", name, err)
+		log.Errorf("Create namespace %s error %v", namespace.Name, err)
 		return err
 	}
 
