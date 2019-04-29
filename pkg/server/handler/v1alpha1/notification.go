@@ -178,7 +178,7 @@ func getSCMSourceFromWorkflowRun(wfr *v1alpha1.WorkflowRun) (*s_v1alpha1.SCMSour
 	for _, r := range wfr.Spec.Resources {
 		for i, p := range r.Parameters {
 			if p.Name == "GIT_AUTH" {
-				gitToken = r.Parameters[i].Value
+				gitToken = *r.Parameters[i].Value
 				found = true
 				break
 			}

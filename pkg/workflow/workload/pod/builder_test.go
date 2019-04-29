@@ -52,6 +52,8 @@ var wf = &v1alpha1.Workflow{
 	},
 }
 
+var tmp1 = "busybox:latest"
+var tmp2 = "v1"
 var wfr = &v1alpha1.WorkflowRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "wfr",
@@ -63,11 +65,11 @@ var wfr = &v1alpha1.WorkflowRun{
 				Parameters: []v1alpha1.ParameterItem{
 					{
 						Name:  "image",
-						Value: "busybox:latest",
+						Value: &tmp1,
 					},
 					{
 						Name:  "p1",
-						Value: "v1",
+						Value: &tmp2,
 					},
 				},
 			},
@@ -93,6 +95,8 @@ type PodBuilderSuite struct {
 }
 
 func (suite *PodBuilderSuite) SetupTest() {
+	v1 := "v1"
+	v2 := "busybox:latest"
 	client := fake.NewSimpleClientset()
 	client.PrependReactor("get", "resources", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		if getAction, ok := action.(k8stesting.GetActionImpl); ok {
@@ -108,7 +112,7 @@ func (suite *PodBuilderSuite) SetupTest() {
 						Parameters: []v1alpha1.ParameterItem{
 							{
 								Name:  "p1",
-								Value: "v1",
+								Value: &v1,
 							},
 						},
 					},
@@ -136,7 +140,7 @@ func (suite *PodBuilderSuite) SetupTest() {
 						Parameters: []v1alpha1.ParameterItem{
 							{
 								Name:  "IMAGE",
-								Value: "busybox:latest",
+								Value: &v2,
 							},
 						},
 					},
@@ -219,6 +223,9 @@ func (suite *PodBuilderSuite) SetupTest() {
 					},
 				}, nil
 			case "stage1":
+				v1 := "alpine:latest"
+				v2 := "/default"
+				v3 := "default1"
 				return true, &v1alpha1.Stage{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: name,
@@ -229,15 +236,15 @@ func (suite *PodBuilderSuite) SetupTest() {
 								Arguments: []v1alpha1.ArgumentValue{
 									{
 										Name:  "image",
-										Value: "alpine:latest",
+										Value: &v1,
 									},
 									{
 										Name:  "dir",
-										Value: "/default",
+										Value: &v2,
 									},
 									{
 										Name:  "p1",
-										Value: "default1",
+										Value: &v3,
 									},
 								},
 								Resources: []v1alpha1.ResourceItem{
