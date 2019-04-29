@@ -169,24 +169,6 @@ func (m *Builder) CreateVolumes() error {
 		}
 	}
 
-	// Create secret volume for use in resource resolvers.
-	if controller.Config.Secret != "" {
-		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: common.DockerConfigJSONVolume,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: controller.Config.Secret,
-					Items: []corev1.KeyToPath{
-						{
-							Key:  common.DockerConfigJSONFile,
-							Path: common.DockerConfigJSONFile,
-						},
-					},
-				},
-			},
-		})
-	}
-
 	// Add preset volumes to pod if configured
 	for i, v := range m.wfr.Spec.PresetVolumes {
 		switch v.Type {
@@ -441,13 +423,6 @@ func (m *Builder) ResolveOutputResources() error {
 				Name:      common.DockerInDockerSockVolume,
 				MountPath: common.DockerSockPath,
 			})
-
-			if controller.Config.Secret != "" {
-				container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-					Name:      common.DockerConfigJSONVolume,
-					MountPath: common.DockerConfigPath,
-				})
-			}
 		}
 
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)

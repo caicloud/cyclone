@@ -56,9 +56,6 @@ type WorkflowControllerConfig struct {
 	ResourceRequirements corev1.ResourceRequirements `json:"default_resource_quota"`
 	// ExecutionContext defines default namespace and pvc used to run workflow.
 	ExecutionContext ExecutionContext `json:"execution_context"`
-	// Secret is default secret used for Cyclone, auth of registry can be placed here. It's optional.
-	// TODO(ChenDe): Remove it when Cyclone can manage secrets for namespaces.
-	Secret string `json:"secret"`
 	// CycloneServerAddr is address of the Cyclone Server
 	CycloneServerAddr string `json:"cyclone_server_addr"`
 	// NotificationURL represents the config to send notifications after workflowruns finish.
@@ -128,10 +125,6 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 func validate(config *WorkflowControllerConfig) bool {
 	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
-	}
-
-	if config.Secret == "" {
-		log.Warn("Secret not configured, no auth information would be available, e.g. docker registry auth.")
 	}
 
 	for _, k := range []string{GitResolverImage, ImageResolverImage, KvResolverImage, CoordinatorImage} {
