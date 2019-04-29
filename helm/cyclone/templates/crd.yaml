@@ -1,0 +1,165 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: resources.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: Resource
+    plural: resources
+    singular: resource
+    shortNames:
+    - rsc
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: stages.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: Stage
+    plural: stages
+    singular: stage
+    shortNames:
+    - stg
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workflows.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: Workflow
+    plural: workflows
+    singular: workflow
+    shortNames:
+    - wf
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workflowruns.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: WorkflowRun
+    plural: workflowruns
+    singular: workflowrun
+    shortNames:
+    - wfr
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workflowtriggers.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: WorkflowTrigger
+    plural: workflowtriggers
+    singular: workflowtrigger
+    shortNames:
+    - wft
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: projects.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: Project
+    plural: projects
+    singular: project
+    shortNames:
+    - proj
+  scope: Namespaced
+  version: v1alpha1
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: executionclusters.cyclone.dev
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: cyclone.dev
+  names:
+    kind: ExecutionCluster
+    plural: executionclusters
+    singular: executioncluster
+    shortNames:
+    - ec
+  scope: Cluster
+  version: v1alpha1

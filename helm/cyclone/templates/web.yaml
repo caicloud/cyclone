@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cyclone-web
+  namespace: {{ .Values.systemNamespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cyclone.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cyclone-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cyclone.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cyclone-web
+    spec:
+      containers:
+      - name: web
+        image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-web:{{ .Chart.AppVersion }}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.web.listenPort }}
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: cyclone-web
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  selector:
+    app.kubernetes.io/component: cyclone-web
+  ports:
+  - protocol: TCP
+    port: {{ .Values.web.listenPort }}
+    nodePort: {{ .Values.web.nodePort }}
+    targetPort: {{ .Values.web.listenPort }}
+  type: NodePort
