@@ -112,15 +112,6 @@ func (t *CronTrigger) Run() {
 	}
 }
 
-func getParamValue(items []v1alpha1.ParameterItem, key string) (string, bool) {
-	for _, item := range items {
-		if item.Name == key {
-			return item.Value, true
-		}
-	}
-	return "", false
-}
-
 // CreateCron creates a cron trigger from workflow trigger, and add it to cron trigger manager.
 func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 	ct := &CronTrigger{

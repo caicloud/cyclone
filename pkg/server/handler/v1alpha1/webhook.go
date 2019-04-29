@@ -176,12 +176,12 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	// Set "Tag" and "GIT_REVISION" for all resource configs if they are empty.
 	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
 		for i, p := range r.Parameters {
-			if p.Name == "TAG" && p.Value == "" {
-				r.Parameters[i].Value = tag
+			if p.Name == "TAG" && (p.Value == nil || *p.Value == "") {
+				r.Parameters[i].Value = &tag
 			}
 
-			if p.Name == "GIT_REVISION" && p.Value == "" {
-				r.Parameters[i].Value = data.Ref
+			if p.Name == "GIT_REVISION" && (p.Value == nil || *p.Value == "") {
+				r.Parameters[i].Value = &data.Ref
 			}
 		}
 	}
@@ -189,8 +189,8 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	// Set "Tag" for all stage configs.
 	for _, s := range wft.Spec.WorkflowRunSpec.Stages {
 		for i, p := range s.Parameters {
-			if p.Name == "tag" && p.Value == "" {
-				s.Parameters[i].Value = tag
+			if p.Name == "tag" && (p.Value == nil || *p.Value == "") {
+				s.Parameters[i].Value = &tag
 			}
 		}
 	}

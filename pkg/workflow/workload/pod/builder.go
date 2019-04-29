@@ -88,19 +88,19 @@ func (m *Builder) ResolveArguments() error {
 	for _, s := range m.wfr.Spec.Stages {
 		if s.Name == m.stage {
 			for _, p := range s.Parameters {
-				parameters[p.Name] = p.Value
+				parameters[p.Name] = *p.Value
 			}
 		}
 	}
 	for _, a := range m.stg.Spec.Pod.Inputs.Arguments {
 		if _, ok := parameters[a.Name]; !ok {
-			if a.Value == "" {
+			if a.Value == nil {
 				log.WithField("arg", a.Name).
 					WithField("stg", m.stg.Name).
 					Error("Argument not set and without default value")
 				return fmt.Errorf("argument '%s' not set in stage '%s' and without default value", a.Name, m.stg.Name)
 			}
-			parameters[a.Name] = a.Value
+			parameters[a.Name] = *a.Value
 		}
 	}
 
@@ -113,9 +113,10 @@ func (m *Builder) ResolveArguments() error {
 		parameters[k] = resolved
 	}
 
-	// Escape double quotes
+	// Escape double quotes and '\n'
 	for k, v := range parameters {
 		parameters[k] = strings.Replace(v, "\"", "\\\"", -1)
+		parameters[k] = strings.Replace(parameters[k], "\n", "\\n", -1)
 	}
 
 	log.WithField("params", parameters).Debug("Parameters collected")
@@ -271,13 +272,13 @@ func (m *Builder) ResolveInputResources() error {
 		envsMap := make(map[string]string)
 		envsMap[common.EnvWorkflowrunName] = m.wfr.Name
 		for _, p := range resource.Spec.Parameters {
-			envsMap[p.Name] = p.Value
+			envsMap[p.Name] = *p.Value
 
 		}
 		for _, p := range m.wfr.Spec.Resources {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
-					envsMap[c.Name] = c.Value
+					envsMap[c.Name] = *c.Value
 				}
 			}
 		}
@@ -364,13 +365,13 @@ func (m *Builder) ResolveOutputResources() error {
 		// container through environment variables.
 		envsMap := make(map[string]string)
 		for _, p := range resource.Spec.Parameters {
-			envsMap[p.Name] = p.Value
+			envsMap[p.Name] = *p.Value
 
 		}
 		for _, p := range m.wfr.Spec.Resources {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
-					envsMap[c.Name] = c.Value
+					envsMap[c.Name] = *c.Value
 				}
 			}
 		}
