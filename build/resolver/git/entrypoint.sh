@@ -79,6 +79,27 @@ urlencode() {
     echo "${encoded}"
 }
 
+# Add credential to URL
+modifyURL() {
+    local URL=$1
+    local AUTH=$2
+    LEFT=${AUTH%%:*}
+    RIGHT=${AUTH##*:}
+    if [[ "$LEFT" == "$AUTH" ]]; then
+        AUTH="oauth2:$(urlencode "$AUTH")"
+    else
+        AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
+    fi
+
+    # If URL contains '@', for example: http://root@192.168.21.97/scm/foobar.git, change
+    # url to http://root:<auth>@192.168.21.97/scm/foobar.git
+    if [[ "${URL%%@*}" != "${URL}" ]]; then
+        echo ${URL/@/:${2}@}
+    else
+        echo ${URL/\/\//\/\/${AUTH}@}
+    fi
+}
+
 wrapPull() {
     # If there is already data, we should just wait for the data to be ready.
     if [ -e $WORKDIR/data ]; then
@@ -146,15 +167,7 @@ pull() {
         # encode each part of it and get '<encoded_user>:<encoded_password>'. If SCM_AUTH is in format '<token>',
         # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
         if [ ! -z ${SCM_AUTH+x} ]; then
-            LEFT=${SCM_AUTH%%:*}
-            RIGHT=${SCM_AUTH##*:}
-            if [[ "$LEFT" == "$SCM_AUTH" ]]; then
-                SCM_AUTH="oauth2:$(urlencode "$SCM_AUTH")"
-            else
-                SCM_AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
-            fi
-
-            SCM_URL=${SCM_URL/\/\//\/\/${SCM_AUTH}@}
+            SCM_URL=$( modifyURL $SCM_URL $SCM_AUTH )
             echo "SCM_URL: $SCM_URL"
         fi
 
