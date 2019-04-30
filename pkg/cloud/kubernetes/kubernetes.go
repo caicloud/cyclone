@@ -333,6 +333,10 @@ func buildK8SEnv(id string, opts options.WorkerOptions) []apiv1.EnvVar {
 			Name:  options.RequestMemory,
 			Value: opts.Quota[options.ResourceRequestsMemory].String(),
 		},
+		{
+			Name:  options.DinDParameter,
+			Value: opts.DinDParameter,
+		},
 	}
 
 	return env

@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
-dockerd-entrypoint.sh dockerd > /dev/null &
+echo "dind parameter is:" $DIND_PARAMETER
+dockerd-entrypoint.sh dockerd $DIND_PARAMETER > /dev/null &
 sleep 10 
 /cyclone-worker
