@@ -38,9 +38,9 @@ COMMAND=$1
 
 # Check whether required environment variables are set.
 if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
-if [ -z ${IMAGE+x} ]; then
-    if [ -z ${REPOSITORY+x} ]; then echo "REPOSITORY should be set when IMAGE is unset"; exit 1; fi
-    if [ -z ${TAG+x} ]; then echo "TAG should be set when IMAGE is unset"; exit 1; fi
+if [ -z ${IMAGE} ]; then
+    if [ -z ${REPOSITORY} ]; then echo "REPOSITORY should be set when IMAGE is unset"; exit 1; fi
+    if [ -z ${TAG} ]; then echo "TAG should be set when IMAGE is unset"; exit 1; fi
     case ${REPOSITORY} in
     */*);;
     * ) REPOSITORY=library/${REPOSITORY};;
@@ -49,7 +49,7 @@ if [ -z ${IMAGE+x} ]; then
 fi
 echo  "Image: ${IMAGE}"
 
-if [ -z ${USER+x} ]; then
+if [ -z ${USER} ]; then
     echo "Warn: USER is unset, will $COMMAND image anonymously.";
 else
     echo "To $COMMAND image as user $USER."
@@ -88,7 +88,7 @@ case $COMMAND in
         ;;
     push )
         wait_ok
-        if [ ! -z ${IMAGE_FILE+x} ]; then
+        if [ ! -z ${IMAGE_FILE} ]; then
             echo "Load images from file ${IMAGE_FILE}"
             docker load -i ${WORKDIR}/data/${IMAGE_FILE}
         fi

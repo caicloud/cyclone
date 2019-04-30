@@ -173,14 +173,14 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		return err
 	}
 
-	// Set "Tag" and "GIT_REVISION" for all resource configs if they are empty.
+	// Set "Tag" and "SCM_REVISION" for all resource configs if they are empty.
 	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
 		for i, p := range r.Parameters {
 			if p.Name == "TAG" && (p.Value == nil || *p.Value == "") {
 				r.Parameters[i].Value = &tag
 			}
 
-			if p.Name == "GIT_REVISION" && (p.Value == nil || *p.Value == "") {
+			if p.Name == "SCM_REVISION" && (p.Value == nil || *p.Value == "") {
 				r.Parameters[i].Value = &data.Ref
 			}
 		}

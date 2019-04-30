@@ -7,9 +7,9 @@ metadata:
 spec:
   type: Git
   parameters:
-  - name: GIT_URL
+  - name: SCM_URL
     value: https://github.com/cd1989/code-zoo.git
-  - name: GIT_REVISION
+  - name: SCM_REVISION
     value: master
 
 ---

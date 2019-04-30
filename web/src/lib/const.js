@@ -10,9 +10,9 @@ export const noLabelItemLayout = {
 
 export const resourceParametersField = {
   scm: [
-    { name: 'GIT_URL', value: '' },
+    { name: 'SCM_URL', value: '' },
     { name: 'GIT_RESIVION', value: '' },
-    { name: 'GIT_AUTH', value: '' },
+    { name: 'SCM_AUTH', value: '' },
   ],
   image: [
     { name: 'IMAGE', value: '' },

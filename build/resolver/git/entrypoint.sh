@@ -7,9 +7,9 @@ USAGE=$(cat <<-END
 
     Usage:
         $ docker run -it --rm \\
-            -e GIT_URL=https://github.com/caicloud/cyclone.git \\
-            -e GIT_REVISION=master \\
-            -e GIT_AUTH=xxxx \\
+            -e SCM_URL=https://github.com/caicloud/cyclone.git \\
+            -e SCM_REVISION=master \\
+            -e SCM_AUTH=xxxx \\
             -e PULL_POLICY=IfNotPresent \\
             git-resource-resolver:latest <COMMAND>
 
@@ -19,15 +19,15 @@ USAGE=$(cat <<-END
      - push Push git source to remote git server. (Not implemented yet)
 
      Arguments:
-     - GIT_URL [Required] URL of the git repository, for the moment, only HTTP/
+     - SCM_URL [Required] URL of the git repository, for the moment, only HTTP/
        HTTPS are supported.
-     - GIT_REVISION [Required] Revision of the source code. It has two different
+     - SCM_REVISION [Required] Revision of the source code. It has two different
        format. a) Single revision, such as branch 'master', tag 'v1.0'; b). Composite
        such as pull requests, 'develop:master' indicates merge 'develop' branch to
        'master'. For GitHub, pull requests can use the single revision form, such as
        'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
        'refs/merge-requests/1/head:master'.
-     - GIT_AUTH [Optional] For public repository, no need provide auth, but for
+     - SCM_AUTH [Optional] For public repository, no need provide auth, but for
        private repository, this should be provided. Auth here supports 2 different formats:
        a. <user>:<password>
        b. <token>
@@ -44,10 +44,10 @@ fi
 COMMAND=$1
 
 # Check whether environment variables are set.
-if [ -z ${WORKDIR+x} ]; then echo "WORKDIR is unset"; exit 1; fi
-if [ -z ${GIT_URL+x} ]; then echo "GIT_URL is unset"; exit 1; fi
-if [ -z ${GIT_REVISION+x} ]; then echo "GIT_REVISION is unset"; exit 1; fi
-if [ -z ${GIT_AUTH+x} ]; then echo "WARN: GIT_AUTH is unset"; fi
+if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
+if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
+if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
+if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
 
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
@@ -117,8 +117,8 @@ wrapPull() {
 # This function parses the composite revision to get the source and target branches. For example,
 #   'develop:master' --> ['develop', 'master']
 parseRevision() {
-    SOURCE_BRANCH=${GIT_REVISION%%:*}
-    TARGET_BRANCH=${GIT_REVISION##*:}
+    SOURCE_BRANCH=${SCM_REVISION%%:*}
+    TARGET_BRANCH=${SCM_REVISION##*:}
 }
 parseRevision
 
@@ -127,13 +127,13 @@ pull() {
     if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
         cd $WORKDIR/data
         # Ensure existed data come from the git repo
-        git remote -v | grep ${GIT_URL##*//} || {
-            echo "Existed data not a valid git repo for ${GIT_URL##*//}"
+        git remote -v | grep ${SCM_URL##*//} || {
+            echo "Existed data not a valid git repo for ${SCM_URL##*//}"
             exit 1
         }
 
-        echo "Fetch $GIT_REVISION from origin"
-        git fetch -v origin $GIT_REVISION
+        echo "Fetch $SCM_REVISION from origin"
+        git fetch -v origin $SCM_REVISION
         git checkout FETCH_HEAD
     else
         if [ -e $WORKDIR/data ]; then
@@ -142,31 +142,31 @@ pull() {
         fi
         cd $WORKDIR
 
-        # Add auth to url if provided and clone git repo. If GIT_AUTH is in format '<user>:<password>', then url
-        # encode each part of it and get '<encoded_user>:<encoded_password>'. If GIT_AUTH is in format '<token>',
+        # Add auth to url if provided and clone git repo. If SCM_AUTH is in format '<user>:<password>', then url
+        # encode each part of it and get '<encoded_user>:<encoded_password>'. If SCM_AUTH is in format '<token>',
         # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
-        if [ ! -z ${GIT_AUTH+x} ]; then
-            LEFT=${GIT_AUTH%%:*}
-            RIGHT=${GIT_AUTH##*:}
-            if [[ "$LEFT" == "$GIT_AUTH" ]]; then
-                GIT_AUTH="oauth2:$(urlencode "$GIT_AUTH")"
+        if [ ! -z ${SCM_AUTH+x} ]; then
+            LEFT=${SCM_AUTH%%:*}
+            RIGHT=${SCM_AUTH##*:}
+            if [[ "$LEFT" == "$SCM_AUTH" ]]; then
+                SCM_AUTH="oauth2:$(urlencode "$SCM_AUTH")"
             else
-                GIT_AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
+                SCM_AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
             fi
 
-            GIT_URL=${GIT_URL/\/\//\/\/${GIT_AUTH}@}
-            echo "GIT_URL: $GIT_URL"
+            SCM_URL=${SCM_URL/\/\//\/\/${SCM_AUTH}@}
+            echo "SCM_URL: $SCM_URL"
         fi
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master --single-branch --recursive ${GIT_URL} data
+            git clone -v -b master --single-branch --recursive ${SCM_URL} data
             cd data
             git fetch origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH --single-branch --recursive ${GIT_URL} data
+            git clone -v -b $TARGET_BRANCH --single-branch --recursive ${SCM_URL} data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
