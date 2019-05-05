@@ -14,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -69,6 +70,20 @@ func HandleWebhook(ctx context.Context, tenant, integration string) (api.Webhook
 
 	if request.Header.Get(gitlab.EventTypeHeader) != "" {
 		if data := gitlab.ParseEvent(request); data != nil {
+			if wfts, ok := repos[data.Repo]; ok {
+				for _, wft := range wfts {
+					log.Infof("Trigger workflow trigger %s", wft)
+					if err = createWorkflowRun(tenant, wft, data); err != nil {
+						log.Error(err)
+					}
+				}
+			}
+			triggered = true
+		}
+	}
+
+	if request.Header.Get(bitbucket.EventTypeHeader) != "" {
+		if data := bitbucket.ParseEvent(in.Spec.SCM, request); data != nil {
 			if wfts, ok := repos[data.Repo]; ok {
 				for _, wft := range wfts {
 					log.Infof("Trigger workflow trigger %s", wft)
