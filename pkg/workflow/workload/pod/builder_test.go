@@ -514,12 +514,12 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 		if c.Name == "c1" {
 			assert.Equal(suite.T(), corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("64Mi"),
-					corev1.ResourceCPU:    resource.MustParse("50m"),
+					corev1.ResourceMemory: resource.MustParse("32Mi"),
+					corev1.ResourceCPU:    resource.MustParse("25m"),
 				},
 				Limits: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("256Mi"),
-					corev1.ResourceCPU:    resource.MustParse("200m"),
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 			}, c.Resources)
 		}
@@ -527,12 +527,12 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 		if c.Name == "workload-sidecar-c2" {
 			assert.Equal(suite.T(), corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("64Mi"),
-					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("32Mi"),
+					corev1.ResourceCPU:    resource.MustParse("50m"),
 				},
 				Limits: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("256Mi"),
-					corev1.ResourceCPU:    resource.MustParse("200m"),
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 			}, c.Resources)
 		}

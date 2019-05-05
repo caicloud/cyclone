@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/cbroglie/mustache"
@@ -691,9 +693,74 @@ func (m *Builder) InjectEnvs() error {
 	return nil
 }
 
+// divideResourceRequirements divides resources requirements by n
+func divideResourceRequirements(resources corev1.ResourceRequirements, n int) (*corev1.ResourceRequirements, error) {
+	requirements := resources.DeepCopy()
+	for k, v := range resources.Requests {
+		newValue, err := divideQuantity(v, n)
+		if err != nil {
+			return requirements, err
+		}
+		requirements.Requests[k] = newValue
+	}
+
+	for k, v := range resources.Limits {
+		newValue, err := divideQuantity(v, n)
+		if err != nil {
+			return requirements, err
+		}
+		requirements.Limits[k] = newValue
+	}
+
+	return requirements, nil
+}
+
+// divideQuantity divides resource.Quantity by n
+func divideQuantity(quantity resource.Quantity, n int) (resource.Quantity, error) {
+	var newValue resource.Quantity
+	var parser = regexp.MustCompile(`([\d.]+)([a-zA-Z]*)`)
+	matches := parser.FindStringSubmatch(quantity.String())
+
+	var digit, unit string
+	if len(matches) < 2 {
+		return newValue, fmt.Errorf("parse Quantity %s error", quantity.String())
+	}
+
+	floatValue, err := strconv.ParseFloat(matches[1], 64)
+	if err != nil {
+		return newValue, err
+	}
+	digit = strconv.FormatFloat(floatValue/float64(n), 'f', -1, 64)
+
+	if len(matches) > 2 {
+		unit = matches[2]
+	}
+
+	newValue, err = resource.ParseQuantity(digit + unit)
+	if err != nil {
+		return newValue, err
+	}
+
+	return newValue, nil
+}
+
 // applyResourceRequirements applies resource requirements to some selected containers.
-func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, selector common.ContainerSelector) []corev1.Container {
+func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, selector common.ContainerSelector, averageToContainers bool) []corev1.Container {
 	var results []corev1.Container
+
+	newRequirements := requirements.DeepCopy()
+	if averageToContainers {
+		containerCount := len(containers)
+		for _, c := range containers {
+			if !selector(c.Name) {
+				containerCount--
+				continue
+			}
+		}
+
+		newRequirements, _ = divideResourceRequirements(*requirements, containerCount)
+	}
+
 	for _, c := range containers {
 		// If the container is not selected, keep it untouched.
 		if !selector(c.Name) {
@@ -702,7 +769,7 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 		}
 
 		// Set resource requests if not set in the container yet.
-		for k, v := range requirements.Requests {
+		for k, v := range newRequirements.Requests {
 			if c.Resources.Requests == nil {
 				c.Resources.Requests = make(map[corev1.ResourceName]resource.Quantity)
 			}
@@ -713,7 +780,7 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 		}
 
 		// Set resource limits if not set in the container yet.
-		for k, v := range requirements.Limits {
+		for k, v := range newRequirements.Limits {
 			if c.Resources.Limits == nil {
 				c.Resources.Limits = make(map[corev1.ResourceName]resource.Quantity)
 			}
@@ -741,8 +808,8 @@ func (m *Builder) ApplyResourceRequirements() error {
 		requirements = m.wf.Spec.Resources
 	}
 
-	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, requirements, common.AllContainers)
-	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, requirements, common.AllContainers)
+	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, requirements, common.AllContainers, false)
+	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, requirements, common.AllContainers, true)
 
 	return nil
 }
