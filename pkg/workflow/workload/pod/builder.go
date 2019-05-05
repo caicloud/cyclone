@@ -90,7 +90,9 @@ func (m *Builder) ResolveArguments() error {
 	for _, s := range m.wfr.Spec.Stages {
 		if s.Name == m.stage {
 			for _, p := range s.Parameters {
-				parameters[p.Name] = *p.Value
+				if p.Value != nil {
+					parameters[p.Name] = *p.Value
+				}
 			}
 		}
 	}
@@ -274,13 +276,17 @@ func (m *Builder) ResolveInputResources() error {
 		envsMap := make(map[string]string)
 		envsMap[common.EnvWorkflowrunName] = m.wfr.Name
 		for _, p := range resource.Spec.Parameters {
-			envsMap[p.Name] = *p.Value
-
+			if p.Value != nil {
+				envsMap[p.Name] = *p.Value
+			}
 		}
+
 		for _, p := range m.wfr.Spec.Resources {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
-					envsMap[c.Name] = *c.Value
+					if c.Value != nil {
+						envsMap[c.Name] = *c.Value
+					}
 				}
 			}
 		}
@@ -367,13 +373,16 @@ func (m *Builder) ResolveOutputResources() error {
 		// container through environment variables.
 		envsMap := make(map[string]string)
 		for _, p := range resource.Spec.Parameters {
-			envsMap[p.Name] = *p.Value
-
+			if p.Value != nil {
+				envsMap[p.Name] = *p.Value
+			}
 		}
 		for _, p := range m.wfr.Spec.Resources {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
-					envsMap[c.Name] = *c.Value
+					if c.Value != nil {
+						envsMap[c.Name] = *c.Value
+					}
 				}
 			}
 		}
