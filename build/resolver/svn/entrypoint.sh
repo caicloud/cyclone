@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+shopt -s extglob
 
 USAGE=$(cat <<-END
     This tool is used to resolve svn resources, here git resource
@@ -101,7 +102,14 @@ pull() {
         if [[ "${SCM_REVISION}" == "" ]]; then
             svn checkout --username ${SCM_USER} --password ${SCM_PWD} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache ${SCM_URL} data
         else
-            svn checkout --username ${SCM_USER} --password ${SCM_PWD} --revision ${SCM_REVISION} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache ${SCM_URL} data
+            case ${SCM_REVISION} in
+                +([0-9]))
+                    svn checkout --username ${SCM_USER} --password ${SCM_PWD} --revision ${SCM_REVISION} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache ${SCM_URL} data
+                    ;;
+                *)
+                    svn checkout --username ${SCM_USER} --password ${SCM_PWD} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache ${SCM_URL}/${SCM_REVISION} data
+                    ;;
+            esac
         fi
 
         cd data
