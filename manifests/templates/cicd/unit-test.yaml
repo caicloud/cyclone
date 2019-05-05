@@ -32,7 +32,7 @@
           - /bin/sh
           - -e
           - -c
-          - "{{ cmd }}"
+          - "{{{ cmd }}}"
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
@@ -80,7 +80,7 @@
           - /bin/sh
           - -e
           - -c
-          - "{{ cmd }}"
+          - "{{{ cmd }}}"
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
@@ -132,7 +132,7 @@
           - /bin/sh
           - -e
           - -c
-          - "{{ cmd }}"
+          - "{{{ cmd }}}"
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
@@ -172,7 +172,7 @@
           - /bin/sh
           - -e
           - -c
-          - "{{ cmd }}"
+          - "{{{ cmd }}}"
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
@@ -212,4 +212,4 @@
           - /bin/sh
           - -e
           - -c
-          - "{{ cmd }}"
+          - "{{{ cmd }}}"
