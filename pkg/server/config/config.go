@@ -50,6 +50,9 @@ type CycloneServerConfig struct {
 	// InitDefaultTenant configures whether to create cyclone default tenant while cyclone server start up.
 	InitDefaultTenant bool `json:"init_default_tenant"`
 
+	// OpenControlCluster indicates whether to open control cluster for workflow execution when tenant created
+	OpenControlCluster bool `json:"open_control_cluster"`
+
 	// Images that used in cyclone, such as GC image.
 	Images map[string]string `json:"images"`
 
