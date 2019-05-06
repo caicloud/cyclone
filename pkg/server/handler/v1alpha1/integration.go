@@ -163,41 +163,47 @@ func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
 		cluster.Namespace = svrcommon.TenantNamespace(tenant.Name)
 		err = svrcommon.CreateNamespace(tenant.Name, client)
 		if err != nil {
-			log.Errorf("create user cluster namespace for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
+				log.Errorf("Create namespace for tenant %s error %v", tenantName, err)
 				return
 			}
+			log.Infof("Namespace %s already exist", cluster.Namespace)
 		}
 	}
 
 	// create resource quota
 	err = svrcommon.CreateResourceQuota(tenant, cluster.Namespace, client)
 	if err != nil {
-		log.Errorf("create resource quota for tenant %s error %v", tenantName, err)
 		if !errors.IsAlreadyExists(err) {
+			log.Errorf("Create resource quota for tenant %s error %v", tenantName, err)
 			return
 		}
+		log.Infof("Resource quota for tenant %s already exist", tenantName)
 	}
 
+	// If a PVC has been configured, check existence of it.
 	if cluster.PVC != "" && cluster.PVC != svrcommon.TenantPVC(tenant.Name) {
 		_, err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(cluster.PVC, meta_v1.GetOptions{})
 		if err != nil {
-			log.Errorf("get pvc %s error %v", cluster.PVC, err)
+			log.Errorf("Get pvc %s error %v", cluster.PVC, err)
 			return
 		}
 	} else {
-		// create pvc
 		if tenant.Spec.PersistentVolumeClaim.Size == "" {
 			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
+		}
+		if tenant.Spec.PersistentVolumeClaim.StorageClass == "" {
+			tenant.Spec.PersistentVolumeClaim.StorageClass = config.Config.DefaultPVCConfig.StorageClass
 		}
 
 		err = pvc.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
 			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
 		if err != nil {
-			log.Errorf("create pvc for tenant %s error %v", tenantName, err)
 			if !errors.IsAlreadyExists(err) {
+				log.Errorf("create pvc for tenant %s error %v", tenantName, err)
 				return
 			}
+			log.Infof("PVC for tenant %s already exist", tenantName)
 		}
 
 		cluster.PVC = svrcommon.TenantPVC(tenant.Name)

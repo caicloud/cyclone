@@ -295,9 +295,16 @@ func createControlClusterIntegration(tenant string) error {
 		},
 	}
 
-	_, err := createIntegration(tenant, in)
+	in, err := createIntegration(tenant, in)
 	if err != nil {
 		return cerr.ErrorCreateIntegration.Error(err)
+	}
+
+	if config.Config.OpenControlCluster {
+		err := OpenClusterForTenant(in, tenant)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
