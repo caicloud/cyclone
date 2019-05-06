@@ -11,3 +11,59 @@ $ make run_examples SCENE=cicd REGISTRIES=<registry>/<project>
 ```
 
 In addition to YAML format manifest files, you can also create your workflows via APIs provided by Cyclone Server. Refer to [API Docs](./swagger-api-docs.md) for detailed APIs.
+
+## Functional Modules
+
+There are 3 main functional modules in Cyclone:
+
+* [Integration Center](#Integration-Center): integrates external systems like SCM, docker registry, S3, etc.
+* Project: manages a group of workflows and their shared configs.
+* Stage Templates: Manages built-in stage templates and customized templates.
+
+## Integration Center
+
+External systems are called integrations in Cyclone, such as `GitHub`, `docker registry`, `k8s cluster`. They can be integrated to Cyclone conveniently. There is an integration center in Cyclone Web, where users can manage integrations.
+From the view of implementation, one integration is saved as a `Secret` in k8s, and information like URL, credentials are hold by it.
+
+Cyclone provides 5 builtin type of integrations: `SCM`, `Cluster`, `DockerRegistry`, `SonarQube` and `General`. Here `SCM` means source code management system like `GitHub`, `GitLab`. Cyclone support different types of SCM: `GitHub`, `GitLab`, `BitBucket` and `SVN`.
+
+Supported external systems including:
+
+|  Name  | Sub Class | Supported Versions | Note  |
+| :---:  | :---:     | :---:              | :---: |
+| SCM    | GitHub    | [Public](https://github.com/) | enterprise edition is unsupported |
+|        | GitLab    | [Public](https://gitlab.com/), Private >= 8.13.6         | May [affect 10.6 and later versions](#GitLab-Webhooks) to create a SCM webhook automatically triggered pipeline |
+|        | BitBucket | \>= 5.0 | BitBucket cloud is unsupported;<br> Different edition may affect [BitBucket Token and Webhooks](#BitBucket-Token-and-Webhooks) |
+|        | SVN       | All                | |
+| Cluster |          | All                | |
+| DockerRegistry |   | All                | |
+| SonarQube |        | Unsupported        | |
+| General |          | All                | |
+
+### GitLab Webhooks
+
+> Starting with GitLab **10.6**, all Webhook requests to the current GitLab instance server address and/or in a private network will be forbidden by default.
+That means that all requests made to 127.0.0.1, ::1 and 0.0.0.0, as well as IPv4 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 and IPv6 site-local (ffc0::/10) addresses won’t be allowed.
+
+This behavior can be overridden by enabling the option “Allow requests to the local network from hooks and services”, accessing address:
+- Version 10.6 - 11.3.x , `{your-gitlab-server}/admin/application_settings`
+- Version 11.4.x and later , `{your-gitlab-server}/admin/application_settings/network`
+
+More detailed information: [Webhooks and insecure internal web services](https://docs.gitlab.com/ee/security/webhooks.html)
+
+### BitBucket Token and Webhooks
+
+#### Tokens
+
+Personal access tokens are supported starting with **5.5**, so in the previous version, you can just use username/password for auth,
+but in the later version, personal access token is supported.
+
+#### Webhooks
+
+BitBucket server supports basic webhook starting with **5.4**, and in **5.10**, there are 2 new events available for webhook:
+`Pull request modified` and `PR reviewers updated`.
+
+More information please reference to:
+- [BitBucket Server 5.4 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-4-release-notes-935388966.html)
+- [BitBucket Server 5.5 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-5-release-notes-938037662.html)
+- [BitBucket Server 5.10 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-10-release-notes-948214779.html)
