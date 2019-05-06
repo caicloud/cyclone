@@ -11,8 +11,8 @@ export const noLabelItemLayout = {
 export const resourceParametersField = {
   scm: [
     { name: 'SCM_URL', value: '' },
-    { name: 'GIT_RESIVION', value: '' },
-    { name: 'SCM_AUTH', value: '' },
+    { name: 'SCM_RESIVION', value: '' },
+    { name: 'SCM_TOKEN', value: '' },
   ],
   image: [
     { name: 'IMAGE', value: '' },
