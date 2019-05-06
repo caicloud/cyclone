@@ -1,0 +1,81 @@
+# Image registry where to pull images. 'project' specifies where to pull cyclone images,
+# while 'libraryProject' specifies where to pull common images like 'alpine', 'busybox'.
+# These two projects can be definitely set to the same value.
+imageRegistry:
+  registry: docker.io
+  project: k8sdevops
+  libraryProject: library
+
+# Address of Cyclone server
+serverAddress: cyclone-server.{{ .Values.systemNamespace }}.svc.cluster.local:{{ .Values.server.listenPort }}
+
+# Namespace where to deploy cyclone
+systemNamespace: default
+
+# Cyclone workflow engine variables
+engine:
+  images:
+    gc: alpine:3.8
+    dind: docker:18.03-dind
+  gc:
+    # Whether enable GC, if set to true, pods would be cleaned after execution finished
+    enabled: true
+    # The time to wait before cleanup pods when an execution finished
+    delaySeconds: 0
+    # How many times to retry (include the initial one)
+    retry: 1
+  limits:
+    # Maximum number of execution records to keep for each workflow.
+    maxWorkflowRuns: 50
+  resourceRequirement:
+    default:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  notification:
+    url: http://{{ .Values.serverAddress }}/apis/v1alpha1/notifications
+  developMode: "true"
+  executionContext:
+    namespace: default
+
+
+# Cyclone server variables
+server:
+  listenAddress: 0.0.0.0
+  listenPort: 7099
+  nodePort: 30011
+  init:
+    templates: true
+    defaultTenant: true
+  openControlCluster: true
+  pvc:
+    storageClass: heketi-storageclass
+    size: 10Gi
+  resourceRequirement:
+    namespace:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+  systemNamespace: default
+  storageWatcher:
+    reportUrl: http://{{ .Values.serverAddress }}/apis/v1alpha1/storage/usages
+    intervalSeconds: 30
+    resourceRequirements:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+# Cyclone web variables
+web:
+  replicas: 1
+  listenPort: 80
+  nodePort: 30022

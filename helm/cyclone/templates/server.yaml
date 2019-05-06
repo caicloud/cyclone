@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cyclone-server-config
+  namespace: {{ .Values.systemNamespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  cyclone-server.json: |
+    {
+      "logging": {
+        "level": "debug"
+      },
+      "cyclone_server_host": "{{ .Values.server.listenAddress }}",
+      "cyclone_server_port": {{ .Values.server.listenPort }},
+      "default_pvc_config": {
+        "size": "{{ .Values.server.pvc.size }}",
+        "storage_class": "{{ .Values.server.pvc.storageClass }}"
+      },
+      "worker_namespace_quota": {
+        "limits.cpu": "{{ .Values.server.resourceRequirement.namespace.limits.cpu }}",
+        "limits.memory": "{{ .Values.server.resourceRequirement.namespace.limits.memory }}",
+        "requests.cpu": "{{ .Values.server.resourceRequirement.namespace.requests.cpu }}",
+        "requests.memory": "{{ .Values.server.resourceRequirement.namespace.requests.memory }}"
+      },
+      "create_builtin_templates": {{ .Values.server.init.templates }},
+      "system_namespace": "{{ .Values.server.systemNamespace }}",
+      "init_default_tenant": {{ .Values.server.init.defaultTenant }},
+      "open_control_cluster": {{ .Values.server.openControlCluster }},
+      "storage_usage_watcher": {
+        "image": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-watcher:{{ .Chart.AppVersion }}",
+        "report_url": "{{ tpl (tpl .Values.server.storageWatcher.reportUrl .) . }}",
+        "interval_seconds": "{{ .Values.server.storageWatcher.intervalSeconds }}",
+        "resource_requirements": {
+          "limits.cpu": "{{ .Values.server.storageWatcher.resourceRequirements.limits.cpu }}",
+          "limits.memory": "{{ .Values.server.storageWatcher.resourceRequirements.limits.memory }}",
+          "requests.cpu": "{{ .Values.server.storageWatcher.resourceRequirements.requests.cpu }}",
+          "requests.memory": "{{ .Values.server.storageWatcher.resourceRequirements.requests.memory }}"
+        }
+      },
+      "images": {
+        "gc": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.gc }}"
+      }
+    }
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cyclone-server
+  namespace: {{ .Values.systemNamespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    app.kubernetes.io/component: cyclone-server
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cyclone.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cyclone-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cyclone.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cyclone-server
+    spec:
+      containers:
+      - name: server
+        image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-server:{{ .Chart.AppVersion }}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: {{ .Values.server.listenPort }}
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: cyclone-server
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  selector:
+    app.kubernetes.io/component: cyclone-server
+  ports:
+  - protocol: TCP
+    port: {{ .Values.server.listenPort }}
+    nodePort: {{ .Values.server.nodePort }}
+    targetPort: {{ .Values.server.listenPort }}
+  type: NodePort
