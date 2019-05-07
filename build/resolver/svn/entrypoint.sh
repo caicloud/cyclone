@@ -39,9 +39,8 @@ COMMAND=$1
 # Check whether environment variables are set.
 if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
-if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; fi
-if [ -z ${SCM_USER} ]; then echo "SCM_REVISION is unset"; exit 1; fi
-if [ -z ${SCM_PWD} ]; then echo "SCM_REVISION is unset"; exit 1; fi
+if [ -z ${SCM_USER} ]; then echo "SCM_USER is unset"; exit 1; fi
+if [ -z ${SCM_PWD} ]; then echo "SCM_PWD is unset"; exit 1; fi
 
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
