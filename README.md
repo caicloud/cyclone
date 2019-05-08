@@ -4,6 +4,7 @@
 
 [![Build Status](https://travis-ci.org/caicloud/cyclone.svg?branch=master)](https://travis-ci.org/caicloud/cyclone)
 [![Go Report Card](https://goreportcard.com/badge/github.com/caicloud/cyclone?style=flat-square)](https://goreportcard.com/report/github.com/caicloud/cyclone)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2792/badge)](https://bestpractices.coreinfrastructure.org/projects/2792)
 [![Coverage Status](https://coveralls.io/repos/github/caicloud/cyclone/badge.svg?branch=master)](https://coveralls.io/github/caicloud/cyclone?branch=master)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/caicloud/cyclone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
