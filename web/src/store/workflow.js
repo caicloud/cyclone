@@ -1,26 +1,25 @@
 import { observable, action } from 'mobx';
-// import fetchApi from "../api/index.js";
+import fetchApi from '../api/index.js';
 
 class Workflow {
-  @observable workflowList = [];
+  @observable workflowList = {};
   @action.bound
-  getWorkflowList(workflowId) {
-    this.workflowList = [
-      {
-        id: '5c04e7a73c17eb00019e5a32',
-        name: 'svn-1',
-        alias: 'svn-1',
-        owner: 'system',
-        recentVersion: 'v1.1.0',
-        creationTime: '2018-09-09',
-        projectID: '5c04dcef3c17eb00019e5a2d',
-      },
-    ];
-    // TODO
-    // return fetchApi.fetchWorkflowList("svn-trigger", {}).then(data => {
+  listWorklow(projectID) {
+    return fetchApi.listWorkflow(projectID, {}).then(data => {
+      this.workflowList[projectID] = data;
+    });
+  }
 
-    // });
-    return;
+  @action.bound
+  createWorkflow(project, info) {
+    return fetchApi.createWorkflow(project, info);
+  }
+
+  @action.bound
+  deleteWorkflow(project, workflow) {
+    return fetchApi.removeWorkflow(project, workflow).then(() => {
+      this.listWorklow(project);
+    });
   }
 }
 

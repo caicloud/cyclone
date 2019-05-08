@@ -2,7 +2,7 @@ import http from './http.js';
 
 const fetchApi = {
   http,
-  fetchWorkflowList(project, query) {
+  listWorkflow(project, query) {
     return http.get(`/projects/${project}/workflows`, query).then(data => {
       return data;
     });
@@ -63,6 +63,32 @@ const fetchApi = {
     });
   },
   /** end project */
+  /** start resource */
+  createResource(project, info) {
+    return http.post(`/projects/${project}/resources`, info).then(data => {
+      return data;
+    });
+  },
+
+  createStage(project, info) {
+    return http.post(`/projects/${project}/stages`, info).then(data => {
+      return data;
+    });
+  },
+  /** end resource */
+  createWorkflow(project, info) {
+    return http.post(`/projects/${project}/workflows`, info).then(data => {
+      return data;
+    });
+  },
+
+  removeWorkflow(project, workflow) {
+    return http
+      .delete(`/projects/${project}/workflows/${workflow}`)
+      .then(data => {
+        return data;
+      });
+  },
 };
 
 export default fetchApi;

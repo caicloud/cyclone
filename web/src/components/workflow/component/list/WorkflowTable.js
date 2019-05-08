@@ -1,35 +1,47 @@
-import React from 'react';
-import { Table, Button, Input } from 'antd';
-import { inject, observer, PropTypes as MobxPropTypes } from 'mobx-react';
+import EllipsisMenu from '@/components/public/ellipsisMenu';
+import { Modal, Button, Input, Table } from 'antd';
+import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
-import EllipsisMenu from '../../public/ellipsisMenu';
+
 const Search = Input.Search;
+const Fragment = React.Fragment;
+const confirm = Modal.confirm;
 
 @inject('workflow')
 @observer
-class List extends React.Component {
+class WorkflowTable extends React.Component {
   static propTypes = {
     workflow: PropTypes.shape({
-      workflowList: MobxPropTypes.observableArray,
-      getWorkflowList: PropTypes.func,
+      deleteWorkflow: PropTypes.func,
     }),
+    project: PropTypes.string,
+    data: PropTypes.array,
     history: PropTypes.object,
-    match: PropTypes.object,
   };
-  componentDidMount() {
-    this.props.workflow.getWorkflowList();
-  }
-  addWorkFlow = () => {
-    this.props.history.push('/workflow/add');
-  };
-  render() {
+
+  deleteWorkflow = (project, workflow) => {
     const {
-      workflow: { workflowList },
+      workflow: { deleteWorkflow },
     } = this.props;
+    confirm({
+      title: `Do you Want to delete workflow ${workflow} ?`,
+      onOk() {
+        deleteWorkflow(project, workflow);
+      },
+    });
+  };
+
+  addWorkFlow = () => {
+    const { project, history } = this.props;
+    history.push(`/workflow/add?project=${project}`);
+  };
+
+  render() {
+    const { project, data } = this.props;
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'name',
+        dataIndex: 'metadata.name',
         key: 'name',
       },
       {
@@ -49,12 +61,19 @@ class List extends React.Component {
       },
       {
         title: intl.get('action'),
-        dataIndex: 'action',
-        render: () => <EllipsisMenu menuFunc={() => {}} />,
+        dataIndex: 'metadata.name',
+        key: 'action',
+        render: value => (
+          <EllipsisMenu
+            menuFunc={() => {
+              this.deleteWorkflow(project, value);
+            }}
+          />
+        ),
       },
     ];
     return (
-      <div>
+      <Fragment>
         <div className="head-bar">
           <Button type="primary" onClick={this.addWorkFlow}>
             {intl.get('operation.add')}
@@ -68,11 +87,11 @@ class List extends React.Component {
         <Table
           rowKey={row => row.id}
           columns={columns}
-          dataSource={[...workflowList]}
+          dataSource={[...data]}
         />
-      </div>
+      </Fragment>
     );
   }
 }
 
-export default List;
+export default WorkflowTable;

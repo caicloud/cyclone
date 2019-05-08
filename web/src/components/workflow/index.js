@@ -1,6 +1,6 @@
 import { Route, Switch } from 'react-router-dom';
 import CreateForm from './component/add/Form';
-import Workflow from './component/List';
+import Workflow from './component/list';
 import PropTypes from 'prop-types';
 
 const WorkFlowRoutes = ({ match }) => {

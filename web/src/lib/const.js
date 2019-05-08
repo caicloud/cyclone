@@ -9,12 +9,12 @@ export const noLabelItemLayout = {
 };
 
 export const resourceParametersField = {
-  scm: [
+  SCM: [
+    { name: 'SCM_TOKEN', value: '' },
     { name: 'SCM_URL', value: '' },
-    { name: 'GIT_RESIVION', value: '' },
-    { name: 'SCM_AUTH', value: '' },
+    { name: 'SCM_RESIVION', value: '' },
   ],
-  image: [
+  DockerRegistry: [
     { name: 'IMAGE', value: '' },
     { name: 'USER', value: '' },
     { name: 'PASSWORD', value: '' },

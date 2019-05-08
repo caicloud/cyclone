@@ -19,7 +19,7 @@ class BasicInfo extends React.Component {
         />
         <Field
           label={intl.get('description')}
-          name="metadata.description"
+          name="metadata.annotations.description"
           component={TextareaField}
         />
       </Form>

@@ -1,4 +1,4 @@
-import { Steps, Button, message, Form } from 'antd';
+import { Steps, Button, Form } from 'antd';
 
 import Graph from './Graph';
 import BasicInfo from './BasicInfo';
@@ -24,6 +24,8 @@ class App extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     values: PropTypes.object,
+    handleDepend: PropTypes.func,
+    handleSubmit: PropTypes.func,
   };
 
   constructor(props) {
@@ -44,13 +46,19 @@ class App extends React.Component {
   }
 
   getStepContent = current => {
-    const { setFieldValue, values } = this.props;
+    const { setFieldValue, values, handleDepend } = this.props;
     switch (current) {
       case 0: {
         return <BasicInfo />;
       }
       case 1: {
-        return <Graph setFieldValue={setFieldValue} values={values} />;
+        return (
+          <Graph
+            setFieldValue={setFieldValue}
+            values={values}
+            setStageDepned={handleDepend}
+          />
+        );
       }
       default: {
         return null;
@@ -60,6 +68,7 @@ class App extends React.Component {
 
   render() {
     const { current } = this.state;
+    const { handleSubmit } = this.props;
     return (
       <Form>
         <Steps current={current} size="small">
@@ -81,10 +90,7 @@ class App extends React.Component {
             </Button>
           )}
           {current === steps.length - 1 && (
-            <Button
-              type="primary"
-              onClick={() => message.success('Processing complete!')}
-            >
+            <Button type="primary" onClick={handleSubmit}>
               {intl.get('confirm')}
             </Button>
           )}

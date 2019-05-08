@@ -25,14 +25,15 @@ class ResourceFrom extends React.Component {
     let data = {
       name: '',
       path: '',
+      resourceType: 'SCM',
       spec: {
         parameters: [],
       },
     };
     if (type === 'input') {
-      data.spec.parameters = resourceParametersField['scm'];
+      data.spec.parameters = resourceParametersField['SCM'];
     } else {
-      data.spec.parameters = resourceParametersField['image'];
+      data.spec.parameters = resourceParametersField['DockerRegistry'];
     }
 
     return data;

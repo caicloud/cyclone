@@ -144,6 +144,7 @@ class Graph extends React.Component {
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
     const { nodePosition } = this.state;
+    const { setFieldValue } = this.props;
     // Deselect events will send Null viewNode
     let state = { selected: viewNode, nodePosition };
     const nodeId = _.get(viewNode, 'id');
@@ -152,6 +153,7 @@ class Graph extends React.Component {
       _.get(nodePosition, `${nodeId}.y`) !== _.get(viewNode, 'y');
     if (viewNode && !moved) {
       state.visible = true;
+      setFieldValue('currentStage', nodeId);
     } else {
       state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
     }
@@ -192,8 +194,32 @@ class Graph extends React.Component {
     this.setState({ graph, selected: null });
   };
 
+  judgeEdgeCricle = (source, target, edge) => {
+    let circle = false;
+    const checkCircle = _target => {
+      let sources = [];
+      _.forEach(edge, v => {
+        if (v.source === _target) {
+          sources.push(v);
+        }
+      });
+      _.forEach(sources, v => {
+        if (v.target === source) {
+          circle = true;
+        }
+        if (!circle) {
+          checkCircle(v.target);
+        }
+      });
+    };
+    checkCircle(target);
+    return circle;
+  };
+
   // Creates a new node between two edges
   onCreateEdge = (sourceViewNode, targetViewNode) => {
+    const { setStageDepned } = this.props;
+    // console.log('sourceViewNode', sourceViewNode, targetViewNode);
     const graph = this.state.graph;
     // This is just an example - any sort of logic
     // could be used here to determine edge type
@@ -206,13 +232,21 @@ class Graph extends React.Component {
       type,
     };
 
+    // Determine whether a closed loop is formed
+    const isCircle = this.judgeEdgeCricle(
+      sourceViewNode[NODE_KEY],
+      targetViewNode[NODE_KEY],
+      graph.edges
+    );
+
     // Only add the edge when the source node is not the same as the target
-    if (viewEdge.source !== viewEdge.target) {
+    if (viewEdge.source !== viewEdge.target && !isCircle) {
       graph.edges = [...graph.edges, viewEdge];
       this.setState({
         graph,
         selected: viewEdge,
       });
+      setStageDepned(graph.edges);
     }
   };
 
@@ -342,6 +376,7 @@ class Graph extends React.Component {
 Graph.propTypes = {
   values: PropTypes.object,
   setFieldValue: PropTypes.func,
+  setStageDepned: PropTypes.func,
 };
 
 export default Graph;
