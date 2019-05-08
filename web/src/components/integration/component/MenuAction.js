@@ -35,7 +35,7 @@ class MenuAction extends React.Component {
     const { name } = this.props;
     return (
       <EllipsisMenu
-        menuText={[intl.get('operation.modify'), intl.get('operation.delete')]}
+        menuText={[intl.get('operation.update'), intl.get('operation.delete')]}
         menuFunc={[
           () => {
             this.updateIntegration(name);

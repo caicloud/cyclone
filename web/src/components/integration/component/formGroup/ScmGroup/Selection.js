@@ -31,6 +31,8 @@ export default class Selection extends React.Component {
       setFieldValue('spec.scm.server', '');
     } else if (value === 'GitHub') {
       setFieldValue('spec.scm.server', 'https://github.com');
+    } else if (value === 'Bitbucket') {
+      setFieldValue('spec.scm.server', 'https://bitbucket.com');
     }
   };
 
@@ -55,6 +57,7 @@ export default class Selection extends React.Component {
               >
                 <RadioButton value="GitHub">GitHub</RadioButton>
                 <RadioButton value="GitLab">GitLab</RadioButton>
+                <RadioButton value="Bitbucket">Bitbucket</RadioButton>
                 <RadioButton value="SVN">SVN</RadioButton>
               </Field>
             </div>

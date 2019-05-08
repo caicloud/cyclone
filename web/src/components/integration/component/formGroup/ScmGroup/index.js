@@ -4,12 +4,14 @@ import GitHub from './Forms/GitHub';
 import GitLab from './Forms/GitLab';
 import PropTypes from 'prop-types';
 import SVN from './Forms/SVN';
+import Bitbucket from './Forms/Bitbucket';
 
 const renderScmForm = (type, props) => {
   const ScmMap = {
     GitHub: <GitHub {...props} />,
     GitLab: <GitLab {...props} />,
     SVN: <SVN {...props} />,
+    Bitbucket: <Bitbucket {...props} />,
   };
   return ScmMap[type];
 };
@@ -30,7 +32,9 @@ const ScmGroup = props => {
         {...props}
         component={Selection}
       />
-      {type && renderScmForm(type, props)}
+      <div style={{ margin: '24px 0' }}>
+        {type && renderScmForm(type, props)}
+      </div>
     </div>
   );
 };

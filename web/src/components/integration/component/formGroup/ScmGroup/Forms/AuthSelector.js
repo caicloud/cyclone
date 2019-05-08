@@ -9,7 +9,7 @@ const FormItem = Form.Item;
 
 const _RadioGroup = MakeField(RadioGroup);
 
-export default class ValidateSelect extends React.Component {
+export default class AuthSelector extends React.Component {
   static propTypes = {
     values: PropTypes.object,
     field: PropTypes.object,
@@ -27,25 +27,27 @@ export default class ValidateSelect extends React.Component {
     const validateMap = {
       Token: (
         <FormItem>
-          <Field
-            label="Token"
-            name="spec.cluster.credential.bearerToken"
-            required
-            component={InputField}
-          />
+          <div>
+            <Field
+              label="Token"
+              name="spec.scm.token"
+              required
+              component={InputField}
+            />
+          </div>
         </FormItem>
       ),
-      UserPwd: (
+      Password: (
         <FormItem>
           <Field
             label={intl.get('integration.form.username')}
-            name="spec.cluster.credential.user"
+            name="spec.scm.user"
             required
             component={InputField}
           />
           <Field
             label={intl.get('integration.form.pwd')}
-            name="spec.cluster.credential.password"
+            name="spec.scm.password"
             type="password"
             required
             component={InputField}
@@ -56,17 +58,15 @@ export default class ValidateSelect extends React.Component {
     const {
       values: {
         spec: {
-          cluster: {
-            credential: { validateType },
-          },
+          scm: { authType },
         },
       },
     } = this.props;
     return (
       <div>
         <FormItem
-          label={intl.get('integration.form.cluster.verificationMode')}
-          className="validate-select"
+          label={intl.get('integration.form.scm.authType')}
+          className="auth-selector"
           required
           {...{
             labelCol: { span: 4 },
@@ -74,17 +74,17 @@ export default class ValidateSelect extends React.Component {
           }}
         >
           <Field
-            name="spec.cluster.credential.validateType"
+            name="spec.scm.authType"
             component={_RadioGroup}
             onChange={this.handleType}
           >
             <RadioButton value="Token">Token</RadioButton>
-            <RadioButton value="UserPwd">
-              {intl.get('integration.form.cluster.usernamepwd')}
+            <RadioButton value="Password">
+              {intl.get('integration.form.scm.usernamepwd')}
             </RadioButton>
           </Field>
         </FormItem>
-        {validateMap[validateType]}
+        {validateMap[authType]}
       </div>
     );
   }

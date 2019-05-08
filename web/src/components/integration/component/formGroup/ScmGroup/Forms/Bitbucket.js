@@ -5,13 +5,13 @@ import AuthSelector from './AuthSelector';
 
 const InputField = MakeField(Input);
 
-const GitHub = props => {
+const Bitbucket = props => {
   return (
     <div>
       <Field
         label={intl.get('integration.form.scm.serverAddress')}
         name="spec.scm.server"
-        disabled
+        required
         component={InputField}
       />
       <Field
@@ -24,4 +24,4 @@ const GitHub = props => {
   );
 };
 
-export default GitHub;
+export default Bitbucket;

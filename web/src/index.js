@@ -14,7 +14,7 @@ import { BrowserRouter, Switch, Route } from 'react-router-dom';
 
 import intl from 'react-intl-universal';
 
-const lang = localStorage.getItem('lang') || 'zh-CN';
+const lang = localStorage.getItem('lang') || 'en-US';
 
 intl.init({
   currentLocale: lang,
