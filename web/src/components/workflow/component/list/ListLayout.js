@@ -1,12 +1,10 @@
 import React from 'react';
-import { Table, Button, Input, Layout, Menu, Spin, Modal } from 'antd';
+import { Layout, Menu, Spin } from 'antd';
 import { inject, observer, PropTypes as MobxPropTypes } from 'mobx-react';
-import EllipsisMenu from '../../public/ellipsisMenu';
 import PropTypes from 'prop-types';
 import qs from 'query-string';
+import WorkflowTable from './WorkflowTable';
 
-const confirm = Modal.confirm;
-const Search = Input.Search;
 const MenuItemGroup = Menu.ItemGroup;
 const { Content, Sider } = Layout;
 
@@ -34,27 +32,12 @@ class List extends React.Component {
     });
   }
 
-  addWorkFlow = () => {
-    const {
-      history: { location },
-    } = this.props;
-    this.props.history.push(`/workflow/add${location.search}`);
-  };
-
   filterByProject = ({ key }) => {
-    this.props.history.replace(`/workflow?project=${key}`);
-  };
-
-  deleteWorkflow = (project, workflow) => {
     const {
-      workflow: { deleteWorkflow },
+      workflow: { listWorklow },
     } = this.props;
-    confirm({
-      title: `Do you Want to delete workflow ${workflow} ?`,
-      onOk() {
-        deleteWorkflow(project, workflow);
-      },
-    });
+    listWorklow(key);
+    this.props.history.replace(`/workflow?project=${key}`);
   };
 
   render() {
@@ -64,48 +47,12 @@ class List extends React.Component {
       history: { location },
     } = this.props;
     const query = qs.parse(location.search);
-
     if (!projectList) {
       return <Spin />;
     }
 
     const projectItems = _.get(projectList, 'items', []);
     const _workflowList = _.get(workflowList, `${query.project}.items`, []);
-    const columns = [
-      {
-        title: intl.get('name'),
-        dataIndex: 'metadata.name',
-        key: 'name',
-      },
-      {
-        title: intl.get('workflow.recentVersion'),
-        dataIndex: 'recentVersion',
-        key: 'recentVersion',
-      },
-      {
-        title: intl.get('workflow.creator'),
-        dataIndex: 'owner',
-        key: 'owner',
-      },
-      {
-        title: intl.get('creationTime'),
-        dataIndex: 'creationTime',
-        key: 'creationTime',
-      },
-      {
-        title: intl.get('action'),
-        dataIndex: 'metadata.name',
-        key: 'action',
-        render: value => (
-          <EllipsisMenu
-            menuFunc={() => {
-              this.deleteWorkflow(query.project, value);
-            }}
-          />
-        ),
-      },
-    ];
-
     return (
       <Layout style={{ background: '#fff' }}>
         <Sider
@@ -128,20 +75,10 @@ class List extends React.Component {
           </Menu>
         </Sider>
         <Content style={{ width: '100%', paddingLeft: '24px' }}>
-          <div className="head-bar">
-            <Button type="primary" onClick={this.addWorkFlow}>
-              {intl.get('operation.add')}
-            </Button>
-            <Search
-              placeholder="input search text"
-              onSearch={() => {}}
-              style={{ width: 200 }}
-            />
-          </div>
-          <Table
-            rowKey={row => row.id}
-            columns={columns}
-            dataSource={[..._workflowList]}
+          <WorkflowTable
+            project={query.project}
+            data={_workflowList}
+            history={this.props.history}
           />
         </Content>
       </Layout>

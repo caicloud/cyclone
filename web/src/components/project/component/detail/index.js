@@ -6,17 +6,19 @@ import { FormatTime } from '@/lib/util';
 import MenuAction from '../MenuAction';
 import ResourceList from './resource';
 import StageList from './stage';
+import WorkflowTable from '@/components/workflow/component/list/WorkflowTable';
 
 const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 const TabPane = Tabs.TabPane;
 
-@inject('project')
+@inject('project', 'workflow')
 @observer
 class ProjectDetail extends React.Component {
   static propTypes = {
     match: PropTypes.object,
     project: PropTypes.object,
     history: PropTypes.object,
+    workflow: PropTypes.object,
   };
   constructor(props) {
     super(props);
@@ -26,6 +28,7 @@ class ProjectDetail extends React.Component {
       },
     } = this.props;
     this.props.project.getProject(projectName);
+    this.props.workflow.listWorklow(projectName);
   }
   render() {
     const {
@@ -33,6 +36,7 @@ class ProjectDetail extends React.Component {
       match: {
         params: { projectName },
       },
+      workflow: { workflowList },
       history,
     } = this.props;
     const loading = project.detailLoading;
@@ -40,7 +44,7 @@ class ProjectDetail extends React.Component {
       return <Spin />;
     }
     const detail = project.projectDetail;
-
+    const _workflowList = _.get(workflowList, `${projectName}.items`, []);
     return (
       <Detail
         actions={
@@ -55,12 +59,13 @@ class ProjectDetail extends React.Component {
           <DetailHeadItem
             name={intl.get('creationTime')}
             value={FormatTime(_.get(detail, 'metadata.creationTimestamp'))}
+            history={history}
           />
         </DetailHead>
         <DetailContent>
           <Tabs defaultActiveKey="workflow" type="card">
             <TabPane tab={intl.get('sideNav.workflow')} key="workflow">
-              Content of Tab Pane 3
+              <WorkflowTable project={projectName} data={_workflowList} />
             </TabPane>
             <TabPane tab={intl.get('sideNav.resource')} key="resource">
               <ResourceList projectName={projectName} />
