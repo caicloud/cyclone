@@ -1,11 +1,11 @@
 export const defaultFormItemLayout = {
-  labelCol: { span: 5 },
-  wrapperCol: { span: 15 },
+  labelCol: { span: 4 },
+  wrapperCol: { span: 16 },
 };
 
 export const noLabelItemLayout = {
   labelCol: { span: 0 },
-  wrapperCol: { span: 24 },
+  wrapperCol: { span: 20 },
 };
 
 export const resourceParametersField = {

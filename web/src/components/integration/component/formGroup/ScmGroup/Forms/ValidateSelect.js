@@ -1,7 +1,7 @@
 import { Field } from 'formik';
 import MakeField from '@/components/public/makeField';
 import PropTypes from 'prop-types';
-import { Radio, Form, Input, Row, Col } from 'antd';
+import { Radio, Form, Input } from 'antd';
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
 const InputField = MakeField(Input);
@@ -24,40 +24,20 @@ export default class ValidateSelect extends React.Component {
     setFieldValue(name, value);
   };
   render() {
-    const {
-      values: {
-        spec: {
-          scm: { type },
-        },
-      },
-    } = this.props;
-    const href =
-      type === 'GitLab'
-        ? 'https://gitlab.com/profile/personal_access_tokens'
-        : 'https://github.com/settings/tokens';
     const validateMap = {
       Token: (
         <FormItem>
-          <Field
-            label="Token"
-            name="spec.scm.token"
-            required
-            component={InputField}
-          />
-          <Row>
-            <Col offset={4} span={18}>
-              <p className="token-tip">
-                {intl.get('integration.form.pleaseClick')}
-                <a href={href} rel="noopener noreferrer" target="_blank">
-                  [Access Token]
-                </a>
-                {intl.get('integration.form.tokentip')}
-              </p>
-            </Col>
-          </Row>
+          <div>
+            <Field
+              label="Token"
+              name="spec.scm.token"
+              required
+              component={InputField}
+            />
+          </div>
         </FormItem>
       ),
-      UserPwd: (
+      Password: (
         <FormItem>
           <Field
             label={intl.get('integration.form.username')}
@@ -99,7 +79,7 @@ export default class ValidateSelect extends React.Component {
             onChange={this.handleType}
           >
             <RadioButton value="Token">Token</RadioButton>
-            <RadioButton value="UserPwd">
+            <RadioButton value="Password">
               {intl.get('integration.form.scm.usernamepwd')}
             </RadioButton>
           </Field>

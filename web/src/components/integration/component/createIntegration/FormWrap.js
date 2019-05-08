@@ -48,17 +48,18 @@ export default class IntegrationForm extends React.Component {
     const spec = _.pick(data.spec, [`${IntegrationTypeMap[type]}`, 'type']); // 只取type类型的表单
     if (type === 'SCM') {
       const scmValueMap = {
-        UserPwd: ['user', 'password', 'type'],
-        Token: ['token', 'server', 'type'],
+        Password: ['server', 'type', 'user', 'password'],
+        Token: ['server', 'type', 'token'],
       };
       const validateType = _.get(data, 'spec.scm.validateType');
       const scmObj = _.pick(spec.scm, scmValueMap[validateType]);
+      scmObj['authType'] = validateType;
       spec[`${IntegrationTypeMap[type]}`] = scmObj;
     }
 
     if (type === 'Cluster') {
       const clusterValueMap = {
-        UserPwd: ['user', 'password', 'server'],
+        Password: ['user', 'password', 'server'],
         Token: ['bearerToken', 'server'],
       };
       const validateType = _.get(data, 'spec.cluster.credential.validateType');
@@ -127,7 +128,7 @@ export default class IntegrationForm extends React.Component {
     if (type === 'SCM') {
       const token = _.get(data, 'spec.scm.token');
       if (!token) {
-        specData.scm.validateType = 'UserPwd';
+        specData.scm.validateType = 'Password';
       } else {
         specData.scm.validateType = 'Token';
       }
@@ -135,7 +136,7 @@ export default class IntegrationForm extends React.Component {
     if (type === 'Cluster') {
       const token = _.get(data, 'spec.cluster.credential.bearerToken');
       if (!token) {
-        specData.cluster.credential.validateType = 'UserPwd';
+        specData.cluster.credential.validateType = 'Password';
       } else {
         specData.cluster.credential.validateType = 'Token';
       }
@@ -188,7 +189,7 @@ export default class IntegrationForm extends React.Component {
         } = props;
         const touchMap = {
           Token: { token: true, server: true },
-          UserPwd: { user: true, password: true, server: true },
+          Password: { user: true, password: true, server: true },
         };
         const scmTouchObj =
           scmTtype !== 'SVN'
@@ -228,7 +229,7 @@ export default class IntegrationForm extends React.Component {
         } = props;
         const touchMap = {
           Token: { bearerToken: true, server: true },
-          UserPwd: { user: true, password: true, server: true },
+          Password: { user: true, password: true, server: true },
         };
         const clusterTouchObj = touchMap[validateType];
         touchObj.spec.cluster = {
@@ -278,7 +279,7 @@ export default class IntegrationForm extends React.Component {
           </h2>
         </div>
         <Row>
-          <Col span={20}>
+          <Col span={24}>
             <Formik
               enableReinitialize={true}
               initialValues={initialValues}

@@ -1,6 +1,6 @@
 import { Field } from 'formik';
 import PropTypes from 'prop-types';
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, Row, Col } from 'antd';
 import MakeField from '@/components/public/makeField';
 import ScmGroup from '../formGroup/ScmGroup';
 import SonarQube from '../formGroup/SonarQube';
@@ -21,7 +21,6 @@ const renderWrapForm = (type, props) => {
   return formMap[type];
 };
 const SelectField = MakeField(SelectSourceType);
-const FormItem = Form.Item;
 const FormContent = props => {
   const {
     values: {
@@ -57,22 +56,16 @@ const FormContent = props => {
         component={SelectField}
       />
       {type && renderWrapForm(type, props)}
-      <FormItem
-        {...{
-          labelCol: { span: 8 },
-          wrapperCol: { span: 20 },
-        }}
-      >
-        <Button style={{ float: 'right' }} onClick={submit} type="primary">
-          {intl.get('integration.form.confirm')}
-        </Button>
-        <Button
-          style={{ float: 'right', marginRight: 10 }}
-          onClick={handleCancle}
-        >
-          {intl.get('integration.form.cancel')}
-        </Button>
-      </FormItem>
+      <Row>
+        <Col offset={4} span={20}>
+          <Button onClick={submit} type="primary">
+            {intl.get('integration.form.confirm')}
+          </Button>
+          <Button style={{ marginLeft: 10 }} onClick={handleCancle}>
+            {intl.get('integration.form.cancel')}
+          </Button>
+        </Col>
+      </Row>
     </Form>
   );
 };

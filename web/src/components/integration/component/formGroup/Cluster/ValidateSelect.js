@@ -35,7 +35,7 @@ export default class ValidateSelect extends React.Component {
           />
         </FormItem>
       ),
-      UserPwd: (
+      Password: (
         <FormItem>
           <Field
             label={intl.get('integration.form.username')}
@@ -79,7 +79,7 @@ export default class ValidateSelect extends React.Component {
             onChange={this.handleType}
           >
             <RadioButton value="Token">Token</RadioButton>
-            <RadioButton value="UserPwd">
+            <RadioButton value="Password">
               {intl.get('integration.form.cluster.usernamepwd')}
             </RadioButton>
           </Field>
