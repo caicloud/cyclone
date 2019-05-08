@@ -2,8 +2,9 @@ import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import CreateWorkflow from './CreateWorkflow';
 import { inject, observer } from 'mobx-react';
+import qs from 'query-string';
 
-@inject('integration')
+@inject('resource', 'workflow')
 @observer
 class AddWorkflow extends React.Component {
   state = {
@@ -21,33 +22,100 @@ class AddWorkflow extends React.Component {
     this.setState({ depend: obj });
   };
 
+  tramformArg = data => {
+    const value = _.cloneDeep(data);
+    const containers = _.get(value, 'spec.containers[0]');
+    _.forEach(containers, (v, k) => {
+      if (['args', 'command'].includes(k) && _.isString(v)) {
+        value.spec.containers[0][k] = v.split(/(?:\r\n|\r|\n)/);
+      }
+    });
+    return value;
+  };
+
   // submit form data
   submit = value => {
-    const { integration } = this.props;
+    const {
+      history: { location },
+    } = this.props;
     const { depend } = this.state;
+    const requests = [];
+    const query = qs.parse(location.search);
     const stages = _.get(value, 'stages', []);
-    const workflow = {
+    const workflowInfo = {
+      metadata: _.get(value, 'metadata'),
       spec: {
         stages: [],
       },
     };
     _.forEach(stages, v => {
-      const resources = _.pick(value, `${v}.inputs.resources`);
-      _.forEach(resources, r => {
-        const data = _.pick(r, 'spec');
+      const inputResources = _.get(value, `${v}.inputs.resources`, []);
+      const outputResources = _.get(value, `${v}.outputs.resources`, []);
+      let stage = {
+        metadata: {
+          name: _.get(value, `${v}.name`),
+        },
+        spec: {
+          pod: this.tramformArg(
+            _.pick(_.get(value, v), ['inputs', 'outputs', 'spec'])
+          ),
+        },
+      };
+      _.forEach(inputResources, (r, i) => {
+        const data = _.pick(r, ['spec']);
         data.metadata = {
           name: r.name,
         };
-        integration.createIntegration(data);
-        const stage = {
-          artifacts: _.get(v, 'outputs.artifacts', []),
-          depend: _.get(depend, `${r.name}`),
-          name: v.metadata.name,
-        };
-        workflow.spec.stages.push(stage);
+        stage.spec.pod.inputs.resources[i] = _.pick(r, ['name', 'path']);
+        requests.push({ type: 'createResource', project: query.project, data });
       });
+
+      _.forEach(outputResources, (r, i) => {
+        const data = _.pick(r, ['spec']);
+        data.metadata = {
+          name: r.name,
+        };
+        stage.spec.pod.outputs.resources[i] = _.pick(r, ['name']);
+        requests.push({ type: 'createResource', project: query.project, data });
+      });
+      requests.push({
+        type: 'createStage',
+        project: query.project,
+        data: stage,
+      });
+
+      const workflowStage = {
+        artifacts: _.get(v, 'outputs.artifacts', []),
+        depend: _.get(depend, v),
+        name: _.get(value, `${v}.name`),
+      };
+      workflowInfo.spec.stages.push(workflowStage);
     });
+    requests.push({
+      type: 'createWorkflow',
+      project: query.project,
+      data: workflowInfo,
+    });
+
+    this.postAllRequests(requests);
   };
+
+  async postAllRequests(requests) {
+    const {
+      resource: { createStage, createResource },
+      workflow: { createWorkflow },
+    } = this.props;
+    for (const req of requests) {
+      const fn =
+        req.type === 'createWorkflow'
+          ? createWorkflow
+          : req.type === 'createStage'
+          ? createStage
+          : createResource;
+      await fn(req.project, req.data);
+    }
+    // TODO(qme): catch error
+  }
 
   validate = () => {
     const errors = {};
@@ -80,7 +148,9 @@ class AddWorkflow extends React.Component {
 
 AddWorkflow.propTypes = {
   handleSubmit: PropTypes.func,
-  integration: PropTypes.object,
+  resource: PropTypes.object,
+  workflow: PropTypes.object,
+  history: PropTypes.object,
 };
 
 export default AddWorkflow;

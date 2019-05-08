@@ -144,6 +144,7 @@ class Graph extends React.Component {
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
     const { nodePosition } = this.state;
+    const { setFieldValue } = this.props;
     // Deselect events will send Null viewNode
     let state = { selected: viewNode, nodePosition };
     const nodeId = _.get(viewNode, 'id');
@@ -152,6 +153,7 @@ class Graph extends React.Component {
       _.get(nodePosition, `${nodeId}.y`) !== _.get(viewNode, 'y');
     if (viewNode && !moved) {
       state.visible = true;
+      setFieldValue('currentStage', nodeId);
     } else {
       state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
     }

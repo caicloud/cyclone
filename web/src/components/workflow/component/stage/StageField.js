@@ -102,7 +102,7 @@ class StageField extends React.Component {
                         required
                       />
                       <Field
-                        label={'ENTRYPOINT'}
+                        label={'COMMAND'}
                         name={`${currentStage}.spec.containers.${index}.args`}
                         component={TextareaField}
                         hasFeedback
