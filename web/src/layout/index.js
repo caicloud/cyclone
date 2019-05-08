@@ -5,6 +5,7 @@ import Routes from '../routes';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import BreadCrumb from './Breadcrumb';
+import CycloneLogo from '@/images/logo.png';
 
 const { Header, Content, Sider } = Layout;
 
@@ -32,7 +33,18 @@ class CoreLayout extends Component {
     return (
       <Layout style={{ minHeight: '100%' }}>
         <Header className="cyclone-layout-header">
-          <div className="cyclone-logo">CYCLONE</div>
+          <div className="cyclone-logo">
+            <img
+              src={CycloneLogo}
+              alt="cyclone logo"
+              style={{
+                height: '40px',
+                paddingRight: '16px',
+                marginLeft: '-16px',
+              }}
+            />
+            CYCLONE
+          </div>
           <Menu theme="dark" mode="horizontal" style={{ lineHeight: '64px' }}>
             <Menu.Item key="3">
               <Icon type="user" />
