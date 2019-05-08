@@ -20,13 +20,13 @@ export const validateForm = values => {
     const type = _.get(values, 'spec.type');
     if (type === 'SCM') {
       const scmType = _.get(values, 'spec.scm.type');
-      const scmValidateType = _.get(values, 'spec.scm.validateType');
+      const scmAuthType = _.get(values, 'spec.scm.authType');
       if (scmType === 'GitHub' || scmType === 'GitLab') {
         if (!values.spec.scm.server) {
           spec.scm.server = intl.get('integration.form.error.server');
           errors['spec'] = spec;
         }
-        if (scmValidateType === 'Token') {
+        if (scmAuthType === 'Token') {
           if (!values.spec.scm.token) {
             spec.scm.token = intl.get('integration.form.error.token');
             errors['spec'] = spec;
@@ -86,17 +86,14 @@ export const validateForm = values => {
     }
 
     if (type === 'Cluster') {
-      const clusterValidateType = _.get(
-        values,
-        'spec.cluster.credential.validateType'
-      );
+      const clusterAuthType = _.get(values, 'spec.cluster.credential.authType');
       if (!values.spec.cluster.credential.server) {
         spec.cluster.credential.server = intl.get(
           'integration.form.error.server'
         );
         errors['spec'] = spec;
       }
-      if (clusterValidateType === 'Token') {
+      if (clusterAuthType === 'Token') {
         if (!values.spec.cluster.credential.bearerToken) {
           spec.cluster.credential.bearerToken = intl.get(
             'integration.form.error.token'

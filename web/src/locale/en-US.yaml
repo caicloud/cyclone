@@ -70,7 +70,7 @@ integration:
     scm:
       name: Code origin
       serverAddress: Server address
-      verificationMode: Verification mode
+      authType: Auth Type
       usernamepwd: Username password
     sonarQube:
       name: SonarQube
@@ -85,7 +85,7 @@ integration:
       serverAddress: Server address
       isControlCluster: isControlCluster
       isWorkerCluster: isWorkerCluster
-      verificationMode: Verification mode
+      authType: Auth Type
       bearerToken: Token
       usernamepwd: Username password
       user: User name

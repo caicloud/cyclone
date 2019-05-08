@@ -1,7 +1,7 @@
 import { Field } from 'formik';
 import { Input } from 'antd';
 import MakeField from '@/components/public/makeField';
-import ValidateSelect from './ValidateSelect';
+import AuthSelector from './AuthSelector';
 import SwitchField from './SwitchField';
 import PropTypes from 'prop-types';
 import WorkerCluster from './WorkerCluster';
@@ -30,10 +30,10 @@ const Cluster = props => {
       />
       <WorkerCluster {...props} />
       <Field
-        label={intl.get('integration.form.cluster.verificationMode')}
+        label={intl.get('integration.form.cluster.authType')}
         {...props}
-        name="spec.cluster.credential.validateType"
-        component={ValidateSelect}
+        name="spec.cluster.credential.authType"
+        component={AuthSelector}
       />
     </div>
   );

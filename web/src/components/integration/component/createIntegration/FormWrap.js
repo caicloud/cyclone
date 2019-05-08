@@ -51,9 +51,9 @@ export default class IntegrationForm extends React.Component {
         Password: ['server', 'type', 'user', 'password'],
         Token: ['server', 'type', 'token'],
       };
-      const validateType = _.get(data, 'spec.scm.validateType');
-      const scmObj = _.pick(spec.scm, scmValueMap[validateType]);
-      scmObj['authType'] = validateType;
+      const authType = _.get(data, 'spec.scm.authType');
+      const scmObj = _.pick(spec.scm, scmValueMap[authType]);
+      scmObj['authType'] = authType;
       spec[`${IntegrationTypeMap[type]}`] = scmObj;
     }
 
@@ -62,10 +62,10 @@ export default class IntegrationForm extends React.Component {
         Password: ['user', 'password', 'server'],
         Token: ['bearerToken', 'server'],
       };
-      const validateType = _.get(data, 'spec.cluster.credential.validateType');
+      const authType = _.get(data, 'spec.cluster.credential.authType');
       const clusterObj = _.pick(
         spec.cluster.credential,
-        clusterValueMap[validateType]
+        clusterValueMap[authType]
       );
       const isControlCluster = _.get(data, 'spec.cluster.isControlCluster');
       const isWorkerCluster = _.get(data, 'spec.cluster.isWorkerCluster');
@@ -101,7 +101,7 @@ export default class IntegrationForm extends React.Component {
       scm: {
         server: 'https://github.com',
         type: 'GitHub',
-        validateType: 'Token',
+        authType: 'Token',
       },
       dockerRegistry: {
         server: '',
@@ -114,7 +114,7 @@ export default class IntegrationForm extends React.Component {
       },
       cluster: {
         credential: {
-          validateType: 'Token',
+          authType: 'Token',
           server: '',
         },
         isControlCluster: false,
@@ -128,17 +128,17 @@ export default class IntegrationForm extends React.Component {
     if (type === 'SCM') {
       const token = _.get(data, 'spec.scm.token');
       if (!token) {
-        specData.scm.validateType = 'Password';
+        specData.scm.authType = 'Password';
       } else {
-        specData.scm.validateType = 'Token';
+        specData.scm.authType = 'Token';
       }
     }
     if (type === 'Cluster') {
       const token = _.get(data, 'spec.cluster.credential.bearerToken');
       if (!token) {
-        specData.cluster.credential.validateType = 'Password';
+        specData.cluster.credential.authType = 'Password';
       } else {
-        specData.cluster.credential.validateType = 'Token';
+        specData.cluster.credential.authType = 'Token';
       }
     }
     return _.assign(defaultSpec, specData);
@@ -183,7 +183,7 @@ export default class IntegrationForm extends React.Component {
         const {
           values: {
             spec: {
-              scm: { validateType, type: scmTtype },
+              scm: { authType, type: scmTtype },
             },
           },
         } = props;
@@ -193,7 +193,7 @@ export default class IntegrationForm extends React.Component {
         };
         const scmTouchObj =
           scmTtype !== 'SVN'
-            ? touchMap[validateType]
+            ? touchMap[authType]
             : {
                 server: true,
                 user: true,
@@ -222,7 +222,7 @@ export default class IntegrationForm extends React.Component {
           values: {
             spec: {
               cluster: {
-                credential: { validateType },
+                credential: { authType },
               },
             },
           },
@@ -231,7 +231,7 @@ export default class IntegrationForm extends React.Component {
           Token: { bearerToken: true, server: true },
           Password: { user: true, password: true, server: true },
         };
-        const clusterTouchObj = touchMap[validateType];
+        const clusterTouchObj = touchMap[authType];
         touchObj.spec.cluster = {
           credential: clusterTouchObj,
         };

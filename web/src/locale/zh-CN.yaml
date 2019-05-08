@@ -69,7 +69,7 @@ integration:
     scm:
       name: 代码源
       serverAddress: 服务地址
-      verificationMode: 验证方式
+      authType: 验证方式
       usernamepwd: 用户名密码
     sonarQube:
       name: SonarQube
@@ -85,7 +85,7 @@ integration:
       isControlCluster: 控制集群
       isWorkerCluster: 工作集群
       bearerToken: Token
-      verificationMode: 验证方式
+      authType: 验证方式
       usernamepwd: 用户名密码
       user: 用户名
       password: 密码
