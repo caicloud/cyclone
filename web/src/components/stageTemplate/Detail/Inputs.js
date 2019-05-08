@@ -9,6 +9,10 @@ const Inputs = ({ inputs = {} }) => {
       key: 'name',
     },
     {
+      title: intl.get('type'),
+      dataIndex: 'type',
+    },
+    {
       title: intl.get('path'),
       dataIndex: 'path',
     },
@@ -19,6 +23,11 @@ const Inputs = ({ inputs = {} }) => {
       title: intl.get('name'),
       dataIndex: 'name',
       key: 'name',
+    },
+    {
+      title: intl.get('value'),
+      dataIndex: 'value',
+      key: 'value',
     },
   ];
 
@@ -54,11 +63,13 @@ Inputs.propTypes = {
       PropTypes.shape({
         name: PropTypes.string,
         path: PropTypes.string,
+        type: PropTypes.string,
       })
     ).isRequired,
     arguments: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string,
+        value: PropTypes.string,
       })
     ).isRequired,
   }),

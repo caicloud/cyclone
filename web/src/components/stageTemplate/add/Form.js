@@ -60,6 +60,10 @@ export default class StageTemplateForm extends React.Component {
       pod: {
         inputs: {
           arguments: argumentsParamtersField,
+          resources: [],
+        },
+        outputs: {
+          resources: [],
         },
         spec: {
           containers: [

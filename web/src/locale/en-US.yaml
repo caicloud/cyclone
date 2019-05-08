@@ -121,29 +121,30 @@ template:
   update: Update
   form:
     inputs:
-      name: 输入
+      name: Inputs
     config:
-      name: 配置
-      image: 镜像
+      name: Config
+      image: Image
       entryPoint: Entry point
       cmd: CMD
       env:
-        name: 环境变量
-        key: 健
-        value: 值
+        name: Env
+        key: Key
+        value: Value
     outputs:
-      name: 输出
+      name: Outputs
     newResourceType: 
-      name: 新建资源类型
-      placeholder: 新增资源
+      name: New resource type
+      placeholder: New resources
       SCM: SCM
-      images: 镜像
+      images: Image
   kinds:
     all: All
     build: Build
     unit-test: UnitTest
     image-build: ImageBuild
     code-scan: CodeScan
+    cd: CD
 stage:
   inputs: Inputs
   input:
