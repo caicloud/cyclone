@@ -71,7 +71,7 @@ integration:
       name: Code origin
       serverAddress: Server address
       authType: Auth Type
-      usernamepwd: Username password
+      usernamepwd: User/Password
     sonarQube:
       name: SonarQube
       serverAddress: Server address
@@ -87,7 +87,7 @@ integration:
       isWorkerCluster: isWorkerCluster
       authType: Auth Type
       bearerToken: Token
-      usernamepwd: Username password
+      usernamepwd: User/Password
       user: User name
       password: Password
       namespace: Name space

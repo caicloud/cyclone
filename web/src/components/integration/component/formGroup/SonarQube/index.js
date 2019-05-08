@@ -6,7 +6,7 @@ const InputField = MakeField(Input);
 
 const SonarQube = () => {
   return (
-    <div className="u-sonarqube">
+    <div style={{ marginBottom: 24 }}>
       <h3>{intl.get('integration.form.sonarQube.name')}</h3>
       <Field
         label={intl.get('integration.form.sonarQube.serverAddress')}

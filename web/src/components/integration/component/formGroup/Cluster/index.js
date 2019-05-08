@@ -11,7 +11,7 @@ const InputField = MakeField(Input);
 const Cluster = props => {
   const { setFieldValue } = props;
   return (
-    <div className="u-cluster">
+    <div style={{ marginBottom: 24 }}>
       <Field
         label={intl.get('integration.form.cluster.serverAddress')}
         name="spec.cluster.credential.server"

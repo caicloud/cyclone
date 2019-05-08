@@ -6,7 +6,7 @@ const InputField = MakeField(Input);
 
 const DockerRegistry = () => {
   return (
-    <div className="u-dockerRegistry">
+    <div style={{ marginBottom: 24 }}>
       <h3>{intl.get('integration.form.dockerRegistry.name')}</h3>
       <Field
         label={intl.get('integration.form.dockerRegistry.registryAddress')}

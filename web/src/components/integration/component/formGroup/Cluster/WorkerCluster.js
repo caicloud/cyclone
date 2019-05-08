@@ -30,7 +30,7 @@ export default class WorkerCluster extends React.Component {
       setFieldValue,
     } = this.props;
     return (
-      <div>
+      <div style={{ marginBottom: 24 }}>
         <Field
           label={intl.get('integration.form.cluster.isWorkerCluster')}
           {...this.props}
