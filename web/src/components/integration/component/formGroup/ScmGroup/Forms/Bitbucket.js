@@ -11,6 +11,7 @@ const Bitbucket = props => {
       <Field
         label={intl.get('integration.form.scm.serverAddress')}
         name="spec.scm.server"
+        required
         component={InputField}
       />
       <Field

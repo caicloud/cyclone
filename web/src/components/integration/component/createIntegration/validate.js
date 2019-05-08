@@ -21,7 +21,11 @@ export const validateForm = values => {
     if (type === 'SCM') {
       const scmType = _.get(values, 'spec.scm.type');
       const scmAuthType = _.get(values, 'spec.scm.authType');
-      if (scmType === 'GitHub' || scmType === 'GitLab') {
+      if (
+        scmType === 'GitHub' ||
+        scmType === 'GitLab' ||
+        scmType === 'Bitbucket'
+      ) {
         if (!values.spec.scm.server) {
           spec.scm.server = intl.get('integration.form.error.server');
           errors['spec'] = spec;
