@@ -3,12 +3,14 @@ import { Formik } from 'formik';
 import CreateWorkflow from './CreateWorkflow';
 import { inject, observer } from 'mobx-react';
 import qs from 'query-string';
+import fetchApi from '@/api/index.js';
 
 @inject('resource', 'workflow')
 @observer
 class AddWorkflow extends React.Component {
   state = {
     depend: {},
+    submitting: false,
   };
   setStageDepend = depend => {
     const obj = {};
@@ -39,6 +41,7 @@ class AddWorkflow extends React.Component {
       history: { location },
     } = this.props;
     const { depend } = this.state;
+    this.setState({ submitting: true });
     const requests = [];
     const query = qs.parse(location.search);
     const stages = _.get(value, 'stages', []);
@@ -97,24 +100,28 @@ class AddWorkflow extends React.Component {
       data: workflowInfo,
     });
 
-    this.postAllRequests(requests);
+    this.postAllRequests(requests).then(data => {
+      this.setState({ submitting: false });
+      if (!_.get(data, 'submitError')) {
+        this.props.history.push(`/workflow?project=${query.project}`);
+      }
+    });
   };
 
   async postAllRequests(requests) {
-    const {
-      resource: { createStage, createResource },
-      workflow: { createWorkflow },
-    } = this.props;
     for (const req of requests) {
-      const fn =
-        req.type === 'createWorkflow'
-          ? createWorkflow
-          : req.type === 'createStage'
-          ? createStage
-          : createResource;
-      await fn(req.project, req.data);
+      try {
+        const fn =
+          req.type === 'createWorkflow'
+            ? fetchApi.createWorkflow
+            : req.type === 'createStage'
+            ? fetchApi.createStage
+            : fetchApi.createResource;
+        await fn(req.project, req.data);
+      } catch (err) {
+        return { submitError: true };
+      }
     }
-    // TODO(qme): catch error
   }
 
   validate = () => {
@@ -132,6 +139,7 @@ class AddWorkflow extends React.Component {
   };
 
   render() {
+    const { submitting } = this.state;
     const initValue = this.getInitialValues();
     return (
       <Formik
@@ -139,7 +147,11 @@ class AddWorkflow extends React.Component {
         validate={this.validate}
         onSubmit={this.submit}
         render={props => (
-          <CreateWorkflow {...props} handleDepend={this.setStageDepend} />
+          <CreateWorkflow
+            {...props}
+            handleDepend={this.setStageDepend}
+            submitting={submitting}
+          />
         )}
       />
     );
