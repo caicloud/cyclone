@@ -1,4 +1,4 @@
-import { Layout, Menu, Icon } from 'antd';
+import { Layout, Menu, Icon, Popover } from 'antd';
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import Routes from '../routes';
@@ -26,30 +26,59 @@ class CoreLayout extends Component {
     this.setState({ collapsed });
   };
 
+  onLocaleChange = item => {
+    if (item.key !== localStorage.getItem('lang')) {
+      localStorage.setItem('lang', item.key);
+      window.location.reload();
+    }
+  };
+
   render() {
     const { location } = this.props;
     const pathSnippets = location.pathname.split('/').filter(i => i);
     const selectNav = pathSnippets[0] ? pathSnippets[0] : '/overview';
+    const lang = localStorage.getItem('lang') || 'en-US';
+
+    const languages = (
+      <Menu style={{ borderRight: 'none' }}>
+        <Menu.Item
+          key="zh-CN"
+          disabled={lang === 'zh-CN'}
+          onClick={this.onLocaleChange}
+        >
+          中文
+        </Menu.Item>
+        <Menu.Item
+          key="en-US"
+          disabled={lang === 'en-US'}
+          onClick={this.onLocaleChange}
+        >
+          ENGLISH
+        </Menu.Item>
+      </Menu>
+    );
+
     return (
       <Layout style={{ minHeight: '100%' }}>
         <Header className="cyclone-layout-header">
           <div className="cyclone-logo">
-            <img
-              src={CycloneLogo}
-              alt="cyclone logo"
-              style={{
-                height: '40px',
-                paddingRight: '16px',
-                marginLeft: '-16px',
-              }}
-            />
+            <img src={CycloneLogo} alt="cyclone logo" />
             CYCLONE
           </div>
-          <Menu theme="dark" mode="horizontal" style={{ lineHeight: '64px' }}>
-            <Menu.Item key="3">
-              <Icon type="user" />
-            </Menu.Item>
-          </Menu>
+          <div>
+            <Icon className="headbar-icon" type="user" />
+            <Popover
+              placement="bottomRight"
+              trigger="click"
+              content={languages}
+            >
+              <Icon
+                className="headbar-icon"
+                type="global"
+                onClick={this.onLangClick}
+              />
+            </Popover>
+          </div>
         </Header>
         <Layout style={{ marginTop: 64 }}>
           <Sider
