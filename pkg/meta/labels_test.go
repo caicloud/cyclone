@@ -94,13 +94,13 @@ func TestAddStageTemplateLabel(t *testing.T) {
 		"nil labels": {
 			nil,
 			map[string]string{
-				LabelStageTemplate: TrueValue,
+				LabelStageTemplate: LabelValueTrue,
 			},
 		},
 		"empty labels": {
 			map[string]string{},
 			map[string]string{
-				LabelStageTemplate: TrueValue,
+				LabelStageTemplate: LabelValueTrue,
 			},
 		},
 		"non-empty labels": {
@@ -109,7 +109,7 @@ func TestAddStageTemplateLabel(t *testing.T) {
 			},
 			map[string]string{
 				LabelTenantName:    "admin",
-				LabelStageTemplate: TrueValue,
+				LabelStageTemplate: LabelValueTrue,
 			},
 		},
 	}

@@ -54,7 +54,7 @@ func (a *Accelerator) Accelerate() {
 		return
 	}
 
-	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAcceleration] == meta.TrueValue {
+	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAcceleration] == meta.LabelValueTrue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
 				Type:      v1alpha1.PresetVolumeTypePV,
