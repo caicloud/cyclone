@@ -7,11 +7,25 @@ const fetchApi = {
       return data;
     });
   },
+  // start template
   fetchStageTemplates(query) {
-    return http.get(`/templates`, query).then(data => {
+    return http.get('/templates', query).then(data => {
       return data;
     });
   },
+  getStageTemplate(template) {
+    return http.get(`/templates/${template}`).then(data => data);
+  },
+  createStageTemplate(data) {
+    return http.post('/templates', data);
+  },
+  updateStageTemplate(data, name) {
+    return http.put(`/templates/${name}`, data);
+  },
+  removeStageTemplate(name) {
+    return http.delete(`/templates/${name}`);
+  },
+  // end template
   fetchIntegrationList(query) {
     return http.get(`/integrations`, query).then(data => {
       return data;

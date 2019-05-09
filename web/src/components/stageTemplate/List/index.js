@@ -1,7 +1,7 @@
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import qs from 'query-string';
-import { Layout } from 'antd';
+import { Layout, Button } from 'antd';
 
 import Item from './Item';
 import KindFilter from './KindFilter';
@@ -47,10 +47,15 @@ class StageTemplate extends React.Component {
         });
   };
 
+  addStageTemplate = () => {
+    this.props.history.push('/stageTemplate/add');
+  };
+
   render() {
     const {
       location = {},
       stageTemplate: { templateList = [] },
+      history,
     } = this.props;
     const kinds = this.getKinds(templateList.items);
     // get kind from querystring
@@ -70,9 +75,15 @@ class StageTemplate extends React.Component {
           <KindFilter activeKind={query.kind || ''} kinds={kinds} />
         </Sider>
         <Content>
+          <div className="head-bar">
+            <Button type="primary" onClick={this.addStageTemplate}>
+              {intl.get('operation.add')}
+            </Button>
+          </div>
           <div className={styles['template-list']}>
             {_.map(actualList, template => (
               <Item
+                history={history}
                 template={template}
                 key={_.get(template, 'metadata.name')}
               />
@@ -89,6 +100,7 @@ StageTemplate.propTypes = {
     search: PropTypes.string.isRequired,
   }),
   stageTemplate: PropTypes.object,
+  history: PropTypes.object,
 };
 
 export default StageTemplate;

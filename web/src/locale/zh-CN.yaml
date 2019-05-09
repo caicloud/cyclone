@@ -1,4 +1,7 @@
 name: 名称
+value: 值
+path: 路径
+configuration: 配置
 action: 操作
 creationTime: 创建时间
 description: 描述
@@ -14,8 +17,6 @@ output: 输出
 image: 镜像
 env: 环境变量
 key: 健
-value: 值
-path: 路径
 operation:
   add: 新增
   delete: 删除
@@ -114,6 +115,28 @@ allocation:
   middle: 中等配置
   high: 高级配置
 template:
+  deletetips: 确定删除模板？
+  create: 创建模板
+  update: 更新模板
+  form:
+    inputs:
+      name: 输入
+    config:
+      name: 配置
+      image: 镜像
+      entryPoint: Entry point
+      cmd: CMD
+      env:
+        name: 环境变量
+        key: 健
+        value: 值
+    outputs:
+      name: 输出
+    newResourceType: 
+      name: 新建资源类型
+      placeholder: 新增资源
+      SCM: SCM
+      images: 镜像
   kinds:
     all: 全部类型
     build: 构建
@@ -121,6 +144,19 @@ template:
     image-build: 镜像构建
     code-scan: 代码扫描
     cd: CD
+stage:
+  inputs: 输入
+  input:
+    arguments: 参数
+  outputs: 输出
+  spec:
+    container:
+      image: 镜像
+      envs: 环境变量
+      env:
+        name: 键
+        value: 值
+resources: 资源
 validate:
   required: 必填
   positiveOrFloat: 允许两位小数

@@ -1,4 +1,7 @@
 name: Name
+value: Value
+path: Path
+configuration: Configuration
 action: Action
 creationTime: Creation time
 description: Description
@@ -14,8 +17,6 @@ output: Output
 image: Image
 env: Env
 key: Key
-value: Value
-path: Path
 operation:
   add: Add
   delete: Delete
@@ -115,6 +116,28 @@ allocation:
   middle: Medium configuration
   high: Advanced configuration
 template:
+  deletetips: Are you sure to delete the template?
+  create: Create
+  update: Update
+  form:
+    inputs:
+      name: Inputs
+    config:
+      name: Config
+      image: Image
+      entryPoint: Entry point
+      cmd: CMD
+      env:
+        name: Env
+        key: Key
+        value: Value
+    outputs:
+      name: Outputs
+    newResourceType: 
+      name: New resource type
+      placeholder: New resources
+      SCM: SCM
+      images: Image
   kinds:
     all: All
     build: Build
@@ -122,6 +145,18 @@ template:
     image-build: ImageBuild
     code-scan: CodeScan
     cd: CD
+stage:
+  inputs: Inputs
+  input:
+    arguments: Args
+  outputs: Outputs
+  spec:
+    container:
+      image: Image
+      envs: Env
+      env:
+        name: Key
+        value: Value
 validate:
   required: Reqiured
   positiveOrFloat: Two decimal allowed
