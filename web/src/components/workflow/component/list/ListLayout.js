@@ -25,8 +25,13 @@ class List extends React.Component {
   };
 
   componentDidMount() {
+    const {
+      history: { location },
+    } = this.props;
+    const query = qs.parse(location.search);
     this.props.project.listProjects(list => {
-      const firstProject = _.get(list, 'items.[0].metadata.name');
+      const firstProject =
+        query.project || _.get(list, 'items.[0].metadata.name');
       this.props.workflow.listWorklow(firstProject);
       this.props.history.replace(`/workflow?project=${firstProject}`);
     });
@@ -63,7 +68,7 @@ class List extends React.Component {
             mode="inline"
             style={{ borderRight: 0 }}
             onSelect={this.filterByProject}
-            defaultSelectedKeys={[_.get(projectItems, `[0].metadata.name`)]}
+            defaultSelectedKeys={[query.project]}
           >
             <MenuItemGroup key="g1" title={intl.get('sideNav.project')}>
               {projectItems.map(o => (

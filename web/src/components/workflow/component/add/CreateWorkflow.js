@@ -26,6 +26,8 @@ class App extends React.Component {
     values: PropTypes.object,
     handleDepend: PropTypes.func,
     handleSubmit: PropTypes.func,
+    submitting: PropTypes.bool,
+    setSubmitting: PropTypes.func,
   };
 
   constructor(props) {
@@ -33,6 +35,13 @@ class App extends React.Component {
     this.state = {
       current: 0,
     };
+  }
+
+  componentDidUpdate(prevProps) {
+    const { submitting, setSubmitting } = this.props;
+    if (!submitting && submitting !== prevProps.submitting) {
+      setSubmitting(submitting);
+    }
   }
 
   next() {
