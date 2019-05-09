@@ -6,21 +6,11 @@ import { toJS } from 'mobx';
 import FormContent from './FormContent';
 import { validateForm } from './validate';
 import { argumentsParamtersField } from '@/lib/const';
+import styles from './template.module.less';
 
 @inject('stageTemplate')
 @observer
 export default class StageTemplateForm extends React.Component {
-  constructor(props) {
-    super(props);
-    const {
-      match: { params },
-    } = props;
-    this.update = !!_.get(params, 'templateName');
-    if (this.update) {
-      props.stageTemplate.getTemplate(params.templateName);
-    }
-  }
-
   static propTypes = {
     history: PropTypes.object,
     match: PropTypes.object,
@@ -30,6 +20,17 @@ export default class StageTemplateForm extends React.Component {
     isValid: PropTypes.bool,
     values: PropTypes.object,
   };
+
+  componentDidMount() {
+    const {
+      match: { params },
+      stageTemplate,
+    } = this.props;
+    const update = !!_.get(params, 'templateName');
+    if (update) {
+      stageTemplate.getTemplate(params.templateName);
+    }
+  }
 
   handleCancle = () => {
     const { history } = this.props;
@@ -100,14 +101,15 @@ export default class StageTemplateForm extends React.Component {
       match: { params },
     } = this.props;
     const submitData = this.generateData(values);
-    if (this.update) {
+    if (_.get(params, 'templateName')) {
       stageTemplate.updateStageTemplate(submitData, params.templateName, () => {
         this.props.history.replace('/stageTemplate');
       });
+    } else {
+      stageTemplate.createStageTemplate(submitData, () => {
+        this.props.history.replace('/stageTemplate');
+      });
     }
-    stageTemplate.createStageTemplate(submitData, () => {
-      this.props.history.replace('/stageTemplate');
-    });
   };
 
   componentWillUnmount() {
@@ -115,13 +117,15 @@ export default class StageTemplateForm extends React.Component {
   }
 
   render() {
+    const {
+      match: { params },
+    } = this.props;
+    const update = !!_.get(params, 'templateName');
     return (
-      <div className="stagetemplate-form">
+      <div className={styles['stagetemplate-form']}>
         <div className="head-bar">
           <h2>
-            {this.update
-              ? intl.get('template.update')
-              : intl.get('template.create')}
+            {update ? intl.get('template.update') : intl.get('template.create')}
           </h2>
         </div>
         <Row>
@@ -134,7 +138,7 @@ export default class StageTemplateForm extends React.Component {
               render={props => (
                 <FormContent
                   {...props}
-                  update={this.update}
+                  update={update}
                   handleCancle={this.handleCancle}
                 />
               )}

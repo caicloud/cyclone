@@ -1,5 +1,5 @@
 import defaultCover from '@/images/stage/template_default.png';
-import { Card, Tooltip, Modal, Icon } from 'antd';
+import { Card, Tooltip, Popconfirm, Icon } from 'antd';
 import PropTypes from 'prop-types';
 import { inject } from 'mobx-react';
 
@@ -18,14 +18,11 @@ class Item extends React.Component {
       }),
     }),
     history: PropTypes.object,
+    key: PropTypes.string,
     stageTemplate: PropTypes.object,
   };
 
-  state = {
-    visible: false,
-  };
-
-  handleSubmit = name => {
+  handleDelete = name => {
     const { stageTemplate } = this.props;
     stageTemplate.deleteStageTemplate(name, () => {
       this.props.history.replace('/stageTemplate');
@@ -34,8 +31,7 @@ class Item extends React.Component {
   };
 
   render() {
-    const { template, history } = this.props;
-    const { visible } = this.state;
+    const { template, history, key } = this.props;
     const name = _.get(template, 'metadata.name');
     return (
       <Fragment>
@@ -56,14 +52,27 @@ class Item extends React.Component {
                 history.push(`/stageTemplate/add/${name}`);
               }}
             />,
-            <Icon
-              key="delete"
-              type="delete"
-              onClick={e => {
+            <Popconfirm
+              key={key}
+              title={intl.get('template.deletetips')}
+              onConfirm={e => {
                 e.stopPropagation();
-                this.setState({ visible: true });
+                this.handleDelete(name);
               }}
-            />,
+              onCancel={e => {
+                e.stopPropagation();
+              }}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Icon
+                key="delete"
+                type="delete"
+                onClick={e => {
+                  e.stopPropagation();
+                }}
+              />
+            </Popconfirm>,
           ]}
         >
           <Meta
@@ -79,15 +88,6 @@ class Item extends React.Component {
             ])}
           />
         </Card>
-        <Modal
-          visible={visible}
-          onCancel={() => this.setState({ visible: false })}
-          onOk={() => {
-            this.handleSubmit(name);
-          }}
-        >
-          <p>{intl.get('template.deletetips')}</p>
-        </Modal>
       </Fragment>
     );
   }
