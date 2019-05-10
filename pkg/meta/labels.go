@@ -47,11 +47,11 @@ const (
 	// LabelScene is the label key used to indicate cyclone scenario
 	LabelScene = "cyclone.dev/scene"
 
-	// TrueValue is the label value used to represent true
-	TrueValue = "true"
+	// LabelValueTrue is the label value used to represent true
+	LabelValueTrue = "true"
 
-	// FalseValue is the label value used to represent false
-	FalseValue = "false"
+	// LabelValueFalse is the label value used to represent false
+	LabelValueFalse = "false"
 
 	// CycloneCreator is the label value used to represent the resources created by Cyclone.
 	CycloneCreator = "cyclone"
@@ -81,7 +81,7 @@ func WorkflowSelector(workflow string) string {
 
 // SchedulableClusterSelector is a selector for clusters which are use to perform workload
 func SchedulableClusterSelector() string {
-	return fmt.Sprintf("%s=%s", LabelIntegrationSchedulableCluster, TrueValue)
+	return fmt.Sprintf("%s=%s", LabelIntegrationSchedulableCluster, LabelValueTrue)
 }
 
 // AddSchedulableClusterLabel adds schedulable label for integrated cluster to run workload.
@@ -90,7 +90,7 @@ func AddSchedulableClusterLabel(labels map[string]string) map[string]string {
 		labels = make(map[string]string)
 	}
 
-	labels[LabelIntegrationSchedulableCluster] = TrueValue
+	labels[LabelIntegrationSchedulableCluster] = LabelValueTrue
 	return labels
 }
 
@@ -101,9 +101,9 @@ func AddNotificationSentLabel(labels map[string]string, sent bool) map[string]st
 	}
 
 	if sent {
-		labels[LabelWorkflowRunNotificationSent] = TrueValue
+		labels[LabelWorkflowRunNotificationSent] = LabelValueTrue
 	} else {
-		labels[LabelWorkflowRunNotificationSent] = FalseValue
+		labels[LabelWorkflowRunNotificationSent] = LabelValueFalse
 	}
 
 	return labels
@@ -115,18 +115,18 @@ func AddStageTemplateLabel(labels map[string]string) map[string]string {
 		labels = make(map[string]string)
 	}
 
-	labels[LabelStageTemplate] = TrueValue
+	labels[LabelStageTemplate] = LabelValueTrue
 	return labels
 }
 
 // StageTemplateSelector returns a label selector to query stage templates.
 func StageTemplateSelector() string {
-	return fmt.Sprintf("%s=%s", LabelStageTemplate, TrueValue)
+	return fmt.Sprintf("%s=%s", LabelStageTemplate, LabelValueTrue)
 }
 
 // BuiltinLabelSelector returns a label selector to query cyclone built-in resources.
 func BuiltinLabelSelector() string {
-	return fmt.Sprintf("%s=%s", LabelBuiltin, TrueValue)
+	return fmt.Sprintf("%s=%s", LabelBuiltin, LabelValueTrue)
 }
 
 // CyclonePodSelector selects pods that are created by Cyclone, for example, stage execution pods, GC pods.
