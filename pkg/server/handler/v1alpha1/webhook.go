@@ -137,8 +137,12 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 			}
 		}
 	case scm.PushEventType:
+		trimmedBranch := data.Branch
+		if index := strings.LastIndex(data.Branch, "/"); index >= 0 {
+			trimmedBranch = trimmedBranch[index+1:]
+		}
 		for _, branch := range st.Push.Branches {
-			if branch == data.Branch {
+			if branch == trimmedBranch {
 				trigger = true
 				break
 			}
