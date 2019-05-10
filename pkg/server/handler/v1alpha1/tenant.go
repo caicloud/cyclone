@@ -353,7 +353,7 @@ func createTenantNamespace(tenant *api.Tenant) error {
 		ObjectMeta: objectMeta,
 	})
 	if err != nil {
-		log.Errorf("Create namespace for tenant %s error %v", tenant.Name, err)
+		log.Warningf("Create namespace for tenant %s error %v", tenant.Name, err)
 		if errors.IsAlreadyExists(err) {
 			tenant.Labels = objectMeta.Labels
 			return updateTenantNamespace(tenant)
