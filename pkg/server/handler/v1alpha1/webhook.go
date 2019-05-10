@@ -115,12 +115,12 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		project = wft.Labels[meta.LabelProjectName]
 	}
 	if project == "" {
-		return fmt.Errorf("Failed to get project from workflowtrigger labels")
+		return fmt.Errorf("failed to get project from workflowtrigger labels")
 	}
 
 	wfName := wft.Spec.WorkflowRef.Name
 	if wfName == "" {
-		return fmt.Errorf("Workflow reference of workflowtrigger is empty")
+		return fmt.Errorf("workflow reference of workflowtrigger is empty")
 	}
 
 	trigger := false
@@ -192,14 +192,14 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 		return err
 	}
 
-	// Set "Tag" and "SCM_REVISION" for all resource configs if they are empty.
+	// Set "Tag" and "SCM_REVISION" for all resource configs.
 	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
 		for i, p := range r.Parameters {
-			if p.Name == "TAG" && (p.Value == nil || *p.Value == "") {
+			if p.Name == "TAG" && tag != "" {
 				r.Parameters[i].Value = &tag
 			}
 
-			if p.Name == "SCM_REVISION" && (p.Value == nil || *p.Value == "") {
+			if p.Name == "SCM_REVISION" && data.Ref != "" {
 				r.Parameters[i].Value = &data.Ref
 			}
 		}
@@ -208,7 +208,7 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 	// Set "Tag" for all stage configs.
 	for _, s := range wft.Spec.WorkflowRunSpec.Stages {
 		for i, p := range s.Parameters {
-			if p.Name == "tag" && (p.Value == nil || *p.Value == "") {
+			if p.Name == "tag" && tag != "" {
 				s.Parameters[i].Value = &tag
 			}
 		}
