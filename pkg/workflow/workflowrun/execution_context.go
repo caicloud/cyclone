@@ -2,6 +2,7 @@ package workflowrun
 
 import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
@@ -13,6 +14,7 @@ func GetExecutionContext(wfr *v1alpha1.WorkflowRun) *v1alpha1.ExecutionContext {
 	}
 
 	return &v1alpha1.ExecutionContext{
+		Cluster:   common.ControlClusterName,
 		Namespace: controller.Config.ExecutionContext.Namespace,
 		PVC:       controller.Config.ExecutionContext.PVC,
 	}

@@ -27,7 +27,7 @@ data:
         "requests.memory": "{{ .Values.server.resourceRequirement.namespace.requests.memory }}"
       },
       "create_builtin_templates": {{ .Values.server.init.templates }},
-      "system_namespace": "{{ .Values.server.systemNamespace }}",
+      "system_namespace": "{{ .Values.systemNamespace }}",
       "init_default_tenant": {{ .Values.server.init.defaultTenant }},
       "open_control_cluster": {{ .Values.server.openControlCluster }},
       "storage_usage_watcher": {

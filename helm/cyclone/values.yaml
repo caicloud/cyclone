@@ -21,7 +21,7 @@ engine:
     # Whether enable GC, if set to true, pods would be cleaned after execution finished
     enabled: true
     # The time to wait before cleanup pods when an execution finished
-    delaySeconds: 0
+    delaySeconds: 300
     # How many times to retry (include the initial one)
     retry: 1
   limits:
@@ -39,8 +39,8 @@ engine:
     url: http://{{ .Values.serverAddress }}/apis/v1alpha1/notifications
   developMode: "true"
   executionContext:
-    namespace: default
-
+    namespace: cyclone-system
+    pvc: cyclone-pvc-system
 
 # Cyclone server variables
 server:
@@ -52,7 +52,7 @@ server:
     defaultTenant: true
   openControlCluster: true
   pvc:
-    storageClass: heketi-storageclass
+    storageClass: ""
     size: 10Gi
   resourceRequirement:
     namespace:
@@ -62,7 +62,6 @@ server:
       limits:
         cpu: 2
         memory: 4Gi
-  systemNamespace: default
   storageWatcher:
     reportUrl: http://{{ .Values.serverAddress }}/apis/v1alpha1/storage/usages
     intervalSeconds: 30

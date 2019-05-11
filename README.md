@@ -34,24 +34,13 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 
 ## Quick Start
 
-Build and push images: `<registry>/<project>` specifies the registry and project where to push your images, for example, `test.caicloudprivatetest.com/release`.
+Make sure [Helm](https://helm.sh/) is installed ([install guide](https://helm.sh/docs/using_helm/#install-helm)), then install Cyclone with:
 
 ```bash
-$ docker login <registry> -u <user> -p <pwd>
-$ make push REGISTRIES=<registry>/<project>
+$ helm install ./helm/cyclone
 ```
 
-Deploy to Kubernetes cluster: Please make sure `kubectl` is installed and appropriately configured. Here `AUTH` is the credential to the docker registry. `PVC` is a PersistentVolumeClaim that needs to be prepared in k8s.
-
-```bash
-$ make deploy REGISTRIES=<registry>/<project> AUTH=<user>:<pwd> PVC=<pvc>
-```
-
-Run CI/CD workflow examples: `SCENE` determines what kind of examples to run, for the moment, only `cicd` is supported.
-
-```bash
-$ make run_examples SCENE=cicd REGISTRIES=<registry>/<project>
-```
+If you want to configure the installation or want to install from source code, please refer to [Cyclone Install Guide](docs/installation.md).
 
 ## Community
 

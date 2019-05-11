@@ -41,7 +41,11 @@ data:
         }
       },
       "cyclone_server_addr": "{{ tpl .Values.serverAddress . }}",
-      "notification_url": "{{ tpl (tpl .Values.engine.notification.url .) . }}"
+      "notification_url": "{{ tpl (tpl .Values.engine.notification.url .) . }}",
+      "execution_context": {
+        "namespace": "{{ .Values.engine.executionContext.namespace }}",
+        "pvc": "{{ .Values.engine.executionContext.pvc }}"
+      }
     }
 
 ---
