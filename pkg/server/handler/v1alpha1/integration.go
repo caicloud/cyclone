@@ -256,8 +256,12 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 		if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
 			err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 			if err != nil {
-				log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
-				return
+				if !errors.IsNotFound(err) {
+					log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
+					return
+				}
+				log.Warningf("namespace %s not found", cluster.Namespace)
+				err = nil
 			}
 
 			// if namespace is deleted, will exit, no need delete others resources.
@@ -269,11 +273,15 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 	quotaName := svrcommon.TenantResourceQuota(tenant)
 	err = client.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
-		log.Errorf("delete resource quota %s error %v", quotaName, err)
-		return
+		if !errors.IsNotFound(err) {
+			log.Errorf("delete resource quota %s error %v", quotaName, err)
+			return
+		}
+		log.Warningf("resource quota %s not found", quotaName)
+		err = nil
 	}
 
-	// Delete the PVC wathcer deployment.
+	// Delete the PVC watcher deployment.
 	err = usage.DeletePVCUsageWatcher(client, cluster.Namespace)
 	if err != nil {
 		log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
@@ -283,8 +291,12 @@ func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
 		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
-			log.Errorf("delete pvc %s error %v", cluster.Namespace, err)
-			return
+			if !errors.IsNotFound(err) {
+				log.Errorf("delete pvc %s error %v", cluster.PVC, err)
+				return
+			}
+			log.Warningf("pvc %s not found", cluster.PVC)
+			err = nil
 		}
 		return
 	}
