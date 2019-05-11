@@ -11,7 +11,7 @@ import (
 // GetExecutionClusterClient gets execution cluster client with the WorkflowRun
 func GetExecutionClusterClient(wfr *v1alpha1.WorkflowRun) kubernetes.Interface {
 	cluster := common.ControlClusterName
-	if wfr.Spec.ExecutionContext != nil {
+	if wfr.Spec.ExecutionContext != nil && wfr.Spec.ExecutionContext.Cluster != "" {
 		cluster = wfr.Spec.ExecutionContext.Cluster
 	}
 
