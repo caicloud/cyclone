@@ -24,7 +24,7 @@ class StageTemplate extends React.Component {
         'labels',
         'stage.cyclone.dev/template-kind',
       ]);
-      !kinds.includes(kind) && kinds.push(kind);
+      kind && !kinds.includes(kind) && kinds.push(kind);
     });
     return _.map(kinds, kind => ({
       alias: intl.get(`template.kinds.${kind}`),
