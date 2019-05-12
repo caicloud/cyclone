@@ -5,19 +5,31 @@
 The simplest way to install Cyclone is using Helm chart. By default, images are pulled from DockerHub, so make sure DockerHub is accessible from your cluster.
 
 ```bash
-$ helm install ./helm/cyclone
+$ helm install --name cyclone --namespace cyclone-system ./helm/cyclone
 ```
 
 If you want to use your own private registry, you can configure it as:
 
 ```bash
-$ helm install --set imageRegistry.registry=cargo.caicloud.xyz,imageRegistry.project=release ./helm/cyclone
+$ helm install --name cyclone --namespace cyclone-system --set imageRegistry.registry=cargo.caicloud.xyz,imageRegistry.project=release ./helm/cyclone
 ```
 
 For more detailed configuration, please use values file, [default values file](../helm/cyclone/values.yaml) is a good reference on how to write it.
 
 ```bash
-$ helm install -f <path-to-your-values-file> ./helm/cyclone
+$ helm install --name cyclone --namespace cyclone-system -f <path-to-your-values-file> ./helm/cyclone
+```
+
+If you want to release after change charts, you can upgrade with command:
+
+```bash
+$ helm upgrade cyclone ./helm/cyclone
+```
+
+If you want to uninstall Cyclone, you can clean up it with command:
+
+```bash
+$ helm delete --purge cyclone
 ```
 
 To install [Helm](https://helm.sh/), refer to [helm install guide](https://helm.sh/docs/using_helm/#install-helm).
@@ -66,7 +78,6 @@ To install [Helm](https://helm.sh/), refer to [helm install guide](https://helm.
 | `server.storageWatcher.intervalSeconds` | Time interval to report PVC usage | `30` |
 | `server.storageWatcher.resourceRequirements` | Resource requirements applied to the storage watcher pod | CPU: 50m/100m, Memory: 32Mi/64Mi |
 
-
 #### Cyclone Web Configurations 
 
 | Parameter | Description | Default |
@@ -89,5 +100,5 @@ Here <registry>/<project> specifies the registry and project where to push your 
 Then install Cyclone with Helm.
 
 ```bash
-$ helm install --set imageRegistry.registry=<registry>,imageRegistry.project=<project> ./helm/cyclone
+$ helm install --name cyclone --namespace cyclone-system --set imageRegistry.registry=<registry>,imageRegistry.project=<project> ./helm/cyclone
 ```

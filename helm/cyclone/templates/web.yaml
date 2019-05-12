@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: cyclone-web
-  namespace: {{ .Values.systemNamespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     helm.sh/chart: {{ include "cyclone.chart" . }}
