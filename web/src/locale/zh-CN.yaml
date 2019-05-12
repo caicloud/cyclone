@@ -51,6 +51,7 @@ workflow:
 integration:
   name: 名称
   desc: 描述
+  type: 类型
   creationTime: 创建时间
   addexternalsystem: 新增外部系统
   updateexternalsystem: 更新外部系统
@@ -68,6 +69,7 @@ integration:
     pleaseClick: 请点击
     tokentip: 新建 Token，并勾选 repo 权限，然后将生成的 Token 复制粘贴到这里。
     scm:
+      type: SCM 类型
       name: 代码源
       serverAddress: 服务地址
       authType: 验证方式

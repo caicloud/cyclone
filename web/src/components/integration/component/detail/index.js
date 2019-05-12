@@ -15,6 +15,7 @@ class IntegrationDetail extends React.Component {
     integration: PropTypes.object,
     history: PropTypes.object,
   };
+
   constructor(props) {
     super(props);
     const {
@@ -24,6 +25,72 @@ class IntegrationDetail extends React.Component {
     } = this.props;
     this.props.integration.getIntegration(integrationName);
   }
+
+  detailContent = detail => {
+    const type = _.get(detail, 'spec.type');
+    switch (type) {
+      case 'SCM':
+        return (
+          <div style={{ paddingBottom: 16 }}>
+            <DetailHeadItem
+              name={intl.get('integration.form.scm.type')}
+              value={_.get(detail, 'spec.scm.type')}
+            />
+            <DetailHeadItem
+              name={intl.get('integration.form.scm.serverAddress')}
+              value={_.get(detail, 'spec.scm.server')}
+            />
+            <DetailHeadItem
+              name={intl.get('integration.form.scm.authType')}
+              value={
+                _.get(detail, 'spec.scm.authType') === 'Password'
+                  ? intl.get('integration.form.scm.usernamepwd')
+                  : 'Token'
+              }
+            />
+            {_.get(detail, 'spec.scm.type') && (
+              <DetailHeadItem
+                name={intl.get('integration.form.username')}
+                value={_.get(detail, 'spec.scm.user')}
+              />
+            )}
+          </div>
+        );
+      case 'DockerRegistry':
+        return (
+          <div style={{ paddingBottom: 16 }}>
+            <DetailHeadItem
+              name={intl.get('integration.form.dockerRegistry.registryAddress')}
+              value={_.get(detail, 'spec.dockerRegistry.server')}
+            />
+            <DetailHeadItem
+              name={intl.get('integration.form.username')}
+              value={_.get(detail, 'spec.dockerRegistry.user')}
+            />
+          </div>
+        );
+      case 'Cluster':
+        return (
+          <div style={{ paddingBottom: 16 }}>
+            <DetailHeadItem
+              name={intl.get('integration.form.cluster.isControlCluster')}
+              value={
+                _.get(detail, 'spec.cluster.isControlCluster') ? 'YES' : 'NO'
+              }
+            />
+            <DetailHeadItem
+              name={intl.get('integration.form.cluster.isWorkerCluster')}
+              value={
+                _.get(detail, 'spec.cluster.isWorkerCluster') ? 'YES' : 'NO'
+              }
+            />
+          </div>
+        );
+      default:
+        return <div />;
+    }
+  };
+
   render() {
     const {
       integration,
@@ -53,6 +120,15 @@ class IntegrationDetail extends React.Component {
             name={intl.get('creationTime')}
             value={FormatTime(_.get(detail, 'metadata.creationTimestamp'))}
           />
+          <DetailHeadItem
+            name={intl.get('integration.type')}
+            value={_.get(detail, 'spec.type')}
+          />
+          <DetailHeadItem
+            name={intl.get('integration.desc')}
+            value={_.get(detail, 'metadata.description') || ' -- '}
+          />
+          {this.detailContent(detail)}
         </DetailHead>
       </Detail>
     );

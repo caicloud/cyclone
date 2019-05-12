@@ -69,6 +69,7 @@ integration:
     pleaseClick: Click please
     tokentip: to create a new Token, check the repo permission, and copy and paste the generated Token here.
     scm:
+      type: SCM type
       name: Code origin
       serverAddress: Server address
       authType: Auth Type
@@ -84,8 +85,8 @@ integration:
     cluster:
       name: Cluster
       serverAddress: Server address
-      isControlCluster: isControlCluster
-      isWorkerCluster: isWorkerCluster
+      isControlCluster: Control Cluster
+      isWorkerCluster: Worker Cluster
       authType: Auth Type
       bearerToken: Token
       usernamepwd: User/Password
