@@ -3,8 +3,7 @@ import { Select } from 'antd';
 
 const Option = Select.Option;
 const SelectSourceType = props => {
-  const value =
-    props.value && props.value.length > 0 ? props.value[0].type : '';
+  const value = props.value && !_.isEmpty(props.value) ? props.value.type : '';
   return (
     <Select
       value={value}
@@ -12,14 +11,15 @@ const SelectSourceType = props => {
       placeholder={intl.get('template.form.newResourceType.placeholder')}
       onChange={props.handleSelectChange}
     >
-      <Option value="SCM">SCM</Option>
+      <Option value="Git">Git</Option>
+      <Option value="SVN">SVN</Option>
       <Option value="Image">Image</Option>
     </Select>
   );
 };
 SelectSourceType.propTypes = {
   handleSelectChange: PropTypes.func,
-  value: PropTypes.array,
+  value: PropTypes.object,
   disabled: PropTypes.bool,
 };
 

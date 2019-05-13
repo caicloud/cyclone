@@ -11,7 +11,7 @@ const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
 const FormItem = Form.Item;
 const FormContent = props => {
-  const { setFieldValue, handleCancle, handleSubmit, update, values } = props;
+  const { handleCancle, handleSubmit, update, values } = props;
   return (
     <Form onSubmit={handleSubmit}>
       <Field
@@ -26,9 +26,9 @@ const FormContent = props => {
         name="metadata.description"
         component={TextareaField}
       />
-      <InputSection setFieldValue={setFieldValue} />
+      <InputSection {...props} />
       <ConfigSection values={values} />
-      <OutputSection setFieldValue={setFieldValue} values={values} />
+      <OutputSection {...props} />
       <FormItem
         {...{
           labelCol: { span: 8 },
