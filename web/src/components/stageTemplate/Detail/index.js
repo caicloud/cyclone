@@ -41,11 +41,13 @@ class TemplateDetail extends React.Component {
           />
           <DetailHeadItem
             name={intl.get('description')}
-            value={_.get(template, [
-              'metadata',
-              'annotations',
-              'cyclone.io/description',
-            ])}
+            value={
+              _.get(template, [
+                'metadata',
+                'annotations',
+                'cyclone.io/description',
+              ]) || '--'
+            }
           />
         </DetailHead>
         <DetailContent>

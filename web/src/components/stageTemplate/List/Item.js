@@ -41,8 +41,7 @@ class Item extends React.Component {
           }}
           hoverable
           className={styles['template-item']}
-          style={{ width: 208, margin: '0 16px 16px 0' }}
-          cover={<img height="104px" alt="example" src={defaultCover} />}
+          cover={<img alt="template icon" src={defaultCover} />}
           actions={[
             <Icon
               key="edit"
@@ -62,8 +61,8 @@ class Item extends React.Component {
               onCancel={e => {
                 e.stopPropagation();
               }}
-              okText="Yes"
-              cancelText="No"
+              okText={intl.get('confirm')}
+              cancelText={intl.get('cancel')}
             >
               <Icon
                 key="delete"
