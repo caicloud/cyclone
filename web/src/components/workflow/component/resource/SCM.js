@@ -3,6 +3,7 @@ import { Field, FieldArray } from 'formik';
 import MakeField from '@/components/public/makeField';
 import { noLabelItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
+import { modalFormItemLayout } from '@/lib/const';
 import SelectPlus from '@/components/public/makeField/select';
 
 const FormItem = Form.Item;
@@ -23,7 +24,7 @@ class SCM extends React.Component {
                   return (
                     <Field
                       key={field.name}
-                      label={'集成中心'}
+                      label={intl.get('sideNav.integration')}
                       name={`spec.parameters.${index}.value`}
                       payload={{
                         items: integrationList,
@@ -34,6 +35,7 @@ class SCM extends React.Component {
                         setFieldValue(`spec.parameters.${index}.value`, val);
                       }}
                       component={SelectField}
+                      formItemLayout={modalFormItemLayout}
                     />
                   );
                 } else {
@@ -47,6 +49,7 @@ class SCM extends React.Component {
                       }
                       name={`spec.parameters.${index}.value`}
                       component={InputField}
+                      formItemLayout={modalFormItemLayout}
                       hasFeedback
                       required
                     />

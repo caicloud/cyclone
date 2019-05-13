@@ -1,5 +1,6 @@
 import EllipsisMenu from '@/components/public/ellipsisMenu';
 import { Modal, Button, Input, Table } from 'antd';
+import { FormatTime } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 
@@ -17,6 +18,7 @@ class WorkflowTable extends React.Component {
     project: PropTypes.string,
     data: PropTypes.array,
     history: PropTypes.object,
+    matchPath: PropTypes.string,
   };
 
   deleteWorkflow = (project, workflow) => {
@@ -37,7 +39,7 @@ class WorkflowTable extends React.Component {
   };
 
   render() {
-    const { project, data } = this.props;
+    const { project, data, matchPath } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -56,8 +58,9 @@ class WorkflowTable extends React.Component {
       },
       {
         title: intl.get('creationTime'),
-        dataIndex: 'creationTime',
+        dataIndex: 'metadata.creationTimestamp',
         key: 'creationTime',
+        render: value => FormatTime(value),
       },
       {
         title: intl.get('action'),
@@ -86,6 +89,15 @@ class WorkflowTable extends React.Component {
         </div>
         <Table
           rowKey={row => row.id}
+          onRow={row => {
+            return {
+              onClick: () => {
+                this.props.history.push(
+                  `${matchPath}/${row.metadata.name}?project=${project}`
+                );
+              },
+            };
+          }}
           columns={columns}
           dataSource={[...data]}
         />

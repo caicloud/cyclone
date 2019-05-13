@@ -1,27 +1,45 @@
 import { Formik } from 'formik';
-import { Modal, Button } from 'antd';
+import { Modal } from 'antd';
 import BindResource from './BindResource';
 import PropTypes from 'prop-types';
 import { resourceParametersField } from '@/lib/const';
 
-const Fragment = React.Fragment;
-
 class ResourceFrom extends React.Component {
   static propTypes = {
     SetReasourceValue: PropTypes.func,
-    type: PropTypes.oneOf(['input', 'ouput']),
+    type: PropTypes.oneOf(['inputs', 'ouputs']),
+    visible: PropTypes.bool,
+    modifyData: PropTypes.object,
+    handleModalClose: PropTypes.func,
   };
 
   static defaultProps = {
-    type: 'input',
+    type: 'inputs',
   };
 
-  state = {
-    visible: false,
+  constructor(props) {
+    super(props);
+    const { visible } = props;
+    this.state = {
+      visible,
+    };
+  }
+
+  componentDidUpdate(preProps) {
+    const { visible } = this.props;
+    if (visible !== preProps.visible) {
+      this.setState({ visible });
+    }
+  }
+
+  closeModal = () => {
+    const { handleModalClose } = this.props;
+    this.setState({ visible: false });
+    handleModalClose && handleModalClose(false);
   };
 
   getInitialValues = () => {
-    const { type } = this.props;
+    const { type, modifyData } = this.props;
     let data = {
       name: '',
       path: '',
@@ -30,7 +48,11 @@ class ResourceFrom extends React.Component {
         parameters: [],
       },
     };
-    if (type === 'input') {
+
+    if (!_.isEmpty(modifyData)) {
+      data = _.merge(data, modifyData);
+    }
+    if (type === 'inputs') {
       data.spec.parameters = resourceParametersField['SCM'];
     } else {
       data.spec.parameters = resourceParametersField['DockerRegistry'];
@@ -40,14 +62,15 @@ class ResourceFrom extends React.Component {
   };
 
   submitResource = value => {
-    const { SetReasourceValue } = this.props;
+    const { SetReasourceValue, handleModalClose } = this.props;
     // TODO(qme): new add save data in store, then change stage resource field
     SetReasourceValue(value);
     this.setState({ visible: false });
+    handleModalClose(false);
   };
   render() {
-    const { visible } = this.state;
     const { type } = this.props;
+    const { visible } = this.state;
     return (
       <Formik
         initialValues={this.getInitialValues()}
@@ -56,23 +79,13 @@ class ResourceFrom extends React.Component {
         }}
         onSubmit={this.submitResource}
         render={props => (
-          <Fragment>
-            <Button
-              ico="plus"
-              onClick={() => {
-                this.setState({ visible: true });
-              }}
-            >
-              {intl.get('workflow.addResource')}
-            </Button>
-            <Modal
-              visible={visible}
-              onCancel={() => this.setState({ visible: false })}
-              onOk={props.handleSubmit}
-            >
-              <BindResource {...props} type={type} />
-            </Modal>
-          </Fragment>
+          <Modal
+            visible={visible}
+            onCancel={this.closeModal}
+            onOk={props.handleSubmit}
+          >
+            <BindResource {...props} type={type} />
+          </Modal>
         )}
       />
     );

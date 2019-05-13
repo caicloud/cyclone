@@ -17,6 +17,7 @@ output: Output
 image: Image
 env: Env
 key: Key
+custom: Custom
 operation:
   add: Add
   delete: Delete
@@ -45,7 +46,7 @@ workflow:
   addMethod: Add method
   usePath: Use path
   selectTemplate: Select Template
-  stageCreation: Stage creation method
+  stageCreation: Creation method
   addEnv: Add env
   addArtifact: Add artifact
 integration:
@@ -134,7 +135,7 @@ template:
         value: Value
     outputs:
       name: Outputs
-    newResourceType: 
+    newResourceType:
       name: New resource type
       placeholder: New resources
       SCM: SCM

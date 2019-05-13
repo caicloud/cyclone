@@ -89,7 +89,7 @@ class AddWorkflow extends React.Component {
 
       const workflowStage = {
         artifacts: _.get(v, 'outputs.artifacts', []),
-        depend: _.get(depend, v),
+        depends: _.get(depend, v),
         name: _.get(value, `${v}.name`),
       };
       workflowInfo.spec.stages.push(workflowStage);

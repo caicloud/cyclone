@@ -1,7 +1,7 @@
 import { Form, Input, Radio } from 'antd';
 import { Field, FieldArray } from 'formik';
 import MakeField from '@/components/public/makeField';
-import { defaultFormItemLayout, noLabelItemLayout } from '@/lib/const';
+import { noLabelItemLayout, modalFormItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 import SelectPlus from '@/components/public/makeField/select';
@@ -23,7 +23,7 @@ class BindResource extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     values: PropTypes.object,
-    type: PropTypes.oneOf(['input', 'output']),
+    type: PropTypes.oneOf(['inputs', 'outputs']),
     integration: PropTypes.object,
   };
 
@@ -49,7 +49,7 @@ class BindResource extends React.Component {
     // TODO(qme): i18n
     return (
       <Form layout={'horizontal'}>
-        {type === 'input' ? (
+        {type === 'inputs' ? (
           <Field
             label={intl.get('type')}
             name="resourceType"
@@ -63,19 +63,20 @@ class BindResource extends React.Component {
               items: inputArray,
             }}
             component={SelectField}
+            formItemLayout={modalFormItemLayout}
           />
         ) : (
           <FormItem
             label={intl.get('workflow.resourceType')}
-            {...defaultFormItemLayout}
+            {...modalFormItemLayout}
           >
             image
           </FormItem>
         )}
-        {type === 'input' && (
+        {type === 'inputs' && (
           <FormItem
             label={intl.get('workflow.addMethod')}
-            {...defaultFormItemLayout}
+            {...modalFormItemLayout}
           >
             <RadioGroup onChange={this.changeAddWay} defaultValue={addWay}>
               <RadioButton value="new">{intl.get('operation.add')}</RadioButton>
@@ -94,6 +95,7 @@ class BindResource extends React.Component {
               setFieldValue('name', val);
             }}
             component={<div>TODO: resource select</div>}
+            formItemLayout={modalFormItemLayout}
           />
         ) : (
           <Fragment>
@@ -101,6 +103,7 @@ class BindResource extends React.Component {
               label={intl.get('name')}
               name="name"
               component={InputField}
+              formItemLayout={modalFormItemLayout}
               hasFeedback
               required
             />
@@ -127,6 +130,7 @@ class BindResource extends React.Component {
                             }
                             name={`spec.parameters.${index}.value`}
                             component={InputField}
+                            formItemLayout={modalFormItemLayout}
                             hasFeedback
                             required
                           />
@@ -139,13 +143,14 @@ class BindResource extends React.Component {
             )}
           </Fragment>
         )}
-        {type === 'input' && (
+        {type === 'inputs' && (
           <Field
             label={intl.get('workflow.usePath')}
             name="path"
             component={InputField}
             hasFeedback
             required
+            formItemLayout={modalFormItemLayout}
           />
         )}
       </Form>
