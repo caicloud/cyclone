@@ -44,14 +44,16 @@ func main() {
 		log.WithField("configmap", *cm).Fatal("Load config from ConfigMap error: ", err)
 	}
 
-	// Init logging and control cluster
+	// Init logging
 	controller.InitLogger(&controller.Config.Logging)
-	if err = controller.InitControlCluster(client); err != nil {
-		log.Fatal("Init control cluster error: ", err)
-	}
 
 	// create CRD
 	v1alpha1.EnsureCRDCreated("", *kubeConfigPath)
+
+	// Init control cluster, ExecutionCluster for control cluster will be created.
+	if err = controller.InitControlCluster(client); err != nil {
+		log.Fatal("Init control cluster error: ", err)
+	}
 
 	// Watch configure changes in ConfigMap.
 	cmController := controllers.NewConfigMapController(client, *namespace, *configMap)
