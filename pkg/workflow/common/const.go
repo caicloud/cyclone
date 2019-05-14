@@ -84,23 +84,25 @@ const (
 	// sidecar containers, e.g. image resolvers. Coordinator would notify resolvers that workload
 	// containers have finished their work, so that resource resolvers can push resources.
 	CoordinatorSidecarVolumeName = "coordinator-sidecar-volume"
+	// HostDockerSockVolumeName is volume for the host docker socket file, coordinator will mount it.
+	HostDockerSockVolumeName = "host-docker-sock"
+	// DockerSockFilePath is path of docker socket file
+	DockerSockFilePath = "/var/run/docker.sock"
 	// DockerInDockerSockVolume is volume used for docker-in-docker to share it's sock file with other containers.
 	DockerInDockerSockVolume = "docker-dind-sock"
 	// DockerConfigJSONVolume is volume for config.json in secret.
 	DockerConfigJSONVolume = "cyclone-docker-secret-volume"
-
 	// DockerSockPath is path of docker socket file in container
 	DockerSockPath = "/var/run"
-
-	// DockerConfigPath is path of docker config
-	DockerConfigPath = "/root/.docker"
-	// DockerConfigJSONFile is name of docker config file
-	DockerConfigJSONFile = "config.json"
 
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"
 	// ContainerStateInitialized represents container is Running or Stopped, not Init or Creating.
 	ContainerStateInitialized ContainerState = "Initialized"
+
+	// ResultFilePath is file to hold execution result of a container that need to be synced to
+	// WorkflowRun status. Each line of the result should be in format: <key>:<value>
+	ResultFilePath = "/__result__"
 )
 
 const (

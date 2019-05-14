@@ -1,6 +1,7 @@
 package k8sapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"time"
@@ -8,8 +9,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
 )
@@ -131,4 +135,27 @@ func (k *Executor) CopyFromContainer(container, path, dst string) error {
 	ret, err := cmd.CombinedOutput()
 	log.WithField("message", string(ret)).WithField("error", err).Info("copy file result")
 	return err
+}
+
+// SetResults sets execution results (key-values) to the pod, workflow controller will sync this result to WorkflowRun status.
+func (k *Executor) SetResults(values []v1alpha1.KeyValue) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if pod.Annotations == nil {
+			pod.Annotations = make(map[string]string)
+		}
+
+		b, err := json.Marshal(values)
+		if err != nil {
+			return err
+		}
+
+		pod.Annotations[meta.AnnotationStageResult] = string(b)
+		_, err = k.client.CoreV1().Pods(k.namespace).Update(pod)
+		return err
+	})
 }

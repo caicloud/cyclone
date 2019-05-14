@@ -9,6 +9,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
 
+	"strings"
+
+	"io/ioutil"
+
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
@@ -22,7 +26,7 @@ type Coordinator struct {
 	runtimeExec RuntimeExecutor
 	// workloadContainer represents name of the workload container.
 	workloadContainer string
-	// Stage relate to this pod.
+	// Stage related to this pod.
 	Stage *v1alpha1.Stage
 	// Wfr represents the WorkflowRun which triggered this pod.
 	Wfr *v1alpha1.WorkflowRun
@@ -41,6 +45,9 @@ type RuntimeExecutor interface {
 	CopyFromContainer(container, path, dst string) error
 	// GetPod get the stage related pod.
 	GetPod() (*core_v1.Pod, error)
+	// SetResults set results (key-values) to the pod, workflow controller would sync this result
+	// to WorkflowRun status.
+	SetResults(values []v1alpha1.KeyValue) error
 }
 
 // NewCoordinator create a coordinator instance.
@@ -343,4 +350,78 @@ func (co *Coordinator) getContainerID(name string) (string, error) {
 	}
 
 	return "", fmt.Errorf("container %s not found", name)
+}
+
+// CollectExecutionResults collects execution results (key-values) and store them in pod's annotation
+func (co *Coordinator) CollectExecutionResults() error {
+	pod, err := co.runtimeExec.GetPod()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range pod.Spec.Containers {
+		if !common.OnlyWorkload(c.Name) {
+			continue
+		}
+
+		// TODO(ChenDe): Should ignore error when result file not exist
+		dst := fmt.Sprintf("/tmp/__result_%s", c.Name)
+		containerID, err := co.getContainerID(c.Name)
+		if err != nil {
+			log.WithField("c", containerID).Error("Get container ID error: ", err)
+			return err
+		}
+		err = co.runtimeExec.CopyFromContainer(containerID, common.ResultFilePath, dst)
+		if isFileNotExist(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		b, err := ioutil.ReadFile(dst)
+		if err != nil {
+			return err
+		}
+		log.Info("Result file content: ", string(b))
+
+		var keyValues []v1alpha1.KeyValue
+		lines := strings.Split(string(b), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if len(line) == 0 {
+				continue
+			}
+
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) < 2 {
+				log.Warn("Invalid result item: ", line)
+				continue
+			}
+			log.Info("Result item: ", line)
+
+			keyValues = append(keyValues, v1alpha1.KeyValue{
+				Key:   parts[0],
+				Value: parts[1],
+			})
+		}
+
+		if len(keyValues) > 0 {
+			log.Info("To set execution result")
+			if err := co.runtimeExec.SetResults(keyValues); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func isFileNotExist(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return strings.Index(err.Error(), "No such container:path") >= 0
 }

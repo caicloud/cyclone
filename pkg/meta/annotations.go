@@ -30,4 +30,7 @@ const (
 
 	// AnnotationMetaNamespace is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
 	AnnotationMetaNamespace = "cyclone.dev/meta-namespace"
+
+	// AnnotationStageResult is annotation to hold execution results (JSON format) of a stage.
+	AnnotationStageResult = "stage.cyclone.dev/execution-results"
 )

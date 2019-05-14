@@ -32,7 +32,7 @@ func main() {
 		}
 	}()
 
-	// Create k8s clientset and registry system signals for exit.
+	// Create k8s clientset
 	client, err := utilk8s.GetClient(*kubeConfigPath)
 	if err != nil {
 		log.Errorf("Get k8s client error: %v", err)
@@ -62,8 +62,14 @@ func main() {
 
 	// Wait workload containers completion, so we can notify output resolvers.
 	log.Info("Wait workload containers completion ... ")
-	err = c.WaitWorkloadTerminate()
-	if err != nil {
+	if err = c.WaitWorkloadTerminate(); err != nil {
+		return
+	}
+
+	// Collect execution result from the workload container, results are key-value pairs in a
+	// specified file, /__result__
+	if err = c.CollectExecutionResults(); err != nil {
+		message = fmt.Sprintf("Collect execution results error: %v", err)
 		return
 	}
 
@@ -76,24 +82,21 @@ func main() {
 
 	// Collect all resources
 	log.Info("Start to collect resources.")
-	err = c.CollectResources()
-	if err != nil {
+	if err = c.CollectResources(); err != nil {
 		message = fmt.Sprintf("Stage %s failed to collect output resource, error: %v.", c.Stage.Name, err)
 		return
 	}
 
 	// Notify output resolver to start working.
 	log.Info("Start to notify resolvers.")
-	err = c.NotifyResolvers()
-	if err != nil {
+	if err = c.NotifyResolvers(); err != nil {
 		message = fmt.Sprintf("Stage %s failed to notify output resolvers, error: %v", c.Stage.Name, err)
 		return
 	}
 
 	// Collect all artifacts
 	log.Info("Start to collect artifacts.")
-	err = c.CollectArtifacts()
-	if err != nil {
+	if err = c.CollectArtifacts(); err != nil {
 		message = fmt.Sprintf("Stage %s failed to collect artifacts, error: %v", c.Stage.Name, err)
 		return
 	}
@@ -101,8 +104,7 @@ func main() {
 	// Wait all others container completion. Coordinator will be the last one
 	// to quit since it need to collect other containers' logs.
 	log.Info("Wait for all other containers completion ... ")
-	err = c.WaitAllOthersTerminate()
-	if err != nil {
+	if err = c.WaitAllOthersTerminate(); err != nil {
 		return
 	}
 
