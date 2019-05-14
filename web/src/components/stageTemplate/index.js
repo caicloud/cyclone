@@ -10,7 +10,7 @@ const TemplateRoute = ({ match }) => {
       <Route path="/stageTemplate" exact component={List} />
       <Route path={`${match.path}/add`} exact component={CreateStageTemplate} />
       <Route
-        path={`${match.path}/add/:templateName`}
+        path={`${match.path}/:templateName/update`}
         exact
         component={CreateStageTemplate}
       />
