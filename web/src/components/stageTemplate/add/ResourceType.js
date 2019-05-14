@@ -4,7 +4,6 @@ import SelectSourceType from './SelectSourceType';
 import { defaultFormItemLayout } from '@/lib/const';
 import { Field, FieldArray } from 'formik';
 import { Form, Row, Col, Button } from 'antd';
-const Fragment = React.Fragment;
 const FormItem = Form.Item;
 
 const SelectField = MakeField(SelectSourceType);
@@ -17,47 +16,45 @@ const ResourceType = props => {
     <FieldArray
       name={path}
       render={arrayHelpers => (
-        <Fragment>
-          <FormItem
-            required={required}
-            label={intl.get('template.resourceType')}
-            {...defaultFormItemLayout}
+        <FormItem
+          required={required}
+          label={intl.get('template.resourceType')}
+          {...defaultFormItemLayout}
+        >
+          {resources.map((a, index) => (
+            <Row key={index} gutter={10}>
+              <Col span={22}>
+                <Field
+                  key={a}
+                  name={`${path}.${index}`}
+                  handleSelectChange={val => {
+                    setFieldValue(`${path}.${index}`, {
+                      name: '',
+                      type: val,
+                      path: '',
+                    });
+                  }}
+                  component={SelectField}
+                />
+              </Col>
+              <Col span={2}>
+                <Button
+                  type="circle"
+                  icon="delete"
+                  onClick={() => arrayHelpers.remove(index)}
+                />
+              </Col>
+            </Row>
+          ))}
+          <Button
+            ico="plus"
+            onClick={() => {
+              arrayHelpers.push({ name: '', type: 'Git', path: '' });
+            }}
           >
-            {resources.map((a, index) => (
-              <Row key={index} gutter={10}>
-                <Col span={22}>
-                  <Field
-                    key={a}
-                    name={`${path}.${index}`}
-                    handleSelectChange={val => {
-                      setFieldValue(`${path}.${index}`, {
-                        name: '',
-                        type: val,
-                        path: '',
-                      });
-                    }}
-                    component={SelectField}
-                  />
-                </Col>
-                <Col span={2}>
-                  <Button
-                    type="circle"
-                    icon="delete"
-                    onClick={() => arrayHelpers.remove(index)}
-                  />
-                </Col>
-              </Row>
-            ))}
-            <Button
-              ico="plus"
-              onClick={() => {
-                arrayHelpers.push({ name: '', type: 'Git', path: '' });
-              }}
-            >
-              {intl.get('template.addRsourceType')}
-            </Button>
-          </FormItem>
-        </Fragment>
+            {intl.get('template.addResource')}
+          </Button>
+        </FormItem>
       )}
     />
   );

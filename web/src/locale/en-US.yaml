@@ -122,7 +122,7 @@ template:
   create: Create
   update: Update
   resourceType: Resource type
-  addRsourceType: Add resource type
+  addResource: Add resource
   form:
     inputs:
       name: Inputs

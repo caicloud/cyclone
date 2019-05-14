@@ -122,7 +122,7 @@ template:
   create: 创建模板
   update: 更新模板
   resourceType: 资源类型
-  addRsourceType: 新增资源类型
+  addResource: 新增资源
   form:
     inputs:
       name: 输入
