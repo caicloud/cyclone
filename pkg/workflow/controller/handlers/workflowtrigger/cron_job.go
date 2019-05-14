@@ -2,6 +2,7 @@ package workflowtrigger
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -12,9 +13,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	ccommon "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
-	common "github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
 const (
@@ -129,6 +131,11 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
+	}
+
+	// If controller instance name is set, add label to the pod created.
+	if instance := os.Getenv(ccommon.ControllerInstanceEnvName); len(instance) != 0 {
+		wfr.ObjectMeta.Labels[meta.LabelControllerInstance] = instance
 	}
 
 	if wft.Labels != nil {

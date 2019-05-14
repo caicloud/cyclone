@@ -2,12 +2,17 @@ package meta
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
+	// LabelControllerInstance is instance name of the workflow controller
+	LabelControllerInstance = "controller.cyclone.dev/instance"
+
 	// LabelTenantName is the label key used to indicate the tenant which the resources belongs to
 	LabelTenantName = "tenant.cyclone.dev/name"
 
@@ -129,9 +134,35 @@ func BuiltinLabelSelector() string {
 	return fmt.Sprintf("%s=%s", LabelBuiltin, LabelValueTrue)
 }
 
-// CyclonePodSelector selects pods that are created by Cyclone, for example, stage execution pods, GC pods.
+// CyclonePodSelector selects pods that are created by Cyclone (for example, stage execution pods, GC pods)
+// and manged by current workflow controller.
 func CyclonePodSelector() string {
-	return fmt.Sprintf("%s=%s", LabelPodCreatedBy, CycloneCreator)
+	instance := os.Getenv(common.ControllerInstanceEnvName)
+	if len(instance) == 0 {
+		return fmt.Sprintf("%s=%s,!%s", LabelPodCreatedBy, CycloneCreator, LabelControllerInstance)
+	}
+
+	return fmt.Sprintf("%s=%s,%s=%s", LabelPodCreatedBy, CycloneCreator, LabelControllerInstance, instance)
+}
+
+// WorkflowTriggerSelector selects workflow triggers managed by current controller instance
+func WorkflowTriggerSelector() string {
+	instance := os.Getenv(common.ControllerInstanceEnvName)
+	if len(instance) == 0 {
+		return fmt.Sprintf("!%s", LabelControllerInstance)
+	}
+
+	return fmt.Sprintf("%s=%s", LabelControllerInstance, instance)
+}
+
+// WorkflowRunSelector selects WorkflowRun that managed by current controller instance.
+func WorkflowRunSelector() string {
+	instance := os.Getenv(common.ControllerInstanceEnvName)
+	if len(instance) == 0 {
+		return fmt.Sprintf("!%s", LabelControllerInstance)
+	}
+
+	return fmt.Sprintf("%s=%s", LabelControllerInstance, instance)
 }
 
 // LabelExistsSelector returns a label selector to query resources with label key exists.
