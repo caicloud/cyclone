@@ -32,6 +32,38 @@ class Item extends React.Component {
 
   render() {
     const { template, history, key } = this.props;
+    const actionList = [
+      <Icon
+        key="edit"
+        type="edit"
+        onClick={e => {
+          e.stopPropagation();
+          history.push(`/stageTemplate/add/${name}`);
+        }}
+      />,
+      <Popconfirm
+        className={styles['delete-ico']}
+        key={key}
+        title={intl.get('template.deletetips')}
+        onConfirm={e => {
+          e.stopPropagation();
+          this.handleDelete(name);
+        }}
+        onCancel={e => {
+          e.stopPropagation();
+        }}
+        okText={intl.get('confirm')}
+        cancelText={intl.get('cancel')}
+      >
+        <Icon
+          key="delete"
+          type="delete"
+          onClick={e => {
+            e.stopPropagation();
+          }}
+        />
+      </Popconfirm>,
+    ];
     const name = _.get(template, 'metadata.name');
     return (
       <Fragment>
@@ -42,37 +74,7 @@ class Item extends React.Component {
           hoverable
           className={styles['template-item']}
           cover={<img alt="template icon" src={defaultCover} />}
-          actions={[
-            <Icon
-              key="edit"
-              type="edit"
-              onClick={e => {
-                e.stopPropagation();
-                history.push(`/stageTemplate/add/${name}`);
-              }}
-            />,
-            <Popconfirm
-              key={key}
-              title={intl.get('template.deletetips')}
-              onConfirm={e => {
-                e.stopPropagation();
-                this.handleDelete(name);
-              }}
-              onCancel={e => {
-                e.stopPropagation();
-              }}
-              okText={intl.get('confirm')}
-              cancelText={intl.get('cancel')}
-            >
-              <Icon
-                key="delete"
-                type="delete"
-                onClick={e => {
-                  e.stopPropagation();
-                }}
-              />
-            </Popconfirm>,
-          ]}
+          actions={actionList}
         >
           <Meta
             title={

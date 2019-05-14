@@ -121,6 +121,8 @@ template:
   deletetips: Are you sure to delete the template?
   create: Create
   update: Update
+  resourceType: Resource type
+  addResource: Add resource
   form:
     inputs:
       name: Inputs

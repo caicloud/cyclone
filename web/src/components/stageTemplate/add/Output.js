@@ -4,30 +4,20 @@ import MakeField from '@/components/public/makeField';
 import { defaultFormItemLayout } from '@/lib/const';
 import { Field, FieldArray } from 'formik';
 import { Form, Input, Row, Col, Button } from 'antd';
-import SelectSourceType from './SelectSourceType';
+import ResourceType from './ResourceType';
 
 const InputField = MakeField(Input);
 const FormItem = Form.Item;
-const SelectField = MakeField(SelectSourceType);
 
 const OutputSection = props => {
   const { setFieldValue, values } = props;
   return (
     <SectionCard title={intl.get('output')}>
-      <Field
-        label={intl.get('type')}
-        name="spec.pod.outputs.resources"
+      <ResourceType
         required
-        handleSelectChange={val => {
-          setFieldValue('spec.pod.outputs.resources', [
-            {
-              name: '',
-              type: val,
-              path: '',
-            },
-          ]);
-        }}
-        component={SelectField}
+        path="spec.pod.outputs.resources"
+        values={values}
+        setFieldValue={setFieldValue}
       />
       <FormItem label={'Artifact'} {...defaultFormItemLayout}>
         <FieldArray

@@ -13,6 +13,16 @@
   margin: 0 16px 16px 0;
   text-align: center;
 
+  .delete-ico {
+    visibility: hidden;
+  }
+
+  &:hover {
+    .delete-ico {
+      visibility: visible;
+    }
+  }
+
   img {
     height: 104px;
     width: auto;
@@ -28,6 +38,14 @@
       // use `ignore next` instead while upgrade autoprefixer to 8.4+
       /* autoprefixer: off */
       -webkit-box-orient: vertical;
+    }
+  }
+}
+
+:global {
+  .ant-card-actions {
+    li {
+      border: none !important;
     }
   }
 }

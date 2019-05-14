@@ -57,6 +57,12 @@ export default class StageTemplateForm extends React.Component {
 
   generateSpecObj = data => {
     const specData = _.get(data, 'spec', {});
+    const args = _.get(specData, 'pod.inputs.arguments', []);
+    if (args.length > 2) {
+      specData.pod.inputs.arguments = args.filter(
+        v => v.name === 'image' || v.name === 'cmd'
+      );
+    }
     let defaultSpec = {
       pod: {
         inputs: {
