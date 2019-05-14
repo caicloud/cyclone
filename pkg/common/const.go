@@ -13,4 +13,7 @@ const (
 
 	// ControlClusterName is name of the master cluster
 	ControlClusterName = "cyclone-control-cluster"
+
+	// ControllerInstanceEnvName is environment name for workflow controller instance
+	ControllerInstanceEnvName = "CONTROLLER_INSTANCE_NAME"
 )

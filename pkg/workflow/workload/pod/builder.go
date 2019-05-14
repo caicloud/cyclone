@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	ccommon "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
@@ -79,6 +80,11 @@ func (m *Builder) Prepare() error {
 			meta.AnnotationStageName:       m.stage,
 			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
 		},
+	}
+
+	// If controller instance name is set, add label to the pod created.
+	if instance := os.Getenv(ccommon.ControllerInstanceEnvName); len(instance) != 0 {
+		m.pod.ObjectMeta.Labels[meta.LabelControllerInstance] = instance
 	}
 
 	return nil
