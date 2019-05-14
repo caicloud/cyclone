@@ -103,6 +103,12 @@ const fetchApi = {
         return data;
       });
   },
+
+  getWorkflow(project, workflow) {
+    return http.get(`/projects/${project}/workflows/${workflow}`).then(data => {
+      return data;
+    });
+  },
 };
 
 export default fetchApi;

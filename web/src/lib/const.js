@@ -5,7 +5,12 @@ export const defaultFormItemLayout = {
 
 export const noLabelItemLayout = {
   labelCol: { span: 0 },
-  wrapperCol: { span: 20 },
+  wrapperCol: { span: 24 },
+};
+
+export const modalFormItemLayout = {
+  labelCol: { span: 6 },
+  wrapperCol: { span: 16 },
 };
 
 export const resourceParametersField = {
@@ -25,3 +30,23 @@ export const argumentsParamtersField = [
   { name: 'image', value: '' },
   { name: 'cmd', value: '' },
 ];
+
+export const customStageField = {
+  name: '',
+  inputs: {
+    resources: [],
+  },
+  spec: {
+    containers: [
+      {
+        image: '',
+        command: [],
+        args: [],
+        env: [],
+      },
+    ],
+  },
+  outputs: {
+    resources: [],
+  },
+};

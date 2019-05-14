@@ -360,7 +360,7 @@ class Graph extends React.Component {
           closable={false}
           onClose={this.onClose}
           visible={this.state.visible}
-          width={600}
+          width={800}
         >
           <AddStage
             key={_.get(values, 'currentStage')}

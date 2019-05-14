@@ -50,6 +50,7 @@ class List extends React.Component {
       workflow: { workflowList },
       project: { projectList },
       history: { location },
+      match: { path },
     } = this.props;
     const query = qs.parse(location.search);
     if (!projectList) {
@@ -58,6 +59,8 @@ class List extends React.Component {
 
     const projectItems = _.get(projectList, 'items', []);
     const _workflowList = _.get(workflowList, `${query.project}.items`, []);
+    const defaultSelected =
+      query.project || _.get(projectItems, `[0].metadata.name`);
     return (
       <Layout style={{ background: '#fff' }}>
         <Sider
@@ -68,7 +71,7 @@ class List extends React.Component {
             mode="inline"
             style={{ borderRight: 0 }}
             onSelect={this.filterByProject}
-            defaultSelectedKeys={[query.project]}
+            defaultSelectedKeys={[defaultSelected]}
           >
             <MenuItemGroup key="g1" title={intl.get('sideNav.project')}>
               {projectItems.map(o => (
@@ -84,6 +87,7 @@ class List extends React.Component {
             project={query.project}
             data={_workflowList}
             history={this.props.history}
+            matchPath={path}
           />
         </Content>
       </Layout>

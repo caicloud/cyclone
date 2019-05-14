@@ -3,6 +3,7 @@ import fetchApi from '../api/index.js';
 
 class Workflow {
   @observable workflowList = {};
+  @observable workflowDetail = {};
   @action.bound
   listWorklow(projectID) {
     return fetchApi.listWorkflow(projectID, {}).then(data => {
@@ -19,6 +20,12 @@ class Workflow {
   deleteWorkflow(project, workflow) {
     return fetchApi.removeWorkflow(project, workflow).then(() => {
       this.listWorklow(project);
+    });
+  }
+  @action.bound
+  getWorkflow(project, workflow) {
+    return fetchApi.getWorkflow(project, workflow).then(data => {
+      this.workflowDetail[workflow] = data;
     });
   }
 }

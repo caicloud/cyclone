@@ -1,4 +1,5 @@
 import moment from 'moment';
+import qs from 'query-string';
 
 export function FormatTime(time, formatStr = 'YYYY-MM-DD HH:mm:ss') {
   return moment(time).format(formatStr);
@@ -21,4 +22,9 @@ export const renderTemplate = data => {
   };
   render(data);
   return domArr;
+};
+
+export const getQuery = str => {
+  const query = qs.parse(str);
+  return query;
 };

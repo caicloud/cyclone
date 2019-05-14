@@ -17,6 +17,7 @@ output: 输出
 image: 镜像
 env: 环境变量
 key: 健
+custom: 自定义
 operation:
   add: 新增
   delete: 删除
@@ -134,7 +135,7 @@ template:
         value: 值
     outputs:
       name: 输出
-    newResourceType: 
+    newResourceType:
       name: 新建资源类型
       placeholder: 新增资源
       SCM: SCM

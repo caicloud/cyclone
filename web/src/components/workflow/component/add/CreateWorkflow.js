@@ -78,6 +78,7 @@ class App extends React.Component {
   render() {
     const { current } = this.state;
     const { handleSubmit } = this.props;
+
     return (
       <Form>
         <Steps current={current} size="small">

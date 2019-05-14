@@ -3,7 +3,7 @@ import MakeField from '@/components/public/makeField';
 import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
 import { defaultFormItemLayout } from '@/lib/const';
-import Resource from '../resource/Form';
+import ResourceArray from '../resource/ResourceArray';
 import PropTypes from 'prop-types';
 
 const Fragment = React.Fragment;
@@ -38,46 +38,10 @@ class StageField extends React.Component {
           required
         />
         <SectionCard title={intl.get('input')}>
-          <FormItem
-            label={intl.get('sideNav.resource')}
-            {...defaultFormItemLayout}
-          >
-            <FieldArray
-              name={`${currentStage}.inputs.resources`}
-              render={arrayHelpers => (
-                <div>
-                  {_.get(values, `${currentStage}.inputs.resources`, [])
-                    .length > 0 && (
-                    <Row gutter={16}>
-                      <Col span={11}>{intl.get('name')}</Col>
-                      <Col span={11}>{intl.get('path')}</Col>
-                    </Row>
-                  )}
-                  {/* TODO(qme): click resource list show modal and restore resource form */}
-                  {_.get(values, `${currentStage}.inputs.resources`, []).map(
-                    (r, i) => (
-                      <Row gutter={16} key={i}>
-                        <Col span={11}>{r.name}</Col>
-                        <Col span={11}>{r.path}</Col>
-                        <Col span={2}>
-                          <Button
-                            type="circle"
-                            icon="delete"
-                            onClick={() => arrayHelpers.remove(i)}
-                          />
-                        </Col>
-                      </Row>
-                    )
-                  )}
-                  <Resource
-                    SetReasourceValue={value => {
-                      arrayHelpers.push(value);
-                    }}
-                  />
-                </div>
-              )}
-            />
-          </FormItem>
+          <ResourceArray
+            resourcesField={`${currentStage}.inputs.resources`}
+            resources={_.get(values, `${currentStage}.inputs.resources`, [])}
+          />
         </SectionCard>
         <SectionCard title={intl.get('config')}>
           <FieldArray
@@ -177,53 +141,13 @@ class StageField extends React.Component {
           />
         </SectionCard>
         <SectionCard title={intl.get('output')}>
-          <FormItem
-            label={intl.get('sideNav.resource')}
-            {...defaultFormItemLayout}
-          >
-            <FieldArray
-              name={`${currentStage}.outputs.resources`}
-              render={arrayHelpers => (
-                <div>
-                  {_.get(values, `${currentStage}.outputs.resources`, [])
-                    .length > 0 && (
-                    <Row gutter={16}>
-                      <Col span={4}>{intl.get('name')}</Col>
-                      <Col span={16}>{intl.get('image')}</Col>
-                    </Row>
-                  )}
-                  {_.get(values, `${currentStage}.outputs.resources`, []).map(
-                    (r, i) => {
-                      const image = _.find(
-                        _.get(r, 'spec.parameters'),
-                        o => _.get(o, 'name') === 'IMAGE'
-                      );
-                      return (
-                        <Row gutter={16} key={i}>
-                          <Col span={4}>{r.name}</Col>
-                          <Col span={16}>{_.get(image, 'value')}</Col>
-                          <Col span={2}>
-                            <Button
-                              type="circle"
-                              icon="delete"
-                              onClick={() => arrayHelpers.remove(i)}
-                            />
-                          </Col>
-                        </Row>
-                      );
-                    }
-                  )}
-                  <Resource
-                    SetReasourceValue={value => {
-                      arrayHelpers.push(value);
-                    }}
-                    type="output"
-                  />
-                </div>
-              )}
-            />
-          </FormItem>
-          <FormItem label={'artifacts'} {...defaultFormItemLayout}>
+          <ResourceArray
+            type="outputs"
+            resourcesField={`${currentStage}.outputs.resources`}
+            resources={_.get(values, `${currentStage}.outputs.resources`, [])}
+          />
+          {/* // NOTE: temporarily not supported artifacts */}
+          {/* <FormItem label={'artifacts'} {...defaultFormItemLayout}>
             <FieldArray
               name={`${currentStage}.outputs.artifacts`}
               render={arrayHelpers => (
@@ -273,7 +197,7 @@ class StageField extends React.Component {
                 </div>
               )}
             />
-          </FormItem>
+          </FormItem> */}
         </SectionCard>
       </Fragment>
     );
