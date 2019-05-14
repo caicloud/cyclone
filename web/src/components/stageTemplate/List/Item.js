@@ -22,6 +22,10 @@ class Item extends React.Component {
     stageTemplate: PropTypes.object,
   };
 
+  state = {
+    showDelete: false,
+  };
+
   handleDelete = name => {
     const { stageTemplate } = this.props;
     stageTemplate.deleteStageTemplate(name, () => {
@@ -30,8 +34,50 @@ class Item extends React.Component {
     });
   };
 
+  showDelete = () => {
+    this.setState({
+      showDelete: !this.state.showDelete,
+    });
+  };
+
   render() {
     const { template, history, key } = this.props;
+    const { showDelete } = this.state;
+    const actionList = [
+      <Icon
+        key="edit"
+        type="edit"
+        onClick={e => {
+          e.stopPropagation();
+          history.push(`/stageTemplate/add/${name}`);
+        }}
+      />,
+    ];
+    if (showDelete) {
+      actionList.push(
+        <Popconfirm
+          key={key}
+          title={intl.get('template.deletetips')}
+          onConfirm={e => {
+            e.stopPropagation();
+            this.handleDelete(name);
+          }}
+          onCancel={e => {
+            e.stopPropagation();
+          }}
+          okText={intl.get('confirm')}
+          cancelText={intl.get('cancel')}
+        >
+          <Icon
+            key="delete"
+            type="delete"
+            onClick={e => {
+              e.stopPropagation();
+            }}
+          />
+        </Popconfirm>
+      );
+    }
     const name = _.get(template, 'metadata.name');
     return (
       <Fragment>
@@ -40,39 +86,11 @@ class Item extends React.Component {
             history.push(`/stageTemplate/${name}`);
           }}
           hoverable
+          onMouseEnter={this.showDelete}
+          onMouseLeave={this.showDelete}
           className={styles['template-item']}
           cover={<img alt="template icon" src={defaultCover} />}
-          actions={[
-            <Icon
-              key="edit"
-              type="edit"
-              onClick={e => {
-                e.stopPropagation();
-                history.push(`/stageTemplate/add/${name}`);
-              }}
-            />,
-            <Popconfirm
-              key={key}
-              title={intl.get('template.deletetips')}
-              onConfirm={e => {
-                e.stopPropagation();
-                this.handleDelete(name);
-              }}
-              onCancel={e => {
-                e.stopPropagation();
-              }}
-              okText={intl.get('confirm')}
-              cancelText={intl.get('cancel')}
-            >
-              <Icon
-                key="delete"
-                type="delete"
-                onClick={e => {
-                  e.stopPropagation();
-                }}
-              />
-            </Popconfirm>,
-          ]}
+          actions={actionList}
         >
           <Meta
             title={

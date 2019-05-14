@@ -63,7 +63,6 @@ class StageTemplate extends React.Component {
     const actualList = this.filterByKind(templateList.items, query.kind);
     return (
       <Layout style={{ background: 'transparent' }}>
-        {/* TODO: add button for creating */}
         <Header style={{ background: 'transparent', padding: 0 }} />
         <Sider
           width="160px"
