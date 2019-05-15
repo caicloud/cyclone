@@ -10,7 +10,7 @@ const InputField = MakeField(Input);
 const FormItem = Form.Item;
 
 const OutputSection = props => {
-  const { setFieldValue, values } = props;
+  const { setFieldValue, values, errors } = props;
   return (
     <SectionCard title={intl.get('output')}>
       <ResourceType
@@ -18,6 +18,7 @@ const OutputSection = props => {
         path="spec.pod.outputs.resources"
         values={values}
         setFieldValue={setFieldValue}
+        errors={errors}
       />
       <FormItem label={'Artifact'} {...defaultFormItemLayout}>
         <FieldArray
@@ -75,6 +76,7 @@ const OutputSection = props => {
 
 OutputSection.propTypes = {
   values: PropTypes.object,
+  errors: PropTypes.object,
   setFieldValue: PropTypes.func,
 };
 

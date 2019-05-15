@@ -3,7 +3,7 @@ import SectionCard from '@/components/public/sectionCard';
 import ResourceType from './ResourceType';
 
 const InputSection = props => {
-  const { values, setFieldValue } = props;
+  const { values, setFieldValue, errors } = props;
   return (
     <SectionCard title={intl.get('input')}>
       <ResourceType
@@ -11,6 +11,7 @@ const InputSection = props => {
         path="spec.pod.inputs.resources"
         values={values}
         setFieldValue={setFieldValue}
+        errors={errors}
       />
     </SectionCard>
   );
@@ -19,6 +20,7 @@ const InputSection = props => {
 InputSection.propTypes = {
   setFieldValue: PropTypes.func,
   values: PropTypes.object,
+  errors: PropTypes.object,
 };
 
 export default InputSection;

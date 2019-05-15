@@ -8,10 +8,25 @@ const FormItem = Form.Item;
 
 const SelectField = MakeField(SelectSourceType);
 
-// TODO huxt validate resource type select
 const ResourceType = props => {
-  const { setFieldValue, values, path, required } = props;
+  const { setFieldValue, values, path, required, errors } = props;
   const resources = _.get(values, path, []);
+  const errorMsg = _.get(errors, path);
+  const errorsObj = {
+    formItem: {},
+    button: {},
+  };
+  if (errorMsg) {
+    errorsObj.formItem = {
+      help: errorMsg,
+      validateStatus: 'error',
+    };
+    errorsObj.button = {
+      ghost: true,
+      type: 'danger',
+    };
+  }
+
   return (
     <FieldArray
       name={path}
@@ -19,6 +34,7 @@ const ResourceType = props => {
         <FormItem
           required={required}
           label={intl.get('template.resourceType')}
+          {...errorsObj.formItem}
           {...defaultFormItemLayout}
         >
           {resources.map((a, index) => (
@@ -47,6 +63,7 @@ const ResourceType = props => {
             </Row>
           ))}
           <Button
+            {...errorsObj.button}
             ico="plus"
             onClick={() => {
               arrayHelpers.push({ name: '', type: 'Git', path: '' });
