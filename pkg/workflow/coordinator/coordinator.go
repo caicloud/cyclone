@@ -3,15 +3,13 @@ package coordinator
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	core_v1 "k8s.io/api/core/v1"
-
-	"strings"
-
-	"io/ioutil"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
@@ -364,8 +362,7 @@ func (co *Coordinator) CollectExecutionResults() error {
 			continue
 		}
 
-		// TODO(ChenDe): Should ignore error when result file not exist
-		dst := fmt.Sprintf("/tmp/__result_%s", c.Name)
+		dst := fmt.Sprintf("/tmp/__result__%s", c.Name)
 		containerID, err := co.getContainerID(c.Name)
 		if err != nil {
 			log.WithField("c", containerID).Error("Get container ID error: ", err)

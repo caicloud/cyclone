@@ -32,7 +32,7 @@ ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
 TARGETS := server workflow/controller workflow/coordinator
-IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image resolver/kv watcher web
+IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image watcher web
 
 # Container image prefix and suffix added to targets.
 # The final built images are:

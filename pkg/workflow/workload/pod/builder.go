@@ -839,6 +839,11 @@ func (m *Builder) ApplyResourceRequirements() error {
 
 // ApplyServiceAccount applies service account to pod
 func (m *Builder) ApplyServiceAccount() error {
+	// If a service account has been explicitly set in stage spec, use it.
+	if m.pod.Spec.ServiceAccountName != "" {
+		return nil
+	}
+
 	if len(controller.Config.ExecutionContext.ServiceAccount) != 0 {
 		m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
 	} else {
