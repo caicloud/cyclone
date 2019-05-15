@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -143,6 +144,19 @@ func (p *Operator) OnUpdated() error {
 		}
 	default:
 		p.DetermineStatus(wfrOperator)
+	}
+
+	// Sync stage execution results from pod annotation to WorkflowRun status
+	if p.pod.Annotations != nil {
+		v, ok := p.pod.Annotations[meta.AnnotationStageResult]
+		if ok && v != "" {
+			var keyValues []v1alpha1.KeyValue
+			if err := json.Unmarshal([]byte(v), &keyValues); err != nil {
+				log.WithField("stg", p.stage).Warning("Unmarshal key-value results error: ", err)
+			} else {
+				wfrOperator.UpdateStageOutputs(p.stage, keyValues)
+			}
+		}
 	}
 
 	return wfrOperator.Update()

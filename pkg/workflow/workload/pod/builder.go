@@ -172,6 +172,16 @@ func (m *Builder) CreateVolumes() error {
 		},
 	})
 
+	// Add host volume for host docker socket file for coordinator container.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.HostDockerSockVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: common.DockerSockFilePath,
+			},
+		},
+	})
+
 	// Add PVC volume to pod if configured.
 	if m.executionContext.PVC != "" {
 		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, m.executionContext.PVC); n != common.DefaultPvVolumeName {
@@ -670,6 +680,10 @@ func (m *Builder) AddCoordinator() error {
 				Name:      common.CoordinatorSidecarVolumeName,
 				MountPath: common.CoordinatorResolverPath,
 			},
+			{
+				Name:      common.HostDockerSockVolumeName,
+				MountPath: common.DockerSockFilePath,
+			},
 		},
 		ImagePullPolicy: controller.ImagePullPolicy(),
 	}
@@ -831,7 +845,17 @@ func (m *Builder) ApplyResourceRequirements() error {
 
 // ApplyServiceAccount applies service account to pod
 func (m *Builder) ApplyServiceAccount() error {
-	m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
+	// If a service account has been explicitly set in stage spec, use it.
+	if m.pod.Spec.ServiceAccountName != "" {
+		return nil
+	}
+
+	if len(controller.Config.ExecutionContext.ServiceAccount) != 0 {
+		m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
+	} else {
+		m.pod.Spec.ServiceAccountName = common.DefaultServiceAccountName
+	}
+
 	return nil
 }
 

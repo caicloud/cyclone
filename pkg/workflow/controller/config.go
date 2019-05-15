@@ -27,8 +27,6 @@ const (
 	SvnResolverImage = "svn-resolver"
 	// ImageResolverImage is key of image source resolver image in config file
 	ImageResolverImage = "image-resolver"
-	// KvResolverImage is key of kv source resolver image in config file
-	KvResolverImage = "kv-resolver"
 	// CoordinatorImage is key of coordinator image in config file
 	CoordinatorImage = "coordinator"
 	// GCImage is key of the GC image in config file
@@ -42,7 +40,6 @@ var ResolverImageKeys = map[v1alpha1.ResourceType]string{
 	v1alpha1.GitResourceType:   GitResolverImage,
 	v1alpha1.SvnResourceType:   SvnResolverImage,
 	v1alpha1.ImageResourceType: ImageResolverImage,
-	v1alpha1.KVResourceType:    KvResolverImage,
 }
 
 // WorkflowControllerConfig configures Workflow Controller
@@ -130,7 +127,7 @@ func validate(config *WorkflowControllerConfig) bool {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
 	}
 
-	for _, k := range []string{GitResolverImage, ImageResolverImage, KvResolverImage, CoordinatorImage} {
+	for _, k := range []string{GitResolverImage, ImageResolverImage, CoordinatorImage} {
 		_, ok := config.Images[k]
 		if !ok {
 			return false

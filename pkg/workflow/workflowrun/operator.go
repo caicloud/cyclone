@@ -36,6 +36,8 @@ type Operator interface {
 	UpdateStageStatus(stage string, status *v1alpha1.Status)
 	// Update stage pod info.
 	UpdateStagePodInfo(stage string, podInfo *v1alpha1.PodInfo)
+	// Update stage outputs, they are key-value results from stage execution
+	UpdateStageOutputs(stage string, keyValues []v1alpha1.KeyValue)
 	// Decide overall status of the WorkflowRun from stage status.
 	OverallStatus() (*v1alpha1.Status, error)
 	// Garbage collection on the WorkflowRun based on GC policy configured
@@ -226,6 +228,27 @@ func (o *operator) UpdateStagePodInfo(stage string, podInfo *v1alpha1.PodInfo) {
 	}
 
 	o.wfr.Status.Stages[stage].Pod = podInfo
+}
+
+// UpdateStageOutputs updates stage outputs, they are key-value results from stage execution
+func (o *operator) UpdateStageOutputs(stage string, keyValues []v1alpha1.KeyValue) {
+	if len(keyValues) == 0 {
+		return
+	}
+
+	if o.wfr.Status.Stages == nil {
+		o.wfr.Status.Stages = make(map[string]*v1alpha1.StageStatus)
+	}
+
+	if _, ok := o.wfr.Status.Stages[stage]; !ok {
+		o.wfr.Status.Stages[stage] = &v1alpha1.StageStatus{
+			Status: v1alpha1.Status{
+				Phase: v1alpha1.StatusRunning,
+			},
+		}
+	}
+
+	o.wfr.Status.Stages[stage].Outputs = keyValues
 }
 
 // OverallStatus calculates the overall status of the WorkflowRun. When a stage has its status
