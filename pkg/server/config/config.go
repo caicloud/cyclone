@@ -179,8 +179,8 @@ func modifier(config *CycloneServerConfig) {
 	}
 
 	if config.SystemNamespace == "" {
-		log.Warningf("SystemNamespace not configured, will use default value 'default'")
-		config.SystemNamespace = "default"
+		log.Warningf("SystemNamespace not configured, will use the namespace where Cyclone installed")
+		config.SystemNamespace = GetSystemNamespace()
 	}
 }
 
@@ -191,5 +191,6 @@ func GetSystemNamespace() string {
 		return envNamespace
 	}
 
-	return Config.SystemNamespace
+	// If SystemNamespace environment is not configured, will return default value 'default'.
+	return "default"
 }

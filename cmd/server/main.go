@@ -50,8 +50,6 @@ type Options struct {
 
 	// ConfigMap that configures for cyclone server, default value is 'cyclone-server-config'
 	ConfigMap string
-	// Namespace that cyclone server will run in, default value is 'default'
-	Namespace string
 }
 
 // NewOptions returns a new Options
@@ -63,7 +61,6 @@ func NewOptions() *Options {
 func (opts *Options) AddFlags() {
 	flag.StringVar(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
 	flag.StringVar(&opts.ConfigMap, "configmap", "cyclone-server-config", "ConfigMap that configures for cyclone server")
-	flag.StringVar(&opts.Namespace, "namespace", "default", "Namespace that cyclone server will run in")
 
 	flag.Parse()
 }
@@ -77,7 +74,7 @@ func initialize(opts *Options) {
 	}
 
 	// Load configuration from ConfigMap.
-	cm, err := client.CoreV1().ConfigMaps(opts.Namespace).Get(opts.ConfigMap, meta_v1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(config.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})
 	if err != nil {
 		log.Fatalf("Get ConfigMap %s error: %s", opts.ConfigMap, err)
 	}
@@ -98,7 +95,7 @@ func initialize(opts *Options) {
 	}
 
 	if config.Config.CreateBuiltinTemplates {
-		templates.InitStageTemplates(client, config.GetSystemNamespace(), "")
+		templates.InitStageTemplates(client, config.Config.SystemNamespace, "")
 	} else {
 		log.Info("create_builtin_templates is false, skip create built-in stage templates")
 	}
@@ -122,7 +119,6 @@ func main() {
 	// add flags
 	cmd.Add(&opts.KubeConfig, "kubeconfig", "", "Kube config file path")
 	cmd.Add(&opts.ConfigMap, "configmap", "", "ConfigMap that configures for cyclone server")
-	cmd.Add(&opts.Namespace, "namespace", "", "Namespace that cyclone server will run in")
 
 	// Create plugin options.
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.

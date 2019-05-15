@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -26,10 +27,12 @@ const (
 	EnvStageName = "STAGE_NAME"
 	// EnvWorkloadContainerName is an environment which represents the workload container name.
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
-	// EnvNamespace is an environment which represents namespace.
+	// EnvNamespace is an environment which represents namespace of workflow execution context.
 	EnvNamespace = "NAMESPACE"
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
+	// EnvSystemNamespace is the evn key to indicate which namespace the cyclone system components installed in.
+	EnvSystemNamespace = "SYSTEM_NAMESPACE"
 
 	// DefaultCycloneServerAddr defines default Cyclone Server address
 	DefaultCycloneServerAddr = "cyclone-server"
@@ -123,4 +126,15 @@ func OutputResourceVolumeName(name string) string {
 // PresetVolumeName ...
 func PresetVolumeName(index int) string {
 	return fmt.Sprintf("preset-%d", index)
+}
+
+// GetSystemNamespace ...
+func GetSystemNamespace() string {
+	envNamespace := os.Getenv(EnvSystemNamespace)
+	if envNamespace != "" {
+		return envNamespace
+	}
+
+	// If SystemNamespace environment is not configured, will return default value 'default'.
+	return "default"
 }

@@ -6,4 +6,4 @@ WORKDIR /workspace
 
 COPY ./bin/workflow/controller /workspace/controller
 
-ENTRYPOINT ["./controller"]
+CMD ["./controller"]
