@@ -11,6 +11,7 @@ class Integration {
   };
   @observable integrationDetail = null;
   @observable detailLoading = false;
+  @observable processing = false;
 
   @action.bound
   getIntegrationList() {
@@ -69,6 +70,20 @@ class Integration {
     fetchApi.getIntegration(name).then(data => {
       this.integrationDetail = data;
       this.detailLoading = false;
+    });
+  }
+  @action.bound
+  closeCluster(name) {
+    this.processing = true;
+    fetchApi.closeCluster(name).then(data => {
+      this.processing = false;
+    });
+  }
+  @action.bound
+  openCluster(name) {
+    this.processing = true;
+    fetchApi.openCluster(name).then(data => {
+      this.processing = false;
     });
   }
   @action.bound
