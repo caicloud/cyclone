@@ -7,10 +7,7 @@ imageRegistry:
   libraryProject: library
 
 # Address of Cyclone server
-serverAddress: cyclone-server.{{ .Values.systemNamespace }}.svc.cluster.local:{{ .Values.server.listenPort }}
-
-# Namespace where to deploy cyclone
-systemNamespace: default
+serverAddress: cyclone-server.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.listenPort }}
 
 # Cyclone workflow engine variables
 engine:

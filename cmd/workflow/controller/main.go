@@ -19,7 +19,6 @@ import (
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 var configMap = flag.String("configmap", "workflow-controller-config", "ConfigMap that configures workflow controller")
-var namespace = flag.String("namespace", "default", "Namespace that workflow controller will run in")
 
 func main() {
 	flag.Parse()
@@ -36,7 +35,8 @@ func main() {
 	signals.GracefulShutdown(cancel)
 
 	// Load configuration from ConfigMap.
-	cm, err := client.CoreV1().ConfigMaps(*namespace).Get(*configMap, metav1.GetOptions{})
+	systemNamespace := common.GetSystemNamespace()
+	cm, err := client.CoreV1().ConfigMaps(systemNamespace).Get(*configMap, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("configmap", *configMap).Fatal("Get ConfigMap error: ", err)
 	}
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Watch configure changes in ConfigMap.
-	cmController := controllers.NewConfigMapController(client, *namespace, *configMap)
+	cmController := controllers.NewConfigMapController(client, systemNamespace, *configMap)
 	go cmController.Run(ctx.Done())
 
 	// Watch workflowTrigger who will start workflowRun on schedule

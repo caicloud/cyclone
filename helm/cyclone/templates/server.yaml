@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cyclone-server-config
-  namespace: {{ .Values.systemNamespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     helm.sh/chart: {{ include "cyclone.chart" . }}
@@ -27,7 +27,7 @@ data:
         "requests.memory": "{{ .Values.server.resourceRequirement.namespace.requests.memory }}"
       },
       "create_builtin_templates": {{ .Values.server.init.templates }},
-      "system_namespace": "{{ .Values.systemNamespace }}",
+      "system_namespace": "{{ .Release.Namespace }}",
       "init_default_tenant": {{ .Values.server.init.defaultTenant }},
       "open_control_cluster": {{ .Values.server.openControlCluster }},
       "storage_usage_watcher": {
@@ -52,7 +52,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: cyclone-server
-  namespace: {{ .Values.systemNamespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     app.kubernetes.io/component: cyclone-server

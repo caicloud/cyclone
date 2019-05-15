@@ -26,7 +26,7 @@ const (
 	EnvStageName = "STAGE_NAME"
 	// EnvWorkloadContainerName is an environment which represents the workload container name.
 	EnvWorkloadContainerName = "WORKLOAD_CONTAINER_NAME"
-	// EnvNamespace is an environment which represents namespace.
+	// EnvNamespace is an environment which represents namespace of workflow execution context.
 	EnvNamespace = "NAMESPACE"
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"

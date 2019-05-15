@@ -78,7 +78,6 @@ _config:
               "requests.memory": "2Gi"
             },
             "create_builtin_templates": false,
-            "system_namespace": "default",
             "init_default_tenant": false,
             "open_control_cluster": false,
             "storage_usage_watcher": {

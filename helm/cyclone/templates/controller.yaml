@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: workflow-controller-config
-  namespace: {{ .Values.systemNamespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     helm.sh/chart: {{ include "cyclone.chart" . }}
@@ -54,7 +54,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: cyclone-workflow-controller
-  namespace: {{ .Values.systemNamespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     app.kubernetes.io/component: workflow-controller
@@ -80,13 +80,9 @@ spec:
         image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-workflow-controller:{{ .Chart.AppVersion }}
         imagePullPolicy: IfNotPresent
         env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: DEVELOP_MODE
           value: "{{ .Values.engine.developMode }}"
-        volumeMounts:
-        - mountPath: /etc/localtime
-          name: local-timezone
-          readOnly: true
-      volumes:
-      - hostPath:
-          path: /etc/localtime
-        name: local-timezone
