@@ -38,7 +38,7 @@ class Item extends React.Component {
         type="edit"
         onClick={e => {
           e.stopPropagation();
-          history.push(`/stageTemplate/add/${name}`);
+          history.push(`/stageTemplate/${name}/update`);
         }}
       />,
       <Popconfirm
