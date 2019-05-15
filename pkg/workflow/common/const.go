@@ -103,6 +103,9 @@ const (
 	// ResultFilePath is file to hold execution result of a container that need to be synced to
 	// WorkflowRun status. Each line of the result should be in format: <key>:<value>
 	ResultFilePath = "/__result__"
+
+	// DefaultServiceAccountName is service account name used by stage pod
+	DefaultServiceAccountName = "cyclone"
 )
 
 const (

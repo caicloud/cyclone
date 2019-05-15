@@ -121,20 +121,17 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 
 // CopyFromContainer copy a file/directory from container:path to dst.
 func (k *Executor) CopyFromContainer(container, path, dst string) error {
-	//args := []string{"--kubeconfig", k.kubeconfig, "cp", fmt.Sprintf("%s/%s:%s", k.namespace, k.podName, path), "-c", container, dst}
-	//
-	//cmd := exec.Command("kubectl", args...)
-	//return cmd.Run()
-
-	// Fixme, use docker instead of kubectl since
-	// kubectl can not cp a file from a stopped container.
 	args := []string{"cp", fmt.Sprintf("%s:%s", container, path), dst}
 
 	cmd := exec.Command("docker", args...)
 	log.WithField("args", args).Info()
 	ret, err := cmd.CombinedOutput()
 	log.WithField("message", string(ret)).WithField("error", err).Info("copy file result")
-	return err
+	if err != nil {
+		return fmt.Errorf("%s, error: %v", string(ret), err)
+	}
+
+	return nil
 }
 
 // SetResults sets execution results (key-values) to the pod, workflow controller will sync this result to WorkflowRun status.

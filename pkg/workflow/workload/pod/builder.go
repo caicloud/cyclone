@@ -839,7 +839,12 @@ func (m *Builder) ApplyResourceRequirements() error {
 
 // ApplyServiceAccount applies service account to pod
 func (m *Builder) ApplyServiceAccount() error {
-	m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
+	if len(controller.Config.ExecutionContext.ServiceAccount) != 0 {
+		m.pod.Spec.ServiceAccountName = controller.Config.ExecutionContext.ServiceAccount
+	} else {
+		m.pod.Spec.ServiceAccountName = common.DefaultServiceAccountName
+	}
+
 	return nil
 }
 
