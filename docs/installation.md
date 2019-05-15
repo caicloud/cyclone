@@ -2,6 +2,21 @@
 
 ## Install With Helm
 
+### Prerequisites
+
+Cyclone can be easily installed with [Helm](https://helm.sh/) with a version higher than **2.10**,
+refer to [helm install guide](https://helm.sh/docs/using_helm/#install-helm) for Helm installation.
+
+You can use `helm template` to generate Kubernetes manifests for Cyclone and then install it using `kubectl apply`,
+or you can use `helm install` to manage Cyclone installation by Tiller.
+You can [install Tiller](https://helm.sh/docs/using_helm/#initialize-helm-and-install-tiller) after Helm is ready with command:
+
+```bash
+$ helm init --history-max 200
+```
+
+### Customizable Installation
+
 The simplest way to install Cyclone is using Helm chart. By default, images are pulled from DockerHub, so make sure DockerHub is accessible from your cluster.
 
 ```bash
@@ -31,8 +46,6 @@ If you want to uninstall Cyclone, you can clean up it with command:
 ```bash
 $ helm delete --purge cyclone
 ```
-
-To install [Helm](https://helm.sh/), refer to [helm install guide](https://helm.sh/docs/using_helm/#install-helm).
 
 ### Configuration
 
