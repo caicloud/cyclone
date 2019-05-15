@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -42,10 +41,6 @@ type CycloneServerConfig struct {
 
 	// CreateBuiltinTemplates configures whether to create builtin stage templates while cyclone server start up.
 	CreateBuiltinTemplates bool `json:"create_builtin_templates"`
-
-	// SystemNamespace is the namespace where the Cyclone components installed in, and cyclone built-in
-	// resources(such as stage templates) will be stored in the namespace too.
-	SystemNamespace string `json:"system_namespace"`
 
 	// InitDefaultTenant configures whether to create cyclone default tenant while cyclone server start up.
 	InitDefaultTenant bool `json:"init_default_tenant"`
@@ -177,20 +172,4 @@ func modifier(config *CycloneServerConfig) {
 			core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 		}
 	}
-
-	if config.SystemNamespace == "" {
-		log.Warningf("SystemNamespace not configured, will use the namespace where Cyclone installed")
-		config.SystemNamespace = GetSystemNamespace()
-	}
-}
-
-// GetSystemNamespace ...
-func GetSystemNamespace() string {
-	envNamespace := os.Getenv(common.EnvSystemNamespace)
-	if envNamespace != "" {
-		return envNamespace
-	}
-
-	// If SystemNamespace environment is not configured, will return default value 'default'.
-	return "default"
 }

@@ -40,7 +40,4 @@ const (
 
 	// CachePrefixPath is the prefix path of acceleration caches
 	CachePrefixPath = "caches"
-
-	// EnvSystemNamespace is the evn key to indicate which namespace the cyclone system components installed in.
-	EnvSystemNamespace = "SYSTEM_NAMESPACE"
 )

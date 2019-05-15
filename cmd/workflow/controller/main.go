@@ -12,7 +12,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
-	w_common "github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
@@ -36,7 +35,7 @@ func main() {
 	signals.GracefulShutdown(cancel)
 
 	// Load configuration from ConfigMap.
-	systemNamespace := w_common.GetSystemNamespace()
+	systemNamespace := common.GetSystemNamespace()
 	cm, err := client.CoreV1().ConfigMaps(systemNamespace).Get(*configMap, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("configmap", *configMap).Fatal("Get ConfigMap error: ", err)

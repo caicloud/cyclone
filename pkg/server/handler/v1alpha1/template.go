@@ -12,9 +12,9 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	c_common "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
-	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -46,7 +46,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 
 	items := templates.Items
 	if includePublic {
-		systemNamespace := config.Config.SystemNamespace
+		systemNamespace := c_common.GetSystemNamespace()
 		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).List(metav1.ListOptions{
 			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
 		})
@@ -174,7 +174,7 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 		}
 
 		if includePublic {
-			systemNamespace := config.Config.SystemNamespace
+			systemNamespace := c_common.GetSystemNamespace()
 			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).Get(template, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("Get templates from system namespace %s error: %v", systemNamespace, err)

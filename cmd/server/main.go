@@ -74,7 +74,7 @@ func initialize(opts *Options) {
 	}
 
 	// Load configuration from ConfigMap.
-	cm, err := client.CoreV1().ConfigMaps(config.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(common.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})
 	if err != nil {
 		log.Fatalf("Get ConfigMap %s error: %s", opts.ConfigMap, err)
 	}
@@ -95,7 +95,7 @@ func initialize(opts *Options) {
 	}
 
 	if config.Config.CreateBuiltinTemplates {
-		templates.InitStageTemplates(client, config.Config.SystemNamespace, "")
+		templates.InitStageTemplates(client, common.GetSystemNamespace(), "")
 	} else {
 		log.Info("create_builtin_templates is false, skip create built-in stage templates")
 	}
