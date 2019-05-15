@@ -77,9 +77,6 @@ spec:
       - name: server
         image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-server:{{ .Chart.AppVersion }}
         imagePullPolicy: IfNotPresent
-        args:
-        - "--namespace"
-        - {{ .Release.Namespace }}
         env:
         - name: SYSTEM_NAMESPACE
           valueFrom:

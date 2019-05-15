@@ -79,9 +79,10 @@ spec:
       - name: controller
         image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-workflow-controller:{{ .Chart.AppVersion }}
         imagePullPolicy: IfNotPresent
-        args:
-        - "--namespace"
-        - {{ .Release.Namespace }}
         env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: DEVELOP_MODE
           value: "{{ .Values.engine.developMode }}"

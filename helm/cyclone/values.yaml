@@ -2,8 +2,6 @@
 # while 'libraryProject' specifies where to pull common images like 'alpine', 'busybox'.
 # These two projects can be definitely set to the same value.
 imageRegistry:
-#  registry: docker.io
-#  project: k8sdevops
   registry: docker.io
   project: k8sdevops
   libraryProject: library
