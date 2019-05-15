@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -111,8 +112,8 @@ func UpdateWorkflow(ctx context.Context, tenant, project, workflow string, wf *v
 		}
 		newWf := origin.DeepCopy()
 		newWf.Spec = wf.Spec
-		newWf.Annotations = MergeMap(wf.Annotations, newWf.Annotations)
-		newWf.Labels = MergeMap(wf.Labels, newWf.Labels)
+		newWf.Annotations = utils.MergeMap(wf.Annotations, newWf.Annotations)
+		newWf.Labels = utils.MergeMap(wf.Labels, newWf.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Update(newWf)
 		return err
 	})

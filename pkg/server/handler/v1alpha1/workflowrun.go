@@ -22,6 +22,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -171,8 +172,8 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		}
 		newWfr := origin.DeepCopy()
 		newWfr.Spec = wfr.Spec
-		newWfr.Annotations = MergeMap(wfr.Annotations, newWfr.Annotations)
-		newWfr.Labels = MergeMap(wfr.Labels, newWfr.Labels)
+		newWfr.Annotations = utils.MergeMap(wfr.Annotations, newWfr.Annotations)
+		newWfr.Labels = utils.MergeMap(wfr.Labels, newWfr.Labels)
 		if newWfr.Spec.WorkflowRef == nil {
 			newWfr.Spec.WorkflowRef = workflowReference(tenant, workflow)
 		}

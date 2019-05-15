@@ -11,6 +11,8 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
+	in "github.com/caicloud/cyclone/pkg/server/biz/integration"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -87,8 +89,8 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		}
 		newWft := origin.DeepCopy()
 		newWft.Spec = wft.Spec
-		newWft.Annotations = MergeMap(wft.Annotations, newWft.Annotations)
-		newWft.Labels = MergeMap(wft.Labels, newWft.Labels)
+		newWft.Annotations = utils.MergeMap(wft.Annotations, newWft.Annotations)
+		newWft.Labels = utils.MergeMap(wft.Labels, newWft.Labels)
 		if newWft.Spec.WorkflowRef == nil {
 			newWft.Spec.WorkflowRef = workflowReference(tenant, workflow)
 		}
@@ -156,8 +158,7 @@ func DeleteWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 }
 
 func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
-		common.IntegrationSecret(secretName), metav1.GetOptions{})
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
@@ -188,7 +189,7 @@ func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
 	} else {
 		// Create webhook for this repo.
 		log.Infof("Create webhook for repo %s", repo)
-		integration, err := SecretToIntegration(secret)
+		integration, err := in.FromSecret(secret)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -226,7 +227,7 @@ func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
-		common.IntegrationSecret(secretName), metav1.GetOptions{})
+		secretName, metav1.GetOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
@@ -248,7 +249,7 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 				found = true
 				// Delete webhook for repo.
 				log.Infof("Delete webhook for repo %s", repo)
-				integration, err := SecretToIntegration(secret)
+				integration, err := in.FromSecret(secret)
 				if err != nil {
 					log.Error(err)
 					return err

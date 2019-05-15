@@ -10,6 +10,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -74,8 +75,8 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 		}
 		newRsc := origin.DeepCopy()
 		newRsc.Spec = rsc.Spec
-		newRsc.Annotations = MergeMap(rsc.Annotations, newRsc.Annotations)
-		newRsc.Labels = MergeMap(rsc.Labels, newRsc.Labels)
+		newRsc.Annotations = utils.MergeMap(rsc.Annotations, newRsc.Annotations)
+		newRsc.Labels = utils.MergeMap(rsc.Labels, newRsc.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Update(newRsc)
 		return err
 	})
