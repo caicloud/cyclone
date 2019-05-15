@@ -110,11 +110,16 @@ class AddStage extends React.Component {
     const {
       stageTemplate: { templateList },
       values,
+      project,
+      update,
     } = this.props;
     const templates = _.get(templateList, 'items');
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
+    if (!_.get(values, `${currentStage}`)) {
+      return <Spin />;
+    }
     return (
       <Form>
         {!modify && (
@@ -148,10 +153,16 @@ class AddStage extends React.Component {
               values={values}
               stageId={_.get(values, 'currentStage')}
               data={templateData}
+              update={update}
+              project={project}
             />
           </Fragment>
         ) : (
-          <StageField values={this.props.values} />
+          <StageField
+            values={this.props.values}
+            update={update}
+            project={project}
+          />
         )}
       </Form>
     );

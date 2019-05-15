@@ -84,14 +84,54 @@ const fetchApi = {
   },
   /** end project */
   /** start resource */
+  getResource(project, resource) {
+    return http.get(`/projects/${project}/resources/${resource}`).then(data => {
+      return data;
+    });
+  },
+
   createResource(project, info) {
     return http.post(`/projects/${project}/resources`, info).then(data => {
       return data;
     });
   },
 
+  updateResource(project, resource, info) {
+    return http
+      .put(`/projects/${project}/resources/${resource}`, info)
+      .then(data => {
+        return data;
+      });
+  },
+
+  deleteResource(project, resource) {
+    return http
+      .delete(`/projects/${project}/resources/${resource}`)
+      .then(data => {
+        return data;
+      });
+  },
+
   createStage(project, info) {
     return http.post(`/projects/${project}/stages`, info).then(data => {
+      return data;
+    });
+  },
+
+  getStage(project, stage) {
+    return http.get(`/projects/${project}/stages/${stage}`).then(data => {
+      return data;
+    });
+  },
+
+  updateStage(project, stage, info) {
+    return http.put(`/projects/${project}/stages/${stage}`, info).then(data => {
+      return data;
+    });
+  },
+
+  deleteStage(project, stage) {
+    return http.delete(`/projects/${project}/stages/${stage}`).then(data => {
       return data;
     });
   },

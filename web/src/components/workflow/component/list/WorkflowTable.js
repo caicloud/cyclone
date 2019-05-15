@@ -3,6 +3,7 @@ import { Modal, Button, Input, Table } from 'antd';
 import { FormatTime } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
+import { toJS } from 'mobx';
 
 const Search = Input.Search;
 const Fragment = React.Fragment;
@@ -38,6 +39,11 @@ class WorkflowTable extends React.Component {
     history.push(`/workflow/add?project=${project}`);
   };
 
+  updateWorkflow = (project, workflow) => {
+    const { history } = this.props;
+    history.push(`/workflow/${workflow}/update?project=${project}`);
+  };
+
   render() {
     const { project, data, matchPath } = this.props;
     const columns = [
@@ -68,9 +74,14 @@ class WorkflowTable extends React.Component {
         key: 'action',
         render: value => (
           <EllipsisMenu
-            menuFunc={() => {
-              this.deleteWorkflow(project, value);
-            }}
+            menuText={[
+              intl.get('operation.modify'),
+              intl.get('operation.delete'),
+            ]}
+            menuFunc={[
+              () => this.updateWorkflow(project, value),
+              () => this.deleteWorkflow(project, value),
+            ]}
           />
         ),
       },

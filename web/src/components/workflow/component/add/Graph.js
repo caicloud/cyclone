@@ -11,29 +11,56 @@ import AddStage from '../stage/AddStage';
 import classNames from 'classnames';
 import styles from '../index.module.less';
 import PropTypes from 'prop-types';
+import { inject, observer } from 'mobx-react';
 
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
 // elsewhere in the App or be generated from some other state upstream of this component.
+@inject('resource')
+@observer
 class Graph extends React.Component {
   GraphView;
 
   constructor(props) {
     super(props);
 
+    const { initialGraph } = props;
+
     this.state = {
       copiedNode: null,
-      graph: {
-        edges: [],
-        nodes: [],
-      },
-      nodePosition: {},
+      graph: _.isEmpty(initialGraph)
+        ? {
+            edges: [],
+            nodes: [],
+          }
+        : initialGraph,
+      nodePosition: this.getNodePosition(initialGraph),
       selected: null,
       visible: false,
+      stageInfo: {},
     };
 
     this.GraphView = React.createRef();
   }
+
+  componentWillUnmount() {
+    const { saveGraphWhenUnmount } = this.props;
+    const { graph } = this.state;
+    saveGraphWhenUnmount(graph);
+  }
+
+  getNodePosition = initialGraph => {
+    if (!_.isEmpty(initialGraph)) {
+      const nodes = _.get(initialGraph, 'nodes');
+      const pos = {};
+      _.forEach(nodes, v => {
+        pos[v.id] = _.pick(v, ['x', 'y']);
+      });
+      return pos;
+    }
+
+    return {};
+  };
 
   // Helper to find the index of a given node
   getNodeIndex(searchNode) {
@@ -60,8 +87,15 @@ class Graph extends React.Component {
   }
 
   onClose = () => {
-    const { graph, selected, nodePosition } = this.state;
-    const { values, setFieldValue } = this.props;
+    const { graph, selected, nodePosition, stageInfo } = this.state;
+    const {
+      values,
+      setFieldValue,
+      updateStagePosition,
+      update,
+      updateStage,
+      project,
+    } = this.props;
 
     let _state = {
       graph,
@@ -71,7 +105,8 @@ class Graph extends React.Component {
 
     const stages = _.get(values, 'stages', []);
     const currentStage = _.get(values, 'currentStage', '');
-    const number = currentStage.split('_')[1] - 1;
+    const number = currentStage.split('_')[1];
+    const stageName = _.get(values, `${currentStage}.metadata.name`);
     // using a new array like this creates a new memory reference
     // this will force a re-render
     if (!selected && !stages.includes(currentStage)) {
@@ -82,7 +117,7 @@ class Graph extends React.Component {
       _state.graph.nodes = [
         {
           id: currentStage, // NOTE: stage id
-          title: _.get(values, `${currentStage}.name`),
+          title: stageName,
           type: STAGE,
           ...position,
         },
@@ -90,8 +125,18 @@ class Graph extends React.Component {
       ];
       _state.nodePosition[currentStage] = position;
       setFieldValue('stages', [...stages, currentStage]);
+      updateStagePosition(currentStage, {
+        title: stageName,
+        ...position,
+      });
+    } else if (update) {
+      // update stage
+      const currentStage = _.get(stageInfo, stageName);
+      const stage = _.get(values, currentStage);
+      if (!_.isEqual(currentStage, stage)) {
+        updateStage(project, stageName, stage);
+      }
     }
-
     this.setState(_state);
   };
 
@@ -100,7 +145,7 @@ class Graph extends React.Component {
     const max = number.sort(function(a, b) {
       return b - a;
     })[0];
-    return max * 1 || 0;
+    return max * 1 + 1 || 0;
   };
 
   addStartNode = () => {
@@ -108,7 +153,7 @@ class Graph extends React.Component {
     // show Drawer
     this.setState({ visible: true, selected: null });
     // TODO(qme): stage id random
-    const stageId = `stage_${this.getStageId(_.get(values, 'stages')) + 1}`;
+    const stageId = `stage_${this.getStageId(_.get(values, 'stages'))}`;
     setFieldValue('currentStage', stageId);
     setFieldValue(stageId, {
       inputs: {
@@ -134,17 +179,24 @@ class Graph extends React.Component {
   // Called by 'drag' handler, etc..
   // to sync updates from D3 with the graph
   onUpdateNode = viewNode => {
+    const { updateStagePosition } = this.props;
     const graph = this.state.graph;
     const i = this.getNodeIndex(viewNode);
     graph.nodes[i] = viewNode;
-
+    updateStagePosition(viewNode.id, _.pick(viewNode, ['title', 'x', 'y']));
     this.setState({ graph });
   };
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
     const { nodePosition } = this.state;
-    const { setFieldValue } = this.props;
+    const {
+      setFieldValue,
+      update,
+      resource: { getStage },
+      project,
+      values,
+    } = this.props;
     // Deselect events will send Null viewNode
     let state = { selected: viewNode, nodePosition };
     const nodeId = _.get(viewNode, 'id');
@@ -156,6 +208,20 @@ class Graph extends React.Component {
       setFieldValue('currentStage', nodeId);
     } else {
       state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
+    }
+
+    if (update) {
+      const stageName = _.get(viewNode, 'title');
+      getStage(project, stageName, data => {
+        const info = {
+          name: _.get(data, 'metadata.name'),
+          ..._.get(data, 'spec.pod'),
+        };
+        if (!_.get(values, nodeId)) {
+          setFieldValue(nodeId, info);
+        }
+        this.setState({ stageInfo: { [stageName]: info } });
+      });
     }
     this.setState(state);
   };
@@ -246,7 +312,10 @@ class Graph extends React.Component {
         graph,
         selected: viewEdge,
       });
-      setStageDepned(graph.edges);
+      setStageDepned(
+        _.get(targetViewNode, 'id'),
+        _.get(sourceViewNode, 'title')
+      );
     }
   };
 
@@ -270,6 +339,15 @@ class Graph extends React.Component {
 
   // Called when an edge is deleted
   onDeleteEdge = (viewEdge, edges) => {
+    const { setStageDepned } = this.props;
+    const {
+      graph: { nodes },
+    } = this.state;
+    const sourceNode = _.find(
+      nodes,
+      n => _.get(n, 'id') === _.get(viewEdge, 'source')
+    );
+    setStageDepned(_.get(viewEdge, 'target'), _.get(sourceNode, 'title'));
     const graph = this.state.graph;
     graph.edges = edges;
     this.setState({
@@ -324,7 +402,7 @@ class Graph extends React.Component {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-    const { values } = this.props;
+    const { values, update, project } = this.props;
 
     return (
       <div id="graph" className={styles['graph']}>
@@ -366,6 +444,8 @@ class Graph extends React.Component {
             key={_.get(values, 'currentStage')}
             setFieldValue={this.props.setFieldValue}
             values={this.props.values}
+            update={update}
+            project={project}
           />
         </Drawer>
       </div>
@@ -377,6 +457,8 @@ Graph.propTypes = {
   values: PropTypes.object,
   setFieldValue: PropTypes.func,
   setStageDepned: PropTypes.func,
+  updateStagePosition: PropTypes.func,
+  initialGraph: PropTypes.object,
 };
 
 export default Graph;

@@ -33,12 +33,12 @@ class TemplateStage extends React.Component {
     return dom;
   };
   render() {
-    const { stageId, values } = this.props;
+    const { stageId, values, update, project } = this.props;
     return (
       <Fragment>
         <Field
           label={intl.get('name')}
-          name={`${stageId}.name`}
+          name={`${stageId}.metadata.name`}
           component={InputField}
           hasFeedback
           required
@@ -51,6 +51,8 @@ class TemplateStage extends React.Component {
               `${stageId}.spec.pod.inputs.resources`,
               []
             )}
+            update={update}
+            project={project}
           />
           <FieldArray
             name={`${stageId}.spec.pod.inputs.arguments`}

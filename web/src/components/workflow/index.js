@@ -8,12 +8,12 @@ const WorkFlowRoutes = ({ match }) => {
   return (
     <Switch>
       <Route path="/workflow" exact component={Workflow} />
-      <Route path={`${match.path}/add`} exact component={CreateForm} />
+      <Route path={`${match.path}/add`} component={CreateForm} />
       <Route
-        path={`${match.path}/:workflowName`}
-        exact
-        component={WorkflowDetail}
+        path={`${match.path}/:workflowName/update`}
+        component={CreateForm}
       />
+      <Route path={`${match.path}/:workflowName`} component={WorkflowDetail} />
     </Switch>
   );
 };

@@ -57,7 +57,7 @@ class ResourceFrom extends React.Component {
     } else {
       data.spec.parameters = resourceParametersField['DockerRegistry'];
     }
-
+    console.log('resource data', data);
     return data;
   };
 

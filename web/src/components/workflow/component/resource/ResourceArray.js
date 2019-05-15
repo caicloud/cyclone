@@ -2,10 +2,13 @@ import { Button, Row, Col, Form } from 'antd';
 import { FieldArray } from 'formik';
 import { defaultFormItemLayout } from '@/lib/const';
 import Resource from './Form';
+import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 
 const FormItem = Form.Item;
 
+@inject('resource')
+@observer
 class ResourceArray extends React.Component {
   static propTypes = {
     resources: PropTypes.array,
@@ -16,9 +19,42 @@ class ResourceArray extends React.Component {
   state = {
     visible: false,
   };
+
+  editResource = r => {
+    const {
+      update,
+      project,
+      resource: { getResource },
+    } = this.props;
+    let state = {
+      modifyData: r,
+      visible: true,
+    };
+    console.log('rrrr', r, update);
+
+    if (update) {
+      getResource(project, r.name, data => {
+        console.log('^^^^^');
+        const info = _.merge(
+          _.pick(data, ['metadata.name', 'spec']),
+          _.pick(r, ['type', 'path'])
+        );
+        state.modifyData = info;
+      });
+    }
+    console.log('qmeqme', state.modifyData);
+    this.setState(state);
+  };
   render() {
-    const { resources, resourcesField, type = 'inputs' } = this.props;
+    const {
+      resources,
+      resourcesField,
+      type = 'inputs',
+      update,
+      project,
+    } = this.props;
     const { visible, modifyData } = this.state;
+    console.log('modifyData', modifyData);
     return (
       <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
         <FieldArray
@@ -41,7 +77,9 @@ class ResourceArray extends React.Component {
                       type="circle"
                       icon="edit"
                       onClick={() => {
-                        this.setState({ visible: true, modifyData: r });
+                        this.editResource(r);
+                        // console.log('r', r);
+                        // this.setState({ visible: true, modifyData: r });
                       }}
                     />
                     <Button
@@ -60,17 +98,19 @@ class ResourceArray extends React.Component {
               >
                 {intl.get('workflow.addResource')}
               </Button>
-              <Resource
-                type={type}
-                handleModalClose={() => {
-                  this.setState({ visible: false });
-                }}
-                SetReasourceValue={value => {
-                  arrayHelpers.push(value);
-                }}
-                visible={visible}
-                modifyData={modifyData}
-              />
+              {visible && (
+                <Resource
+                  type={type}
+                  handleModalClose={() => {
+                    this.setState({ visible: false });
+                  }}
+                  SetReasourceValue={value => {
+                    arrayHelpers.push(value);
+                  }}
+                  visible={visible}
+                  modifyData={modifyData}
+                />
+              )}
             </div>
           )}
         />

@@ -89,7 +89,7 @@ class BindResource extends React.Component {
         {addWay === 'exist' ? (
           <Field
             label={intl.get('type')}
-            name="name"
+            name="matadata.name"
             required
             handleSelectChange={val => {
               setFieldValue('name', val);
@@ -101,7 +101,7 @@ class BindResource extends React.Component {
           <Fragment>
             <Field
               label={intl.get('name')}
-              name="name"
+              name="matadata.name"
               component={InputField}
               formItemLayout={modalFormItemLayout}
               hasFeedback

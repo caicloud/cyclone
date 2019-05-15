@@ -1,10 +1,10 @@
 import { Steps, Button, Form } from 'antd';
-
 import Graph from './Graph';
 import BasicInfo from './BasicInfo';
 import styles from '../index.module.less';
 import classNames from 'classnames/bind';
 import PropTypes from 'prop-types';
+import { tranformStage } from '@/lib/util';
 
 const styleCls = classNames.bind(styles);
 const Step = Steps.Step;
@@ -28,12 +28,21 @@ class App extends React.Component {
     handleSubmit: PropTypes.func,
     submitting: PropTypes.bool,
     setSubmitting: PropTypes.func,
+    saveStagePostition: PropTypes.func,
+    workFlowInfo: PropTypes.object,
   };
 
   constructor(props) {
     super(props);
+    const { workFlowInfo } = props;
     this.state = {
       current: 0,
+      graph: _.isEmpty(workFlowInfo)
+        ? {}
+        : tranformStage(
+            _.get(workFlowInfo, 'spec.stages'),
+            _.get(workFlowInfo, 'metadata.annotations.stagePosition')
+          ),
     };
   }
 
@@ -54,8 +63,20 @@ class App extends React.Component {
     this.setState({ current });
   }
 
+  saveGraph = graphData => {
+    this.setState({ graph: graphData });
+  };
+
   getStepContent = current => {
-    const { setFieldValue, values, handleDepend } = this.props;
+    const {
+      setFieldValue,
+      values,
+      handleDepend,
+      saveStagePostition,
+      workFlowInfo,
+      project,
+    } = this.props;
+    const { graph } = this.state;
     switch (current) {
       case 0: {
         return <BasicInfo />;
@@ -65,7 +86,12 @@ class App extends React.Component {
           <Graph
             setFieldValue={setFieldValue}
             values={values}
+            initialGraph={graph}
+            update={!_.isEmpty(workFlowInfo)}
+            project={project}
             setStageDepned={handleDepend}
+            updateStagePosition={saveStagePostition}
+            saveGraphWhenUnmount={this.saveGraph}
           />
         );
       }
@@ -78,7 +104,7 @@ class App extends React.Component {
   render() {
     const { current } = this.state;
     const { handleSubmit } = this.props;
-
+    console.log('value', this.props.values);
     return (
       <Form>
         <Steps current={current} size="small">

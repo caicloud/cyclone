@@ -23,7 +23,7 @@ class StageField extends React.Component {
   };
 
   render() {
-    const { values } = this.props;
+    const { values, update, project } = this.props;
     const currentStage = _.get(values, 'currentStage');
     if (!currentStage) {
       return <Spin />;
@@ -32,7 +32,7 @@ class StageField extends React.Component {
       <Fragment>
         <Field
           label={intl.get('name')}
-          name={`${currentStage}.name`}
+          name={`${currentStage}.metadata.name`}
           component={InputField}
           hasFeedback
           required
@@ -41,6 +41,8 @@ class StageField extends React.Component {
           <ResourceArray
             resourcesField={`${currentStage}.inputs.resources`}
             resources={_.get(values, `${currentStage}.inputs.resources`, [])}
+            update={update}
+            project={project}
           />
         </SectionCard>
         <SectionCard title={intl.get('config')}>
