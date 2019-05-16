@@ -545,6 +545,7 @@ func OpenCluster(ctx context.Context, tenant, name string) error {
 	if err != nil {
 		return err
 	}
+	secret.Labels[meta.LabelIntegrationSchedulableCluster] = meta.LabelValueTrue
 
 	return updateSecret(svrcommon.TenantNamespace(tenant), svrcommon.IntegrationSecret(name), in.Spec.Type, secret)
 }
@@ -579,6 +580,9 @@ func CloseCluster(ctx context.Context, tenant, name string) error {
 	secret, err := buildSecret(tenant, in)
 	if err != nil {
 		return err
+	}
+	if _, ok := secret.Labels[meta.LabelIntegrationSchedulableCluster]; ok {
+		delete(secret.Labels, meta.LabelIntegrationSchedulableCluster)
 	}
 
 	return updateSecret(svrcommon.TenantNamespace(tenant), svrcommon.IntegrationSecret(name), in.Spec.Type, secret)
