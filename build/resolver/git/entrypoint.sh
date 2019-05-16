@@ -144,6 +144,8 @@ parseRevision() {
 parseRevision
 
 pull() {
+    git config --global http.sslVerify false
+
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
     if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
         cd $WORKDIR/data
