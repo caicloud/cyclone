@@ -5,6 +5,7 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -77,7 +78,7 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 	}
 
 	err := usage.DeletePVCUsageWatcher(client, nsname)
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete pvc usage watcher in namespace %s failed %s", nsname, err)
 		return err
 	}
