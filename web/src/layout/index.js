@@ -1,4 +1,4 @@
-import { Layout, Menu, Icon, Popover } from 'antd';
+import { Layout, Menu, Icon, Popover, Tooltip } from 'antd';
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import Routes from '../routes';
@@ -78,6 +78,18 @@ class CoreLayout extends Component {
                 onClick={this.onLangClick}
               />
             </Popover>
+            <Tooltip
+              placement="bottomRight"
+              title={intl.get('tips.officialWebsite')}
+            >
+              <a
+                href="https://cyclone.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon className="headbar-icon" type="book" />
+              </a>
+            </Tooltip>
           </div>
         </Header>
         <Layout style={{ marginTop: 64 }}>
@@ -128,36 +140,6 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.integration')}</span>
                 </NavLink>
               </Menu.Item>
-              {/* TODO: manage and setting */}
-              {/* <SubMenu
-                key="manage"
-                title={
-                  <span>
-                    <Icon type="team" />
-                    管理中心
-                  </span>
-                }
-              >
-                <Menu.Item key="tenant">租户</Menu.Item>
-                <Menu.Item key="user">
-                  <NavLink activeClassName="active">
-                    用户
-                  </NavLink>
-                </Menu.Item>
-              </SubMenu>
-              <SubMenu
-                key="setting"
-                title={
-                  <span>
-                    <Icon type="setting" />
-                    配置中心
-                  </span>
-                }
-              >
-                <Menu.Item>
-                  <span>设置</span>
-                </Menu.Item>
-              </SubMenu> */}
             </Menu>
           </Sider>
           <Layout

@@ -18,6 +18,8 @@ image: Image
 env: Env
 key: Key
 custom: Custom
+tips:
+  officialWebsite: Open Cyclone official website for docs and guides
 operation:
   add: Add
   delete: Delete
