@@ -9,29 +9,23 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/biz/pvc"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
-	"github.com/caicloud/cyclone/pkg/server/biz/usage"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
-	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
-// ListIntegrations get integrations the given tenant has access to.
-// - ctx Context of the reqeust
-// - tenant Tenant
-// - query Query params includes start, limit and filter.
+// ListIntegrations get integrations for the given tenant.
 func ListIntegrations(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
 	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
@@ -59,30 +53,14 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 	}
 
 	for _, secret := range items {
-		integration, err := SecretToIntegration(&secret)
+		i, err := integration.FromSecret(&secret)
 		if err != nil {
 			continue
 		}
-		integrations = append(integrations, *integration)
+		integrations = append(integrations, *i)
 	}
 
 	return types.NewListResponse(int(size), integrations[query.Start:end]), nil
-}
-
-// SecretToIntegration translates secret to integration
-func SecretToIntegration(secret *core_v1.Secret) (*api.Integration, error) {
-	integration := &api.Integration{
-		ObjectMeta: secret.ObjectMeta,
-	}
-
-	// retrieve integration name
-	integration.Name = svrcommon.SecretIntegration(secret.Name)
-	err := json.Unmarshal(secret.Data[svrcommon.SecretKeyIntegration], &integration.Spec)
-	if err != nil {
-		return integration, err
-	}
-
-	return integration, nil
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.
@@ -100,8 +78,8 @@ func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) 
 
 func createIntegration(tenant string, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
-		// open cluster for the tenant, create namespace and pvc
-		err := OpenClusterForTenant(in, tenant)
+		// Open cluster for the tenant, create namespace and pvc
+		err := cluster.Open(handler.K8sClient, in, tenant)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +92,7 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 		}
 	}
 
-	secret, err := buildSecret(tenant, in)
+	secret, err := integration.ToSecret(tenant, in)
 	if err != nil {
 		return nil, err
 	}
@@ -129,220 +107,6 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 	return in, nil
 }
 
-// OpenClusterForTenant opens cluster to run workload.
-func OpenClusterForTenant(in *api.Integration, tenantName string) (err error) {
-	// Convert the returned error if it is a k8s error.
-	defer func() {
-		err = cerr.ConvertK8sError(err)
-	}()
-
-	cluster := in.Spec.Cluster
-
-	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
-	if err != nil {
-		log.Errorf("new cluster client for tenant %s error %v", tenantName, err)
-		return
-	}
-
-	tenant, err := getTenant(tenantName)
-	if err != nil {
-		log.Errorf("get tenant %s info error %v", tenantName, err)
-		return
-	}
-
-	if cluster.Namespace != "" && cluster.Namespace != svrcommon.TenantNamespace(tenant.Name) {
-		// check if namespace exist
-		_, err = client.CoreV1().Namespaces().Get(cluster.Namespace, meta_v1.GetOptions{})
-		if err != nil {
-			log.Errorf("get namespace %s error %v", cluster.Namespace, err)
-			return
-		}
-	} else {
-		// create namespace
-		cluster.Namespace = svrcommon.TenantNamespace(tenant.Name)
-		err = svrcommon.CreateNamespace(tenant.Name, client)
-		if err != nil {
-			if !errors.IsAlreadyExists(err) {
-				log.Errorf("Create namespace for tenant %s error %v", tenantName, err)
-				return
-			}
-			log.Infof("Namespace %s already exist", cluster.Namespace)
-		}
-	}
-
-	// create resource quota
-	err = svrcommon.CreateResourceQuota(tenant, cluster.Namespace, client)
-	if err != nil {
-		if !errors.IsAlreadyExists(err) {
-			log.Errorf("Create resource quota for tenant %s error %v", tenantName, err)
-			return
-		}
-		log.Infof("Resource quota for tenant %s already exist", tenantName)
-	}
-
-	// If a PVC has been configured, check existence of it.
-	if cluster.PVC != "" && cluster.PVC != svrcommon.TenantPVC(tenant.Name) {
-		_, err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(cluster.PVC, meta_v1.GetOptions{})
-		if err != nil {
-			log.Errorf("Get pvc %s error %v", cluster.PVC, err)
-			return
-		}
-	} else {
-		if tenant.Spec.PersistentVolumeClaim.Size == "" {
-			tenant.Spec.PersistentVolumeClaim.Size = config.Config.DefaultPVCConfig.Size
-		}
-		if tenant.Spec.PersistentVolumeClaim.StorageClass == "" {
-			tenant.Spec.PersistentVolumeClaim.StorageClass = config.Config.DefaultPVCConfig.StorageClass
-		}
-
-		err = pvc.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
-			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, client)
-		if err != nil {
-			if !errors.IsAlreadyExists(err) {
-				log.Errorf("create pvc for tenant %s error %v", tenantName, err)
-				return
-			}
-			log.Infof("PVC for tenant %s already exist", tenantName)
-		}
-
-		cluster.PVC = svrcommon.TenantPVC(tenant.Name)
-	}
-
-	clusterName := in.Spec.Cluster.ClusterName
-	if in.Spec.Cluster.IsControlCluster {
-		clusterName = common.ControlClusterName
-	}
-
-	// Create ExecutionCluster resource for Workflow Engine to use
-	_, err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Create(&v1alpha1.ExecutionCluster{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name: clusterName,
-		},
-		Spec: v1alpha1.ExecutionClusterSpec{
-			Credential: cluster.Credential,
-		},
-	})
-
-	// Execution cluster is system level, so different tenants may try to create ExecutionCluster CR for the same
-	// cluster, so if the CR already exists, just ignore it.
-	if err != nil && errors.IsAlreadyExists(err) {
-		log.Infof("ExecutionCluster resource for %s already exist", in.Name)
-		return nil
-	}
-
-	return err
-}
-
-// CloseClusterForTenant close worker cluster for the tenant.
-// It is dangerous since all pvc data will lost.
-func CloseClusterForTenant(in *api.Integration, tenant string) (err error) {
-	// Convert the returned error if it is a k8s error.
-	defer func() {
-		err = cerr.ConvertK8sError(err)
-	}()
-	cluster := in.Spec.Cluster
-
-	// new cluster clientset
-	client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
-	if err != nil {
-		log.Errorf("new cluster client error %v", err)
-		return
-	}
-
-	// delete namespace which is created by cyclone
-	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-		// if is a user cluster and namespace are created by cyclone, delete the namespace directly
-		if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-			err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
-					return
-				}
-				log.Warningf("namespace %s not found", cluster.Namespace)
-				err = nil
-			}
-
-			// if namespace is deleted, will exit, no need delete others resources.
-			return
-		}
-	}
-
-	// delete resource quota
-	quotaName := svrcommon.TenantResourceQuota(tenant)
-	err = client.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			log.Errorf("delete resource quota %s error %v", quotaName, err)
-			return
-		}
-		log.Warningf("resource quota %s not found", quotaName)
-		err = nil
-	}
-
-	// Delete the PVC watcher deployment.
-	err = usage.DeletePVCUsageWatcher(client, cluster.Namespace)
-	if err != nil {
-		log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
-	}
-
-	// delete pvc which is created by cyclone
-	if cluster.PVC == svrcommon.TenantPVC(tenant) {
-		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				log.Errorf("delete pvc %s error %v", cluster.PVC, err)
-				return
-			}
-			log.Warningf("pvc %s not found", cluster.PVC)
-			err = nil
-		}
-		return
-	}
-
-	// TODO(ChenDe): Different tenants may use the same execution cluster, so we can't delete the ExecutionCluster simply here.
-	//err = handler.K8sClient.CycloneV1alpha1().ExecutionClusters().Delete(in.Spec.Cluster.ClusterName, &meta_v1.DeleteOptions{})
-	//if err != nil {
-	//	log.Warningf("Delete ExecutionCluster resource error: %v", err)
-	//	return nil
-	//}
-
-	return
-}
-
-func buildSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
-	objectMeta := in.ObjectMeta
-	// build secret name
-	objectMeta.Name = svrcommon.IntegrationSecret(in.Name)
-	if objectMeta.Labels == nil {
-		objectMeta.Labels = make(map[string]string)
-	}
-
-	objectMeta.Labels[meta.LabelIntegrationType] = string(in.Spec.Type)
-	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
-		worker := in.Spec.Cluster.IsWorkerCluster
-		if worker {
-			objectMeta.Labels = meta.AddSchedulableClusterLabel(objectMeta.Labels)
-		}
-	}
-
-	integration, err := json.Marshal(in.Spec)
-	if err != nil {
-		log.Errorf("Marshal integration %v for tenant %s error %v", in.Name, tenant, err)
-		return nil, err
-	}
-	data := make(map[string][]byte)
-	data[svrcommon.SecretKeyIntegration] = integration
-
-	secret := &core_v1.Secret{
-		ObjectMeta: objectMeta,
-		Data:       data,
-	}
-
-	return secret, nil
-}
-
 // GetIntegration gets an integration with the given name under given tenant.
 func GetIntegration(ctx context.Context, tenant, name string) (*api.Integration, error) {
 	return getIntegration(tenant, name)
@@ -350,65 +114,19 @@ func GetIntegration(ctx context.Context, tenant, name string) (*api.Integration,
 
 func getIntegration(tenant, name string) (*api.Integration, error) {
 	secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
-		svrcommon.IntegrationSecret(name), meta_v1.GetOptions{})
+		integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return nil, cerr.ConvertK8sError(err)
 	}
 
-	return SecretToIntegration(secret)
-}
-
-func updateClusterIntegration(tenant, name string, in *api.Integration) error {
-	oldIn, err := getIntegration(tenant, name)
-	if err != nil {
-		log.Errorf("get integration %s error %v", name, err)
-		return err
-	}
-
-	oldCluster := oldIn.Spec.Cluster
-	cluster := in.Spec.Cluster
-	if cluster.Namespace == "" {
-		cluster.Namespace = oldCluster.Namespace
-	} else if cluster.Namespace == oldCluster.Namespace && cluster.PVC == "" {
-		cluster.PVC = oldCluster.PVC
-	}
-	// turn on worker cluster
-	if !oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
-		// open cluster for the tenant, create namespace and pvc
-		err := OpenClusterForTenant(in, tenant)
-		if err != nil {
-			return err
-		}
-	}
-
-	// turn off worker cluster
-	if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
-		// close cluster for the tenant, delete namespace
-		err := CloseClusterForTenant(oldIn, tenant)
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO(zhujian7): namespace or pvc changed
-	if oldCluster.IsWorkerCluster && cluster.IsWorkerCluster {
-		if oldCluster.Namespace != cluster.Namespace {
-			log.Info("can not process updating namespace, namespace changed from %s to %s", oldCluster.Namespace, cluster.Namespace)
-		}
-
-		if oldCluster.PVC != cluster.PVC {
-			log.Info("can not process updating pvc, pvc changed from %s to %s", oldCluster.PVC, cluster.PVC)
-		}
-	}
-
-	return nil
+	return integration.FromSecret(secret)
 }
 
 // UpdateIntegration updates an integration with the given tenant name and integration name.
 // If updated successfully, return the updated integration.
 func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
-		err := updateClusterIntegration(tenant, name, in)
+		err := cluster.UpdateClusterIntegration(handler.K8sClient, tenant, name, in)
 		if err != nil {
 			return nil, err
 		}
@@ -421,12 +139,12 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		}
 	}
 
-	secret, err := buildSecret(tenant, in)
+	secret, err := integration.ToSecret(tenant, in)
 	if err != nil {
 		return nil, err
 	}
 
-	err = updateSecret(svrcommon.TenantNamespace(tenant), svrcommon.IntegrationSecret(name), in.Spec.Type, secret)
+	err = updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
 	if err != nil {
 		return nil, err
 	}
@@ -443,8 +161,8 @@ func updateSecret(namespace, secretName string, inteType api.IntegrationType, se
 		}
 
 		newSecret := origin.DeepCopy()
-		newSecret.Annotations = MergeMap(secret.Annotations, newSecret.Annotations)
-		newSecret.Labels = MergeMap(secret.Labels, newSecret.Labels)
+		newSecret.Annotations = utils.MergeMap(secret.Annotations, newSecret.Annotations)
+		newSecret.Labels = utils.MergeMap(secret.Labels, newSecret.Labels)
 		newSecret.Labels[meta.LabelIntegrationType] = string(inteType)
 
 		// Only use new datas to overwrite old ones, and keep others not needed to be overwritten, such as repos.
@@ -474,7 +192,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 		return cerr.ErrorClusterNotClosed.Error(in.Name)
 	}
 
-	secretName := svrcommon.IntegrationSecret(name)
+	secretName := integration.GetSecretName(name)
 	if in.Spec.Type == api.SCM {
 		// Cleanup SCM webhooks for integrated SCM.
 		secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
@@ -494,7 +212,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 
 		if len(repos) > 0 {
 			log.Infoln("Delete webhook.")
-			integration, err := SecretToIntegration(secret)
+			integration, err := integration.FromSecret(secret)
 			if err != nil {
 				log.Error(err)
 				return err
@@ -535,19 +253,18 @@ func OpenCluster(ctx context.Context, tenant, name string) error {
 	}
 
 	// open cluster for the tenant, create namespace and pvc
-	err = OpenClusterForTenant(in, tenant)
+	err = cluster.Open(handler.K8sClient, in, tenant)
 	if err != nil {
 		return err
 	}
 
 	in.Spec.Cluster.IsWorkerCluster = true
-	secret, err := buildSecret(tenant, in)
+	secret, err := integration.ToSecret(tenant, in)
 	if err != nil {
 		return err
 	}
-	secret.Labels[meta.LabelIntegrationSchedulableCluster] = meta.LabelValueTrue
 
-	return updateSecret(svrcommon.TenantNamespace(tenant), svrcommon.IntegrationSecret(name), in.Spec.Type, secret)
+	return updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
 }
 
 // CloseCluster closes cluster type integration that used to execute workflow
@@ -565,49 +282,23 @@ func CloseCluster(ctx context.Context, tenant, name string) error {
 		return cerr.ErrorUnknownInternal.Error("cluster is nil")
 	}
 
-	cluster := in.Spec.Cluster
-	if !cluster.IsWorkerCluster {
+	if !in.Spec.Cluster.IsWorkerCluster {
 		return nil
 	}
 
 	// close cluster for the tenant, delete namespace
-	err = CloseClusterForTenant(in, tenant)
+	err = cluster.Close(handler.K8sClient, in, tenant)
 	if err != nil {
 		return err
 	}
 
 	in.Spec.Cluster.IsWorkerCluster = false
-	secret, err := buildSecret(tenant, in)
+	secret, err := integration.ToSecret(tenant, in)
 	if err != nil {
 		return err
 	}
-	if _, ok := secret.Labels[meta.LabelIntegrationSchedulableCluster]; ok {
-		delete(secret.Labels, meta.LabelIntegrationSchedulableCluster)
-	}
 
-	return updateSecret(svrcommon.TenantNamespace(tenant), svrcommon.IntegrationSecret(name), in.Spec.Type, secret)
-}
-
-// GetSchedulableClusters gets all clusters which are used to perform workload for this tenant.
-func GetSchedulableClusters(tenant string) ([]api.Integration, error) {
-	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
-		LabelSelector: meta.SchedulableClusterSelector(),
-	})
-	if err != nil {
-		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)
-		return nil, cerr.ConvertK8sError(err)
-	}
-
-	integrations := []api.Integration{}
-	for _, secret := range secrets.Items {
-		integration, err := SecretToIntegration(&secret)
-		if err != nil {
-			continue
-		}
-		integrations = append(integrations, *integration)
-	}
-
-	return integrations, nil
+	return updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
 }
 
 func getSCMSourceFromIntegration(tenant, integrationName string) (*api.SCMSource, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
@@ -120,7 +121,7 @@ func getWftMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getIntegrationMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(common.IntegrationSecret(name), meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -356,22 +357,6 @@ func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {
 	return nil
 }
 
-// MergeMap merges map 'in' into map 'out', if there is an element in both 'in' and 'out',
-// we will use the value of 'in'.
-func MergeMap(in, out map[string]string) map[string]string {
-	if in != nil {
-		if out == nil {
-			out = make(map[string]string)
-		}
-
-		for k, v := range in {
-			out[k] = v
-		}
-	}
-
-	return out
-}
-
 // CreateSCMWebhook creates webhook for SCM repo.
 func CreateSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) error {
 	sp, err := scm.GetSCMProvider(scmSource)
@@ -412,8 +397,7 @@ func generateWebhookURL(tenant, secret string) string {
 
 func getReposFromSecret(tenant, secretName string) (map[string][]string, error) {
 	repos := map[string][]string{}
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
-		common.IntegrationSecret(secretName), meta_v1.GetOptions{})
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(secretName, meta_v1.GetOptions{})
 	if err != nil {
 		return repos, cerr.ConvertK8sError(err)
 	}

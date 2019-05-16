@@ -12,6 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -82,8 +83,8 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 		}
 		newProject := origin.DeepCopy()
 		newProject.Spec = project.Spec
-		newProject.Annotations = MergeMap(project.Annotations, newProject.Annotations)
-		newProject.Labels = MergeMap(project.Labels, newProject.Labels)
+		newProject.Annotations = utils.MergeMap(project.Annotations, newProject.Annotations)
+		newProject.Labels = utils.MergeMap(project.Labels, newProject.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Update(newProject)
 		return err
 	})

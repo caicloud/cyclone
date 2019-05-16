@@ -16,6 +16,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -82,7 +83,7 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 
 // Cleanup cleans up given storage paths.
 func Cleanup(ctx context.Context, tenant string, request v1alpha1.StorageCleanup) error {
-	integrations, err := GetSchedulableClusters(tenant)
+	integrations, err := cluster.GetSchedulableClusters(handler.K8sClient, tenant)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	c_common "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
@@ -199,8 +200,8 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 		}
 		newStage := origin.DeepCopy()
 		newStage.Spec = stage.Spec
-		newStage.Annotations = MergeMap(stage.Annotations, newStage.Annotations)
-		newStage.Labels = MergeMap(stage.Labels, newStage.Labels)
+		newStage.Annotations = utils.MergeMap(stage.Annotations, newStage.Annotations)
+		newStage.Labels = utils.MergeMap(stage.Labels, newStage.Labels)
 		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStage)
 		return err
 	})

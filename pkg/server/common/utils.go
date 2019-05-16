@@ -24,13 +24,3 @@ func TenantPVC(tenant string) string {
 func TenantResourceQuota(tenant string) string {
 	return tenant
 }
-
-// IntegrationSecret returns secret name related to the integration
-func IntegrationSecret(i string) string {
-	return i
-}
-
-// SecretIntegration returns integration name related to the secret
-func SecretIntegration(s string) string {
-	return s
-}
