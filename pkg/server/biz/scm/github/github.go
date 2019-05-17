@@ -384,7 +384,7 @@ func newClientByToken(token string) *github.Client {
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
-	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+	httpClient := oauth2.NewClient(context.TODO(), tokenSource)
 
 	return github.NewClient(httpClient)
 }

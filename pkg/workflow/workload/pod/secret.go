@@ -93,7 +93,10 @@ func (r *SecretRefValue) Resolve(client clientset.Interface) (interface{}, error
 	var v interface{}
 	for index, path := range r.Jsonpaths {
 		var obj interface{}
-		json.Unmarshal(data, &obj)
+		err := json.Unmarshal(data, &obj)
+		if err != nil {
+			return nil, err
+		}
 		v, err = jsonpath.Get(path, obj)
 		if err != nil {
 			return nil, err
@@ -105,6 +108,9 @@ func (r *SecretRefValue) Resolve(client clientset.Interface) (interface{}, error
 		}
 		if index == 0 {
 			data, err = base64.StdEncoding.DecodeString(strV)
+			if err != nil {
+				return nil, err
+			}
 			v = string(data)
 		} else {
 			data = []byte(strV)

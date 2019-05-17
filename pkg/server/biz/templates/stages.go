@@ -59,7 +59,11 @@ func (l *StageTemplatesLoader) LoadStageTemplates(scene string) ([]*v1alpha1.Sta
 			log.Errorf("Convert template %s from YAML to JSON error: %v", f, err)
 			continue
 		}
-		json.Unmarshal(jsonData, &templates)
+		err = json.Unmarshal(jsonData, &templates)
+		if err != nil {
+			log.Errorf("unmarshal template failed: %v", err)
+			continue
+		}
 
 		results = append(results, templates...)
 	}

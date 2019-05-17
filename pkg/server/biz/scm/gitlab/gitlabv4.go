@@ -35,16 +35,6 @@ type V4 struct {
 	client *v4.Client
 }
 
-func newGitlabV4(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
-	client, err := newGitlabV4Client(scmCfg.Server, scmCfg.User, scmCfg.Token)
-	if err != nil {
-		log.Errorf("fail to new gitlab client as %v", err)
-		return nil, err
-	}
-
-	return &V4{scmCfg, client}, nil
-}
-
 // GetToken gets the token by the username and password of SCM config.
 func (g *V4) GetToken() (string, error) {
 	return getOauthToken(g.scmCfg)

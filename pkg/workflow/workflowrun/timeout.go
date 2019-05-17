@@ -150,19 +150,17 @@ func (m *TimeoutProcessor) process() {
 
 		// Kill stage pods.
 		stages := wfr.Status.Stages
-		if stages != nil {
-			for stage, status := range stages {
-				if status.Pod == nil {
-					continue
-				}
-				log.WithField("wfr", wfr.Name).
-					WithField("pod", status.Pod.Name).
-					WithField("stg", stage).
-					Info("To delete pod for expired WorkflowRun")
-				err = clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
-				if err != nil {
-					log.Error("Delete pod error: ", err)
-				}
+		for stage, status := range stages {
+			if status.Pod == nil {
+				continue
+			}
+			log.WithField("wfr", wfr.Name).
+				WithField("pod", status.Pod.Name).
+				WithField("stg", stage).
+				Info("To delete pod for expired WorkflowRun")
+			err = clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+			if err != nil {
+				log.Error("Delete pod error: ", err)
 			}
 		}
 

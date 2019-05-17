@@ -91,16 +91,16 @@ func newBitbucketServerClient(scmCfg *v1alpha1.SCMSource) (*server.V1Client, err
 			if isSupportToken {
 				config.AuthType = server.PersonalAccessToken
 				config.Token = scmCfg.Token
-				client, err = server.NewClient(baseClient, config)
+				return server.NewClient(baseClient, config)
 			} else {
 				config.AuthType = server.BasicAuth
 				config.Password = scmCfg.Token
-				client, err = server.NewClient(baseClient, config)
+				return server.NewClient(baseClient, config)
 			}
 		} else {
 			config.AuthType = server.BasicAuth
 			config.Password = scmCfg.Password
-			client, err = server.NewClient(baseClient, config)
+			return server.NewClient(baseClient, config)
 		}
 	default:
 		return nil, cerr.ErrorNotImplemented.Error(fmt.Sprintf("unsupported auth type: %v", scmCfg.AuthType))

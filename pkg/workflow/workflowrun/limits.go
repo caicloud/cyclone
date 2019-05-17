@@ -89,6 +89,8 @@ func (w *LimitedQueues) AutoScan() {
 			for _, q := range w.Queues {
 				scanQueue(q)
 			}
+		default:
+			continue
 		}
 	}
 }

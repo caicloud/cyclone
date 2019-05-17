@@ -521,7 +521,10 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 		o.recorder.Event(o.wfr, corev1.EventTypeNormal, "GC", "GC is performed succeed.")
 
 		o.wfr.Status.Cleaned = true
-		o.Update()
+		err := o.Update()
+		if err != nil {
+			log.WithField("wfr", o.wfr.Name).Warn("Update wfr error: ", err)
+		}
 	}
 
 	return nil

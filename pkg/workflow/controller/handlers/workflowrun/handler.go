@@ -60,7 +60,10 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	}
 
 	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
-	h.TimeoutProcessor.Add(originWfr)
+	err := h.TimeoutProcessor.Add(originWfr)
+	if err != nil {
+		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed", err)
+	}
 
 	wfr := originWfr.DeepCopy()
 	clusterClient := common.GetExecutionClusterClient(wfr)
@@ -104,7 +107,10 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 	// otherwise directly skip it.
 	if workflowrun.IsWorkflowRunTerminated(originWfr) {
 		// Send notification after workflowrun terminated.
-		h.sendNotification(originWfr)
+		err := h.sendNotification(originWfr)
+		if err != nil {
+			log.WithField("wfr", originWfr.Name).Warn("send notification failed", err)
+		}
 		return
 	}
 
@@ -155,8 +161,10 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 		return
 	}
 
-	operator.GC(true, true)
-	return
+	err = operator.GC(true, true)
+	if err != nil {
+		log.WithField("wfr", wfr.Name).Warn("GC failed", err)
+	}
 }
 
 // sendNotification sends notifications for workflowruns when:
