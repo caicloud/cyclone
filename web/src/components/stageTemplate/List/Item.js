@@ -42,7 +42,6 @@ class Item extends React.Component {
         }}
       />,
       <Popconfirm
-        className={styles['delete-ico']}
         key={key}
         title={intl.get('template.deletetips')}
         onConfirm={e => {
