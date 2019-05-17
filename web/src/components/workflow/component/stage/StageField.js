@@ -16,6 +16,9 @@ const TextareaField = MakeField(TextArea);
 class StageField extends React.Component {
   static propTypes = {
     values: PropTypes.object,
+    update: PropTypes.boolean,
+    project: PropTypes.string,
+    modify: PropTypes.boolean,
   };
 
   state = {
@@ -23,53 +26,60 @@ class StageField extends React.Component {
   };
 
   render() {
-    const { values, update, project } = this.props;
+    const { values, update, project, modify } = this.props;
     const currentStage = _.get(values, 'currentStage');
     if (!currentStage) {
       return <Spin />;
     }
+    const specKey = `${currentStage}.spec.pod`;
     return (
       <Fragment>
-        <Field
-          label={intl.get('name')}
-          name={`${currentStage}.metadata.name`}
-          component={InputField}
-          hasFeedback
-          required
-        />
+        {update && modify ? (
+          <FormItem label={intl.get('name')} {...defaultFormItemLayout}>
+            {_.get(values, `${currentStage}.metadata.name`)}
+          </FormItem>
+        ) : (
+          <Field
+            label={intl.get('name')}
+            name={`${currentStage}.metadata.name`}
+            component={InputField}
+            hasFeedback
+            required
+          />
+        )}
         <SectionCard title={intl.get('input')}>
           <ResourceArray
-            resourcesField={`${currentStage}.inputs.resources`}
-            resources={_.get(values, `${currentStage}.inputs.resources`, [])}
+            resourcesField={`${specKey}.inputs.resources`}
+            resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
           />
         </SectionCard>
         <SectionCard title={intl.get('config')}>
           <FieldArray
-            name={`${currentStage}.spec.containers`}
+            name={`${specKey}.spec.containers`}
             render={() => (
               <div>
-                {_.get(values, `${currentStage}.spec.containers`, []).map(
+                {_.get(values, `${specKey}.spec.containers`, []).map(
                   (a, index) => (
                     <Fragment key={index}>
                       <Field
                         label={intl.get('image')}
-                        name={`${currentStage}.spec.containers.${index}.image`}
+                        name={`${specKey}.spec.containers.${index}.image`}
                         component={InputField}
                         hasFeedback
                         required
                       />
                       <Field
                         label={'ENTRYPOINT'}
-                        name={`${currentStage}.spec.containers.${index}.command`}
+                        name={`${specKey}.spec.containers.${index}.command`}
                         component={TextareaField}
                         hasFeedback
                         required
                       />
                       <Field
                         label={'COMMAND'}
-                        name={`${currentStage}.spec.containers.${index}.args`}
+                        name={`${specKey}.spec.containers.${index}.args`}
                         component={TextareaField}
                         hasFeedback
                         required
@@ -79,12 +89,12 @@ class StageField extends React.Component {
                         {...defaultFormItemLayout}
                       >
                         <FieldArray
-                          name={`${currentStage}.spec.containers.${index}.env`}
+                          name={`${specKey}.spec.containers.${index}.env`}
                           render={arrayHelpers => (
                             <div>
                               {_.get(
                                 values,
-                                `${currentStage}.spec.containers.${index}.env`,
+                                `${specKey}.spec.containers.${index}.env`,
                                 []
                               ).length > 0 && (
                                 <Row gutter={16}>
@@ -94,14 +104,14 @@ class StageField extends React.Component {
                               )}
                               {_.get(
                                 values,
-                                `${currentStage}.spec.containers.${index}.env`,
+                                `${specKey}.spec.containers.${index}.env`,
                                 []
                               ).map((a, i) => (
                                 <Row key={i} gutter={16}>
                                   <Col span={11}>
                                     <Field
                                       key={a.name}
-                                      name={`${currentStage}.spec.containers.${index}.env.${i}.name`}
+                                      name={`${specKey}.spec.containers.${index}.env.${i}.name`}
                                       component={InputField}
                                       hasFeedback
                                     />
@@ -109,7 +119,7 @@ class StageField extends React.Component {
                                   <Col span={11}>
                                     <Field
                                       key={a.value}
-                                      name={`${currentStage}.spec.containers.${index}.env.${i}.value`}
+                                      name={`${specKey}.spec.containers.${index}.env.${i}.value`}
                                       component={InputField}
                                       hasFeedback
                                     />

@@ -64,7 +64,7 @@ class AddStage extends React.Component {
       'labels',
       'stage.cyclone.dev/template-kind',
     ]);
-    let inputs = _.merge({ name: '' }, _.pick(item, 'spec', {}));
+    let inputs = _.merge({ metadata: { name: '' } }, _.pick(item, 'spec', {}));
     if (templateType === 'cd') {
       inputs = this.transformTemplateData(inputs);
     }
@@ -154,6 +154,7 @@ class AddStage extends React.Component {
               stageId={_.get(values, 'currentStage')}
               data={templateData}
               update={update}
+              modify={modify}
               project={project}
             />
           </Fragment>
@@ -161,6 +162,7 @@ class AddStage extends React.Component {
           <StageField
             values={this.props.values}
             update={update}
+            modify={modify}
             project={project}
           />
         )}
@@ -173,6 +175,8 @@ AddStage.propTypes = {
   stageTemplate: PropTypes.object,
   setFieldValue: PropTypes.func,
   values: PropTypes.object,
+  update: PropTypes.boolean,
+  project: PropTypes.string,
 };
 
 export default AddStage;

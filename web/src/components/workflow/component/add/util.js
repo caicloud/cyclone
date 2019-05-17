@@ -1,5 +1,3 @@
-import { tranformStage } from '@/lib/util';
-
 const tramformArg = data => {
   const value = _.cloneDeep(data);
   const containers = _.get(value, 'spec.containers[0]');
@@ -11,6 +9,52 @@ const tramformArg = data => {
   return value;
 };
 
+export const formatStage = (data, fromCreate = true, requests, query) => {
+  const inputResources = _.get(data, `spec.pod.inputs.resources`, []);
+  const outputResources = _.get(data, `spec.pod.outputs.resources`, []);
+  let stage = {
+    metadata: _.get(data, 'metadata'),
+    spec: {
+      pod: tramformArg(
+        _.pick(_.get(data, 'spec.pod'), ['inputs', 'outputs', 'spec'])
+      ),
+    },
+  };
+  _.forEach(inputResources, (r, i) => {
+    stage.spec.pod.inputs.resources[i] = {
+      metadata: {
+        name: _.get(r, 'name'),
+      },
+      path: _.get(r, 'path'),
+    };
+    if (fromCreate) {
+      const resourceData = {
+        metadata: { name: _.get(r, 'name') },
+        ..._.pick(r, ['spec']),
+      };
+      requests.push({
+        type: 'createResource',
+        project: query.project,
+        data: resourceData,
+      });
+    }
+  });
+
+  _.forEach(outputResources, (r, i) => {
+    stage.spec.pod.outputs.resources[i] = { name: _.get(r, 'metadata.name') };
+    if (fromCreate) {
+      const resourceData = _.pick(r, ['spec', 'metadata.name']);
+      requests.push({
+        type: 'createResource',
+        project: query.project,
+        data: resourceData,
+      });
+    }
+  });
+
+  return stage;
+};
+
 export const formatSubmitData = (value, query, state) => {
   const { position, depend } = state;
   const requests = [];
@@ -19,6 +63,7 @@ export const formatSubmitData = (value, query, state) => {
     metadata: {
       name: _.get(value, 'metadata.name'),
       annotations: {
+        description: _.get(value, 'metadata.annotations.description'),
         stagePosition: JSON.stringify(position),
       },
     },
@@ -27,37 +72,18 @@ export const formatSubmitData = (value, query, state) => {
     },
   };
   _.forEach(stages, v => {
-    const inputResources = _.get(value, `${v}.inputs.resources`, []);
-    const outputResources = _.get(value, `${v}.outputs.resources`, []);
-    let stage = {
-      metadata: _.get(value, 'metadata'),
-      spec: {
-        pod: tramformArg(
-          _.pick(_.get(value, v), ['inputs', 'outputs', 'spec'])
-        ),
-      },
-    };
-    _.forEach(inputResources, (r, i) => {
-      const data = _.pick(r, ['spec', 'metadata.name']);
-      stage.spec.pod.inputs.resources[i] = _.pick(r, ['name', 'path']);
-      requests.push({ type: 'createResource', project: query.project, data });
-    });
-
-    _.forEach(outputResources, (r, i) => {
-      const data = _.pick(r, ['spec', 'metadata.name']);
-      stage.spec.pod.outputs.resources[i] = _.pick(r, ['name']);
-      requests.push({ type: 'createResource', project: query.project, data });
-    });
+    const currentStage = _.get(value, v);
+    const stageFormatData = formatStage(currentStage, true, requests, query);
     requests.push({
       type: 'createStage',
       project: query.project,
-      data: stage,
+      data: stageFormatData,
     });
 
     const workflowStage = {
-      artifacts: _.get(v, 'outputs.artifacts', []),
+      artifacts: _.get(currentStage, 'spec.pod.outputs.artifacts', []),
       depends: _.get(depend, v),
-      name: _.get(value, `${v}.name`),
+      name: _.get(currentStage, `metadata.name`),
     };
     workflowInfo.spec.stages.push(workflowStage);
   });
@@ -66,16 +92,12 @@ export const formatSubmitData = (value, query, state) => {
     project: query.project,
     data: workflowInfo,
   });
-  console.log('******', JSON.stringify(workflowInfo));
   return requests;
 };
 
 export const revertWorkflow = data => {
   const workflow = {
-    metadata: {
-      name: _.get(data, 'metadata.name'),
-      description: _.get(data, 'metadata.annotations.description'),
-    },
+    ..._.pick(data, ['metadata.name', 'metadata.annotations.description']),
     stages: [],
     currentStage: '',
   };

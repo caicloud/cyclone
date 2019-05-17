@@ -2,11 +2,6 @@ import http from './http.js';
 
 const fetchApi = {
   http,
-  listWorkflow(project, query) {
-    return http.get(`/projects/${project}/workflows`, query).then(data => {
-      return data;
-    });
-  },
   // start template
   fetchStageTemplates(query) {
     return http.get('/templates', query).then(data => {
@@ -54,6 +49,7 @@ const fetchApi = {
       return data;
     });
   },
+
   /** start project */
   listProjects() {
     return http.get('/projects').then(data => {
@@ -136,10 +132,24 @@ const fetchApi = {
     });
   },
   /** end resource */
+  listWorkflow(project, query) {
+    return http.get(`/projects/${project}/workflows`, query).then(data => {
+      return data;
+    });
+  },
+
   createWorkflow(project, info) {
     return http.post(`/projects/${project}/workflows`, info).then(data => {
       return data;
     });
+  },
+
+  updateWorkflow(project, workflow, info) {
+    return http
+      .put(`/projects/${project}/workflows/${workflow}`, info)
+      .then(data => {
+        return data;
+      });
   },
 
   removeWorkflow(project, workflow) {

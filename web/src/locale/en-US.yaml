@@ -18,6 +18,10 @@ image: Image
 env: Env
 key: Key
 custom: Custom
+GET: Get
+PUT: Update
+POST: Create
+DELETE: Delete
 tips:
   officialWebsite: Open Cyclone official website for docs and guides
 cluster:

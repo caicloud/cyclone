@@ -17,6 +17,13 @@ class Workflow {
   }
 
   @action.bound
+  updateWorkflow(project, workflow, info) {
+    return fetchApi.updateWorkflow(project, workflow, info).then(data => {
+      this.workflowDetail[workflow] = data;
+    });
+  }
+
+  @action.bound
   deleteWorkflow(project, workflow) {
     return fetchApi.removeWorkflow(project, workflow).then(() => {
       this.listWorklow(project);

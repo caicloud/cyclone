@@ -7,8 +7,10 @@ class Resource {
   @observable stageDetail = {};
 
   @action.bound
-  createResource(project, data) {
-    fetchApi.createResource(project, data);
+  createResource(project, data, cb) {
+    fetchApi.createResource(project, data).then(data => {
+      cb && cb();
+    });
   }
   @action.bound
   getResource(project, resource, cb) {
@@ -19,8 +21,15 @@ class Resource {
   }
 
   @action.bound
-  createStage(project, data) {
-    fetchApi.createStage(project, data);
+  updateResource(project, resource, info) {
+    fetchApi.updateResource(project, resource, info);
+  }
+
+  @action.bound
+  createStage(project, data, cb) {
+    fetchApi.createStage(project, data).then(data => {
+      cb && cb(data);
+    });
   }
 
   @action.bound

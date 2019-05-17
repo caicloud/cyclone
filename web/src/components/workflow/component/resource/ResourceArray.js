@@ -14,13 +14,16 @@ class ResourceArray extends React.Component {
     resources: PropTypes.array,
     resourcesField: PropTypes.string,
     type: PropTypes.oneOf(['inputs', 'outputs']),
+    update: PropTypes.boolean,
+    project: PropTypes.string,
+    resource: PropTypes.object,
   };
 
   state = {
     visible: false,
   };
 
-  editResource = r => {
+  editResource = (r, index) => {
     const {
       update,
       project,
@@ -29,21 +32,21 @@ class ResourceArray extends React.Component {
     let state = {
       modifyData: r,
       visible: true,
+      modifyIndex: index,
     };
-    console.log('rrrr', r, update);
 
     if (update) {
       getResource(project, r.name, data => {
-        console.log('^^^^^');
         const info = _.merge(
           _.pick(data, ['metadata.name', 'spec']),
           _.pick(r, ['type', 'path'])
         );
         state.modifyData = info;
+        this.setState(state);
       });
+    } else {
+      this.setState(state);
     }
-    console.log('qmeqme', state.modifyData);
-    this.setState(state);
   };
   render() {
     const {
@@ -53,8 +56,7 @@ class ResourceArray extends React.Component {
       update,
       project,
     } = this.props;
-    const { visible, modifyData } = this.state;
-    console.log('modifyData', modifyData);
+    const { visible, modifyData, modifyIndex } = this.state;
     return (
       <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
         <FieldArray
@@ -70,16 +72,14 @@ class ResourceArray extends React.Component {
               {/* TODO(qme): click resource list show modal and restore resource form */}
               {resources.map((r, i) => (
                 <Row gutter={16} key={i}>
-                  <Col span={10}>{r.name}</Col>
-                  <Col span={10}>{r.path}</Col>
+                  <Col span={10}>{_.get(r, 'name')}</Col>
+                  <Col span={10}>{_.get(r, 'path')}</Col>
                   <Col span={4}>
                     <Button
                       type="circle"
                       icon="edit"
                       onClick={() => {
-                        this.editResource(r);
-                        // console.log('r', r);
-                        // this.setState({ visible: true, modifyData: r });
+                        this.editResource(r, i);
                       }}
                     />
                     <Button
@@ -104,10 +104,14 @@ class ResourceArray extends React.Component {
                   handleModalClose={() => {
                     this.setState({ visible: false });
                   }}
-                  SetReasourceValue={value => {
-                    arrayHelpers.push(value);
+                  SetReasourceValue={(value, modify) => {
+                    modify
+                      ? arrayHelpers.replace(modifyIndex, value)
+                      : arrayHelpers.push(value);
                   }}
                   visible={visible}
+                  update={update}
+                  project={project}
                   modifyData={modifyData}
                 />
               )}

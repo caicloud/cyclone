@@ -2,8 +2,11 @@ import { Formik } from 'formik';
 import { Modal } from 'antd';
 import BindResource from './BindResource';
 import PropTypes from 'prop-types';
+import { inject, observer } from 'mobx-react';
 import { resourceParametersField } from '@/lib/const';
 
+@inject('resource')
+@observer
 class ResourceFrom extends React.Component {
   static propTypes = {
     SetReasourceValue: PropTypes.func,
@@ -11,6 +14,9 @@ class ResourceFrom extends React.Component {
     visible: PropTypes.bool,
     modifyData: PropTypes.object,
     handleModalClose: PropTypes.func,
+    update: PropTypes.boolean,
+    project: PropTypes.string,
+    resource: PropTypes.object,
   };
 
   static defaultProps = {
@@ -45,31 +51,55 @@ class ResourceFrom extends React.Component {
       path: '',
       resourceType: 'SCM',
       spec: {
-        parameters: [],
+        parameters:
+          type === 'inputs'
+            ? resourceParametersField['SCM']
+            : resourceParametersField['DockerRegistry'],
       },
     };
-
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
     }
-    if (type === 'inputs') {
-      data.spec.parameters = resourceParametersField['SCM'];
-    } else {
-      data.spec.parameters = resourceParametersField['DockerRegistry'];
-    }
-    console.log('resource data', data);
     return data;
   };
 
   submitResource = value => {
-    const { SetReasourceValue, handleModalClose } = this.props;
-    // TODO(qme): new add save data in store, then change stage resource field
-    SetReasourceValue(value);
+    const {
+      SetReasourceValue,
+      handleModalClose,
+      update,
+      project,
+      modifyData,
+      resource: { createResource, updateResource },
+    } = this.props;
+    const resourceObj = {
+      metadata: { name: _.get(value, 'name') },
+      ..._.pick(value, ['spec.parameters', 'spec.type']),
+    };
+    const modifyResource = !_.isEmpty(modifyData);
+    if (update) {
+      if (modifyResource) {
+        updateResource(
+          project,
+          _.get(value, 'metadata.name'),
+          resourceObj,
+          () => {
+            SetReasourceValue(value, modifyResource);
+          }
+        );
+      } else {
+        createResource(project, resourceObj, () => {
+          SetReasourceValue(value, modifyResource);
+        });
+      }
+    } else {
+      SetReasourceValue(value, modifyResource);
+    }
     this.setState({ visible: false });
     handleModalClose(false);
   };
   render() {
-    const { type } = this.props;
+    const { type, update, modifyData } = this.props;
     const { visible } = this.state;
     return (
       <Formik
@@ -84,7 +114,11 @@ class ResourceFrom extends React.Component {
             onCancel={this.closeModal}
             onOk={props.handleSubmit}
           >
-            <BindResource {...props} type={type} />
+            <BindResource
+              {...props}
+              type={type}
+              update={update && !_.isEmpty(modifyData)}
+            />
           </Modal>
         )}
       />

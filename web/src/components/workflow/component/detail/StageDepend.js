@@ -101,6 +101,7 @@ StageDepend.propTypes = {
   values: PropTypes.object,
   setStageDepned: PropTypes.func,
   stages: PropTypes.object,
+  detail: PropTypes.object,
 };
 
 export default StageDepend;

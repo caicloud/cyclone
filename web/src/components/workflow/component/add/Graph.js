@@ -11,12 +11,13 @@ import AddStage from '../stage/AddStage';
 import classNames from 'classnames';
 import styles from '../index.module.less';
 import PropTypes from 'prop-types';
+import { formatStage } from './util';
 import { inject, observer } from 'mobx-react';
 
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
 // elsewhere in the App or be generated from some other state upstream of this component.
-@inject('resource')
+@inject('resource', 'workflow')
 @observer
 class Graph extends React.Component {
   GraphView;
@@ -54,11 +55,10 @@ class Graph extends React.Component {
       const nodes = _.get(initialGraph, 'nodes');
       const pos = {};
       _.forEach(nodes, v => {
-        pos[v.id] = _.pick(v, ['x', 'y']);
+        pos[v.id] = _.pick(v, ['x', 'y', 'title']);
       });
       return pos;
     }
-
     return {};
   };
 
@@ -93,8 +93,8 @@ class Graph extends React.Component {
       setFieldValue,
       updateStagePosition,
       update,
-      updateStage,
       project,
+      resource: { updateStage, createStage },
     } = this.props;
 
     let _state = {
@@ -111,13 +111,13 @@ class Graph extends React.Component {
     // this will force a re-render
     if (!selected && !stages.includes(currentStage)) {
       const position = {
+        title: stageName,
         x: 100 + number * 140, // 动态随机定位
         y: 100 + number * 60,
       };
       _state.graph.nodes = [
         {
           id: currentStage, // NOTE: stage id
-          title: stageName,
           type: STAGE,
           ...position,
         },
@@ -126,15 +126,41 @@ class Graph extends React.Component {
       _state.nodePosition[currentStage] = position;
       setFieldValue('stages', [...stages, currentStage]);
       updateStagePosition(currentStage, {
-        title: stageName,
         ...position,
       });
-    } else if (update) {
-      // update stage
-      const currentStage = _.get(stageInfo, stageName);
-      const stage = _.get(values, currentStage);
-      if (!_.isEqual(currentStage, stage)) {
-        updateStage(project, stageName, stage);
+      // create stage
+      if (update) {
+        const stage = formatStage(
+          _.get(values, `${_.get(values, 'currentStage')}`),
+          false
+        );
+        createStage(project, stage, data => {
+          // update workflow stages after add stage
+          const workflowStage = {
+            name: _.get(data, 'metadata.name'),
+            artifacts: _.get(data, 'spec.pod.outputs.artifacts', []),
+            depends: [],
+          };
+          this.updateStageDepned(workflowStage, '', 'addStage');
+        });
+      }
+    }
+
+    if (selected && stages.includes(currentStage)) {
+      const nodeTitle = _.get(values, `${currentStage}.metadta.name`);
+      const stageNode = this.getViewNode(currentStage);
+      if (nodeTitle && nodeTitle !== _.get(stageNode, 'title')) {
+        const i = this.getNodeIndex(stageNode);
+        _state.graph.nodes[i].title = nodeTitle;
+        // TODO(qme): update stage depend
+      }
+
+      if (update) {
+        const stage = formatStage(_.get(values, currentStage), false);
+        const prevStageInfo = _.get(stageInfo, stageName);
+        if (!_.isEqual(stage, prevStageInfo)) {
+          updateStage(project, stageName, stage);
+        }
       }
     }
     this.setState(_state);
@@ -156,18 +182,23 @@ class Graph extends React.Component {
     const stageId = `stage_${this.getStageId(_.get(values, 'stages'))}`;
     setFieldValue('currentStage', stageId);
     setFieldValue(stageId, {
-      inputs: {
-        resources: [],
-      },
+      metadata: { name: '' },
       spec: {
-        containers: [
-          {
-            args: [],
-            command: [],
-            image: '',
-            env: [],
+        pod: {
+          inputs: {
+            resources: [],
           },
-        ],
+          spec: {
+            containers: [
+              {
+                args: [],
+                command: [],
+                image: '',
+                env: [],
+              },
+            ],
+          },
+        },
       },
     });
   };
@@ -206,22 +237,18 @@ class Graph extends React.Component {
     if (viewNode && !moved) {
       state.visible = true;
       setFieldValue('currentStage', nodeId);
+      if (update) {
+        const stageName = _.get(viewNode, 'title');
+        getStage(project, stageName, data => {
+          const info = _.pick(data, ['metadata.name', 'spec']);
+          if (!_.get(values, nodeId)) {
+            setFieldValue(nodeId, info);
+          }
+          this.setState({ stageInfo: { [stageName]: info } });
+        });
+      }
     } else {
-      state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y']);
-    }
-
-    if (update) {
-      const stageName = _.get(viewNode, 'title');
-      getStage(project, stageName, data => {
-        const info = {
-          name: _.get(data, 'metadata.name'),
-          ..._.get(data, 'spec.pod'),
-        };
-        if (!_.get(values, nodeId)) {
-          setFieldValue(nodeId, info);
-        }
-        this.setState({ stageInfo: { [stageName]: info } });
-      });
+      state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y', 'title']);
     }
     this.setState(state);
   };
@@ -248,16 +275,37 @@ class Graph extends React.Component {
 
   // Deletes a node from the graph
   onDeleteNode = (viewNode, nodeId, nodeArr) => {
-    const graph = this.state.graph;
+    const {
+      update,
+      updateStagePosition,
+      setFieldValue,
+      values,
+      setStageDepned,
+    } = this.props;
+    const { graph, nodePosition } = this.state;
     // Delete any connected edges
     const newEdges = graph.edges.filter((edge, i) => {
       return (
         edge.source !== viewNode[NODE_KEY] && edge.target !== viewNode[NODE_KEY]
       );
     });
+    const stages = _.get(values, 'stages', []);
+    const index = stages.indexOf(nodeId);
+    if (index > -1) {
+      _.pullAt(stages, index);
+      setFieldValue('stages', stages);
+      setFieldValue(nodeId, {});
+    }
+    setStageDepned(nodeId, '', _.get(viewNode, 'title'));
+    const position = _.cloneDeep(nodePosition);
     graph.nodes = nodeArr;
     graph.edges = newEdges;
-    this.setState({ graph, selected: null });
+    delete position[nodeId];
+    this.setState({ graph, selected: null, nodePosition: position });
+    updateStagePosition(nodeId, {});
+    if (update) {
+      this.updateStageDepned(_.get(viewNode, 'title'), '', 'removeNode');
+    }
   };
 
   judgeEdgeCricle = (source, target, edge) => {
@@ -284,8 +332,7 @@ class Graph extends React.Component {
 
   // Creates a new node between two edges
   onCreateEdge = (sourceViewNode, targetViewNode) => {
-    const { setStageDepned } = this.props;
-    // console.log('sourceViewNode', sourceViewNode, targetViewNode);
+    const { setStageDepned, update } = this.props;
     const graph = this.state.graph;
     // This is just an example - any sort of logic
     // could be used here to determine edge type
@@ -316,7 +363,72 @@ class Graph extends React.Component {
         _.get(targetViewNode, 'id'),
         _.get(sourceViewNode, 'title')
       );
+      if (update) {
+        this.updateStageDepned(
+          _.get(targetViewNode, 'title'),
+          _.get(sourceViewNode, 'title'),
+          'addEdge'
+        );
+      }
     }
+  };
+
+  updateStageDepned = (targetName, sourceName, type) => {
+    const {
+      workflowName,
+      values,
+      project,
+      workflow: { updateWorkflow, workflowDetail },
+    } = this.props;
+    const { nodePosition } = this.state;
+    const detail = _.get(workflowDetail, workflowName);
+    const workflowInfo = _.cloneDeep({
+      ..._.pick(values, ['metadata']),
+      ..._.pick(detail, 'spec.stages'),
+    });
+    workflowInfo.metadata.annotations.stagePosition = JSON.stringify(
+      nodePosition
+    );
+    const index = _.findIndex(
+      workflowInfo.spec.stages,
+      s => s.name === targetName
+    );
+    if (index > -1 || type === 'addStage') {
+      const depends =
+        _.get(workflowInfo, 'spec.spec.stages[index].depends') || [];
+      switch (type) {
+        case 'addEdge': {
+          workflowInfo.spec.stages[index].depends = depends;
+          workflowInfo.spec.stages[index].depends.push(sourceName);
+          break;
+        }
+        case 'removeEdge': {
+          const removedIndex = workflowInfo.spec.stages[index].depends.indexOf(
+            sourceName
+          );
+          _.pullAt(workflowInfo.spec.stages[index].depends, removedIndex);
+          break;
+        }
+        case 'removeNode': {
+          _.pullAt(workflowInfo.spec.stages, index);
+          _.forEach(workflowInfo.spec.stages, s => {
+            if (s.depends && s.depends.includes(targetName)) {
+              const i = s.depends.indexOf(targetName);
+              _.pullAt(s.depends, i);
+            }
+          });
+          break;
+        }
+        case 'addStage': {
+          workflowInfo.spec.stages.push(targetName);
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    updateWorkflow(project, workflowName, workflowInfo);
   };
 
   // Called when an edge is reattached to a different target.
@@ -330,7 +442,6 @@ class Graph extends React.Component {
     graph.edges[i] = edge;
     // reassign the array reference if you want the graph to re-render a swapped edge
     graph.edges = [...graph.edges];
-
     this.setState({
       graph,
       selected: edge,
@@ -339,7 +450,7 @@ class Graph extends React.Component {
 
   // Called when an edge is deleted
   onDeleteEdge = (viewEdge, edges) => {
-    const { setStageDepned } = this.props;
+    const { setStageDepned, update } = this.props;
     const {
       graph: { nodes },
     } = this.state;
@@ -354,6 +465,18 @@ class Graph extends React.Component {
       graph,
       selected: null,
     });
+
+    if (update) {
+      const targetName = _.get(
+        _.find(nodes, n => _.get(n, 'id') === _.get(viewEdge, 'target')),
+        'title'
+      );
+      const sourceName = _.get(
+        _.find(nodes, n => _.get(n, 'id') === _.get(viewEdge, 'source')),
+        'title'
+      );
+      this.updateStageDepned(targetName, sourceName, 'removeEdge');
+    }
   };
 
   onCopySelected = () => {
@@ -403,7 +526,9 @@ class Graph extends React.Component {
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
     const { values, update, project } = this.props;
-
+    const currentStage = _.get(values, 'currentStage');
+    const stages = _.get(values, 'stages', []);
+    const modify = stages.includes(currentStage);
     return (
       <div id="graph" className={styles['graph']}>
         <div className="graph-header">
@@ -433,7 +558,11 @@ class Graph extends React.Component {
           renderNodeText={this.renderNodeText}
         />
         <Drawer
-          title="Basic Drawer"
+          title={
+            modify
+              ? `${intl.get('operation.modify')} stage`
+              : `${intl.get('operation.add')} stage`
+          }
           placement="right"
           closable={false}
           onClose={this.onClose}
@@ -459,6 +588,12 @@ Graph.propTypes = {
   setStageDepned: PropTypes.func,
   updateStagePosition: PropTypes.func,
   initialGraph: PropTypes.object,
+  update: PropTypes.boolean,
+  project: PropTypes.string,
+  workflowName: PropTypes.string,
+  resource: PropTypes.object,
+  saveGraphWhenUnmount: PropTypes.func,
+  workflow: PropTypes.object,
 };
 
 export default Graph;

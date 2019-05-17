@@ -5,6 +5,7 @@ import styles from '../index.module.less';
 import classNames from 'classnames/bind';
 import PropTypes from 'prop-types';
 import { tranformStage } from '@/lib/util';
+import { inject, observer } from 'mobx-react';
 
 const styleCls = classNames.bind(styles);
 const Step = Steps.Step;
@@ -20,6 +21,8 @@ const steps = [
   },
 ];
 
+@inject('workflow')
+@observer
 class App extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
@@ -30,6 +33,9 @@ class App extends React.Component {
     setSubmitting: PropTypes.func,
     saveStagePostition: PropTypes.func,
     workFlowInfo: PropTypes.object,
+    workflow: PropTypes.object,
+    workflowName: PropTypes.string,
+    project: PropTypes.string,
   };
 
   constructor(props) {
@@ -53,15 +59,33 @@ class App extends React.Component {
     }
   }
 
-  next() {
+  next = update => {
+    const {
+      workflow: { updateWorkflow, workflowDetail },
+      values,
+      workflowName,
+      project,
+    } = this.props;
     const current = this.state.current + 1;
     this.setState({ current });
-  }
+    if (update) {
+      const detail = _.get(workflowDetail, workflowName);
+      const prevDes = _.get(detail, 'metadata.annotations.description');
+      const des = _.get(values, 'metadata.annotations.description');
+      if (prevDes !== des) {
+        const workflowData = {
+          metadata: { name: workflowName, annotations: { description: des } },
+          ..._.pick(detail, 'spec.stages'),
+        };
+        updateWorkflow(project, workflowName, workflowData);
+      }
+    }
+  };
 
-  prev() {
+  prev = update => {
     const current = this.state.current - 1;
     this.setState({ current });
-  }
+  };
 
   saveGraph = graphData => {
     this.setState({ graph: graphData });
@@ -75,6 +99,7 @@ class App extends React.Component {
       saveStagePostition,
       workFlowInfo,
       project,
+      workflowName,
     } = this.props;
     const { graph } = this.state;
     switch (current) {
@@ -89,6 +114,7 @@ class App extends React.Component {
             initialGraph={graph}
             update={!_.isEmpty(workFlowInfo)}
             project={project}
+            workflowName={workflowName}
             setStageDepned={handleDepend}
             updateStagePosition={saveStagePostition}
             saveGraphWhenUnmount={this.saveGraph}
@@ -103,8 +129,8 @@ class App extends React.Component {
 
   render() {
     const { current } = this.state;
-    const { handleSubmit } = this.props;
-    console.log('value', this.props.values);
+    const { handleSubmit, workflowName } = this.props;
+    const update = !!workflowName;
     return (
       <Form>
         <Steps current={current} size="small">
@@ -121,11 +147,11 @@ class App extends React.Component {
         </div>
         <div className="steps-action">
           {current < steps.length - 1 && (
-            <Button type="primary" onClick={() => this.next()}>
+            <Button type="primary" onClick={() => this.next(update)}>
               {intl.get('next')}
             </Button>
           )}
-          {current === steps.length - 1 && (
+          {current === steps.length - 1 && !update && (
             <Button type="primary" onClick={handleSubmit}>
               {intl.get('confirm')}
             </Button>

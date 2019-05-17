@@ -1,12 +1,14 @@
-import { Input } from 'antd';
+import { Input, Form } from 'antd';
 import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
 import MakeField from '@/components/public/makeField';
 import ResourceArray from '../resource/ResourceArray';
 import PropTypes from 'prop-types';
+import { defaultFormItemLayout } from '@/lib/const';
 
 const Fragment = React.Fragment;
 const { TextArea } = Input;
+const FormItem = Form.Item;
 const InputField = MakeField(Input);
 const TextareaField = MakeField(TextArea);
 
@@ -14,6 +16,9 @@ class TemplateStage extends React.Component {
   static propTypes = {
     stageId: PropTypes.string,
     values: PropTypes.object,
+    update: PropTypes.boolean,
+    project: PropTypes.string,
+    modify: PropTypes.boolean,
   };
 
   renderSection = (data, key) => {
@@ -33,44 +38,47 @@ class TemplateStage extends React.Component {
     return dom;
   };
   render() {
-    const { stageId, values, update, project } = this.props;
+    const { stageId, values, update, project, modify } = this.props;
+    const specKey = `${stageId}.spec.pod`;
     return (
       <Fragment>
-        <Field
-          label={intl.get('name')}
-          name={`${stageId}.metadata.name`}
-          component={InputField}
-          hasFeedback
-          required
-        />
+        {update && modify ? (
+          <FormItem label={intl.get('name')} {...defaultFormItemLayout}>
+            {_.get(values, `${stageId}.metadata.name`)}
+          </FormItem>
+        ) : (
+          <Field
+            label={intl.get('name')}
+            name={`${stageId}.metadata.name`}
+            component={InputField}
+            hasFeedback
+            required
+          />
+        )}
         <SectionCard title={intl.get('input')}>
           <ResourceArray
-            resourcesField={`${stageId}.spec.pod.inputs.resources`}
-            resources={_.get(
-              values,
-              `${stageId}.spec.pod.inputs.resources`,
-              []
-            )}
+            resourcesField={`${specKey}.inputs.resources`}
+            resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
           />
           <FieldArray
-            name={`${stageId}.spec.pod.inputs.arguments`}
+            name={`${specKey}.inputs.arguments`}
             render={arrayHelpers => (
               <div>
-                {_.get(values, `${stageId}.spec.pod.inputs.arguments`, []).map(
+                {_.get(values, `${specKey}.inputs.arguments`, []).map(
                   (r, i) => {
                     if (_.isObject(r.value)) {
                       return this.renderSection(
                         r,
-                        `${stageId}.spec.pod.inputs.arguments.${i}.value`
+                        `${specKey}.inputs.arguments.${i}.value`
                       );
                     } else {
                       return (
                         <Field
                           key={i}
                           label={r.name}
-                          name={`${stageId}.spec.pod.inputs.arguments.${i}.value`}
+                          name={`${specKey}.inputs.arguments.${i}.value`}
                           component={
                             ['cmd'].includes(r.name)
                               ? TextareaField

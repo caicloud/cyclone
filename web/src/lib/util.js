@@ -1,6 +1,5 @@
 import moment from 'moment';
 import qs from 'query-string';
-import { toJS } from 'mobx';
 import {
   STAGE,
   SPECIAL_EDGE_TYPE,
@@ -47,9 +46,10 @@ export const tranformStage = (stages, position) => {
     };
     nodes.push(node);
     if (_.isArray(v.depends)) {
-      console.log('v.depends', toJS(v.depends));
       const edge = _.map(v.depends, d => {
-        const index = _.findIndex(stages, s => s.name === d);
+        const index = _.findIndex(stages, s => {
+          return s.name === d;
+        });
         return {
           source: `stage_${index}`,
           target: `stage_${k}`,
@@ -59,7 +59,5 @@ export const tranformStage = (stages, position) => {
       edges = _.concat(edges, edge);
     }
   });
-  console.log('&&&&&', nodes);
-  console.log('edges', edges);
   return { nodes, edges };
 };

@@ -4,17 +4,13 @@ import MakeField from '@/components/public/makeField';
 import { noLabelItemLayout, modalFormItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
-import SelectPlus from '@/components/public/makeField/select';
 import SCM from './SCM';
 
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
 const FormItem = Form.Item;
 const InputField = MakeField(Input);
-const SelectField = MakeField(SelectPlus);
 const Fragment = React.Fragment;
-
-const inputArray = ['SCM', 'DockerRegistry', 'Cluster', 'SonarQube'];
 
 // use in add stage, select a exist resource or create a new resource
 @inject('integration')
@@ -25,6 +21,7 @@ class BindResource extends React.Component {
     values: PropTypes.object,
     type: PropTypes.oneOf(['inputs', 'outputs']),
     integration: PropTypes.object,
+    update: PropTypes.boolean,
   };
 
   state = { addWay: 'new' };
@@ -40,16 +37,22 @@ class BindResource extends React.Component {
 
   render() {
     const { addWay } = this.state;
-    const { values, setFieldValue, type, integration } = this.props;
+    const { values, setFieldValue, type, integration, update } = this.props;
     const resourceType = _.get(values, 'resourceType', 'SCM');
     const resourceList = _.get(
       integration,
       `groupIntegrationList.${resourceType}`
     );
-    // TODO(qme): i18n
     return (
       <Form layout={'horizontal'}>
-        {type === 'inputs' ? (
+        <FormItem
+          label={intl.get('workflow.resourceType')}
+          {...modalFormItemLayout}
+        >
+          {type === 'inputs' ? 'SCM' : 'Image'}
+        </FormItem>
+        {/* // TODO(qme): Subsequent support for multiple resource types */}
+        {/* {type === 'inputs' ? (
           <Field
             label={intl.get('type')}
             name="resourceType"
@@ -72,7 +75,7 @@ class BindResource extends React.Component {
           >
             image
           </FormItem>
-        )}
+        )} */}
         {type === 'inputs' && (
           <FormItem
             label={intl.get('workflow.addMethod')}
@@ -89,7 +92,7 @@ class BindResource extends React.Component {
         {addWay === 'exist' ? (
           <Field
             label={intl.get('type')}
-            name="matadata.name"
+            name="name"
             required
             handleSelectChange={val => {
               setFieldValue('name', val);
@@ -99,14 +102,20 @@ class BindResource extends React.Component {
           />
         ) : (
           <Fragment>
-            <Field
-              label={intl.get('name')}
-              name="matadata.name"
-              component={InputField}
-              formItemLayout={modalFormItemLayout}
-              hasFeedback
-              required
-            />
+            {update ? (
+              <FormItem label={intl.get('name')} {...modalFormItemLayout}>
+                {_.get(values, 'name')}
+              </FormItem>
+            ) : (
+              <Field
+                label={intl.get('name')}
+                name="name"
+                component={InputField}
+                formItemLayout={modalFormItemLayout}
+                hasFeedback
+                required
+              />
+            )}
             {resourceType === 'SCM' ? (
               <SCM
                 values={values}

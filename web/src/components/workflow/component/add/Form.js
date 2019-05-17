@@ -28,24 +28,39 @@ class AddWorkflow extends React.Component {
     }
   }
 
-  setStageDepend = (target, sourceName) => {
+  setStageDepend = (targetID, sourceName, targeName) => {
     const { depend } = this.state;
     const obj = _.cloneDeep(depend);
-    if (!obj[target]) {
-      obj[target] = [sourceName];
-    } else if (obj[target].includes(sourceName)) {
-      const index = _.findIndex(obj[target], o => o === sourceName);
-      _.pullAt(obj[target], index);
+    if (sourceName) {
+      if (!obj[targetID]) {
+        obj[targetID] = [sourceName];
+      } else if (obj[targetID].includes(sourceName)) {
+        const index = _.findIndex(obj[targetID], o => o === sourceName);
+        _.pullAt(obj[targetID], index);
+      } else {
+        obj[targetID].push(sourceName);
+      }
     } else {
-      obj[target].push(sourceName);
+      delete obj[targetID];
+      _.forEach(obj, v => {
+        if (v && v.includes(targeName)) {
+          const index = v.indexOf(targeName);
+          _.pullAt(v, index);
+        }
+      });
     }
+
     this.setState({ depend: obj });
   };
 
   saveStagePosition = (stageId, data) => {
     const { position } = this.state;
     const _position = _.cloneDeep(position);
-    _position[stageId] = data;
+    if (!_.isEmpty(data)) {
+      _position[stageId] = data;
+    } else {
+      delete _position[stageId];
+    }
     this.setState({ position: _position });
   };
 
@@ -54,7 +69,6 @@ class AddWorkflow extends React.Component {
     const {
       history: { location },
     } = this.props;
-    console.log('before submit', JSON.stringify(value));
     this.setState({ submitting: true });
     const query = getQuery(location.search);
     const requests = formatSubmitData(value, query, this.state);
@@ -89,7 +103,7 @@ class AddWorkflow extends React.Component {
 
   getInitialValues = data => {
     let defaultValue = {
-      metadata: { name: '', description: '' },
+      metadata: { name: '', annotations: { description: '' } },
       stages: [],
       currentStage: '',
     };
@@ -127,6 +141,7 @@ class AddWorkflow extends React.Component {
           <CreateWorkflow
             {...props}
             project={query.project}
+            workflowName={_.get(params, 'workflowName')}
             workFlowInfo={_.get(workflowDetail, `${params.workflowName}`)}
             handleDepend={this.setStageDepend}
             saveStagePostition={this.saveStagePosition}
@@ -143,6 +158,7 @@ AddWorkflow.propTypes = {
   resource: PropTypes.object,
   workflow: PropTypes.object,
   history: PropTypes.object,
+  match: PropTypes.object,
 };
 
 export default AddWorkflow;
