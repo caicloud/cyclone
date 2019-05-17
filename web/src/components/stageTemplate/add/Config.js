@@ -5,29 +5,47 @@ import { defaultFormItemLayout } from '@/lib/const';
 import { Field, FieldArray } from 'formik';
 import { Form, Input, Row, Col, Button } from 'antd';
 
+const { TextArea } = Input;
+const TextareaField = MakeField(TextArea);
 const InputField = MakeField(Input);
 const FormItem = Form.Item;
 const Fragment = React.Fragment;
 
+const inputMap = {
+  image: {
+    component: InputField,
+    props: {},
+  },
+  cmd: {
+    component: TextareaField,
+    props: {
+      style: {
+        height: 100,
+      },
+    },
+  },
+};
+
 const ConfigSection = props => {
   const { values } = props;
+  const args = _.get(values, 'spec.pod.inputs.arguments', []);
   return (
     <SectionCard title={intl.get('config')}>
       <FieldArray
         name="spec.pod.inputs.arguments"
         render={() => (
           <Fragment>
-            {_.get(values, 'spec.pod.inputs.arguments', []).map(
-              (field, index) => (
+            {args.length > 0 &&
+              args.map((field, index) => (
                 <Field
                   key={field.name}
                   label={intl.get(`template.form.config.${field.name}`)}
                   name={`spec.pod.inputs.arguments.${index}.value`}
-                  component={InputField}
+                  component={inputMap[field.name]['component']}
+                  {...inputMap[field.name]['props']}
                   required
                 />
-              )
-            )}
+              ))}
           </Fragment>
         )}
       />
