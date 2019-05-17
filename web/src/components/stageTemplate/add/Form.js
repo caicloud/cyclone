@@ -77,7 +77,7 @@ export default class StageTemplateForm extends React.Component {
             {
               env: [],
               image: '{{ image }}',
-              args: ['/bin/sh", "-e", "-c", "{{{ cmd }}}'],
+              args: ['/bin/sh', '-e', '-c', '{{{ cmd }}}'],
             },
           ],
         },
