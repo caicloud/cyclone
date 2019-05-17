@@ -14,7 +14,6 @@ const OutputSection = props => {
   return (
     <SectionCard title={intl.get('output')}>
       <ResourceType
-        required
         path="spec.pod.outputs.resources"
         values={values}
         setFieldValue={setFieldValue}

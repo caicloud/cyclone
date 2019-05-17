@@ -7,7 +7,6 @@ const InputSection = props => {
   return (
     <SectionCard title={intl.get('input')}>
       <ResourceType
-        required
         path="spec.pod.inputs.resources"
         values={values}
         setFieldValue={setFieldValue}
