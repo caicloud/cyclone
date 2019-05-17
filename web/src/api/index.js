@@ -43,6 +43,12 @@ const fetchApi = {
   removeIntegration(name) {
     return http.delete(`/integrations/${name}`);
   },
+  openCluster(name) {
+    return http.put(`/integrations/${name}/opencluster`, null);
+  },
+  closeCluster(name) {
+    return http.put(`/integrations/${name}/closecluster`, null);
+  },
   fetchResources() {
     return http.get('/resources').then(data => {
       return data;

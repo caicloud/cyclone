@@ -20,6 +20,11 @@ key: 健
 custom: 自定义
 tips:
   officialWebsite: 访问 Cyclone 官网查看项目文档和使用说明
+cluster:
+  open: 开启
+  openTips: 确定为租户初始化该集群以便运行流水线?
+  close: 关闭
+  closeTips: 确定为租户清理该集群？该操作后租户无法继续该集群运行流水线
 operation:
   add: 新增
   delete: 删除

@@ -20,6 +20,11 @@ key: Key
 custom: Custom
 tips:
   officialWebsite: Open Cyclone official website for docs and guides
+cluster:
+  open: Open
+  openTips: Sure to initialize this cluster for current tenant to execution workflow ?
+  close: Close
+  closeTips: Sure to cleanup this cluster for current tenant ? After this operation, current tenant can't execute workflow in this cluster.
 operation:
   add: Add
   delete: Delete

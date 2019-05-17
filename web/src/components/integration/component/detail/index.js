@@ -1,4 +1,4 @@
-import { Spin } from 'antd';
+import { Spin, Button, Icon, Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
@@ -75,13 +75,21 @@ class IntegrationDetail extends React.Component {
             <DetailHeadItem
               name={intl.get('integration.form.cluster.isControlCluster')}
               value={
-                _.get(detail, 'spec.cluster.isControlCluster') ? 'YES' : 'NO'
+                _.get(detail, 'spec.cluster.isControlCluster') ? (
+                  <Icon type="check" style={{ color: '#1890ff' }} />
+                ) : (
+                  <Icon type="minus" />
+                )
               }
             />
             <DetailHeadItem
               name={intl.get('integration.form.cluster.isWorkerCluster')}
               value={
-                _.get(detail, 'spec.cluster.isWorkerCluster') ? 'YES' : 'NO'
+                _.get(detail, 'spec.cluster.isWorkerCluster') ? (
+                  <Icon type="check" style={{ color: '#1890ff' }} />
+                ) : (
+                  <Icon type="minus" />
+                )
               }
             />
           </div>
@@ -89,6 +97,26 @@ class IntegrationDetail extends React.Component {
       default:
         return <div />;
     }
+  };
+
+  openCluster = () => {
+    const { integrationDetail, openCluster } = this.props.integration;
+    Modal.confirm({
+      title: intl.get('cluster.openTips'),
+      onOk() {
+        openCluster(integrationDetail.metadata.name);
+      },
+    });
+  };
+
+  closeCluster = () => {
+    const { integrationDetail, closeCluster } = this.props.integration;
+    Modal.confirm({
+      title: intl.get('cluster.closeTips'),
+      onOk() {
+        closeCluster(integrationDetail.metadata.name);
+      },
+    });
   };
 
   render() {
@@ -100,15 +128,31 @@ class IntegrationDetail extends React.Component {
       history,
     } = this.props;
     const loading = integration.detailLoading;
-    if (loading) {
+    const processing = integration.processing;
+    if (loading || processing) {
       return <Spin />;
     }
     const detail = integration.integrationDetail;
+    const opened =
+      _.get(
+        detail,
+        'metadata.labels["integration.cyclone.dev/schedulable-cluster"]'
+      ) === 'true';
 
     return (
       <Detail
         actions={
           <DetailAction>
+            {_.get(detail, 'spec.type') === 'Cluster' && (
+              <Button
+                type="primary"
+                size="small"
+                style={{ marginRight: 16 }}
+                onClick={opened ? this.closeCluster : this.openCluster}
+              >
+                {opened ? intl.get('cluster.close') : intl.get('cluster.open')}
+              </Button>
+            )}
             <MenuAction name={integrationName} history={history} detail />
           </DetailAction>
         }
