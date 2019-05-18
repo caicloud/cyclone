@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/caicloud/nirvana/log"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const (

@@ -133,7 +133,7 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 				}
 				selected = false
 			case "status":
-				if strings.ToLower(string(wfr.Status.Overall.Phase)) != value {
+				if !strings.EqualFold(string(wfr.Status.Overall.Phase), value) {
 					selected = false
 				}
 			case "trigger":

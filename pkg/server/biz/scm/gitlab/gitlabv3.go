@@ -291,7 +291,7 @@ func generateV3ProjectHook(webhook *scm.Webhook) *v3.AddProjectHookOptions {
 
 func convertGitlabV3Error(err error, resp *v3.Response) error {
 	if err == nil {
-		return err
+		return nil
 	}
 
 	if resp != nil && resp.StatusCode == http.StatusInternalServerError {

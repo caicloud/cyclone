@@ -274,7 +274,7 @@ func generateV4ProjectHook(webhook *scm.Webhook) *v4.AddProjectHookOptions {
 
 func convertGitlabV4Error(err error, resp *v4.Response) error {
 	if err == nil {
-		return err
+		return nil
 	}
 
 	if resp != nil && resp.StatusCode == http.StatusInternalServerError {

@@ -18,10 +18,10 @@ package descriptors
 
 import (
 	"github.com/caicloud/nirvana/definition"
+	"github.com/caicloud/nirvana/operators/validator"
 
 	handler "github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/nirvana/operators/validator"
 )
 
 func init() {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
-	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket/bitbucket-server"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket/server"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
@@ -78,7 +78,7 @@ func newBitbucketServerClient(scmCfg *v1alpha1.SCMSource) (*server.V1Client, err
 				return nil, err
 			}
 			if !strings.HasSuffix(base.Path, "/") {
-				base.Path = base.Path + "/"
+				base.Path += "/"
 			}
 			version, err := server.GetBitbucketVersion(baseClient, base)
 			if err != nil {

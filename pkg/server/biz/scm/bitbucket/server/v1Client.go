@@ -90,7 +90,7 @@ func NewClient(client *http.Client, config Config) (*V1Client, error) {
 		return nil, err
 	}
 	if !strings.HasSuffix(base.Path, "/") {
-		base.Path = base.Path + "/"
+		base.Path += "/"
 	}
 	if client == nil {
 		client = http.DefaultClient

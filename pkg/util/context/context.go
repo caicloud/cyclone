@@ -27,7 +27,7 @@ func GetHeaderParameter(ctx context.Context, name string) (string, error) {
 	request := GetHTTPRequest(ctx)
 
 	value := request.Header.Get(name)
-	if len(value) <= 0 {
+	if len(value) == 0 {
 		return "", cerr.ErrorHeaderParamNotFound.Error(name)
 	}
 	return value, nil
