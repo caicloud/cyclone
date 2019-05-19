@@ -48,7 +48,7 @@ func HandleWebhook(ctx context.Context, tenant, integration string) (api.Webhook
 		return newWebhookResponse(ignoredMsg), nil
 	}
 
-	in, err := getIntegration(tenant, integration)
+	in, err := getIntegration(common.TenantNamespace(tenant), integration)
 	if err != nil {
 		return newWebhookResponse(err.Error()), err
 	}

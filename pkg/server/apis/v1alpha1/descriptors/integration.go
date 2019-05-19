@@ -27,6 +27,12 @@ var integration = []definition.Descriptor{
 						Description: "Name of the tenant whose integrations to list",
 					},
 					{
+						Source:      definition.Query,
+						Name:        httputil.IncludePublicQueryParameter,
+						Default:     true,
+						Description: "Whether include system level resources",
+					},
+					{
 						Source:      definition.Auto,
 						Name:        httputil.PaginationAutoParameter,
 						Description: "pagination",
@@ -43,6 +49,10 @@ var integration = []definition.Descriptor{
 						Source:      definition.Header,
 						Name:        httputil.TenantHeaderName,
 						Description: "Name of the tenant to create integration for",
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.PublicHeaderName,
 					},
 					{
 						Source:      definition.Body,
@@ -72,6 +82,10 @@ var integration = []definition.Descriptor{
 						Name:        "integration",
 						Description: "Name of the integration to get",
 					},
+					{
+						Source: definition.Header,
+						Name:   httputil.PublicHeaderName,
+					},
 				},
 				Results: definition.DataErrorResults("integration gotten"),
 			},
@@ -89,6 +103,10 @@ var integration = []definition.Descriptor{
 						Source:      definition.Path,
 						Name:        "integration",
 						Description: "Name of the integration to update",
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.PublicHeaderName,
 					},
 					{
 						Source:      definition.Body,
@@ -111,6 +129,10 @@ var integration = []definition.Descriptor{
 						Source:      definition.Path,
 						Name:        "integration",
 						Description: "Name of the integration to delete",
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.PublicHeaderName,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
