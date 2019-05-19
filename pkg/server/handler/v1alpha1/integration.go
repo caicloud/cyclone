@@ -12,6 +12,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration"
@@ -26,17 +27,31 @@ import (
 )
 
 // ListIntegrations get integrations for the given tenant.
-func ListIntegrations(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
+func ListIntegrations(ctx context.Context, tenant string, includePublic bool, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
 	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
 		LabelSelector: meta.LabelIntegrationType,
 	})
 	if err != nil {
-		log.Errorf("Get integrations from k8s with tenant %s error: %v", tenant, err)
+		log.Errorf("Get secrets from k8s with tenant %s error: %v", tenant, err)
 		return nil, cerr.ConvertK8sError(err)
 	}
 
 	items := secrets.Items
+
+	if includePublic {
+		systemNamespace := common.GetSystemNamespace()
+		publicSecrets, err := handler.K8sClient.CoreV1().Secrets(systemNamespace).List(meta_v1.ListOptions{
+			LabelSelector: meta.LabelIntegrationType,
+		})
+		if err != nil {
+			log.Errorf("Get secrets from system namespace %s error: %v", systemNamespace, err)
+			return nil, err
+		}
+
+		items = append(items, publicSecrets.Items...)
+	}
+
 	var integrations []api.Integration
 	size := int64(len(items))
 	if query.Start >= size {
@@ -64,7 +79,7 @@ func ListIntegrations(ctx context.Context, tenant string, query *types.QueryPara
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.
-func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) (*api.Integration, error) {
+func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, "", "", in)
@@ -73,10 +88,10 @@ func CreateIntegration(ctx context.Context, tenant string, in *api.Integration) 
 		}
 	}
 
-	return createIntegration(tenant, in)
+	return createIntegration(tenant, isPublic, in)
 }
 
-func createIntegration(tenant string, in *api.Integration) (*api.Integration, error) {
+func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// Open cluster for the tenant, create namespace and pvc
 		err := cluster.Open(handler.K8sClient, in, tenant)
@@ -98,6 +113,9 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 	}
 
 	ns := svrcommon.TenantNamespace(tenant)
+	if isPublic {
+		ns = common.GetSystemNamespace()
+	}
 	_, err = handler.K8sClient.CoreV1().Secrets(ns).Create(secret)
 	if err != nil {
 		log.Errorf("Create secret %v for tenant %s error %v", secret.ObjectMeta.Name, tenant, err)
@@ -108,12 +126,31 @@ func createIntegration(tenant string, in *api.Integration) (*api.Integration, er
 }
 
 // GetIntegration gets an integration with the given name under given tenant.
-func GetIntegration(ctx context.Context, tenant, name string) (*api.Integration, error) {
-	return getIntegration(tenant, name)
+func GetIntegration(ctx context.Context, tenant, name string, includePublic bool) (*api.Integration, error) {
+	integration, err := getIntegration(svrcommon.TenantNamespace(tenant), name)
+	if err != nil {
+		if !cerr.ErrorContentNotFound.Derived(err) {
+			return nil, err
+		}
+
+		if includePublic {
+			systemNamespace := common.GetSystemNamespace()
+			publicIntegration, err := getIntegration(systemNamespace, name)
+			if err != nil {
+				log.Errorf("Get integration from system namespace %s error: %v", systemNamespace, err)
+				return nil, err
+			}
+			return publicIntegration, nil
+		}
+
+		return nil, err
+	}
+
+	return integration, nil
 }
 
-func getIntegration(tenant, name string) (*api.Integration, error) {
-	secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
+func getIntegration(namespace, name string) (*api.Integration, error) {
+	secret, err := handler.K8sClient.CoreV1().Secrets(namespace).Get(
 		integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return nil, cerr.ConvertK8sError(err)
@@ -124,7 +161,7 @@ func getIntegration(tenant, name string) (*api.Integration, error) {
 
 // UpdateIntegration updates an integration with the given tenant name and integration name.
 // If updated successfully, return the updated integration.
-func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integration) (*api.Integration, error) {
+func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, in *api.Integration) (*api.Integration, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
 		err := cluster.UpdateClusterIntegration(handler.K8sClient, tenant, name, in)
 		if err != nil {
@@ -144,7 +181,11 @@ func UpdateIntegration(ctx context.Context, tenant, name string, in *api.Integra
 		return nil, err
 	}
 
-	err = updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
+	ns := svrcommon.TenantNamespace(tenant)
+	if isPublic {
+		ns = common.GetSystemNamespace()
+	}
+	err = updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
 	if err != nil {
 		return nil, err
 	}
@@ -182,8 +223,13 @@ func updateSecret(namespace, secretName string, inteType api.IntegrationType, se
 }
 
 // DeleteIntegration deletes a integration with the given tenant and name.
-func DeleteIntegration(ctx context.Context, tenant, name string) error {
-	in, err := getIntegration(tenant, name)
+func DeleteIntegration(ctx context.Context, tenant, name string, isPublic bool) error {
+	ns := svrcommon.TenantNamespace(tenant)
+	if isPublic {
+		ns = common.GetSystemNamespace()
+	}
+
+	in, err := getIntegration(ns, name)
 	if err != nil {
 		return err
 	}
@@ -227,15 +273,15 @@ func DeleteIntegration(ctx context.Context, tenant, name string) error {
 		}
 	}
 
-	err = handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Delete(
-		secretName, &meta_v1.DeleteOptions{})
+	err = handler.K8sClient.CoreV1().Secrets(ns).Delete(secretName, &meta_v1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
 }
 
 // OpenCluster opens cluster type integration to execute workflow
 func OpenCluster(ctx context.Context, tenant, name string) error {
-	in, err := getIntegration(tenant, name)
+	ns := svrcommon.TenantNamespace(tenant)
+	in, err := getIntegration(ns, name)
 	if err != nil {
 		return err
 	}
@@ -264,12 +310,13 @@ func OpenCluster(ctx context.Context, tenant, name string) error {
 		return err
 	}
 
-	return updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
+	return updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
 }
 
 // CloseCluster closes cluster type integration that used to execute workflow
 func CloseCluster(ctx context.Context, tenant, name string) error {
-	in, err := getIntegration(tenant, name)
+	ns := svrcommon.TenantNamespace(tenant)
+	in, err := getIntegration(ns, name)
 	if err != nil {
 		return err
 	}
@@ -298,11 +345,11 @@ func CloseCluster(ctx context.Context, tenant, name string) error {
 		return err
 	}
 
-	return updateSecret(svrcommon.TenantNamespace(tenant), integration.GetSecretName(name), in.Spec.Type, secret)
+	return updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
 }
 
 func getSCMSourceFromIntegration(tenant, integrationName string) (*api.SCMSource, error) {
-	integration, err := getIntegration(tenant, integrationName)
+	integration, err := getIntegration(svrcommon.TenantNamespace(tenant), integrationName)
 	if err != nil {
 		return nil, err
 	}

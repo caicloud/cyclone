@@ -68,7 +68,7 @@ const (
 	// PaginationAutoParameter represents the auto param pagination.
 	PaginationAutoParameter = "pagination"
 
-	// TenantHeaderName is name of tenant header name in http reqeust
+	// TenantHeaderName is name of tenant header name in http request
 	TenantHeaderName = "X-Tenant"
 
 	// NamespaceHeaderName is name of namespace header
@@ -79,6 +79,9 @@ const (
 
 	// HeaderContentTypeJSON represents the JSON Content-Type value.
 	HeaderContentTypeJSON = "application/json"
+
+	// PublicHeaderName is a header name to indicate whether the resource is public
+	PublicHeaderName = "X-Public"
 
 	// DefaultNamespace represents the default namespace 'default'.
 	DefaultNamespace = "default"

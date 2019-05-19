@@ -197,7 +197,7 @@ func getSCMSourceFromWorkflowRun(wfr *v1alpha1.WorkflowRun) (*s_v1alpha1.SCMSour
 			return nil, err
 		}
 
-		in, err := getIntegration(common.NamespaceTenant(secretRef.Namespace), secretRef.Secret)
+		in, err := getIntegration(secretRef.Namespace, secretRef.Secret)
 		if err != nil {
 			return nil, err
 		}
