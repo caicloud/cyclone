@@ -83,10 +83,8 @@ var integration = []definition.Descriptor{
 						Description: "Name of the integration to get",
 					},
 					{
-						Source:      definition.Query,
-						Name:        httputil.IncludePublicQueryParameter,
-						Default:     true,
-						Description: "Whether include system level resources",
+						Source: definition.Header,
+						Name:   httputil.PublicHeaderName,
 					},
 				},
 				Results: definition.DataErrorResults("integration gotten"),

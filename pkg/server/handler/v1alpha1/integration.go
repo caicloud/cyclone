@@ -126,27 +126,13 @@ func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.
 }
 
 // GetIntegration gets an integration with the given name under given tenant.
-func GetIntegration(ctx context.Context, tenant, name string, includePublic bool) (*api.Integration, error) {
-	integration, err := getIntegration(svrcommon.TenantNamespace(tenant), name)
-	if err != nil {
-		if !cerr.ErrorContentNotFound.Derived(err) {
-			return nil, err
-		}
-
-		if includePublic {
-			systemNamespace := common.GetSystemNamespace()
-			publicIntegration, err := getIntegration(systemNamespace, name)
-			if err != nil {
-				log.Errorf("Get integration from system namespace %s error: %v", systemNamespace, err)
-				return nil, err
-			}
-			return publicIntegration, nil
-		}
-
-		return nil, err
+func GetIntegration(ctx context.Context, tenant, name string, isPublic bool) (*api.Integration, error) {
+	ns := svrcommon.TenantNamespace(tenant)
+	if isPublic {
+		ns = common.GetSystemNamespace()
 	}
 
-	return integration, nil
+	return getIntegration(ns, name)
 }
 
 func getIntegration(namespace, name string) (*api.Integration, error) {
