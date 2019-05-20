@@ -74,17 +74,10 @@ type Github struct {
 // NewGithub new Github client.
 func NewGithub(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 	var client *github.Client
-	var err error
 	if scmCfg.Token == "" {
-		client, err = newClientByBasicAuth(scmCfg.User, scmCfg.Password)
-		if err != nil {
-			return nil, err
-		}
+		client = newClientByBasicAuth(scmCfg.User, scmCfg.Password)
 	} else {
-		client, err = newClientByBasicAuth(scmCfg.User, scmCfg.Token)
-		if err != nil {
-			return nil, err
-		}
+		client = newClientByBasicAuth(scmCfg.User, scmCfg.Token)
 	}
 
 	return &Github{scmCfg, client, context.Background()}, nil
@@ -365,7 +358,7 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 // newClientByBasicAuth news Github client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
-func newClientByBasicAuth(username, password string) (*github.Client, error) {
+func newClientByBasicAuth(username, password string) *github.Client {
 	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
@@ -375,7 +368,7 @@ func newClientByBasicAuth(username, password string) (*github.Client, error) {
 		},
 	}
 
-	return github.NewClient(client), nil
+	return github.NewClient(client)
 }
 
 // newClientByToken news Github client by token.
@@ -384,7 +377,7 @@ func newClientByToken(token string) *github.Client {
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
-	httpClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+	httpClient := oauth2.NewClient(context.TODO(), tokenSource)
 
 	return github.NewClient(httpClient)
 }

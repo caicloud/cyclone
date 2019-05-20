@@ -85,7 +85,7 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 .PHONY: lint test build container push
 
 lint: $(GOMETALINTER)
-	gometalinter --deadline=300s ./pkg/... ./cmd/...
+	golangci-lint run --disable=gosimple --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
 
 build: build-local
 

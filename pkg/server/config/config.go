@@ -123,11 +123,7 @@ func LoadConfig(cm *core_v1.ConfigMap) error {
 
 // validate validates some required configurations.
 func validate(config *CycloneServerConfig) bool {
-	if !validateNotification(config.Notifications) {
-		return false
-	}
-
-	return true
+	return validateNotification(config.Notifications)
 }
 
 // validateNotification validates notification configurations.

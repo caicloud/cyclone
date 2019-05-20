@@ -15,9 +15,8 @@ import (
 func TestAccelerate(t *testing.T) {
 	project := "project"
 	testcase := map[string]struct {
-		project string
-		wfr     *v1alpha1.WorkflowRun
-		expect  v1alpha1.WorkflowRun
+		wfr    *v1alpha1.WorkflowRun
+		expect v1alpha1.WorkflowRun
 	}{
 		"accelerate": {
 			wfr: &v1alpha1.WorkflowRun{

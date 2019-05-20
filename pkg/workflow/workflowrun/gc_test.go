@@ -129,7 +129,7 @@ func (s *GCProcessorSuite) TestProcess() {
 	pre := controller.Config.GC.DelaySeconds
 	controller.Config.GC.DelaySeconds = 2
 	defer func(preDelay time.Duration) {
-		controller.Config.GC.DelaySeconds = pre
+		controller.Config.GC.DelaySeconds = preDelay
 	}(pre)
 
 	wfr := &v1alpha1.WorkflowRun{

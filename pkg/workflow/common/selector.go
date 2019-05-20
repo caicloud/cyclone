@@ -33,11 +33,7 @@ func OnlyCustomContainer(name string) bool {
 
 // NonWorkloadSidecar selects all containers except workload sidecars.
 func NonWorkloadSidecar(name string) bool {
-	if strings.HasPrefix(name, WorkloadSidecarPrefix) {
-		return false
-	}
-
-	return true
+	return !strings.HasPrefix(name, WorkloadSidecarPrefix)
 }
 
 // NonCoordinator selects all containers except coordinator.

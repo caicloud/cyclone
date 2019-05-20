@@ -217,7 +217,7 @@ func registerSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 	secret.Data[common.SecretKeyRepos] = reposStr
 
-	secret, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
+	_, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
@@ -291,7 +291,7 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 	}
 
 	secret.Data[common.SecretKeyRepos] = reposStr
-	secret, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
+	_, err = handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Update(secret)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}

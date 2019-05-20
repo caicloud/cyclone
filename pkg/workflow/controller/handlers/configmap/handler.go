@@ -27,7 +27,6 @@ func (h *Handler) ObjectUpdated(obj interface{}) {
 
 // ObjectDeleted ...
 func (h *Handler) ObjectDeleted(obj interface{}) {
-	return
 }
 
 func (h *Handler) process(obj interface{}) {

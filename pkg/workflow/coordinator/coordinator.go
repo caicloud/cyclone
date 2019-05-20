@@ -420,5 +420,5 @@ func isFileNotExist(err error) bool {
 		return false
 	}
 
-	return strings.Index(err.Error(), "No such container:path") >= 0
+	return strings.Contains(err.Error(), "No such container:path")
 }

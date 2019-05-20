@@ -169,7 +169,7 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 func GetTemplate(ctx context.Context, tenant, template string, includePublic bool) (stage *v1alpha1.Stage, err error) {
 	// Convert the returned error if it is a k8s error.
 	defer func() {
-		cerr.ConvertK8sError(err)
+		err = cerr.ConvertK8sError(err)
 	}()
 
 	stage, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})

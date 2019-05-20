@@ -13,7 +13,6 @@ func TestSlugify(t *testing.T) {
 		str        string
 		withSuffix bool
 		maxIDlen   int
-		expect     string
 	}{
 		{
 			str:        "qwert-qwert-qwert-qwert",

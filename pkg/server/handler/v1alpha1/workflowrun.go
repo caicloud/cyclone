@@ -137,7 +137,7 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 				}
 				selected = false
 			case "status":
-				if strings.ToLower(string(wfr.Status.Overall.Phase)) != value {
+				if !strings.EqualFold(string(wfr.Status.Overall.Phase), value) {
 					selected = false
 				}
 			case "trigger":
@@ -390,7 +390,10 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 	for {
 		select {
 		case <-pingTicker.C:
-			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+			err := ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+			if err != nil {
+				log.Warningf("set write deadline error:%v", err)
+			}
 			if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
 					return nil
@@ -404,7 +407,10 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 			}
 
 			if err != nil {
-				ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
+				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
+				if err != nil {
+					log.Warningf("write close message error:%v", err)
+				}
 				break
 			}
 
@@ -415,7 +421,10 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 				}
 				return err
 			}
-			ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+			err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+			if err != nil {
+				log.Warningf("set write deadline error:%v", err)
+			}
 		}
 	}
 

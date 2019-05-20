@@ -112,7 +112,7 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 		close(closeLog)
 	}()
 
-	k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream, closeLog)
+	err = k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream, closeLog)
 	if err != nil {
 		return err
 	}

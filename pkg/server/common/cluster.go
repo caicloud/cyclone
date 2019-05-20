@@ -15,13 +15,9 @@ import (
 
 // CreateNamespace creates a namespace
 func CreateNamespace(tenant string, client *kubernetes.Clientset) error {
-	namespace, err := buildNamespace(tenant)
-	if err != nil {
-		log.Warningf("Build namespace %s error %v", namespace.Name, err)
-		return err
-	}
+	namespace := buildNamespace(tenant)
 
-	_, err = client.CoreV1().Namespaces().Create(namespace)
+	_, err := client.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Infof("namespace %s already exists", namespace.Name)
@@ -35,9 +31,9 @@ func CreateNamespace(tenant string, client *kubernetes.Clientset) error {
 	return nil
 }
 
-func buildNamespace(tenant string) (*core_v1.Namespace, error) {
+func buildNamespace(tenant string) *core_v1.Namespace {
 	nsname := TenantNamespace(tenant)
-	namespace := &core_v1.Namespace{
+	return &core_v1.Namespace{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: nsname,
 			Labels: map[string]string{
@@ -45,8 +41,6 @@ func buildNamespace(tenant string) (*core_v1.Namespace, error) {
 			},
 		},
 	}
-
-	return namespace, nil
 }
 
 // CreateResourceQuota creates resource quota for tenant

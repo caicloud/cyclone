@@ -142,7 +142,7 @@ func (suite *TimeoutProcessorSuite) SetupTest() {
 }
 
 func (suite *TimeoutProcessorSuite) TestAdd() {
-	suite.processor.Add(&v1alpha1.WorkflowRun{
+	err := suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test1",
 			Namespace: "default",
@@ -151,10 +151,12 @@ func (suite *TimeoutProcessorSuite) TestAdd() {
 			Timeout: "30s",
 		},
 	})
+
+	suite.Nil(err)
 	assert.Equal(suite.T(), 1, len(suite.processor.items))
 	assert.Equal(suite.T(), "test1", suite.processor.items["default:test1"].name)
 
-	suite.processor.Add(&v1alpha1.WorkflowRun{
+	err = suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test2",
 			Namespace: "default",
@@ -164,13 +166,14 @@ func (suite *TimeoutProcessorSuite) TestAdd() {
 		},
 	})
 
+	suite.Nil(err)
 	assert.Equal(suite.T(), 2, len(suite.processor.items))
 	assert.Equal(suite.T(), "test1", suite.processor.items["default:test1"].name)
 	assert.Equal(suite.T(), "test2", suite.processor.items["default:test2"].name)
 }
 
 func (suite *TimeoutProcessorSuite) TestProcess() {
-	suite.processor.Add(&v1alpha1.WorkflowRun{
+	err := suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test1",
 			Namespace: "default",
@@ -190,7 +193,8 @@ func (suite *TimeoutProcessorSuite) TestProcess() {
 			},
 		},
 	})
-	suite.processor.Add(&v1alpha1.WorkflowRun{
+	suite.Nil(err)
+	err = suite.processor.Add(&v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test2",
 			Namespace: "default",
@@ -199,6 +203,8 @@ func (suite *TimeoutProcessorSuite) TestProcess() {
 			Timeout: "30s",
 		},
 	})
+
+	suite.Nil(err)
 	suite.Equal(2, len(suite.processor.items))
 
 	time.Sleep(time.Second)

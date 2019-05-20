@@ -2,8 +2,6 @@ package cycloneserver
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,35 +42,6 @@ func NewClient(cycloneServer string) Client {
 		baseURL: baseURL,
 		client:  http.DefaultClient,
 	}
-}
-
-// do sends the request to Cyclone and returns an HTTP response.
-func (c *client) do(method, relativePath string, bodyObject interface{}) (*http.Response, error) {
-	url := c.baseURL + cycloneAPIVersion + relativePath
-	log.Infof("Request for Cyclone server: %s %s", method, url)
-
-	var body io.Reader
-	if bodyObject != nil {
-		bodyBytes, err := json.Marshal(bodyObject)
-		if err != nil {
-			return nil, err
-		}
-
-		body = bytes.NewReader(bodyBytes)
-	}
-
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.client.Do(req)
-	if err != nil {
-		log.Errorf(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
 }
 
 // PushLogStream ...
@@ -127,10 +96,16 @@ func watchLogs(ws *websocket.Conn, reader io.Reader, close chan struct{}) error 
 					continue
 				}
 				log.Errorf("watch log file errs: %v", errRead)
-				ws.WriteMessage(websocket.CloseMessage, []byte(errRead.Error()))
+				err := ws.WriteMessage(websocket.CloseMessage, []byte(errRead.Error()))
+				if err != nil {
+					log.Warningf("write close message error:%v", err)
+				}
 				return errRead
 			}
-			ws.WriteMessage(websocket.TextMessage, line)
+			err := ws.WriteMessage(websocket.TextMessage, line)
+			if err != nil {
+				log.Warningf("write text message error:%v", err)
+			}
 		case <-close:
 			log.Info("Close the watch of log file")
 			return nil
