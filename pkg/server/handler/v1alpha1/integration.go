@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -53,15 +54,6 @@ func ListIntegrations(ctx context.Context, tenant string, includePublic bool, qu
 	}
 
 	var integrations []api.Integration
-	size := int64(len(items))
-	if query.Start >= size {
-		return types.NewListResponse(int(size), integrations), nil
-	}
-
-	end := query.Start + query.Limit
-	if end > size {
-		end = size
-	}
 
 	if query.Sort {
 		sort.Sort(sorter.NewSecretSorter(items, query.Ascending))
@@ -75,7 +67,64 @@ func ListIntegrations(ctx context.Context, tenant string, includePublic bool, qu
 		integrations = append(integrations, *i)
 	}
 
-	return types.NewListResponse(int(size), integrations[query.Start:end]), nil
+	results, err := filterIntegrations(integrations, query.Filter)
+	if err != nil {
+		return nil, err
+	}
+
+	size := int64(len(results))
+	if query.Start >= size {
+		return types.NewListResponse(int(size), []api.Integration{}), nil
+	}
+
+	end := query.Start + query.Limit
+	if end > size {
+		end = size
+	}
+	return types.NewListResponse(int(size), results[query.Start:end]), nil
+}
+
+func filterIntegrations(integrations []api.Integration, filter string) ([]api.Integration, error) {
+	if filter == "" {
+		return integrations, nil
+	}
+
+	var results []api.Integration
+	// Support multiple filters rules, separated with comma.
+	filterParts := strings.Split(filter, ",")
+	filters := make(map[string]string)
+	for _, part := range filterParts {
+		kv := strings.Split(part, "=")
+		if len(kv) != 2 {
+			return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
+		}
+
+		filters[kv[0]] = strings.ToLower(kv[1])
+	}
+
+	var selected bool
+	for _, itg := range integrations {
+		selected = true
+		for key, value := range filters {
+			switch key {
+			case "type":
+				if itg.Labels != nil {
+					if itgType, ok := itg.Labels[meta.LabelIntegrationType]; ok {
+						if strings.EqualFold(itgType, value) {
+							continue
+						}
+					}
+				}
+				selected = false
+			}
+		}
+
+		if selected {
+			results = append(results, itg)
+		}
+	}
+
+	return results, nil
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.

@@ -87,7 +87,11 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 }
 
 func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, error) {
-	results := []v1alpha1.Stage{}
+	if filter == "" {
+		return stages, nil
+	}
+
+	var results []v1alpha1.Stage
 	// Support multiple filters rules: name or alias, and type, separated with comma.
 	filterParts := strings.Split(filter, ",")
 	filters := make(map[string]string)

@@ -101,6 +101,10 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 }
 
 func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.WorkflowRun, error) {
+	if filter == "" {
+		return wfrs, nil
+	}
+
 	var results []v1alpha1.WorkflowRun
 	// Support multiple filters rules, separated with comma.
 	filterParts := strings.Split(filter, ",")
