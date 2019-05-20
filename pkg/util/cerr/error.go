@@ -45,6 +45,9 @@ var (
 	// ErrorAuthenticationRequired defines error that authentication not provided.
 	ErrorAuthenticationRequired = nerror.Unauthorized.Build(ReasonRequest, "authentication required")
 
+	// ErrorAuthenticationFailed defines error that authentication failed.
+	ErrorAuthenticationFailed = nerror.Unauthorized.Build(ReasonRequest, "authentication failed")
+
 	// ErrorInternalTypeError defines internal type error
 	//ErrorInternalTypeError = nerror.InternalServerError.Build(ReasonInternal, "type of ${resource} should be ${expect}, but got ${real}")
 
