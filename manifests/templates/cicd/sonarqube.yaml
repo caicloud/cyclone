@@ -1,0 +1,54 @@
+- apiVersion: cyclone.dev/v1alpha1
+  kind: Stage
+  metadata:
+    name: sonarqube-template
+    labels:
+      stage.cyclone.dev/template: "true"
+      cyclone.dev/builtin: "true"
+      cyclone.dev/scene: cicd
+      stage.cyclone.dev/template-kind: codescan
+    annotations:
+      cyclone.dev/alias: sonarqube-template
+      cyclone.dev/description: >
+        Static code scan with SonarQube
+  spec:
+    pod:
+      inputs:
+        arguments:
+        - name: image
+          value: release/cyclone-cicd-sonarcube:v0.9.5-beta
+        - name: sonarURL
+        - name: sonarToken
+        - name: encoding
+          value: UTF-8
+        - name: language
+          value: ""
+        - name: projectName
+        - name: projectKey
+        - name: qualityGate
+          value: "1"
+        - name: sourcePath
+          value: ./
+        resources:
+        - name: code
+          path: /workspace
+      spec:
+        containers:
+        - image: "{{ image }}"
+          env:
+          - name: SERVER
+            value: "{{{ sonarURL }}}"
+          - name: TOKEN
+            value: "{{{ sonarToken }}}"
+          - name: ENCODING
+            value: "{{{ encoding }}}"
+          - name: LANGUAGE
+            value: "{{{ language }}}"
+          - name: PROJECT_NAME
+            value: "{{{ projectName }}}"
+          - name: PROJECT_KEY
+            value: "{{{ projectKey }}}"
+          - name: QUALITY_GATE
+            value: "{{{ qualityGate }}}"
+          - name: SOURCE_PATH
+            value: "{{{ sourcePath }}}"

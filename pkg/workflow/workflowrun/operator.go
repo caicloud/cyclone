@@ -376,6 +376,7 @@ func (o *operator) Reconcile() error {
 
 		stg, err := o.client.CycloneV1alpha1().Stages(o.wfr.Namespace).Get(stage, metav1.GetOptions{})
 		if err != nil {
+			log.WithField("stg", stage).Error("Get stage error: ", err)
 			continue
 		}
 
