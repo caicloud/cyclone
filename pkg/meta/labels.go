@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/caicloud/cyclone/pkg/common"
-
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/common"
 )
 
 const (

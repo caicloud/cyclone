@@ -18,6 +18,7 @@ import (
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration/sonarqube"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
@@ -156,6 +157,13 @@ func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.
 		}
 	}
 
+	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
+		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	secret, err := integration.ToSecret(tenant, in)
 	if err != nil {
 		return nil, err
@@ -206,6 +214,13 @@ func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, 
 
 	if in.Spec.Type == api.SCM && in.Spec.SCM != nil {
 		err := scm.GenerateSCMToken(in.Spec.SCM)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
+		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
 		if err != nil {
 			return nil, err
 		}
