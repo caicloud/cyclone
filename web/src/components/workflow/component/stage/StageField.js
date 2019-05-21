@@ -70,13 +70,14 @@ class StageField extends React.Component {
                         hasFeedback
                         required
                       />
-                      <Field
+                      {/* // TODO: 暂时不展示此字段 */}
+                      {/* <Field
                         label={'ENTRYPOINT'}
                         name={`${specKey}.spec.containers.${index}.command`}
                         component={TextareaField}
                         hasFeedback
                         required
-                      />
+                      /> */}
                       <Field
                         label={'COMMAND'}
                         name={`${specKey}.spec.containers.${index}.args`}
@@ -110,7 +111,7 @@ class StageField extends React.Component {
                                 <Row key={i} gutter={16}>
                                   <Col span={11}>
                                     <Field
-                                      key={a.name}
+                                      key={`env_name_${i}`}
                                       name={`${specKey}.spec.containers.${index}.env.${i}.name`}
                                       component={InputField}
                                       hasFeedback
@@ -118,7 +119,7 @@ class StageField extends React.Component {
                                   </Col>
                                   <Col span={11}>
                                     <Field
-                                      key={a.value}
+                                      key={`env_value_${i}`}
                                       name={`${specKey}.spec.containers.${index}.env.${i}.value`}
                                       component={InputField}
                                       hasFeedback
@@ -176,7 +177,7 @@ class StageField extends React.Component {
                       <Row key={i} gutter={16}>
                         <Col span={11}>
                           <Field
-                            key={r.name}
+                            key={`artifacts_name_${i}`}
                             name={`${currentStage}.outputs.artifacts.${i}.name`}
                             component={InputField}
                             hasFeedback
@@ -184,7 +185,7 @@ class StageField extends React.Component {
                         </Col>
                         <Col span={11}>
                           <Field
-                            key={r.name}
+                            key={`artifacts_path_${i}`}
                             name={`${currentStage}.outputs.artifacts.${i}.path`}
                             component={InputField}
                             hasFeedback

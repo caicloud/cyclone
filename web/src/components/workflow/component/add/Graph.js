@@ -220,7 +220,7 @@ class Graph extends React.Component {
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
-    const { nodePosition } = this.state;
+    const { nodePosition, stageInfo } = this.state;
     const {
       setFieldValue,
       update,
@@ -229,27 +229,33 @@ class Graph extends React.Component {
       values,
     } = this.props;
     // Deselect events will send Null viewNode
-    let state = { selected: viewNode, nodePosition };
+    let state = { selected: viewNode, nodePosition, stageInfo };
     const nodeId = _.get(viewNode, 'id');
     const moved =
       _.get(nodePosition, `${nodeId}.x`) !== _.get(viewNode, 'x') ||
       _.get(nodePosition, `${nodeId}.y`) !== _.get(viewNode, 'y');
     if (viewNode && !moved) {
-      state.visible = true;
       setFieldValue('currentStage', nodeId);
       if (update) {
         const stageName = _.get(viewNode, 'title');
         getStage(project, stageName, data => {
-          const info = _.pick(data, ['metadata.name', 'spec']);
+          const info = _.pick(data, [
+            'metadata.name',
+            'metadata.annotations.stageTemplate',
+            'spec',
+          ]);
           if (!_.get(values, nodeId)) {
             setFieldValue(nodeId, info);
           }
-          this.setState({ stageInfo: { [stageName]: info } });
+          this.setState({ stageInfo: { [stageName]: info }, visible: true });
         });
+      } else {
+        state.visible = true;
       }
     } else {
       state.nodePosition[nodeId] = _.pick(viewNode, ['x', 'y', 'title']);
     }
+
     this.setState(state);
   };
 
@@ -522,13 +528,22 @@ class Graph extends React.Component {
    */
 
   render() {
-    const { nodes, edges } = this.state.graph;
+    const {
+      graph: { nodes, edges },
+      stageInfo,
+    } = this.state;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
     const { values, update, project } = this.props;
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
+    const stageName = update
+      ? _.get(
+          stageInfo,
+          `${_.get(selected, 'title')}.metadata.annotations.stageTemplate`
+        )
+      : '';
     return (
       <div id="graph" className={styles['graph']}>
         <div className="graph-header">
@@ -556,6 +571,7 @@ class Graph extends React.Component {
           onCopySelected={this.onCopySelected}
           onPasteSelected={this.onPasteSelected}
           renderNodeText={this.renderNodeText}
+          showGraphControls={false}
         />
         <Drawer
           title={
@@ -575,6 +591,7 @@ class Graph extends React.Component {
             values={this.props.values}
             update={update}
             project={project}
+            templateName={stageName}
           />
         </Drawer>
       </div>

@@ -12,13 +12,17 @@ const Fragment = React.Fragment;
 @inject('stageTemplate')
 @observer
 class AddStage extends React.Component {
+  constructor(props) {
+    super(props);
+    const { templateName } = props;
+    this.state = {
+      creationMethod: templateName ? 'template' : 'custom',
+      templateData: null,
+    };
+  }
   componentDidMount() {
     this.props.stageTemplate.getTemplateList();
   }
-  state = {
-    creationMethod: 'custom',
-    templateData: null,
-  };
 
   handleChange = e => {
     const { setFieldValue, values } = this.props;
@@ -30,21 +34,29 @@ class AddStage extends React.Component {
     this.setState({ creationMethod: value });
   };
 
-  transformTemplateData = data => {
+  transformTemplateData = (data, templateType) => {
     const value = _.cloneDeep(data);
-    const _arguments = _.get(data, 'spec.pod.inputs.arguments', []);
 
-    _.forEach(_arguments, (v, k) => {
-      if (v.name === 'config') {
-        v.value = {
-          namespace: '',
-          name: '',
-          container: '',
-          image: '',
-        };
+    if (templateType === 'cd') {
+      const _arguments = _.get(value, 'spec.pod.inputs.arguments', []);
+      _.forEach(_arguments, (v, k) => {
+        if (v.name === 'config') {
+          v.value = {
+            namespace: '',
+            name: '',
+            container: '',
+            image: '',
+          };
+        }
+      });
+      value.spec.pod.inputs.arguments = _arguments;
+    }
+    const resource = _.get(value, 'spec.pod.inputs.resources', []);
+    _.forEach(resource, v => {
+      if (v.name) {
+        v.name = '';
       }
     });
-    value.spec.pod.inputs.arguments = _arguments;
     return value;
   };
 
@@ -64,9 +76,12 @@ class AddStage extends React.Component {
       'labels',
       'stage.cyclone.dev/template-kind',
     ]);
-    let inputs = _.merge({ metadata: { name: '' } }, _.pick(item, 'spec', {}));
-    if (templateType === 'cd') {
-      inputs = this.transformTemplateData(inputs);
+    let inputs = _.merge(
+      { metadata: { name: '', annotations: { stageTemplate: templateType } } },
+      _.pick(item, 'spec', {})
+    );
+    if (templateType) {
+      inputs = this.transformTemplateData(inputs, templateType);
     }
     this.setState({ templateData: inputs });
     const currentStage = _.get(values, 'currentStage');
@@ -117,6 +132,7 @@ class AddStage extends React.Component {
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
+
     if (!_.get(values, `${currentStage}`)) {
       return <Spin />;
     }
@@ -177,6 +193,7 @@ AddStage.propTypes = {
   values: PropTypes.object,
   update: PropTypes.boolean,
   project: PropTypes.string,
+  templateName: PropTypes.string,
 };
 
 export default AddStage;

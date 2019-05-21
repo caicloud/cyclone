@@ -10,17 +10,6 @@ import { inject, observer } from 'mobx-react';
 const styleCls = classNames.bind(styles);
 const Step = Steps.Step;
 
-const steps = [
-  {
-    title: '基础信息', //intl.get('workflow.basicInfo'),
-    content: <BasicInfo />,
-  },
-  {
-    title: '任务', //intl.get('workflow.task'),
-    content: <Graph />,
-  },
-];
-
 @inject('workflow')
 @observer
 class App extends React.Component {
@@ -131,11 +120,22 @@ class App extends React.Component {
     const { current } = this.state;
     const { handleSubmit, workflowName } = this.props;
     const update = !!workflowName;
+    const steps = [
+      {
+        title: `${intl.get('workflow.basicInfo')}`,
+        content: <BasicInfo />,
+      },
+      {
+        title: `${intl.get('workflow.task')}`,
+        content: <Graph />,
+      },
+    ];
+
     return (
       <Form>
         <Steps current={current} size="small">
-          {steps.map(item => (
-            <Step key={item.title} title={item.title} />
+          {steps.map((item, i) => (
+            <Step key={i} title={item.title} />
           ))}
         </Steps>
         <div
