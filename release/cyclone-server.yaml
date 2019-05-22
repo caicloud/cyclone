@@ -82,7 +82,7 @@ _config:
             "open_control_cluster": false,
             "storage_usage_watcher": {
               "image": "[[ registry_release ]]/cyclone-watcher:[[ imageTagFromGitTag ]]",
-              "report_url": "http://cyclone-server.default.svc.cluster.local:7099/apis/v1alpha1/storage/usages",
+              "report_url": "http://[[ kube_apiserver_endpoint_ip ]]:6008/apis/v1alpha1/storage/usages",
               "interval_seconds": "30",
               "resource_requirements": {
                 "limits.cpu": "100m",
