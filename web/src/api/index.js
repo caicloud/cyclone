@@ -165,6 +165,41 @@ const fetchApi = {
       return data;
     });
   },
+
+  listSCMRepos(integration) {
+    return http.get(`/integrations/${integration}/scmrepos`).then(data => {
+      return data;
+    });
+  },
+
+  runWorkflow(projectName, workflowName, info) {
+    return http
+      .post(
+        `/projects/${projectName}/workflows/${workflowName}/workflowruns`,
+        info
+      )
+      .then(data => {
+        return data;
+      });
+  },
+
+  listWorkflowRuns(project, workflow) {
+    return http
+      .get(`/projects/${project}/workflows/${workflow}/workflowruns`)
+      .then(data => {
+        return data;
+      });
+  },
+
+  deleteWorkflowRun(project, workflow, record) {
+    return http
+      .delete(
+        `/projects/${project}/workflows/${workflow}/workflowruns/${record}`
+      )
+      .then(data => {
+        return data;
+      });
+  },
 };
 
 export default fetchApi;

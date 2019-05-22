@@ -7,10 +7,16 @@ const SelectPlus = props => {
     value,
     disabled,
     handleSelectChange,
+    labelInValue = false,
     payload: { items, nameKey = 'name', valueKey = 'value' },
   } = props;
   return (
-    <Select value={value} disabled={disabled} onChange={handleSelectChange}>
+    <Select
+      value={value}
+      disabled={disabled}
+      labelInValue={labelInValue}
+      onChange={handleSelectChange}
+    >
       {items.map(o => {
         const name = _.isObject(o) && nameKey ? _.get(o, nameKey) : o;
         const value = _.isObject(o) && valueKey ? _.get(o, valueKey) : o;
@@ -26,7 +32,8 @@ const SelectPlus = props => {
 SelectPlus.propTypes = {
   handleSelectChange: PropTypes.func,
   value: PropTypes.string,
-  disabled: PropTypes.bool,
+  disabled: PropTypes.boolean,
+  labelInValue: PropTypes.boolean,
   payload: PropTypes.shape({
     items: PropTypes.array,
     nameKey: PropTypes.string,

@@ -66,10 +66,9 @@ const getLoadingInfo = (method, url) => {
   let loadingText = '';
   if (lastResource && lastResource.length > 0) {
     const index = _.findIndex(_querys, o => o === lastResource[0]);
-    loadingText =
-      method === 'GET'
-        ? `${intl.get(method)} ${lastResource[0]}`
-        : `${intl.get(method)} ${lastResource[0]} ${_querys[index + 1]}`;
+    loadingText = ['GET', 'POST'].includes(method)
+      ? `${intl.get(method)} ${lastResource[0]}`
+      : `${intl.get(method)} ${lastResource[0]} ${_querys[index + 1]}`;
   }
   return loadingText;
 };

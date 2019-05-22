@@ -5,6 +5,7 @@ class Resource {
   @observable resourceList = null;
   @observable resourceDetail = {};
   @observable stageDetail = {};
+  @observable SCMRepos = {};
 
   @action.bound
   createResource(project, data, cb) {
@@ -41,8 +42,17 @@ class Resource {
   }
 
   @action.bound
-  updateStage(project, stage, data) {
-    fetchApi.updateStage(project, stage, data);
+  updateStage(project, stage, data, cb) {
+    fetchApi.updateStage(project, stage, data).then(() => {
+      cb && cb();
+    });
+  }
+
+  @action.bound
+  listSCMRepos(integration) {
+    fetchApi.listSCMRepos(integration).then(data => {
+      this.SCMRepos[integration] = data;
+    });
   }
 }
 

@@ -1,5 +1,5 @@
 import { Formik } from 'formik';
-import { Modal } from 'antd';
+import { Modal, notification } from 'antd';
 import BindResource from './BindResource';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
@@ -85,6 +85,10 @@ class ResourceFrom extends React.Component {
           resourceObj,
           () => {
             SetReasourceValue(value, modifyResource);
+            notification.success({
+              message: '更新 Resource',
+              duration: 2,
+            });
           }
         );
       } else {

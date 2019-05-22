@@ -5,8 +5,10 @@ import PropTypes from 'prop-types';
 import { FormatTime } from '@/lib/util';
 import { getQuery } from '@/lib/util';
 import StageDepend from './StageDepend';
+import WorkflowRuns from './WorkflowRuns';
+import MenuAction from '@/components/workflow/component/MenuAction';
 
-const { DetailHead, DetailHeadItem, DetailContent } = Detail;
+const { DetailHead, DetailHeadItem, DetailContent, DetailAction } = Detail;
 const TabPane = Tabs.TabPane;
 
 @inject('workflow')
@@ -36,11 +38,24 @@ class WorkflowDetail extends React.Component {
         params: { workflowName },
       },
       workflow: { workflowDetail },
+      history,
     } = this.props;
     const detail = _.get(workflowDetail, workflowName);
-
+    const query = getQuery(_.get(history, 'location.search'));
+    const _params = { workflowName, projectName: query.project };
     return (
-      <Detail>
+      <Detail
+        actions={
+          <DetailAction>
+            <MenuAction
+              projectName={query.project}
+              workflowName={workflowName}
+              history={history}
+              detail
+            />
+          </DetailAction>
+        }
+      >
         <DetailHead headName={_.get(detail, 'metadata.name')}>
           <DetailHeadItem
             name={intl.get('creationTime')}
@@ -55,6 +70,9 @@ class WorkflowDetail extends React.Component {
           <Tabs defaultActiveKey="workflow" type="card">
             <TabPane tab={intl.get('workflow.basicInfo')} key="workflow">
               <StageDepend detail={detail} />
+            </TabPane>
+            <TabPane tab={intl.get('workflow.runRecord')} key="record">
+              <WorkflowRuns {..._params} />
             </TabPane>
           </Tabs>
         </DetailContent>
