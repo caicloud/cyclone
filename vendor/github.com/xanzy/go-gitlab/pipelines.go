@@ -30,14 +30,6 @@ type PipelinesService struct {
 	client *Client
 }
 
-// PipelineVariable represents a pipeline variable.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html
-type PipelineVariable struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
 // Pipeline represents a GitLab pipeline.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html
@@ -45,8 +37,8 @@ type Pipeline struct {
 	ID         int    `json:"id"`
 	Status     string `json:"status"`
 	Ref        string `json:"ref"`
-	SHA        string `json:"sha"`
-	BeforeSHA  string `json:"before_sha"`
+	Sha        string `json:"sha"`
+	BeforeSha  string `json:"before_sha"`
 	Tag        bool   `json:"tag"`
 	YamlErrors string `json:"yaml_errors"`
 	User       struct {
@@ -64,59 +56,28 @@ type Pipeline struct {
 	CommittedAt *time.Time `json:"committed_at"`
 	Duration    int        `json:"duration"`
 	Coverage    string     `json:"coverage"`
-	WebURL      string     `json:"web_url"`
 }
 
 func (i Pipeline) String() string {
 	return Stringify(i)
 }
 
-// PipelineList represents a GitLab list project pipelines
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html#list-project-pipelines
-type PipelineList []struct {
-	ID     int    `json:"id"`
-	Status string `json:"status"`
-	Ref    string `json:"ref"`
-	SHA    string `json:"sha"`
-}
-
-func (i PipelineList) String() string {
-	return Stringify(i)
-}
-
-// ListProjectPipelinesOptions represents the available ListProjectPipelines() options.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html#list-project-pipelines
-type ListProjectPipelinesOptions struct {
-	ListOptions
-	Scope      *string          `url:"scope,omitempty" json:"scope,omitempty"`
-	Status     *BuildStateValue `url:"status,omitempty" json:"status,omitempty"`
-	Ref        *string          `url:"ref,omitempty" json:"ref,omitempty"`
-	SHA        *string          `url:"sha,omitempty" json:"sha,omitempty"`
-	YamlErrors *bool            `url:"yaml_errors,omitempty" json:"yaml_errors,omitempty"`
-	Name       *string          `url:"name,omitempty" json:"name,omitempty"`
-	Username   *string          `url:"username,omitempty" json:"username,omitempty"`
-	OrderBy    *string          `url:"order_by,omitempty" json:"order_by,omitempty"`
-	Sort       *string          `url:"sort,omitempty" json:"sort,omitempty"`
-}
-
 // ListProjectPipelines gets a list of project piplines.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html#list-project-pipelines
-func (s *PipelinesService) ListProjectPipelines(pid interface{}, opt *ListProjectPipelinesOptions, options ...OptionFunc) (PipelineList, *Response, error) {
+func (s *PipelinesService) ListProjectPipelines(pid interface{}, options ...OptionFunc) ([]*Pipeline, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/pipelines", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt, options)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var p PipelineList
+	var p []*Pipeline
 	resp, err := s.client.Do(req, &p)
 	if err != nil {
 		return nil, resp, err
@@ -152,8 +113,7 @@ func (s *PipelinesService) GetPipeline(pid interface{}, pipeline int, options ..
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/pipelines.html#create-a-new-pipeline
 type CreatePipelineOptions struct {
-	Ref       *string             `url:"ref" json:"ref"`
-	Variables []*PipelineVariable `url:"variables,omitempty" json:"variables,omitempty"`
+	Ref *string `url:"ref,omitempty" json:"ref"`
 }
 
 // CreatePipeline creates a new project pipeline.

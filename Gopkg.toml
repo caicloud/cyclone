@@ -34,7 +34,8 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 
 [[constraint]]
   name = "github.com/xanzy/go-gitlab"
-  version = "0.16.1"
+  # Limit version for GitLab v3
+  version = "0.4.0"
 
 [[constraint]]
   branch = "master"

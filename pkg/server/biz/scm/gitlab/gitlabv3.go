@@ -140,7 +140,7 @@ func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, com
 	owner, project := scm.ParseRepo(repoURL)
 	context := "continuous-integration/cyclone"
 	opt := &v3.SetCommitStatusOptions{
-		State:       *v3.BuildState(v3.BuildStateValue(state)),
+		State:       v3.BuildState(state),
 		Description: &description,
 		TargetURL:   &targetURL,
 		Context:     &context,
