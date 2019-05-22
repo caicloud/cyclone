@@ -1,25 +1,17 @@
 import { Steps, Button, Form } from 'antd';
-
 import Graph from './Graph';
 import BasicInfo from './BasicInfo';
 import styles from '../index.module.less';
 import classNames from 'classnames/bind';
 import PropTypes from 'prop-types';
+import { tranformStage } from '@/lib/util';
+import { inject, observer } from 'mobx-react';
 
 const styleCls = classNames.bind(styles);
 const Step = Steps.Step;
 
-const steps = [
-  {
-    title: '基础信息', //intl.get('workflow.basicInfo'),
-    content: <BasicInfo />,
-  },
-  {
-    title: '任务', //intl.get('workflow.task'),
-    content: <Graph />,
-  },
-];
-
+@inject('workflow')
+@observer
 class App extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
@@ -28,12 +20,24 @@ class App extends React.Component {
     handleSubmit: PropTypes.func,
     submitting: PropTypes.bool,
     setSubmitting: PropTypes.func,
+    saveStagePostition: PropTypes.func,
+    workFlowInfo: PropTypes.object,
+    workflow: PropTypes.object,
+    workflowName: PropTypes.string,
+    project: PropTypes.string,
   };
 
   constructor(props) {
     super(props);
+    const { workFlowInfo } = props;
     this.state = {
       current: 0,
+      graph: _.isEmpty(workFlowInfo)
+        ? {}
+        : tranformStage(
+            _.get(workFlowInfo, 'spec.stages'),
+            _.get(workFlowInfo, 'metadata.annotations.stagePosition')
+          ),
     };
   }
 
@@ -44,18 +48,49 @@ class App extends React.Component {
     }
   }
 
-  next() {
+  next = update => {
+    const {
+      workflow: { updateWorkflow, workflowDetail },
+      values,
+      workflowName,
+      project,
+    } = this.props;
     const current = this.state.current + 1;
     this.setState({ current });
-  }
+    if (update) {
+      const detail = _.get(workflowDetail, workflowName);
+      const prevDes = _.get(detail, 'metadata.annotations.description');
+      const des = _.get(values, 'metadata.annotations.description');
+      if (prevDes !== des) {
+        const workflowData = {
+          metadata: { name: workflowName, annotations: { description: des } },
+          ..._.pick(detail, 'spec.stages'),
+        };
+        updateWorkflow(project, workflowName, workflowData);
+      }
+    }
+  };
 
-  prev() {
+  prev = update => {
     const current = this.state.current - 1;
     this.setState({ current });
-  }
+  };
+
+  saveGraph = graphData => {
+    this.setState({ graph: graphData });
+  };
 
   getStepContent = current => {
-    const { setFieldValue, values, handleDepend } = this.props;
+    const {
+      setFieldValue,
+      values,
+      handleDepend,
+      saveStagePostition,
+      workFlowInfo,
+      project,
+      workflowName,
+    } = this.props;
+    const { graph } = this.state;
     switch (current) {
       case 0: {
         return <BasicInfo />;
@@ -65,7 +100,13 @@ class App extends React.Component {
           <Graph
             setFieldValue={setFieldValue}
             values={values}
+            initialGraph={graph}
+            update={!_.isEmpty(workFlowInfo)}
+            project={project}
+            workflowName={workflowName}
             setStageDepned={handleDepend}
+            updateStagePosition={saveStagePostition}
+            saveGraphWhenUnmount={this.saveGraph}
           />
         );
       }
@@ -77,13 +118,24 @@ class App extends React.Component {
 
   render() {
     const { current } = this.state;
-    const { handleSubmit } = this.props;
+    const { handleSubmit, workflowName } = this.props;
+    const update = !!workflowName;
+    const steps = [
+      {
+        title: `${intl.get('workflow.basicInfo')}`,
+        content: <BasicInfo />,
+      },
+      {
+        title: `${intl.get('workflow.task')}`,
+        content: <Graph />,
+      },
+    ];
 
     return (
       <Form>
         <Steps current={current} size="small">
-          {steps.map(item => (
-            <Step key={item.title} title={item.title} />
+          {steps.map((item, i) => (
+            <Step key={i} title={item.title} />
           ))}
         </Steps>
         <div
@@ -95,11 +147,11 @@ class App extends React.Component {
         </div>
         <div className="steps-action">
           {current < steps.length - 1 && (
-            <Button type="primary" onClick={() => this.next()}>
+            <Button type="primary" onClick={() => this.next(update)}>
               {intl.get('next')}
             </Button>
           )}
-          {current === steps.length - 1 && (
+          {current === steps.length - 1 && !update && (
             <Button type="primary" onClick={handleSubmit}>
               {intl.get('confirm')}
             </Button>

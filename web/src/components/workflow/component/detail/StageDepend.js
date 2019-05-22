@@ -1,11 +1,8 @@
 import * as React from 'react';
 import { Spin } from 'antd';
 import { GraphView } from 'react-digraph';
-import GraphConfig, {
-  NODE_KEY,
-  STAGE,
-  SPECIAL_EDGE_TYPE,
-} from '../add/graph-config'; // Configures node/edge types
+import GraphConfig, { NODE_KEY } from '../add/graph-config'; // Configures node/edge types
+import { tranformStage } from '@/lib/util';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
@@ -15,13 +12,16 @@ class StageDepend extends React.Component {
   constructor(props) {
     super(props);
 
-    const { stages } = props;
+    const { detail } = props;
     let graph = {
       edges: [],
       nodes: [],
     };
-    if (!_.isEmpty(stages)) {
-      graph = this.tranformStage(stages);
+    if (!_.isEmpty(detail)) {
+      graph = tranformStage(
+        _.get(detail, 'spec.stages'),
+        _.get(detail, 'metadata.annotations.stagePosition')
+      );
     }
     this.state = {
       graph,
@@ -32,38 +32,15 @@ class StageDepend extends React.Component {
   }
 
   componentDidUpdate(preProps) {
-    const { stages } = this.props;
-    if (!_.isEmpty(stages) && !_.isEqual(stages, preProps.stages)) {
-      const data = this.tranformStage(stages);
+    const { detail } = this.props;
+    if (!_.isEmpty(detail) && !_.isEqual(detail, preProps.detail)) {
+      const data = tranformStage(
+        _.get(detail, 'spec.stages'),
+        _.get(detail, 'metadata.annotations.stagePosition')
+      );
       this.setState({ graph: data });
     }
   }
-
-  tranformStage = stages => {
-    let nodes = [];
-    let edges = [];
-    _.forEach(stages, (v, k) => {
-      const node = {
-        id: `stage_${k + 1}`,
-        title: v.name,
-        type: STAGE,
-        x: _.get(nodes, `[${k - 1}].x`, 0) + ((k + 1) % 2) * 240,
-        y: _.get(nodes, `[${k - 1}].y`, 0) + (k % 2) * 120,
-      };
-      nodes.push(node);
-      if (_.isArray(v.depends)) {
-        const edge = _.map(v.depends, d => {
-          return {
-            source: d,
-            target: `stage_${k + 1}`,
-            type: SPECIAL_EDGE_TYPE,
-          };
-        });
-        edges = _.concat(edges, edge);
-      }
-    });
-    return { nodes, edges };
-  };
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
@@ -124,6 +101,7 @@ StageDepend.propTypes = {
   values: PropTypes.object,
   setStageDepned: PropTypes.func,
   stages: PropTypes.object,
+  detail: PropTypes.object,
 };
 
 export default StageDepend;

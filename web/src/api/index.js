@@ -2,11 +2,6 @@ import http from './http.js';
 
 const fetchApi = {
   http,
-  listWorkflow(project, query) {
-    return http.get(`/projects/${project}/workflows`, query).then(data => {
-      return data;
-    });
-  },
   // start template
   fetchStageTemplates(query) {
     return http.get('/templates', query).then(data => {
@@ -54,6 +49,7 @@ const fetchApi = {
       return data;
     });
   },
+
   /** start project */
   listProjects() {
     return http.get('/projects').then(data => {
@@ -84,10 +80,32 @@ const fetchApi = {
   },
   /** end project */
   /** start resource */
+  getResource(project, resource) {
+    return http.get(`/projects/${project}/resources/${resource}`).then(data => {
+      return data;
+    });
+  },
+
   createResource(project, info) {
     return http.post(`/projects/${project}/resources`, info).then(data => {
       return data;
     });
+  },
+
+  updateResource(project, resource, info) {
+    return http
+      .put(`/projects/${project}/resources/${resource}`, info)
+      .then(data => {
+        return data;
+      });
+  },
+
+  deleteResource(project, resource) {
+    return http
+      .delete(`/projects/${project}/resources/${resource}`)
+      .then(data => {
+        return data;
+      });
   },
 
   createStage(project, info) {
@@ -95,11 +113,43 @@ const fetchApi = {
       return data;
     });
   },
+
+  getStage(project, stage) {
+    return http.get(`/projects/${project}/stages/${stage}`).then(data => {
+      return data;
+    });
+  },
+
+  updateStage(project, stage, info) {
+    return http.put(`/projects/${project}/stages/${stage}`, info).then(data => {
+      return data;
+    });
+  },
+
+  deleteStage(project, stage) {
+    return http.delete(`/projects/${project}/stages/${stage}`).then(data => {
+      return data;
+    });
+  },
   /** end resource */
+  listWorkflow(project, query) {
+    return http.get(`/projects/${project}/workflows`, query).then(data => {
+      return data;
+    });
+  },
+
   createWorkflow(project, info) {
     return http.post(`/projects/${project}/workflows`, info).then(data => {
       return data;
     });
+  },
+
+  updateWorkflow(project, workflow, info) {
+    return http
+      .put(`/projects/${project}/workflows/${workflow}`, info)
+      .then(data => {
+        return data;
+      });
   },
 
   removeWorkflow(project, workflow) {

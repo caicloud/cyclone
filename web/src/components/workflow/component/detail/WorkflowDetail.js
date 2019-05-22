@@ -54,7 +54,7 @@ class WorkflowDetail extends React.Component {
         <DetailContent>
           <Tabs defaultActiveKey="workflow" type="card">
             <TabPane tab={intl.get('workflow.basicInfo')} key="workflow">
-              <StageDepend stages={_.get(detail, 'spec.stages')} />
+              <StageDepend detail={detail} />
             </TabPane>
           </Tabs>
         </DetailContent>

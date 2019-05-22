@@ -53,13 +53,34 @@ const addRequesting = config => {
   return config;
 };
 
+// get resource info from url
+const getLoadingInfo = (method, url) => {
+  const _querys = url.split('/');
+  const subResource = ['stages', 'resources', 'workflows'];
+  const firstResource = ['project', 'integrations', 'templates'];
+  const includeSubResource = _.intersection(_querys, subResource);
+  const includeFirstResource = _.intersection(_querys, firstResource);
+
+  const lastResource =
+    includeSubResource.length > 0 ? includeSubResource : includeFirstResource;
+  let loadingText = '';
+  if (lastResource && lastResource.length > 0) {
+    const index = _.findIndex(_querys, o => o === lastResource[0]);
+    loadingText =
+      method === 'GET'
+        ? `${intl.get(method)} ${lastResource[0]}`
+        : `${intl.get(method)} ${lastResource[0]} ${_querys[index + 1]}`;
+  }
+  return loadingText;
+};
+
 //loading
 let loading;
 let loadingNum = 0;
-const addLoading = function(method) {
+const addLoading = function(method, url) {
   if (loadingNum <= 0) {
     loadingNum = 0;
-    loading = message.loading(method === 'GET' ? '加载中' : '提交中', 3);
+    loading = message.loading(getLoadingInfo(method, url), 3);
   }
   loadingNum++;
 };
@@ -95,7 +116,7 @@ instance.interceptors.request.use(
       instance.updateToken();
     }
     config = addRequesting(config);
-    addLoading(config.method.toUpperCase());
+    addLoading(config.method.toUpperCase(), config.url);
     return config;
   },
   function(error) {

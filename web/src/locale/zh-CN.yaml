@@ -18,6 +18,10 @@ image: 镜像
 env: 环境变量
 key: 健
 custom: 自定义
+GET: 获取
+PUT: 修改
+POST: 创建
+DELETE: 删除
 tips:
   officialWebsite: 访问 Cyclone 官网查看项目文档和使用说明
 cluster:

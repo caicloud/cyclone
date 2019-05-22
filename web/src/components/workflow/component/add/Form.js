@@ -1,38 +1,67 @@
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
+import { Spin } from 'antd';
 import CreateWorkflow from './CreateWorkflow';
 import { inject, observer } from 'mobx-react';
-import qs from 'query-string';
+import { formatSubmitData, revertWorkflow } from './util';
+import { getQuery } from '@/lib/util';
 import fetchApi from '@/api/index.js';
 
 @inject('resource', 'workflow')
 @observer
 class AddWorkflow extends React.Component {
-  state = {
-    depend: {},
-    submitting: false,
-  };
-  setStageDepend = depend => {
-    const obj = {};
-    _.forEach(depend, v => {
-      if (!obj[v.target]) {
-        obj[v.target] = [v.source];
+  constructor(props) {
+    super(props);
+    this.state = {
+      depend: {},
+      submitting: false,
+      position: {},
+    };
+    const {
+      match: { params },
+      history: { location },
+      workflow,
+    } = props;
+    if (_.get(params, 'workflowName')) {
+      const query = getQuery(location.search);
+      workflow.getWorkflow(query.project, params.workflowName);
+    }
+  }
+
+  setStageDepend = (targetID, sourceName, targeName) => {
+    const { depend } = this.state;
+    const obj = _.cloneDeep(depend);
+    if (sourceName) {
+      if (!obj[targetID]) {
+        obj[targetID] = [sourceName];
+      } else if (obj[targetID].includes(sourceName)) {
+        const index = _.findIndex(obj[targetID], o => o === sourceName);
+        _.pullAt(obj[targetID], index);
       } else {
-        obj[v.target].push(v.source);
+        obj[targetID].push(sourceName);
       }
-    });
+    } else {
+      delete obj[targetID];
+      _.forEach(obj, v => {
+        if (v && v.includes(targeName)) {
+          const index = v.indexOf(targeName);
+          _.pullAt(v, index);
+        }
+      });
+    }
+
     this.setState({ depend: obj });
   };
 
-  tramformArg = data => {
-    const value = _.cloneDeep(data);
-    const containers = _.get(value, 'spec.containers[0]');
-    _.forEach(containers, (v, k) => {
-      if (['args', 'command'].includes(k) && _.isString(v)) {
-        value.spec.containers[0][k] = v.split(/(?:\r\n|\r|\n)/);
-      }
-    });
-    return value;
+  saveStagePosition = (stageId, data) => {
+    const { position } = this.state;
+    const _position = _.cloneDeep(position);
+    if (!_.isEmpty(data)) {
+      _position[stageId] = data;
+    } else {
+      delete _position[stageId];
+    }
+    this.setState({ position: _position });
   };
 
   // submit form data
@@ -40,66 +69,9 @@ class AddWorkflow extends React.Component {
     const {
       history: { location },
     } = this.props;
-    const { depend } = this.state;
     this.setState({ submitting: true });
-    const requests = [];
-    const query = qs.parse(location.search);
-    const stages = _.get(value, 'stages', []);
-    const workflowInfo = {
-      metadata: _.get(value, 'metadata'),
-      spec: {
-        stages: [],
-      },
-    };
-    _.forEach(stages, v => {
-      const inputResources = _.get(value, `${v}.inputs.resources`, []);
-      const outputResources = _.get(value, `${v}.outputs.resources`, []);
-      let stage = {
-        metadata: {
-          name: _.get(value, `${v}.name`),
-        },
-        spec: {
-          pod: this.tramformArg(
-            _.pick(_.get(value, v), ['inputs', 'outputs', 'spec'])
-          ),
-        },
-      };
-      _.forEach(inputResources, (r, i) => {
-        const data = _.pick(r, ['spec']);
-        data.metadata = {
-          name: r.name,
-        };
-        stage.spec.pod.inputs.resources[i] = _.pick(r, ['name', 'path']);
-        requests.push({ type: 'createResource', project: query.project, data });
-      });
-
-      _.forEach(outputResources, (r, i) => {
-        const data = _.pick(r, ['spec']);
-        data.metadata = {
-          name: r.name,
-        };
-        stage.spec.pod.outputs.resources[i] = _.pick(r, ['name']);
-        requests.push({ type: 'createResource', project: query.project, data });
-      });
-      requests.push({
-        type: 'createStage',
-        project: query.project,
-        data: stage,
-      });
-
-      const workflowStage = {
-        artifacts: _.get(v, 'outputs.artifacts', []),
-        depends: _.get(depend, v),
-        name: _.get(value, `${v}.name`),
-      };
-      workflowInfo.spec.stages.push(workflowStage);
-    });
-    requests.push({
-      type: 'createWorkflow',
-      project: query.project,
-      data: workflowInfo,
-    });
-
+    const query = getQuery(location.search);
+    const requests = formatSubmitData(value, query, this.state);
     this.postAllRequests(requests).then(data => {
       this.setState({ submitting: false });
       if (!_.get(data, 'submitError')) {
@@ -129,18 +101,37 @@ class AddWorkflow extends React.Component {
     return errors;
   };
 
-  getInitialValues = () => {
+  getInitialValues = data => {
     let defaultValue = {
-      metadata: { name: '', description: '' },
+      metadata: { name: '', annotations: { description: '' } },
       stages: [],
       currentStage: '',
     };
+
+    if (!_.isEmpty(data)) {
+      defaultValue = revertWorkflow(data);
+    }
     return defaultValue;
   };
 
   render() {
+    const {
+      match: { params },
+      history: { location },
+      workflow: { workflowDetail },
+    } = this.props;
     const { submitting } = this.state;
-    const initValue = this.getInitialValues();
+    const query = getQuery(location.search);
+    if (
+      _.get(params, 'workflowName') &&
+      !_.get(workflowDetail, `${params.workflowName}`)
+    ) {
+      return <Spin />;
+    }
+
+    const initValue = this.getInitialValues(
+      _.get(workflowDetail, `${params.workflowName}`)
+    );
     return (
       <Formik
         initialValues={initValue}
@@ -149,7 +140,11 @@ class AddWorkflow extends React.Component {
         render={props => (
           <CreateWorkflow
             {...props}
+            project={query.project}
+            workflowName={_.get(params, 'workflowName')}
+            workFlowInfo={_.get(workflowDetail, `${params.workflowName}`)}
             handleDepend={this.setStageDepend}
+            saveStagePostition={this.saveStagePosition}
             submitting={submitting}
           />
         )}
@@ -163,6 +158,7 @@ AddWorkflow.propTypes = {
   resource: PropTypes.object,
   workflow: PropTypes.object,
   history: PropTypes.object,
+  match: PropTypes.object,
 };
 
 export default AddWorkflow;
