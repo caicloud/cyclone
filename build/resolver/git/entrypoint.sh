@@ -129,6 +129,12 @@ wrapPull() {
             done
         fi
     fi
+
+    # Write commit id to output file, which will be collected by Cyclone
+    cd $WORKDIR/data
+    echo "Collect commit id to result file /__result__ ..."
+    echo "LastCommitID:`git log -n 1 --pretty=format:"%H"`" >> /__result__;
+    cat /__result__;
 }
 
 # Revision can be in two different format:
@@ -188,9 +194,10 @@ pull() {
             git fetch origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit
         fi
-
-        ls -al
     fi
+
+    cd $WORKDIR/data
+    ls -al
 }
 
 case $COMMAND in
