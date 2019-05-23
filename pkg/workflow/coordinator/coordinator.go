@@ -347,6 +347,12 @@ func (co *Coordinator) getContainerID(name string) (string, error) {
 		}
 	}
 
+	for _, cs := range pod.Status.InitContainerStatuses {
+		if cs.Name == name {
+			return refineContainerID(cs.ContainerID), nil
+		}
+	}
+
 	return "", fmt.Errorf("container %s not found", name)
 }
 
@@ -357,58 +363,30 @@ func (co *Coordinator) CollectExecutionResults() error {
 		return err
 	}
 
+	var keyValues []v1alpha1.KeyValue
+
 	for _, c := range pod.Spec.Containers {
-		if !common.OnlyWorkload(c.Name) {
+		kv, err := co.extractExecutionResults(c.Name)
+		if err != nil {
 			continue
 		}
 
-		dst := fmt.Sprintf("/tmp/__result__%s", c.Name)
-		containerID, err := co.getContainerID(c.Name)
+		keyValues = append(keyValues, kv...)
+	}
+
+	for _, c := range pod.Spec.InitContainers {
+		kv, err := co.extractExecutionResults(c.Name)
 		if err != nil {
-			log.WithField("c", containerID).Error("Get container ID error: ", err)
-			return err
-		}
-		err = co.runtimeExec.CopyFromContainer(containerID, common.ResultFilePath, dst)
-		if isFileNotExist(err) {
 			continue
 		}
 
-		if err != nil {
+		keyValues = append(keyValues, kv...)
+	}
+
+	if len(keyValues) > 0 {
+		log.Info("To set execution result")
+		if err := co.runtimeExec.SetResults(keyValues); err != nil {
 			return err
-		}
-
-		b, err := ioutil.ReadFile(dst)
-		if err != nil {
-			return err
-		}
-		log.Info("Result file content: ", string(b))
-
-		var keyValues []v1alpha1.KeyValue
-		lines := strings.Split(string(b), "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if len(line) == 0 {
-				continue
-			}
-
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) < 2 {
-				log.Warn("Invalid result item: ", line)
-				continue
-			}
-			log.Info("Result item: ", line)
-
-			keyValues = append(keyValues, v1alpha1.KeyValue{
-				Key:   parts[0],
-				Value: parts[1],
-			})
-		}
-
-		if len(keyValues) > 0 {
-			log.Info("To set execution result")
-			if err := co.runtimeExec.SetResults(keyValues); err != nil {
-				return err
-			}
 		}
 	}
 
@@ -421,4 +399,50 @@ func isFileNotExist(err error) bool {
 	}
 
 	return strings.Contains(err.Error(), "No such container:path")
+}
+
+func (co *Coordinator) extractExecutionResults(containerName string) ([]v1alpha1.KeyValue, error) {
+	var keyValues []v1alpha1.KeyValue
+	dst := fmt.Sprintf("/tmp/__result__%s", containerName)
+	containerID, err := co.getContainerID(containerName)
+	if err != nil {
+		log.WithField("c", containerID).Error("Get container ID error: ", err)
+		return keyValues, err
+	}
+	err = co.runtimeExec.CopyFromContainer(containerID, common.ResultFilePath, dst)
+	if isFileNotExist(err) {
+		return keyValues, err
+	}
+
+	if err != nil {
+		return keyValues, err
+	}
+
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return keyValues, err
+	}
+	log.Info("Result file content: ", string(b))
+
+	lines := strings.Split(string(b), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) < 2 {
+			log.Warn("Invalid result item: ", line)
+			continue
+		}
+		log.Info("Result item: ", line)
+
+		keyValues = append(keyValues, v1alpha1.KeyValue{
+			Key:   parts[0],
+			Value: parts[1],
+		})
+	}
+
+	return keyValues, nil
 }
