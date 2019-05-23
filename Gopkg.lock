@@ -487,12 +487,12 @@
   version = "v1.2.2"
 
 [[projects]]
-  digest = "1:e362dddd08e6e894835074b6de49515939dbfb590c7198980639291bab62db4f"
+  digest = "1:347556b281f7d790d186cd01818c5baa398a3334af6c8b932e20114edaaeb13c"
   name = "github.com/xanzy/go-gitlab"
   packages = ["."]
   pruneopts = "UT"
-  revision = "be70cf752294cc5c6ee89a18d6ba0caca08aa5c7"
-  version = "v0.16.1"
+  revision = "9f4cdd1f0e436cb7208077e645a05bce5f36fcbd"
+  version = "v0.4.1"
 
 [[projects]]
   branch = "master"
@@ -965,6 +965,7 @@
     "github.com/cbroglie/mustache",
     "github.com/golang/glog",
     "github.com/google/go-github/github",
+    "github.com/google/go-querystring/query",
     "github.com/gorilla/websocket",
     "github.com/mozillazg/go-slugify",
     "github.com/robfig/cron",
@@ -978,6 +979,8 @@
     "gopkg.in/xanzy/go-gitlab.v0",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
+    "k8s.io/api/policy/v1beta1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apimachinery/pkg/api/errors",
