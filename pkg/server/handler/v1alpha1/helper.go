@@ -442,6 +442,16 @@ func listSCMTags(scmSource *api.SCMSource, repo string) ([]string, error) {
 	return sp.ListTags(repo)
 }
 
+func listSCMDockerfiles(scmSource *api.SCMSource, repo string) ([]string, error) {
+	sp, err := scm.GetSCMProvider(scmSource)
+	if err != nil {
+		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
+		return nil, err
+	}
+
+	return sp.ListDockerfiles(repo)
+}
+
 func createSCMStatus(scmSource *api.SCMSource, status v1alpha1.StatusPhase, recordURL string, event *scm.EventData) error {
 	sp, err := scm.GetSCMProvider(scmSource)
 	if err != nil {

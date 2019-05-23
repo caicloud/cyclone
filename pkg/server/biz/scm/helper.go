@@ -42,3 +42,33 @@ type Repository struct {
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url,omitempty"`
 }
+
+// IsDockerfile judges whether the file is Dockerfile. Dockerfile should meet requirements:
+// * File name should be Dockerfile.
+// * File should not be in dep folders.
+func IsDockerfile(name, path string) bool {
+	if name != "Dockerfile" {
+		return false
+	}
+
+	if IsInDep(path) {
+		return false
+	}
+
+	return true
+}
+
+// IsInDep judges whether the path is in dep folders.
+func IsInDep(path string) bool {
+	// Will exclude more dep folders for different languages if necessary.
+	// * Golang: vendor
+	depFolders := []string{"vendor/"}
+
+	for _, d := range depFolders {
+		if strings.HasPrefix(path, d) {
+			return true
+		}
+	}
+
+	return false
+}

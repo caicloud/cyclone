@@ -152,7 +152,7 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 
 	files := []string{}
 	for _, t := range treeNodes {
-		if t.Type == "blob" && t.Name == "Dockerfile" {
+		if t.Type == "blob" && scm.IsDockerfile(t.Name, t.Path) {
 			files = append(files, t.Path)
 		}
 	}

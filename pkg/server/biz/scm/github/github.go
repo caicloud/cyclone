@@ -291,7 +291,7 @@ func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 
 	crs := []string{}
 	for _, c := range allCodeResult {
-		if *c.Name == "Dockerfile" {
+		if scm.IsDockerfile(*c.Name, *c.Path) {
 			crs = append(crs, *c.Path)
 		}
 	}
