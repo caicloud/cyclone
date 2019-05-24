@@ -62,6 +62,7 @@ workflow:
   addArtifact: 添加 Artifact
   run: 执行
   runRecord: 执行记录
+  runWorkflow: 执行 Workflow
 integration:
   name: 名称
   desc: 描述
@@ -183,3 +184,6 @@ validate:
     selectConfig: 请选择配置
 confirmTip:
   remove: 确定删除 {resourceType} {name} ?
+notification:
+  updateStage: Stage 更新成功
+  updateWorkflow: Workflow 更新成功

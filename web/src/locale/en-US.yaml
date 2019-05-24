@@ -62,6 +62,7 @@ workflow:
   addArtifact: Add artifact
   run: Run
   runRecord: Run records
+  runWorkflow: Run Workflow
 integration:
   name: Name
   desc: Description
@@ -182,3 +183,6 @@ validate:
     selectConfig: Please select config
 confirmTip:
   remove: Make sure to delete {resourceType} {name} ?
+notification:
+  updateStage: Stage update succeeded
+  updateWorkflow: Workflow update succeeded

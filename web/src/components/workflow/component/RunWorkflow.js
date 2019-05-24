@@ -65,7 +65,7 @@ class RunWorkflow extends React.Component {
         onSubmit={this.submitForm}
         render={props => (
           <Modal
-            title="Run Workflow"
+            title={intl.get('workflow.runWorkflow')}
             visible={visible}
             onCancel={this.closeModal}
             onOk={props.handleSubmit}

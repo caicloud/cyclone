@@ -162,7 +162,7 @@ class Graph extends React.Component {
         if (!_.isEqual(stage, prevStageInfo)) {
           updateStage(project, stageName, stage, () => {
             notification.success({
-              message: 'stage 更新成功',
+              message: intl.get('notification.updateStage'),
               duration: 2,
             });
           });
@@ -447,7 +447,7 @@ class Graph extends React.Component {
     updateWorkflow(project, workflowName, workflowInfo, () => {
       // NOTE: 停留时间太短，看不清
       notification.success({
-        message: 'workflow 更新成功',
+        message: intl.get('notification.updateWorkflow'),
         duration: 2,
       });
       this.setState({ depnedLoading: false });
