@@ -78,7 +78,7 @@ const ConfigSection = props => {
                           <Row key={i} gutter={16}>
                             <Col span={11}>
                               <Field
-                                key={a.name}
+                                key={i}
                                 name={`spec.pod.spec.containers.${index}.env.${i}.name`}
                                 component={InputField}
                                 hasFeedback
@@ -86,7 +86,7 @@ const ConfigSection = props => {
                             </Col>
                             <Col span={11}>
                               <Field
-                                key={a.value}
+                                key={i}
                                 name={`spec.pod.spec.containers.${index}.env.${i}.value`}
                                 component={InputField}
                                 hasFeedback

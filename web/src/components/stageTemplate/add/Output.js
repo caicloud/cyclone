@@ -35,7 +35,7 @@ const OutputSection = props => {
                   <Row key={index} gutter={16}>
                     <Col span={11}>
                       <Field
-                        key={a.name}
+                        key={index}
                         name={`spec.pod.outputs.artifacts.${index}.name`}
                         component={InputField}
                         hasFeedback
@@ -43,7 +43,7 @@ const OutputSection = props => {
                     </Col>
                     <Col span={11}>
                       <Field
-                        key={a.value}
+                        key={index}
                         name={`spec.pod.outputs.artifacts.${index}.path`}
                         component={InputField}
                         hasFeedback
