@@ -1,6 +1,6 @@
 import { Modal } from 'antd';
 import { inject, observer } from 'mobx-react';
-import EllipsisMenu from '../../public/ellipsisMenu';
+import EllipsisMenu from '@/components/public/ellipsisMenu';
 import PropTypes from 'prop-types';
 
 const confirm = Modal.confirm;

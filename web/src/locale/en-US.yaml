@@ -60,6 +60,9 @@ workflow:
   stageCreation: Creation method
   addEnv: Add env
   addArtifact: Add artifact
+  run: Run
+  runRecord: Run records
+  runWorkflow: Run Workflow
 integration:
   name: Name
   desc: Description
@@ -178,3 +181,8 @@ validate:
   quota:
     exceedLimit: The request can‘t exceed the limit
     selectConfig: Please select config
+confirmTip:
+  remove: Make sure to delete {resourceType} {name} ?
+notification:
+  updateStage: Stage update succeeded
+  updateWorkflow: Workflow update succeeded

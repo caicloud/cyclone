@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Drawer } from 'antd';
+import { Button, Drawer, notification } from 'antd';
 import { GraphView } from 'react-digraph';
 import GraphConfig, {
   NODE_KEY,
@@ -39,6 +39,7 @@ class Graph extends React.Component {
       selected: null,
       visible: false,
       stageInfo: {},
+      depnedLoading: false,
     };
 
     this.GraphView = React.createRef();
@@ -159,7 +160,12 @@ class Graph extends React.Component {
         const stage = formatStage(_.get(values, currentStage), false);
         const prevStageInfo = _.get(stageInfo, stageName);
         if (!_.isEqual(stage, prevStageInfo)) {
-          updateStage(project, stageName, stage);
+          updateStage(project, stageName, stage, () => {
+            notification.success({
+              message: intl.get('notification.updateStage'),
+              duration: 2,
+            });
+          });
         }
       }
     }
@@ -220,7 +226,7 @@ class Graph extends React.Component {
 
   // Node 'mouseUp' handler
   onSelectNode = viewNode => {
-    const { nodePosition, stageInfo } = this.state;
+    const { nodePosition, stageInfo, depnedLoading } = this.state;
     const {
       setFieldValue,
       update,
@@ -228,6 +234,9 @@ class Graph extends React.Component {
       project,
       values,
     } = this.props;
+    if (depnedLoading) {
+      return;
+    }
     // Deselect events will send Null viewNode
     let state = { selected: viewNode, nodePosition, stageInfo };
     const nodeId = _.get(viewNode, 'id');
@@ -387,6 +396,7 @@ class Graph extends React.Component {
       workflow: { updateWorkflow, workflowDetail },
     } = this.props;
     const { nodePosition } = this.state;
+    this.setState({ depnedLoading: true });
     const detail = _.get(workflowDetail, workflowName);
     const workflowInfo = _.cloneDeep({
       ..._.pick(values, ['metadata']),
@@ -434,7 +444,14 @@ class Graph extends React.Component {
         }
       }
     }
-    updateWorkflow(project, workflowName, workflowInfo);
+    updateWorkflow(project, workflowName, workflowInfo, () => {
+      // NOTE: 停留时间太短，看不清
+      notification.success({
+        message: intl.get('notification.updateWorkflow'),
+        duration: 2,
+      });
+      this.setState({ depnedLoading: false });
+    });
   };
 
   // Called when an edge is reattached to a different target.
@@ -531,8 +548,9 @@ class Graph extends React.Component {
     const {
       graph: { nodes, edges },
       stageInfo,
+      depnedLoading,
+      selected,
     } = this.state;
-    const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
     const { values, update, project } = this.props;
     const currentStage = _.get(values, 'currentStage');
@@ -547,7 +565,11 @@ class Graph extends React.Component {
     return (
       <div id="graph" className={styles['graph']}>
         <div className="graph-header">
-          <Button type="primary" onClick={this.addStartNode}>
+          <Button
+            type="primary"
+            onClick={this.addStartNode}
+            disabled={depnedLoading}
+          >
             添加 stage
           </Button>
         </div>
@@ -571,6 +593,7 @@ class Graph extends React.Component {
           onCopySelected={this.onCopySelected}
           onPasteSelected={this.onPasteSelected}
           renderNodeText={this.renderNodeText}
+          readOnly={depnedLoading}
           showGraphControls={false}
         />
         <Drawer
