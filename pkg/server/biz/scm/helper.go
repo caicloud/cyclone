@@ -44,14 +44,16 @@ type Repository struct {
 }
 
 // IsDockerfile judges whether the file is Dockerfile. Dockerfile should meet requirements:
-// * File name should be Dockerfile.
 // * File should not be in dep folders.
-func IsDockerfile(name, path string) bool {
-	if name != "Dockerfile" {
+// * File name should has Dockerfile prefix.
+func IsDockerfile(path string) bool {
+	if IsInDep(path) {
 		return false
 	}
 
-	if IsInDep(path) {
+	parts := strings.Split(path, "/")
+	name := parts[len(parts)-1]
+	if !strings.HasPrefix(name, "Dockerfile") {
 		return false
 	}
 

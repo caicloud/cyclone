@@ -134,7 +134,7 @@ func (b *BitbucketServer) ListBranches(repo string) ([]string, error) {
 	for {
 		branches, resp, err := b.v1Client.Repositories.ListBranches(context.Background(), projectKey, repo, &opt)
 		if err != nil {
-			log.Errorf("Fail to list branches for %s", repo)
+			log.Errorf("Fail to list branches for %s as %v", repo, err)
 			if resp != nil && resp.StatusCode == 500 {
 				return nil, cerr.ErrorSCMServerInternalError.Error(err)
 			}
@@ -169,7 +169,7 @@ func (b *BitbucketServer) ListTags(repo string) ([]string, error) {
 	for {
 		tags, resp, err := b.v1Client.Repositories.ListTags(context.Background(), projectKey, repo, &opt)
 		if err != nil {
-			log.Errorf("Fail to list tags for %s", repo)
+			log.Errorf("Fail to list tags for %s as %v", repo, err)
 			if resp != nil && resp.StatusCode == 500 {
 				return nil, cerr.ErrorSCMServerInternalError.Error(err)
 			}
@@ -204,7 +204,7 @@ func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 	for {
 		files, resp, err := b.v1Client.Repositories.ListFiles(context.Background(), projectKey, repo, &opt)
 		if err != nil {
-			log.Errorf("Fail to list tags for %s", repo)
+			log.Errorf("Fail to list files for %s as %s", repo, err)
 			if resp != nil && resp.StatusCode == 500 {
 				return nil, cerr.ErrorSCMServerInternalError.Error(err)
 			}
@@ -220,7 +220,7 @@ func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 
 	var dockerfiles []string
 	for _, file := range allFiles {
-		if strings.HasSuffix(file, "/Dockerfile") {
+		if scm.IsDockerfile(file) {
 			dockerfiles = append(dockerfiles, file)
 		}
 	}
