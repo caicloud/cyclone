@@ -37,7 +37,7 @@ Supported external systems including:
 |        | SVN       | All                | |
 | Cluster |          | All                | |
 | DockerRegistry |   | All                | |
-| SonarQube |        | Unsupported        | |
+| SonarQube |        | All                | |
 | General |          | All                | |
 
 ### GitLab Webhooks
