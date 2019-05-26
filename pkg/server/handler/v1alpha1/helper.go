@@ -341,19 +341,24 @@ func InjectWorkflowOwnerRefModifier(tenant, project, wf string, object interface
 	return nil
 }
 
-// WorkflowRunModifier is a modifier of create cyclone workflowrun resources.
-// It will add workflow labels for workflowrun.
-func WorkflowRunModifier(tenant, project, wf string, object interface{}) error {
-	wfr, ok := object.(*v1alpha1.WorkflowRun)
-	if !ok {
+// InjectWorkflowLabelModifier is a modifier of create cyclone CRD resources.
+// It will add workflow labels for the resource.
+func InjectWorkflowLabelModifier(tenant, project, wf string, object interface{}) error {
+	var objectMeta *meta_v1.ObjectMeta
+	switch obj := object.(type) {
+	case *v1alpha1.WorkflowRun:
+		objectMeta = &obj.ObjectMeta
+	case *v1alpha1.WorkflowTrigger:
+		objectMeta = &obj.ObjectMeta
+	default:
 		return fmt.Errorf("resource type not support")
 	}
 
 	// Add workflow label
-	if wfr.Labels == nil {
-		wfr.Labels = make(map[string]string)
+	if objectMeta.Labels == nil {
+		objectMeta.Labels = make(map[string]string)
 	}
-	wfr.Labels[meta.LabelWorkflowName] = wf
+	objectMeta.Labels[meta.LabelWorkflowName] = wf
 	return nil
 }
 
