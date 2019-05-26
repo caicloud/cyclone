@@ -362,61 +362,6 @@ func InjectWorkflowLabelModifier(tenant, project, wf string, object interface{})
 	return nil
 }
 
-// CreateSCMWebhook creates webhook for SCM repo.
-func CreateSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) error {
-	sp, err := scm.GetSCMProvider(scmSource)
-	if err != nil {
-		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
-		return err
-	}
-
-	webhook := &scm.Webhook{
-		URL: generateWebhookURL(tenant, secret),
-		Events: []scm.EventType{
-			scm.PushEventType,
-			scm.TagReleaseEventType,
-			scm.PullRequestEventType,
-			scm.PullRequestCommentEventType,
-		},
-	}
-
-	return sp.CreateWebhook(repo, webhook)
-}
-
-// DeleteSCMWebhook deletes webhook from SCM repo.
-func DeleteSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) error {
-	sp, err := scm.GetSCMProvider(scmSource)
-	if err != nil {
-		log.Errorf("Fail to get SCM provider for %s", scmSource.Server)
-		return err
-	}
-
-	return sp.DeleteWebhook(repo, generateWebhookURL(tenant, secret))
-}
-
-func generateWebhookURL(tenant, secret string) string {
-	webhookURL := strings.TrimPrefix(config.Config.WebhookURL, "/")
-	// Construct webhook URL, refer to cyclone/pkg/server/apis/v1alpha1/descriptors/webhook.go
-	return fmt.Sprintf("%s/tenants/%s/integrations/%s/webhook", webhookURL, tenant, secret)
-}
-
-func getReposFromSecret(tenant, secretName string) (map[string][]string, error) {
-	repos := map[string][]string{}
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(secretName, meta_v1.GetOptions{})
-	if err != nil {
-		return repos, cerr.ConvertK8sError(err)
-	}
-
-	if d, ok := secret.Data[common.SecretKeyRepos]; ok {
-		if err = json.Unmarshal(d, &repos); err != nil {
-			log.Errorf("Failed to unmarshal repos from secret")
-			return repos, err
-		}
-	}
-
-	return repos, nil
-}
-
 func listSCMRepos(scmSource *api.SCMSource) ([]scm.Repository, error) {
 	sp, err := scm.GetSCMProvider(scmSource)
 	if err != nil {

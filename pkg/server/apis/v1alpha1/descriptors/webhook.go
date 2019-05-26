@@ -12,7 +12,7 @@ func init() {
 
 var webhook = []definition.Descriptor{
 	{
-		Path:        "/tenants/{tenant}/integrations/{integration}/webhook",
+		Path:        "/tenants/{tenant}/webhook",
 		Description: "Webhook APIs",
 		Definitions: []definition.Definition{
 			{
@@ -26,9 +26,13 @@ var webhook = []definition.Descriptor{
 						Description: "tenant",
 					},
 					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Integration name",
+						Source:      definition.Query,
+						Name:        "eventType",
+						Description: "the webhook eventType, support SCM for now",
+					},
+					{
+						Source: definition.Query,
+						Name:   "integration",
 					},
 				},
 				Results: definition.DataErrorResults("webhook"),
