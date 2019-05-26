@@ -36,7 +36,7 @@ import (
 
 // CreateWorkflowRun ...
 func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowOwnerRefModifier, WorkflowRunModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowLabelModifier, InjectWorkflowOwnerRefModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, workflow, wfr)
 		if err != nil {
