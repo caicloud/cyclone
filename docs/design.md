@@ -42,8 +42,8 @@ Workflow controller creates a pod for each stage to execute, and there are 3 kin
 Each type of resource needs a resource resolver to handle their resources. Now Cyclone supports 4 types of resources:
 
 * Image: Image resources in the registry, supports pulling and pushing operations.
-* Git: Code resources in Git SCM like Github and Gitlab, only supports cloning source code.
-* KV: Stages can generate some key-value pairs as the outputs, which can be used by dependent stages.
+* Git: Code resources in Git SCM like Github and Gitlab, only supports pulling source code.
+* SVN: Code resources in SVN, only supports pulling source code.
 * General: General type allows users to implement handlers by themselves for other types of resources.
 
 ### Workflow Executation
