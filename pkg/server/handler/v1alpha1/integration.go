@@ -41,7 +41,7 @@ func ListIntegrations(ctx context.Context, tenant string, includePublic bool, qu
 
 	items := secrets.Items
 
-	if includePublic {
+	if includePublic && tenant != svrcommon.DefaultTenant {
 		systemNamespace := common.GetSystemNamespace()
 		publicSecrets, err := handler.K8sClient.CoreV1().Secrets(systemNamespace).List(meta_v1.ListOptions{
 			LabelSelector: meta.LabelIntegrationType,

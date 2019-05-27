@@ -46,7 +46,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	}
 
 	items := templates.Items
-	if includePublic {
+	if includePublic && tenant != common.DefaultTenant {
 		systemNamespace := c_common.GetSystemNamespace()
 		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).List(metav1.ListOptions{
 			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
