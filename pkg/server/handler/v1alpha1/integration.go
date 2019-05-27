@@ -431,3 +431,23 @@ func ListSCMTags(ctx context.Context, tenant, integrationName, repo string) (*ty
 
 	return types.NewListResponse(len(tags), tags), nil
 }
+
+// ListSCMDockerfiles lists Dockerfiles for specified repo of integrated SCM under given tenant.
+func ListSCMDockerfiles(ctx context.Context, tenant, integrationName, repo string) (*types.ListResponse, error) {
+	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err = url.PathUnescape(repo)
+	if err != nil {
+		return nil, err
+	}
+	dockerfiles, err := listSCMDockerfiles(scmSource, repo)
+	if err != nil {
+		log.Errorf("Failed to list Dockerfiles for integration %s's repo %s as %v", integrationName, repo, err)
+		return nil, err
+	}
+
+	return types.NewListResponse(len(dockerfiles), dockerfiles), nil
+}

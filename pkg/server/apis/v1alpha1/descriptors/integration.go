@@ -269,4 +269,33 @@ var integration = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/integrations/{integration}/scmrepos/{repo}/dockerfiles",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListSCMDockerfiles,
+				Description: "List Dockerfiles for integrated SCM",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "repo",
+						Description: "Name of SCM repo",
+					},
+				},
+				Results: definition.DataErrorResults("Dockerfiles gotten for integrated SCM"),
+			},
+		},
+	},
 }
