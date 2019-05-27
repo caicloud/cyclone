@@ -17,6 +17,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	ccommon "github.com/caicloud/cyclone/pkg/common"
+	"github.com/caicloud/cyclone/pkg/common/values"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
@@ -115,6 +116,7 @@ func (m *Builder) ResolveArguments() error {
 	}
 
 	for k, v := range parameters {
+		v = values.ParseRefValue(v)
 		resolved, err := ResolveRefStringValue(v, m.client)
 		if err != nil {
 			log.WithField("key", k).WithField("value", v).Error("resolve ref failed:", err)
