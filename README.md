@@ -44,7 +44,7 @@ If you want to configure the installation or want to install from source code, p
 
 ## Community
 
-- **Slack**: Join [Cyclone Community](https://caicloud-cyclone.slack.com/join/signup) for disscussions and posting questions.
+- **Slack**: Join [Cyclone Community](https://cycloneworkflow.slack.com/) for disscussions and posting questions. If you are not yet a member of Cyclone Slack, you may sign up [here](https://join.slack.com/t/cycloneworkflow/shared_invite/enQtNjQ2MDI1MTM1NDg4LTI0NzhmOGY1NjU2NDJhZGNmODNmZDQ5MWJmZjdmNzdlOTc2Yjc1N2M0MjZjYWZiODUyMzViMDZhODYzOTI5MDE).
 
 ## Roadmap
 
