@@ -94,7 +94,8 @@ modifyURL() {
     # If URL contains '@', for example: http://root@192.168.21.97/scm/foobar.git, change
     # url to http://root:<auth>@192.168.21.97/scm/foobar.git
     if [[ "${URL%%@*}" != "${URL}" ]]; then
-        echo ${URL/@/:${2}@}
+        local encoded=$(urlencode "${2}")
+        echo ${URL/@/:${encoded}@}
     else
         echo ${URL/\/\//\/\/${AUTH}@}
     fi
