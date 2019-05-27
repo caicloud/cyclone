@@ -72,7 +72,10 @@ spec:
         app.kubernetes.io/name: {{ include "cyclone.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: cyclone-server
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
+      serviceAccountName: cyclone-system
       containers:
       - name: server
         image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-server:{{ .Chart.AppVersion }}
@@ -84,6 +87,13 @@ spec:
               fieldPath: metadata.namespace
         ports:
         - containerPort: {{ .Values.server.listenPort }}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 128Mi
 
 ---
 

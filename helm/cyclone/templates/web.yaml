@@ -21,13 +21,23 @@ spec:
         app.kubernetes.io/name: {{ include "cyclone.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: cyclone-web
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
+      serviceAccountName: cyclone-system
       containers:
       - name: web
         image: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-web:{{ .Chart.AppVersion }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: {{ .Values.web.listenPort }}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 128Mi
 
 ---
 
