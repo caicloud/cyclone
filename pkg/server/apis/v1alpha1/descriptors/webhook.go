@@ -27,8 +27,8 @@ var webhook = []definition.Descriptor{
 					},
 					{
 						Source:      definition.Query,
-						Name:        "eventType",
-						Description: "the webhook eventType, support SCM for now",
+						Name:        "sourceType",
+						Description: "the webhook sourceType, support SCM for now",
 					},
 					{
 						Source: definition.Query,

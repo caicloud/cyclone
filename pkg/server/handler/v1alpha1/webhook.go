@@ -70,7 +70,7 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 		return newWebhookResponse(ignoredMsg), nil
 	}
 
-	wfts, err := hook.GetInstance().ListWfts(tenant, data.Repo, integration)
+	wfts, err := hook.ListSCMWfts(tenant, data.Repo, integration)
 	if err != nil {
 		return newWebhookResponse(err.Error()), err
 	}

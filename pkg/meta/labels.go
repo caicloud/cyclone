@@ -41,11 +41,13 @@ const (
 	// LabelIntegrationSchedulableCluster is the label key used to indicate the cluster is schedulable for workflowruns in this tenant
 	LabelIntegrationSchedulableCluster = "integration.cyclone.dev/schedulable-cluster"
 
-	// LabelIntegrationOfWft is the label key used to indicate integration name of wft
-	LabelIntegrationOfWft = "integration.workflowtrigger.cyclone.dev/name"
+	// LabelWftEventSource is the label key used to indicate event source of the trigger, event source could be a SCM server,
+	// and we represent it as integration in cyclone.
+	LabelWftEventSource = "workflowtrigger.cyclone.dev/event-source"
 
-	// LabelRepoOfWft is the label key used to indicate scm repo name of wft
-	LabelRepoOfWft = "repo.workflowtrigger.cyclone.dev/name"
+	// LabelWftEventRepo is the label key used to indicate scm repo name of wft,
+	// this label is useful for SCM type event source triggers to determine a repository name.
+	LabelWftEventRepo = "workflowtrigger.cyclone.dev/event-repo"
 
 	// LabelPodKind is the label key applied to pod to indicate whether the pod is used for GC purpose.
 	LabelPodKind = "pod.kubernetes.io/kind"

@@ -33,12 +33,14 @@ func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string
 		wft.Spec.WorkflowRef = workflowReference(tenant, workflow)
 	}
 
-	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
-		// Create webhook for integrated SCM.
-		SCMTrigger := wft.Spec.SCM
-		if err := hook.GetInstance().RegisterSCMWebhook(tenant, wft.Name, SCMTrigger.Secret, SCMTrigger.Repo); err != nil {
-			return nil, err
-		}
+	hookManager, err := hook.GetManager(wft.Spec.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	err = hookManager.Register(tenant, *wft)
+	if err != nil {
+		return nil, err
 	}
 
 	hook.LabelSCMTrigger(wft)
@@ -98,7 +100,7 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		// Handle trigger type change and repo change when SCM type.
 		// Do not care about the change of secret.
 		oldSpec := origin.Spec
-		newSpec := wft.Spec
+		newSpec := newWft.Spec
 		unregisterOld, registerNew := false, false
 		if oldSpec.Type == v1alpha1.TriggerTypeSCM {
 			// Need to unregister old SCM webhook only when:
@@ -114,14 +116,19 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 			registerNew = true
 		}
 
+		hookManager, err := hook.GetManager(wft.Spec.Type)
+		if err != nil {
+			return err
+		}
+
 		if unregisterOld {
-			if err = hook.GetInstance().UnregisterSCMWebhook(tenant, wft.Name, oldSpec.SCM.Secret, oldSpec.SCM.Repo); err != nil {
+			if err = hookManager.Unregister(tenant, *origin); err != nil {
 				return err
 			}
 		}
 
 		if registerNew {
-			if err = hook.GetInstance().RegisterSCMWebhook(tenant, wft.Name, newSpec.SCM.Secret, newSpec.SCM.Repo); err != nil {
+			if err = hookManager.Register(tenant, *newWft); err != nil {
 				return err
 			}
 		}
@@ -145,12 +152,13 @@ func DeleteWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		return cerr.ConvertK8sError(err)
 	}
 
-	if wft.Spec.Type == v1alpha1.TriggerTypeSCM {
-		// Unregister webhook for integrated SCM.
-		SCMTrigger := wft.Spec.SCM
-		if err := hook.GetInstance().UnregisterSCMWebhook(tenant, wft.Name, SCMTrigger.Secret, SCMTrigger.Repo); err != nil {
-			return err
-		}
+	hookManager, err := hook.GetManager(wft.Spec.Type)
+	if err != nil {
+		return err
+	}
+
+	if err = hookManager.Unregister(tenant, *wft); err != nil {
+		return err
 	}
 
 	err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
