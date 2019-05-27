@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
@@ -288,43 +287,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string, isPublic bool) 
 		return cerr.ErrorClusterNotClosed.Error(in.Name)
 	}
 
-	secretName := integration.GetSecretName(name)
-	if in.Spec.Type == api.SCM {
-		// Cleanup SCM webhooks for integrated SCM.
-		secret, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(
-			secretName, meta_v1.GetOptions{})
-		if err != nil {
-			return cerr.ConvertK8sError(err)
-		}
-
-		repos := map[string][]string{}
-		if d, ok := secret.Data[svrcommon.SecretKeyRepos]; ok {
-			log.Infof("repos data of secret %s: %s\n", secret.Name, d)
-			if err = json.Unmarshal(d, &repos); err != nil {
-				log.Errorf("Failed to unmarshal repos from secret")
-				return err
-			}
-		}
-
-		if len(repos) > 0 {
-			log.Infoln("Delete webhook.")
-			integration, err := integration.FromSecret(secret)
-			if err != nil {
-				log.Error(err)
-				return err
-			}
-
-			for repo := range repos {
-				if err = DeleteSCMWebhook(integration.Spec.SCM, tenant, secretName, repo); err != nil {
-					// Only try best to cleanup webhooks, if there are errors, will not block the process.
-					log.Error(err)
-				}
-			}
-		}
-	}
-
-	err = handler.K8sClient.CoreV1().Secrets(ns).Delete(secretName, &meta_v1.DeleteOptions{})
-
+	err = handler.K8sClient.CoreV1().Secrets(ns).Delete(integration.GetSecretName(name), &meta_v1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 

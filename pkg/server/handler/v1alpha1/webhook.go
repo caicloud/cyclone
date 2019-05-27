@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/hook"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
@@ -35,67 +36,51 @@ func newWebhookResponse(msg string) api.WebhookResponse {
 }
 
 // HandleWebhook handles webhooks from integrated systems.
-func HandleWebhook(ctx context.Context, tenant, integration string) (api.WebhookResponse, error) {
+func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (api.WebhookResponse, error) {
+	if eventType != string(v1alpha1.TriggerTypeSCM) {
+		err := fmt.Errorf("eventType %s unsupported, support SCM for now", eventType)
+		return newWebhookResponse(err.Error()), err
+	}
 	request := service.HTTPContextFrom(ctx).Request()
 
-	repos, err := getReposFromSecret(tenant, integration)
-	if err != nil {
-		log.Error(err)
-		return newWebhookResponse(err.Error()), err
-	}
-
-	if len(repos) == 0 {
-		return newWebhookResponse(ignoredMsg), nil
-	}
-
-	in, err := getIntegration(common.TenantNamespace(tenant), integration)
-	if err != nil {
-		return newWebhookResponse(err.Error()), err
-	}
+	var data *scm.EventData
 
 	triggered := false
 	if request.Header.Get(github.EventTypeHeader) != "" {
-		if data := github.ParseEvent(in.Spec.SCM, request); data != nil {
-			if wfts, ok := repos[data.Repo]; ok {
-				for _, wft := range wfts {
-					log.Infof("Trigger workflow trigger %s", wft)
-					if err = createWorkflowRun(tenant, wft, data); err != nil {
-						log.Error(err)
-					}
-				}
-			}
-			triggered = true
+		in, err := getIntegration(common.TenantNamespace(tenant), integration)
+		if err != nil {
+			return newWebhookResponse(err.Error()), err
 		}
+		data = github.ParseEvent(in.Spec.SCM, request)
 	}
 
 	if request.Header.Get(gitlab.EventTypeHeader) != "" {
-		if data := gitlab.ParseEvent(request); data != nil {
-			if wfts, ok := repos[data.Repo]; ok {
-				for _, wft := range wfts {
-					log.Infof("Trigger workflow trigger %s", wft)
-					if err = createWorkflowRun(tenant, wft, data); err != nil {
-						log.Error(err)
-					}
-				}
-			}
-			triggered = true
-		}
+		data = gitlab.ParseEvent(request)
 	}
 
 	if request.Header.Get(bitbucket.EventTypeHeader) != "" {
-		if data := bitbucket.ParseEvent(in.Spec.SCM, request); data != nil {
-			if wfts, ok := repos[data.Repo]; ok {
-				for _, wft := range wfts {
-					log.Infof("Trigger workflow trigger %s", wft)
-					if err = createWorkflowRun(tenant, wft, data); err != nil {
-						log.Error(err)
-					}
-				}
-			}
-			triggered = true
+		in, err := getIntegration(common.TenantNamespace(tenant), integration)
+		if err != nil {
+			return newWebhookResponse(err.Error()), err
 		}
+		data = bitbucket.ParseEvent(in.Spec.SCM, request)
 	}
 
+	if data == nil {
+		return newWebhookResponse(ignoredMsg), nil
+	}
+
+	wfts, err := hook.ListSCMWfts(tenant, data.Repo, integration)
+	if err != nil {
+		return newWebhookResponse(err.Error()), err
+	}
+
+	for _, wft := range wfts.Items {
+		log.Infof("Trigger workflow trigger %s", wft.Name)
+		if err = createWorkflowRun(tenant, wft.Name, data); err != nil {
+			log.Error(err)
+		}
+	}
 	if triggered {
 		return newWebhookResponse(succeededMsg), nil
 	}
