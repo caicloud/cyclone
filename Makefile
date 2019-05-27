@@ -24,9 +24,6 @@
 # Set shell to bash
 SHELL := /bin/bash
 
-# Current version of the project.x`
-VERSION ?= v0.9.2
-
 # This repo's root import path (under GOPATH).
 ROOT := github.com/caicloud/cyclone
 
@@ -72,6 +69,12 @@ BUILD_DIR := ./build
 
 # Git commit sha.
 COMMIT := $(shell git rev-parse --short HEAD)
+
+# Git tag describe.
+TAG = $(shell git describe --tags --always --dirty)
+
+# Current version of the project.
+VERSION ?= $(TAG)
 
 # Golang standard bin directory.
 BIN_DIR := $(GOPATH)/bin
@@ -159,11 +162,11 @@ container-web-local: build-web-local
 	done
 
 container-local: build-local
-	@for target in $(TARGETS); do                                                      \
+	@for image in $(IMAGES); do                                                        \
 	  for registry in $(REGISTRIES); do                                                \
-	    image=$(IMAGE_PREFIX)$${target/\//-}$(IMAGE_SUFFIX);                           \
-	    docker build -t $${registry}/$${image}:$(VERSION)                              \
-	      -f $(BUILD_DIR)/$${target}/Dockerfile .;                                     \
+	    imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                        \
+	    docker build -t $${registry}/$${imageName}:$(VERSION)                          \
+	      -f $(BUILD_DIR)/$${image}/Dockerfile .;                                      \
 	  done                                                                             \
 	done
 
