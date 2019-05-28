@@ -1,6 +1,7 @@
 import { Input, Form } from 'antd';
 import MakeField from '@/components/public/makeField';
 import { Field } from 'formik';
+import { required } from '@/components/public/validate';
 
 const { TextArea } = Input;
 const InputField = MakeField(Input);
@@ -16,6 +17,7 @@ class BasicInfo extends React.Component {
           component={InputField}
           hasFeedback
           required
+          validate={required}
         />
         <Field
           label={intl.get('description')}

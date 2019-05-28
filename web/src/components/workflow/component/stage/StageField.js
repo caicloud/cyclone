@@ -4,6 +4,7 @@ import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
 import { defaultFormItemLayout } from '@/lib/const';
 import ResourceArray from '../resource/ResourceArray';
+import { required } from '@/components/public/validate';
 import PropTypes from 'prop-types';
 
 const Fragment = React.Fragment;
@@ -45,6 +46,7 @@ class StageField extends React.Component {
             component={InputField}
             hasFeedback
             required
+            validate={required}
           />
         )}
         <SectionCard title={intl.get('input')}>
@@ -69,6 +71,7 @@ class StageField extends React.Component {
                         component={InputField}
                         hasFeedback
                         required
+                        validate={required}
                       />
                       {/* // TODO: 暂时不展示此字段 */}
                       {/* <Field
@@ -84,6 +87,7 @@ class StageField extends React.Component {
                         component={TextareaField}
                         hasFeedback
                         required
+                        validate={required}
                       />
                       <FormItem
                         label={intl.get('env')}

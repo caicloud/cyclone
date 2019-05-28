@@ -56,8 +56,8 @@ class BindResource extends React.Component {
           label={intl.get('workflow.resourceType')}
           {...modalFormItemLayout}
         >
-          {type === 'inputs' ? 'SCM' : 'Image'}
-        </FormItem> */}
+          {type === 'inputs' ? 'Git' : 'Image'}
+        </FormItem>
         {/* // TODO(qme): Subsequent support for multiple resource types */}
 
         <Field
