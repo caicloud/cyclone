@@ -87,6 +87,10 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 		return fmt.Errorf("SCM config %s not found", config)
 	}
 
+	if config.Type == v1alpha1.SVN {
+		return nil
+	}
+
 	if config.AuthType != v1alpha1.AuthTypePassword && config.AuthType != v1alpha1.AuthTypeToken {
 		return fmt.Errorf("SCM auth type %s upsupported", config.AuthType)
 	}
