@@ -40,16 +40,9 @@ IMAGE_SUFFIX ?= $(strip )
 
 # Container registries.
 REGISTRIES ?= docker.io/library
-AUTH ?= user:pwd
 
 # Example scene
 SCENE ?= cicd
-
-# PVC used to run workflow
-PVC ?=
-
-# Namespace where workflow would run, the above PVC should belong to this namespace
-EXEC_NAMESPACE ?= default
 
 #
 # These variables should not need tweaking.
@@ -197,14 +190,6 @@ swagger:
 	  go get -u github.com/caicloud/nirvana/cmd/nirvana &&                            \
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
 	  nirvana api --output web/public pkg/server/apis"
-
-deploy:
-	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC} --execNamespace=${EXEC_NAMESPACE}
-	kubectl create -f ./manifests/.generated/cyclone.yaml
-
-undeploy:
-	./manifests/generate.sh --registry=${REGISTRIES} --auth=${AUTH} --version=${VERSION} --pvc=${PVC} --execNamespace=${EXEC_NAMESPACE}
-	kubectl delete -f ./manifests/.generated/cyclone.yaml
 
 run_examples:
 	./examples/${SCENE}/generate.sh --registry=${REGISTRIES}
