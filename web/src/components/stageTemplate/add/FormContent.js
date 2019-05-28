@@ -49,7 +49,7 @@ class FormContent extends React.Component {
       <Form onSubmit={handleSubmit}>
         <Field
           label={intl.get('name')}
-          name="metadata.alias"
+          name="metadata.name"
           component={InputField}
           disabled={update}
           required

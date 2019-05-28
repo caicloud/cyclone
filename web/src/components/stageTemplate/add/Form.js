@@ -37,11 +37,7 @@ export default class StageTemplateForm extends React.Component {
   };
 
   mapRequestFormToInitForm = data => {
-    const alias = _.get(
-      data,
-      ['metadata', 'annotations', 'cyclone.dev/alias'],
-      ''
-    );
+    const name = _.get(data, ['metadata', 'name'], '');
     const description = _.get(
       data,
       ['metadata', 'annotations', 'cyclone.dev/description'],
@@ -55,7 +51,7 @@ export default class StageTemplateForm extends React.Component {
     );
     const spec = this.generateSpecObj(data);
     return {
-      metadata: { alias, description, scene, kind },
+      metadata: { name, description, scene, kind },
       spec,
     };
   };
@@ -109,12 +105,12 @@ export default class StageTemplateForm extends React.Component {
     const metadata = {
       annotations: {
         'cyclone.dev/description': _.get(data, 'metadata.description', ''),
-        'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
       },
       labels: {
         'cyclone.dev/scene': _.get(data, 'metadata.scene', ''),
         'stage.cyclone.dev/template-kind': _.get(data, 'metadata.kind', ''),
       },
+      name: _.get(data, 'metadata.name', ''),
     };
     data.spec.pod.spec.containers.forEach(v => {
       v.command = _.concat(['/bin/sh', '-e', '-c'], v.command);
