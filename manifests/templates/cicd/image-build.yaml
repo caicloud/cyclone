@@ -15,18 +15,25 @@
       inputs:
         arguments:
         - name: registry
+          description: Docker registry to push images, for example, 'cargo.caicloud.xyz'
         - name: repository
+          description: Image repository to push images, for example, 'release/app'
         - name: tag
+          description: Tag for the image to be built, for example, 'v1.0'
         - name: build-context
           value: .
+          description: Docker build context, default to '.'
         - name: dockerfile-path
           value: ./Dockerfile
+          description: Path of Dockerfile
         - name: image
           value: docker:18.03.1-ce-dind
+          description: Image to run this stage, for example, 'docker:18.03.1-ce-dind'
         - name: cmd
           value: >-
             while [ ! -S /var/run/docker.sock ]; do sleep 1; done;
             docker build -f {{ dockerfile-path }} -t {{ registry }}/{{ repository }}:{{ tag }} {{ build-context }}
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         resources:
         - name: code
           type: Git

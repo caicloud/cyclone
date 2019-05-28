@@ -15,8 +15,11 @@
       inputs:
         arguments:
         - name: image
+          description: Image to run this stage, for example, 'golang:1.10-alpine3.8'
         - name: cmd
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         - name: output-artifact-path
+          description: Path to the output artifacts, for example, '/workspace/target/app.war'
         resources:
         - name: code
           type: Git
@@ -51,11 +54,14 @@
         arguments:
         - name: image
           value: golang:1.10-alpine3.8
+          description: Image to run this stage, for example, 'golang:1.10-alpine3.8'
         - name: cmd
           value: >-
             go build -o /go/bin/app <main-entrypoint-path>
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         - name: output-artifact-path
           value: /go/bin/app
+          description: Path to the output artifacts, for example, '/go/bin/app'
         resources:
         - name: code
           type: Git
@@ -90,11 +96,14 @@
         arguments:
         - name: image
           value: maven:3.5.3-jdk-8-alpine
+          description: Image to run this stage, for example, 'maven:3.5.3-jdk-8-alpine'
         - name: cmd
           value: >-
             mvn clean package -Dmaven.test.skip
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         - name: output-artifact-path
           value: /workspace/target/<app>.jar
+          description: Path to the output artifacts, for example, '/workspace/target/<app>.jar'
         resources:
         - name: code
           type: Git
@@ -130,11 +139,14 @@
         arguments:
         - name: image
           value: gradle:3.4.1
+          description: Image to run this stage, for example, 'gradle:3.4.1'
         - name: cmd
           value: >-
             gradle build -x test
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         - name: output-artifact-path
           value: /workspace/build/<app>.jar
+          description: Path to the output artifacts, for example, '/workspace/build/<app>.jar'
         resources:
         - name: code
           type: Git

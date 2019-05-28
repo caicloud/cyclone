@@ -161,7 +161,7 @@ template:
     build: Build
     unit-test: UnitTest
     image-build: ImageBuild
-    code-scan: CodeScan
+    codescan: CodeScan
     cd: CD
 stage:
   inputs: Inputs

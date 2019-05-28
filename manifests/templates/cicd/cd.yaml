@@ -15,7 +15,8 @@
       inputs:
         arguments:
         - name: image
-          value: zer0one/cyclone-cicd-cd:v0.9.4-alpha
+          value: k8sdevops/cyclone-cicd-cd:v0.9.5
+          description: Image to run this stage, for example, 'k8sdevops/cyclone-cicd-cd:v0.9.5'
         - name: config
           value: >-
             {
@@ -31,6 +32,7 @@
                 }
               ]
             }
+          description: JSON to express the CD task, including which deployment, and what containers, images to update.
       spec:
         containers:
         - image: "{{ image }}"
