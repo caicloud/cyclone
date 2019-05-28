@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -13,6 +14,9 @@ import (
 const (
 	// ConfigFileKey is key of config file in ConfigMap
 	ConfigFileKey = "cyclone-server.json"
+
+	// EnvWebhookURLPrefix is the key of Environment variable to define webhook callback url prefix
+	EnvWebhookURLPrefix = "WEBHOOK_URL_PREFIX"
 )
 
 // CycloneServerConfig configures Cyclone Server
@@ -32,9 +36,9 @@ type CycloneServerConfig struct {
 	// eg map[core_v1.ResourceName]string{"cpu": "2", "memory": "4Gi"}
 	WorkerNamespaceQuota map[core_v1.ResourceName]string `json:"worker_namespace_quota"`
 
-	// WebhookURL represents the Cyclone server path to receive webhook requests.
+	// WebhookURLPrefix represents the Cyclone server path to receive webhook requests.
 	// If Cyclone server can be accessed by external systems, it would like be `https://{cyclone-server}/apis/v1alpha1`.
-	WebhookURL string `json:"webhook_url"`
+	WebhookURLPrefix string `json:"webhook_url_prefix"`
 
 	// StorageUsageWatcher configures PVC storage usage watchers.
 	StorageUsageWatcher StorageUsageWatcher `json:"storage_usage_watcher"`
@@ -168,4 +172,15 @@ func modifier(config *CycloneServerConfig) {
 			core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 		}
 	}
+}
+
+// GetWebhookURLPrefix returns webhook callback url prefix. It tries to get the url from "WEBHOOK_URL_PREFIX" environment variable,
+// if the value is empty, then get it from configmap.
+func GetWebhookURLPrefix() string {
+	urlPrefix := os.Getenv(EnvWebhookURLPrefix)
+	if urlPrefix != "" {
+		return urlPrefix
+	}
+
+	return Config.WebhookURLPrefix
 }
