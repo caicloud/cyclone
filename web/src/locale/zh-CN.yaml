@@ -140,6 +140,8 @@ template:
   resourceType: 资源类型
   addResource: 新增资源
   form:
+    scene: 场景
+    kind: 模板类型
     inputs:
       name: 输入
       arguments: 属性

@@ -140,6 +140,8 @@ template:
   resourceType: Resource type
   addResource: Add resource
   form:
+    scene: Scene
+    kind: Type
     inputs:
       name: Inputs
       arguments: Arguments

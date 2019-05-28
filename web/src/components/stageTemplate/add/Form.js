@@ -47,9 +47,15 @@ export default class StageTemplateForm extends React.Component {
       ['metadata', 'annotations', 'cyclone.dev/description'],
       ''
     );
+    const scene = _.get(data, ['metadata', 'labels', 'cyclone.dev/scene'], '');
+    const kind = _.get(
+      data,
+      ['metadata', 'labels', 'stage.cyclone.dev/template-kind'],
+      ''
+    );
     const spec = this.generateSpecObj(data);
     return {
-      metadata: { alias, description },
+      metadata: { alias, description, scene, kind },
       spec,
     };
   };
@@ -104,6 +110,10 @@ export default class StageTemplateForm extends React.Component {
       annotations: {
         'cyclone.dev/description': _.get(data, 'metadata.description', ''),
         'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
+      },
+      labels: {
+        'cyclone.dev/scene': _.get(data, 'metadata.scene', ''),
+        'stage.cyclone.dev/template-kind': _.get(data, 'metadata.kind', ''),
       },
     };
     data.spec.pod.spec.containers.forEach(v => {
