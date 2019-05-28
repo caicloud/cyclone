@@ -45,7 +45,7 @@ class TemplateDetail extends React.Component {
               _.get(template, [
                 'metadata',
                 'annotations',
-                'cyclone.io/description',
+                'cyclone.dev/description',
               ]) || '--'
             }
           />
