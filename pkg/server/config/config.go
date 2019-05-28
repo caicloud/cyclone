@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -13,6 +14,9 @@ import (
 const (
 	// ConfigFileKey is key of config file in ConfigMap
 	ConfigFileKey = "cyclone-server.json"
+
+	// EnvWebhookURL is the key of Environment variable to define webhook callback url
+	EnvWebhookURL = "WEBHOOK_URL"
 )
 
 // CycloneServerConfig configures Cyclone Server
@@ -168,4 +172,15 @@ func modifier(config *CycloneServerConfig) {
 			core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 		}
 	}
+}
+
+// GetWebhookURL returns webhook callback url. It tries to get the url from "WEBHOOK_URL" environment variable,
+// if the value is empty, then get it from configmap.
+func GetWebhookURL() string {
+	webhook := os.Getenv(EnvWebhookURL)
+	if webhook != "" {
+		return webhook
+	}
+
+	return Config.WebhookURL
 }

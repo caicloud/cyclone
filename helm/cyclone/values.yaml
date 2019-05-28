@@ -44,6 +44,7 @@ server:
   listenAddress: 0.0.0.0
   listenPort: 7099
   nodePort: 30011
+  webhookURL: http://{{ .Values.serverAddress }}/apis/v1alpha1
   init:
     templates: true
     defaultTenant: true

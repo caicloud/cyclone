@@ -100,7 +100,7 @@ func createSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) err
 }
 
 func generateWebhookURL(tenant, secret string) string {
-	webhookURL := strings.TrimPrefix(config.Config.WebhookURL, "/")
+	webhookURL := strings.TrimPrefix(config.GetWebhookURL(), "/")
 	// Construct webhook URL, refer to cyclone/pkg/server/apis/v1alpha1/descriptors/webhook.go
 	return fmt.Sprintf("%s/tenants/%s/webhook?sourceType=SCM&integration=%s", webhookURL, tenant, secret)
 }
