@@ -142,11 +142,13 @@ template:
   form:
     inputs:
       name: 输入
+      arguments: 属性
+      addArgs: 新增属性
     config:
       name: 配置
       image: 镜像
       entryPoint: Entry point
-      cmd: CMD
+      command: CMD
       env:
         name: 环境变量
         key: 健

@@ -26,11 +26,6 @@ export const resourceParametersField = {
   ],
 };
 
-export const argumentsParamtersField = [
-  { name: 'image', value: '' },
-  { name: 'cmd', value: '' },
-];
-
 export const customStageField = {
   name: '',
   inputs: {

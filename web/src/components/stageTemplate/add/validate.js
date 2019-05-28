@@ -12,10 +12,14 @@ export const validateForm = values => {
     errors.metadata = { alias: intl.get('validate.required') };
     errors['spec'] = spec;
   }
-  const args = _.get(values, 'spec.pod.inputs.arguments');
+  const args = _.get(values, 'spec.pod.spec.containers');
   _.forEach(args, (v, i) => {
-    if (v.value === '') {
-      spec.pod.inputs.arguments[i].value = intl.get('validate.required');
+    if (v.command === '') {
+      spec.pod.spec.containers[i].command = intl.get('validate.required');
+      errors['spec'] = spec;
+    }
+    if (v.image === '') {
+      spec.pod.spec.containers[i].image = intl.get('validate.required');
       errors['spec'] = spec;
     }
   });

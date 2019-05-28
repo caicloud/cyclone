@@ -5,7 +5,6 @@ import { Row, Col } from 'antd';
 import { toJS } from 'mobx';
 import FormContent from './FormContent';
 import { validateForm } from './validate';
-import { argumentsParamtersField } from '@/lib/const';
 import styles from './template.module.less';
 
 @inject('stageTemplate')
@@ -55,29 +54,18 @@ export default class StageTemplateForm extends React.Component {
     };
   };
 
-  formatCmdValue = val => {
-    return val.replace(/;/g, '\n');
-  };
-
   generateSpecObj = data => {
     const specData = _.get(data, 'spec', {});
-    const args = _.get(specData, 'pod.inputs.arguments', []);
-    if (args.length > 2) {
-      specData.pod.inputs.arguments = args.filter(v => {
-        if (v.name === 'image' || v.name === 'cmd') {
-          if (v.name === 'cmd') {
-            v.value = this.formatCmdValue(v.value);
-          }
-          return true;
-        } else {
-          return false;
-        }
+    const containers = _.get(specData, 'pod.spec.containers', []);
+    if (containers.length > 0) {
+      containers.forEach(v => {
+        v.command = _.last(v.command);
       });
     }
     let defaultSpec = {
       pod: {
         inputs: {
-          arguments: argumentsParamtersField,
+          arguments: [],
           resources: [],
         },
         outputs: {
@@ -88,7 +76,7 @@ export default class StageTemplateForm extends React.Component {
             {
               env: [],
               image: '{{ image }}',
-              args: ['/bin/sh', '-e', '-c', '{{{ cmd }}}'],
+              command: ['{{{ cmd }}}'],
             },
           ],
         },
@@ -109,6 +97,9 @@ export default class StageTemplateForm extends React.Component {
         'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
       },
     };
+    data.spec.pod.spec.containers.forEach(v => {
+      v.command = _.concat(['/bin/sh', '-e', '-c'], v.command);
+    });
     return { metadata, spec: data.spec };
   };
 

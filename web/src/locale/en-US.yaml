@@ -142,11 +142,13 @@ template:
   form:
     inputs:
       name: Inputs
+      arguments: Arguments
+      addArgs: Add arguments
     config:
       name: Config
       image: Image
       entryPoint: Entry point
-      cmd: CMD
+      command: CMD
       env:
         name: Env
         key: Key
