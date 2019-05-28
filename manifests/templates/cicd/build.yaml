@@ -21,8 +21,7 @@
         - name: output-artifact-path
           description: Path to the output artifacts, for example, '/workspace/target/app.war'
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         artifacts:
@@ -63,8 +62,7 @@
           value: /go/bin/app
           description: Path to the output artifacts, for example, '/go/bin/app'
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /go/src
       outputs:
         artifacts:
@@ -105,8 +103,7 @@
           value: /workspace/target/<app>.jar
           description: Path to the output artifacts, for example, '/workspace/target/<app>.jar'
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         artifacts:
@@ -148,8 +145,7 @@
           value: /workspace/build/<app>.jar
           description: Path to the output artifacts, for example, '/workspace/build/<app>.jar'
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         artifacts:

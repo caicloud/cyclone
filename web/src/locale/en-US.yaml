@@ -1,6 +1,7 @@
 name: Name
 value: Value
 path: Path
+mountPath: Mount Path
 configuration: Configuration
 action: Action
 creationTime: Creation time
@@ -22,6 +23,7 @@ GET: Get
 PUT: Update
 POST: Create
 DELETE: Delete
+resources: Resources
 tips:
   officialWebsite: Open Cyclone official website for docs and guides
 cluster:
@@ -166,12 +168,12 @@ template:
 stage:
   inputs: Inputs
   input:
-    arguments: Args
+    arguments: Arguments
   outputs: Outputs
   spec:
     container:
       image: Image
-      envs: Env
+      envs: Envs
       env:
         name: Key
         value: Value

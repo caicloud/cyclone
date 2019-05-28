@@ -21,8 +21,7 @@
         - name: test-result-path
           description: Path to the rest result
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         resources:
@@ -72,8 +71,7 @@
           value: /go/src/github.com/caicloud/cyclone/report.xml
           description: Path to the rest result
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /go/src
       outputs:
         resources:
@@ -127,8 +125,7 @@
           value: /go/src/github.com/caicloud/cyclone/report.xml
           description: Path to the rest result
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /go/src
       outputs:
         resources:
@@ -169,8 +166,7 @@
           value: /workspace/target/surefire-reports
           description: Path to the rest result
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         resources:
@@ -212,8 +208,7 @@
           value: /workspace/build/test-results
           description: Path to the rest result
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         resources:

@@ -35,13 +35,11 @@
             docker build -f {{ dockerfile-path }} -t {{ registry }}/{{ repository }}:{{ tag }} {{ build-context }}
           description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
         resources:
-        - name: code
-          type: Git
+        - type: Git
           path: /workspace
       outputs:
         resources:
-        - name: image
-          type: Image
+        - type: Image
       spec:
         containers:
         - image: "{{ image }}"
