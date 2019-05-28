@@ -33,14 +33,16 @@ func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string
 		wft.Spec.WorkflowRef = workflowReference(tenant, workflow)
 	}
 
-	hookManager, err := hook.GetManager(wft.Spec.Type)
-	if err != nil {
-		return nil, err
-	}
+	if wft.Spec.Type == v1alpha1.TriggerTypeWebhook || wft.Spec.Type == v1alpha1.TriggerTypeSCM {
+		hookManager, err := hook.GetManager(wft.Spec.Type)
+		if err != nil {
+			return nil, err
+		}
 
-	err = hookManager.Register(tenant, *wft)
-	if err != nil {
-		return nil, err
+		err = hookManager.Register(tenant, *wft)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	hook.LabelSCMTrigger(wft)
@@ -116,9 +118,12 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 			registerNew = true
 		}
 
-		hookManager, err := hook.GetManager(wft.Spec.Type)
-		if err != nil {
-			return err
+		var hookManager hook.Manager
+		if registerNew || unregisterOld {
+			hookManager, err = hook.GetManager(wft.Spec.Type)
+			if err != nil {
+				return err
+			}
 		}
 
 		if unregisterOld {
@@ -152,16 +157,19 @@ func DeleteWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		return cerr.ConvertK8sError(err)
 	}
 
-	hookManager, err := hook.GetManager(wft.Spec.Type)
-	if err != nil {
-		return err
-	}
+	if wft.Spec.Type == v1alpha1.TriggerTypeWebhook || wft.Spec.Type == v1alpha1.TriggerTypeSCM {
+		var hookManager hook.Manager
+		hookManager, err = hook.GetManager(wft.Spec.Type)
+		if err != nil {
+			return err
+		}
 
-	if err = hookManager.Unregister(tenant, *wft); err != nil {
-		return err
-	}
+		if err = hookManager.Unregister(tenant, *wft); err != nil {
+			return err
+		}
 
-	err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+		err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+	}
 
 	return cerr.ConvertK8sError(err)
 }

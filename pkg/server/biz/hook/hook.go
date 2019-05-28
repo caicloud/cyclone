@@ -16,7 +16,7 @@ type Manager interface {
 // GetManager ...
 func GetManager(typ v1alpha1.TriggerType) (Manager, error) {
 	switch typ {
-	case v1alpha1.TriggerTypeSCM:
+	case v1alpha1.TriggerTypeSCM, v1alpha1.TriggerTypeWebhook:
 		return getScmManager(), nil
 	}
 
