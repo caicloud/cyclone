@@ -1,6 +1,7 @@
 name: 名称
 value: 值
 path: 路径
+mountPath: 挂载路径
 configuration: 配置
 action: 操作
 creationTime: 创建时间
@@ -22,6 +23,7 @@ GET: 获取
 PUT: 修改
 POST: 创建
 DELETE: 删除
+resources: 资源
 tips:
   officialWebsite: 访问 Cyclone 官网查看项目文档和使用说明
 cluster:
@@ -175,7 +177,6 @@ stage:
       env:
         name: 键
         value: 值
-resources: 资源
 validate:
   required: 必填
   positiveOrFloat: 允许两位小数

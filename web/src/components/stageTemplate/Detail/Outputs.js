@@ -14,12 +14,26 @@ const Outputs = ({ outputs = {} }) => {
     },
   ];
 
+  const resourceColumns = [
+    {
+      title: intl.get('type'),
+      dataIndex: 'type',
+    },
+  ];
+
   return (
-    <Collapse activeKey={['1']}>
+    <Collapse activeKey={['1', '2']}>
+      <Collapse.Panel showArrow={false} header={intl.get('resources')} key="1">
+        <Table
+          columns={resourceColumns}
+          dataSource={outputs.resources}
+          pagination={false}
+        />
+      </Collapse.Panel>
       <Collapse.Panel
         showArrow={false}
         header={intl.get('stage.outputs')}
-        key="1"
+        key="2"
       >
         <Table
           columns={artifactColumns}

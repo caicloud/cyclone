@@ -41,7 +41,7 @@
           value: ./
           description: Path to the sources to be analyzed
         resources:
-        - name: code
+        - type: Git
           path: /workspace
       spec:
         containers:

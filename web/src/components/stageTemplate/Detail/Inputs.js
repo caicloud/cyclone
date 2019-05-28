@@ -4,16 +4,11 @@ import PropTypes from 'prop-types';
 const Inputs = ({ inputs = {} }) => {
   const resourceColumns = [
     {
-      title: intl.get('name'),
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
       title: intl.get('type'),
       dataIndex: 'type',
     },
     {
-      title: intl.get('path'),
+      title: intl.get('mountPath'),
       dataIndex: 'path',
     },
   ];
