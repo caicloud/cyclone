@@ -31,6 +31,7 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 - Garbage Collection: automatic resource cleanup after workflow execution
 - Logging: logs are persisted and independent from workflow lifecycle, enabling offline inspection
 - Built-in Pipeline: curated DAG templates and stage runtimes for running DevOps pipelines for both regular software and AI development
+- Delegation Workload: Delegate some complicated stage to be executed in external systems, instead of Cyclone.
 
 ## Quick Start
 
@@ -45,6 +46,10 @@ If you want to configure the installation or want to install from source code, p
 ## Community
 
 - **Slack**: Join [Cyclone Community](https://cycloneworkflow.slack.com/) for disscussions and posting questions. If you are not yet a member of Cyclone Slack, you may sign up [here](https://join.slack.com/t/cycloneworkflow/shared_invite/enQtNjQ2MDI1MTM1NDg4LTI0NzhmOGY1NjU2NDJhZGNmODNmZDQ5MWJmZjdmNzdlOTc2Yjc1N2M0MjZjYWZiODUyMzViMDZhODYzOTI5MDE).
+
+## Aditional Tools
+
+- [cycli](https://github.com/cd1989/cycli) Cyclone CLI interface
 
 ## Roadmap
 
