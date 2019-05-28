@@ -29,6 +29,11 @@ const Inputs = ({ inputs = {} }) => {
       dataIndex: 'value',
       key: 'value',
     },
+    {
+      title: intl.get('description'),
+      dataIndex: 'description',
+      key: 'description',
+    },
   ];
 
   return (

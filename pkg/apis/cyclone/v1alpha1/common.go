@@ -33,6 +33,8 @@ type ParameterItem struct {
 	Name string `json:"name"`
 	// Value of the parameter
 	Value *string `json:"value"`
+	// Description of the parameter
+	Description string `json:"description"`
 }
 
 // ArgumentValue defines a argument value

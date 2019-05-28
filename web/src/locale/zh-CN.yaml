@@ -161,7 +161,7 @@ template:
     build: 构建
     unit-test: 单元测试
     image-build: 镜像构建
-    code-scan: 代码扫描
+    codescan: 代码扫描
     cd: CD
 stage:
   inputs: 输入

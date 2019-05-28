@@ -2,6 +2,7 @@
   kind: Stage
   metadata:
     name: sonarqube-template
+    namespace: cyclone-system
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -16,19 +17,29 @@
       inputs:
         arguments:
         - name: image
-          value: release/cyclone-cicd-sonarcube:v0.9.5-beta
+          value: k8sdevops/cyclone-cicd-sonarcube:v0.9.5-beta
+          description: Image to run this stage, for example, 'k8sdevops/cyclone-cicd-sonarcube:v0.9.5'
         - name: sonarURL
+          description: URL of the SonarQube server, for example, 'http://192.168.21.97:9000'
         - name: sonarToken
+          description: Token of the SonarQube server
         - name: encoding
           value: UTF-8
+          description: Encoding of the source files, for example, 'UTF-8'
         - name: language
           value: ""
+          description: Languages of the source files, for example, 'Go'
         - name: projectName
+          description: Name of the project that will be displayed on the SonarQube web interface
         - name: projectKey
+          description: >
+            Unique key of the SonarQube project. Allowed characters are: letters, numbers, -, _, . and :, with at least one non-digit.
         - name: qualityGate
           value: "1"
+          description: ID of SonarQube quality gate to use, for example, '1' represents the default 'Sonar Way' quality gate. Don't omit the quotes for this value
         - name: sourcePath
           value: ./
+          description: Path to the sources to be analyzed
         resources:
         - name: code
           path: /workspace
