@@ -32,7 +32,7 @@ const Outputs = ({ outputs = {} }) => {
       </Collapse.Panel>
       <Collapse.Panel
         showArrow={false}
-        header={intl.get('stage.outputs')}
+        header={intl.get('stage.output.artifacts')}
         key="2"
       >
         <Table

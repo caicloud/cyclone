@@ -170,6 +170,8 @@ stage:
   input:
     arguments: Arguments
   outputs: Outputs
+  output:
+    artifacts: Artifacts
   spec:
     container:
       image: Image
