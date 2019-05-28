@@ -34,9 +34,6 @@ const (
 
 	// SecretKeyIntegration is the key of the secret dada to indicate its value is about integration information.
 	SecretKeyIntegration = "integration"
-	// SecretKeyRepos is the key of the secret dada to records webhooks created for workflowtriggers.
-	// Only for SCM integration secrets.
-	SecretKeyRepos = "repos"
 
 	// CachePrefixPath is the prefix path of acceleration caches
 	CachePrefixPath = "caches"

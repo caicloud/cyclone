@@ -18,6 +18,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -66,6 +67,10 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 		data = bitbucket.ParseEvent(in.Spec.SCM, request)
 	}
 
+	if request.Header.Get(svn.EventTypeHeader) != "" {
+		data = svn.ParseEvent(request)
+	}
+
 	if data == nil {
 		return newWebhookResponse(ignoredMsg), nil
 	}
@@ -77,8 +82,8 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 
 	for _, wft := range wfts.Items {
 		log.Infof("Trigger workflow trigger %s", wft.Name)
-		if err = createWorkflowRun(tenant, wft.Name, data); err != nil {
-			log.Error(err)
+		if err = createWorkflowRun(wft, data); err != nil {
+			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
 		}
 	}
 	if triggered {
@@ -88,13 +93,9 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	return newWebhookResponse(ignoredMsg), nil
 }
 
-func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
-	ns := common.TenantNamespace(tenant)
-	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(ns).Get(wftName, metav1.GetOptions{})
-	if err != nil {
-		return cerr.ConvertK8sError(err)
-	}
-
+func createWorkflowRun(wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
+	ns := wft.Namespace
+	var err error
 	var project string
 	if wft.Labels != nil {
 		project = wft.Labels[meta.LabelProjectName]
@@ -142,13 +143,17 @@ func createWorkflowRun(tenant, wftName string, data *scm.EventData) error {
 				trigger = true
 			}
 		}
+	case scm.PostCommitEventType:
+		if st.PostCommit.Enabled {
+			trigger = true
+		}
 	}
 
 	if !trigger {
 		return nil
 	}
 
-	log.Infof("Trigger wft %s with event data: %v", wftName, data)
+	log.Infof("Trigger wft %s with event data: %v", wft.Name, data)
 
 	name := fmt.Sprintf("%s-%s", wfName, rand.String(5))
 	alias := name

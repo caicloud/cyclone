@@ -81,6 +81,8 @@ type SCMTriggerPolicy struct {
 	PullRequest SCMTriggerPullRequest `json:"pullRequest"`
 	// PullRequestComment represents trigger policy for pull request comment events.
 	PullRequestComment SCMTriggerPullRequestComment `json:"pullRequestComment"`
+	// PostCommit represents trigger policy for post commit events.
+	PostCommit SCMTriggerPostCommit `json:"postCommit"`
 }
 
 // SCMTriggerBasic represents basic config for SCM trigger policy.
@@ -111,6 +113,11 @@ type SCMTriggerPullRequestComment struct {
 	SCMTriggerBasic `json:",inline"`
 	// Comments represents the comment lists to filter pull request comment events.
 	Comments []string `json:"comments"`
+}
+
+// SCMTriggerPostCommit represents trigger policy for post commit events.
+type SCMTriggerPostCommit struct {
+	SCMTriggerBasic `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -17,6 +17,11 @@ limitations under the License.
 package svn
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/caicloud/nirvana/log"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -31,8 +36,13 @@ func init() {
 	}
 }
 
-// SVNUserPwdSep represents username and password separator, because SVN username can not contain ":".
-const SVNUserPwdSep string = ":"
+const (
+	// EventTypeHeader represents the header key for event type of SVN, e.g X-Subversion-Event=Post-Commit.
+	EventTypeHeader = "X-Subversion-Event"
+
+	// PostCommitEvent represents post commit type event
+	PostCommitEvent = "Post-Commit"
+)
 
 // SVN represents the SCM provider of SVN.
 type SVN struct {
@@ -86,10 +96,68 @@ func (s *SVN) CheckToken() error {
 
 // CreateWebhook ...
 func (s *SVN) CreateWebhook(repo string, webhook *scm.Webhook) error {
-	return cerr.ErrorNotImplemented.Error("create svn webhook")
+	return nil
 }
 
 // DeleteWebhook ...
 func (s *SVN) DeleteWebhook(repo string, webhookURL string) error {
-	return cerr.ErrorNotImplemented.Error("delete svn webhook")
+	return nil
+}
+
+// ParseEvent parses data from SVN events, only support Post-Commit.
+func ParseEvent(request *http.Request) *scm.EventData {
+	event, err := parseWebhook(request)
+	if err != nil {
+		log.Errorln(err)
+		return nil
+	}
+
+	switch event := event.(type) {
+	case *PostCommit:
+		return &scm.EventData{
+			Type: scm.PostCommitEventType,
+			Repo: event.RepoUUID,
+			Ref:  event.Revision,
+		}
+	default:
+		log.Warningln("Skip unsupported Gitlab event")
+		return nil
+	}
+}
+
+// parseWebhook parses the body from webhook requeset.
+func parseWebhook(r *http.Request) (payload interface{}, err error) {
+	eventType := r.Header.Get(EventTypeHeader)
+	switch eventType {
+	case PostCommitEvent:
+		payload = &PostCommit{}
+	default:
+		return nil, fmt.Errorf("event type %v not support", eventType)
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("fail to read request body")
+	}
+
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return nil, err
+	}
+
+	return payload, nil
+}
+
+// PostCommit is PostCommit Event type body struct
+type PostCommit struct {
+	// RepoUUID represents svn repository uuid of this trigger commit
+	// Exec command:
+	// `svn info --show-item repos-uuid --username {user} --password {password} --non-interactive
+	// --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+	// --no-auth-cache {url}`
+	// or
+	// `svnlook uuid {repoPath}`
+	// can get the repo uuid
+	RepoUUID string `json:"repoUUID"`
+	// RepoName represents the revision of this trigger commit
+	Revision string `json:"revision"`
 }

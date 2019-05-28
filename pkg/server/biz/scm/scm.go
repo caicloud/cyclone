@@ -153,6 +153,8 @@ const (
 	PushEventType EventType = "scm-push"
 	// TagReleaseEventType represents tag release events.
 	TagReleaseEventType EventType = "scm-tag-release"
+	// PostCommitEventType represents post commit events.
+	PostCommitEventType EventType = "scm-post-commit"
 )
 
 // EventData represents the data parsed from SCM events.
