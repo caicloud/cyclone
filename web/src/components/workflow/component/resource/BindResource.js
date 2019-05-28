@@ -4,12 +4,15 @@ import MakeField from '@/components/public/makeField';
 import { noLabelItemLayout, modalFormItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
+import SelectPlus from '@/components/public/makeField/select';
 import SCM from './SCM';
 
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
 const FormItem = Form.Item;
 const InputField = MakeField(Input);
+const SelectField = MakeField(SelectPlus);
+
 const Fragment = React.Fragment;
 
 // use in add stage, select a exist resource or create a new resource
@@ -43,39 +46,33 @@ class BindResource extends React.Component {
       integration,
       `groupIntegrationList.${resourceType}`
     );
+    const inputArray =
+      type === 'inputs'
+        ? [{ name: 'SCM', value: 'SCM' }]
+        : [{ name: 'Image', value: 'image' }];
     return (
       <Form layout={'horizontal'}>
-        <FormItem
+        {/* <FormItem
           label={intl.get('workflow.resourceType')}
           {...modalFormItemLayout}
         >
           {type === 'inputs' ? 'SCM' : 'Image'}
-        </FormItem>
+        </FormItem> */}
         {/* // TODO(qme): Subsequent support for multiple resource types */}
-        {/* {type === 'inputs' ? (
-          <Field
-            label={intl.get('type')}
-            name="resourceType"
-            required
-            handleSelectChange={val => {
-              setFieldValue('resourceType', val);
-              // TODO(qme): set value
-              // setFieldValue('spec.parameters', resourceParametersField[val]);
-            }}
-            payload={{
-              items: inputArray,
-            }}
-            component={SelectField}
-            formItemLayout={modalFormItemLayout}
-          />
-        ) : (
-          <FormItem
-            label={intl.get('workflow.resourceType')}
-            {...modalFormItemLayout}
-          >
-            image
-          </FormItem>
-        )} */}
+
+        <Field
+          label={intl.get('type')}
+          name="resourceType"
+          required
+          handleSelectChange={val => {
+            setFieldValue('resourceType', val);
+          }}
+          payload={{
+            items: inputArray,
+          }}
+          component={SelectField}
+          formItemLayout={modalFormItemLayout}
+        />
         {type === 'inputs' && (
           <FormItem
             label={intl.get('workflow.addMethod')}
