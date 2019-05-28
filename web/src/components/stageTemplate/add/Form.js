@@ -86,8 +86,17 @@ export default class StageTemplateForm extends React.Component {
   };
 
   initFormValue = () => {
-    const templateInfo = toJS(this.props.stageTemplate.template);
-    return this.mapRequestFormToInitForm(templateInfo);
+    const {
+      match: { params },
+    } = this.props;
+    const update = !!_.get(params, 'templateName');
+    if (update) {
+      return this.mapRequestFormToInitForm(
+        toJS(this.props.stageTemplate.template)
+      );
+    } else {
+      return this.mapRequestFormToInitForm();
+    }
   };
 
   generateData = data => {
