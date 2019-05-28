@@ -55,13 +55,24 @@ export default class StageTemplateForm extends React.Component {
     };
   };
 
+  formatCmdValue = val => {
+    return val.replace(/;/g, '\n');
+  };
+
   generateSpecObj = data => {
     const specData = _.get(data, 'spec', {});
     const args = _.get(specData, 'pod.inputs.arguments', []);
     if (args.length > 2) {
-      specData.pod.inputs.arguments = args.filter(
-        v => v.name === 'image' || v.name === 'cmd'
-      );
+      specData.pod.inputs.arguments = args.filter(v => {
+        if (v.name === 'image' || v.name === 'cmd') {
+          if (v.name === 'cmd') {
+            v.value = this.formatCmdValue(v.value);
+          }
+          return true;
+        } else {
+          return false;
+        }
+      });
     }
     let defaultSpec = {
       pod: {
