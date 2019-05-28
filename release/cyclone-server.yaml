@@ -14,7 +14,7 @@ _config:
       image: '[[ registry_release ]]/cyclone-server:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
       env:
-      - name: WEBHOOK_URL
+      - name: WEBHOOK_URL_PREFIX
         from:
           type: Config
           name: platform-config
@@ -71,7 +71,7 @@ _config:
             },
             "cyclone_server_host": "0.0.0.0",
             "cyclone_server_port": 7099,
-            "webhook_url": "[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2",
+            "webhook_url_prefix": "[[ compassWebEndpoint ]]/hodor/apis/admin.devops.caicloud.io/v2",
             "record_web_url_template": "[[ compassWebEndpoint ]]/devops/pipeline/{{.WorkflowName}}/record/{{.WorkflowRunName}}?workspace={{.ProjectName}}&tenant={{.Tenant}}",
             "default_pvc_config": {
               "storage_class": "heketi-storageclass",

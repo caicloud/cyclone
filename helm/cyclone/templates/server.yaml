@@ -16,7 +16,7 @@ data:
       },
       "cyclone_server_host": "{{ .Values.server.listenAddress }}",
       "cyclone_server_port": {{ .Values.server.listenPort }},
-      "webhook_url": "{{ .Values.server.webhookURL }}",
+      "webhook_url_prefix": "{{ .Values.server.webhookUrlPrefix }}",
       "default_pvc_config": {
         "size": "{{ .Values.server.pvc.size }}",
         "storage_class": "{{ .Values.server.pvc.storageClass }}"
