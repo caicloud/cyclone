@@ -142,6 +142,11 @@ template:
   form:
     scene: 场景
     kind: 模板类型
+    placeholder:
+      kind: 模板类型
+      name: 模板名称 
+      scene: 模板场景
+      desc: 模板描述信息
     inputs:
       name: 输入
       arguments: 属性

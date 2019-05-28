@@ -8,8 +8,8 @@ export const validateForm = values => {
       outputs: {},
     },
   };
-  if (!values.metadata.alias) {
-    errors.metadata = { alias: intl.get('validate.required') };
+  if (!values.metadata.name) {
+    errors.metadata = { name: intl.get('validate.required') };
     errors['spec'] = spec;
   }
   const args = _.get(values, 'spec.pod.spec.containers');

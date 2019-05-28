@@ -64,6 +64,19 @@ export default class StageTemplateForm extends React.Component {
         v.command = _.last(v.command);
       });
     }
+    const args = _.get(specData, 'pod.inputs.arguments', []);
+    if (args.length > 0) {
+      const cmdIndex = args.findIndex(v => {
+        if (v.name === 'cmd' && v.value) {
+          v.value = v.value.replace(/;\s+/g, ';\n');
+          return true;
+        } else {
+          return false;
+        }
+      });
+      const cmdObj = args.splice(cmdIndex, 1)[0];
+      args.push(cmdObj);
+    }
     let defaultSpec = {
       pod: {
         inputs: {
@@ -114,6 +127,11 @@ export default class StageTemplateForm extends React.Component {
     };
     data.spec.pod.spec.containers.forEach(v => {
       v.command = _.concat(['/bin/sh', '-e', '-c'], v.command);
+    });
+    data.spec.pod.inputs.arguments.forEach(v => {
+      if (v.name === 'cmd') {
+        v.value = v.value.replace(/\n/g, '');
+      }
     });
     return { metadata, spec: data.spec };
   };

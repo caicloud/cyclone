@@ -142,6 +142,11 @@ template:
   form:
     scene: Scene
     kind: Type
+    placeholder:
+      kind: stage template type
+      name: stage template name 
+      scene: stage template scene
+      desc: stage template description
     inputs:
       name: Inputs
       arguments: Arguments
