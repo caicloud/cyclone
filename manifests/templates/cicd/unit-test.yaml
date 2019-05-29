@@ -24,7 +24,7 @@
         - type: Git
           path: /workspace
       outputs:
-        resources:
+        artifacts:
         - name: test-result
           path: "{{ test-result-path }}"
       spec:
@@ -74,7 +74,7 @@
         - type: Git
           path: /go/src
       outputs:
-        resources:
+        artifacts:
         - name: test-result
           path: "{{ test-result-path }}"
       spec:
@@ -128,7 +128,7 @@
         - type: Git
           path: /go/src
       outputs:
-        resources:
+        artifacts:
         - name: test-result
           path: "{{ test-result-path }}"
       spec:
@@ -169,7 +169,7 @@
         - type: Git
           path: /workspace
       outputs:
-        resources:
+        artifacts:
         - name: test-result
           path: "{{ test-result-path }}"
       spec:
@@ -211,7 +211,7 @@
         - type: Git
           path: /workspace
       outputs:
-        resources:
+        artifacts:
         - name: test-result
           path: "{{ test-result-path }}"
       spec:

@@ -1,6 +1,19 @@
 import { Table, Collapse } from 'antd';
 import PropTypes from 'prop-types';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { duotoneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
+const valueRender = (v, item) => {
+  if (item.name === 'cmd') {
+    return (
+      <SyntaxHighlighter language="bash" style={duotoneLight}>
+        {v.replace(/;\s+/g, ';\n')}
+      </SyntaxHighlighter>
+    );
+  } else {
+    return v;
+  }
+};
 const Inputs = ({ inputs = {} }) => {
   const resourceColumns = [
     {
@@ -23,6 +36,7 @@ const Inputs = ({ inputs = {} }) => {
       title: intl.get('value'),
       dataIndex: 'value',
       key: 'value',
+      render: valueRender,
     },
     {
       title: intl.get('description'),
