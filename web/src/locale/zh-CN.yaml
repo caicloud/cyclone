@@ -61,7 +61,7 @@ workflow:
   selectTemplate: 选择模版
   stageCreation: 创建阶段方式
   addEnv: 添加环境变量
-  addArtifact: 添加 Artifact
+  addArtifact: 添加产出物
   run: 执行
   runRecord: 执行记录
   runWorkflow: 执行 Workflow
@@ -170,6 +170,8 @@ stage:
   input:
     arguments: 参数
   outputs: 输出
+  output:
+    artifacts: 产出物
   spec:
     container:
       image: 镜像
