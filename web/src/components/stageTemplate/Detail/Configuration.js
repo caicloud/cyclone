@@ -27,8 +27,8 @@ const Configuration = ({ configuration = {} }) => {
       <KeyValue
         cls={style['kv-item']}
         name={'CMD'}
-        isEmpty={_.isEmpty(container.args)}
-        value={_.last(container.args)}
+        isEmpty={_.isEmpty(container.command)}
+        value={_.last(container.command)}
       />
       <KeyValue
         cls={style['kv-item']}

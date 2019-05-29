@@ -4,10 +4,10 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { duotoneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const valueRender = (v, item) => {
-  if (item.name === 'cmd') {
+  if (item.name === 'cmd' && v) {
     return (
       <SyntaxHighlighter language="bash" style={duotoneLight}>
-        {v.replace(/;\s+/g, ';\n')}
+        {v.replace(/;\s*/g, ';\n')}
       </SyntaxHighlighter>
     );
   } else {
