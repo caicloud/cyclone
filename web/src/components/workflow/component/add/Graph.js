@@ -12,6 +12,7 @@ import classNames from 'classnames';
 import styles from '../index.module.less';
 import PropTypes from 'prop-types';
 import { formatStage } from './util';
+import { formatTouchedField } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
 
 // NOTE: Edges must have 'source' & 'target' attributes
@@ -87,7 +88,7 @@ class Graph extends React.Component {
     return this.state.graph.nodes[i];
   }
 
-  onClose = () => {
+  addOrUpdateStageOnClose = () => {
     const { graph, selected, nodePosition, stageInfo } = this.state;
     const {
       values,
@@ -97,7 +98,6 @@ class Graph extends React.Component {
       project,
       resource: { updateStage, createStage },
     } = this.props;
-
     let _state = {
       graph,
       visible: false,
@@ -170,6 +170,21 @@ class Graph extends React.Component {
       }
     }
     this.setState(_state);
+  };
+
+  onClose = () => {
+    const { values, validateForm, setTouched } = this.props;
+
+    validateForm(_.get(values, _.get(values, 'currentStage'), {})).then(
+      error => {
+        if (_.isEmpty(error)) {
+          this.addOrUpdateStageOnClose();
+        } else {
+          const fieldObj = formatTouchedField(error);
+          setTouched(fieldObj);
+        }
+      }
+    );
   };
 
   getStageId = array => {
@@ -634,6 +649,8 @@ Graph.propTypes = {
   resource: PropTypes.object,
   saveGraphWhenUnmount: PropTypes.func,
   workflow: PropTypes.object,
+  validateForm: PropTypes.func,
+  setTouched: PropTypes.func,
 };
 
 export default Graph;

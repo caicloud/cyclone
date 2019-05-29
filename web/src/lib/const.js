@@ -33,20 +33,24 @@ export const argumentsParamtersField = [
 
 export const customStageField = {
   name: '',
-  inputs: {
-    resources: [],
-  },
   spec: {
-    containers: [
-      {
-        image: '',
-        command: [],
-        args: [],
-        env: [],
+    pod: {
+      inputs: {
+        resources: [],
       },
-    ],
-  },
-  outputs: {
-    resources: [],
+      spec: {
+        containers: [
+          {
+            image: '',
+            command: [],
+            args: [],
+            env: [],
+          },
+        ],
+      },
+      outputs: {
+        resources: [],
+      },
+    },
   },
 };

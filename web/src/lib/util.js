@@ -61,3 +61,18 @@ export const tranformStage = (stages, position) => {
   });
   return { nodes, edges };
 };
+
+export const formatTouchedField = value => {
+  const touchObj = {};
+  const flatObject = (obj, parent) => {
+    _.forEach(obj, (v, k) => {
+      if (_.isString(v)) {
+        touchObj[`${parent}${k}`] = true;
+      } else {
+        flatObject(v, `${parent}${k}.`);
+      }
+    });
+  };
+  flatObject(value, '');
+  return touchObj;
+};
