@@ -67,3 +67,50 @@ More information please reference to:
 - [BitBucket Server 5.4 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-4-release-notes-935388966.html)
 - [BitBucket Server 5.5 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-5-release-notes-938037662.html)
 - [BitBucket Server 5.10 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-10-release-notes-948214779.html)
+
+## SVN Post-Commit hook
+Cyclone server supports svn post-commit hook to trigger workflow. Using this feature, you should do two things:
+- configure your svn repository
+- create SCM type workflowtriggers
+
+### Configure your svn repository
+
+Login your svn server, and do the following steps to configure hooks:
+- Make sure `curl` is installed at `/usr/bin/curl` in you svn server.
+
+- Navigate to your repository’s hooks directory. This is almost always a directory cleverly named “hooks” right inside the top level of your repository:
+```
+cd /home/svn/my_repository/hooks/
+```
+
+- Create a new file called post-commit, and make it executable.
+```
+touch ./post-commit
+chmod 755 ./post-commit
+```
+
+- Open up the file you just created, and add the following bit of code:
+
+```
+#!/bin/sh
+
+REPOS="$1"
+REV="$2"
+TXN_NAME="$3"
+
+UUID=`svnlook uuid $REPOS`
+
+/usr/bin/curl --request POST \
+              --header "Content-Type:application/json;charset=UTF-8" \
+              --header "X-Subversion-Event:Post-Commit" \
+              --data "{\"repoUUID\":\"${UUID}\", \"revision\":\"${REV}\"}" \
+              http://{cyclone-server-address}/apis/v1alpha1/tenants/{tenant}/webhook?sourceType=SCM
+```
+Please replace `{cyclone-server-address}` and `{tenant}` with correct value.
+
+### Create SCM type workflowtriggers
+
+Note that the `workflowtrigger.spc.scm.repo` field should be svn repository's uuid, you can get it by:
+```
+svn info --show-item repos-uuid --username {user} --password {password} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache {svn-repo-url}
+```
