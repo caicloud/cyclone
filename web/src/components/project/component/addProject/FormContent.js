@@ -2,7 +2,6 @@ import { Field } from 'formik';
 import PropTypes from 'prop-types';
 import { Form, Input, Button, Row, Col } from 'antd';
 import Quota from '@/components/public/quota';
-import IntegrationSelect from './IntegrationSelect';
 import MakeField from '@/components/public/makeField';
 
 const { TextArea } = Input;
@@ -32,12 +31,6 @@ const FormContent = ({
         component={TextareaField}
       />
       <Field
-        label={intl.get('project.externalSystem')}
-        name="spec.integrations"
-        required
-        component={IntegrationSelect}
-      />
-      <Field
         label={intl.get('allocation.quotaConfig')}
         name="spec.quota"
         component={Quota}
@@ -46,6 +39,7 @@ const FormContent = ({
         onChange={value => {
           setFieldValue('spec.quota', value);
         }}
+        required
       />
       <Row>
         <Col span={4} />

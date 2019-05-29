@@ -31,10 +31,6 @@ class AddProject extends React.Component {
     } = this.props;
     const { update } = this.state;
     const data = _.omit(values, 'metadata');
-    data.spec.integrations = _.map(values.spec.integrations, n => {
-      const resources = n.split('/');
-      return { type: resources[0], name: resources[1] };
-    });
     data.metadata = {
       annotations: {
         'cyclone.dev/description': _.get(values, 'metadata.description', ''),
@@ -68,7 +64,6 @@ class AddProject extends React.Component {
     let defaultValue = {
       metadata: { alias: '', description: '' },
       spec: {
-        integrations: [],
         quota: {
           'limits.cpu': '',
           'limits.memory': '',
@@ -79,12 +74,8 @@ class AddProject extends React.Component {
     };
     if (update) {
       const proejctInfo = toJS(this.props.project.projectDetail);
-      const values = _.pick(proejctInfo, ['spec.integrations', 'spec.quota']);
+      const values = _.pick(proejctInfo, ['spec.quota']);
       const metadata = _.get(proejctInfo, ['metadata', 'annotations']);
-      values.spec.integrations = _.map(
-        _.get(values, 'spec.integrations', []),
-        n => `${n.type}/${n.name}`
-      );
       values.metadata = {
         alias: _.get(metadata, 'cyclone.dev/alias', ''),
         description: _.get(metadata, 'cyclone.dev/description', ''),
