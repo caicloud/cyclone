@@ -4,6 +4,7 @@ import MakeField from '@/components/public/makeField';
 import { noLabelItemLayout, modalFormItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
+import { required } from '@/components/public/validate';
 import SelectPlus from '@/components/public/makeField/select';
 import SCM from './SCM';
 
@@ -41,37 +42,34 @@ class BindResource extends React.Component {
   render() {
     const { addWay } = this.state;
     const { values, setFieldValue, type, integration, update } = this.props;
-    const resourceType = _.get(values, 'resourceType', 'SCM');
-    const resourceList = _.get(
-      integration,
-      `groupIntegrationList.${resourceType}`
-    );
+    const resourceType = _.get(values, 'type', 'Git');
+    const resourceList = _.get(integration, `groupIntegrationList.SCM`);
     const inputArray =
       type === 'inputs'
-        ? [{ name: 'SCM', value: 'SCM' }]
-        : [{ name: 'Image', value: 'image' }];
+        ? [{ name: 'Git', value: 'Git' }]
+        : [{ name: 'Image', value: 'Image' }];
     return (
       <Form layout={'horizontal'}>
         {/* <FormItem
           label={intl.get('workflow.resourceType')}
           {...modalFormItemLayout}
         >
-          {type === 'inputs' ? 'SCM' : 'Image'}
-        </FormItem> */}
+          {type === 'inputs' ? 'Git' : 'Image'}
+        </FormItem>
         {/* // TODO(qme): Subsequent support for multiple resource types */}
-
         <Field
-          label={intl.get('type')}
-          name="resourceType"
-          required
+          label={intl.get('workflow.resourceType')}
+          name="type"
           handleSelectChange={val => {
-            setFieldValue('resourceType', val);
+            setFieldValue('type', val);
           }}
           payload={{
             items: inputArray,
           }}
           component={SelectField}
           formItemLayout={modalFormItemLayout}
+          required
+          validate={required}
         />
         {type === 'inputs' && (
           <FormItem
@@ -90,12 +88,13 @@ class BindResource extends React.Component {
           <Field
             label={intl.get('type')}
             name="name"
-            required
             handleSelectChange={val => {
               setFieldValue('name', val);
             }}
             component={<div>TODO: resource select</div>}
             formItemLayout={modalFormItemLayout}
+            required
+            validate={required}
           />
         ) : (
           <Fragment>
@@ -111,9 +110,10 @@ class BindResource extends React.Component {
                 formItemLayout={modalFormItemLayout}
                 hasFeedback
                 required
+                validate={required}
               />
             )}
-            {resourceType === 'SCM' ? (
+            {resourceType === 'Git' ? (
               <SCM
                 values={values}
                 integrationList={resourceList}
@@ -139,6 +139,7 @@ class BindResource extends React.Component {
                             formItemLayout={modalFormItemLayout}
                             hasFeedback
                             required
+                            validate={required}
                           />
                         )
                       )}
@@ -156,6 +157,7 @@ class BindResource extends React.Component {
             component={InputField}
             hasFeedback
             required
+            validate={required}
             formItemLayout={modalFormItemLayout}
           />
         )}

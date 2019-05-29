@@ -94,7 +94,7 @@ const removeLoading = function() {
 // axios instance
 const instance = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
-  timeout: 5000,
+  timeout: 15000,
   headers: {
     accesstoken: getToken(),
     'Content-Type': 'application/json',

@@ -4,6 +4,7 @@ import SectionCard from '@/components/public/sectionCard';
 import MakeField from '@/components/public/makeField';
 import ResourceArray from '../resource/ResourceArray';
 import PropTypes from 'prop-types';
+import { required } from '@/components/public/validate';
 import { defaultFormItemLayout } from '@/lib/const';
 
 const Fragment = React.Fragment;
@@ -32,6 +33,7 @@ class TemplateStage extends React.Component {
           component={InputField}
           hasFeedback
           required
+          validate={required}
         />
       );
     });
@@ -53,6 +55,7 @@ class TemplateStage extends React.Component {
             component={InputField}
             hasFeedback
             required
+            validate={required}
           />
         )}
         <SectionCard title={intl.get('input')}>
@@ -86,6 +89,7 @@ class TemplateStage extends React.Component {
                           }
                           hasFeedback
                           required
+                          validate={required}
                         />
                       );
                     }

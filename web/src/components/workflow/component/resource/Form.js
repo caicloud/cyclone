@@ -49,7 +49,7 @@ class ResourceFrom extends React.Component {
     let data = {
       name: '',
       path: '',
-      resourceType: 'SCM',
+      type: 'Git',
       spec: {
         parameters:
           type === 'inputs'
@@ -108,9 +108,6 @@ class ResourceFrom extends React.Component {
     return (
       <Formik
         initialValues={this.getInitialValues()}
-        validate={() => {
-          // TODO(qme): validate resource
-        }}
         onSubmit={this.submitResource}
         render={props => (
           <Modal

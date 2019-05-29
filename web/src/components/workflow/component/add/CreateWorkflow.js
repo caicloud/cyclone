@@ -25,6 +25,8 @@ class App extends React.Component {
     workflow: PropTypes.object,
     workflowName: PropTypes.string,
     project: PropTypes.string,
+    validateForm: PropTypes.func,
+    setTouched: PropTypes.func,
   };
 
   constructor(props) {
@@ -54,21 +56,32 @@ class App extends React.Component {
       values,
       workflowName,
       project,
+      validateForm,
+      setTouched,
     } = this.props;
-    const current = this.state.current + 1;
-    this.setState({ current });
-    if (update) {
-      const detail = _.get(workflowDetail, workflowName);
-      const prevDes = _.get(detail, 'metadata.annotations.description');
-      const des = _.get(values, 'metadata.annotations.description');
-      if (prevDes !== des) {
-        const workflowData = {
-          metadata: { name: workflowName, annotations: { description: des } },
-          ..._.pick(detail, 'spec.stages'),
-        };
-        updateWorkflow(project, workflowName, workflowData);
+    validateForm().then(error => {
+      if (_.isEmpty(error)) {
+        const current = this.state.current + 1;
+        this.setState({ current });
+        if (update) {
+          const detail = _.get(workflowDetail, workflowName);
+          const prevDes = _.get(detail, 'metadata.annotations.description');
+          const des = _.get(values, 'metadata.annotations.description');
+          if (prevDes !== des) {
+            const workflowData = {
+              metadata: {
+                name: workflowName,
+                annotations: { description: des },
+              },
+              ..._.pick(detail, 'spec.stages'),
+            };
+            updateWorkflow(project, workflowName, workflowData);
+          }
+        }
+      } else {
+        setTouched({ 'metadata.name': true });
       }
-    }
+    });
   };
 
   prev = update => {
@@ -89,6 +102,8 @@ class App extends React.Component {
       workFlowInfo,
       project,
       workflowName,
+      validateForm,
+      setTouched,
     } = this.props;
     const { graph } = this.state;
     switch (current) {
@@ -107,6 +122,8 @@ class App extends React.Component {
             setStageDepned={handleDepend}
             updateStagePosition={saveStagePostition}
             saveGraphWhenUnmount={this.saveGraph}
+            validateForm={validateForm}
+            setTouched={setTouched}
           />
         );
       }

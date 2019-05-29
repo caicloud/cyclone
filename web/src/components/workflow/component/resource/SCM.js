@@ -5,6 +5,7 @@ import { noLabelItemLayout } from '@/lib/const';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 import { modalFormItemLayout } from '@/lib/const';
+import { required } from '@/components/public/validate';
 import SelectPlus from '@/components/public/makeField/select';
 
 const FormItem = Form.Item;
@@ -61,6 +62,8 @@ class SCM extends React.Component {
                         setFieldValue(`spec.parameters.${index}.value`, val);
                       }}
                       component={SelectField}
+                      required
+                      validate={required}
                       formItemLayout={modalFormItemLayout}
                     />
                   );
@@ -81,6 +84,8 @@ class SCM extends React.Component {
                       }}
                       component={SelectField}
                       formItemLayout={modalFormItemLayout}
+                      required
+                      validate={required}
                     />
                   );
                 }
@@ -97,6 +102,7 @@ class SCM extends React.Component {
                     formItemLayout={modalFormItemLayout}
                     hasFeedback
                     required
+                    validate={required}
                   />
                 );
               })}

@@ -27,11 +27,14 @@ class AddStage extends React.Component {
   handleChange = e => {
     const { setFieldValue, values } = this.props;
     const value = e.target.value;
+    const state = { creationMethod: value };
     if (value === 'custom') {
       const currentStage = _.get(values, 'currentStage');
       setFieldValue(currentStage, customStageField);
+    } else {
+      state.templateData = null;
     }
-    this.setState({ creationMethod: value });
+    this.setState(state);
   };
 
   transformTemplateData = (data, templateType) => {
