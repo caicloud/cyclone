@@ -139,6 +139,8 @@ template:
   update: 更新模板
   resourceType: 资源类型
   addResource: 新增资源
+  scene: 使用场景
+  type: 模板类型
   form:
     scene: 场景
     kind: 模板类型

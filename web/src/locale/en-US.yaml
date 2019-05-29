@@ -139,6 +139,8 @@ template:
   update: Update
   resourceType: Resource type
   addResource: Add resource
+  scene: Scene
+  type: Template Type
   form:
     scene: Scene
     kind: Type

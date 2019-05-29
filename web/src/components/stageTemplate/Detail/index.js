@@ -40,13 +40,27 @@ class TemplateDetail extends React.Component {
             value={_.get(template, 'metadata.creationTimestamp')}
           />
           <DetailHeadItem
+            name={intl.get('template.scene')}
+            value={
+              _.get(template, 'metadata.labels["cyclone.dev/scene"]') || '--'
+            }
+          />
+          <DetailHeadItem
+            name={intl.get('template.type')}
+            value={
+              _.get(
+                template,
+                'metadata.labels["stage.cyclone.dev/template-kind"]'
+              ) || '--'
+            }
+          />
+          <DetailHeadItem
             name={intl.get('description')}
             value={
-              _.get(template, [
-                'metadata',
-                'annotations',
-                'cyclone.dev/description',
-              ]) || '--'
+              _.get(
+                template,
+                'metadata.annotations["cyclone.dev/description"]'
+              ) || '--'
             }
           />
         </DetailHead>
