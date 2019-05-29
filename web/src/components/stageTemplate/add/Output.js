@@ -17,6 +17,7 @@ const OutputSection = props => {
         path="spec.pod.outputs.resources"
         values={values}
         setFieldValue={setFieldValue}
+        options={['Image']}
         errors={errors}
       />
       <FormItem label={'Artifact'} {...defaultFormItemLayout}>

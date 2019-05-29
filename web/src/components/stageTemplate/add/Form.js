@@ -68,7 +68,7 @@ export default class StageTemplateForm extends React.Component {
     if (args.length > 0) {
       const cmdIndex = args.findIndex(v => {
         if (v.name === 'cmd' && v.value) {
-          v.value = v.value.replace(/;\s+/g, ';\n');
+          v.value = v.value.replace(/;\s*/g, ';\n');
           return true;
         } else {
           return false;

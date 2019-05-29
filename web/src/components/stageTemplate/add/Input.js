@@ -96,6 +96,7 @@ const InputSection = props => {
         path="spec.pod.inputs.resources"
         values={values}
         setFieldValue={setFieldValue}
+        options={['Git', 'SVN']}
         errors={errors}
       />
     </SectionCard>

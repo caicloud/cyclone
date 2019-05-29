@@ -33,14 +33,16 @@ class Item extends React.Component {
   render() {
     const { template, history, key } = this.props;
     const actionList = [
-      <Icon
+      <div
         key="edit"
-        type="edit"
+        className="edit-item"
         onClick={e => {
           e.stopPropagation();
           history.push(`/stageTemplate/${name}/update`);
         }}
-      />,
+      >
+        <Icon type="edit" />
+      </div>,
       <Popconfirm
         key={key}
         title={intl.get('template.deletetips')}
@@ -54,13 +56,14 @@ class Item extends React.Component {
         okText={intl.get('confirm')}
         cancelText={intl.get('cancel')}
       >
-        <Icon
-          key="delete"
-          type="delete"
+        <div
+          className="delete-item"
           onClick={e => {
             e.stopPropagation();
           }}
-        />
+        >
+          <Icon key="delete" type="delete" />
+        </div>
       </Popconfirm>,
     ];
     const name = _.get(template, 'metadata.name');

@@ -9,7 +9,7 @@ const FormItem = Form.Item;
 const SelectField = MakeField(SelectSourceType);
 
 const ResourceType = props => {
-  const { setFieldValue, values, path, required, errors } = props;
+  const { setFieldValue, values, path, required, errors, options } = props;
   const resources = _.get(values, path, []);
   const errorMsg = _.get(errors, path);
   const errorsObj = {
@@ -50,6 +50,7 @@ const ResourceType = props => {
                       path: '',
                     });
                   }}
+                  options={options}
                   component={SelectField}
                 />
               </Col>
@@ -66,7 +67,7 @@ const ResourceType = props => {
             {...errorsObj.button}
             ico="plus"
             onClick={() => {
-              arrayHelpers.push({ name: '', type: 'Git', path: '' });
+              arrayHelpers.push({ name: '', type: options[0], path: '' });
             }}
           >
             {intl.get('template.addResource')}
@@ -84,6 +85,7 @@ ResourceType.propTypes = {
   touched: PropTypes.object,
   errors: PropTypes.object,
   required: PropTypes.bool,
+  options: PropTypes.array,
 };
 
 export default ResourceType;
