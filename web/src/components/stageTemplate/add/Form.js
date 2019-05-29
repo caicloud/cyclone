@@ -5,7 +5,6 @@ import { Row, Col } from 'antd';
 import { toJS } from 'mobx';
 import FormContent from './FormContent';
 import { validateForm } from './validate';
-import { argumentsParamtersField } from '@/lib/const';
 import styles from './template.module.less';
 
 @inject('stageTemplate')
@@ -38,35 +37,50 @@ export default class StageTemplateForm extends React.Component {
   };
 
   mapRequestFormToInitForm = data => {
-    const alias = _.get(
-      data,
-      ['metadata', 'annotations', 'cyclone.dev/alias'],
-      ''
-    );
+    const name = _.get(data, ['metadata', 'name'], '');
     const description = _.get(
       data,
       ['metadata', 'annotations', 'cyclone.dev/description'],
       ''
     );
+    const scene = _.get(data, ['metadata', 'labels', 'cyclone.dev/scene'], '');
+    const kind = _.get(
+      data,
+      ['metadata', 'labels', 'stage.cyclone.dev/template-kind'],
+      ''
+    );
     const spec = this.generateSpecObj(data);
     return {
-      metadata: { alias, description },
+      metadata: { name, description, scene, kind },
       spec,
     };
   };
 
   generateSpecObj = data => {
     const specData = _.get(data, 'spec', {});
+    const containers = _.get(specData, 'pod.spec.containers', []);
+    if (containers.length > 0) {
+      containers.forEach(v => {
+        v.command = _.last(v.command);
+      });
+    }
     const args = _.get(specData, 'pod.inputs.arguments', []);
-    if (args.length > 2) {
-      specData.pod.inputs.arguments = args.filter(
-        v => v.name === 'image' || v.name === 'cmd'
-      );
+    if (args.length > 0) {
+      const cmdIndex = args.findIndex(v => {
+        if (v.name === 'cmd' && v.value) {
+          v.value = v.value.replace(/;\s+/g, ';\n');
+          return true;
+        } else {
+          return false;
+        }
+      });
+      const cmdObj = args.splice(cmdIndex, 1)[0];
+      args.push(cmdObj);
     }
     let defaultSpec = {
       pod: {
         inputs: {
-          arguments: argumentsParamtersField,
+          arguments: [],
           resources: [],
         },
         outputs: {
@@ -77,7 +91,7 @@ export default class StageTemplateForm extends React.Component {
             {
               env: [],
               image: '{{ image }}',
-              args: ['/bin/sh', '-e', '-c', '{{{ cmd }}}'],
+              command: ['{{{ cmd }}}'],
             },
           ],
         },
@@ -87,17 +101,38 @@ export default class StageTemplateForm extends React.Component {
   };
 
   initFormValue = () => {
-    const templateInfo = toJS(this.props.stageTemplate.template);
-    return this.mapRequestFormToInitForm(templateInfo);
+    const {
+      match: { params },
+    } = this.props;
+    const update = !!_.get(params, 'templateName');
+    if (update) {
+      return this.mapRequestFormToInitForm(
+        toJS(this.props.stageTemplate.template)
+      );
+    } else {
+      return this.mapRequestFormToInitForm();
+    }
   };
 
   generateData = data => {
     const metadata = {
       annotations: {
         'cyclone.dev/description': _.get(data, 'metadata.description', ''),
-        'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
       },
+      labels: {
+        'cyclone.dev/scene': _.get(data, 'metadata.scene', ''),
+        'stage.cyclone.dev/template-kind': _.get(data, 'metadata.kind', ''),
+      },
+      name: _.get(data, 'metadata.name', ''),
     };
+    data.spec.pod.spec.containers.forEach(v => {
+      v.command = _.concat(['/bin/sh', '-e', '-c'], v.command);
+    });
+    data.spec.pod.inputs.arguments.forEach(v => {
+      if (v.name === 'cmd') {
+        v.value = v.value.replace(/\n/g, '');
+      }
+    });
     return { metadata, spec: data.spec };
   };
 

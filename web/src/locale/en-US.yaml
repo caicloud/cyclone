@@ -140,13 +140,22 @@ template:
   resourceType: Resource type
   addResource: Add resource
   form:
+    scene: Scene
+    kind: Type
+    placeholder:
+      kind: stage template type
+      name: stage template name 
+      scene: stage template scene
+      desc: stage template description
     inputs:
       name: Inputs
+      arguments: Arguments
+      addArgs: Add arguments
     config:
       name: Config
       image: Image
       entryPoint: Entry point
-      cmd: CMD
+      command: CMD
       env:
         name: Env
         key: Key

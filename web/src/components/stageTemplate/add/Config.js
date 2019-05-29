@@ -16,7 +16,7 @@ const inputMap = {
     component: InputField,
     props: {},
   },
-  cmd: {
+  command: {
     component: TextareaField,
     props: {
       style: {
@@ -28,23 +28,31 @@ const inputMap = {
 
 const ConfigSection = props => {
   const { values } = props;
-  const args = _.get(values, 'spec.pod.inputs.arguments', []);
+  const args = _.get(values, 'spec.pod.spec.containers', []);
   return (
     <SectionCard title={intl.get('config')}>
       <FieldArray
-        name="spec.pod.inputs.arguments"
+        name="spec.pod.spec.containers"
         render={() => (
           <Fragment>
             {args.length > 0 &&
               args.map((field, index) => (
-                <Field
-                  key={field.name}
-                  label={intl.get(`template.form.config.${field.name}`)}
-                  name={`spec.pod.inputs.arguments.${index}.value`}
-                  component={inputMap[field.name]['component']}
-                  {...inputMap[field.name]['props']}
-                  required
-                />
+                <Fragment key={field.name}>
+                  <Field
+                    label={intl.get('template.form.config.command')}
+                    name={`spec.pod.spec.containers.${index}.command`}
+                    component={inputMap['command']['component']}
+                    {...inputMap['command']['props']}
+                    required
+                  />
+                  <Field
+                    label={intl.get('template.form.config.image')}
+                    name={`spec.pod.spec.containers.${index}.image`}
+                    component={inputMap['image']['component']}
+                    {...inputMap['image']['props']}
+                    required
+                  />
+                </Fragment>
               ))}
           </Fragment>
         )}
