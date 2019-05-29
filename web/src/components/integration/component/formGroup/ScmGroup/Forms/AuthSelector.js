@@ -31,6 +31,7 @@ export default class AuthSelector extends React.Component {
             <Field
               label="Token"
               name="spec.scm.token"
+              type="password"
               required
               component={InputField}
             />

@@ -214,6 +214,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, 
 	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
 		err := scm.GenerateSCMToken(in.Spec.SCM)
 		if err != nil {
+			log.Errorf("Generate or check token error: %v", err)
 			return nil, err
 		}
 	}

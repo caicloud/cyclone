@@ -144,8 +144,8 @@ func getAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 
 // versionResponse represents the response of Gitlab version API.
 type versionResponse struct {
-	Version   string `json:"version"`
-	Reversion string `json:"reversion"`
+	Version  string `json:"version"`
+	Revision string `json:"revision"`
 }
 
 func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
@@ -159,6 +159,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	}
 
 	url := fmt.Sprintf(apiPathForGitlabVersion, scmCfg.Server)
+	log.Infof("URL: %s", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Error(err)
@@ -193,6 +194,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	case http.StatusOK:
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
+			log.Errorf("Read body error: %v", err)
 			return "", err
 		}
 
@@ -206,6 +208,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		log.Infof("Gitlab version is %s, will use %s API", gv.Version, v4APIVersion)
 		return v4APIVersion, nil
 	case http.StatusNotFound, http.StatusFound:
+		log.Infof("Check v4 api version with status code, %d, will use v3", resp.StatusCode)
 		return v3APIVersion, nil
 	default:
 		log.Warningf("Status code of Gitlab API version request is %d, use v3 in default", resp.StatusCode)

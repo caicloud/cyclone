@@ -49,7 +49,7 @@ export default class IntegrationForm extends React.Component {
     if (type === 'SCM') {
       const scmValueMap = {
         Password: ['server', 'type', 'user', 'password'],
-        Token: ['server', 'type', 'token'],
+        Token: ['server', 'type', 'user', 'token'],
       };
       const authType = _.get(data, 'spec.scm.authType');
       const scmObj = _.pick(spec.scm, scmValueMap[authType]);
