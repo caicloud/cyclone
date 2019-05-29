@@ -1,6 +1,6 @@
 export const IntegrationTypeMap = {
   SCM: 'scm',
-  SonarQube: 'sonarqube',
+  SonarQube: 'sonarQube',
   DockerRegistry: 'dockerRegistry',
   Cluster: 'cluster',
 };

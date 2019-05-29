@@ -97,8 +97,8 @@ integration:
     dockerRegistry:
       name: 镜像仓库
       registryAddress: 仓库地址
-      admin: 管理员账号
-      adminpwd: 管理员密码
+      userName: 账号名
+      password: 密码
     cluster:
       name: 集群
       serverAddress: 服务地址
@@ -146,7 +146,7 @@ template:
     kind: 模板类型
     placeholder:
       kind: 模板类型
-      name: 模板名称 
+      name: 模板名称
       scene: 模板场景
       desc: 模板描述信息
     inputs:
