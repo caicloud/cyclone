@@ -166,7 +166,8 @@ func LabelSCMTrigger(wft *v1alpha1.WorkflowTrigger) {
 }
 
 func encodeRepoValue(repo string) string {
-	return strings.Replace(repo, "/", ".", -1)
+	trimRepo := strings.Trim(repo, "/")
+	return strings.Replace(trimRepo, "/", ".", -1)
 }
 
 // ListSCMWfts list all related SCM type workflow triggers
