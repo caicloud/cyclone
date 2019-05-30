@@ -1,9 +1,8 @@
 import { Formik } from 'formik';
-import { Modal, notification } from 'antd';
+import { Modal, notification, Spin } from 'antd';
 import BindResource from './BindResource';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
-import { resourceParametersField } from '@/lib/const';
 
 @inject('resource')
 @observer
@@ -25,10 +24,15 @@ class ResourceFrom extends React.Component {
 
   constructor(props) {
     super(props);
-    const { visible } = props;
+    const {
+      visible,
+      type,
+      resource: { listResourceTypes },
+    } = props;
     this.state = {
       visible,
     };
+    listResourceTypes({ operation: type === 'inputs' ? 'pull' : 'push' });
   }
 
   componentDidUpdate(preProps) {
@@ -44,18 +48,12 @@ class ResourceFrom extends React.Component {
     handleModalClose && handleModalClose(false);
   };
 
-  getInitialValues = () => {
-    const { type, modifyData } = this.props;
+  getInitialValues = value => {
+    const { modifyData } = this.props;
     let data = {
       name: '',
       path: '',
-      spec: {
-        type: type === 'inputs' ? 'Git' : 'Image',
-        parameters:
-          type === 'inputs'
-            ? resourceParametersField['SCM']
-            : resourceParametersField['DockerRegistry'],
-      },
+      ..._.pick(value, ['spec.type', 'spec.parameters']),
     };
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
@@ -103,11 +101,21 @@ class ResourceFrom extends React.Component {
     handleModalClose(false);
   };
   render() {
-    const { type, update, modifyData } = this.props;
+    const {
+      type,
+      update,
+      modifyData,
+      resource: { resourceTypeList, resourceTypeLoading },
+    } = this.props;
     const { visible } = this.state;
+    if (resourceTypeLoading) {
+      return <Spin />;
+    }
     return (
       <Formik
-        initialValues={this.getInitialValues()}
+        initialValues={this.getInitialValues(
+          _.get(resourceTypeList, ['items', 0])
+        )}
         onSubmit={this.submitResource}
         render={props => (
           <Modal

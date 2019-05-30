@@ -72,6 +72,10 @@ class AddStage extends React.Component {
       if (v.name) {
         v.name = '';
       }
+      v.spec = {
+        type: v.type,
+      };
+      delete v.type;
     });
     return value;
   };

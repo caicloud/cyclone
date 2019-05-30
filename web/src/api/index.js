@@ -1,4 +1,5 @@
 import http from './http.js';
+import qs from 'query-string';
 
 const fetchApi = {
   http,
@@ -133,10 +134,15 @@ const fetchApi = {
   },
 
   listResourceTypes(query) {
-    return http.get('/resourcetypes', query).then(data => {
+    // TODO(qme): format query in axios
+    const url = _.isEmpty(query)
+      ? `/resourcetypes`
+      : `/resourcetypes?${qs.stringify(query)}`;
+    return http.get(url).then(data => {
       return data;
     });
   },
+
   /** end resource */
   listWorkflow(project, query) {
     return http.get(`/projects/${project}/workflows`, query).then(data => {

@@ -13,21 +13,8 @@ export const emptyLabelItemLayout = {
 };
 
 export const modalFormItemLayout = {
-  labelCol: { span: 6 },
+  labelCol: { span: 7 },
   wrapperCol: { span: 16 },
-};
-
-export const resourceParametersField = {
-  SCM: [
-    { name: 'SCM_TOKEN', value: '' },
-    { name: 'SCM_URL', value: '' },
-    { name: 'SCM_RESIVION', value: '' },
-  ],
-  DockerRegistry: [
-    { name: 'IMAGE', value: '' },
-    { name: 'USER', value: '' },
-    { name: 'PASSWORD', value: '' },
-  ],
 };
 
 export const customStageField = {

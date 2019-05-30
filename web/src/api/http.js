@@ -49,7 +49,6 @@ const addRequesting = config => {
   } else {
     requesting[requestId] = true;
   }
-
   return config;
 };
 

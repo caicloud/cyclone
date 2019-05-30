@@ -43,7 +43,10 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
   _.forEach(outputResources, (r, i) => {
     stage.spec.pod.outputs.resources[i] = { name: _.get(r, 'metadata.name') };
     if (fromCreate) {
-      const resourceData = _.pick(r, ['spec', 'metadata.name']);
+      const resourceData = {
+        metadata: { name: _.get(r, 'name') },
+        ..._.pick(r, ['spec']),
+      };
       requests.push({
         type: 'createResource',
         project: query.project,

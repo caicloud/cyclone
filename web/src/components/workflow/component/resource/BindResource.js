@@ -1,4 +1,4 @@
-import { Form, Input, Radio } from 'antd';
+import { Form, Input } from 'antd';
 import { Field, FieldArray } from 'formik';
 import MakeField from '@/components/public/makeField';
 import { noLabelItemLayout, modalFormItemLayout } from '@/lib/const';
@@ -6,10 +6,7 @@ import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 import { required } from '@/components/public/validate';
 import SelectPlus from '@/components/public/makeField/select';
-import SCM from './SCM';
 
-const RadioButton = Radio.Button;
-const RadioGroup = Radio.Group;
 const FormItem = Form.Item;
 const InputField = MakeField(Input);
 const SelectField = MakeField(SelectPlus);
@@ -17,7 +14,7 @@ const SelectField = MakeField(SelectPlus);
 const Fragment = React.Fragment;
 
 // use in add stage, select a exist resource or create a new resource
-@inject('integration')
+@inject('integration', 'resource')
 @observer
 class BindResource extends React.Component {
   static propTypes = {
@@ -26,64 +23,63 @@ class BindResource extends React.Component {
     type: PropTypes.oneOf(['inputs', 'outputs']),
     integration: PropTypes.object,
     update: PropTypes.bool,
+    resource: PropTypes.object,
   };
 
   state = { addWay: 'new' };
 
   componentDidMount() {
-    const { integration } = this.props;
-    integration.getIntegrationList();
+    // TODO(qme): user integration
+    // const { integration } = this.props;
+    // integration.getIntegrationList();
   }
 
   changeAddWay = value => {
     this.setState({ addWay: value });
   };
 
+  handleTypeChange = val => {
+    const {
+      setFieldValue,
+      resource: { resourceTypeList },
+    } = this.props;
+    setFieldValue('spec.type', val);
+    const item = _.find(
+      _.get(resourceTypeList, 'items', []),
+      o => _.get(o, 'spec.type') === val
+    );
+    if (item) {
+      setFieldValue('spec.parameters', _.get(item, 'spec.parameters'));
+    }
+  };
+
   render() {
     const { addWay } = this.state;
-    const { values, setFieldValue, type, integration, update } = this.props;
-    const resourceType = _.get(values, 'spec.type', 'Git');
-    const resourceList = _.get(integration, `groupIntegrationList.SCM`);
-    const inputArray =
-      type === 'inputs'
-        ? [{ name: 'Git', value: 'Git' }]
-        : [{ name: 'Image', value: 'Image' }];
+    const {
+      values,
+      setFieldValue,
+      type,
+      update,
+      resource: { resourceTypeList },
+    } = this.props;
     return (
       <Form layout={'horizontal'}>
-        {/* <FormItem
-          label={intl.get('workflow.resourceType')}
-          {...modalFormItemLayout}
-        >
-          {type === 'inputs' ? 'Git' : 'Image'}
-        </FormItem>
-        {/* // TODO(qme): Subsequent support for multiple resource types */}
         <Field
           label={intl.get('workflow.resourceType')}
           name="spec.type"
           handleSelectChange={val => {
-            setFieldValue('spec.type', val);
+            this.handleTypeChange(val);
           }}
           payload={{
-            items: inputArray,
+            items: _.get(resourceTypeList, 'items', []),
+            nameKey: 'spec.type',
+            valueKey: 'spec.type',
           }}
           component={SelectField}
           formItemLayout={modalFormItemLayout}
           required
           validate={required}
         />
-        {type === 'inputs' && (
-          <FormItem
-            label={intl.get('workflow.addMethod')}
-            {...modalFormItemLayout}
-          >
-            <RadioGroup onChange={this.changeAddWay} defaultValue={addWay}>
-              <RadioButton value="new">{intl.get('operation.add')}</RadioButton>
-              <RadioButton value="exist">
-                {intl.get('workflow.existResource')}
-              </RadioButton>
-            </RadioGroup>
-          </FormItem>
-        )}
         {addWay === 'exist' ? (
           <Field
             label={intl.get('type')}
@@ -113,41 +109,34 @@ class BindResource extends React.Component {
                 validate={required}
               />
             )}
-            {resourceType === 'Git' ? (
-              <SCM
-                values={values}
-                integrationList={resourceList}
-                setFieldValue={setFieldValue}
+            <FormItem {...noLabelItemLayout}>
+              <FieldArray
+                name="spec.parameters"
+                render={() => (
+                  <div>
+                    {_.get(values, 'spec.parameters', []).map(
+                      (field, index) => (
+                        <Field
+                          key={field.name}
+                          label={
+                            field.name.includes('SCM_')
+                              ? field.name.replace('SCM_', '')
+                              : field.name
+                          }
+                          name={`spec.parameters.${index}.value`}
+                          component={InputField}
+                          formItemLayout={modalFormItemLayout}
+                          hasFeedback
+                          required
+                          tooltip={field.description}
+                          validate={required}
+                        />
+                      )
+                    )}
+                  </div>
+                )}
               />
-            ) : (
-              <FormItem {...noLabelItemLayout}>
-                <FieldArray
-                  name="spec.parameters"
-                  render={() => (
-                    <div>
-                      {_.get(values, 'spec.parameters', []).map(
-                        (field, index) => (
-                          <Field
-                            key={field.name}
-                            label={
-                              field.name.includes('GIT_')
-                                ? field.name.replace('GIT_', '')
-                                : field.name
-                            }
-                            name={`spec.parameters.${index}.value`}
-                            component={InputField}
-                            formItemLayout={modalFormItemLayout}
-                            hasFeedback
-                            required
-                            validate={required}
-                          />
-                        )
-                      )}
-                    </div>
-                  )}
-                />
-              </FormItem>
-            )}
+            </FormItem>
           </Fragment>
         )}
         {type === 'inputs' && (
