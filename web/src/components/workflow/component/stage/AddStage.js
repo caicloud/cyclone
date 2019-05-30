@@ -110,12 +110,21 @@ class AddStage extends React.Component {
       >
         {templates.map(o => {
           const name = _.get(o, 'metadata.name');
+          const alias = _.get(o, [
+            'metadata',
+            'annotations',
+            'cyclone.dev/alias',
+          ]);
+          const namespace = _.get(o, 'metadata.namespace', '');
+          const key = namespace ? `${namespace}-${name}` : name;
+          const templateAlias = namespace ? `${namespace}-${alias}` : alias;
           return (
-            <Option value={name} key={name}>
+            <Option value={name} key={key}>
               {_.get(o, ['metadata', 'labels', 'cyclone.dev/builtin']) ===
               'true'
-                ? intl.get(`template.kinds.${name.replace('-template', '')}`)
-                : _.get(o, ['metadata', 'annotations', 'cyclone.dev/alias'])}
+                ? intl.get(`template.kinds.${name.replace('-template', '')}`) ||
+                  key
+                : templateAlias}
             </Option>
           );
         })}
