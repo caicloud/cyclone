@@ -50,6 +50,10 @@ type ResourceSpec struct {
 	Persistent *Persistent `json:"persistent"`
 	// Parameters of the resource
 	Parameters []ParameterItem `json:"parameters"`
+	// SupportedOperations defines what operations the resource type supported,
+	// it's only used to register a resource type. When you create a resource for
+	// workflow, just ignore it.
+	SupportedOperations []string `json:"operations"`
 }
 
 // Persistent describes persistent parameters for the resource.

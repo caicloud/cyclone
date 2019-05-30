@@ -1,0 +1,88 @@
+apiVersion: cyclone.dev/v1alpha1
+kind: Resource
+metadata:
+  name: resource-type-git
+  namespace: {{ .Release.Namespace }}
+  labels:
+    resource.cyclone.dev/template: "true"
+    cyclone.dev/builtin: "true"
+spec:
+  type: Git
+  operations:
+  - pull
+  parameters:
+  - name: SCM_URL
+    description: >
+      URL of the scm, for example, https://github.com/caicloud/cyclone.git.
+      Only http and https are supported.
+  - name: SCM_REVISION
+    description: >
+       Revision of the source code. It has two different format. a) Single revision,
+       such as branch 'master', tag 'v1.0'; b). Composite such as pull requests,
+       'develop:master' indicates merge 'develop' branch to 'master'. For GitHub,
+       pull requests can use the single revision form, such as 'refs/pull/1/merge',
+       but for Gitlab, composite revision is necessary, such as 'refs/merge-requests/1/head:master'.
+  - name: SCM_AUTH
+    description: >
+      For public repository, no need provide auth, but for private repository, this
+      should be provided. Auth here supports 2 different formats: a. <user>:<password>
+      b. <token>
+
+---
+
+apiVersion: cyclone.dev/v1alpha1
+kind: Resource
+metadata:
+  name: resource-type-svn
+  namespace: {{ .Release.Namespace }}
+  labels:
+    resource.cyclone.dev/template: "true"
+    cyclone.dev/builtin: "true"
+spec:
+  type: Svn
+  operations:
+  - pull
+  parameters:
+  - name: SCM_URL
+    description: >
+      URL of the svn repository. For exmaple, http://192.168.21.97/svn
+  - name: SCM_REVISION
+    description: >
+      Revision of the source code. For example, "996".
+  - name: SCM_USER
+    description: >
+      User name of the svn server.
+  - name: SCM_PWD
+    description: >
+      Password for the user.
+
+---
+
+apiVersion: cyclone.dev/v1alpha1
+kind: Resource
+metadata:
+  name: resource-type-image
+  namespace: {{ .Release.Namespace }}
+  labels:
+    resource.cyclone.dev/template: "true"
+    cyclone.dev/builtin: "true"
+spec:
+  type: Image
+  operations:
+  - push
+  parameters:
+  - name: REGISTRY
+    description: >
+      Registry where to pull/push images, for example, docker.io
+  - name: REPOSITORY
+    description: >
+      Repository of the image, for example, library/alpine
+  - name: TAG
+    description: >
+      Tag of the image, for example, 3.6
+  - name: USER
+    description: >
+      User of the regisry
+  - name: PASSWORD
+    description: >
+      Password of the registry
