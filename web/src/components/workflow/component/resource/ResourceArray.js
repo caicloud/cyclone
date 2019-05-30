@@ -101,7 +101,7 @@ class ResourceArray extends React.Component {
                           <div style={style}>
                             <Row gutter={16}>
                               <Col span={colSpan}>
-                                {_.get(r, 'name') || '- -'}
+                                {_.get(r, 'name') || '--'}
                               </Col>
                               <Col span={colSpan}>{_.get(r, 'type')}</Col>
                               {type === 'inputs' && (
