@@ -173,17 +173,17 @@ class Graph extends React.Component {
   };
 
   onClose = () => {
-    const { values, validateForm, setTouched } = this.props;
-    validateForm(_.get(values, _.get(values, 'currentStage'), {})).then(
-      error => {
-        if (_.isEmpty(error)) {
-          this.addOrUpdateStageOnClose();
-        } else {
-          const fieldObj = formatTouchedField(error);
-          setTouched(fieldObj);
-        }
+    const { validateForm, setTouched, values } = this.props;
+    const currentStage = _.get(values, 'currentStage');
+    validateForm().then(error => {
+      const stageError = _.get(error, currentStage, {});
+      if (_.isEmpty(stageError)) {
+        this.addOrUpdateStageOnClose();
+      } else {
+        const fieldObj = formatTouchedField(stageError);
+        setTouched(fieldObj);
       }
-    );
+    });
   };
 
   getStageId = array => {
