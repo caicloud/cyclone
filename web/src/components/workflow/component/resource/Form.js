@@ -14,7 +14,7 @@ class ResourceFrom extends React.Component {
     visible: PropTypes.bool,
     modifyData: PropTypes.object,
     handleModalClose: PropTypes.func,
-    update: PropTypes.boolean,
+    update: PropTypes.bool,
     project: PropTypes.string,
     resource: PropTypes.object,
   };

@@ -194,7 +194,7 @@ AddStage.propTypes = {
   stageTemplate: PropTypes.object,
   setFieldValue: PropTypes.func,
   values: PropTypes.object,
-  update: PropTypes.boolean,
+  update: PropTypes.bool,
   project: PropTypes.string,
   templateName: PropTypes.string,
 };

@@ -1,5 +1,6 @@
 name: 名称
 value: 值
+defaultValue: 默认值
 path: 路径
 mountPath: 挂载路径
 configuration: 配置

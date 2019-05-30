@@ -25,7 +25,7 @@ class BindResource extends React.Component {
     values: PropTypes.object,
     type: PropTypes.oneOf(['inputs', 'outputs']),
     integration: PropTypes.object,
-    update: PropTypes.boolean,
+    update: PropTypes.bool,
   };
 
   state = { addWay: 'new' };
