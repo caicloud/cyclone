@@ -14,10 +14,12 @@ const TextareaField = MakeField(TextArea);
 const AutoCompleteField = MakeField(AutoCompletePlus);
 const FormItem = Form.Item;
 @inject('stageTemplate')
+@inject('resource')
 @observer
 class FormContent extends React.Component {
   componentDidMount() {
     this.props.stageTemplate.getTemplateList();
+    this.props.resource.listResourceTypes();
   }
   getKinds = list => {
     const kinds = [];
@@ -34,6 +36,25 @@ class FormContent extends React.Component {
       value: kind,
     }));
   };
+  getResourceTypes = list => {
+    const items = _.get(list, 'items', []);
+    const inputResourceTypes = [];
+    const outputResourceTypes = [];
+    if (items.length > 0) {
+      items.forEach(v => {
+        const operations = _.get(v, 'spec.operations');
+        const type = _.get(v, 'spec.type');
+        if (operations.includes('pull')) {
+          inputResourceTypes.push(type);
+        }
+        if (operations.includes('push')) {
+          outputResourceTypes.push(type);
+        }
+      });
+    }
+
+    return { inputResourceTypes, outputResourceTypes };
+  };
   render() {
     const {
       handleCancle,
@@ -41,10 +62,11 @@ class FormContent extends React.Component {
       update,
       values,
       setFieldValue,
-      stageTemplate: { templateList = [] },
+      stageTemplate: { templateList },
+      resource: { resourceTypeList },
     } = this.props;
     const kinds = this.getKinds(templateList.items);
-
+    const resourceTypes = this.getResourceTypes(resourceTypeList);
     return (
       <Form onSubmit={handleSubmit}>
         <Field
@@ -80,9 +102,15 @@ class FormContent extends React.Component {
           component={TextareaField}
           placeholder={intl.get('template.form.placeholder.desc')}
         />
-        <InputSection {...this.props} />
+        <InputSection
+          {...this.props}
+          resourceTypes={resourceTypes.inputResourceTypes}
+        />
         <ConfigSection values={values} />
-        <OutputSection {...this.props} />
+        <OutputSection
+          {...this.props}
+          resourceTypes={resourceTypes.outputResourceTypes}
+        />
         <FormItem
           {...{
             labelCol: { span: 8 },
@@ -108,6 +136,7 @@ FormContent.propTypes = {
   history: PropTypes.object,
   values: PropTypes.object,
   stageTemplate: PropTypes.object,
+  resource: PropTypes.object,
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,
   handleCancle: PropTypes.func,

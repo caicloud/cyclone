@@ -131,6 +131,12 @@ const fetchApi = {
       return data;
     });
   },
+
+  listResourceTypes(query) {
+    return http.get('/resourcetypes', query).then(data => {
+      return data;
+    });
+  },
   /** end resource */
   listWorkflow(project, query) {
     return http.get(`/projects/${project}/workflows`, query).then(data => {
