@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	//  ExitDelayTime is the delay time of coordinator exit, coordinator need the time to do
+	//  exitDelayTime is the delay time of coordinator exit, coordinator need the time to do
 	// something, like collecting logs, to make exit gracefully
-	ExitDelayTime = 3 * time.Second
+	exitDelayTime = 3 * time.Second
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to kubeconfig. Only required if out-of-cluster.")
@@ -30,7 +30,8 @@ func main() {
 	var err error
 	var message string
 	defer func() {
-		time.Sleep(ExitDelayTime)
+		// graceful showdown, need delay time to collect logs of other containers
+		time.Sleep(exitDelayTime)
 		if err != nil {
 			log.Error(message)
 			os.Exit(1)
