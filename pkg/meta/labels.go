@@ -35,6 +35,9 @@ const (
 	// LabelStageTemplate is the label key used to represent a stage is a stage template
 	LabelStageTemplate = "stage.cyclone.dev/template"
 
+	// LabelResourceTemplate represents registration of a supported resource
+	LabelResourceTemplate = "resource.cyclone.dev/template"
+
 	// LabelIntegrationType is the label key used to indicate type of integration
 	LabelIntegrationType = "integration.cyclone.dev/type"
 
@@ -86,6 +89,15 @@ const (
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
 func ProjectSelector(project string) string {
 	return LabelProjectName + "=" + project
+}
+
+// ResourceSelector selects all resources with resource registration excluded.
+func ResourceSelector(project string) string {
+	return fmt.Sprintf("%s=%s,!%s", LabelProjectName, project, LabelResourceTemplate)
+}
+
+func ResourceTypeSelector() string {
+	return LabelResourceTemplate
 }
 
 // WorkflowSelector is a selector for cyclone CRD resources which have corresponding workflow label

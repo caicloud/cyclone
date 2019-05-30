@@ -101,6 +101,12 @@ const (
 
 	// EndTimeQueryParameter represents the query param end time.
 	EndTimeQueryParameter string = "endTime"
+
+	// OperationQueryParameter ...
+	OperationQueryParameter string = "operation"
+
+	// ResourceTypePathParameterName ...
+	ResourceTypePathParameterName = "resourceType"
 )
 
 // GetHTTPRequest gets request from context.

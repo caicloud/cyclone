@@ -34,7 +34,7 @@ func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.R
 // ListResources ...
 func ListResources(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	resources, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: meta.ProjectSelector(project),
+		LabelSelector: meta.ResourceSelector(project),
 	})
 	if err != nil {
 		log.Errorf("Get resources from k8s with tenant %s, project %s error: %v", tenant, project, err)
