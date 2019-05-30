@@ -197,6 +197,7 @@ validate:
   quota:
     exceedLimit: 请求不能超过上限
     selectConfig: 请选择配置
+    incompleteResource: resource 信息不完善
 confirmTip:
   remove: 确定删除 {resourceType} {name} ?
 notification:
