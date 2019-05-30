@@ -69,29 +69,25 @@ More information please reference to:
 - [BitBucket Server 5.10 release notes](https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-10-release-notes-948214779.html)
 
 ## SVN Post-Commit hook
-Cyclone server supports svn post-commit hook to trigger workflow. Using this feature, you should do two things:
-- configure your svn repository
+
+Cyclone server supports SVN post-commit hook to trigger workflow. Using this feature, you should do two things:
+- configure your SVN repository
 - create SCM type workflowtriggers
 
-### Configure your svn repository
+### Configure your SVN repository
 
-Login your svn server, and do the following steps to configure hooks:
-- Make sure `curl` is installed at `/usr/bin/curl` in you svn server.
+Login your SVN server, and do the following steps to configure hooks:
 
-- Navigate to your repository’s hooks directory. This is almost always a directory cleverly named “hooks” right inside the top level of your repository:
-```
-cd /home/svn/my_repository/hooks/
-```
+- Make sure `curl` is installed at `/usr/bin/curl` in you SVN server.
 
-- Create a new file called post-commit, and make it executable.
+- Navigate to your repository’s hooks directory. This is almost always a directory cleverly named `hooks` right inside the top level of your repository:
 ```
-touch ./post-commit
-chmod 755 ./post-commit
+cd /{home_svn}/{my_repository}/hooks/
 ```
 
-- Open up the file you just created, and add the following bit of code:
-
-```
+- Create a new file called post-commit with following content, and make it executable.
+```shell
+$ cat <<'EOF' > post-commit
 #!/bin/sh
 
 REPOS="$1"
@@ -105,12 +101,16 @@ UUID=`svnlook uuid $REPOS`
               --header "X-Subversion-Event:Post-Commit" \
               --data "{\"repoUUID\":\"${UUID}\", \"revision\":\"${REV}\"}" \
               http://{cyclone-server-address}/apis/v1alpha1/tenants/{tenant}/webhook?sourceType=SCM
+
+EOF
+
+$ chmod 755 ./post-commit
 ```
 Please replace `{cyclone-server-address}` and `{tenant}` with correct value.
 
 ### Create SCM type workflowtriggers
 
-Note that the `workflowtrigger.spc.scm.repo` field should be svn repository's uuid, you can get it by:
+Note that the `workflowtrigger.spc.scm.repo` field should be SVN repository's uuid, you can get it by:
 ```
 svn info --show-item repos-uuid --username {user} --password {password} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache {svn-repo-url}
 ```
