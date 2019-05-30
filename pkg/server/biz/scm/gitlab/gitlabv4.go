@@ -60,7 +60,7 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 	trueVar := true
 	opt := &v4.ListProjectsOptions{
 		ListOptions: v4.ListOptions{
-			PerPage: scm.ListPerPageOpt,
+			PerPage: scm.ListOptPerPage,
 		},
 		Membership: &trueVar,
 	}
@@ -91,36 +91,56 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 
 // ListBranches lists the branches for specified repo.
 func (g *V4) ListBranches(repo string) ([]string, error) {
-	opts := &v4.ListBranchesOptions{}
-	branches, resp, err := g.client.Branches.ListBranches(repo, opts)
-	if err != nil {
-		log.Errorf("Fail to list branches for %s", repo)
-		return nil, convertGitlabV4Error(err, resp)
+	opts := &v4.ListBranchesOptions{
+		PerPage: scm.ListOptPerPage,
 	}
 
-	branchNames := make([]string, len(branches))
-	for i, branch := range branches {
-		branchNames[i] = branch.Name
+	var allBranches []string
+	for {
+		branches, resp, err := g.client.Branches.ListBranches(repo, opts)
+		if err != nil {
+			log.Errorf("Fail to list branches for %s", repo)
+			return nil, convertGitlabV4Error(err, resp)
+		}
+
+		for _, b := range branches {
+			allBranches = append(allBranches, b.Name)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
-	return branchNames, nil
+	return allBranches, nil
 }
 
 // ListTags lists the tags for specified repo.
 func (g *V4) ListTags(repo string) ([]string, error) {
-	opts := &v4.ListTagsOptions{}
-	tags, resp, err := g.client.Tags.ListTags(repo, opts)
-	if err != nil {
-		log.Errorf("Fail to list tags for %s", repo)
-		return nil, convertGitlabV4Error(err, resp)
+	opts := &v4.ListTagsOptions{
+		ListOptions: v4.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
 	}
 
-	tagNames := make([]string, len(tags))
-	for i, tag := range tags {
-		tagNames[i] = tag.Name
+	var allTags []string
+	for {
+		tags, resp, err := g.client.Tags.ListTags(repo, opts)
+		if err != nil {
+			log.Errorf("Fail to list tags for %s", repo)
+			return nil, convertGitlabV4Error(err, resp)
+		}
+
+		for _, t := range tags {
+			allTags = append(allTags, t.Name)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
-	return tagNames, nil
+	return allTags, nil
 }
 
 // ListDockerfiles lists the Dockerfiles for specified repo.
@@ -129,7 +149,7 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 	opt := &v4.ListTreeOptions{
 		Recursive: &recursive,
 		ListOptions: v4.ListOptions{
-			PerPage: 100,
+			PerPage: scm.ListOptLargePerPage,
 		},
 	}
 

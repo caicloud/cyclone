@@ -93,7 +93,7 @@ func (g *Github) GetToken() (string, error) {
 	// oauthAppName represents the oauth app name for Cyclone.
 	oauthAppName := "Cyclone"
 	opt := &github.ListOptions{
-		PerPage: scm.ListPerPageOpt,
+		PerPage: scm.ListOptPerPage,
 	}
 	for {
 		auths, resp, err := g.client.Authorizations.List(g.ctx, opt)
@@ -152,7 +152,7 @@ func (g *Github) listReposInner(listAll bool) ([]scm.Repository, error) {
 	// List all repositories for the authenticated user.
 	opt := &github.RepositoryListOptions{
 		ListOptions: github.ListOptions{
-			PerPage: scm.ListPerPageOpt,
+			PerPage: scm.ListOptPerPage,
 		},
 	}
 
@@ -182,7 +182,7 @@ func (g *Github) listReposInner(listAll bool) ([]scm.Repository, error) {
 // ListBranches lists the branches for specified repo.
 func (g *Github) ListBranches(repo string) ([]string, error) {
 	opt := &github.ListOptions{
-		PerPage: scm.ListPerPageOpt,
+		PerPage: scm.ListOptPerPage,
 	}
 
 	owner := g.scmCfg.User
@@ -196,31 +196,29 @@ func (g *Github) ListBranches(repo string) ([]string, error) {
 		owner, repo = parts[0], parts[1]
 	}
 
-	var allBranches []*github.Branch
+	var allBranches []string
 	for {
 		branches, resp, err := g.client.Repositories.ListBranches(g.ctx, owner, repo, opt)
 		if err != nil {
 			return nil, convertGithubError(err)
 		}
-		allBranches = append(allBranches, branches...)
+
+		for _, b := range branches {
+			allBranches = append(allBranches, *b.Name)
+		}
 		if resp.NextPage == 0 {
 			break
 		}
 		opt.Page = resp.NextPage
 	}
 
-	branches := make([]string, len(allBranches))
-	for i, b := range allBranches {
-		branches[i] = *b.Name
-	}
-
-	return branches, nil
+	return allBranches, nil
 }
 
 // ListTags lists the tags for specified repo.
 func (g *Github) ListTags(repo string) ([]string, error) {
 	opt := &github.ListOptions{
-		PerPage: scm.ListPerPageOpt,
+		PerPage: scm.ListOptPerPage,
 	}
 
 	owner := g.scmCfg.User
@@ -259,7 +257,7 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	opt := &github.SearchOptions{
 		ListOptions: github.ListOptions{
-			PerPage: 100,
+			PerPage: scm.ListOptLargePerPage,
 		},
 	}
 
