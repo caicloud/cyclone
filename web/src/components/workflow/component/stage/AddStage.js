@@ -39,6 +39,16 @@ class AddStage extends React.Component {
 
   transformTemplateData = (data, templateType) => {
     const value = _.cloneDeep(data);
+    const _arguments = _.get(value, 'spec.pod.inputs.arguments', []);
+    const commandIndex = _.findIndex(_arguments, o => o.name === 'cmd');
+    if (
+      commandIndex > -1 &&
+      _.isString(_.get(_arguments, [commandIndex, 'value']))
+    ) {
+      let cmd = _arguments[commandIndex].value;
+      cmd = cmd.replace(/;\s+/g, ';\n');
+      _arguments[commandIndex].value = cmd;
+    }
 
     if (templateType === 'cd') {
       const _arguments = _.get(value, 'spec.pod.inputs.arguments', []);
@@ -54,7 +64,10 @@ class AddStage extends React.Component {
       });
       value.spec.pod.inputs.arguments = _arguments;
     }
-    const resource = _.get(value, 'spec.pod.inputs.resources', []);
+    const resource = _.concat(
+      _.get(value, 'spec.pod.inputs.resources', []),
+      _.get(value, 'spec.pod.outputs.resources', [])
+    );
     _.forEach(resource, v => {
       if (v.name) {
         v.name = '';

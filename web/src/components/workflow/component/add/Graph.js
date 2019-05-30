@@ -180,7 +180,7 @@ class Graph extends React.Component {
       if (_.isEmpty(stageError)) {
         this.addOrUpdateStageOnClose();
       } else {
-        const fieldObj = formatTouchedField(stageError);
+        const fieldObj = formatTouchedField(error);
         setTouched(fieldObj);
       }
     });

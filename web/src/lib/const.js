@@ -8,6 +8,10 @@ export const noLabelItemLayout = {
   wrapperCol: { span: 24 },
 };
 
+export const emptyLabelItemLayout = {
+  wrapperCol: { span: 16, offset: 4 },
+};
+
 export const modalFormItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },

@@ -96,34 +96,6 @@ class AddWorkflow extends React.Component {
     }
   }
 
-  // validateStage = value => {
-  //   const stageError = {};
-  //   if (!_.get(value, 'metadata.name')) {
-  //     stageError.metadata = {
-  //       name: intl.get('validate.required'),
-  //     };
-  //   }
-  //   if (!_.isEmpty(stageError)) {
-  //     return stageError;
-  //   }
-  // };
-
-  // validate = values => {
-  //   const errors = {};
-  //   const currentStage = _.get(values, 'currentStage');
-  //   const stages = _.get(values, 'stages', []);
-  //   if (!_.get(values, 'metadata.name')) {
-  //     errors.metadata = {
-  //       name: intl.get('validate.required'),
-  //     };
-  //   }
-  //   if (currentStage && !stages.includes(currentStage)) {
-  //     // validate new stage
-  //     errors[currentStage] = this.validateStage(_.get(values, currentStage));
-  //   }
-  //   return errors;
-  // };
-
   getInitialValues = data => {
     let defaultValue = {
       metadata: { name: '', annotations: { description: '' } },

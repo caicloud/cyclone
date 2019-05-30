@@ -1,11 +1,12 @@
-import { Input, Form } from 'antd';
+import { Input, Form, Divider } from 'antd';
 import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
 import MakeField from '@/components/public/makeField';
 import ResourceArray from '../resource/ResourceArray';
-import PropTypes from 'prop-types';
 import { required } from '@/components/public/validate';
 import { defaultFormItemLayout } from '@/lib/const';
+import style from '@/components/workflow/component/index.module.less';
+import PropTypes from 'prop-types';
 
 const Fragment = React.Fragment;
 const { TextArea } = Input;
@@ -42,6 +43,7 @@ class TemplateStage extends React.Component {
   render() {
     const { stageId, values, update, project, modify } = this.props;
     const specKey = `${stageId}.spec.pod`;
+    const outputResource = _.get(values, `${specKey}.outputs.resources`);
     return (
       <Fragment>
         {update && modify ? (
@@ -59,12 +61,19 @@ class TemplateStage extends React.Component {
           />
         )}
         <SectionCard title={intl.get('input')}>
+          <Divider orientation="left" dashed className={style['divider-small']}>
+            Resources
+          </Divider>
           <ResourceArray
             resourcesField={`${specKey}.inputs.resources`}
             resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
+            noLabel
           />
+          <Divider orientation="left" dashed className={style['divider-small']}>
+            Arguments
+          </Divider>
           <FieldArray
             name={`${specKey}.inputs.arguments`}
             render={arrayHelpers => (
@@ -99,6 +108,17 @@ class TemplateStage extends React.Component {
             )}
           />
         </SectionCard>
+        {outputResource && (
+          <SectionCard title={intl.get('output')}>
+            <ResourceArray
+              resourcesField={`${specKey}.outputs.resources`}
+              type="outputs"
+              resources={_.get(values, `${specKey}.outputs.resources`, [])}
+              update={update}
+              project={project}
+            />
+          </SectionCard>
+        )}
       </Fragment>
     );
   }

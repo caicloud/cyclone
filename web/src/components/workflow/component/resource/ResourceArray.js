@@ -1,6 +1,6 @@
 import { Button, Row, Col, Form } from 'antd';
 import { FieldArray, FastField } from 'formik';
-import { defaultFormItemLayout } from '@/lib/const';
+import { defaultFormItemLayout, emptyLabelItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
@@ -18,6 +18,7 @@ class ResourceArray extends React.Component {
     update: PropTypes.bool,
     project: PropTypes.string,
     resource: PropTypes.object,
+    noLabel: PropTypes.bool,
   };
 
   state = {
@@ -56,18 +57,24 @@ class ResourceArray extends React.Component {
       type = 'inputs',
       update,
       project,
+      noLabel,
     } = this.props;
+    const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
+    const layout = noLabel ? emptyLabelItemLayout : defaultFormItemLayout;
     return (
-      <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
+      <FormItem label={noLabel ? '' : intl.get('sideNav.resource')} {...layout}>
         <FieldArray
           name={resourcesField}
           render={arrayHelpers => (
             <div>
               {resources.length > 0 && (
                 <Row gutter={16}>
-                  <Col span={10}>{intl.get('name')}</Col>
-                  <Col span={10}>{intl.get('path')}</Col>
+                  <Col span={colSpan}>{intl.get('name')}</Col>
+                  <Col span={colSpan}>{intl.get('type')}</Col>
+                  {type === 'inputs' && (
+                    <Col span={colSpan}>{intl.get('path')}</Col>
+                  )}
                 </Row>
               )}
               {/* TODO(qme): click resource list show modal and restore resource form */}
@@ -93,8 +100,13 @@ class ResourceArray extends React.Component {
                         <Fragment>
                           <div style={style}>
                             <Row gutter={16}>
-                              <Col span={10}>{_.get(r, 'name')}</Col>
-                              <Col span={10}>{_.get(r, 'path')}</Col>
+                              <Col span={colSpan}>
+                                {_.get(r, 'name') || '- -'}
+                              </Col>
+                              <Col span={colSpan}>{_.get(r, 'type')}</Col>
+                              {type === 'inputs' && (
+                                <Col span={colSpan}>{_.get(r, 'path')}</Col>
+                              )}
                               <Col span={4}>
                                 <Button
                                   type="circle"

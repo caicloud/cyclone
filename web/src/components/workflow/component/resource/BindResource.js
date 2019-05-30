@@ -42,7 +42,7 @@ class BindResource extends React.Component {
   render() {
     const { addWay } = this.state;
     const { values, setFieldValue, type, integration, update } = this.props;
-    const resourceType = _.get(values, 'type', 'Git');
+    const resourceType = _.get(values, 'spec.type', 'Git');
     const resourceList = _.get(integration, `groupIntegrationList.SCM`);
     const inputArray =
       type === 'inputs'
@@ -59,9 +59,9 @@ class BindResource extends React.Component {
         {/* // TODO(qme): Subsequent support for multiple resource types */}
         <Field
           label={intl.get('workflow.resourceType')}
-          name="type"
+          name="spec.type"
           handleSelectChange={val => {
-            setFieldValue('type', val);
+            setFieldValue('spec.type', val);
           }}
           payload={{
             items: inputArray,
