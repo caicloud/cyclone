@@ -144,7 +144,7 @@ template:
     kind: Type
     placeholder:
       kind: stage template type
-      name: stage template name 
+      name: stage template name
       scene: stage template scene
       desc: stage template description
     inputs:
@@ -189,11 +189,12 @@ stage:
         name: Key
         value: Value
 validate:
-  required: Reqiured
+  required: Required
   positiveOrFloat: Two decimal allowed
   quota:
     exceedLimit: The request can‘t exceed the limit
     selectConfig: Please select config
+  incompleteResource: Incomplete resource info
 confirmTip:
   remove: Make sure to delete {resourceType} {name} ?
 notification:

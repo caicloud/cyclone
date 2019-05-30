@@ -174,7 +174,6 @@ class Graph extends React.Component {
 
   onClose = () => {
     const { values, validateForm, setTouched } = this.props;
-
     validateForm(_.get(values, _.get(values, 'currentStage'), {})).then(
       error => {
         if (_.isEmpty(error)) {

@@ -1,11 +1,12 @@
 import { Button, Row, Col, Form } from 'antd';
-import { FieldArray } from 'formik';
+import { FieldArray, FastField } from 'formik';
 import { defaultFormItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 
 const FormItem = Form.Item;
+const Fragment = React.Fragment;
 
 @inject('resource')
 @observer
@@ -70,26 +71,57 @@ class ResourceArray extends React.Component {
                 </Row>
               )}
               {/* TODO(qme): click resource list show modal and restore resource form */}
-              {resources.map((r, i) => (
-                <Row gutter={16} key={i}>
-                  <Col span={10}>{_.get(r, 'name')}</Col>
-                  <Col span={10}>{_.get(r, 'path')}</Col>
-                  <Col span={4}>
-                    <Button
-                      type="circle"
-                      icon="edit"
-                      onClick={() => {
-                        this.editResource(r, i);
-                      }}
-                    />
-                    <Button
-                      type="circle"
-                      icon="delete"
-                      onClick={() => arrayHelpers.remove(i)}
-                    />
-                  </Col>
-                </Row>
-              ))}
+              {resources.map((r, i) => {
+                return (
+                  <FastField
+                    key={i}
+                    name={`${resourcesField}.${i}`}
+                    validate={value =>
+                      !_.get(value, 'name')
+                        ? { name: intl.get('validate.required') }
+                        : undefined
+                    }
+                    render={({ field, form }) => {
+                      const error = _.get(
+                        form,
+                        `errors.${resourcesField}.${i}.name`
+                      );
+                      const style = error
+                        ? { border: '1px solid #f5222d', borderRadius: '4px' }
+                        : {};
+                      return (
+                        <Fragment>
+                          <div style={style}>
+                            <Row gutter={16}>
+                              <Col span={10}>{_.get(r, 'name')}</Col>
+                              <Col span={10}>{_.get(r, 'path')}</Col>
+                              <Col span={4}>
+                                <Button
+                                  type="circle"
+                                  icon="edit"
+                                  onClick={() => {
+                                    this.editResource(r, i);
+                                  }}
+                                />
+                                <Button
+                                  type="circle"
+                                  icon="delete"
+                                  onClick={() => arrayHelpers.remove(i)}
+                                />
+                              </Col>
+                            </Row>
+                          </div>
+                          {error && (
+                            <div style={{ color: '#f5222d' }}>
+                              {intl.get('validate.incompleteResource')}
+                            </div>
+                          )}
+                        </Fragment>
+                      );
+                    }}
+                  />
+                );
+              })}
               <Button
                 ico="plus"
                 onClick={() => {
