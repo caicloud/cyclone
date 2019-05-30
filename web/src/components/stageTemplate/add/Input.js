@@ -80,7 +80,7 @@ const InputSection = props => {
               )}
               <FormItem>
                 <Button
-                  ico="plus"
+                  icon="plus"
                   onClick={() => {
                     arrayHelpers.push({ name: '', value: '', description: '' });
                   }}
