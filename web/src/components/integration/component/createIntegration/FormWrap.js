@@ -18,6 +18,8 @@ export default class IntegrationForm extends React.Component {
     this.update = !!_.get(params, 'integrationName');
     if (this.update) {
       props.integration.getIntegration(params.integrationName);
+    } else {
+      props.integration.integrationDetail = null;
     }
   }
 
@@ -45,11 +47,12 @@ export default class IntegrationForm extends React.Component {
       },
     };
     const type = _.get(data, 'spec.type');
-    const spec = _.pick(data.spec, [`${IntegrationTypeMap[type]}`, 'type']); // 只取type类型的表单
+    const spec = _.pick(data.spec, [`${IntegrationTypeMap[type]}`, 'type']);
+
     if (type === 'SCM') {
       const scmValueMap = {
         Password: ['server', 'type', 'user', 'password'],
-        Token: ['server', 'type', 'token'],
+        Token: ['server', 'type', 'user', 'token'],
       };
       const authType = _.get(data, 'spec.scm.authType');
       const scmObj = _.pick(spec.scm, scmValueMap[authType]);

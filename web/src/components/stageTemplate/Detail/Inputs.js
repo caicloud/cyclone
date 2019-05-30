@@ -1,12 +1,20 @@
 import { Table, Collapse } from 'antd';
 import PropTypes from 'prop-types';
+import styles from './detail.module.less';
+import classNames from 'classnames/bind';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { duotoneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+const styleCls = classNames.bind(styles);
 
 const valueRender = (v, item) => {
   if (item.name === 'cmd' && v) {
     return (
-      <SyntaxHighlighter language="bash" style={duotoneLight}>
+      <SyntaxHighlighter
+        className={styleCls('arg-cmd-value-wrapper')}
+        language="bash"
+        style={duotoneLight}
+      >
         {v.replace(/;\s*/g, ';\n')}
       </SyntaxHighlighter>
     );

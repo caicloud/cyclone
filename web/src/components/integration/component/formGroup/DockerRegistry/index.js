@@ -15,14 +15,15 @@ const DockerRegistry = () => {
         component={InputField}
       />
       <Field
-        label={intl.get('integration.form.dockerRegistry.admin')}
+        label={intl.get('integration.form.dockerRegistry.userName')}
         required
         name="spec.dockerRegistry.user"
         component={InputField}
       />
       <Field
-        label={intl.get('integration.form.dockerRegistry.adminpwd')}
+        label={intl.get('integration.form.dockerRegistry.password')}
         required
+        type="password"
         name="spec.dockerRegistry.password"
         component={InputField}
       />

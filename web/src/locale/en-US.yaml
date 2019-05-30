@@ -70,8 +70,8 @@ integration:
   desc: Description
   type: Type
   creationTime: Creation time
-  addexternalsystem: Add external system
-  updateexternalsystem: Update external system
+  addexternalsystem: Add External System
+  updateexternalsystem: Update External System
   serviceAddress: Service address
   confirm:
     tips: Do you Want to delete integration
@@ -97,8 +97,8 @@ integration:
     dockerRegistry:
       name: DockerRegistry
       registryAddress: Registry address
-      admin: Admin
-      adminpwd: Admin password
+      userName: Account Name
+      password: Password
     cluster:
       name: Cluster
       serverAddress: Server address
@@ -109,7 +109,7 @@ integration:
       usernamepwd: User/Password
       user: User name
       password: Password
-      namespace: Name space
+      namespace: Namespace
       pvc: Persistent Volumes
     error:
       alias: Name is required
@@ -146,7 +146,7 @@ template:
     kind: Type
     placeholder:
       kind: stage template type
-      name: stage template name 
+      name: stage template name
       scene: stage template scene
       desc: stage template description
     inputs:
