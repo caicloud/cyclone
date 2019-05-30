@@ -12,7 +12,7 @@ const TextareaField = MakeField(TextArea);
 const FormItem = Form.Item;
 
 const InputSection = props => {
-  const { values, setFieldValue, errors } = props;
+  const { values, setFieldValue, errors, resourceTypes } = props;
   return (
     <SectionCard title={intl.get('input')}>
       <FormItem
@@ -96,7 +96,7 @@ const InputSection = props => {
         path="spec.pod.inputs.resources"
         values={values}
         setFieldValue={setFieldValue}
-        options={['Git', 'SVN']}
+        options={resourceTypes}
         errors={errors}
       />
     </SectionCard>
@@ -106,7 +106,9 @@ const InputSection = props => {
 InputSection.propTypes = {
   setFieldValue: PropTypes.func,
   values: PropTypes.object,
+  resource: PropTypes.object,
   errors: PropTypes.object,
+  resourceTypes: PropTypes.array,
 };
 
 export default InputSection;
