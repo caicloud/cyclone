@@ -103,7 +103,7 @@ class ResourceArray extends React.Component {
                               <Col span={colSpan}>
                                 {_.get(r, 'name') || '--'}
                               </Col>
-                              <Col span={colSpan}>{_.get(r, 'type')}</Col>
+                              <Col span={colSpan}>{_.get(r, 'spec.type')}</Col>
                               {type === 'inputs' && (
                                 <Col span={colSpan}>{_.get(r, 'path')}</Col>
                               )}

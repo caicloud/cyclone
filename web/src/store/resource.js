@@ -7,7 +7,7 @@ class Resource {
   @observable stageDetail = {};
   @observable SCMRepos = {};
   @observable resourceTypeList = null;
-  @observable resourceTypeArg = {};
+  @observable resourceTypeLoading = false;
 
   @action.bound
   createResource(project, data, cb) {
@@ -57,17 +57,12 @@ class Resource {
     });
   }
 
-  @action
+  @action.bound
   listResourceTypes(operationQuery) {
+    this.resourceTypeLoading = true;
     fetchApi.listResourceTypes(operationQuery).then(data => {
       this.resourceTypeList = data;
-    });
-  }
-
-  @action
-  getResourceTypeArg(resourceType) {
-    fetchApi.getReousrceTypeArg(resourceType).then(data => {
-      this.resourceTypeArg[resourceType] = data;
+      this.resourceTypeLoading = false;
     });
   }
 }

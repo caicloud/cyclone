@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form } from 'antd';
+import { Form, Icon, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
 import { defaultFormItemLayout, noLabelItemLayout } from '@/lib/const';
 
@@ -15,6 +15,7 @@ export default function makeField(Component) {
       children: PropTypes.node,
       required: PropTypes.bool,
       formItemLayout: PropTypes.object,
+      tooltip: PropTypes.string,
     };
     const {
       label,
@@ -23,15 +24,26 @@ export default function makeField(Component) {
       required = false,
       form: { touched, errors },
       formItemLayout,
+      tooltip,
       ...rest
     } = props;
     const name = field.name;
     const hasError = _.get(touched, name) && _.get(errors, name);
     const _formItemLayout =
       formItemLayout || (label ? defaultFormItemLayout : noLabelItemLayout);
+    const _label = tooltip ? (
+      <span>
+        {label}
+        <Tooltip title={tooltip} placement="right">
+          <Icon type="question-circle" style={{ marginLeft: '4px' }} />
+        </Tooltip>
+      </span>
+    ) : (
+      label
+    );
     return (
       <FormItem
-        label={label}
+        label={_label}
         validateStatus={hasError ? 'error' : 'success'}
         hasFeedback={hasFeedback && hasError}
         help={hasError}
