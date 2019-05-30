@@ -136,6 +136,7 @@ class App extends React.Component {
   render() {
     const { current } = this.state;
     const { handleSubmit, workflowName } = this.props;
+
     const update = !!workflowName;
     const steps = [
       {

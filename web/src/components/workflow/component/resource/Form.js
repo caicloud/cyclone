@@ -49,8 +49,8 @@ class ResourceFrom extends React.Component {
     let data = {
       name: '',
       path: '',
-      type: 'Git',
       spec: {
+        type: type === 'inputs' ? 'Git' : 'Image',
         parameters:
           type === 'inputs'
             ? resourceParametersField['SCM']
