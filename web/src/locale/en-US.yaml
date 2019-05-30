@@ -48,6 +48,7 @@ sideNav:
   workflow: Workflow
   integration: Integration Center
 workflow:
+  addStage: Add Stage 
   recentVersion: Recent version
   creator: Creator
   creationTime: Creation time

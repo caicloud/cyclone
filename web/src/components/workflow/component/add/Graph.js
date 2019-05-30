@@ -584,7 +584,7 @@ class Graph extends React.Component {
             onClick={this.addStartNode}
             disabled={depnedLoading}
           >
-            添加 stage
+            {intl.get('workflow.addStage')}
           </Button>
         </div>
         <GraphView
