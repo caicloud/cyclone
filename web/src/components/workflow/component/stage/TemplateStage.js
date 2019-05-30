@@ -17,9 +17,9 @@ class TemplateStage extends React.Component {
   static propTypes = {
     stageId: PropTypes.string,
     values: PropTypes.object,
-    update: PropTypes.boolean,
+    update: PropTypes.bool,
     project: PropTypes.string,
-    modify: PropTypes.boolean,
+    modify: PropTypes.bool,
   };
 
   renderSection = (data, key) => {

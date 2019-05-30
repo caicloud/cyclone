@@ -15,8 +15,8 @@ class MenuAction extends React.Component {
     projectName: PropTypes.string,
     workflowName: PropTypes.string,
     history: PropTypes.object,
-    detail: PropTypes.boolean,
-    visible: PropTypes.boolean,
+    detail: PropTypes.bool,
+    visible: PropTypes.bool,
   };
 
   state = {

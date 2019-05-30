@@ -1,5 +1,6 @@
 name: Name
 value: Value
+defaultValue: Default Value
 path: Path
 mountPath: Mount Path
 configuration: Configuration

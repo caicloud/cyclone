@@ -14,7 +14,7 @@ class ResourceArray extends React.Component {
     resources: PropTypes.array,
     resourcesField: PropTypes.string,
     type: PropTypes.oneOf(['inputs', 'outputs']),
-    update: PropTypes.boolean,
+    update: PropTypes.bool,
     project: PropTypes.string,
     resource: PropTypes.object,
   };

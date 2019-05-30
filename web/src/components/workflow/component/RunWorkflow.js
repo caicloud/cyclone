@@ -16,7 +16,7 @@ class RunWorkflow extends React.Component {
     projectName: PropTypes.string,
     workflowName: PropTypes.string,
     handleModalClose: PropTypes.func,
-    visible: PropTypes.boolean,
+    visible: PropTypes.bool,
   };
 
   constructor(props) {

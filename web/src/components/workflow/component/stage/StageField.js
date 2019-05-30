@@ -17,9 +17,9 @@ const TextareaField = MakeField(TextArea);
 class StageField extends React.Component {
   static propTypes = {
     values: PropTypes.object,
-    update: PropTypes.boolean,
+    update: PropTypes.bool,
     project: PropTypes.string,
-    modify: PropTypes.boolean,
+    modify: PropTypes.bool,
   };
 
   state = {

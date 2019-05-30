@@ -32,8 +32,8 @@ const SelectPlus = props => {
 SelectPlus.propTypes = {
   handleSelectChange: PropTypes.func,
   value: PropTypes.string,
-  disabled: PropTypes.boolean,
-  labelInValue: PropTypes.boolean,
+  disabled: PropTypes.bool,
+  labelInValue: PropTypes.bool,
   payload: PropTypes.shape({
     items: PropTypes.array,
     nameKey: PropTypes.string,

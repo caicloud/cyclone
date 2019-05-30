@@ -643,7 +643,7 @@ Graph.propTypes = {
   setStageDepned: PropTypes.func,
   updateStagePosition: PropTypes.func,
   initialGraph: PropTypes.object,
-  update: PropTypes.boolean,
+  update: PropTypes.bool,
   project: PropTypes.string,
   workflowName: PropTypes.string,
   resource: PropTypes.object,

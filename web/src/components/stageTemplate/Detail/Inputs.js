@@ -19,7 +19,7 @@ const valueRender = (v, item) => {
       </SyntaxHighlighter>
     );
   } else {
-    return v;
+    return v || '--';
   }
 };
 const Inputs = ({ inputs = {} }) => {
@@ -41,7 +41,7 @@ const Inputs = ({ inputs = {} }) => {
       key: 'name',
     },
     {
-      title: intl.get('value'),
+      title: intl.get('defaultValue'),
       dataIndex: 'value',
       key: 'value',
       render: valueRender,

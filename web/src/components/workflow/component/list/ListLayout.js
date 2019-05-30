@@ -13,7 +13,7 @@ const { Content, Sider } = Layout;
 class List extends React.Component {
   static propTypes = {
     workflow: PropTypes.shape({
-      workflowList: MobxPropTypes.observableArray,
+      workflowList: PropTypes.object,
       listWorklow: PropTypes.func,
     }),
     history: PropTypes.object,
