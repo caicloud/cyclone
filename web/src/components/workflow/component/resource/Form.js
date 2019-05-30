@@ -25,10 +25,15 @@ class ResourceFrom extends React.Component {
 
   constructor(props) {
     super(props);
-    const { visible } = props;
+    const {
+      visible,
+      type,
+      respurce: { listResourceTypes },
+    } = props;
     this.state = {
       visible,
     };
+    listResourceTypes();
   }
 
   componentDidUpdate(preProps) {

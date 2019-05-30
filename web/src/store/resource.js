@@ -7,6 +7,7 @@ class Resource {
   @observable stageDetail = {};
   @observable SCMRepos = {};
   @observable resourceTypeList = null;
+  @observable resourceTypeArg = {};
 
   @action.bound
   createResource(project, data, cb) {
@@ -60,6 +61,13 @@ class Resource {
   listResourceTypes(operationQuery) {
     fetchApi.listResourceTypes(operationQuery).then(data => {
       this.resourceTypeList = data;
+    });
+  }
+
+  @action
+  getResourceTypeArg(resourceType) {
+    fetchApi.getReousrceTypeArg(resourceType).then(data => {
+      this.resourceTypeArg[resourceType] = data;
     });
   }
 }
