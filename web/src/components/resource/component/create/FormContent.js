@@ -1,6 +1,6 @@
 import { Field, FieldArray } from 'formik';
 import PropTypes from 'prop-types';
-import { Form, Input, Button, Row, Col, Checkbox } from 'antd';
+import { Form, Input, Button, Row, Col, Checkbox, Switch } from 'antd';
 import MakeField from '@/components/public/makeField';
 import { defaultFormItemLayout } from '@/lib/const';
 
@@ -56,15 +56,16 @@ const FormContent = ({ history, handleSubmit, update }) => {
               <div>
                 {_.get(values, 'spec.parameters', []).length > 0 && (
                   <Row gutter={16}>
-                    <Col span={8}>{intl.get('name')}</Col>
-                    <Col span={12}>{intl.get('description')}</Col>
+                    <Col span={6}>{intl.get('name')}</Col>
+                    <Col span={10}>{intl.get('description')}</Col>
+                    <Col span={4}>{intl.get('required')}</Col>
                   </Row>
                 )}
                 {_.get(values, 'spec.parameters', []).map((a, index) => {
                   return (
                     <FormItem key={index}>
                       <Row gutter={16}>
-                        <Col span={8}>
+                        <Col span={6}>
                           <Field
                             key={index}
                             name={`spec.parameters.${index}.name`}
@@ -72,13 +73,16 @@ const FormContent = ({ history, handleSubmit, update }) => {
                             hasFeedback
                           />
                         </Col>
-                        <Col span={12}>
+                        <Col span={10}>
                           <Field
                             key={index}
                             name={`spec.parameters.${index}.description`}
                             component={InputField}
                             hasFeedback
                           />
+                        </Col>
+                        <Col span={4}>
+                          <Switch checked={!!a.required} />
                         </Col>
                         <Col span={4}>
                           <Button

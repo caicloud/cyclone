@@ -12,10 +12,12 @@ spec:
   - pull
   parameters:
   - name: SCM_URL
+    required: true
     description: >
       URL of the scm, for example, https://github.com/caicloud/cyclone.git.
       Only http and https are supported.
   - name: SCM_REVISION
+    required: true
     description: >
        Revision of the source code. It has two different format. a) Single revision,
        such as branch 'master', tag 'v1.0'; b). Composite such as pull requests,
@@ -44,15 +46,19 @@ spec:
   - pull
   parameters:
   - name: SCM_URL
+    required: true
     description: >
       URL of the svn repository. For exmaple, http://192.168.21.97/svn
   - name: SCM_REVISION
+    required: true
     description: >
       Revision of the source code. For example, "996".
   - name: SCM_USER
+    required: true
     description: >
       User name of the svn server.
   - name: SCM_PWD
+    required: true
     description: >
       Password for the user.
 
@@ -72,17 +78,22 @@ spec:
   - push
   parameters:
   - name: REGISTRY
+    required: true
     description: >
       Registry where to pull/push images, for example, docker.io
   - name: REPOSITORY
+    required: true
     description: >
       Repository of the image, for example, library/alpine
   - name: TAG
+    required: true
     description: >
       Tag of the image, for example, 3.6
   - name: USER
+    required: true
     description: >
       User of the regisry
   - name: PASSWORD
+    required: true
     description: >
       Password of the registry

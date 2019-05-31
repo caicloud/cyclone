@@ -42,9 +42,17 @@ class ResourceTypeDetail extends React.Component {
 
     const columns = [
       {
-        title: intl.get('name'),
+        title: intl.get('parameterName'),
         dataIndex: 'name',
         key: 'name',
+      },
+      {
+        title: intl.get('required'),
+        dataIndex: 'required',
+        key: 'required',
+        render: v => {
+          return v ? 'true' : 'false';
+        },
       },
       {
         title: intl.get('description'),
