@@ -172,18 +172,24 @@ class Graph extends React.Component {
     this.setState(_state);
   };
 
-  onClose = () => {
-    const { validateForm, setTouched, values } = this.props;
-    const currentStage = _.get(values, 'currentStage');
-    validateForm().then(error => {
-      const stageError = _.get(error, currentStage, {});
-      if (_.isEmpty(stageError)) {
-        this.addOrUpdateStageOnClose();
-      } else {
-        const fieldObj = formatTouchedField(error);
-        setTouched(fieldObj);
-      }
-    });
+  onClose = e => {
+    if (e.target.className !== 'ant-drawer-mask') {
+      this.setState({
+        visible: false,
+      });
+    } else {
+      const { validateForm, setTouched, values } = this.props;
+      const currentStage = _.get(values, 'currentStage');
+      validateForm().then(error => {
+        const stageError = _.get(error, currentStage, {});
+        if (_.isEmpty(stageError)) {
+          this.addOrUpdateStageOnClose();
+        } else {
+          const fieldObj = formatTouchedField(error);
+          setTouched(fieldObj);
+        }
+      });
+    }
   };
 
   getStageId = array => {
@@ -617,7 +623,7 @@ class Graph extends React.Component {
               : `${intl.get('operation.add')} stage`
           }
           placement="right"
-          closable={false}
+          closable={true}
           onClose={this.onClose}
           visible={this.state.visible}
           width={800}
