@@ -1,6 +1,9 @@
 package meta
 
 const (
+	// AnnotationValueFalse is boolean value false for annotation
+	AnnotationValueFalse = "false"
+
 	// AnnotationAlias is the annotation key used to indicate the alias of resources
 	AnnotationAlias = "cyclone.dev/alias"
 
@@ -33,4 +36,7 @@ const (
 
 	// AnnotationStageResult is annotation to hold execution results (JSON format) of a stage.
 	AnnotationStageResult = "stage.cyclone.dev/execution-results"
+
+	// AnnotationIstioInject is annotation to decide whether to inject istio sidecar
+	AnnotationIstioInject = "sidecar.istio.io/inject"
 )

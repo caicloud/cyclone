@@ -77,6 +77,7 @@ func (m *Builder) Prepare() error {
 			meta.LabelPodCreatedBy:    meta.CycloneCreator,
 		},
 		Annotations: map[string]string{
+			meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
 			meta.AnnotationWorkflowRunName: m.wfr.Name,
 			meta.AnnotationStageName:       m.stage,
 			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
