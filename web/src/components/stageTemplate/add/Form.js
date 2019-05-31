@@ -16,7 +16,7 @@ export default class StageTemplateForm extends React.Component {
     stageTemplate: PropTypes.object,
     initialFormData: PropTypes.object,
     setTouched: PropTypes.func,
-    isValid: PropTypes.bool,
+    dirty: PropTypes.bool,
     values: PropTypes.object,
   };
 
@@ -136,11 +136,16 @@ export default class StageTemplateForm extends React.Component {
     return { metadata, spec: data.spec };
   };
 
-  submit = values => {
+  submit = props => {
     const {
+      values,
+      dirty,
       stageTemplate,
       match: { params },
-    } = this.props;
+    } = props;
+    if (!dirty) {
+      return;
+    }
     const submitData = this.generateData(values);
     if (_.get(params, 'templateName')) {
       stageTemplate.updateStageTemplate(submitData, params.templateName, () => {
@@ -175,11 +180,11 @@ export default class StageTemplateForm extends React.Component {
               initialValues={this.initFormValue()}
               enableReinitialize={true}
               validate={validateForm}
-              onSubmit={this.submit}
               render={props => (
                 <FormContent
                   {...props}
                   update={update}
+                  submit={this.submit.bind(this, { ...props, ...this.props })}
                   handleCancle={this.handleCancle}
                 />
               )}

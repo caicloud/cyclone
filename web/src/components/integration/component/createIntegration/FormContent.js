@@ -26,6 +26,7 @@ const FormContent = props => {
     values: {
       spec: { type },
     },
+    dirty,
     setFieldValue,
     handleCancle,
     submit,
@@ -58,7 +59,7 @@ const FormContent = props => {
       {type && renderWrapForm(type, props)}
       <Row>
         <Col offset={4} span={20}>
-          <Button onClick={submit} type="primary">
+          <Button onClick={submit} type="primary" disabled={!dirty}>
             {intl.get('integration.form.confirm')}
           </Button>
           <Button style={{ marginLeft: 10 }} onClick={handleCancle}>
@@ -77,6 +78,7 @@ FormContent.propTypes = {
   setFieldValue: PropTypes.func,
   handleCancle: PropTypes.func,
   update: PropTypes.bool,
+  dirty: PropTypes.bool,
 };
 
 export default FormContent;

@@ -61,6 +61,8 @@ class FormContent extends React.Component {
       handleSubmit,
       update,
       values,
+      submit,
+      dirty,
       setFieldValue,
       stageTemplate: { templateList },
       resource: { resourceTypeList },
@@ -117,7 +119,12 @@ class FormContent extends React.Component {
             wrapperCol: { span: 20 },
           }}
         >
-          <Button style={{ float: 'right' }} htmlType="submit" type="primary">
+          <Button
+            style={{ float: 'right' }}
+            onClick={submit}
+            type="primary"
+            disabled={!dirty}
+          >
             {intl.get('confirm')}
           </Button>
           <Button
@@ -140,7 +147,9 @@ FormContent.propTypes = {
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,
   handleCancle: PropTypes.func,
+  submit: PropTypes.func,
   update: PropTypes.bool,
+  dirty: PropTypes.bool,
 };
 
 export default FormContent;
