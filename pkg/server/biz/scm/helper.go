@@ -16,8 +16,11 @@ package scm
 import "strings"
 
 const (
-	// ListPerPageOpt represents the value for PerPage in list options.
-	ListPerPageOpt = 30
+	// ListOptPerPage represents the value for PerPage in list options.
+	ListOptPerPage = 30
+
+	// ListOptLargePerPage represents the value for large PerPage in list options.
+	ListOptLargePerPage = 100
 )
 
 // ParseServerURL is a helper func to parse the server url, such as https://github.com/ to return server(github.com).

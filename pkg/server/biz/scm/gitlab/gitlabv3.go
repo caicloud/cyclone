@@ -63,7 +63,7 @@ func (g *V3) ListRepos() ([]scm.Repository, error) {
 func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 	opt := &v3.ListProjectsOptions{
 		ListOptions: v3.ListOptions{
-			PerPage: scm.ListPerPageOpt,
+			PerPage: scm.ListOptPerPage,
 		},
 	}
 
@@ -92,6 +92,7 @@ func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 }
 
 // ListBranches lists the branches for specified repo.
+// Only return first 20 branches, will not support listing all branches as v3 api has been deprecated.
 func (g *V3) ListBranches(repo string) ([]string, error) {
 	branches, resp, err := g.client.Branches.ListBranches(repo, nil)
 	if err != nil {
@@ -108,6 +109,7 @@ func (g *V3) ListBranches(repo string) ([]string, error) {
 }
 
 // ListTags lists the tags for specified repo.
+// Only return first 20 tags, will not support listing all tags as v3 api has been deprecated.
 func (g *V3) ListTags(repo string) ([]string, error) {
 	tags, resp, err := g.client.Tags.ListTags(repo, nil)
 	if err != nil {
