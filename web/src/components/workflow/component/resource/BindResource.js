@@ -127,9 +127,9 @@ class BindResource extends React.Component {
                           component={InputField}
                           formItemLayout={modalFormItemLayout}
                           hasFeedback
-                          required
+                          required={field.required}
                           tooltip={field.description}
-                          validate={required}
+                          validate={field.required && required}
                         />
                       )
                     )}
