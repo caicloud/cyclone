@@ -131,7 +131,8 @@ func updatePullRequestStatus(wfr *v1alpha1.WorkflowRun) error {
 
 	trigger, ok := wfr.Annotations[meta.AnnotationWorkflowRunTrigger]
 	if !ok {
-		return fmt.Errorf("Trigger of workflowrun %s can not be empty", wfrName)
+		// Skip workflowruns without trigger.
+		return nil
 	}
 
 	// Skip workflowruns whose trigger are not about pull request.
