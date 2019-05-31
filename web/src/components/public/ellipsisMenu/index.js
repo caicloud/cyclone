@@ -55,24 +55,26 @@ class EllipsisMenu extends React.Component {
       </Menu>
     );
     return (
-      <Dropdown
-        overlay={menu}
-        placement={placement}
-        trigger={['click']}
-        onClick={e => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <Button size="small">
-          <Icon
-            type="ellipsis"
-            style={{
-              transform: 'rotate(90deg)',
-            }}
-          />
-        </Button>
-      </Dropdown>
+      <div style={{ marginLeft: '8px', display: 'inline-block' }}>
+        <Dropdown
+          overlay={menu}
+          placement={placement}
+          trigger={['click']}
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <Button size="small">
+            <Icon
+              type="ellipsis"
+              style={{
+                transform: 'rotate(90deg)',
+              }}
+            />
+          </Button>
+        </Dropdown>
+      </div>
     );
   }
 }

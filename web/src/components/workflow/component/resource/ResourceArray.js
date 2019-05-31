@@ -4,6 +4,7 @@ import { defaultFormItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
+import style from '@/components/workflow/component/index.module.less';
 
 const FormItem = Form.Item;
 const Fragment = React.Fragment;
@@ -93,12 +94,12 @@ class ResourceArray extends React.Component {
                         form,
                         `errors.${resourcesField}.${i}.name`
                       );
-                      const style = error
+                      const itemStyle = error
                         ? { border: '1px solid #f5222d', borderRadius: '4px' }
                         : {};
                       return (
                         <Fragment>
-                          <div style={style}>
+                          <div style={itemStyle}>
                             <Row gutter={16}>
                               <Col span={colSpan}>
                                 {_.get(r, 'name') || '--'}
@@ -107,19 +108,21 @@ class ResourceArray extends React.Component {
                               {type === 'inputs' && (
                                 <Col span={colSpan}>{_.get(r, 'path')}</Col>
                               )}
-                              <Col span={4}>
-                                <Button
-                                  type="circle"
-                                  icon="edit"
-                                  onClick={() => {
-                                    this.editResource(r, i);
-                                  }}
-                                />
-                                <Button
-                                  type="circle"
-                                  icon="delete"
-                                  onClick={() => arrayHelpers.remove(i)}
-                                />
+                              <Col span={6}>
+                                <div className={style['resource-action']}>
+                                  <Button
+                                    type="circle"
+                                    icon="edit"
+                                    onClick={() => {
+                                      this.editResource(r, i);
+                                    }}
+                                  />
+                                  <Button
+                                    type="circle"
+                                    icon="delete"
+                                    onClick={() => arrayHelpers.remove(i)}
+                                  />
+                                </div>
                               </Col>
                             </Row>
                           </div>

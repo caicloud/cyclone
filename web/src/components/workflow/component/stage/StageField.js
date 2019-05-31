@@ -119,6 +119,7 @@ class StageField extends React.Component {
                                       name={`${specKey}.spec.containers.${index}.env.${i}.name`}
                                       component={InputField}
                                       hasFeedback
+                                      validate={required}
                                     />
                                   </Col>
                                   <Col span={11}>
@@ -127,6 +128,7 @@ class StageField extends React.Component {
                                       name={`${specKey}.spec.containers.${index}.env.${i}.value`}
                                       component={InputField}
                                       hasFeedback
+                                      validate={required}
                                     />
                                   </Col>
                                   <Col span={2}>

@@ -567,7 +567,6 @@ class Graph extends React.Component {
   render() {
     const {
       graph: { nodes, edges },
-      stageInfo,
       depnedLoading,
       selected,
     } = this.state;
@@ -576,12 +575,12 @@ class Graph extends React.Component {
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
-    const stageName = update
-      ? _.get(
-          stageInfo,
-          `${_.get(selected, 'title')}.metadata.annotations.stageTemplate`
-        )
-      : '';
+    const stageTemplateName = _.get(
+      values,
+      `${currentStage}.metadata.annotations.stageTemplate`,
+      ''
+    );
+
     return (
       <div id="graph" className={styles['graph']}>
         <div className="graph-header">
@@ -634,7 +633,7 @@ class Graph extends React.Component {
             values={this.props.values}
             update={update}
             project={project}
-            templateName={stageName}
+            templateName={stageTemplateName}
           />
         </Drawer>
       </div>
