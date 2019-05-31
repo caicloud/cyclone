@@ -1,6 +1,6 @@
 import { Button, Row, Col, Form } from 'antd';
 import { FieldArray, FastField } from 'formik';
-import { defaultFormItemLayout, emptyLabelItemLayout } from '@/lib/const';
+import { defaultFormItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
@@ -57,13 +57,11 @@ class ResourceArray extends React.Component {
       type = 'inputs',
       update,
       project,
-      noLabel,
     } = this.props;
     const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
-    const layout = noLabel ? emptyLabelItemLayout : defaultFormItemLayout;
     return (
-      <FormItem label={noLabel ? '' : intl.get('sideNav.resource')} {...layout}>
+      <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
         <FieldArray
           name={resourcesField}
           render={arrayHelpers => (
