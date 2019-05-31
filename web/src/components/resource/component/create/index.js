@@ -62,7 +62,6 @@ class CreateOrUpdate extends React.Component {
     values.metadata = {
       name: `resource-type-${_.toLower(values.spec.type)}`,
       labels: {
-        'cyclone.dev/builtin': 'true',
         'resource.cyclone.dev/template': 'true',
       },
     };

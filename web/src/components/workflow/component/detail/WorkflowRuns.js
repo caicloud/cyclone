@@ -1,6 +1,6 @@
 import EllipsisMenu from '@/components/public/ellipsisMenu';
 import { inject, observer } from 'mobx-react';
-import { Table, Modal } from 'antd';
+import { Table, Modal, Tag } from 'antd';
 import { FormatTime } from '@/lib/util';
 import PropTypes from 'prop-types';
 
@@ -65,7 +65,27 @@ class WorkflowRuns extends React.Component {
         title: intl.get('status.name'),
         dataIndex: 'status.overall.phase',
         key: 'status',
-        render: value => intl.get(`status.${value.toLowerCase()}`),
+        render: value => {
+          if (value === 'Succeeded') {
+            return (
+              <Tag color="green">
+                {intl.get(`status.${value.toLowerCase()}`)}
+              </Tag>
+            );
+          } else if (value === 'Failed') {
+            return (
+              <Tag color="red">{intl.get(`status.${value.toLowerCase()}`)}</Tag>
+            );
+          } else if (value === 'Running') {
+            return (
+              <Tag color="cyan">
+                {intl.get(`status.${value.toLowerCase()}`)}
+              </Tag>
+            );
+          } else {
+            return <Tag>{intl.get(`status.${value.toLowerCase()}`)}</Tag>;
+          }
+        },
       },
       {
         title: intl.get('creationTime'),
