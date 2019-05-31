@@ -7,7 +7,7 @@ import { defaultFormItemLayout } from '@/lib/const';
 const InputField = MakeField(Input);
 const FormItem = Form.Item;
 
-const FormContent = ({ history, handleSubmit, update }) => {
+const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
   return (
     <Form layout={'horizontal'} onSubmit={handleSubmit}>
       <Field
@@ -82,7 +82,15 @@ const FormContent = ({ history, handleSubmit, update }) => {
                           />
                         </Col>
                         <Col span={4}>
-                          <Switch checked={!!a.required} />
+                          <Switch
+                            onChange={val => {
+                              setFieldValue(
+                                `spec.parameters.${index}.required`,
+                                val
+                              );
+                            }}
+                            defaultChecked={!!a.required}
+                          />
                         </Col>
                         <Col span={4}>
                           <Button
