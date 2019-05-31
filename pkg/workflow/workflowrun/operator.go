@@ -459,6 +459,9 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 					meta.LabelPodKind:         meta.PodKindGC.String(),
 					meta.LabelPodCreatedBy:    meta.CycloneCreator,
 				},
+				Annotations: map[string]string{
+					meta.AnnotationIstioInject: meta.AnnotationValueFalse,
+				},
 			},
 			Spec: corev1.PodSpec{
 				RestartPolicy: corev1.RestartPolicyNever,
