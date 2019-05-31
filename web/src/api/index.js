@@ -143,6 +143,30 @@ const fetchApi = {
     });
   },
 
+  getResourceType(type) {
+    return http.get(`/resourcetypes/${type}`).then(data => {
+      return data;
+    });
+  },
+
+  createResourceType(data) {
+    return http.post(`/resourcetypes`, data).then(data => {
+      return data;
+    });
+  },
+
+  updateResourceType(resourceType, data) {
+    return http.put(`/resourcetypes/${resourceType}`, data).then(data => {
+      return data;
+    });
+  },
+
+  deleteResourceType(resourceType) {
+    return http.delete(`/resourcetypes/${resourceType}`, null).then(data => {
+      return data;
+    });
+  },
+
   /** end resource */
   listWorkflow(project, query) {
     return http.get(`/projects/${project}/workflows`, query).then(data => {

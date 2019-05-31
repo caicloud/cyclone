@@ -140,6 +140,12 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.integration')}</span>
                 </NavLink>
               </Menu.Item>
+              <Menu.Item key="resource">
+                <NavLink to="/resource" activeClassName="active">
+                  <Icon type="cloud" />
+                  <span>{intl.get('sideNav.resource')}</span>
+                </NavLink>
+              </Menu.Item>
             </Menu>
           </Sider>
           <Layout

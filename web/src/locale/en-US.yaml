@@ -1,6 +1,8 @@
 name: Name
 value: Value
+parameterName: Parameter Name
 defaultValue: Default Value
+required: Required
 path: Path
 mountPath: Mount Path
 configuration: Configuration
@@ -42,13 +44,13 @@ operation:
   cancel: Cancel
 sideNav:
   overview: Overview
-  project: Project
-  resource: Resource
-  stageTemplate: Template
-  workflow: Workflow
-  integration: Integration Center
+  project: Projects
+  stageTemplate: Templates
+  workflow: Workflows
+  integration: Integrations
+  resource: Resource Types
 workflow:
-  addStage: Add Stage 
+  addStage: Add Stage
   recentVersion: Recent version
   creator: Creator
   creationTime: Creation time
@@ -201,6 +203,15 @@ validate:
   incompleteResource: Incomplete resource info
 confirmTip:
   remove: Make sure to delete {resourceType} {name} ?
+  removeResourceType: Sure to remove resource type {resourceType} ?
 notification:
   updateStage: Stage update succeeded
   updateWorkflow: Workflow update succeeded
+resource:
+  type: Resource Type
+  resolver: Resource Resolver
+  operations: Supported Operations
+  messages:
+    typeRequired: Type can't be empty
+    resolverRequired: Resolver (image) can't be empty
+    parameterNameRequired: Parameter name can't be empty

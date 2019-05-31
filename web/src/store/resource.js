@@ -4,9 +4,9 @@ import fetchApi from '../api/index.js';
 class Resource {
   @observable resourceList = null;
   @observable resourceDetail = {};
-  @observable stageDetail = {};
   @observable SCMRepos = {};
   @observable resourceTypeList = null;
+  @observable resourceTypeDetail = {};
   @observable resourceTypeLoading = false;
 
   @action.bound
@@ -15,6 +15,7 @@ class Resource {
       cb && cb();
     });
   }
+
   @action.bound
   getResource(project, resource, cb) {
     fetchApi.getResource(project, resource).then(data => {
@@ -63,6 +64,40 @@ class Resource {
     fetchApi.listResourceTypes(operationQuery).then(data => {
       this.resourceTypeList = data;
       this.resourceTypeLoading = false;
+    });
+  }
+
+  @action.bound
+  createResourceType(data, cb) {
+    fetchApi.createResourceType(data).then(data => {
+      cb && cb();
+    });
+  }
+
+  @action.bound
+  getResourceType(resourceType) {
+    this.resourceTypeLoading = true;
+    fetchApi.getResourceType(resourceType).then(data => {
+      this.resourceTypeDetail = data;
+      this.resourceTypeLoading = false;
+    });
+  }
+
+  @action.bound
+  updateResourceType(resourceType, data, cb) {
+    this.resourceTypeLoading = true;
+    fetchApi.updateResourceType(resourceType, data).then(data => {
+      this.resourceTypeLoading = false;
+      cb && cb();
+    });
+  }
+
+  @action.bound
+  deleteResourceType(resourceType, cb) {
+    this.resourceTypeLoading = true;
+    fetchApi.deleteResourceType(resourceType).then(data => {
+      this.resourceTypeLoading = false;
+      cb && cb();
     });
   }
 }

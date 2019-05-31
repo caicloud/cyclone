@@ -1,6 +1,8 @@
 name: 名称
 value: 值
 defaultValue: 默认值
+parameterName: 参数名
+required: 必填
 path: 路径
 mountPath: 挂载路径
 configuration: 配置
@@ -43,12 +45,12 @@ operation:
 sideNav:
   overview: 总览
   project: 项目
-  resource: 资源
   stageTemplate: 模板
   workflow: 流水线
   integration: 集成中心
+  resource: 资源类型
 workflow:
-  addStage: 添加阶段 
+  addStage: 添加阶段
   recentVersion: 最近版本
   creator: 创建者
   creationTime: 创建时间
@@ -201,6 +203,15 @@ validate:
     incompleteResource: resource 信息不完善
 confirmTip:
   remove: 确定删除 {resourceType} {name} ?
+  removeResourceType: 确定删除资源类型 {resourceType} ?
 notification:
   updateStage: Stage 更新成功
   updateWorkflow: Workflow 更新成功
+resource:
+  type: 资源类型
+  resolver: 资源解析器
+  operations: 支持操作
+  messages:
+    typeRequired: 资源类型必填
+    resolverRequired: 资源解析器（镜像）必填
+    parameterNameRequired: 参数名必填

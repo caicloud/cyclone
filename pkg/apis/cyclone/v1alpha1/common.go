@@ -34,7 +34,9 @@ type ParameterItem struct {
 	// Value of the parameter
 	Value *string `json:"value"`
 	// Description of the parameter
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
+	// Required indicates whether this parameter is required
+	Required bool `json:"required,omitempty"`
 }
 
 // ArgumentValue defines a argument value

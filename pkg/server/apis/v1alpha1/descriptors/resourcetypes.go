@@ -33,6 +33,22 @@ var resourceTypes = []definition.Descriptor{
 				},
 				Results: definition.DataErrorResults("resource types"),
 			},
+			{
+				Method:      definition.Create,
+				Function:    handler.CreateResourceType,
+				Description: "Create new resource type",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "resource type to be created",
+					},
+				},
+				Results: definition.DataErrorResults("resource type created"),
+			},
 		},
 	},
 	{
@@ -54,6 +70,42 @@ var resourceTypes = []definition.Descriptor{
 					},
 				},
 				Results: definition.DataErrorResults("resource"),
+			},
+			{
+				Method:      definition.Update,
+				Function:    handler.UpdateResourceType,
+				Description: "Update resource type",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ResourceTypePathParameterName,
+					},
+					{
+						Source:      definition.Body,
+						Description: "resource type to be created",
+					},
+				},
+				Results: definition.DataErrorResults("resource"),
+			},
+			{
+				Method:      definition.Delete,
+				Function:    handler.DeleteResourceType,
+				Description: "Delete resource type",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ResourceTypePathParameterName,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},
