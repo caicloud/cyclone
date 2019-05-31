@@ -30,6 +30,7 @@ type Builder struct {
 	wf               *v1alpha1.Workflow
 	wfr              *v1alpha1.WorkflowRun
 	stg              *v1alpha1.Stage
+	rendered         *v1alpha1.StageSpec
 	stage            string
 	pod              *corev1.Pod
 	pvcVolumes       map[string]string
@@ -133,7 +134,7 @@ func (m *Builder) ResolveArguments() error {
 	}
 
 	log.WithField("params", parameters).Debug("Parameters collected")
-	b, err := json.Marshal(m.stg.Spec.Pod.Spec)
+	b, err := json.Marshal(m.stg.Spec)
 	if err != nil {
 		return err
 	}
@@ -143,25 +144,47 @@ func (m *Builder) ResolveArguments() error {
 		return err
 	}
 
-	renderedSpec := corev1.PodSpec{}
+	renderedSpec := v1alpha1.StageSpec{}
 	err = json.Unmarshal([]byte(rendered), &renderedSpec)
 	if err != nil {
-		log.Errorf("Unmarshal rendered pod spec %s error: %v", rendered, err)
+		log.Errorf("Unmarshal rendered stage spec %s error: %v", rendered, err)
 		return err
 	}
-	m.pod.Spec = renderedSpec
+	m.rendered = &renderedSpec
+	m.pod.Spec = renderedSpec.Pod.Spec
 	m.pod.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	return nil
 }
 
-// EnsureContainerNames ensures all containers have names.
+// EnsureContainerNames ensures all containers have name set.
 func (m *Builder) EnsureContainerNames() error {
-	for i := range m.pod.Spec.Containers {
-		if len(m.pod.Spec.Containers[i].Name) == 0 {
-			m.pod.Spec.Containers[i].Name = ContainerName(i)
+	if m.stg.Spec.Pod == nil {
+		return nil
+	}
+
+	nameMap := make(map[string]struct{})
+	for _, c := range m.stg.Spec.Pod.Spec.Containers {
+		if len(c.Name) > 0 {
+			nameMap[c.Name] = struct{}{}
 		}
 	}
+
+	nameIndex := 0
+	for i := range m.stg.Spec.Pod.Spec.Containers {
+		if len(m.stg.Spec.Pod.Spec.Containers[i].Name) > 0 {
+			continue
+		}
+
+		for true {
+			if _, ok := nameMap[fmt.Sprintf("c%d", nameIndex)]; !ok {
+				break
+			}
+			nameIndex++
+		}
+		m.stg.Spec.Pod.Spec.Containers[i].Name = fmt.Sprintf("c%d", nameIndex)
+	}
+
 	return nil
 }
 
@@ -627,7 +650,9 @@ func (m *Builder) AddCoordinator() error {
 		break
 	}
 
-	stgInfo, err := json.Marshal(m.stg)
+	newStg := m.stg.DeepCopy()
+	newStg.Spec = *m.rendered
+	stgInfo, err := json.Marshal(newStg)
 	if err != nil {
 		log.Errorf("Marshal stage %s error %s", m.stg.Name, err)
 		return err
@@ -869,12 +894,12 @@ func (m *Builder) Build() (*corev1.Pod, error) {
 		return nil, err
 	}
 
-	err = m.ResolveArguments()
+	err = m.EnsureContainerNames()
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.EnsureContainerNames()
+	err = m.ResolveArguments()
 	if err != nil {
 		return nil, err
 	}
