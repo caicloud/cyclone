@@ -53,6 +53,7 @@ class WorkflowTable extends React.Component {
         title: intl.get('action'),
         dataIndex: 'metadata.name',
         key: 'action',
+        align: 'right',
         render: value => (
           <MenuAction
             projectName={project}

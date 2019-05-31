@@ -39,10 +39,12 @@ class ResourceArray extends React.Component {
 
     if (update) {
       getResource(project, r.name, data => {
-        const info = _.merge(
-          _.pick(data, ['metadata.name', 'spec']),
-          _.pick(r, ['type', 'path'])
-        );
+        const info = {
+          name: _.get(data, 'metadata.name'),
+          type: _.get(data, 'spec.type'),
+          ..._.pick(data, ['spec.parameters']),
+          path: r.path,
+        };
         state.modifyData = info;
         this.setState(state);
       });
@@ -101,7 +103,7 @@ class ResourceArray extends React.Component {
                               <Col span={colSpan}>
                                 {_.get(r, 'name') || '--'}
                               </Col>
-                              <Col span={colSpan}>{_.get(r, 'spec.type')}</Col>
+                              <Col span={colSpan}>{_.get(r, 'type')}</Col>
                               {type === 'inputs' && (
                                 <Col span={colSpan}>{_.get(r, 'path')}</Col>
                               )}

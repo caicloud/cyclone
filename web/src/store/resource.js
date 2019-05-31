@@ -11,7 +11,7 @@ class Resource {
 
   @action.bound
   createResource(project, data, cb) {
-    fetchApi.createResource(project, data).then(data => {
+    fetchApi.createResource(project, data).then(() => {
       cb && cb();
     });
   }
@@ -25,8 +25,10 @@ class Resource {
   }
 
   @action.bound
-  updateResource(project, resource, info) {
-    fetchApi.updateResource(project, resource, info);
+  updateResource(project, resource, info, cb) {
+    fetchApi.updateResource(project, resource, info).then(() => {
+      cb && cb();
+    });
   }
 
   @action.bound

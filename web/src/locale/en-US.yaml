@@ -207,6 +207,7 @@ confirmTip:
 notification:
   updateStage: Stage update succeeded
   updateWorkflow: Workflow update succeeded
+  updateResource: Resource updated succeeded
 resource:
   type: Resource Type
   resolver: Resource Resolver
@@ -215,3 +216,11 @@ resource:
     typeRequired: Type can't be empty
     resolverRequired: Resolver (image) can't be empty
     parameterNameRequired: Parameter name can't be empty
+status:
+  name: Status
+  failed: Failed
+  running: Running
+  pending: Pending
+  waiting: Waiting
+  succeeded: Succeeded
+  cancelled: Cancelled

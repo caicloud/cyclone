@@ -207,6 +207,7 @@ confirmTip:
 notification:
   updateStage: Stage 更新成功
   updateWorkflow: Workflow 更新成功
+  updateResource: Resource 更新成功
 resource:
   type: 资源类型
   resolver: 资源解析器
@@ -215,3 +216,11 @@ resource:
     typeRequired: 资源类型必填
     resolverRequired: 资源解析器（镜像）必填
     parameterNameRequired: 参数名必填
+status:
+  name: 状态
+  failed: 失败
+  running: 运行中
+  pending: 准备中
+  waiting: 等待中
+  succeeded: 成功
+  cancelled: 停止
