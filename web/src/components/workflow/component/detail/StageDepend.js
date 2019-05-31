@@ -78,21 +78,23 @@ class StageDepend extends React.Component {
     }
 
     return (
-      <GraphView
-        ref={el => (this.GraphView = el)}
-        nodeKey={NODE_KEY}
-        nodes={nodes}
-        edges={edges}
-        selected={selected}
-        nodeTypes={NodeTypes}
-        nodeSubtypes={NodeSubtypes}
-        edgeTypes={EdgeTypes}
-        onSelectNode={this.onSelectNode}
-        renderNodeText={this.renderNodeText}
-        readOnly
-        showGraphControls={false}
-        maxZoom={1}
-      />
+      <div style={{ height: '300px' }}>
+        <GraphView
+          ref={el => (this.GraphView = el)}
+          nodeKey={NODE_KEY}
+          nodes={nodes}
+          edges={edges}
+          selected={selected}
+          nodeTypes={NodeTypes}
+          nodeSubtypes={NodeSubtypes}
+          edgeTypes={EdgeTypes}
+          onSelectNode={this.onSelectNode}
+          renderNodeText={this.renderNodeText}
+          readOnly
+          showGraphControls={false}
+          maxZoom={1}
+        />
+      </div>
     );
   }
 }
