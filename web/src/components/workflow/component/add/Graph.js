@@ -576,7 +576,7 @@ class Graph extends React.Component {
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
-    const stageName = update
+    const stageTemplateName = update
       ? _.get(
           stageInfo,
           `${_.get(selected, 'title')}.metadata.annotations.stageTemplate`
@@ -634,7 +634,7 @@ class Graph extends React.Component {
             values={this.props.values}
             update={update}
             project={project}
-            templateName={stageName}
+            templateName={stageTemplateName}
           />
         </Drawer>
       </div>

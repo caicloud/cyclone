@@ -63,7 +63,7 @@ class WorkflowDetail extends React.Component {
           />
           <DetailHeadItem
             name={intl.get('description')}
-            value={_.get(detail, 'metadata.annotations.description')}
+            value={_.get(detail, 'metadata.annotations.description') || '--'}
           />
         </DetailHead>
         <DetailContent>

@@ -34,13 +34,8 @@ class WorkflowTable extends React.Component {
         key: 'name',
       },
       {
-        title: intl.get('workflow.recentVersion'),
-        dataIndex: 'recentVersion',
-        key: 'recentVersion',
-      },
-      {
         title: intl.get('workflow.creator'),
-        dataIndex: 'owner',
+        dataIndex: 'metadata.annotations["cyclone.dev/owner"]',
         key: 'owner',
       },
       {

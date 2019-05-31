@@ -73,6 +73,7 @@ export const formatSubmitData = (value, query, state) => {
       name: _.get(value, 'metadata.name'),
       annotations: {
         description: _.get(value, 'metadata.annotations.description'),
+        'cyclone.dev/owner': 'admin',
         stagePosition: JSON.stringify(position),
       },
     },
