@@ -14,10 +14,14 @@ const Fragment = React.Fragment;
 class AddStage extends React.Component {
   constructor(props) {
     super(props);
-    const { templateName } = props;
+    const { templateName, values } = props;
+    const currentStage = _.get(values, 'currentStage');
+    const stages = _.get(values, 'stages', []);
+    const modify = stages.includes(currentStage);
     this.state = {
-      creationMethod: templateName ? 'template' : 'custom',
+      creationMethod: modify && !templateName ? 'custom' : 'template',
       templateData: null,
+      modify,
     };
   }
   componentDidMount() {
@@ -140,7 +144,7 @@ class AddStage extends React.Component {
   };
 
   render() {
-    const { creationMethod, templateData } = this.state;
+    const { creationMethod, templateData, modify } = this.state;
     const {
       stageTemplate: { templateList },
       values,
@@ -149,8 +153,6 @@ class AddStage extends React.Component {
     } = this.props;
     const templates = _.get(templateList, 'items');
     const currentStage = _.get(values, 'currentStage');
-    const stages = _.get(values, 'stages', []);
-    const modify = stages.includes(currentStage);
 
     if (!_.get(values, `${currentStage}`)) {
       return <Spin />;

@@ -575,12 +575,12 @@ class Graph extends React.Component {
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
-    const stageTemplateName = update
-      ? _.get(
-          values,
-          `${_.get(selected, 'id')}.metadata.annotations.stageTemplate`
-        )
-      : '';
+    const stageTemplateName = _.get(
+      values,
+      `${currentStage}.metadata.annotations.stageTemplate`,
+      ''
+    );
+
     return (
       <div id="graph" className={styles['graph']}>
         <div className="graph-header">
