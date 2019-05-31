@@ -567,7 +567,6 @@ class Graph extends React.Component {
   render() {
     const {
       graph: { nodes, edges },
-      stageInfo,
       depnedLoading,
       selected,
     } = this.state;
@@ -578,8 +577,8 @@ class Graph extends React.Component {
     const modify = stages.includes(currentStage);
     const stageTemplateName = update
       ? _.get(
-          stageInfo,
-          `${_.get(selected, 'title')}.metadata.annotations.stageTemplate`
+          values,
+          `${_.get(selected, 'id')}.metadata.annotations.stageTemplate`
         )
       : '';
     return (

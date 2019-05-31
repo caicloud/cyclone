@@ -41,7 +41,6 @@ class Resource {
   @action.bound
   getStage(project, stage, cb) {
     fetchApi.getStage(project, stage).then(data => {
-      this.stageDetail[`${project}-${stage}`] = data;
       cb && cb(data);
     });
   }

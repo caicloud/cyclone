@@ -95,7 +95,7 @@ class ResourceFrom extends React.Component {
         updateResource(project, _.get(value, 'name'), resourceObj, () => {
           SetReasourceValue(value, modifyResource);
           notification.success({
-            message: Intl.get('notification.updateResource'),
+            message: intl.get('notification.updateResource'),
             duration: 2,
           });
         });
