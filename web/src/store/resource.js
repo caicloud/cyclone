@@ -59,11 +59,10 @@ class Resource {
   }
 
   @action.bound
-  listResourceTypes(operationQuery) {
-    this.resourceTypeLoading = true;
+  listResourceTypes(operationQuery, cb) {
     fetchApi.listResourceTypes(operationQuery).then(data => {
       this.resourceTypeList = data;
-      this.resourceTypeLoading = false;
+      cb && cb();
     });
   }
 

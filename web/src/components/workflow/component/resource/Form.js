@@ -31,8 +31,14 @@ class ResourceFrom extends React.Component {
     } = props;
     this.state = {
       visible,
+      loading: true,
     };
-    listResourceTypes({ operation: type === 'inputs' ? 'pull' : 'push' });
+    listResourceTypes(
+      { operation: type === 'inputs' ? 'pull' : 'push' },
+      () => {
+        this.setState({ loading: false });
+      }
+    );
   }
 
   componentDidUpdate(preProps) {
@@ -48,12 +54,18 @@ class ResourceFrom extends React.Component {
     handleModalClose && handleModalClose(false);
   };
 
-  getInitialValues = value => {
+  getInitialValues = list => {
     const { modifyData } = this.props;
+    const item = _.get(modifyData, 'spec.type')
+      ? _.find(
+          list,
+          o => _.get(o, 'spec.type') === _.get(modifyData, 'spec.type')
+        )
+      : list[0];
     let data = {
       name: '',
       path: '',
-      ..._.pick(value, ['spec.type', 'spec.parameters']),
+      ..._.pick(item, ['spec.type', 'spec.parameters']),
     };
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
@@ -105,16 +117,16 @@ class ResourceFrom extends React.Component {
       type,
       update,
       modifyData,
-      resource: { resourceTypeList, resourceTypeLoading },
+      resource: { resourceTypeList },
     } = this.props;
-    const { visible } = this.state;
-    if (resourceTypeLoading) {
+    const { visible, loading } = this.state;
+    if (loading) {
       return <Spin />;
     }
     return (
       <Formik
         initialValues={this.getInitialValues(
-          _.get(resourceTypeList, ['items', 0])
+          _.get(resourceTypeList, 'items', [])
         )}
         onSubmit={this.submitResource}
         render={props => (
