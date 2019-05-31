@@ -8,8 +8,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 )
 
 const (
@@ -21,12 +19,6 @@ const (
 	// ConfigFileKey is key of config file in ConfigMap
 	ConfigFileKey = "workflow-controller.json"
 
-	// GitResolverImage is key of git source resolver image in config file
-	GitResolverImage = "git-resolver"
-	// SvnResolverImage is key of svn source resolver image in config file
-	SvnResolverImage = "svn-resolver"
-	// ImageResolverImage is key of image source resolver image in config file
-	ImageResolverImage = "image-resolver"
 	// CoordinatorImage is key of coordinator image in config file
 	CoordinatorImage = "coordinator"
 	// GCImage is key of the GC image in config file
@@ -35,16 +27,9 @@ const (
 	DindImage = "dind"
 )
 
-// ResolverImageKeys maps resource type to resolver images
-var ResolverImageKeys = map[v1alpha1.ResourceType]string{
-	v1alpha1.GitResourceType:   GitResolverImage,
-	v1alpha1.SvnResourceType:   SvnResolverImage,
-	v1alpha1.ImageResourceType: ImageResolverImage,
-}
-
 // WorkflowControllerConfig configures Workflow Controller
 type WorkflowControllerConfig struct {
-	// Images that used in controller, such as resource resolvers.
+	// Images that used in controller, such as gc image.
 	Images map[string]string `json:"images"`
 	// Logging configuration, such as log level.
 	Logging LoggingConfig `json:"logging"`
@@ -125,13 +110,6 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 func validate(config *WorkflowControllerConfig) bool {
 	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
-	}
-
-	for _, k := range []string{GitResolverImage, ImageResolverImage, CoordinatorImage} {
-		_, ok := config.Images[k]
-		if !ok {
-			return false
-		}
 	}
 
 	return true

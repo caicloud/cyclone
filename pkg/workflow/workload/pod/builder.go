@@ -303,15 +303,6 @@ func (m *Builder) ResolveInputResources() error {
 			subPath = ""
 		}
 
-		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
-		// the images configured, otherwise use images given in the resource spec.
-		var image string
-		if key, ok := controller.ResolverImageKeys[resource.Spec.Type]; ok {
-			image = controller.Config.Images[key]
-		} else {
-			image = resource.Spec.Resolver
-		}
-
 		// Create init container for each input resource and project all parameters into the
 		// container through environment variables. Parameters are gathered from both the resource
 		// spec and the WorkflowRun spec.
@@ -344,9 +335,16 @@ func (m *Builder) ResolveInputResources() error {
 			})
 		}
 
+		// Get resource resolver for the given resource type. If the resource has resolver set, use it directly,
+		// otherwise get resolver from registered resource types.
+		resolver, err := common.GetResourceResolver(m.client, resource)
+		if err != nil {
+			return fmt.Errorf("get resource resolver for resource type '%s' error: %v", resource.Spec.Type, err)
+		}
+
 		container := corev1.Container{
 			Name:  InputContainerName(index + 1),
-			Image: image,
+			Image: resolver,
 			Args:  []string{common.ResourcePullCommand},
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{
@@ -402,15 +400,6 @@ func (m *Builder) ResolveOutputResources() error {
 
 		m.outputResources = append(m.outputResources, resource)
 
-		// Get resource resolver image, if the resource is build-in resource (Git, Image, KV), use
-		// the images configured, otherwise use images given in the resource spec.
-		var image string
-		if key, ok := controller.ResolverImageKeys[resource.Spec.Type]; ok {
-			image = controller.Config.Images[key]
-		} else {
-			image = resource.Spec.Resolver
-		}
-
 		// Create container for each output resource and project all parameters into the
 		// container through environment variables.
 		envsMap := make(map[string]string)
@@ -440,9 +429,16 @@ func (m *Builder) ResolveOutputResources() error {
 			})
 		}
 
+		// Get resource resolver for the given resource type. If the resource has resolver set, use it directly,
+		// otherwise get resolver from registered resource types.
+		resolver, err := common.GetResourceResolver(m.client, resource)
+		if err != nil {
+			return fmt.Errorf("get resource resolver for resource type '%s' error: %v", resource.Spec.Type, err)
+		}
+
 		container := corev1.Container{
 			Name:  OutputContainerName(index + 1),
-			Image: image,
+			Image: resolver,
 			Args:  []string{common.ResourcePushCommand},
 			Env:   envs,
 			VolumeMounts: []corev1.VolumeMount{

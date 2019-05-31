@@ -149,6 +149,38 @@ func (suite *PodBuilderSuite) SetupTest() {
 		}
 		return true, nil, nil
 	})
+
+	client.PrependReactor("list", "resources", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, &v1alpha1.ResourceList{
+			Items: []v1alpha1.Resource{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "resource-type-git",
+						Labels: map[string]string{
+							"resource.cyclone.dev/template": "true",
+						},
+					},
+					Spec: v1alpha1.ResourceSpec{
+						Type:     v1alpha1.GitResourceType,
+						Resolver: "cyclone-resolver-git",
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "resource-type-image",
+						Labels: map[string]string{
+							"resource.cyclone.dev/template": "true",
+						},
+					},
+					Spec: v1alpha1.ResourceSpec{
+						Type:     v1alpha1.ImageResourceType,
+						Resolver: "cyclone-resolver-image",
+					},
+				},
+			},
+		}, nil
+	})
+
 	client.PrependReactor("get", "stages", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		if getAction, ok := action.(k8stesting.GetActionImpl); ok {
 			name := getAction.GetName()

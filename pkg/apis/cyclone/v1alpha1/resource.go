@@ -2,6 +2,13 @@ package v1alpha1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+const (
+	// ImageResourceType represents image in docker registry
+	ImageResourceType = "Image"
+	// GitResourceType represents git repo in SCM
+	GitResourceType = "Git"
+)
+
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -15,20 +22,6 @@ type Resource struct {
 	// Resource specification
 	Spec ResourceSpec `json:"spec"`
 }
-
-// ResourceType defines resource type
-type ResourceType string
-
-const (
-	// ImageResourceType represents image in docker registry
-	ImageResourceType = "Image"
-	// GitResourceType represents git repo in SCM
-	GitResourceType = "Git"
-	// SvnResourceType represents svn repo in SCM
-	SvnResourceType = "Svn"
-	// GeneralResourceType represents general resource
-	GeneralResourceType = "General"
-)
 
 // ResourcePullPolicy indicates resource pull policy
 type ResourcePullPolicy string
@@ -45,7 +38,7 @@ type ResourceSpec struct {
 	// Image to resolve this kind of resource.
 	Resolver string `json:"resolver,omitempty"`
 	// Resource type, e.g. image, git, kv, general.
-	Type ResourceType `json:"type"`
+	Type string `json:"type"`
 	// Persistent resource to PVC.
 	Persistent *Persistent `json:"persistent"`
 	// Parameters of the resource
