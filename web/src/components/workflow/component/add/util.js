@@ -22,15 +22,15 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
   };
   _.forEach(inputResources, (r, i) => {
     stage.spec.pod.inputs.resources[i] = {
-      metadata: {
-        name: _.get(r, 'name'),
-      },
-      path: _.get(r, 'path'),
+      ..._.pick(r, ['name', 'path', 'type']),
     };
     if (fromCreate) {
       const resourceData = {
         metadata: { name: _.get(r, 'name') },
-        ..._.pick(r, ['spec']),
+        spec: {
+          type: _.get(r, 'type'),
+          ..._.get(r, 'spec'),
+        },
       };
       requests.push({
         type: 'createResource',
@@ -41,11 +41,17 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
   });
 
   _.forEach(outputResources, (r, i) => {
-    stage.spec.pod.outputs.resources[i] = { name: _.get(r, 'metadata.name') };
+    stage.spec.pod.outputs.resources[i] = {
+      ..._.pick(r, ['name', 'type']),
+      path: '',
+    };
     if (fromCreate) {
       const resourceData = {
         metadata: { name: _.get(r, 'name') },
-        ..._.pick(r, ['spec']),
+        spec: {
+          type: _.get(r, 'type'),
+          ..._.get(r, 'spec'),
+        },
       };
       requests.push({
         type: 'createResource',

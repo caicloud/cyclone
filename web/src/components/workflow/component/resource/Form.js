@@ -31,8 +31,14 @@ class ResourceFrom extends React.Component {
     } = props;
     this.state = {
       visible,
+      loading: true,
     };
-    listResourceTypes({ operation: type === 'inputs' ? 'pull' : 'push' });
+    listResourceTypes(
+      { operation: type === 'inputs' ? 'pull' : 'push' },
+      () => {
+        this.setState({ loading: false });
+      }
+    );
   }
 
   componentDidUpdate(preProps) {
@@ -48,12 +54,16 @@ class ResourceFrom extends React.Component {
     handleModalClose && handleModalClose(false);
   };
 
-  getInitialValues = value => {
+  getInitialValues = list => {
     const { modifyData } = this.props;
+    const item = _.get(modifyData, 'type')
+      ? _.find(list, o => _.get(o, 'spec.type') === _.get(modifyData, 'type'))
+      : list[0];
     let data = {
       name: '',
       path: '',
-      ..._.pick(value, ['spec.type', 'spec.parameters']),
+      type: _.get(item, 'spec.type'),
+      ..._.pick(item, ['spec.parameters']),
     };
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
@@ -72,26 +82,22 @@ class ResourceFrom extends React.Component {
     } = this.props;
     const resourceObj = {
       metadata: { name: _.get(value, 'name') },
-      ..._.pick(value, ['spec.parameters', 'spec.type']),
+      ..._.pick(value, ['spec.parameters']),
     };
     const modifyResource = !_.isEmpty(modifyData);
     if (update) {
-      if (modifyResource) {
-        updateResource(
-          project,
-          _.get(value, 'metadata.name'),
-          resourceObj,
-          () => {
-            SetReasourceValue(value, modifyResource);
-            notification.success({
-              message: '更新 Resource',
-              duration: 2,
-            });
-          }
-        );
-      } else {
+      resourceObj.spec.type = _.get(value, 'type');
+      if (!modifyResource) {
         createResource(project, resourceObj, () => {
           SetReasourceValue(value, modifyResource);
+        });
+      } else if (!_.isEqual(value, modifyData)) {
+        updateResource(project, _.get(value, 'name'), resourceObj, () => {
+          SetReasourceValue(value, modifyResource);
+          notification.success({
+            message: Intl.get('notification.updateResource'),
+            duration: 2,
+          });
         });
       }
     } else {
@@ -105,16 +111,16 @@ class ResourceFrom extends React.Component {
       type,
       update,
       modifyData,
-      resource: { resourceTypeList, resourceTypeLoading },
+      resource: { resourceTypeList },
     } = this.props;
-    const { visible } = this.state;
-    if (resourceTypeLoading) {
+    const { visible, loading } = this.state;
+    if (loading) {
       return <Spin />;
     }
     return (
       <Formik
         initialValues={this.getInitialValues(
-          _.get(resourceTypeList, ['items', 0])
+          _.get(resourceTypeList, 'items', [])
         )}
         onSubmit={this.submitResource}
         render={props => (

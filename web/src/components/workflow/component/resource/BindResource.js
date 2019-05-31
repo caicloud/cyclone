@@ -43,7 +43,7 @@ class BindResource extends React.Component {
       setFieldValue,
       resource: { resourceTypeList },
     } = this.props;
-    setFieldValue('spec.type', val);
+    setFieldValue('type', val);
     const item = _.find(
       _.get(resourceTypeList, 'items', []),
       o => _.get(o, 'spec.type') === val
@@ -66,7 +66,7 @@ class BindResource extends React.Component {
       <Form layout={'horizontal'}>
         <Field
           label={intl.get('workflow.resourceType')}
-          name="spec.type"
+          name="type"
           handleSelectChange={val => {
             this.handleTypeChange(val);
           }}
@@ -127,9 +127,9 @@ class BindResource extends React.Component {
                           component={InputField}
                           formItemLayout={modalFormItemLayout}
                           hasFeedback
-                          required
+                          required={field.required}
                           tooltip={field.description}
-                          validate={required}
+                          validate={field.required && required}
                         />
                       )
                     )}

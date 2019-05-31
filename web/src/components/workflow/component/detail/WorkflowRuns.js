@@ -62,6 +62,12 @@ class WorkflowRuns extends React.Component {
         key: 'name',
       },
       {
+        title: intl.get('status.name'),
+        dataIndex: 'status.overall.phase',
+        key: 'status',
+        render: value => intl.get(`status.${value.toLowerCase()}`),
+      },
+      {
         title: intl.get('creationTime'),
         dataIndex: 'metadata.creationTimestamp',
         key: 'creationTime',
@@ -71,6 +77,7 @@ class WorkflowRuns extends React.Component {
         title: intl.get('action'),
         dataIndex: 'metadata.name',
         key: 'action',
+        align: 'right',
         render: value => (
           <EllipsisMenu menuFunc={() => this.removeRunRecord(value)} />
         ),

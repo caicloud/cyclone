@@ -1,4 +1,4 @@
-import { Input, Form, Divider } from 'antd';
+import { Input, Form } from 'antd';
 import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
 import MakeField from '@/components/public/makeField';
@@ -61,19 +61,13 @@ class TemplateStage extends React.Component {
           />
         )}
         <SectionCard title={intl.get('input')}>
-          <Divider orientation="left" dashed className={style['divider-small']}>
-            Resources
-          </Divider>
           <ResourceArray
             resourcesField={`${specKey}.inputs.resources`}
             resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
-            noLabel
           />
-          <Divider orientation="left" dashed className={style['divider-small']}>
-            Arguments
-          </Divider>
+          <div className={style['divider-small']}>Arguments</div>
           <FieldArray
             name={`${specKey}.inputs.arguments`}
             render={arrayHelpers => (

@@ -1,6 +1,6 @@
 import { Button, Row, Col, Form } from 'antd';
 import { FieldArray, FastField } from 'formik';
-import { defaultFormItemLayout, emptyLabelItemLayout } from '@/lib/const';
+import { defaultFormItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
@@ -39,10 +39,12 @@ class ResourceArray extends React.Component {
 
     if (update) {
       getResource(project, r.name, data => {
-        const info = _.merge(
-          _.pick(data, ['metadata.name', 'spec']),
-          _.pick(r, ['type', 'path'])
-        );
+        const info = {
+          name: _.get(data, 'metadata.name'),
+          type: _.get(data, 'spec.type'),
+          ..._.pick(data, ['spec.parameters']),
+          path: r.path,
+        };
         state.modifyData = info;
         this.setState(state);
       });
@@ -57,13 +59,11 @@ class ResourceArray extends React.Component {
       type = 'inputs',
       update,
       project,
-      noLabel,
     } = this.props;
     const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
-    const layout = noLabel ? emptyLabelItemLayout : defaultFormItemLayout;
     return (
-      <FormItem label={noLabel ? '' : intl.get('sideNav.resource')} {...layout}>
+      <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
         <FieldArray
           name={resourcesField}
           render={arrayHelpers => (
@@ -103,7 +103,7 @@ class ResourceArray extends React.Component {
                               <Col span={colSpan}>
                                 {_.get(r, 'name') || '--'}
                               </Col>
-                              <Col span={colSpan}>{_.get(r, 'spec.type')}</Col>
+                              <Col span={colSpan}>{_.get(r, 'type')}</Col>
                               {type === 'inputs' && (
                                 <Col span={colSpan}>{_.get(r, 'path')}</Col>
                               )}
