@@ -8,6 +8,7 @@ mountPath: 挂载路径
 configuration: 配置
 action: 操作
 creationTime: 创建时间
+duration: 执行时间
 description: 描述
 memory: 内存
 type: 类型

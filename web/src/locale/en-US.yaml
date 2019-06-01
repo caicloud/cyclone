@@ -8,6 +8,7 @@ mountPath: Mount Path
 configuration: Configuration
 action: Action
 creationTime: Creation time
+duration: Duration
 description: Description
 memory: Memory
 type: Type

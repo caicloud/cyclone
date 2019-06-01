@@ -4,8 +4,29 @@ import {
   STAGE,
   SPECIAL_EDGE_TYPE,
 } from '@/components/workflow/component/add/graph-config';
+
 export function FormatTime(time, formatStr = 'YYYY-MM-DD HH:mm:ss') {
   return moment(time).format(formatStr);
+}
+
+export function TimeDuration(start, end) {
+  let duration = moment.duration(moment(end).diff(moment(start)));
+  let seconds = duration.asSeconds();
+  if (seconds >= 3600 * 24) {
+    return '> 1d';
+  }
+
+  let hour = Math.floor(seconds / 3600);
+  let minute = Math.floor((seconds % 3600) / 60);
+  let second = seconds % 60;
+
+  if (hour > 0) {
+    return `${hour}h ${minute}m ${second}s`;
+  } else if (minute > 0) {
+    return `${minute}m ${second}s`;
+  } else {
+    return `${second}s`;
+  }
 }
 
 export const renderTemplate = data => {
