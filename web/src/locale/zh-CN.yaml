@@ -228,3 +228,12 @@ status:
   waiting: 等待中
   succeeded: 成功
   cancelled: 停止
+dashboard:
+  storageUsage: PVC 用量
+  projectCount: 项目数
+  workflowCount: 工作流数
+  workflowrunCount: 执行次数
+  workflowrunTrend: 执行趋势
+  executionSucceeded: 成功
+  executionFailed: 失败
+  executionRunning: 执行中

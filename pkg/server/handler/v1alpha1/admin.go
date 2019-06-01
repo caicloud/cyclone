@@ -2,13 +2,14 @@ package v1alpha1
 
 import (
 	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sort"
 
 	"github.com/caicloud/nirvana/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
 )
 
@@ -95,6 +96,7 @@ func AllWorkflowRuns(ctx context.Context, label string, query *types.QueryParams
 	}
 
 	items := workflowruns.Items
+	sort.Sort(sorter.NewWorkflowRunSorter(items, false))
 	size := int64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil

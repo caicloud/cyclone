@@ -228,3 +228,12 @@ status:
   waiting: Waiting
   succeeded: Succeeded
   cancelled: Cancelled
+dashboard:
+  storageUsage: PVC Usage
+  projectCount: Project Count
+  workflowCount: Workflow Count
+  workflowrunCount: Execution Count
+  workflowrunTrend: Execution Trend
+  executionSucceeded: Succeeded
+  executionFailed: Failed
+  executionRunning: Running
