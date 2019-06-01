@@ -13,8 +13,8 @@ class Project {
   @observable loadingStage = false;
 
   @action.bound
-  listProjects(cb) {
-    fetchApi.listProjects().then(data => {
+  listProjects(query, cb) {
+    fetchApi.listProjects(query).then(data => {
       this.projectList = data;
       cb && cb(data);
     });

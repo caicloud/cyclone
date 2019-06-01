@@ -14,8 +14,8 @@ class Integration {
   @observable processing = false;
 
   @action.bound
-  getIntegrationList() {
-    fetchApi.fetchIntegrationList({}).then(data => {
+  getIntegrationList(query = {}) {
+    fetchApi.fetchIntegrationList(query).then(data => {
       const groups = {
         SonarQube: [],
         SCM: [],

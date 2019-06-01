@@ -25,6 +25,14 @@ class WorkflowTable extends React.Component {
     history.push(`/workflow/add?project=${project}`);
   };
 
+  search = val => {
+    const {
+      workflow: { listWorklow },
+      project,
+    } = this.props;
+    listWorklow(project, { filter: `name=${val}` });
+  };
+
   render() {
     const { project, data, matchPath, history } = this.props;
     const columns = [
@@ -66,7 +74,7 @@ class WorkflowTable extends React.Component {
           </Button>
           <Search
             placeholder="input search text"
-            onSearch={() => {}}
+            onSearch={this.search}
             style={{ width: 200 }}
           />
         </div>

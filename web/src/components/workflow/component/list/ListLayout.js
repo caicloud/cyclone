@@ -29,7 +29,7 @@ class List extends React.Component {
       history: { location },
     } = this.props;
     const query = qs.parse(location.search);
-    this.props.project.listProjects(list => {
+    this.props.project.listProjects({}, list => {
       const firstProject =
         query.project || _.get(list, 'items.[0].metadata.name');
       this.props.workflow.listWorklow(firstProject);
@@ -50,7 +50,7 @@ class List extends React.Component {
       workflow: { workflowList },
       project: { projectList },
       history: { location },
-      match: { path },
+      match: { url },
     } = this.props;
     const query = qs.parse(location.search);
     if (!projectList) {
@@ -87,7 +87,8 @@ class List extends React.Component {
             project={query.project}
             data={_workflowList}
             history={this.props.history}
-            matchPath={path}
+            matchPath={url}
+            key={query.project}
           />
         </Content>
       </Layout>
