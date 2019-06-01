@@ -32,14 +32,24 @@ class ResourceFrom extends React.Component {
     this.state = {
       visible,
       loading: true,
+      bindInfo: {},
     };
     listResourceTypes(
       { operation: type === 'inputs' ? 'pull' : 'push' },
-      () => {
-        this.setState({ loading: false });
+      data => {
+        this.setBindInfo(data);
       }
     );
   }
+
+  setBindInfo = data => {
+    const { modifyData } = this.props;
+    const list = _.get(data, 'items', []);
+    const item = _.get(modifyData, 'type')
+      ? _.find(list, o => _.get(o, 'spec.type') === _.get(modifyData, 'type'))
+      : list[0];
+    this.setState({ bindInfo: _.get(item, 'spec.bind'), loading: false });
+  };
 
   componentDidUpdate(preProps) {
     const { visible } = this.props;
@@ -113,7 +123,7 @@ class ResourceFrom extends React.Component {
       modifyData,
       resource: { resourceTypeList },
     } = this.props;
-    const { visible, loading } = this.state;
+    const { visible, loading, bindInfo } = this.state;
     if (loading) {
       return <Spin />;
     }
@@ -133,6 +143,7 @@ class ResourceFrom extends React.Component {
               {...props}
               type={type}
               update={update && !_.isEmpty(modifyData)}
+              bindInfo={bindInfo}
             />
           </Modal>
         )}

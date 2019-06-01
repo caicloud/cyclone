@@ -24,14 +24,36 @@ class BindResource extends React.Component {
     integration: PropTypes.object,
     update: PropTypes.bool,
     resource: PropTypes.object,
+    bindInfo: PropTypes.object,
   };
 
-  state = { addWay: 'new' };
+  constructor(props) {
+    super(props);
+    const { bindInfo = {}, values } = props;
+    this.state = {
+      addWay: 'new',
+      bindInfo,
+      noShowIndex: this.getNoShowIndex(
+        bindInfo,
+        _.get(values, 'spec.parameters')
+      ),
+    };
+  }
+
+  getNoShowIndex = (bindInfo, specParameters) => {
+    let noShowIndex = {};
+    const noShowKey = _.keys(_.get(bindInfo, 'paramBindings'));
+    _.forEach(specParameters, (v, i) => {
+      if (noShowKey.includes(v.name)) {
+        noShowIndex[v.name] = i;
+      }
+    });
+    return noShowIndex;
+  };
 
   componentDidMount() {
-    // TODO(qme): user integration
-    // const { integration } = this.props;
-    // integration.getIntegrationList();
+    const { integration } = this.props;
+    integration.getIntegrationList();
   }
 
   changeAddWay = value => {
@@ -44,24 +66,79 @@ class BindResource extends React.Component {
       resource: { resourceTypeList },
     } = this.props;
     setFieldValue('type', val);
+    setFieldValue('integration', '');
     const item = _.find(
       _.get(resourceTypeList, 'items', []),
       o => _.get(o, 'spec.type') === val
     );
     if (item) {
+      this.setState({
+        bindInfo: _.get(item, 'spec.bind'),
+        noShowIndex: this.getNoShowIndex(
+          _.get(item, 'spec.bind'),
+          _.get(item, 'spec.parameters')
+        ),
+      });
       setFieldValue('spec.parameters', _.get(item, 'spec.parameters'));
     }
   };
 
+  handleIntegrationChange = (val, list) => {
+    const { bindInfo, noShowIndex } = this.state;
+    const { setFieldValue } = this.props;
+    setFieldValue('integration', val);
+    const item = _.find(list, o => _.get(o, 'metadata.name'));
+    if (item) {
+      _.forEach(_.get(bindInfo, 'paramBindings'), (v, k) => {
+        setFieldValue(
+          `spec.parameters.${noShowIndex[k]}.value`,
+          `$.${_.get(item, 'metadata.namespace')}.${val}/data.integration/${v}`
+        );
+      });
+    }
+  };
+
+  renderParameters = noShowKeys => {
+    const { values } = this.props;
+    let arr = [];
+    _.forEach(_.get(values, 'spec.parameters', []), (field, index) => {
+      if (!noShowKeys.includes(field.name)) {
+        const dom = (
+          <Field
+            key={field.name}
+            label={
+              field.name.includes('SCM_')
+                ? field.name.replace('SCM_', '')
+                : field.name
+            }
+            name={`spec.parameters.${index}.value`}
+            component={InputField}
+            formItemLayout={modalFormItemLayout}
+            hasFeedback
+            required={field.required}
+            tooltip={field.description}
+            validate={field.required && required}
+          />
+        );
+        arr.push(dom);
+      }
+    });
+    return arr;
+  };
+
   render() {
-    const { addWay } = this.state;
+    const { addWay, bindInfo } = this.state;
     const {
       values,
       setFieldValue,
       type,
       update,
       resource: { resourceTypeList },
+      integration: { groupIntegrationList },
     } = this.props;
+    const integrationResourceType = _.get(bindInfo, 'integrationType');
+    const noShowKeys = _.keys(_.get(bindInfo, 'paramBindings'));
+    const list = _.get(groupIntegrationList, integrationResourceType, []);
     return (
       <Form layout={'horizontal'}>
         <Field
@@ -109,32 +186,26 @@ class BindResource extends React.Component {
                 validate={required}
               />
             )}
+            <Field
+              label={intl.get('sideNav.integration')}
+              name="integration"
+              payload={{
+                items: list,
+                nameKey: 'metadata.name',
+                valueKey: 'metadata.name',
+              }}
+              handleSelectChange={val =>
+                this.handleIntegrationChange(val, list)
+              }
+              component={SelectField}
+              required
+              validate={required}
+              formItemLayout={modalFormItemLayout}
+            />
             <FormItem {...noLabelItemLayout}>
               <FieldArray
                 name="spec.parameters"
-                render={() => (
-                  <div>
-                    {_.get(values, 'spec.parameters', []).map(
-                      (field, index) => (
-                        <Field
-                          key={field.name}
-                          label={
-                            field.name.includes('SCM_')
-                              ? field.name.replace('SCM_', '')
-                              : field.name
-                          }
-                          name={`spec.parameters.${index}.value`}
-                          component={InputField}
-                          formItemLayout={modalFormItemLayout}
-                          hasFeedback
-                          required={field.required}
-                          tooltip={field.description}
-                          validate={field.required && required}
-                        />
-                      )
-                    )}
-                  </div>
-                )}
+                render={() => this.renderParameters(noShowKeys)}
               />
             </FormItem>
           </Fragment>
