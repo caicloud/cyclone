@@ -1,4 +1,4 @@
-import { Layout, Menu, Icon, Popover, Tooltip } from 'antd';
+import { Layout, Menu, Icon, Popover } from 'antd';
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import Routes from '../routes';
@@ -58,6 +58,27 @@ class CoreLayout extends Component {
       </Menu>
     );
 
+    const refs = (
+      <Menu style={{ borderRight: 'none' }}>
+        <Menu.Item key="official">
+          <a
+            href="https://cyclone.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon type="home" />
+            <span>{intl.get('sideNav.official')}</span>
+          </a>
+        </Menu.Item>
+        <Menu.Item key="swagger">
+          <NavLink to="/swagger" activeClassName="active">
+            <Icon type="read" />
+            <span>{intl.get('sideNav.swagger')}</span>
+          </NavLink>
+        </Menu.Item>
+      </Menu>
+    );
+
     return (
       <Layout style={{ minHeight: '100%' }}>
         <Header className="cyclone-layout-header">
@@ -66,7 +87,6 @@ class CoreLayout extends Component {
             CYCLONE
           </div>
           <div>
-            <Icon className="headbar-icon" type="user" />
             <Popover
               placement="bottomRight"
               trigger="click"
@@ -78,18 +98,13 @@ class CoreLayout extends Component {
                 onClick={this.onLangClick}
               />
             </Popover>
-            <Tooltip
-              placement="bottomRight"
-              title={intl.get('tips.officialWebsite')}
-            >
-              <a
-                href="https://cyclone.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Icon className="headbar-icon" type="book" />
-              </a>
-            </Tooltip>
+            <Popover placement="bottomRight" trigger="click" content={refs}>
+              <Icon
+                className="headbar-icon"
+                type="book"
+                onClick={this.onLangClick}
+              />
+            </Popover>
           </div>
         </Header>
         <Layout style={{ marginTop: 64 }}>
@@ -112,7 +127,7 @@ class CoreLayout extends Component {
             >
               <Menu.Item key="overview">
                 <NavLink to="/overview" activeClassName="active">
-                  <Icon type="home" />
+                  <Icon type="dashboard" />
                   <span>{intl.get('sideNav.overview')}</span>
                 </NavLink>
               </Menu.Item>
