@@ -50,6 +50,8 @@ sideNav:
   workflow: 流水线
   integration: 集成中心
   resource: 资源类型
+  swagger: API 文档
+  official: 官网
 workflow:
   addStage: 添加阶段
   recentVersion: 最近版本

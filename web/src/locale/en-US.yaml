@@ -50,6 +50,8 @@ sideNav:
   workflow: Workflows
   integration: Integrations
   resource: Resource Types
+  swagger: API Docs
+  official: Official Site
 workflow:
   addStage: Add Stage
   recentVersion: Recent version
