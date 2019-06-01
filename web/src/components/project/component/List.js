@@ -1,8 +1,10 @@
-import { Table, Button } from 'antd';
+import { Table, Button, Input } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { FormatTime } from '@/lib/util';
 import MenuAction from './MenuAction';
+
+const Search = Input.Search;
 
 @inject('project')
 @observer
@@ -23,6 +25,13 @@ class List extends React.Component {
   showModal = () => {
     const { match } = this.props;
     this.props.history.push(`${match.path}/add`);
+  };
+
+  search = val => {
+    const {
+      project: { listProjects },
+    } = this.props;
+    listProjects({ filter: `name=${val}` });
   };
 
   handleCreate = () => {
@@ -68,6 +77,11 @@ class List extends React.Component {
           <Button type="primary" onClick={this.showModal}>
             {intl.get('operation.add')}
           </Button>
+          <Search
+            placeholder="input search text"
+            onSearch={this.search}
+            style={{ width: 200 }}
+          />
         </div>
         <Table
           columns={columns}

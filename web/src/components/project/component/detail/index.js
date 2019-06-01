@@ -34,6 +34,7 @@ class ProjectDetail extends React.Component {
     const {
       project,
       match: {
+        url,
         params: { projectName },
       },
       workflow: { workflowList },
@@ -69,6 +70,7 @@ class ProjectDetail extends React.Component {
                 project={projectName}
                 data={_workflowList}
                 history={this.props.history}
+                matchPath={url}
               />
             </TabPane>
             <TabPane tab={intl.get('resources')} key="resource">

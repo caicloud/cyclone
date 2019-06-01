@@ -1,5 +1,4 @@
 import http from './http.js';
-import qs from 'query-string';
 
 const fetchApi = {
   http,
@@ -23,7 +22,7 @@ const fetchApi = {
   },
   // end template
   fetchIntegrationList(query) {
-    return http.get(`/integrations`, query).then(data => {
+    return http.get(`/integrations`, { params: query }).then(data => {
       return data;
     });
   },
@@ -52,8 +51,8 @@ const fetchApi = {
   },
 
   /** start project */
-  listProjects() {
-    return http.get('/projects').then(data => {
+  listProjects(query = {}) {
+    return http.get('/projects', { params: query }).then(data => {
       return data;
     });
   },
@@ -134,11 +133,7 @@ const fetchApi = {
   },
 
   listResourceTypes(query) {
-    // TODO(qme): format query in axios
-    const url = _.isEmpty(query)
-      ? `/resourcetypes`
-      : `/resourcetypes?${qs.stringify(query)}`;
-    return http.get(url).then(data => {
+    return http.get('/resourcetypes', { params: query }).then(data => {
       return data;
     });
   },
@@ -168,10 +163,12 @@ const fetchApi = {
   },
 
   /** end resource */
-  listWorkflow(project, query) {
-    return http.get(`/projects/${project}/workflows`, query).then(data => {
-      return data;
-    });
+  listWorkflow(project, query = {}) {
+    return http
+      .get(`/projects/${project}/workflows`, { params: query })
+      .then(data => {
+        return data;
+      });
   },
 
   createWorkflow(project, info) {
@@ -219,9 +216,11 @@ const fetchApi = {
       });
   },
 
-  listWorkflowRuns(project, workflow) {
+  listWorkflowRuns(project, workflow, query) {
     return http
-      .get(`/projects/${project}/workflows/${workflow}/workflowruns`)
+      .get(`/projects/${project}/workflows/${workflow}/workflowruns`, {
+        params: query,
+      })
       .then(data => {
         return data;
       });

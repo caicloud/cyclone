@@ -1,10 +1,12 @@
 import EllipsisMenu from '@/components/public/ellipsisMenu';
 import { inject, observer } from 'mobx-react';
-import { Table, Modal, Tag, Spin } from 'antd';
+import { Table, Modal, Tag, Spin, Input } from 'antd';
 import { FormatTime, TimeDuration } from '@/lib/util';
 import PropTypes from 'prop-types';
 
 const confirm = Modal.confirm;
+const Fragment = React.Fragment;
+const Search = Input.Search;
 
 @inject('workflow')
 @observer
@@ -42,6 +44,15 @@ class WorkflowRuns extends React.Component {
         delelteWorkflowRun(projectName, workflowName, name);
       },
     });
+  };
+
+  search = val => {
+    const {
+      workflow: { listWorkflowRuns },
+      projectName,
+      workflowName,
+    } = this.props;
+    listWorkflowRuns(projectName, workflowName, { filter: `name=${val}` });
   };
 
   render() {
@@ -126,11 +137,20 @@ class WorkflowRuns extends React.Component {
       },
     ];
     return (
-      <Table
-        rowKey={row => row.metadata.name}
-        columns={columns}
-        dataSource={[...items]}
-      />
+      <Fragment>
+        <div className="head-bar right">
+          <Search
+            placeholder="input search text"
+            onSearch={this.search}
+            style={{ width: 200 }}
+          />
+        </div>
+        <Table
+          rowKey={row => row.metadata.name}
+          columns={columns}
+          dataSource={[...items]}
+        />
+      </Fragment>
     );
   }
 }

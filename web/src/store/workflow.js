@@ -7,8 +7,8 @@ class Workflow {
   @observable workflowRuns = {};
 
   @action.bound
-  listWorklow(projectID) {
-    return fetchApi.listWorkflow(projectID, {}).then(data => {
+  listWorklow(projectID, query) {
+    return fetchApi.listWorkflow(projectID, query).then(data => {
       this.workflowList[projectID] = data;
     });
   }
@@ -47,8 +47,8 @@ class Workflow {
   }
 
   @action.bound
-  listWorkflowRuns(project, workflow) {
-    return fetchApi.listWorkflowRuns(project, workflow).then(data => {
+  listWorkflowRuns(project, workflow, query = {}) {
+    return fetchApi.listWorkflowRuns(project, workflow, query).then(data => {
       this.workflowRuns[`${project}-${workflow}`] = data;
     });
   }
