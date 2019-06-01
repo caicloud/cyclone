@@ -63,7 +63,7 @@ class Resource {
   listResourceTypes(operationQuery, cb) {
     fetchApi.listResourceTypes(operationQuery).then(data => {
       this.resourceTypeList = data;
-      cb && cb();
+      cb && cb(data);
     });
   }
 

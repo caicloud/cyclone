@@ -29,6 +29,17 @@ class ResourceArray extends React.Component {
     visible: false,
   };
 
+  getIntegrationName = _argument => {
+    const reg = /^\$\.+/;
+    const item = _.find(_argument, o => reg.test(o.value));
+    // NOTE: get integration name from $.${namespace}.${integration}/data.integration/sonarQube.server
+    if (item) {
+      const value = _.get(item, 'value').split('/data.integration');
+      const integration = value[0].split('.')[2];
+      return integration;
+    }
+  };
+
   editResource = (r, index) => {
     const {
       update,
@@ -48,6 +59,7 @@ class ResourceArray extends React.Component {
           type: _.get(data, 'spec.type'),
           ..._.pick(data, ['spec.parameters']),
           path: r.path,
+          integration: this.getIntegrationName(_.get(data, 'spec.parameters')),
         };
         state.modifyData = info;
         this.setState(state);
