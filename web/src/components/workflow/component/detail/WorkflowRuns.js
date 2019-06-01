@@ -1,7 +1,7 @@
 import EllipsisMenu from '@/components/public/ellipsisMenu';
 import { inject, observer } from 'mobx-react';
-import { Table, Modal, Tag } from 'antd';
-import { FormatTime } from '@/lib/util';
+import { Table, Modal, Tag, Spin } from 'antd';
+import { FormatTime, TimeDuration } from '@/lib/util';
 import PropTypes from 'prop-types';
 
 const confirm = Modal.confirm;
@@ -92,6 +92,28 @@ class WorkflowRuns extends React.Component {
         dataIndex: 'metadata.creationTimestamp',
         key: 'creationTime',
         render: value => FormatTime(value),
+      },
+      {
+        title: intl.get('duration'),
+        dataIndex: 'metadata.creationTimestamp',
+        key: 'duration',
+        render: (value, item) => {
+          const status = _.get(item, 'status.overall.phase');
+          if (
+            status === 'Succeeded' ||
+            status === 'Failed' ||
+            status === 'Cancelled'
+          ) {
+            const endTime = _.get(item, 'status.overall.lastTransitionTime');
+            if (endTime) {
+              return TimeDuration(value, endTime);
+            } else {
+              return '--';
+            }
+          }
+
+          return <Spin size="small" />;
+        },
       },
       {
         title: intl.get('action'),
