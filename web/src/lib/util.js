@@ -97,3 +97,10 @@ export const formatTouchedField = value => {
   flatObject(value, '');
   return touchObj;
 };
+
+export const getMaxNumber = arr => {
+  const max = arr.sort(function(a, b) {
+    return b - a;
+  })[0];
+  return max * 1 || 0;
+};

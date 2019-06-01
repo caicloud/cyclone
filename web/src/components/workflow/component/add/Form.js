@@ -101,6 +101,7 @@ class AddWorkflow extends React.Component {
       metadata: { name: '', annotations: { description: '' } },
       stages: [],
       currentStage: '',
+      resourcesArr: [],
     };
 
     if (!_.isEmpty(data)) {

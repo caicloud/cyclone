@@ -18,7 +18,6 @@ export const modalFormItemLayout = {
 };
 
 export const customStageField = {
-  name: '',
   spec: {
     pod: {
       inputs: {

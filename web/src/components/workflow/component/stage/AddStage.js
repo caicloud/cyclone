@@ -34,7 +34,11 @@ class AddStage extends React.Component {
     const state = { creationMethod: value };
     if (value === 'custom') {
       const currentStage = _.get(values, 'currentStage');
-      setFieldValue(currentStage, customStageField);
+      const info = {
+        metadata: { name: this.stageDefaultName() },
+        ...customStageField,
+      };
+      setFieldValue(currentStage, info);
     } else {
       state.templateData = null;
     }
@@ -80,6 +84,13 @@ class AddStage extends React.Component {
     return value;
   };
 
+  stageDefaultName = () => {
+    const { values } = this.props;
+    const workflowName = _.get(values, 'metadata.name');
+    const currentStageId = _.get(values, 'currentStage').split('_')[1];
+    return `${workflowName}-stg${currentStageId}`;
+  };
+
   // Select template then render field
   selectTemplate = value => {
     const {
@@ -97,7 +108,12 @@ class AddStage extends React.Component {
       'stage.cyclone.dev/template-kind',
     ]);
     let inputs = _.merge(
-      { metadata: { name: '', annotations: { stageTemplate: templateType } } },
+      {
+        metadata: {
+          name: this.stageDefaultName(),
+          annotations: { stageTemplate: templateType },
+        },
+      },
       _.pick(item, 'spec', {})
     );
     if (templateType) {
@@ -150,6 +166,7 @@ class AddStage extends React.Component {
       values,
       project,
       update,
+      setFieldValue,
     } = this.props;
     const templates = _.get(templateList, 'items');
     const currentStage = _.get(values, 'currentStage');
@@ -157,6 +174,13 @@ class AddStage extends React.Component {
     if (!_.get(values, `${currentStage}`)) {
       return <Spin />;
     }
+    const stageProps = {
+      values,
+      update,
+      modify,
+      project,
+      setFieldValue,
+    };
     return (
       <Form>
         {!modify && (
@@ -187,21 +211,13 @@ class AddStage extends React.Component {
               </FormItem>
             )}
             <TemplateStage
-              values={values}
               stageId={_.get(values, 'currentStage')}
               data={templateData}
-              update={update}
-              modify={modify}
-              project={project}
+              {...stageProps}
             />
           </Fragment>
         ) : (
-          <StageField
-            values={this.props.values}
-            update={update}
-            modify={modify}
-            project={project}
-          />
+          <StageField {...stageProps} />
         )}
       </Form>
     );

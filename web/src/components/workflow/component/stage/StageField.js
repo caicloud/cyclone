@@ -20,6 +20,7 @@ class StageField extends React.Component {
     update: PropTypes.bool,
     project: PropTypes.string,
     modify: PropTypes.bool,
+    setFieldValue: PropTypes.func,
   };
 
   state = {
@@ -27,12 +28,20 @@ class StageField extends React.Component {
   };
 
   render() {
-    const { values, update, project, modify } = this.props;
+    const { values, update, project, modify, setFieldValue } = this.props;
     const currentStage = _.get(values, 'currentStage');
     if (!currentStage) {
       return <Spin />;
     }
     const specKey = `${currentStage}.spec.pod`;
+    const resourceArrayProps = {
+      resourcesField: `${currentStage}.outputs.resources`,
+      resources: _.get(values, `${currentStage}.outputs.resources`, []),
+      resourcesArr: _.get(values, 'resourcesArr'),
+      setFieldValue,
+      workflowName: _.get(values, 'metadata.name'),
+    };
+
     return (
       <Fragment>
         {update && modify ? (
@@ -51,10 +60,9 @@ class StageField extends React.Component {
         )}
         <SectionCard title={intl.get('input')}>
           <ResourceArray
-            resourcesField={`${specKey}.inputs.resources`}
-            resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
+            {...resourceArrayProps}
           />
         </SectionCard>
         <SectionCard title={intl.get('config')}>
@@ -160,11 +168,7 @@ class StageField extends React.Component {
           />
         </SectionCard>
         <SectionCard title={intl.get('output')}>
-          <ResourceArray
-            type="outputs"
-            resourcesField={`${currentStage}.outputs.resources`}
-            resources={_.get(values, `${currentStage}.outputs.resources`, [])}
-          />
+          <ResourceArray type="outputs" {...resourceArrayProps} />
           {/* // NOTE: temporarily not supported artifacts */}
           {/* <FormItem label={'artifacts'} {...defaultFormItemLayout}>
             <FieldArray

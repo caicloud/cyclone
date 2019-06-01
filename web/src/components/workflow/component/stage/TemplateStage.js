@@ -21,6 +21,7 @@ class TemplateStage extends React.Component {
     update: PropTypes.bool,
     project: PropTypes.string,
     modify: PropTypes.bool,
+    setFieldValue: PropTypes.func,
   };
 
   renderSection = (data, key) => {
@@ -41,7 +42,14 @@ class TemplateStage extends React.Component {
     return dom;
   };
   render() {
-    const { stageId, values, update, project, modify } = this.props;
+    const {
+      stageId,
+      values,
+      update,
+      project,
+      modify,
+      setFieldValue,
+    } = this.props;
     const specKey = `${stageId}.spec.pod`;
     const outputResource = _.get(values, `${specKey}.outputs.resources`);
     return (
@@ -66,6 +74,9 @@ class TemplateStage extends React.Component {
             resources={_.get(values, `${specKey}.inputs.resources`, [])}
             update={update}
             project={project}
+            resourcesArr={_.get(values, 'resourcesArr')}
+            setFieldValue={setFieldValue}
+            workflowName={_.get(values, 'metadata.name')}
           />
           <div className={style['divider-small']}>Arguments</div>
           <FieldArray
@@ -110,6 +121,9 @@ class TemplateStage extends React.Component {
               resources={_.get(values, `${specKey}.outputs.resources`, [])}
               update={update}
               project={project}
+              resourcesArr={_.get(values, 'resourcesArr')}
+              setFieldValue={setFieldValue}
+              workflowName={_.get(values, 'metadata.name')}
             />
           </SectionCard>
         )}
