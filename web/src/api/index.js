@@ -78,8 +78,7 @@ const fetchApi = {
       return data;
     });
   },
-  /** end project */
-  /** start resource */
+
   getResource(project, resource) {
     return http.get(`/projects/${project}/resources/${resource}`).then(data => {
       return data;
@@ -162,7 +161,6 @@ const fetchApi = {
     });
   },
 
-  /** end resource */
   listWorkflow(project, query = {}) {
     return http
       .get(`/projects/${project}/workflows`, { params: query })
@@ -234,6 +232,22 @@ const fetchApi = {
       .then(data => {
         return data;
       });
+  },
+
+  getStorageUsage() {
+    return http.get('/storage/usages').then(data => data);
+  },
+
+  listAllWorkflows() {
+    return http.get('/workflows').then(data => {
+      return data;
+    });
+  },
+
+  listAllWorkflowRuns() {
+    return http.get('/workflowruns').then(data => {
+      return data;
+    });
   },
 };
 
