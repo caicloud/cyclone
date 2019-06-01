@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"context"
 	"sort"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +34,17 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 	}
 
 	items := projects.Items
-	size := int64(len(items))
+	var results []v1alpha1.Project
+	if query.Filter == "" {
+		results = items
+	} else {
+		results, err = filterProjects(items, query.Filter)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	size := int64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Project{}), nil
 	}
@@ -44,10 +55,45 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 	}
 
 	if query.Sort {
-		sort.Sort(sorter.NewProjectSorter(items, query.Ascending))
+		sort.Sort(sorter.NewProjectSorter(results, query.Ascending))
 	}
 
-	return types.NewListResponse(int(size), items[query.Start:end]), nil
+	return types.NewListResponse(int(size), results[query.Start:end]), nil
+}
+
+func filterProjects(projects []v1alpha1.Project, filter string) ([]v1alpha1.Project, error) {
+	if filter == "" {
+		return projects, nil
+	}
+
+	var results []v1alpha1.Project
+	kv := strings.Split(filter, "=")
+	if len(kv) != 2 {
+		return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
+	}
+	value := strings.ToLower(kv[1])
+
+	if kv[0] == "name" {
+		for _, item := range projects {
+			if strings.Contains(item.Name, value) {
+				results = append(results, item)
+			}
+		}
+	} else if kv[0] == "alias" {
+		for _, item := range projects {
+			if item.Annotations != nil {
+				if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
+					if strings.Contains(alias, value) {
+						results = append(results, item)
+					}
+				}
+			}
+		}
+	} else {
+		results = projects
+	}
+
+	return results, nil
 }
 
 // CreateProject creates a project for the tenant.
