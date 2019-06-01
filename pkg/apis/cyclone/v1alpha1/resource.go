@@ -47,6 +47,18 @@ type ResourceSpec struct {
 	// it's only used to register a resource type. When you create a resource for
 	// workflow, just ignore it.
 	SupportedOperations []string `json:"operations"`
+	// IntegrationBind binds the resource type to integration (represent a external data source).
+	// It's used when define a resource type.
+	IntegrationBind *IntegrationBind `json:"bind,omitempty"`
+}
+
+// IntegrationBind describes bindings between a resource type and a integration type.
+type IntegrationBind struct {
+	// IntegrationType is type of integration to bind for this resource type, for example 'DockerRegistry'
+	IntegrationType string `json:"integrationType"`
+	// ParamBindings binds parameters of one resource type to the integration. It's a map with keys being
+	// parameter names of the resource type, and values being the parameter names of the integration type.
+	ParamBindings map[string]string `json:"paramBindings"`
 }
 
 // Persistent describes persistent parameters for the resource.

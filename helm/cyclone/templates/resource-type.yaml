@@ -30,6 +30,12 @@ spec:
       For public repository, no need provide auth, but for private repository, this
       should be provided. Auth here supports 2 different formats: a. <user>:<password>
       b. <token>
+  bind:
+    integrationType: SCM
+    paramBindings:
+      SCM_URL: scm.server
+      SCM_AUTH: scm.token
+
 
 ---
 
@@ -63,6 +69,12 @@ spec:
     required: true
     description: >
       Password for the user.
+  bind:
+    integrationType: SCM
+    paramBindings:
+      SCM_URL: scm.server
+      SCM_USER: scm.token
+      SCM_PWD: scm.password
 
 ---
 
@@ -100,3 +112,9 @@ spec:
     required: true
     description: >
       Password of the registry
+  bind:
+    integrationType: DockerRegistry
+    paramBindings:
+      REGISTRY: dockerRegistry.server
+      USER: dockerRegistry.user
+      PASSWORD: dockerRegistry.password

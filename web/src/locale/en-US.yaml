@@ -213,6 +213,7 @@ resource:
   type: Resource Type
   resolver: Resource Resolver
   operations: Supported Operations
+  binding: Integration Binding
   messages:
     typeRequired: Type can't be empty
     resolverRequired: Resolver (image) can't be empty

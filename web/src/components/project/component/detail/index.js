@@ -71,7 +71,7 @@ class ProjectDetail extends React.Component {
                 history={this.props.history}
               />
             </TabPane>
-            <TabPane tab={intl.get('sideNav.resource')} key="resource">
+            <TabPane tab={intl.get('resources')} key="resource">
               <ResourceList projectName={projectName} />
             </TabPane>
             <TabPane tab={intl.get('project.stage')} key="stage">
