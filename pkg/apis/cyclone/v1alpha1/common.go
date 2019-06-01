@@ -5,7 +5,7 @@ type ResourceItem struct {
 	// Resource name
 	Name string `json:"name"`
 	// Type is type of the resource, for example, Git, Image
-	Type ResourceType `json:"type"`
+	Type string `json:"type"`
 	// For input resource, this is the path that resource will be mounted in workload container.
 	// Resolver would resolve resources and mount it in this path.
 	// For output resource, this is the path in the workload container specify output data, for

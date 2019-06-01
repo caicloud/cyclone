@@ -8,6 +8,7 @@ metadata:
     cyclone.dev/builtin: "true"
 spec:
   type: Git
+  resolver: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-git:{{ .Chart.AppVersion }}
   operations:
   - pull
   parameters:
@@ -42,6 +43,7 @@ metadata:
     cyclone.dev/builtin: "true"
 spec:
   type: Svn
+  resolver: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}
   operations:
   - pull
   parameters:
@@ -74,6 +76,7 @@ metadata:
     cyclone.dev/builtin: "true"
 spec:
   type: Image
+  resolver: {{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-image:{{ .Chart.AppVersion }}
   operations:
   - push
   parameters:
