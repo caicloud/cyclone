@@ -67,12 +67,12 @@ class WorkflowDetail extends React.Component {
           />
         </DetailHead>
         <DetailContent>
-          <Tabs defaultActiveKey="workflow" type="card">
-            <TabPane tab={intl.get('workflow.basicInfo')} key="workflow">
-              <StageDepend detail={detail} />
-            </TabPane>
+          <Tabs defaultActiveKey="record" type="card">
             <TabPane tab={intl.get('workflow.runRecord')} key="record">
               <WorkflowRuns {..._params} />
+            </TabPane>
+            <TabPane tab={intl.get('workflow.basicInfo')} key="workflow">
+              <StageDepend detail={detail} />
             </TabPane>
           </Tabs>
         </DetailContent>

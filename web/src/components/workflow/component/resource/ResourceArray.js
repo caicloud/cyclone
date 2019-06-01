@@ -20,6 +20,9 @@ class ResourceArray extends React.Component {
     project: PropTypes.string,
     resource: PropTypes.object,
     noLabel: PropTypes.bool,
+    resourcesArr: PropTypes.array,
+    setFieldValue: PropTypes.func,
+    workflowName: PropTypes.string,
   };
 
   state = {
@@ -60,6 +63,9 @@ class ResourceArray extends React.Component {
       type = 'inputs',
       update,
       project,
+      resourcesArr,
+      setFieldValue,
+      workflowName,
     } = this.props;
     const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
@@ -160,6 +166,9 @@ class ResourceArray extends React.Component {
                   update={update}
                   project={project}
                   modifyData={modifyData}
+                  workflowName={workflowName}
+                  resourcesArr={resourcesArr}
+                  setFieldValue={setFieldValue}
                 />
               )}
             </div>
