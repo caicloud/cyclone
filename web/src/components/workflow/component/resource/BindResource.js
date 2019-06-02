@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 import { required } from '@/components/public/validate';
 import SelectPlus from '@/components/public/makeField/select';
+import SectionCard from '@/components/public/sectionCard';
 
 const FormItem = Form.Item;
 const InputField = MakeField(Input);
@@ -158,33 +159,72 @@ class BindResource extends React.Component {
           validate={required}
         />
         {addWay === 'exist' ? (
-          <Field
-            label={intl.get('type')}
-            name="name"
-            handleSelectChange={val => {
-              setFieldValue('name', val);
-            }}
-            component={<div>TODO: resource select</div>}
-            formItemLayout={modalFormItemLayout}
-            required
-            validate={required}
-          />
-        ) : (
           <Fragment>
-            {update ? (
-              <FormItem label={intl.get('name')} {...modalFormItemLayout}>
-                {_.get(values, 'name')}
-              </FormItem>
-            ) : (
+            <Field
+              label={intl.get('type')}
+              name="name"
+              handleSelectChange={val => {
+                setFieldValue('name', val);
+              }}
+              component={<div>TODO: resource select</div>}
+              formItemLayout={modalFormItemLayout}
+              required
+              validate={required}
+            />
+            {type === 'inputs' && (
               <Field
-                label={intl.get('name')}
-                name="name"
+                label={intl.get('workflow.usePath')}
+                name="path"
                 component={InputField}
-                formItemLayout={modalFormItemLayout}
                 hasFeedback
                 required
                 validate={required}
+                formItemLayout={modalFormItemLayout}
               />
+            )}
+          </Fragment>
+        ) : (
+          <Fragment>
+            {update ? (
+              <Fragment>
+                <FormItem label={intl.get('name')} {...modalFormItemLayout}>
+                  {_.get(values, 'name')}
+                </FormItem>
+                {type === 'inputs' && (
+                  <Field
+                    label={intl.get('workflow.usePath')}
+                    name="path"
+                    component={InputField}
+                    hasFeedback
+                    required
+                    validate={required}
+                    formItemLayout={modalFormItemLayout}
+                  />
+                )}
+              </Fragment>
+            ) : (
+              <Fragment>
+                <Field
+                  label={intl.get('name')}
+                  name="name"
+                  component={InputField}
+                  formItemLayout={modalFormItemLayout}
+                  hasFeedback
+                  required
+                  validate={required}
+                />
+                {type === 'inputs' && (
+                  <Field
+                    label={intl.get('workflow.usePath')}
+                    name="path"
+                    component={InputField}
+                    hasFeedback
+                    required
+                    validate={required}
+                    formItemLayout={modalFormItemLayout}
+                  />
+                )}
+              </Fragment>
             )}
             <Field
               label={intl.get('sideNav.integration')}
@@ -202,24 +242,15 @@ class BindResource extends React.Component {
               validate={required}
               formItemLayout={modalFormItemLayout}
             />
-            <FormItem {...noLabelItemLayout}>
-              <FieldArray
-                name="spec.parameters"
-                render={() => this.renderParameters(noShowKeys)}
-              />
-            </FormItem>
+            <SectionCard title={intl.get('resource.parameters')}>
+              <FormItem {...noLabelItemLayout}>
+                <FieldArray
+                  name="spec.parameters"
+                  render={() => this.renderParameters(noShowKeys)}
+                />
+              </FormItem>
+            </SectionCard>
           </Fragment>
-        )}
-        {type === 'inputs' && (
-          <Field
-            label={intl.get('workflow.usePath')}
-            name="path"
-            component={InputField}
-            hasFeedback
-            required
-            validate={required}
-            formItemLayout={modalFormItemLayout}
-          />
         )}
       </Form>
     );

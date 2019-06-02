@@ -65,7 +65,7 @@ workflow:
   resourceType: Resource type
   existResource: Existing resource
   addMethod: Add method
-  usePath: Use path
+  usePath: Mount Path
   selectTemplate: Select Template
   stageCreation: Creation method
   addEnv: Add env
@@ -217,6 +217,7 @@ resource:
   resolver: Resource Resolver
   operations: Supported Operations
   binding: Integration Binding
+  parameters: Resource Parameters
   messages:
     typeRequired: Type can't be empty
     resolverRequired: Resolver (image) can't be empty
