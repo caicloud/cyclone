@@ -1,4 +1,4 @@
-import { Spin, Table } from 'antd';
+import { Spin, Table, Tabs } from 'antd';
 import { inject, observer } from 'mobx-react';
 import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
@@ -6,6 +6,7 @@ import { FormatTime } from '@/lib/util';
 import MenuAction from '../MenuAction';
 
 const { DetailHead, DetailHeadItem, DetailAction, DetailContent } = Detail;
+const TabPane = Tabs.TabPane;
 
 @inject('resource')
 @observer
@@ -25,6 +26,17 @@ class ResourceTypeDetail extends React.Component {
     } = this.props;
     this.props.resource.getResourceType(resourceTypeName);
   }
+
+  getBinding = data => {
+    const temp = [];
+    _.forEach(data, (v, k) => {
+      temp.push({
+        name: k,
+        binding: v,
+      });
+    });
+    return temp;
+  };
 
   render() {
     const {
@@ -61,6 +73,23 @@ class ResourceTypeDetail extends React.Component {
       },
     ];
 
+    const bindingColumns = [
+      {
+        title: intl.get('parameterName'),
+        dataIndex: 'name',
+        key: 'name',
+      },
+      {
+        title: intl.get('resource.binding'),
+        dataIndex: 'binding',
+        key: 'binding',
+      },
+    ];
+
+    const bindingData = this.getBinding(
+      _.get(detail, 'spec.bind.paramBindings')
+    );
+
     return (
       <Detail
         actions={
@@ -82,14 +111,30 @@ class ResourceTypeDetail extends React.Component {
             name={intl.get('resource.operations')}
             value={_.get(detail, 'spec.operations') || ' -- '}
           />
+          <DetailHeadItem
+            name={intl.get('resource.binding')}
+            value={_.get(detail, 'spec.bind.integrationType') || ' -- '}
+          />
         </DetailHead>
         <DetailContent>
-          <Table
-            columns={columns}
-            dataSource={_.get(detail, 'spec.parameters')}
-            pagination={false}
-            rowKey="name"
-          />
+          <Tabs defaultActiveKey="parameters" type="card">
+            <TabPane tab={intl.get('resource.parameters')} key="parameters">
+              <Table
+                columns={columns}
+                dataSource={_.get(detail, 'spec.parameters')}
+                pagination={false}
+                rowKey="name"
+              />
+            </TabPane>
+            <TabPane tab={intl.get('resource.binding')}>
+              <Table
+                columns={bindingColumns}
+                dataSource={bindingData}
+                pagination={false}
+                rowKey="name"
+              />
+            </TabPane>
+          </Tabs>
         </DetailContent>
       </Detail>
     );

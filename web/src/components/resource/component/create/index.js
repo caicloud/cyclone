@@ -24,8 +24,26 @@ class CreateOrUpdate extends React.Component {
 
   getInitialValues = () => {
     const { update } = this.state;
+    const { resource } = this.props;
     if (update) {
-      return toJS(this.props.resource.resourceTypeDetail);
+      const resourceTypeDetail = toJS(
+        _.get(resource, 'resourceTypeDetail'),
+        {}
+      );
+      if (resourceTypeDetail) {
+        const paramBindings = _.get(
+          resourceTypeDetail,
+          'spec.bind.paramBindings',
+          {}
+        );
+        const parameters = _.get(resourceTypeDetail, 'spec.parameters', []);
+        parameters.forEach(v => {
+          if (paramBindings[`${v.name}`]) {
+            v.binding = paramBindings[`${v.name}`];
+          }
+        });
+      }
+      return resourceTypeDetail;
     }
 
     return { spec: { parameters: [] } };
@@ -65,6 +83,19 @@ class CreateOrUpdate extends React.Component {
         'resource.cyclone.dev/template': 'true',
       },
     };
+
+    const bindType = _.get(values, 'spec.bind.integrationType');
+    const parameters = _.get(values, 'spec.parameters');
+
+    if (bindType && parameters) {
+      const paramBindings = {};
+      parameters.forEach(v => {
+        if (v.binding) {
+          paramBindings[`${v.name}`] = v.binding;
+        }
+      });
+      values.spec.bind = _.assign(values.spec.bind, paramBindings);
+    }
 
     const { update } = this.state;
     const { resource, history } = this.props;
