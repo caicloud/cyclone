@@ -69,21 +69,26 @@ class ResourceFrom extends React.Component {
   };
 
   getInitialValues = list => {
-    const { modifyData, resourcesArr, workflowName } = this.props;
+    const { modifyData, resourcesArr, workflowName, update } = this.props;
+
     const item = _.get(modifyData, 'type')
       ? _.find(list, o => _.get(o, 'spec.type') === _.get(modifyData, 'type'))
       : list[0];
-    const defaultName = `${workflowName}-rsc${getMaxNumber(resourcesArr) + 1}`;
     let data = {
-      name: defaultName,
+      name: '',
       path: '',
       type: _.get(item, 'spec.type'),
       ..._.pick(item, ['spec.parameters']),
     };
+
     if (!_.isEmpty(modifyData)) {
-      modifyData.name = modifyData.name || defaultName;
       data = _.merge(data, modifyData);
     }
+
+    if (!update && data.name === '') {
+      data.name = `${workflowName}-rsc${getMaxNumber(resourcesArr) + 1}`;
+    }
+
     return data;
   };
 
@@ -103,13 +108,11 @@ class ResourceFrom extends React.Component {
       ..._.pick(value, ['spec.parameters']),
     };
     const modifyResource = !_.isEmpty(modifyData);
-    const defaultNameID = getMaxNumber(resourcesArr) + 1;
     if (update) {
       resourceObj.spec.type = _.get(value, 'type');
       if (!modifyResource) {
         createResource(project, resourceObj, () => {
           SetReasourceValue(value, modifyResource);
-          resourcesArr.push(defaultNameID);
           setFieldValue('resourcesArr', resourcesArr);
         });
       } else if (!_.isEqual(value, modifyData)) {
@@ -122,6 +125,7 @@ class ResourceFrom extends React.Component {
         });
       }
     } else {
+      const defaultNameID = getMaxNumber(resourcesArr) + 1;
       SetReasourceValue(value, modifyResource);
       resourcesArr.push(defaultNameID);
       setFieldValue('resourcesArr', resourcesArr);
