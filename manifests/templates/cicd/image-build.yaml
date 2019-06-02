@@ -33,7 +33,7 @@
           value: >-
             while [ ! -S /var/run/docker.sock ]; do sleep 1; done;
             docker build -f {{ dockerfile-path }} -t {{ registry }}/{{ repository }}:{{ tag }} {{ build-context }}
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         resources:
         - type: Git
           path: /workspace

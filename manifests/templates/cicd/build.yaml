@@ -17,7 +17,7 @@
         - name: image
           description: Image to run this stage, for example, 'golang:1.10-alpine3.8'
         - name: cmd
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: output-artifact-path
           description: Path to the output artifacts, for example, '/workspace/target/app.war'
         resources:
@@ -57,7 +57,7 @@
         - name: cmd
           value: >-
             go build -o /go/bin/app <main-entrypoint-path>
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: output-artifact-path
           value: /go/bin/app
           description: Path to the output artifacts, for example, '/go/bin/app'
@@ -98,7 +98,7 @@
         - name: cmd
           value: >-
             mvn clean package -Dmaven.test.skip
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: output-artifact-path
           value: /workspace/target/<app>.jar
           description: Path to the output artifacts, for example, '/workspace/target/<app>.jar'
@@ -140,7 +140,7 @@
         - name: cmd
           value: >-
             gradle build -x test
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: output-artifact-path
           value: /workspace/build/<app>.jar
           description: Path to the output artifacts, for example, '/workspace/build/<app>.jar'
