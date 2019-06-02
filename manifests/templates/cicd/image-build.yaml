@@ -1,7 +1,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: image-build-template
+    name: image-build
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"

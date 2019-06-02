@@ -1,7 +1,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: build-template
+    name: build
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -38,7 +38,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: golang-build-template
+    name: golang-build
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -79,7 +79,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: maven-build-template
+    name: maven-build
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -121,7 +121,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: gradle-build-template
+    name: gradle-build
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
