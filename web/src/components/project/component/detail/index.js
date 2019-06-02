@@ -28,7 +28,10 @@ class ProjectDetail extends React.Component {
       },
     } = this.props;
     this.props.project.getProject(projectName);
-    this.props.workflow.listWorklow(projectName);
+    this.props.workflow.listWorklow(projectName, {
+      sort: true,
+      ascending: false,
+    });
   }
   render() {
     const {

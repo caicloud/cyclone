@@ -29,10 +29,13 @@ class List extends React.Component {
       history: { location },
     } = this.props;
     const query = qs.parse(location.search);
-    this.props.project.listProjects({}, list => {
+    this.props.project.listProjects({ sort: true, ascending: false }, list => {
       const firstProject =
         query.project || _.get(list, 'items.[0].metadata.name');
-      this.props.workflow.listWorklow(firstProject);
+      this.props.workflow.listWorklow(firstProject, {
+        sort: true,
+        ascending: false,
+      });
       this.props.history.replace(`/workflow?project=${firstProject}`);
     });
   }
@@ -41,7 +44,7 @@ class List extends React.Component {
     const {
       workflow: { listWorklow },
     } = this.props;
-    listWorklow(key);
+    listWorklow(key, { sort: true, ascending: false });
     this.props.history.replace(`/workflow?project=${key}`);
   };
 
