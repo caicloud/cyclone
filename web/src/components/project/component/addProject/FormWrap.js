@@ -53,9 +53,7 @@ class AddProject extends React.Component {
     if (!values.metadata.alias) {
       errors.metadata = { alias: intl.get('validate.required') };
     }
-    if (!values.spec.quota['limits.cpu']) {
-      errors.quota = intl.get('validate.quota.selectConfig');
-    }
+
     return errors;
   };
 

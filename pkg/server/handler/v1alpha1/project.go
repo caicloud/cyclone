@@ -58,7 +58,21 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 		sort.Sort(sorter.NewProjectSorter(results, query.Ascending))
 	}
 
-	return types.NewListResponse(int(size), results[query.Start:end]), nil
+	items = results[query.Start:end]
+	if query.Detail {
+		for i := range items {
+			workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+				LabelSelector: meta.ProjectSelector(items[i].Name),
+			})
+			if err != nil {
+				log.Warningf("Get workflows from k8s with tenant %s, project %s error: %v", tenant, items[i].Name, err)
+				continue
+			}
+			items[i].Status = &v1alpha1.ProjectStatus{WorkflowCount: len(workflows.Items)}
+		}
+	}
+
+	return types.NewListResponse(int(size), items), nil
 }
 
 func filterProjects(projects []v1alpha1.Project, filter string) ([]v1alpha1.Project, error) {

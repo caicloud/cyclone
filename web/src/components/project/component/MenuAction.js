@@ -23,7 +23,11 @@ class MenuAction extends React.Component {
         project.deleteProject(name, () => {
           history.replace(`/project`);
           if (!detail) {
-            project.listProjects();
+            project.listProjects({
+              sort: true,
+              ascending: false,
+              detail: true,
+            });
           }
         });
       },

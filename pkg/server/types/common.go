@@ -11,6 +11,8 @@ type QueryParams struct {
 	Sort bool `source:"query,sort"`
 	// Ascending will sort the results by ascending order, otherwise by descending order
 	Ascending bool `source:"query,ascending"`
+	// Detail determines whether to return details of list items.
+	Detail bool `source:"query,detail"`
 }
 
 // ListMeta describes the structure of list metadata
