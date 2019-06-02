@@ -24,7 +24,7 @@ class List extends React.Component {
     const columns = [
       {
         title: intl.get('name'),
-        dataIndex: 'metadata.annotations["cyclone.dev/alias"]',
+        dataIndex: 'metadata.name',
         key: 'name',
       },
       {

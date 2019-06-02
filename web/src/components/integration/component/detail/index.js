@@ -28,6 +28,7 @@ class IntegrationDetail extends React.Component {
 
   detailContent = detail => {
     const type = _.get(detail, 'spec.type');
+    const authType = _.get(detail, 'spec.scm.authType');
     switch (type) {
       case 'SCM':
         return (
@@ -43,12 +44,12 @@ class IntegrationDetail extends React.Component {
             <DetailHeadItem
               name={intl.get('integration.form.scm.authType')}
               value={
-                _.get(detail, 'spec.scm.authType') === 'Password'
+                authType === 'Password'
                   ? intl.get('integration.form.scm.usernamepwd')
                   : 'Token'
               }
             />
-            {_.get(detail, 'spec.scm.type') && (
+            {_.get(detail, 'spec.scm.type') && authType === 'Password' && (
               <DetailHeadItem
                 name={intl.get('integration.form.username')}
                 value={_.get(detail, 'spec.scm.user')}
@@ -170,7 +171,13 @@ class IntegrationDetail extends React.Component {
           />
           <DetailHeadItem
             name={intl.get('integration.desc')}
-            value={_.get(detail, 'metadata.description') || ' -- '}
+            value={
+              _.get(detail, [
+                'metadata',
+                'annotations',
+                'cyclone.dev/description',
+              ]) || ' -- '
+            }
           />
           {this.detailContent(detail)}
         </DetailHead>

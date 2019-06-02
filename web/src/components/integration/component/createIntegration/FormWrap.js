@@ -41,9 +41,9 @@ export default class IntegrationForm extends React.Component {
   generateData = data => {
     const metadata = {
       creationTime: Date.now().toString(),
+      name: _.get(data, 'metadata.alias', ''),
       annotations: {
         'cyclone.dev/description': _.get(data, 'metadata.description', ''),
-        'cyclone.dev/alias': _.get(data, 'metadata.alias', ''),
       },
     };
     const type = _.get(data, 'spec.type');
@@ -148,11 +148,7 @@ export default class IntegrationForm extends React.Component {
   };
 
   mapRequestFormToInitForm = data => {
-    const alias = _.get(
-      data,
-      ['metadata', 'annotations', 'cyclone.dev/alias'],
-      ''
-    );
+    const alias = _.get(data, 'metadata.name', '');
     const description = _.get(
       data,
       ['metadata', 'annotations', 'cyclone.dev/description'],
