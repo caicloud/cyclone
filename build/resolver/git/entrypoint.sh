@@ -8,6 +8,7 @@ USAGE=$(cat <<-END
     Usage:
         $ docker run -it --rm \\
             -e SCM_URL=https://github.com/caicloud/cyclone.git \\
+            -e SCM_REPO=caicloud/cyclone \\
             -e SCM_REVISION=master \\
             -e SCM_AUTH=xxxx \\
             -e PULL_POLICY=IfNotPresent \\
@@ -21,6 +22,8 @@ USAGE=$(cat <<-END
      Arguments:
      - SCM_URL [Required] URL of the git repository, for the moment, only HTTP/
        HTTPS are supported.
+     - SCM_REPO [Optional] Repo of the source code, if URL doesn't include repo,
+       repo can be given here.
      - SCM_REVISION [Required] Revision of the source code. It has two different
        format. a) Single revision, such as branch 'master', tag 'v1.0'; b). Composite
        such as pull requests, 'develop:master' indicates merge 'develop' branch to
@@ -48,6 +51,11 @@ if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
 if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
 if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
+
+# If SCM_REPO is provided, embed it to SCM_URL
+if [ ! -z ${SCM_REPO} ]; then
+    SCM_URL=${SCM_URL%/}/${SCM_REPO}.git
+fi
 
 # Lock file for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
