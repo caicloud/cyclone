@@ -217,6 +217,7 @@ resource:
   resolver: 资源解析器
   operations: 支持操作
   binding: 集成服务绑定
+  parameters: 资源参数
   messages:
     typeRequired: 资源类型必填
     resolverRequired: 资源解析器（镜像）必填
