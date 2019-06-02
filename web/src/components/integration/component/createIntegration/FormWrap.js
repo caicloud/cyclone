@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 import { toJS } from 'mobx';
 import { Row, Col, Spin } from 'antd';
 import FormContent from './FormContent';
-import { IntegrationTypeMap } from '@/consts/const.js';
+import { IntegrationTypeMap } from '@/lib/const.js';
 import { validateForm } from './validate';
 
 @inject('integration')

@@ -128,7 +128,8 @@ export default class StageTemplateForm extends React.Component {
     data.spec.pod.spec.containers.forEach(v => {
       v.command = _.concat(['/bin/sh', '-e', '-c'], v.command);
     });
-    data.spec.pod.inputs.arguments.forEach(v => {
+    const inputsArguments = _.get(data, 'spec.pod.inputs.arguments', []);
+    inputsArguments.forEach(v => {
       if (v.name === 'cmd') {
         v.value = v.value.replace(/\n/g, '');
       }
