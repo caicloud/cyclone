@@ -257,8 +257,8 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 				err = DeleteSCMWebhook(integration.Spec.SCM, tenant, secretName, repo)
 				if err != nil {
-					log.Error(err)
-					return err
+					// Only try best to cleanup webhooks, if there are errors, will not block the process.
+					log.Warning(err)
 				}
 
 				delete(repos, repo)
