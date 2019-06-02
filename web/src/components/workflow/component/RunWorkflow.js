@@ -1,7 +1,9 @@
+import moment from 'moment';
 import { Formik, Field } from 'formik';
 import MakeField from '@/components/public/makeField';
+import { defaultFormItemLayout } from '@/lib/const';
 import { inject, observer } from 'mobx-react';
-import { Modal, Input } from 'antd';
+import { Modal, Radio, Input, Form } from 'antd';
 import PropTypes from 'prop-types';
 
 const InputField = MakeField(Input);
@@ -24,6 +26,7 @@ class RunWorkflow extends React.Component {
     const { visible } = props;
     this.state = {
       visible,
+      versionMethod: 'auto',
     };
   }
 
@@ -40,23 +43,42 @@ class RunWorkflow extends React.Component {
       projectName,
       workflowName,
     } = this.props;
-    runWorkflow(projectName, workflowName, value);
+    const { versionMethod } = this.state;
+    if (versionMethod === 'auto') {
+      const version = moment().format('YYYYMMDDhhmmss');
+      runWorkflow(projectName, workflowName, {
+        metadata: {
+          name: version,
+        },
+      });
+    } else {
+      runWorkflow(projectName, workflowName, {
+        metadata: {
+          name: value.version,
+        },
+      });
+    }
+
     this.setState({ visible: false });
     handleModalClose(false);
   };
 
+  onVersionMethodChange = e => {
+    this.setState({ versionMethod: e.target.value });
+  };
+
   render() {
     const { visible } = this.props;
+    const { versionMethod } = this.state;
+
     return (
       <Formik
         initialValues={{}}
         validate={values => {
           let errors = {};
-          if (!_.get(values, 'metadata.name')) {
+          if (versionMethod === 'manual' && !_.get(values, 'version')) {
             errors = {
-              metadata: {
-                name: 'name is required',
-              },
+              version: 'version is required',
             };
           }
 
@@ -70,13 +92,32 @@ class RunWorkflow extends React.Component {
             onCancel={this.closeModal}
             onOk={props.handleSubmit}
           >
-            <Field
-              label={intl.get('name')}
-              name="metadata.name"
-              required
-              hasFeedback
-              component={InputField}
-            />
+            <Form.Item
+              label={intl.get('workflowrun.version.method')}
+              {...defaultFormItemLayout}
+            >
+              <Radio.Group
+                defaultValue={versionMethod}
+                value={versionMethod}
+                onChange={this.onVersionMethodChange}
+              >
+                <Radio.Button value="auto">
+                  {intl.get('workflowrun.version.auto')}
+                </Radio.Button>
+                <Radio.Button value="manual">
+                  {intl.get('workflowrun.version.manual')}
+                </Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+            {versionMethod === 'manual' && (
+              <Field
+                label={intl.get('version')}
+                name="version"
+                required
+                hasFeedback
+                component={InputField}
+              />
+            )}
           </Modal>
         )}
       />

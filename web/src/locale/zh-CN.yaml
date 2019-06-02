@@ -1,5 +1,6 @@
 name: 名称
 value: 值
+version: 版本
 defaultValue: 默认值
 parameterName: 参数名
 required: 必填
@@ -237,3 +238,8 @@ dashboard:
   executionSucceeded: 成功
   executionFailed: 失败
   executionRunning: 执行中
+workflowrun:
+  version:
+    method: 版本生成
+    auto: 自动生成
+    manual: 手动输入
