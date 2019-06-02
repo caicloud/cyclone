@@ -14,7 +14,7 @@ class List extends React.Component {
   };
   state = { visible: false };
   componentDidMount() {
-    this.props.integration.getIntegrationList();
+    this.props.integration.getIntegrationList({ sort: true, ascending: false });
   }
   addDataSource = () => {
     this.props.history.push('/integration/add');

@@ -26,7 +26,10 @@ class WorkflowRuns extends React.Component {
       projectName,
       workflowName,
     } = this.props;
-    listWorkflowRuns(projectName, workflowName);
+    listWorkflowRuns(projectName, workflowName, {
+      sort: true,
+      ascending: false,
+    });
   }
 
   removeRunRecord = name => {
@@ -52,7 +55,11 @@ class WorkflowRuns extends React.Component {
       projectName,
       workflowName,
     } = this.props;
-    listWorkflowRuns(projectName, workflowName, { filter: `name=${val}` });
+    listWorkflowRuns(projectName, workflowName, {
+      filter: `name=${val}`,
+      sort: true,
+      ascending: false,
+    });
   };
 
   render() {
