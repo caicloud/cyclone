@@ -17,7 +17,7 @@
         - name: image
           description: Image to run this stage, for example, 'golang:1.10-alpine3.8'
         - name: cmd
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: test-result-path
           description: Path to the rest result
         resources:
@@ -66,7 +66,7 @@
             cd $WORKDIR;
             ls -la;
             go test -v -cover $(go list ./...)
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: test-result-path
           value: /go/src/github.com/caicloud/cyclone/report.xml
           description: Path to the rest result
@@ -120,7 +120,7 @@
             go get -u github.com/jstemmer/go-junit-report;
             go test -v -cover $(go list ./...) 2>&1 | tee output.tmp;
             cat output.tmp| go-junit-report > report.xml
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: test-result-path
           value: /go/src/github.com/caicloud/cyclone/report.xml
           description: Path to the rest result
@@ -161,7 +161,7 @@
         - name: cmd
           value: >-
             mvn test
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: test-result-path
           value: /workspace/target/surefire-reports
           description: Path to the rest result
@@ -203,7 +203,7 @@
         - name: cmd
           value: >-
             gradle clean test
-          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{ cmd }}'
+          description: Commmands to run, multiple commands supported here, commands will be run as '/bin/sh -c {{{ cmd }}}'
         - name: test-result-path
           value: /workspace/build/test-results
           description: Path to the rest result
