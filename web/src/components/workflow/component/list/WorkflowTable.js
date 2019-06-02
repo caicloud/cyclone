@@ -34,7 +34,7 @@ class WorkflowTable extends React.Component {
   };
 
   render() {
-    const { project, data, matchPath, history } = this.props;
+    const { project, data, history } = this.props;
     const columns = [
       {
         title: intl.get('name'),
@@ -84,7 +84,7 @@ class WorkflowTable extends React.Component {
             return {
               onClick: () => {
                 this.props.history.push(
-                  `${matchPath}/${row.metadata.name}?project=${project}`
+                  `/workflow/${row.metadata.name}?project=${project}`
                 );
               },
             };
