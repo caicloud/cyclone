@@ -17,6 +17,8 @@ type Project struct {
 	meta_v1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec is the Workflow specification
 	Spec ProjectSpec `json:"spec"`
+	// Status is status of the project, it holds statistics info of a project
+	Status *ProjectStatus `json:"status,omitempty"`
 }
 
 // ProjectSpec defines project specification.
@@ -27,6 +29,11 @@ type ProjectSpec struct {
 	// Quota is the default quota of the workflow under it,
 	// eg map[core_v1.ResourceName]string{"requests.cpu": "2", "requests.memory": "4Gi"}
 	Quota map[core_v1.ResourceName]string `json:"quota"`
+}
+
+// ProjectStatus represents status of project
+type ProjectStatus struct {
+	WorkflowCount int `json:"workflowCount"`
 }
 
 // IntegrationItem describes default value of a type of integrations

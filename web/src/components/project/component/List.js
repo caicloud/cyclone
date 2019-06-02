@@ -16,7 +16,7 @@ class List extends React.Component {
   };
   componentDidMount() {
     const { project } = this.props;
-    project.listProjects();
+    project.listProjects({ detail: true, sort: true, ascending: false });
   }
   saveFormRef = formRef => {
     this.formRef = formRef;
@@ -31,7 +31,12 @@ class List extends React.Component {
     const {
       project: { listProjects },
     } = this.props;
-    listProjects({ filter: `name=${val}` });
+    listProjects({
+      filter: `name=${val}`,
+      detail: true,
+      sort: true,
+      ascending: false,
+    });
   };
 
   handleCreate = () => {
@@ -60,7 +65,7 @@ class List extends React.Component {
       },
       {
         title: intl.get('project.workflowCount'),
-        dataIndex: 'workflowCount',
+        dataIndex: 'status.workflowCount',
         key: 'workflowCount',
       },
       {
