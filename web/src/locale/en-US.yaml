@@ -224,6 +224,7 @@ resource:
     parameterNameRequired: Parameter name can't be empty
 status:
   name: Status
+  all: All Status
   failed: Failed
   running: Running
   pending: Pending
