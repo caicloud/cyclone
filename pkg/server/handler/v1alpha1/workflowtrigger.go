@@ -22,7 +22,7 @@ import (
 
 // CreateWorkflowTrigger ...
 func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowOwnerRefModifier}
+	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowLabelModifier, InjectWorkflowOwnerRefModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, workflow, wft)
 		if err != nil {
@@ -48,7 +48,7 @@ func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string
 // ListWorkflowTriggers ...
 func ListWorkflowTriggers(ctx context.Context, tenant, project, workflow string, query *types.QueryParams) (*types.ListResponse, error) {
 	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{
-		LabelSelector: meta.ProjectSelector(project),
+		LabelSelector: meta.ProjectSelector(project) + "," + meta.WorkflowSelector(workflow),
 	})
 	if err != nil {
 		log.Errorf("Get workflowtrigger from k8s with tenant %s, project %s error: %v", tenant, project, err)
@@ -257,8 +257,8 @@ func unregisterSCMWebhook(tenant, wftName, secretName, repo string) error {
 
 				err = DeleteSCMWebhook(integration.Spec.SCM, tenant, secretName, repo)
 				if err != nil {
-					log.Error(err)
-					return err
+					// Only try best to cleanup webhooks, if there are errors, will not block the process.
+					log.Warning(err)
 				}
 
 				delete(repos, repo)

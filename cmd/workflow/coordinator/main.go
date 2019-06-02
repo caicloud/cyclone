@@ -4,12 +4,19 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caicloud/cyclone/pkg/common"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
+)
+
+const (
+	//  exitDelayTime is the delay time of coordinator exit, coordinator need the time to do
+	// something, like collecting logs, to make exit gracefully
+	exitDelayTime = 3 * time.Second
 )
 
 var kubeConfigPath = flag.String("kubeconfig", "", "Path to kubeconfig. Only required if out-of-cluster.")
@@ -23,6 +30,8 @@ func main() {
 	var err error
 	var message string
 	defer func() {
+		// graceful showdown, need delay time to collect logs of other containers
+		time.Sleep(exitDelayTime)
 		if err != nil {
 			log.Error(message)
 			os.Exit(1)

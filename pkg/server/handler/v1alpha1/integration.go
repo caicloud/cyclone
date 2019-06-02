@@ -317,7 +317,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string, isPublic bool) 
 			for repo := range repos {
 				if err = DeleteSCMWebhook(integration.Spec.SCM, tenant, secretName, repo); err != nil {
 					// Only try best to cleanup webhooks, if there are errors, will not block the process.
-					log.Error(err)
+					log.Warning(err)
 				}
 			}
 		}
