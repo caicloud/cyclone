@@ -223,6 +223,7 @@ resource:
     parameterNameRequired: 参数名必填
 status:
   name: 状态
+  all: 全部状态
   failed: 失败
   running: 运行中
   pending: 准备中
