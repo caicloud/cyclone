@@ -17,6 +17,11 @@ spec:
     description: >
       URL of the scm, for example, https://github.com/caicloud/cyclone.git.
       Only http and https are supported.
+  - name: SCM_REPO
+    required: false
+    description: >
+      Repo of the code, for example, 'caicloud/cyclone'. Set it if your SCM_URL
+      doesn't include repo part, such as https://github.com.
   - name: SCM_REVISION
     required: true
     description: >
