@@ -45,7 +45,7 @@ class List extends React.Component {
         title: intl.get('resource.binding'),
         dataIndex: 'spec.bind',
         key: 'binding',
-        render: value => value.integrationType || '--',
+        render: value => (value || {}).integrationType || '--',
       },
       {
         title: intl.get('creationTime'),
