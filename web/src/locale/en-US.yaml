@@ -1,5 +1,6 @@
 name: Name
 value: Value
+version: Version
 parameterName: Parameter Name
 defaultValue: Default Value
 required: Required
@@ -237,3 +238,8 @@ dashboard:
   executionSucceeded: Succeeded
   executionFailed: Failed
   executionRunning: Running
+workflowrun:
+  version:
+    method: Version Method
+    auto: Auto Generate
+    manual: Manual Input
