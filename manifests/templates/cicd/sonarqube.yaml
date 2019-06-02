@@ -1,7 +1,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: sonarqube-template
+    name: sonarqube
     namespace: cyclone-system
     labels:
       stage.cyclone.dev/template: "true"
@@ -9,7 +9,7 @@
       cyclone.dev/scene: cicd
       stage.cyclone.dev/template-kind: codescan
     annotations:
-      cyclone.dev/alias: sonarqube-template
+      cyclone.dev/alias: sonarqube
       cyclone.dev/description: >
         Static code scan with SonarQube
   spec:

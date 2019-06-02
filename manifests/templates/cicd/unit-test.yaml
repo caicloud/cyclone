@@ -1,7 +1,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: unit-test-template
+    name: unit-test
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -38,7 +38,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: golang-unit-test-template
+    name: golang-unit-test
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -88,7 +88,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: golang-unit-test-report-template
+    name: golang-unit-test-report
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -142,7 +142,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: maven-unit-test-template
+    name: maven-unit-test
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
@@ -184,7 +184,7 @@
 - apiVersion: cyclone.dev/v1alpha1
   kind: Stage
   metadata:
-    name: gradle-unit-test-template
+    name: gradle-unit-test
     labels:
       stage.cyclone.dev/template: "true"
       cyclone.dev/builtin: "true"
