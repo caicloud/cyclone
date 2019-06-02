@@ -1,7 +1,6 @@
 import { Field } from 'formik';
 import PropTypes from 'prop-types';
 import { Form, Input, Button, Row, Col } from 'antd';
-import Quota from '@/components/public/quota';
 import MakeField from '@/components/public/makeField';
 
 const { TextArea } = Input;
@@ -29,17 +28,6 @@ const FormContent = ({
         label={intl.get('description')}
         name="metadata.description"
         component={TextareaField}
-      />
-      <Field
-        label={intl.get('allocation.quotaConfig')}
-        name="spec.quota"
-        component={Quota}
-        update={update}
-        parentSubmitCount={submitCount} // use submitCount to judge whether the parent form is submited
-        onChange={value => {
-          setFieldValue('spec.quota', value);
-        }}
-        required
       />
       <Row>
         <Col span={4} />
