@@ -36,7 +36,7 @@ class CoreLayout extends Component {
   render() {
     const { location } = this.props;
     const pathSnippets = location.pathname.split('/').filter(i => i);
-    const selectNav = pathSnippets[0] ? pathSnippets[0] : '/overview';
+    const selectNav = pathSnippets[0] ? pathSnippets[0] : 'overview';
     const lang = localStorage.getItem('lang') || 'en-US';
 
     const languages = (
@@ -131,22 +131,16 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.overview')}</span>
                 </NavLink>
               </Menu.Item>
-              <Menu.Item key="project">
-                <NavLink to="/project" activeClassName="active">
+              <Menu.Item key="projects">
+                <NavLink to="/projects" activeClassName="active">
                   <Icon type="project" />
-                  <span>{intl.get('sideNav.project')}</span>
+                  <span>{intl.get('sideNav.projects')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="stageTemplate">
                 <NavLink to="/stageTemplate" activeClassName="active">
                   <Icon type="profile" />
                   <span>{intl.get('sideNav.stageTemplate')}</span>
-                </NavLink>
-              </Menu.Item>
-              <Menu.Item key="workflow">
-                <NavLink to="/workflow" activeClassName="active">
-                  <Icon type="share-alt" />
-                  <span>{intl.get('sideNav.workflow')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="integration">

@@ -38,7 +38,7 @@ const FormContent = ({
             </Button>
             <Button
               onClick={() => {
-                history.push(`/project`);
+                history.push(`/projects`);
               }}
             >
               {intl.get('operation.cancel')}

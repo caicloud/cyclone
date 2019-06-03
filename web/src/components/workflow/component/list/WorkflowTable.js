@@ -22,7 +22,7 @@ class WorkflowTable extends React.Component {
 
   addWorkFlow = () => {
     const { project, history } = this.props;
-    history.push(`/workflow/add?project=${project}`);
+    history.push(`/projects/${project}/workflows/add`);
   };
 
   search = val => {
@@ -84,7 +84,7 @@ class WorkflowTable extends React.Component {
             return {
               onClick: () => {
                 this.props.history.push(
-                  `/workflow/${row.metadata.name}?project=${project}`
+                  `/projects/${project}/workflows/${row.metadata.name}`
                 );
               },
             };

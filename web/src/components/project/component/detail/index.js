@@ -68,7 +68,7 @@ class ProjectDetail extends React.Component {
         </DetailHead>
         <DetailContent>
           <Tabs defaultActiveKey="workflow" type="card">
-            <TabPane tab={intl.get('sideNav.workflow')} key="workflow">
+            <TabPane tab={intl.get('sideNav.workflows')} key="workflow">
               <WorkflowTable
                 project={projectName}
                 data={_workflowList}

@@ -39,7 +39,7 @@ class MenuAction extends React.Component {
       }),
       onOk() {
         workflow.deleteWorkflow(projectName, workflowName, () => {
-          history.replace(`/workfow`);
+          history.replace(`/projects/${projectName}`);
         });
       },
     });
@@ -47,7 +47,7 @@ class MenuAction extends React.Component {
 
   updateWorkflow = () => {
     const { history, projectName, workflowName } = this.props;
-    history.push(`/workflow/${workflowName}/update?project=${projectName}`);
+    history.push(`/projects/${projectName}/workflows/${workflowName}/update`);
   };
 
   runWorkflow = () => {
