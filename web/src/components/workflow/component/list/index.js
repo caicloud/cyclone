@@ -1,2 +1,2 @@
-import ListLayout from './ListLayout';
-export default ListLayout;
+import WorkflowTable from './WorkflowTable';
+export default WorkflowTable;

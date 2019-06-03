@@ -39,11 +39,11 @@ class AddProject extends React.Component {
     };
     if (update) {
       project.updateProject(data, params.projectName, () => {
-        history.replace(`/project`);
+        history.replace(`/projects`);
       });
     } else {
       project.createProject(data, () => {
-        history.replace(`/project`);
+        history.replace(`/projects`);
       });
     }
   };

@@ -9,7 +9,7 @@ const tramformArg = data => {
   return value;
 };
 
-export const formatStage = (data, fromCreate = true, requests, query) => {
+export const formatStage = (data, fromCreate = true, requests, projectName) => {
   const inputResources = _.get(data, `spec.pod.inputs.resources`, []);
   const outputResources = _.get(data, `spec.pod.outputs.resources`, []);
   let stage = {
@@ -34,7 +34,7 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
       };
       requests.push({
         type: 'createResource',
-        project: query.project,
+        project: projectName,
         data: resourceData,
       });
     }
@@ -55,7 +55,7 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
       };
       requests.push({
         type: 'createResource',
-        project: query.project,
+        project: projectName,
         data: resourceData,
       });
     }
@@ -64,7 +64,7 @@ export const formatStage = (data, fromCreate = true, requests, query) => {
   return stage;
 };
 
-export const formatSubmitData = (value, query, state) => {
+export const formatSubmitData = (value, projectName, state) => {
   const { position, depend } = state;
   const requests = [];
   const stages = _.get(value, 'stages', []);
@@ -83,10 +83,15 @@ export const formatSubmitData = (value, query, state) => {
   };
   _.forEach(stages, v => {
     const currentStage = _.get(value, v);
-    const stageFormatData = formatStage(currentStage, true, requests, query);
+    const stageFormatData = formatStage(
+      currentStage,
+      true,
+      requests,
+      projectName
+    );
     requests.push({
       type: 'createStage',
-      project: query.project,
+      project: projectName,
       data: stageFormatData,
     });
 
@@ -99,7 +104,7 @@ export const formatSubmitData = (value, query, state) => {
   });
   requests.push({
     type: 'createWorkflow',
-    project: query.project,
+    project: projectName,
     data: workflowInfo,
   });
   return requests;

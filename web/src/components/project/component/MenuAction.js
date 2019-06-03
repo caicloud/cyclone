@@ -21,7 +21,7 @@ class MenuAction extends React.Component {
       title: `Do you Want to delete project ${name} ?`,
       onOk() {
         project.deleteProject(name, () => {
-          history.replace(`/project`);
+          history.replace(`/projects`);
           if (!detail) {
             project.listProjects({
               sort: true,
@@ -36,7 +36,7 @@ class MenuAction extends React.Component {
 
   updateProject = name => {
     const { history } = this.props;
-    history.push(`/project/${name}/update`);
+    history.push(`/projects/${name}/update`);
   };
 
   render() {

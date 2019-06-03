@@ -27,9 +27,10 @@ class Workflow {
   }
 
   @action.bound
-  deleteWorkflow(project, workflow) {
+  deleteWorkflow(project, workflow, cb) {
     return fetchApi.removeWorkflow(project, workflow).then(() => {
       this.listWorklow(project);
+      cb && cb();
     });
   }
   @action.bound

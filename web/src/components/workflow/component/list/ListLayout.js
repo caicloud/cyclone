@@ -10,6 +10,7 @@ const { Content, Sider } = Layout;
 
 @inject('workflow', 'project')
 @observer
+// TODO(qme): remove useless file
 class List extends React.Component {
   static propTypes = {
     workflow: PropTypes.shape({

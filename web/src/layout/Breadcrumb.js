@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 const mainModules = [
   'overview',
-  'project',
+  'projects',
   'stageTemplate',
   'resource',
   'workflow',
@@ -15,10 +15,10 @@ const operations = ['update', 'add'];
 
 /**
  * define the route rules
- * list page => /project
- * project detail  => /project/:projectId
- * update project => /project/:projectId/update
- * add project => /project/add
+ * list page => /projects
+ * project detail  => /projects/:projectId
+ * update project => /projects/:projectId/update
+ * add project => /projects/add
  */
 const BreadcrumbComponent = ({ location }) => {
   const pathSnippets = location.pathname.split('/').filter(i => i);
