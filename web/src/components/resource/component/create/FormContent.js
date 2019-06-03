@@ -3,11 +3,20 @@ import PropTypes from 'prop-types';
 import { Form, Input, Button, Row, Col, Checkbox, Switch } from 'antd';
 import MakeField from '@/components/public/makeField';
 import { defaultFormItemLayout } from '@/lib/const';
+import SelectSourceType from './SelectSourceType';
 
 const InputField = MakeField(Input);
+const SelectField = MakeField(SelectSourceType);
 const FormItem = Form.Item;
 
-const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
+const FormContent = ({
+  history,
+  handleSubmit,
+  update,
+  setFieldValue,
+  values,
+}) => {
+  const bindType = _.get(values, 'spec.bind.integrationType');
   return (
     <Form layout={'horizontal'} onSubmit={handleSubmit}>
       <Field
@@ -44,20 +53,30 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
           required
         />
       </FormItem>
+      <Field
+        label={intl.get('resource.binding')}
+        name="spec.bind.integrationType"
+        handleSelectChange={val => {
+          setFieldValue('spec.bind.integrationType', val);
+        }}
+        component={SelectField}
+      />
       <FormItem
         label={intl.get('template.form.inputs.arguments')}
         {...defaultFormItemLayout}
       >
         <FieldArray
           name="spec.parameters"
-          render={obj => {
-            const values = obj.form.values;
+          render={arrayHelpers => {
             return (
               <div>
                 {_.get(values, 'spec.parameters', []).length > 0 && (
                   <Row gutter={16}>
-                    <Col span={6}>{intl.get('name')}</Col>
-                    <Col span={10}>{intl.get('description')}</Col>
+                    <Col span={4}>{intl.get('name')}</Col>
+                    {bindType && (
+                      <Col span={8}>{intl.get('resource.binding')}</Col>
+                    )}
+                    <Col span={8}>{intl.get('description')}</Col>
                     <Col span={4}>{intl.get('required')}</Col>
                   </Row>
                 )}
@@ -65,7 +84,7 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
                   return (
                     <FormItem key={index}>
                       <Row gutter={16}>
-                        <Col span={6}>
+                        <Col span={4}>
                           <Field
                             key={index}
                             name={`spec.parameters.${index}.name`}
@@ -73,7 +92,17 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
                             hasFeedback
                           />
                         </Col>
-                        <Col span={10}>
+                        {bindType && (
+                          <Col span={8}>
+                            <Field
+                              key={index}
+                              name={`spec.parameters.${index}.binding`}
+                              component={InputField}
+                              hasFeedback
+                            />
+                          </Col>
+                        )}
+                        <Col span={8}>
                           <Field
                             key={index}
                             name={`spec.parameters.${index}.description`}
@@ -81,7 +110,7 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
                             hasFeedback
                           />
                         </Col>
-                        <Col span={4}>
+                        <Col span={2}>
                           <Switch
                             onChange={val => {
                               setFieldValue(
@@ -92,11 +121,11 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
                             defaultChecked={!!a.required}
                           />
                         </Col>
-                        <Col span={4}>
+                        <Col span={2}>
                           <Button
                             type="circle"
                             icon="delete"
-                            onClick={() => obj.remove(index)}
+                            onClick={() => arrayHelpers.remove(index)}
                           />
                         </Col>
                       </Row>
@@ -107,7 +136,7 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
                   <Button
                     icon="plus"
                     onClick={() => {
-                      obj.push({ name: '', description: '' });
+                      arrayHelpers.push({ name: '', description: '' });
                     }}
                   >
                     {intl.get('template.form.inputs.addArgs')}
@@ -141,6 +170,7 @@ const FormContent = ({ history, handleSubmit, update, setFieldValue }) => {
 
 FormContent.propTypes = {
   history: PropTypes.object,
+  values: PropTypes.object,
   handleSubmit: PropTypes.func,
   setFieldValue: PropTypes.func,
   update: PropTypes.bool,
