@@ -1,6 +1,6 @@
 import { Button, Row, Col, Form } from 'antd';
 import { FieldArray, FastField } from 'formik';
-import { defaultFormItemLayout } from '@/lib/const';
+import { drawerFormItemLayout } from '@/lib/const';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
@@ -82,7 +82,7 @@ class ResourceArray extends React.Component {
     const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
     return (
-      <FormItem label={intl.get('sideNav.resource')} {...defaultFormItemLayout}>
+      <FormItem label={intl.get('sideNav.resource')} {...drawerFormItemLayout}>
         <FieldArray
           name={resourcesField}
           render={arrayHelpers => (
