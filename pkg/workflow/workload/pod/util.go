@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
@@ -70,4 +71,20 @@ func ResolveRefStringValue(ref string, client clientset.Interface) (string, erro
 	}
 
 	return strV, nil
+}
+
+// MatchContainerGroup matches a container name against a ContainerGroup, if the container belongs to the container group,
+// return true, otherwise false.  It only tests containers, init containers are not considered here. If input container
+// group is empty or invalid, return true.
+func MatchContainerGroup(group v1alpha1.ContainerGroup, container string) bool {
+	switch group {
+	case v1alpha1.ContainerGroupAll:
+		return true
+	case v1alpha1.ContainerGroupSidecar:
+		return strings.HasPrefix(container, common.CycloneSidecarPrefix)
+	case v1alpha1.ContainerGroupWorkload:
+		return !strings.HasPrefix(container, common.CycloneSidecarPrefix)
+	default:
+		return true
+	}
 }
