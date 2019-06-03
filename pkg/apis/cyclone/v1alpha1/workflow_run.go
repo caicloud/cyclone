@@ -49,10 +49,17 @@ type WorkflowRunSpec struct {
 type PresetVolume struct {
 	// Type of the volume
 	Type PresetVolumeType `json:"type"`
-	// Path is path in host, or PV.
+	// Path is path in host, PVC, or key path in Secret, ConfigMap.
 	Path string `json:"path"`
 	// MountPath is path in container that this preset volume will be mounted.
 	MountPath string `json:"mountPath"`
+	// SubPath is subpath to mount in container, for example, if MountPath is '/etc', SubPath is 'app.config', then
+	// final file would be '/etc/app.config' in container
+	SubPath string `json:"subPath"`
+	// ObjectName is name of the source object if preset volume type is Secret, ConfigMap, PVC
+	ObjectName *string `json:"objectName,omitempty"`
+	// Scope defines the which containers to apply the preset volumes
+	ContainerGroup ContainerGroup `json:"containerGroup"`
 }
 
 // PresetVolumeType is type of preset volumes, HostPath, PV supported.
@@ -61,8 +68,24 @@ type PresetVolumeType string
 const (
 	// PresetVolumeTypeHostPath ...
 	PresetVolumeTypeHostPath PresetVolumeType = "HostPath"
-	// PresetVolumeTypePV ...
-	PresetVolumeTypePV PresetVolumeType = "PV"
+	// PresetVolumeTypePVC ...
+	PresetVolumeTypePVC PresetVolumeType = "PVC"
+	// PresetVolumeTypeSecret ...
+	PresetVolumeTypeSecret PresetVolumeType = "Secret"
+	// PresetVolumeTypeConfigMap ...
+	PresetVolumeTypeConfigMap PresetVolumeType = "ConfigMap"
+)
+
+// ContainerGroup defines group of containers in a stage pod, for example, 'sidecar', 'workload', 'initContainer'
+type ContainerGroup string
+
+const (
+	// ContainerGroupAll represents all containers in a pod
+	ContainerGroupAll ContainerGroup = "All"
+	// ContainerGroupSidecar represents sidecar containers in a pod
+	ContainerGroupSidecar ContainerGroup = "Sidecar"
+	// ContainerGroupWorkload repressents user containers in a pod
+	ContainerGroupWorkload ContainerGroup = "Workload"
 )
 
 // ParameterConfig configures parameters of a resource or a stage.

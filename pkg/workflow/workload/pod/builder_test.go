@@ -76,7 +76,7 @@ var wfr = &v1alpha1.WorkflowRun{
 		},
 		PresetVolumes: []v1alpha1.PresetVolume{
 			{
-				Type:      v1alpha1.PresetVolumeTypePV,
+				Type:      v1alpha1.PresetVolumeTypePVC,
 				Path:      "etc",
 				MountPath: "/tmp",
 			},
