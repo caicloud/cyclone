@@ -46,9 +46,9 @@ operation:
   cancel: 取消
 sideNav:
   overview: 总览
-  project: 项目
+  projects: 项目
   stageTemplate: 模板
-  workflow: 流水线
+  workflows: 流水线
   integration: 集成中心
   resource: 资源类型
   swagger: API 文档

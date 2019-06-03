@@ -134,7 +134,7 @@ class CoreLayout extends Component {
               <Menu.Item key="projects">
                 <NavLink to="/projects" activeClassName="active">
                   <Icon type="project" />
-                  <span>{intl.get('sideNav.project')}</span>
+                  <span>{intl.get('sideNav.projects')}</span>
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="stageTemplate">
@@ -143,12 +143,6 @@ class CoreLayout extends Component {
                   <span>{intl.get('sideNav.stageTemplate')}</span>
                 </NavLink>
               </Menu.Item>
-              {/* <Menu.Item key="workflow">
-                <NavLink to="/workflow" activeClassName="active">
-                  <Icon type="share-alt" />
-                  <span>{intl.get('sideNav.workflow')}</span>
-                </NavLink>
-              </Menu.Item> */}
               <Menu.Item key="integration">
                 <NavLink to="/integration" activeClassName="active">
                   <Icon type="sliders" />

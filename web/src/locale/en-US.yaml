@@ -46,9 +46,9 @@ operation:
   cancel: Cancel
 sideNav:
   overview: Overview
-  project: Projects
+  projects: Projects
   stageTemplate: Templates
-  workflow: Workflows
+  workflows: Workflows
   integration: Integrations
   resource: Resource Types
   swagger: API Docs

@@ -8,7 +8,6 @@ const mainModules = [
   'projects',
   'stageTemplate',
   'resource',
-  'workflow',
   'integration',
 ];
 const operations = ['update', 'add'];
@@ -26,15 +25,13 @@ const BreadcrumbComponent = ({ location }) => {
     const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
     let text = path;
     if (_.includes(mainModules, path)) {
-      text = intl.get(`sideNav.${path}`);
+      text = <Link to={url}>{intl.get(`sideNav.${path}`)}</Link>;
     } else if (_.includes(operations, path)) {
       text = intl.get(`operation.${path}`);
+    } else if (_.includes(mainModules, pathSnippets[index - 1])) {
+      text = <Link to={url}>{path}</Link>;
     }
-    return (
-      <Breadcrumb.Item key={url}>
-        <Link to={url}>{text}</Link>
-      </Breadcrumb.Item>
-    );
+    return <Breadcrumb.Item key={url}>{text}</Breadcrumb.Item>;
   });
   return (
     <Breadcrumb style={{ marginBottom: '12px' }}>
