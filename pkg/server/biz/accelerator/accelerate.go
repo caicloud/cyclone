@@ -57,17 +57,17 @@ func (a *Accelerator) Accelerate() {
 	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAcceleration] == meta.LabelValueTrue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{
-				Type:      v1alpha1.PresetVolumeTypePV,
+				Type:      v1alpha1.PresetVolumeTypePVC,
 				Path:      fmt.Sprintf("%s/%s/m2", common.CachePrefixPath, a.project),
 				MountPath: "/root/.m2",
 			},
 			{
-				Type:      v1alpha1.PresetVolumeTypePV,
+				Type:      v1alpha1.PresetVolumeTypePVC,
 				Path:      fmt.Sprintf("%s/%s/gradle", common.CachePrefixPath, a.project),
 				MountPath: "/root/.gradle",
 			},
 			{
-				Type:      v1alpha1.PresetVolumeTypePV,
+				Type:      v1alpha1.PresetVolumeTypePVC,
 				Path:      fmt.Sprintf("%s/%s/npm", common.CachePrefixPath, a.project),
 				MountPath: "/root/.npm",
 			},

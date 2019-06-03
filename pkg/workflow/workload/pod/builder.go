@@ -228,7 +228,40 @@ func (m *Builder) CreateVolumes() error {
 					},
 				},
 			})
-		case v1alpha1.PresetVolumeTypePV:
+		case v1alpha1.PresetVolumeTypePVC:
+			// Use the default PVC for preset volume, and the volume already created before
+		case v1alpha1.PresetVolumeTypeSecret:
+			m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+				Name: common.PresetVolumeName(i),
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: *v.ObjectName,
+						Items: []corev1.KeyToPath{
+							{
+								Key:  v.Path,
+								Path: v.SubPath,
+							},
+						},
+					},
+				},
+			})
+		case v1alpha1.PresetVolumeTypeConfigMap:
+			m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+				Name: common.PresetVolumeName(i),
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: *v.ObjectName,
+						},
+						Items: []corev1.KeyToPath{
+							{
+								Key:  v.Path,
+								Path: v.SubPath,
+							},
+						},
+					},
+				},
+			})
 		default:
 			log.WithField("type", v.Type).Warning("Unknown preset volume type.")
 		}
@@ -612,6 +645,10 @@ func (m *Builder) MountPresetVolumes() error {
 	var containers []corev1.Container
 	for _, c := range m.pod.Spec.Containers {
 		for i, v := range m.wfr.Spec.PresetVolumes {
+			if !MatchContainerGroup(v.ContainerGroup, c.Name) {
+				continue
+			}
+
 			switch v.Type {
 			case v1alpha1.PresetVolumeTypeHostPath:
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
@@ -619,11 +656,16 @@ func (m *Builder) MountPresetVolumes() error {
 					MountPath: v.MountPath,
 					ReadOnly:  true,
 				})
-			case v1alpha1.PresetVolumeTypePV:
+			case v1alpha1.PresetVolumeTypePVC:
 				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
 					Name:      common.DefaultPvVolumeName,
 					MountPath: v.MountPath,
 					SubPath:   v.Path,
+				})
+			case v1alpha1.PresetVolumeTypeSecret, v1alpha1.PresetVolumeTypeConfigMap:
+				c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+					Name:      common.PresetVolumeName(i),
+					MountPath: v.MountPath,
 				})
 			default:
 				log.WithField("type", v.Type).Warning("Common volume type not supported")

@@ -33,17 +33,17 @@ func TestAccelerate(t *testing.T) {
 				Spec: v1alpha1.WorkflowRunSpec{
 					PresetVolumes: []v1alpha1.PresetVolume{
 						{
-							Type:      v1alpha1.PresetVolumeTypePV,
+							Type:      v1alpha1.PresetVolumeTypePVC,
 							Path:      fmt.Sprintf("%s/%s/m2", common.CachePrefixPath, project),
 							MountPath: "/root/.m2",
 						},
 						{
-							Type:      v1alpha1.PresetVolumeTypePV,
+							Type:      v1alpha1.PresetVolumeTypePVC,
 							Path:      fmt.Sprintf("%s/%s/gradle", common.CachePrefixPath, project),
 							MountPath: "/root/.gradle",
 						},
 						{
-							Type:      v1alpha1.PresetVolumeTypePV,
+							Type:      v1alpha1.PresetVolumeTypePVC,
 							Path:      fmt.Sprintf("%s/%s/npm", common.CachePrefixPath, project),
 							MountPath: "/root/.npm",
 						},
