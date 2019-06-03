@@ -113,8 +113,11 @@ instance.interceptors.request.use(
     if (!config.headers['accesstoken']) {
       instance.updateToken();
     }
+    const silent = _.get(config, 'params.silent');
     config = addRequesting(config);
-    addLoading(config.method.toUpperCase(), config.url);
+    if (!silent) {
+      addLoading(config.method.toUpperCase(), config.url);
+    }
     return config;
   },
   function(error) {

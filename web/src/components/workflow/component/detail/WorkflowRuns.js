@@ -9,6 +9,11 @@ const Fragment = React.Fragment;
 const Search = Input.Search;
 const { Option } = Select;
 
+const listParams = {
+  sort: true,
+  ascending: false,
+};
+
 @inject('workflow')
 @observer
 class WorkflowRuns extends React.Component {
@@ -32,10 +37,81 @@ class WorkflowRuns extends React.Component {
       projectName,
       workflowName,
     } = this.props;
-    listWorkflowRuns(projectName, workflowName, {
-      sort: true,
-      ascending: false,
+    listWorkflowRuns(projectName, workflowName, listParams, data => {
+      const items = _.get(data, 'items', []);
+      const loop = this.shouldLoopRequest(items);
+      if (loop) {
+        this.pollRequest(5000);
+      }
     });
+  }
+
+  pollRequest = time => {
+    this.setState({
+      intervalId: setInterval(() => {
+        const { query, status } = this.state;
+        this.requestListWorkflowRuns({
+          ...listParams,
+          filter: `name=${query}${status === 'all' ? '' : `,status=${status}`}`,
+          silent: true,
+        });
+      }, time),
+    });
+  };
+
+  shouldLoopRequest = list => {
+    let loop = false;
+    if (list.length > 0) {
+      const statusList = list.map(v => {
+        return _.get(v, 'status.overall.phase', '');
+      });
+      const nonTerminatedList = ['Running', 'Pending', 'Waiting', ''];
+      nonTerminatedList.forEach(v => {
+        if (_.includes(statusList, v)) {
+          loop = true;
+        }
+      });
+    }
+    return loop;
+  };
+
+  stopPollRequest = id => {
+    this.setState(
+      {
+        intervalId: undefined,
+      },
+      () => {
+        clearInterval(id);
+      }
+    );
+  };
+
+  componentDidUpdate(prevProps) {
+    const { intervalId } = this.state;
+    const {
+      workflow: { workflowRuns },
+      projectName,
+      workflowName,
+    } = this.props;
+    const items = _.get(
+      workflowRuns,
+      [`${projectName}-${workflowName}`, 'items'],
+      []
+    );
+    const loop = this.shouldLoopRequest(items);
+    if (loop && !intervalId) {
+      this.pollRequest(5000);
+    }
+    if (!loop && intervalId) {
+      this.stopPollRequest(intervalId);
+    }
+  }
+
+  componentWillUnmount() {
+    const { intervalId } = this.state;
+    if (intervalId) {
+      this.stopPollRequest(intervalId);
+    }
   }
 
   removeRunRecord = name => {
@@ -50,32 +126,26 @@ class WorkflowRuns extends React.Component {
         name,
       }),
       onOk() {
-        delelteWorkflowRun(projectName, workflowName, name);
+        delelteWorkflowRun(projectName, workflowName, name, listParams);
       },
     });
   };
 
-  doSearch = () => {
-    const { query, status } = this.state;
+  requestListWorkflowRuns = params => {
     const {
       workflow: { listWorkflowRuns },
       projectName,
       workflowName,
     } = this.props;
+    listWorkflowRuns(projectName, workflowName, params);
+  };
 
-    if (status === 'all') {
-      listWorkflowRuns(projectName, workflowName, {
-        filter: `name=${query}`,
-        sort: true,
-        ascending: false,
-      });
-    } else {
-      listWorkflowRuns(projectName, workflowName, {
-        filter: `name=${query},status=${status}`,
-        sort: true,
-        ascending: false,
-      });
-    }
+  doSearch = () => {
+    const { query, status } = this.state;
+    this.requestListWorkflowRuns({
+      ...listParams,
+      filter: `name=${query}${status === 'all' ? '' : `,status=${status}`}`,
+    });
   };
 
   onStatusSelectChange = v => {
