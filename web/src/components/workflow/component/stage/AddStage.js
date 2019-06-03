@@ -20,12 +20,33 @@ class AddStage extends React.Component {
     const modify = stages.includes(currentStage);
     this.state = {
       creationMethod: modify && !templateName ? 'custom' : 'template',
-      templateData: null,
+      argDes: null,
       modify,
     };
   }
+
   componentDidMount() {
-    this.props.stageTemplate.getTemplateList();
+    const { update, values } = this.props;
+    this.props.stageTemplate.getTemplateList(data => {
+      if (update) {
+        const stageTemplateName = _.get(values, [
+          _.get(values, 'currentStage'),
+          'metadata',
+          'annotations',
+          'stageTemplate',
+        ]);
+        const item = _.find(
+          _.get(data, 'items', []),
+          o => _.get(o, 'metadata.name') === stageTemplateName
+        );
+        const _arg = _.get(item, 'spec.pod.inputs.arguments', []);
+        let argDes = {};
+        _.forEach(_arg, v => {
+          argDes[v.name] = v.description;
+        });
+        this.setState({ argDes });
+      }
+    });
   }
 
   handleChange = e => {
@@ -40,7 +61,7 @@ class AddStage extends React.Component {
       };
       setFieldValue(currentStage, info);
     } else {
-      state.templateData = null;
+      state.argDes = null;
     }
     this.setState(state);
   };
@@ -48,30 +69,25 @@ class AddStage extends React.Component {
   transformTemplateData = (data, templateType) => {
     const value = _.cloneDeep(data);
     const _arguments = _.get(value, 'spec.pod.inputs.arguments', []);
-    const commandIndex = _.findIndex(_arguments, o => o.name === 'cmd');
-    if (
-      commandIndex > -1 &&
-      _.isString(_.get(_arguments, [commandIndex, 'value']))
-    ) {
-      let cmd = _arguments[commandIndex].value;
-      cmd = cmd.replace(/;\s+/g, ';\n');
-      _arguments[commandIndex].value = cmd;
-    }
+    let argDes = {};
 
-    if (templateType === 'cd') {
-      const _arguments = _.get(value, 'spec.pod.inputs.arguments', []);
-      _.forEach(_arguments, (v, k) => {
-        if (v.name === 'config') {
-          v.value = {
-            namespace: '',
-            name: '',
-            container: '',
-            image: '',
-          };
-        }
-      });
-      value.spec.pod.inputs.arguments = _arguments;
-    }
+    _.forEach(_arguments, (v, k) => {
+      if (v.name === 'config' && templateType === 'cd') {
+        v.value = {
+          namespace: '',
+          name: '',
+          container: '',
+          image: '',
+        };
+      }
+      if (v.name === 'cmd' && _.isString(v.value)) {
+        const cmd = v.value.replace(/;\s+/g, ';\n');
+        v.value = cmd;
+      }
+      argDes[v.name] = v.description;
+      _arguments[k] = _.pick(v, ['name', 'value']);
+    });
+
     const resource = _.concat(
       _.get(value, 'spec.pod.inputs.resources', []),
       _.get(value, 'spec.pod.outputs.resources', [])
@@ -81,7 +97,7 @@ class AddStage extends React.Component {
         v.name = '';
       }
     });
-    return value;
+    return { value, argDes };
   };
 
   stageDefaultName = () => {
@@ -111,28 +127,28 @@ class AddStage extends React.Component {
       {
         metadata: {
           name: this.stageDefaultName(),
-          annotations: { stageTemplate: templateType },
+          annotations: { stageTemplate: value },
         },
       },
       _.pick(item, 'spec', {})
     );
     if (templateType) {
-      inputs = this.transformTemplateData(inputs, templateType);
+      const formatData = this.transformTemplateData(inputs, templateType);
+      inputs = _.get(formatData, 'value');
+      this.setState({ argDes: formatData.argDes });
     }
-    this.setState({ templateData: inputs });
     const currentStage = _.get(values, 'currentStage');
-
     setFieldValue(currentStage, inputs);
   };
 
   renderTemplateSelect = templates => {
-    const { templateData } = this.state;
+    const { argDes } = this.state;
     if (!templates) {
       return <Spin />;
     }
 
     const defaultValue = _.get(templates, '[0].metadata.name');
-    if (!templateData) {
+    if (!argDes) {
       this.selectTemplate(defaultValue);
     }
     return (
@@ -160,7 +176,7 @@ class AddStage extends React.Component {
   };
 
   render() {
-    const { creationMethod, templateData, modify } = this.state;
+    const { creationMethod, argDes, modify } = this.state;
     const {
       stageTemplate: { templateList },
       values,
@@ -212,7 +228,7 @@ class AddStage extends React.Component {
             )}
             <TemplateStage
               stageId={_.get(values, 'currentStage')}
-              data={templateData}
+              argDes={argDes}
               {...stageProps}
             />
           </Fragment>

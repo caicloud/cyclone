@@ -36,23 +36,35 @@ class ResourceFrom extends React.Component {
     this.state = {
       visible,
       loading: true,
-      bindInfo: {},
+      resourceTypeInfo: {},
     };
     listResourceTypes(
       { operation: type === 'inputs' ? 'pull' : 'push' },
       data => {
-        this.setBindInfo(data);
+        this.setResourceTypeInfo(data);
       }
     );
   }
 
-  setBindInfo = data => {
+  setResourceTypeInfo = data => {
     const { modifyData } = this.props;
     const list = _.get(data, 'items', []);
+    let argDes = {};
     const item = _.get(modifyData, 'type')
       ? _.find(list, o => _.get(o, 'spec.type') === _.get(modifyData, 'type'))
       : list[0];
-    this.setState({ bindInfo: _.get(item, 'spec.bind'), loading: false });
+    const arg = _.get(item, 'spec.parameters', []);
+    _.forEach(arg, v => {
+      argDes[v.name] = v.description;
+    });
+    this.setState({
+      resourceTypeInfo: {
+        bindInfo: _.get(item, 'spec.bind'),
+        arg,
+        argDes,
+      },
+      loading: false,
+    });
   };
 
   componentDidUpdate(preProps) {
@@ -78,9 +90,12 @@ class ResourceFrom extends React.Component {
       name: '',
       path: '',
       type: _.get(item, 'spec.type'),
-      ..._.pick(item, ['spec.parameters']),
+      spec: {
+        parameters: _.map(_.get(item, 'spec.parameters'), o =>
+          _.pick(o, ['name', 'value'])
+        ),
+      },
     };
-
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
     }
@@ -88,7 +103,6 @@ class ResourceFrom extends React.Component {
     if (!update && data.name === '') {
       data.name = `${workflowName}-rsc${getMaxNumber(resourcesArr) + 1}`;
     }
-
     return data;
   };
 
@@ -140,7 +154,7 @@ class ResourceFrom extends React.Component {
       modifyData,
       resource: { resourceTypeList },
     } = this.props;
-    const { visible, loading, bindInfo } = this.state;
+    const { visible, loading, resourceTypeInfo, argDes } = this.state;
     if (loading) {
       return <Spin />;
     }
@@ -160,7 +174,8 @@ class ResourceFrom extends React.Component {
               {...props}
               type={type}
               update={update && !_.isEmpty(modifyData)}
-              bindInfo={bindInfo}
+              resourceTypeInfo={resourceTypeInfo}
+              argDes={argDes}
             />
           </Modal>
         )}

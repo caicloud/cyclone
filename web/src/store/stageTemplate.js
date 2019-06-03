@@ -35,10 +35,13 @@ class StageTemplate {
   }
 
   @action
-  getTemplateList() {
+  getTemplateList(cb) {
     this.templateList = [];
     this.templateListLoading = true;
-    fetchApi.fetchStageTemplates({}).then(this.fetchStageTemplatesSuccess);
+    fetchApi.fetchStageTemplates({}).then(data => {
+      this.fetchStageTemplatesSuccess();
+      cb && cb(data);
+    });
   }
 
   @action.bound
