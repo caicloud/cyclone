@@ -1,8 +1,9 @@
-import { Table, Button } from 'antd';
+import { Table, Button, Icon } from 'antd';
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { FormatTime } from '@/lib/util';
 import MenuAction from './MenuAction';
+import { Fragment } from 'react';
 
 @inject('resource')
 @observer
@@ -29,6 +30,26 @@ class List extends React.Component {
         title: intl.get('resource.type'),
         dataIndex: 'spec.type',
         key: 'type',
+        render: (val, rowData) => {
+          const builtin = _.get(rowData, [
+            'metadata',
+            'labels',
+            'cyclone.dev/builtin',
+          ]);
+          return (
+            <Fragment>
+              {builtin && (
+                <Icon
+                  style={{ marginRight: '5px' }}
+                  type="safety-certificate"
+                  theme="twoTone"
+                  twoToneColor="#1890ff"
+                />
+              )}
+              <span>{_.get(rowData, 'spec.type', '')}</span>
+            </Fragment>
+          );
+        },
       },
       {
         title: intl.get('resource.resolver'),
@@ -58,7 +79,16 @@ class List extends React.Component {
         dataIndex: 'spec.type',
         key: 'action',
         align: 'right',
-        render: value => <MenuAction type={value} history={history} />,
+        render: (value, rowData) => {
+          const builtin = _.get(rowData, [
+            'metadata',
+            'labels',
+            'cyclone.dev/builtin',
+          ]);
+          return (
+            <MenuAction type={value} disablAll={builtin} history={history} />
+          );
+        },
       },
     ];
     return (

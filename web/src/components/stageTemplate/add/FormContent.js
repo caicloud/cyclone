@@ -42,12 +42,12 @@ class FormContent extends React.Component {
     const outputResourceTypes = [];
     if (items.length > 0) {
       items.forEach(v => {
-        const operations = _.get(v, 'spec.operations');
+        const operations = _.get(v, 'spec.operations', []);
         const type = _.get(v, 'spec.type');
-        if (operations.includes('pull')) {
+        if (operations && operations.includes('pull')) {
           inputResourceTypes.push(type);
         }
-        if (operations.includes('push')) {
+        if (operations && operations.includes('push')) {
           outputResourceTypes.push(type);
         }
       });
