@@ -4,7 +4,7 @@ import SectionCard from '@/components/public/sectionCard';
 import MakeField from '@/components/public/makeField';
 import ResourceArray from '../resource/ResourceArray';
 import { required } from '@/components/public/validate';
-import { defaultFormItemLayout } from '@/lib/const';
+import { drawerFormItemLayout } from '@/lib/const';
 import style from '@/components/workflow/component/index.module.less';
 import PropTypes from 'prop-types';
 
@@ -57,7 +57,7 @@ class TemplateStage extends React.Component {
     return (
       <Fragment>
         {update && modify ? (
-          <FormItem label={intl.get('name')} {...defaultFormItemLayout}>
+          <FormItem label={intl.get('name')} {...drawerFormItemLayout}>
             {_.get(values, `${stageId}.metadata.name`)}
           </FormItem>
         ) : (
@@ -68,6 +68,7 @@ class TemplateStage extends React.Component {
             hasFeedback
             required
             validate={required}
+            formItemLayout={drawerFormItemLayout}
           />
         )}
         <SectionCard title={intl.get('input')}>
@@ -107,6 +108,7 @@ class TemplateStage extends React.Component {
                           hasFeedback
                           required
                           validate={required}
+                          formItemLayout={drawerFormItemLayout}
                         />
                       );
                     }

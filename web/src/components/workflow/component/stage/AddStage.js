@@ -1,7 +1,7 @@
 import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { Form, Radio, Select, Spin } from 'antd';
-import { defaultFormItemLayout, customStageField } from '@/lib/const';
+import { drawerFormItemLayout, customStageField } from '@/lib/const';
 import StageField from './StageField';
 import TemplateStage from './TemplateStage';
 
@@ -202,7 +202,7 @@ class AddStage extends React.Component {
         {!modify && (
           <FormItem
             label={intl.get('workflow.stageCreation')}
-            {...defaultFormItemLayout}
+            {...drawerFormItemLayout}
           >
             <Radio.Group
               onChange={this.handleChange}
@@ -221,7 +221,7 @@ class AddStage extends React.Component {
             {!modify && (
               <FormItem
                 label={intl.get('workflow.selectTemplate')}
-                {...defaultFormItemLayout}
+                {...drawerFormItemLayout}
               >
                 {this.renderTemplateSelect(templates)}
               </FormItem>

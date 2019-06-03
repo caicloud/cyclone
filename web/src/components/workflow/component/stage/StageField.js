@@ -2,7 +2,7 @@ import { Input, Form, Button, Spin, Row, Col } from 'antd';
 import MakeField from '@/components/public/makeField';
 import { Field, FieldArray } from 'formik';
 import SectionCard from '@/components/public/sectionCard';
-import { defaultFormItemLayout } from '@/lib/const';
+import { drawerFormItemLayout } from '@/lib/const';
 import ResourceArray from '../resource/ResourceArray';
 import { required } from '@/components/public/validate';
 import PropTypes from 'prop-types';
@@ -45,7 +45,7 @@ class StageField extends React.Component {
     return (
       <Fragment>
         {update && modify ? (
-          <FormItem label={intl.get('name')} {...defaultFormItemLayout}>
+          <FormItem label={intl.get('name')} {...drawerFormItemLayout}>
             {_.get(values, `${currentStage}.metadata.name`)}
           </FormItem>
         ) : (
@@ -56,6 +56,7 @@ class StageField extends React.Component {
             hasFeedback
             required
             validate={required}
+            formItemLayout={drawerFormItemLayout}
           />
         )}
         <SectionCard title={intl.get('input')}>
@@ -80,6 +81,7 @@ class StageField extends React.Component {
                         hasFeedback
                         required
                         validate={required}
+                        formItemLayout={drawerFormItemLayout}
                       />
                       {/* // TODO: 暂时不展示此字段 */}
                       {/* <Field
@@ -96,10 +98,11 @@ class StageField extends React.Component {
                         hasFeedback
                         required
                         validate={required}
+                        formItemLayout={drawerFormItemLayout}
                       />
                       <FormItem
                         label={intl.get('env')}
-                        {...defaultFormItemLayout}
+                        {...drawerFormItemLayout}
                       >
                         <FieldArray
                           name={`${specKey}.spec.containers.${index}.env`}
@@ -170,7 +173,7 @@ class StageField extends React.Component {
         <SectionCard title={intl.get('output')}>
           <ResourceArray type="outputs" {...resourceArrayProps} />
           {/* // NOTE: temporarily not supported artifacts */}
-          {/* <FormItem label={'artifacts'} {...defaultFormItemLayout}>
+          {/* <FormItem label={'artifacts'} {...drawerFormItemLayout}>
             <FieldArray
               name={`${currentStage}.outputs.artifacts`}
               render={arrayHelpers => (
