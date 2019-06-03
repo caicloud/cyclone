@@ -13,6 +13,7 @@ class MenuAction extends React.Component {
     type: PropTypes.string,
     history: PropTypes.object,
     resource: PropTypes.object,
+    disablAll: PropTypes.bool,
   };
 
   removeResourceType = type => {
@@ -34,9 +35,10 @@ class MenuAction extends React.Component {
   };
 
   render() {
-    const { type } = this.props;
+    const { type, disablAll } = this.props;
     return (
       <EllipsisMenu
+        disablAll={disablAll}
         menuText={[intl.get('operation.modify'), intl.get('operation.delete')]}
         menuFunc={[
           () => {

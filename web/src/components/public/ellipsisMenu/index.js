@@ -15,6 +15,7 @@ class EllipsisMenu extends React.Component {
     menuText: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
     menuFunc: PropTypes.oneOfType([PropTypes.func, PropTypes.array]),
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
+    disablAll: PropTypes.bool,
   };
   static defaultProps = {
     placement: 'bottomLeft',
@@ -22,7 +23,7 @@ class EllipsisMenu extends React.Component {
   };
 
   render() {
-    const { placement, menuText, menuFunc, disabled } = this.props;
+    const { placement, menuText, menuFunc, disabled, disablAll } = this.props;
     const _menuText = menuText || intl.get('operation.delete');
     const menu = (
       <Menu>
@@ -57,6 +58,7 @@ class EllipsisMenu extends React.Component {
     return (
       <div style={{ marginLeft: '8px', display: 'inline-block' }}>
         <Dropdown
+          disabled={disablAll}
           overlay={menu}
           placement={placement}
           trigger={['click']}
