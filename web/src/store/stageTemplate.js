@@ -39,7 +39,7 @@ class StageTemplate {
     this.templateList = [];
     this.templateListLoading = true;
     fetchApi.fetchStageTemplates({}).then(data => {
-      this.fetchStageTemplatesSuccess();
+      this.fetchStageTemplatesSuccess(data);
       cb && cb(data);
     });
   }
