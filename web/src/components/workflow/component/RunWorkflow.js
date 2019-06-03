@@ -46,17 +46,35 @@ class RunWorkflow extends React.Component {
     const { versionMethod } = this.state;
     if (versionMethod === 'auto') {
       const version = moment().format('YYYYMMDDhhmmss');
-      runWorkflow(projectName, workflowName, {
-        metadata: {
-          name: version,
+      runWorkflow(
+        projectName,
+        workflowName,
+        {
+          metadata: {
+            name: version,
+          },
         },
-      });
+        // the parameters of list workflowrun callback
+        {
+          sort: true,
+          ascending: false,
+        }
+      );
     } else {
-      runWorkflow(projectName, workflowName, {
-        metadata: {
-          name: value.version,
+      runWorkflow(
+        projectName,
+        workflowName,
+        {
+          metadata: {
+            name: value.version,
+          },
         },
-      });
+        // the parameters of list workflowrun callback
+        {
+          sort: true,
+          ascending: false,
+        }
+      );
     }
 
     this.setState({ visible: false });

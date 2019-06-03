@@ -40,23 +40,24 @@ class Workflow {
   }
 
   @action.bound
-  runWorkflow(project, workflow, info) {
+  runWorkflow(project, workflow, info, listQuery = {}) {
     return fetchApi.runWorkflow(project, workflow, info).then(() => {
-      this.listWorkflowRuns(project, workflow);
+      this.listWorkflowRuns(project, workflow, listQuery);
     });
   }
 
   @action.bound
-  listWorkflowRuns(project, workflow, query = {}) {
+  listWorkflowRuns(project, workflow, query = {}, cb) {
     return fetchApi.listWorkflowRuns(project, workflow, query).then(data => {
       this.workflowRuns[`${project}-${workflow}`] = data;
+      cb && cb(data);
     });
   }
 
   @action.bound
-  delelteWorkflowRun(project, workflow, record) {
+  delelteWorkflowRun(project, workflow, record, listQuery = {}) {
     return fetchApi.deleteWorkflowRun(project, workflow, record).then(() => {
-      this.listWorkflowRuns(project, workflow);
+      this.listWorkflowRuns(project, workflow, listQuery);
     });
   }
 }
