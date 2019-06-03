@@ -106,9 +106,10 @@ class App extends React.Component {
       setTouched,
     } = this.props;
     const { graph } = this.state;
+    const update = !_.isEmpty(workFlowInfo);
     switch (current) {
       case 0: {
-        return <BasicInfo />;
+        return <BasicInfo update={update} values={values} />;
       }
       case 1: {
         return (
@@ -116,7 +117,7 @@ class App extends React.Component {
             setFieldValue={setFieldValue}
             values={values}
             initialGraph={graph}
-            update={!_.isEmpty(workFlowInfo)}
+            update={update}
             project={project}
             workflowName={workflowName}
             setStageDepned={handleDepend}
