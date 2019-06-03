@@ -54,6 +54,14 @@ class TemplateStage extends React.Component {
     } = this.props;
     const specKey = `${stageId}.spec.pod`;
     const outputResource = _.get(values, `${specKey}.outputs.resources`);
+    const resourceProps = {
+      resources: _.get(values, `${specKey}.inputs.resources`, []),
+      update,
+      project,
+      setFieldValue,
+      resourcesArr: _.get(values, 'resourcesArr'),
+      workflowName: _.get(values, 'metadata.name'),
+    };
     return (
       <Fragment>
         {update && modify ? (
@@ -74,12 +82,7 @@ class TemplateStage extends React.Component {
         <SectionCard title={intl.get('input')}>
           <ResourceArray
             resourcesField={`${specKey}.inputs.resources`}
-            resources={_.get(values, `${specKey}.inputs.resources`, [])}
-            update={update}
-            project={project}
-            resourcesArr={_.get(values, 'resourcesArr')}
-            setFieldValue={setFieldValue}
-            workflowName={_.get(values, 'metadata.name')}
+            {...resourceProps}
           />
           <div className={style['divider-small']}>Arguments</div>
           <FieldArray
@@ -123,12 +126,7 @@ class TemplateStage extends React.Component {
             <ResourceArray
               resourcesField={`${specKey}.outputs.resources`}
               type="outputs"
-              resources={_.get(values, `${specKey}.outputs.resources`, [])}
-              update={update}
-              project={project}
-              resourcesArr={_.get(values, 'resourcesArr')}
-              setFieldValue={setFieldValue}
-              workflowName={_.get(values, 'metadata.name')}
+              {...resourceProps}
             />
           </SectionCard>
         )}

@@ -35,10 +35,11 @@ class StageField extends React.Component {
     }
     const specKey = `${currentStage}.spec.pod`;
     const resourceArrayProps = {
-      resourcesField: `${currentStage}.outputs.resources`,
       resources: _.get(values, `${currentStage}.outputs.resources`, []),
       resourcesArr: _.get(values, 'resourcesArr'),
       setFieldValue,
+      update,
+      project,
       workflowName: _.get(values, 'metadata.name'),
     };
 
@@ -61,8 +62,7 @@ class StageField extends React.Component {
         )}
         <SectionCard title={intl.get('input')}>
           <ResourceArray
-            update={update}
-            project={project}
+            resourcesField={`${currentStage}.inputs.resources`}
             {...resourceArrayProps}
           />
         </SectionCard>
@@ -171,7 +171,11 @@ class StageField extends React.Component {
           />
         </SectionCard>
         <SectionCard title={intl.get('output')}>
-          <ResourceArray type="outputs" {...resourceArrayProps} />
+          <ResourceArray
+            type="outputs"
+            resourcesField={`${currentStage}.outputs.resources`}
+            {...resourceArrayProps}
+          />
           {/* // NOTE: temporarily not supported artifacts */}
           {/* <FormItem label={'artifacts'} {...drawerFormItemLayout}>
             <FieldArray
