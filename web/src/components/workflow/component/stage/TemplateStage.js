@@ -22,6 +22,7 @@ class TemplateStage extends React.Component {
     project: PropTypes.string,
     modify: PropTypes.bool,
     setFieldValue: PropTypes.func,
+    argDes: PropTypes.object,
   };
 
   renderSection = (data, key) => {
@@ -49,6 +50,7 @@ class TemplateStage extends React.Component {
       project,
       modify,
       setFieldValue,
+      argDes,
     } = this.props;
     const specKey = `${stageId}.spec.pod`;
     const outputResource = _.get(values, `${specKey}.outputs.resources`);
@@ -101,6 +103,7 @@ class TemplateStage extends React.Component {
                               ? TextareaField
                               : InputField
                           }
+                          tooltip={_.get(argDes, r.name)}
                           hasFeedback
                           required
                           validate={required}

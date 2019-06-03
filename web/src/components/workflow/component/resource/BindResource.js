@@ -25,26 +25,23 @@ class BindResource extends React.Component {
     integration: PropTypes.object,
     update: PropTypes.bool,
     resource: PropTypes.object,
-    bindInfo: PropTypes.object,
+    resourceTypeInfo: PropTypes.object,
   };
 
   constructor(props) {
     super(props);
-    const { bindInfo = {}, values } = props;
+    const { resourceTypeInfo = {} } = props;
     this.state = {
       addWay: 'new',
-      bindInfo,
-      noShowIndex: this.getNoShowIndex(
-        bindInfo,
-        _.get(values, 'spec.parameters')
-      ),
+      resourceTypeInfo,
+      noShowIndex: this.getNoShowIndex(resourceTypeInfo),
     };
   }
 
-  getNoShowIndex = (bindInfo, specParameters) => {
+  getNoShowIndex = data => {
     let noShowIndex = {};
-    const noShowKey = _.keys(_.get(bindInfo, 'paramBindings'));
-    _.forEach(specParameters, (v, i) => {
+    const noShowKey = _.keys(_.get(data, 'bindInfo.paramBindings'));
+    _.forEach(_.get(data, 'arg'), (v, i) => {
       if (noShowKey.includes(v.name)) {
         noShowIndex[v.name] = i;
       }
@@ -73,24 +70,31 @@ class BindResource extends React.Component {
       o => _.get(o, 'spec.type') === val
     );
     if (item) {
-      this.setState({
+      const arg = _.get(item, 'spec.parameters', []);
+      let argDes = {};
+      _.forEach(arg, v => {
+        argDes[v.name] = v.description;
+      });
+      const typeInfo = {
         bindInfo: _.get(item, 'spec.bind'),
-        noShowIndex: this.getNoShowIndex(
-          _.get(item, 'spec.bind'),
-          _.get(item, 'spec.parameters')
-        ),
+        arg,
+        argDes,
+      };
+      this.setState({
+        resourceTypeInfo: typeInfo,
+        noShowIndex: this.getNoShowIndex(typeInfo),
       });
       setFieldValue('spec.parameters', _.get(item, 'spec.parameters'));
     }
   };
 
   handleIntegrationChange = (val, list) => {
-    const { bindInfo, noShowIndex } = this.state;
+    const { resourceTypeInfo, noShowIndex } = this.state;
     const { setFieldValue } = this.props;
     setFieldValue('integration', val);
     const item = _.find(list, o => _.get(o, 'metadata.name'));
     if (item) {
-      _.forEach(_.get(bindInfo, 'paramBindings'), (v, k) => {
+      _.forEach(_.get(resourceTypeInfo, 'bindInfo.paramBindings'), (v, k) => {
         setFieldValue(
           `spec.parameters.${noShowIndex[k]}.value`,
           `$.${_.get(item, 'metadata.namespace')}.${val}/data.integration/${v}`
@@ -101,6 +105,7 @@ class BindResource extends React.Component {
 
   renderParameters = noShowKeys => {
     const { values } = this.props;
+    const { resourceTypeInfo } = this.state;
     let arr = [];
     _.forEach(_.get(values, 'spec.parameters', []), (field, index) => {
       if (!noShowKeys.includes(field.name)) {
@@ -117,7 +122,7 @@ class BindResource extends React.Component {
             formItemLayout={modalFormItemLayout}
             hasFeedback
             required={field.required}
-            tooltip={field.description}
+            tooltip={_.get(resourceTypeInfo, ['argDes', field.name])}
             validate={field.required && required}
           />
         );
@@ -128,7 +133,7 @@ class BindResource extends React.Component {
   };
 
   render() {
-    const { addWay, bindInfo } = this.state;
+    const { addWay, resourceTypeInfo } = this.state;
     const {
       values,
       setFieldValue,
@@ -137,8 +142,13 @@ class BindResource extends React.Component {
       resource: { resourceTypeList },
       integration: { groupIntegrationList },
     } = this.props;
-    const integrationResourceType = _.get(bindInfo, 'integrationType');
-    const noShowKeys = _.keys(_.get(bindInfo, 'paramBindings'));
+    const integrationResourceType = _.get(
+      resourceTypeInfo,
+      'bindInfo.integrationType'
+    );
+    const noShowKeys = _.keys(
+      _.get(resourceTypeInfo, 'bindInfo.paramBindings')
+    );
     const list = _.get(groupIntegrationList, integrationResourceType, []);
     return (
       <Form layout={'horizontal'}>
