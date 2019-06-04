@@ -35,7 +35,6 @@ class StageField extends React.Component {
     }
     const specKey = `${currentStage}.spec.pod`;
     const resourceArrayProps = {
-      resources: _.get(values, `${currentStage}.outputs.resources`, []),
       resourcesArr: _.get(values, 'resourcesArr'),
       setFieldValue,
       update,
@@ -62,7 +61,8 @@ class StageField extends React.Component {
         )}
         <SectionCard title={intl.get('input')}>
           <ResourceArray
-            resourcesField={`${currentStage}.inputs.resources`}
+            resourcesField={`${specKey}.inputs.resources`}
+            resources={_.get(values, `${specKey}.inputs.resources`, [])}
             {...resourceArrayProps}
           />
         </SectionCard>
@@ -173,7 +173,8 @@ class StageField extends React.Component {
         <SectionCard title={intl.get('output')}>
           <ResourceArray
             type="outputs"
-            resourcesField={`${currentStage}.outputs.resources`}
+            resourcesField={`${specKey}.outputs.resources`}
+            resources={_.get(values, `${specKey}.outputs.resources`, [])}
             {...resourceArrayProps}
           />
           {/* // NOTE: temporarily not supported artifacts */}
