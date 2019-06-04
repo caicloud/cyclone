@@ -7,6 +7,8 @@ const (
 	ImageResourceType = "Image"
 	// GitResourceType represents git repo in SCM
 	GitResourceType = "Git"
+	// SvnResourceType represents svn repo in SCM
+	SvnResourceType = "Svn"
 )
 
 // +genclient
