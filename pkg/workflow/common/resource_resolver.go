@@ -11,6 +11,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 func GetResourceTypes(client clientset.Interface, namespaces []string, operation string) ([]v1alpha1.Resource, error) {
@@ -45,6 +46,12 @@ func GetResourceTypes(client clientset.Interface, namespaces []string, operation
 func GetResourceResolver(client clientset.Interface, resource *v1alpha1.Resource) (string, error) {
 	if len(resource.Spec.Resolver) > 0 {
 		return resource.Spec.Resolver, nil
+	}
+
+	// If resolver is set in config file, use it.
+	resolverConfigKey := fmt.Sprintf("%s-resolver", strings.ToLower(resource.Spec.Type))
+	if resolver, ok := controller.Config.Images[resolverConfigKey]; ok {
+		return resolver, nil
 	}
 
 	namespaces := []string{resource.Namespace}
