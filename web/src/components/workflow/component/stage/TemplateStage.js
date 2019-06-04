@@ -55,7 +55,6 @@ class TemplateStage extends React.Component {
     const specKey = `${stageId}.spec.pod`;
     const outputResource = _.get(values, `${specKey}.outputs.resources`);
     const resourceProps = {
-      resources: _.get(values, `${specKey}.inputs.resources`, []),
       update,
       project,
       setFieldValue,
@@ -82,6 +81,7 @@ class TemplateStage extends React.Component {
         <SectionCard title={intl.get('input')}>
           <ResourceArray
             resourcesField={`${specKey}.inputs.resources`}
+            resources={_.get(values, `${specKey}.inputs.resources`, [])}
             {...resourceProps}
           />
           <div className={style['divider-small']}>Arguments</div>
@@ -125,6 +125,7 @@ class TemplateStage extends React.Component {
           <SectionCard title={intl.get('output')}>
             <ResourceArray
               resourcesField={`${specKey}.outputs.resources`}
+              resources={_.get(values, `${specKey}.outputs.resources`, [])}
               type="outputs"
               {...resourceProps}
             />
