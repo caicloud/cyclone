@@ -212,12 +212,16 @@ notification:
   updateStage: Stage update succeeded
   updateWorkflow: Workflow update succeeded
   updateResource: Resource updated succeeded
+  createResource: Resource create succeeded
 resource:
+  name: Resource
   type: Resource Type
   resolver: Resource Resolver
   operations: Supported Operations
   binding: Integration Binding
   parameters: Resource Parameters
+  selectResource: Select Resource
+  detail: Resource Detail
   messages:
     typeRequired: Type can't be empty
     resolverRequired: Resolver (image) can't be empty

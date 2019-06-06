@@ -2,34 +2,10 @@ import { observable, action } from 'mobx';
 import fetchApi from '../api/index.js';
 
 class Resource {
-  @observable resourceList = null;
-  @observable resourceDetail = {};
   @observable SCMRepos = {};
   @observable resourceTypeList = null;
   @observable resourceTypeDetail = {};
   @observable resourceTypeLoading = false;
-
-  @action.bound
-  createResource(project, data, cb) {
-    fetchApi.createResource(project, data).then(() => {
-      cb && cb();
-    });
-  }
-
-  @action.bound
-  getResource(project, resource, cb) {
-    fetchApi.getResource(project, resource).then(data => {
-      this.resourceDetail[`${project}-${resource}`] = data;
-      cb && cb(data);
-    });
-  }
-
-  @action.bound
-  updateResource(project, resource, info, cb) {
-    fetchApi.updateResource(project, resource, info).then(() => {
-      cb && cb();
-    });
-  }
 
   @action.bound
   createStage(project, data, cb) {

@@ -4,7 +4,7 @@ import Detail from '@/components/public/detail';
 import PropTypes from 'prop-types';
 import { FormatTime } from '@/lib/util';
 import MenuAction from '../MenuAction';
-import ResourceList from './resource';
+import ResourceList from '@/components/resource/component/List';
 import StageList from './stage';
 import WorkflowTable from '@/components/workflow/component/list/WorkflowTable';
 

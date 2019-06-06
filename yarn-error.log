@@ -1,0 +1,32 @@
+Arguments: 
+  /Users/qme/.nvm/versions/node/v8.9.3/bin/node /Users/qme/.nvm/versions/node/v8.9.3/bin/yarn start
+
+PATH: 
+  /Users/qme/.nvm/versions/node/v8.9.3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+Yarn version: 
+  1.5.1
+
+Node version: 
+  8.9.3
+
+Platform: 
+  darwin x64
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
+
+Trace: 
+  Error: Couldn't find a package.json file in "/Volumes/qme-code/cyclone"
+      at new MessageError (/Users/qme/.nvm/versions/node/v8.9.3/lib/node_modules/yarn/lib/cli.js:186:110)
+      at /Users/qme/.nvm/versions/node/v8.9.3/lib/node_modules/yarn/lib/cli.js:40048:15
+      at Generator.next (<anonymous>)
+      at step (/Users/qme/.nvm/versions/node/v8.9.3/lib/node_modules/yarn/lib/cli.js:98:30)
+      at /Users/qme/.nvm/versions/node/v8.9.3/lib/node_modules/yarn/lib/cli.js:109:13
+      at <anonymous>

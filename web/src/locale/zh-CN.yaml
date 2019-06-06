@@ -212,12 +212,16 @@ notification:
   updateStage: Stage 更新成功
   updateWorkflow: Workflow 更新成功
   updateResource: Resource 更新成功
+  createResource: Resource 新增成功
 resource:
+  name: 资源
   type: 资源类型
   resolver: 资源解析器
   operations: 支持操作
   binding: 集成服务绑定
   parameters: 资源参数
+  selectResource: 选择资源
+  detail: 资源详情
   messages:
     typeRequired: 资源类型必填
     resolverRequired: 资源解析器（镜像）必填

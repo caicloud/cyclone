@@ -10,8 +10,6 @@ const tramformArg = data => {
 };
 
 export const formatStage = (data, fromCreate = true, requests, projectName) => {
-  const inputResources = _.get(data, `spec.pod.inputs.resources`, []);
-  const outputResources = _.get(data, `spec.pod.outputs.resources`, []);
   let stage = {
     metadata: _.get(data, 'metadata'),
     spec: {
@@ -20,46 +18,6 @@ export const formatStage = (data, fromCreate = true, requests, projectName) => {
       ),
     },
   };
-  _.forEach(inputResources, (r, i) => {
-    stage.spec.pod.inputs.resources[i] = {
-      ..._.pick(r, ['name', 'path', 'type']),
-    };
-    if (fromCreate) {
-      const resourceData = {
-        metadata: { name: _.get(r, 'name') },
-        spec: {
-          type: _.get(r, 'type'),
-          ..._.get(r, 'spec'),
-        },
-      };
-      requests.push({
-        type: 'createResource',
-        project: projectName,
-        data: resourceData,
-      });
-    }
-  });
-
-  _.forEach(outputResources, (r, i) => {
-    stage.spec.pod.outputs.resources[i] = {
-      ..._.pick(r, ['name', 'type']),
-      path: '',
-    };
-    if (fromCreate) {
-      const resourceData = {
-        metadata: { name: _.get(r, 'name') },
-        spec: {
-          type: _.get(r, 'type'),
-          ..._.get(r, 'spec'),
-        },
-      };
-      requests.push({
-        type: 'createResource',
-        project: projectName,
-        data: resourceData,
-      });
-    }
-  });
 
   return stage;
 };

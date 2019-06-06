@@ -16,6 +16,7 @@ export default function makeField(Component) {
       required: PropTypes.bool,
       formItemLayout: PropTypes.object,
       tooltip: PropTypes.string,
+      readOnly: PropTypes.bool,
     };
     const {
       label,
@@ -25,6 +26,7 @@ export default function makeField(Component) {
       form: { touched, errors },
       formItemLayout,
       tooltip,
+      readOnly,
       ...rest
     } = props;
     const name = field.name;
@@ -50,7 +52,7 @@ export default function makeField(Component) {
         required={required}
         {..._formItemLayout}
       >
-        <Component {...field} {...rest} />
+        {readOnly ? field.value : <Component {...field} {...rest} />}
       </FormItem>
     );
   };
