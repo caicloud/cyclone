@@ -2,7 +2,7 @@ import { Switch, Route, Redirect } from 'react-router-dom';
 import Project from '../components/project';
 import StageTemplate from '../components/stageTemplate';
 import Overview from '../components/overview';
-import Resource from '../components/resource';
+import Resource from '../components/resourceTypes';
 import Integration from '../components/integration';
 import Swagger from '../components/swagger';
 import React from 'react';

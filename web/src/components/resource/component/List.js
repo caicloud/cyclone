@@ -1,118 +1,109 @@
-import { Table, Button, Icon } from 'antd';
-import { inject, observer } from 'mobx-react';
+import { Table, Button } from 'antd';
 import PropTypes from 'prop-types';
-import { FormatTime } from '@/lib/util';
-import MenuAction from './MenuAction';
-import { Fragment } from 'react';
+import Resource from './Form';
+import { inject, observer } from 'mobx-react';
+import { getIntegrationName } from '@/lib/util';
+import EllipsisMenu from '@/components/public/ellipsisMenu';
 
-@inject('resource')
+const Fragment = React.Fragment;
+
+@inject('project')
 @observer
-class List extends React.Component {
+class ResourceList extends React.Component {
   static propTypes = {
-    match: PropTypes.object,
-    history: PropTypes.object,
-    resource: PropTypes.object,
+    projectName: PropTypes.string,
+    project: PropTypes.object,
   };
+
+  state = {
+    visible: false,
+    modifyData: null,
+    update: false,
+  };
+
+  addResource = () => {
+    this.setState({ visible: true });
+  };
+
   componentDidMount() {
-    const { resource } = this.props;
-    resource.listResourceTypes();
+    const { projectName } = this.props;
+    this.props.project.listProjectResources(projectName);
   }
 
-  showModal = () => {
-    const { match } = this.props;
-    this.props.history.push(`${match.path}/add`);
+  updateResource = (name, value) => {
+    const integration = getIntegrationName(_.get(value, 'spec.parameters'));
+    this.setState({
+      visible: true,
+      modifyData: { ...value, integration },
+      update: true,
+    });
   };
 
   render() {
-    const { match, resource, history } = this.props;
+    const { project, projectName } = this.props;
+    const { visible, modifyData, update } = this.state;
+    const list = _.get(project, ['resourceList', 'items'], []);
     const columns = [
       {
-        title: intl.get('resource.type'),
+        title: intl.get('name'),
+        dataIndex: 'metadata.name',
+        key: 'name',
+      },
+      {
+        title: intl.get('type'),
         dataIndex: 'spec.type',
         key: 'type',
-        render: (val, rowData) => {
-          const builtin = _.get(rowData, [
-            'metadata',
-            'labels',
-            'cyclone.dev/builtin',
-          ]);
-          return (
-            <Fragment>
-              {builtin && (
-                <Icon
-                  style={{ marginRight: '5px' }}
-                  type="safety-certificate"
-                  theme="twoTone"
-                  twoToneColor="#1890ff"
-                />
-              )}
-              <span>{_.get(rowData, 'spec.type', '')}</span>
-            </Fragment>
-          );
-        },
-      },
-      {
-        title: intl.get('resource.resolver'),
-        dataIndex: 'spec.resolver',
-        key: 'resolver',
-      },
-      {
-        title: intl.get('resource.operations'),
-        dataIndex: 'spec.operations',
-        key: 'operations',
-        render: value => _.join(value, ', '),
-      },
-      {
-        title: intl.get('resource.binding'),
-        dataIndex: 'spec.bind',
-        key: 'binding',
-        render: value => (value || {}).integrationType || '--',
-      },
-      {
-        title: intl.get('creationTime'),
-        dataIndex: 'metadata.creationTimestamp',
-        key: 'creationTime',
-        render: value => FormatTime(value),
       },
       {
         title: intl.get('action'),
-        dataIndex: 'spec.type',
+        dataIndex: 'metadata.name',
         key: 'action',
         align: 'right',
-        render: (value, rowData) => {
-          const builtin = _.get(rowData, [
-            'metadata',
-            'labels',
-            'cyclone.dev/builtin',
-          ]);
-          return (
-            <MenuAction type={value} disablAll={builtin} history={history} />
-          );
-        },
+        render: (value, row) => (
+          <EllipsisMenu
+            menuText={[intl.get('operation.modify')]}
+            menuFunc={[
+              () => {
+                this.updateResource(value, row);
+              },
+            ]}
+          />
+        ),
       },
     ];
+    const resourceLen = list.length;
     return (
-      <div>
+      <Fragment>
         <div className="head-bar">
-          <Button type="primary" onClick={this.showModal}>
+          <Button type="primary" onClick={this.addResource}>
             {intl.get('operation.add')}
           </Button>
         </div>
         <Table
+          loading={project.loadingResource}
           columns={columns}
           rowKey={record => record.metadata.name}
-          onRow={record => {
-            return {
-              onClick: () => {
-                this.props.history.push(`${match.path}/${record.spec.type}`);
-              },
-            };
-          }}
-          dataSource={_.get(resource, 'resourceTypeList.items', [])}
+          dataSource={list}
         />
-      </div>
+        {visible && (
+          <Resource
+            handleModalClose={() => {
+              this.setState({
+                visible: false,
+                modifyData: null,
+                update: false,
+              });
+            }}
+            visible={visible}
+            update={update}
+            projectName={projectName}
+            resourceLen={resourceLen}
+            modifyData={modifyData}
+          />
+        )}
+      </Fragment>
     );
   }
 }
 
-export default List;
+export default ResourceList;

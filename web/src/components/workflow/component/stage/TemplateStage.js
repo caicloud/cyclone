@@ -21,7 +21,6 @@ class TemplateStage extends React.Component {
     update: PropTypes.bool,
     project: PropTypes.string,
     modify: PropTypes.bool,
-    setFieldValue: PropTypes.func,
     argDes: PropTypes.object,
   };
 
@@ -37,29 +36,19 @@ class TemplateStage extends React.Component {
           hasFeedback
           required
           validate={required}
+          formItemLayout={drawerFormItemLayout}
         />
       );
     });
     return dom;
   };
   render() {
-    const {
-      stageId,
-      values,
-      update,
-      project,
-      modify,
-      setFieldValue,
-      argDes,
-    } = this.props;
+    const { stageId, values, update, project, modify, argDes } = this.props;
     const specKey = `${stageId}.spec.pod`;
     const outputResource = _.get(values, `${specKey}.outputs.resources`);
     const resourceProps = {
       update,
-      project,
-      setFieldValue,
-      resourcesArr: _.get(values, 'resourcesArr'),
-      workflowName: _.get(values, 'metadata.name'),
+      projectName: project,
     };
     return (
       <Fragment>

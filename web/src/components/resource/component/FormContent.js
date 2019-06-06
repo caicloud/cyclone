@@ -15,7 +15,7 @@ const SelectField = MakeField(SelectPlus);
 // use in add stage, select a exist resource or create a new resource
 @inject('integration', 'resource')
 @observer
-class BindResource extends React.Component {
+class FormContent extends React.Component {
   static propTypes = {
     setFieldValue: PropTypes.func,
     values: PropTypes.object,
@@ -50,10 +50,6 @@ class BindResource extends React.Component {
     const { integration } = this.props;
     integration.getIntegrationList();
   }
-
-  changeAddWay = value => {
-    this.setState({ addWay: value });
-  };
 
   handleTypeChange = val => {
     const {
@@ -210,4 +206,4 @@ class BindResource extends React.Component {
   }
 }
 
-export default BindResource;
+export default FormContent;

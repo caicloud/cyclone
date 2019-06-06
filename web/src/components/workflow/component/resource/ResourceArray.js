@@ -2,27 +2,19 @@ import { Button, Row, Col, Form } from 'antd';
 import { FieldArray, FastField } from 'formik';
 import { drawerFormItemLayout } from '@/lib/const';
 import Resource from './Form';
-import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import style from '@/components/workflow/component/index.module.less';
 
 const FormItem = Form.Item;
 const Fragment = React.Fragment;
 
-@inject('resource')
-@observer
 class ResourceArray extends React.Component {
   static propTypes = {
-    resources: PropTypes.array,
     resourcesField: PropTypes.string,
     type: PropTypes.oneOf(['inputs', 'outputs']),
     update: PropTypes.bool,
-    project: PropTypes.string,
-    resource: PropTypes.object,
-    noLabel: PropTypes.bool,
-    resourcesArr: PropTypes.array,
-    setFieldValue: PropTypes.func,
-    workflowName: PropTypes.string,
+    projectName: PropTypes.string,
+    resources: PropTypes.array,
   };
 
   state = {
@@ -41,32 +33,12 @@ class ResourceArray extends React.Component {
   };
 
   editResource = (r, index) => {
-    const {
-      update,
-      project,
-      resource: { getResource },
-    } = this.props;
     let state = {
       modifyData: r,
       visible: true,
       modifyIndex: index,
     };
-
-    if (update) {
-      getResource(project, r.name, data => {
-        const info = {
-          name: _.get(data, 'metadata.name'),
-          type: _.get(data, 'spec.type'),
-          ..._.pick(data, ['spec.parameters']),
-          path: r.path,
-          integration: this.getIntegrationName(_.get(data, 'spec.parameters')),
-        };
-        state.modifyData = info;
-        this.setState(state);
-      });
-    } else {
-      this.setState(state);
-    }
+    this.setState(state);
   };
   render() {
     const {
@@ -74,10 +46,7 @@ class ResourceArray extends React.Component {
       resourcesField,
       type = 'inputs',
       update,
-      project,
-      resourcesArr,
-      setFieldValue,
-      workflowName,
+      projectName,
     } = this.props;
     const colSpan = type === 'inputs' ? 6 : 9;
     const { visible, modifyData, modifyIndex } = this.state;
@@ -167,7 +136,7 @@ class ResourceArray extends React.Component {
                 <Resource
                   type={type}
                   handleModalClose={() => {
-                    this.setState({ visible: false });
+                    this.setState({ visible: false, modifyData: null });
                   }}
                   SetReasourceValue={(value, modify) => {
                     modify
@@ -176,11 +145,8 @@ class ResourceArray extends React.Component {
                   }}
                   visible={visible}
                   update={update}
-                  project={project}
+                  projectName={projectName}
                   modifyData={modifyData}
-                  workflowName={workflowName}
-                  resourcesArr={resourcesArr}
-                  setFieldValue={setFieldValue}
                 />
               )}
             </div>

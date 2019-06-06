@@ -1,6 +1,6 @@
 import { Formik } from 'formik';
 import { Modal, notification, Spin } from 'antd';
-import BindResource from './BindResource1';
+import FormContent from './FormContent';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
 
@@ -77,9 +77,11 @@ class ResourceFrom extends React.Component {
 
   getInitialValues = list => {
     const { modifyData, projectName, update, resourceLen } = this.props;
-
-    const item = _.get(modifyData, 'type')
-      ? _.find(list, o => _.get(o, 'spec.type') === _.get(modifyData, 'type'))
+    const item = _.get(modifyData, 'spec.type')
+      ? _.find(
+          list,
+          o => _.get(o, 'spec.type') === _.get(modifyData, 'spec.type')
+        )
       : list[0];
     let data = {
       metadata: { name: '' },
@@ -163,7 +165,7 @@ class ResourceFrom extends React.Component {
               props.handleSubmit();
             }}
           >
-            <BindResource
+            <FormContent
               {...props}
               update={update}
               resourceTypeInfo={resourceTypeInfo}

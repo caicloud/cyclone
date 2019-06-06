@@ -182,7 +182,6 @@ class AddStage extends React.Component {
       values,
       project,
       update,
-      setFieldValue,
     } = this.props;
     const templates = _.get(templateList, 'items');
     const currentStage = _.get(values, 'currentStage');
@@ -195,8 +194,8 @@ class AddStage extends React.Component {
       update,
       modify,
       project,
-      setFieldValue,
     };
+
     return (
       <Form>
         {!modify && (

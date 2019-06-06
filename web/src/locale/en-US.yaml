@@ -219,6 +219,7 @@ resource:
   operations: Supported Operations
   binding: Integration Binding
   parameters: Resource Parameters
+  selectResource: Select Resource
   messages:
     typeRequired: Type can't be empty
     resolverRequired: Resolver (image) can't be empty

@@ -52,11 +52,12 @@ class Project {
   }
 
   @action.bound
-  listProjectResources(project) {
+  listProjectResources(project, cb) {
     this.loadingResource = true;
     fetchApi.listProjectResources(project).then(data => {
       this.resourceList = data;
       this.loadingResource = false;
+      cb && cb(data);
     });
   }
 
@@ -81,6 +82,7 @@ class Project {
   updateResource(project, resource, info, cb) {
     fetchApi.updateResource(project, resource, info).then(() => {
       cb && cb();
+      this.listProjectResources(project);
     });
   }
 

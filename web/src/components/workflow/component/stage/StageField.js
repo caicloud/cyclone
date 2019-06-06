@@ -20,7 +20,6 @@ class StageField extends React.Component {
     update: PropTypes.bool,
     project: PropTypes.string,
     modify: PropTypes.bool,
-    setFieldValue: PropTypes.func,
   };
 
   state = {
@@ -28,18 +27,15 @@ class StageField extends React.Component {
   };
 
   render() {
-    const { values, update, project, modify, setFieldValue } = this.props;
+    const { values, update, project, modify } = this.props;
     const currentStage = _.get(values, 'currentStage');
     if (!currentStage) {
       return <Spin />;
     }
     const specKey = `${currentStage}.spec.pod`;
     const resourceArrayProps = {
-      resourcesArr: _.get(values, 'resourcesArr'),
-      setFieldValue,
       update,
-      project,
-      workflowName: _.get(values, 'metadata.name'),
+      projectName: project,
     };
 
     return (
