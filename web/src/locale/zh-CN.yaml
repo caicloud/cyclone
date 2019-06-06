@@ -213,6 +213,7 @@ notification:
   updateWorkflow: Workflow 更新成功
   updateResource: Resource 更新成功
   createResource: Resource 新增成功
+  deleteStage: Stage 删除成功
 resource:
   name: 资源
   type: 资源类型

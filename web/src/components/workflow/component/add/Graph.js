@@ -173,10 +173,12 @@ class Graph extends React.Component {
   };
 
   onClose = e => {
+    const { setFieldValue } = this.props;
     if (e.target.className !== 'ant-drawer-mask') {
       this.setState({
         visible: false,
       });
+      setFieldValue('currentStage', '');
     } else {
       const { validateForm, setTouched, values } = this.props;
       const currentStage = _.get(values, 'currentStage');
@@ -316,6 +318,8 @@ class Graph extends React.Component {
       setFieldValue,
       values,
       setStageDepned,
+      project,
+      resource: { deleteStage },
     } = this.props;
     const { graph, nodePosition } = this.state;
     // Delete any connected edges
@@ -326,12 +330,13 @@ class Graph extends React.Component {
     });
     const stages = _.get(values, 'stages', []);
     const index = stages.indexOf(nodeId);
+    const stageName = _.get(viewNode, 'title');
     if (index > -1) {
       _.pullAt(stages, index);
       setFieldValue('stages', stages);
       setFieldValue(nodeId, {});
     }
-    setStageDepned(nodeId, '', _.get(viewNode, 'title'));
+    setStageDepned(nodeId, '', stageName);
     const position = _.cloneDeep(nodePosition);
     graph.nodes = nodeArr;
     graph.edges = newEdges;
@@ -339,6 +344,12 @@ class Graph extends React.Component {
     this.setState({ graph, selected: null, nodePosition: position });
     updateStagePosition(nodeId, {});
     if (update) {
+      deleteStage(project, stageName, () => {
+        notification.success({
+          message: intl.get('notification.deleteStage'),
+          duration: 2,
+        });
+      });
       this.updateStageDepned(_.get(viewNode, 'title'), '', 'removeNode');
     }
   };
