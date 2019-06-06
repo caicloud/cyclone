@@ -93,6 +93,13 @@ class Project {
       this.listProjectResources(project);
     });
   }
+
+  @action.bound
+  deleteResource(project, name) {
+    fetchApi.deleteResource(project, name).then(() => {
+      this.listProjectResources(project);
+    });
+  }
 }
 
 export default new Project();

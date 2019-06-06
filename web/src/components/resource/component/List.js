@@ -1,4 +1,4 @@
-import { Table, Button } from 'antd';
+import { Table, Button, Modal } from 'antd';
 import PropTypes from 'prop-types';
 import Resource from './Form';
 import { inject, observer } from 'mobx-react';
@@ -6,6 +6,7 @@ import { getIntegrationName } from '@/lib/util';
 import EllipsisMenu from '@/components/public/ellipsisMenu';
 
 const Fragment = React.Fragment;
+const confirm = Modal.confirm;
 
 @inject('project')
 @observer
@@ -39,6 +40,22 @@ class ResourceList extends React.Component {
     });
   };
 
+  removeResouece = name => {
+    const {
+      projectName,
+      project: { deleteResource },
+    } = this.props;
+    confirm({
+      title: intl.get('confirmTip.remove', {
+        resourceType: 'Resource',
+        name,
+      }),
+      onOk() {
+        deleteResource(projectName, name);
+      },
+    });
+  };
+
   render() {
     const { project, projectName } = this.props;
     const { visible, modifyData, update } = this.state;
@@ -61,10 +78,16 @@ class ResourceList extends React.Component {
         align: 'right',
         render: (value, row) => (
           <EllipsisMenu
-            menuText={[intl.get('operation.modify')]}
+            menuText={[
+              intl.get('operation.modify'),
+              intl.get('operation.delete'),
+            ]}
             menuFunc={[
               () => {
                 this.updateResource(value, row);
+              },
+              () => {
+                this.removeResouece(value);
               },
             ]}
           />

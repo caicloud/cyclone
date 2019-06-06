@@ -95,7 +95,6 @@ class ResourceFrom extends React.Component {
     if (!_.isEmpty(modifyData)) {
       data = _.merge(data, modifyData);
     }
-
     if (!update && !_.get(data, 'metadata.name')) {
       data.metadata.name = `${projectName}-rsc${resourceLen + 1}`;
     }
