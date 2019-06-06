@@ -212,6 +212,7 @@ notification:
   updateStage: Stage 更新成功
   updateWorkflow: Workflow 更新成功
   updateResource: Resource 更新成功
+  createResource: Resource 新增成功
 resource:
   type: 资源类型
   resolver: 资源解析器

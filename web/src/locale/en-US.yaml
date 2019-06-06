@@ -212,6 +212,7 @@ notification:
   updateStage: Stage update succeeded
   updateWorkflow: Workflow update succeeded
   updateResource: Resource updated succeeded
+  createResource: Resource create succeeded
 resource:
   type: Resource Type
   resolver: Resource Resolver

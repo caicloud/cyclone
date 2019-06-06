@@ -12,6 +12,8 @@ class Project {
   @observable stageList = null;
   @observable loadingStage = false;
 
+  @observable resourceDetail = {};
+
   @action.bound
   listProjects(query, cb) {
     fetchApi.listProjects(query).then(data => {
@@ -64,6 +66,29 @@ class Project {
     fetchApi.listProjectStages(project).then(data => {
       this.stageList = data;
       this.loadingStage = false;
+    });
+  }
+
+  @action.bound
+  getResource(project, resource, cb) {
+    fetchApi.getResource(project, resource).then(data => {
+      this.resourceDetail[resource] = data;
+      cb && cb(data);
+    });
+  }
+
+  @action.bound
+  updateResource(project, resource, info, cb) {
+    fetchApi.updateResource(project, resource, info).then(() => {
+      cb && cb();
+    });
+  }
+
+  @action.bound
+  createResource(project, data, cb) {
+    fetchApi.createResource(project, data).then(() => {
+      cb && cb();
+      this.listProjectResources(project);
     });
   }
 }
