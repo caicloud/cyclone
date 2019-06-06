@@ -20,6 +20,7 @@ class ResourceList extends React.Component {
     visible: false,
     modifyData: null,
     update: false,
+    showDetail: false,
   };
 
   addResource = () => {
@@ -31,13 +32,18 @@ class ResourceList extends React.Component {
     this.props.project.listProjectResources(projectName);
   }
 
-  updateResource = (name, value) => {
+  updateResource = (name, value, detail) => {
     const integration = getIntegrationName(_.get(value, 'spec.parameters'));
-    this.setState({
-      visible: true,
+    let state = {
       modifyData: { ...value, integration },
-      update: true,
-    });
+    };
+    if (detail) {
+      state.detailVisible = true;
+    } else {
+      state.update = true;
+      state.visible = true;
+    }
+    this.setState(state);
   };
 
   removeResouece = name => {
@@ -58,7 +64,7 @@ class ResourceList extends React.Component {
 
   render() {
     const { project, projectName } = this.props;
-    const { visible, modifyData, update } = this.state;
+    const { visible, modifyData, update, detailVisible } = this.state;
     const list = _.get(project, ['resourceList', 'items'], []);
     const columns = [
       {
@@ -107,6 +113,13 @@ class ResourceList extends React.Component {
           columns={columns}
           rowKey={record => record.metadata.name}
           dataSource={list}
+          onRow={row => {
+            return {
+              onClick: () => {
+                this.updateResource(_.get(row, 'metadata.name'), row, 'detail');
+              },
+            };
+          }}
         />
         {visible && (
           <Resource
@@ -122,6 +135,22 @@ class ResourceList extends React.Component {
             projectName={projectName}
             resourceLen={resourceLen}
             modifyData={modifyData}
+          />
+        )}
+        {detailVisible && (
+          <Resource
+            handleModalClose={() => {
+              this.setState({
+                detailVisible: false,
+                modifyData: null,
+              });
+            }}
+            title={intl.get('resource.detail')}
+            visible={detailVisible}
+            projectName={projectName}
+            resourceLen={resourceLen}
+            modifyData={modifyData}
+            readOnly={true}
           />
         )}
       </Fragment>

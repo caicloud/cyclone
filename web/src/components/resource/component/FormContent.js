@@ -24,6 +24,7 @@ class FormContent extends React.Component {
     update: PropTypes.bool,
     resource: PropTypes.object,
     resourceTypeInfo: PropTypes.object,
+    readOnly: PropTypes.bool,
   };
 
   constructor(props) {
@@ -33,6 +34,11 @@ class FormContent extends React.Component {
       resourceTypeInfo,
       noShowIndex: this.getNoShowIndex(resourceTypeInfo),
     };
+  }
+
+  componentDidMount() {
+    const { integration } = this.props;
+    integration.getIntegrationList();
   }
 
   getNoShowIndex = data => {
@@ -45,11 +51,6 @@ class FormContent extends React.Component {
     });
     return noShowIndex;
   };
-
-  componentDidMount() {
-    const { integration } = this.props;
-    integration.getIntegrationList();
-  }
 
   handleTypeChange = val => {
     const {
@@ -100,7 +101,7 @@ class FormContent extends React.Component {
   };
 
   renderParameters = noShowKeys => {
-    const { values } = this.props;
+    const { values, readOnly } = this.props;
     const { resourceTypeInfo } = this.state;
     let arr = [];
     _.forEach(_.get(values, 'spec.parameters', []), (field, index) => {
@@ -128,6 +129,7 @@ class FormContent extends React.Component {
               'description',
             ])}
             validate={field.required && required}
+            readOnly={readOnly}
           />
         );
         arr.push(dom);
@@ -140,6 +142,7 @@ class FormContent extends React.Component {
     const { resourceTypeInfo } = this.state;
     const {
       update,
+      readOnly,
       resource: { resourceTypeList },
       integration: { groupIntegrationList },
     } = this.props;
@@ -167,6 +170,7 @@ class FormContent extends React.Component {
           component={SelectField}
           formItemLayout={modalFormItemLayout}
           required
+          readOnly={readOnly}
           validate={required}
         />
         <Field
@@ -177,7 +181,7 @@ class FormContent extends React.Component {
           hasFeedback
           required
           validate={required}
-          readOnly={update}
+          readOnly={update || readOnly}
         />
         <Field
           label={intl.get('sideNav.integration')}
@@ -192,6 +196,7 @@ class FormContent extends React.Component {
           required
           validate={required}
           formItemLayout={modalFormItemLayout}
+          readOnly={readOnly}
         />
         <SectionCard title={intl.get('resource.parameters')}>
           <FormItem {...noLabelItemLayout}>

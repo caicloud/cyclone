@@ -1,5 +1,5 @@
 import { Formik } from 'formik';
-import { Modal, notification, Spin } from 'antd';
+import { Modal, notification } from 'antd';
 import FormContent from './FormContent';
 import PropTypes from 'prop-types';
 import { inject, observer } from 'mobx-react';
@@ -16,6 +16,8 @@ class ResourceFrom extends React.Component {
     resource: PropTypes.object,
     project: PropTypes.object,
     resourceLen: PropTypes.number,
+    title: PropTypes.string,
+    readOnly: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -144,10 +146,13 @@ class ResourceFrom extends React.Component {
     const {
       update,
       resource: { resourceTypeList },
+      title,
+      readOnly,
     } = this.props;
     const { visible, loading, resourceTypeInfo } = this.state;
+    const footerProps = readOnly ? { footer: null } : {};
     if (loading) {
-      return <Spin />;
+      return null;
     }
     return (
       <Formik
@@ -158,15 +163,18 @@ class ResourceFrom extends React.Component {
         render={props => (
           <Modal
             visible={visible}
+            title={title}
             onCancel={this.closeModal}
             onOk={() => {
               this.setState({ dirty: props.dirty });
               props.handleSubmit();
             }}
+            {...footerProps}
           >
             <FormContent
               {...props}
               update={update}
+              readOnly={readOnly}
               resourceTypeInfo={resourceTypeInfo}
             />
           </Modal>
