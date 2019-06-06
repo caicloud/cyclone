@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/biz/hook"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
@@ -82,7 +83,7 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 
 	for _, wft := range wfts.Items {
 		log.Infof("Trigger workflow trigger %s", wft.Name)
-		if err = createWorkflowRun(wft, data); err != nil {
+		if err = createWorkflowRun(tenant, wft, data); err != nil {
 			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
 		}
 	}
@@ -93,7 +94,7 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	return newWebhookResponse(ignoredMsg), nil
 }
 
-func createWorkflowRun(wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
+func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
 	ns := wft.Namespace
 	var err error
 	var project string
@@ -204,6 +205,7 @@ func createWorkflowRun(wft v1alpha1.WorkflowTrigger, data *scm.EventData) error 
 		}
 	}
 
+	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
 	_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(ns).Create(wfr)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
