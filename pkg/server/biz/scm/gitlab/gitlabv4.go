@@ -181,10 +181,9 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 }
 
 // CreateStatus generate a new status for repository.
-func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
+func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repo, commitSha string) error {
 	state, description := transStatus(status)
 
-	owner, project := scm.ParseRepo(repoURL)
 	context := "continuous-integration/cyclone"
 	opt := &v4.SetCommitStatusOptions{
 		State:       v4.BuildStateValue(state),
@@ -192,14 +191,13 @@ func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, com
 		TargetURL:   &targetURL,
 		Context:     &context,
 	}
-	_, resp, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
+	_, resp, err := g.client.Commits.SetCommitStatus(repo, commitSha, opt)
 	return convertGitlabV4Error(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
-func (g *V4) GetPullRequestSHA(repoURL string, number int) (string, error) {
-	owner, name := scm.ParseRepo(repoURL)
-	mr, resp, err := g.client.MergeRequests.GetMergeRequest(owner+"/"+name, number, nil)
+func (g *V4) GetPullRequestSHA(repo string, number int) (string, error) {
+	mr, resp, err := g.client.MergeRequests.GetMergeRequest(repo, number, nil)
 	if err != nil {
 		return "", convertGitlabV4Error(err, resp)
 	}
@@ -209,8 +207,8 @@ func (g *V4) GetPullRequestSHA(repoURL string, number int) (string, error) {
 
 // GetWebhook gets webhook from specified repo.
 func (g *V4) GetWebhook(repo string, webhookURL string) (*v4.ProjectHook, error) {
-	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	// log.Infof("repo: %s", url.PathEscape(repo))
+	hooks, resp, err := g.client.Projects.ListProjectHooks(repo, nil)
 	if err != nil {
 		return nil, convertGitlabV4Error(err, resp)
 	}
@@ -236,9 +234,9 @@ func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 			return err
 		}
 
-		onwer, name := scm.ParseRepo(repo)
+		log.Infof("webhook url: %s", webhook.URL)
 		hook := generateV4ProjectHook(webhook)
-		_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+		_, resp, err := g.client.Projects.AddProjectHook(repo, hook)
 		if err != nil {
 			return convertGitlabV4Error(err, resp)
 		}
@@ -256,9 +254,8 @@ func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
 		return err
 	}
 
-	owner, name := scm.ParseRepo(repo)
-	if resp, err := g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
-		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+	if resp, err := g.client.Projects.DeleteProjectHook(repo, hook.ID); err != nil {
+		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, repo, err)
 		return convertGitlabV4Error(err, resp)
 	}
 

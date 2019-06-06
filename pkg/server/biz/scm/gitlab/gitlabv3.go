@@ -136,10 +136,9 @@ func (g *V3) ListDockerfiles(repo string) ([]string, error) {
 }
 
 // CreateStatus generate a new status for repository.
-func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
+func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repo, commitSha string) error {
 	state, description := transStatus(status)
 
-	owner, project := scm.ParseRepo(repoURL)
 	context := "continuous-integration/cyclone"
 	opt := &v3.SetCommitStatusOptions{
 		State:       v3.BuildState(state),
@@ -147,15 +146,14 @@ func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, com
 		TargetURL:   &targetURL,
 		Context:     &context,
 	}
-	_, resp, err := g.client.Commits.SetCommitStatus(owner+"/"+project, commitSha, opt)
+	_, resp, err := g.client.Commits.SetCommitStatus(repo, commitSha, opt)
 	return convertGitlabV3Error(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
-func (g *V3) GetPullRequestSHA(repoURL string, number int) (string, error) {
-	owner, name := scm.ParseRepo(repoURL)
+func (g *V3) GetPullRequestSHA(repo string, number int) (string, error) {
 	path := fmt.Sprintf("%s/api/%s/projects/%s/merge_requests?iid=%d",
-		strings.TrimSuffix(g.scmCfg.Server, "/"), v3APIVersion, url.QueryEscape(owner+"/"+name), number)
+		strings.TrimSuffix(g.scmCfg.Server, "/"), v3APIVersion, url.QueryEscape(repo), number)
 	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return "", err
@@ -208,8 +206,7 @@ type mergeRequestResponse struct {
 
 // GetWebhook gets webhook from specified repo.
 func (g *V3) GetWebhook(repo string, webhookURL string) (*v3.ProjectHook, error) {
-	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Projects.ListProjectHooks(owner+"/"+name, nil)
+	hooks, resp, err := g.client.Projects.ListProjectHooks(repo, nil)
 	if err != nil {
 		return nil, convertGitlabV3Error(err, resp)
 	}
@@ -235,9 +232,8 @@ func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 			return err
 		}
 
-		onwer, name := scm.ParseRepo(repo)
 		hook := generateV3ProjectHook(webhook)
-		_, resp, err := g.client.Projects.AddProjectHook(onwer+"/"+name, hook)
+		_, resp, err := g.client.Projects.AddProjectHook(repo, hook)
 		if err != nil {
 			return convertGitlabV3Error(err, resp)
 		}
@@ -255,9 +251,8 @@ func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
 		return err
 	}
 
-	owner, name := scm.ParseRepo(repo)
-	if resp, err := g.client.Projects.DeleteProjectHook(owner+"/"+name, hook.ID); err != nil {
-		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, owner, name, err)
+	if resp, err := g.client.Projects.DeleteProjectHook(repo, hook.ID); err != nil {
+		log.Errorf("delete project hook %s for repo error: %v", hook.ID, repo, err)
 		return convertGitlabV3Error(err, resp)
 	}
 
