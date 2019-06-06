@@ -29,6 +29,13 @@ class Resource {
   }
 
   @action.bound
+  deleteStage(project, stage, cb) {
+    fetchApi.deleteStage(project, stage).then(() => {
+      cb && cb();
+    });
+  }
+
+  @action.bound
   listSCMRepos(integration) {
     fetchApi.listSCMRepos(integration).then(data => {
       this.SCMRepos[integration] = data;

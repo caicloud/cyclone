@@ -213,6 +213,7 @@ notification:
   updateWorkflow: Workflow update succeeded
   updateResource: Resource updated succeeded
   createResource: Resource create succeeded
+  deleteStage: Stage delete succeeded
 resource:
   name: Resource
   type: Resource Type
