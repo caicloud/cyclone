@@ -195,6 +195,7 @@ stage:
     container:
       image: Image
       envs: Envs
+      command: Cmd
       env:
         name: Key
         value: Value

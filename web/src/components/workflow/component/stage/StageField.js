@@ -82,14 +82,14 @@ class StageField extends React.Component {
                       {/* // TODO: 暂时不展示此字段 */}
                       {/* <Field
                         label={'ENTRYPOINT'}
-                        name={`${specKey}.spec.containers.${index}.command`}
+                        name={`${specKey}.spec.containers.${index}.args`}
                         component={TextareaField}
                         hasFeedback
                         required
                       /> */}
                       <Field
-                        label={'COMMAND'}
-                        name={`${specKey}.spec.containers.${index}.args`}
+                        label={intl.get('stage.spec.container.command')}
+                        name={`${specKey}.spec.containers.${index}.command`}
                         component={TextareaField}
                         hasFeedback
                         required

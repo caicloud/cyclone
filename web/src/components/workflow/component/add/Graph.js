@@ -11,7 +11,7 @@ import AddStage from '../stage/AddStage';
 import classNames from 'classnames';
 import styles from '../index.module.less';
 import PropTypes from 'prop-types';
-import { formatStage } from './util';
+import { formatStage, revertFormArg } from './util';
 import { formatTouchedField } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
 
@@ -132,8 +132,7 @@ class Graph extends React.Component {
       // create stage
       if (update) {
         const stage = formatStage(
-          _.get(values, `${_.get(values, 'currentStage')}`),
-          false
+          _.get(values, `${_.get(values, 'currentStage')}`)
         );
         createStage(project, stage, data => {
           // update workflow stages after add stage
@@ -157,7 +156,7 @@ class Graph extends React.Component {
       }
 
       if (update) {
-        const stage = formatStage(_.get(values, currentStage), false);
+        const stage = formatStage(_.get(values, currentStage));
         const prevStageInfo = _.get(stageInfo, stageName);
         if (!_.isEqual(stage, prevStageInfo)) {
           updateStage(project, stageName, stage, () => {
@@ -275,6 +274,10 @@ class Graph extends React.Component {
             'metadata.annotations.stageTemplate',
             'spec',
           ]);
+          info.spec.pod = revertFormArg(
+            _.get(info, 'spec.pod'),
+            !_.get(info, ['metadata', 'annotations', 'stageTemplate'])
+          );
           if (!_.get(values, nodeId)) {
             setFieldValue(nodeId, info);
           }

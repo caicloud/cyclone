@@ -195,6 +195,7 @@ stage:
     container:
       image: 镜像
       envs: 环境变量
+      command: 命令
       env:
         name: 键
         value: 值

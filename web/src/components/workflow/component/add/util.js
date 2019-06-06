@@ -1,24 +1,49 @@
-const tramformArg = data => {
+const tramformArg = (data, isCustomStage) => {
   const value = _.cloneDeep(data);
   const containers = _.get(value, 'spec.containers[0]');
   _.forEach(containers, (v, k) => {
     if (['args', 'command'].includes(k) && _.isString(v)) {
       value.spec.containers[0][k] = v.split(/(?:\r\n|\r|\n)/);
+      if (isCustomStage && k === 'command') {
+        value.spec.containers[0][k] = _.concat(
+          ['/bin/sh', '-e', '-c'],
+          value.spec.containers[0][k]
+        );
+      }
     }
   });
   return value;
 };
 
-export const formatStage = (data, fromCreate = true, requests, projectName) => {
+export const revertFormArg = (data, isCustom) => {
+  const value = _.cloneDeep(data);
+  const containers = _.get(value, 'spec.containers[0]');
+  _.forEach(containers, (v, k) => {
+    if (k === 'command' && _.isArray(v) && v.length > 0) {
+      if (isCustom) {
+        value.spec.containers[0][k] = _.drop(v, 3);
+      }
+      value.spec.containers[0][k] = value.spec.containers[0][k].join('\n');
+    }
+  });
+  return value;
+};
+
+export const formatStage = data => {
+  const isCustomStage = !_.get(data, [
+    'metadata',
+    'annotations',
+    'stageTemplate',
+  ]);
   let stage = {
     metadata: _.get(data, 'metadata'),
     spec: {
       pod: tramformArg(
-        _.pick(_.get(data, 'spec.pod'), ['inputs', 'outputs', 'spec'])
+        _.pick(_.get(data, 'spec.pod'), ['inputs', 'outputs', 'spec']),
+        isCustomStage
       ),
     },
   };
-
   return stage;
 };
 
@@ -41,12 +66,7 @@ export const formatSubmitData = (value, projectName, state) => {
   };
   _.forEach(stages, v => {
     const currentStage = _.get(value, v);
-    const stageFormatData = formatStage(
-      currentStage,
-      true,
-      requests,
-      projectName
-    );
+    const stageFormatData = formatStage(currentStage);
     requests.push({
       type: 'createStage',
       project: projectName,
