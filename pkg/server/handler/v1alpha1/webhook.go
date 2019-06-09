@@ -171,8 +171,9 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 				meta.AnnotationAlias:              alias,
 			},
 			Labels: map[string]string{
-				meta.LabelProjectName:  project,
-				meta.LabelWorkflowName: wfName,
+				meta.LabelProjectName:             project,
+				meta.LabelWorkflowName:            wfName,
+				meta.LabelWorkflowRunAcceleration: wft.Labels[meta.LabelWorkflowRunAcceleration],
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
