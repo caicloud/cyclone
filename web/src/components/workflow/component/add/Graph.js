@@ -274,12 +274,13 @@ class Graph extends React.Component {
             'metadata.annotations.stageTemplate',
             'spec',
           ]);
-          info.spec.pod = revertFormArg(
-            _.get(info, 'spec.pod'),
-            !_.get(info, ['metadata', 'annotations', 'stageTemplate'])
+          const _info = _.cloneDeep(info);
+          _info.spec.pod = revertFormArg(
+            _.get(_info, 'spec.pod'),
+            !_.get(_info, ['metadata', 'annotations', 'stageTemplate'])
           );
           if (!_.get(values, nodeId)) {
-            setFieldValue(nodeId, info);
+            setFieldValue(nodeId, _info);
           }
           this.setState({ stageInfo: { [stageName]: info }, visible: true });
         });
