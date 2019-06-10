@@ -74,7 +74,6 @@ export const formatSubmitData = (value, projectName, state) => {
     });
 
     const workflowStage = {
-      artifacts: _.get(currentStage, 'spec.pod.outputs.artifacts', []),
       depends: _.get(depend, v),
       name: _.get(currentStage, `metadata.name`),
     };

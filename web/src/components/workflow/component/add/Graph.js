@@ -446,7 +446,7 @@ class Graph extends React.Component {
     );
     if (index > -1 || type === 'addStage') {
       const depends =
-        _.get(workflowInfo, 'spec.spec.stages[index].depends') || [];
+        _.get(workflowInfo, `spec.stages[${index}].depends`) || [];
       switch (type) {
         case 'addEdge': {
           workflowInfo.spec.stages[index].depends = depends;
