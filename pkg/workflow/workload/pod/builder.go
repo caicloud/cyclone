@@ -130,7 +130,16 @@ func (m *Builder) ResolveArguments() error {
 	// Escape double quotes and '\n'
 	for k, v := range parameters {
 		parameters[k] = strings.Replace(v, "\"", "\\\"", -1)
-		parameters[k] = strings.Replace(parameters[k], "\n", "\\n", -1)
+		parameters[k] = strings.Replace(v, "\n", "\\n", -1)
+	}
+
+	// Handle cases when parameter values containers templates
+	for k, v := range parameters {
+		rendered, err := mustache.Render(v, parameters)
+		if err != nil {
+			return err
+		}
+		parameters[k] = rendered
 	}
 
 	log.WithField("params", parameters).Debug("Parameters collected")
@@ -522,12 +531,16 @@ func (m *Builder) ResolveOutputResources() error {
 	}
 
 	// Add a docker-in-docker sidecar when there are image type resource to output.
+	args := []string{"dockerd"}
+	for _, r := range controller.Config.DindSettings.InsecureRegistries {
+		args = append(args, "--insecure-registry", r)
+	}
 	if withImageOutput {
 		var previleged = true
 		dind := corev1.Container{
 			Image: controller.Config.Images[controller.DindImage],
 			Name:  common.DockerInDockerSidecarName,
-			Args:  []string{"dockerd"},
+			Args:  args,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged: &previleged,
 			},

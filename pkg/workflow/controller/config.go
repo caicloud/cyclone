@@ -46,6 +46,8 @@ type WorkflowControllerConfig struct {
 	// NotificationURL represents the config to send notifications after workflowruns finish.
 	// It can be configured as Cyclone server notification URL to take advantage of its scenarized functions.
 	NotificationURL string `json:"notification_url"`
+	// DindSettings is settings for Docker in Docker
+	DindSettings DindSettings `json:"dind"`
 }
 
 // LoggingConfig configures logging
@@ -81,6 +83,13 @@ type GCConfig struct {
 type LimitsConfig struct {
 	// Maximum WorkflowRuns to be kept for each Workflow
 	MaxWorkflowRuns int `json:"max_workflowruns"`
+}
+
+// DindSettings is settings for Docker in Docker.
+type DindSettings struct {
+	// InsecureRegistries is list of insecure registries, for docker registries with
+	// self-signed certs, it's useful to bypass the cert check.
+	InsecureRegistries []string `json:"insecure_registries"`
 }
 
 // Config is Workflow Controller config instance
