@@ -231,7 +231,7 @@ func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 // CreateStatus generate a new status for repository.
 func (b *BitbucketServer) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
 	// BitBucket Server:  SUCCESSFUL, FAILED and INPROGRESS.
-	state := "INPROGRESS"
+	state := ""
 	description := ""
 
 	switch status {
