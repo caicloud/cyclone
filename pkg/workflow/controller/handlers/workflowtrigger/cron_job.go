@@ -16,6 +16,7 @@ import (
 	ccommon "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
@@ -138,9 +139,25 @@ func (m *CronTriggerManager) CreateCron(wft *v1alpha1.WorkflowTrigger) {
 		wfr.ObjectMeta.Labels[meta.LabelControllerInstance] = instance
 	}
 
+	var project, acceleration string
 	if wft.Labels != nil {
 		if projectName, ok := wft.Labels[meta.LabelProjectName]; ok {
 			wfr.Labels[meta.LabelProjectName] = projectName
+			project = projectName
+		}
+
+		if acc, ok := wft.Labels[meta.LabelWorkflowRunAcceleration]; ok {
+			wfr.Labels[meta.LabelWorkflowRunAcceleration] = acc
+			acceleration = acc
+		}
+	}
+
+	if acceleration == meta.LabelValueTrue {
+		if project == "" {
+			log.Warningf("workflowruns triggered by workflowtrigger %s will not be accelerated as its project is empty", wft.Name)
+		} else {
+			tenant := common.NamespaceTenant(wft.Namespace)
+			accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
 		}
 	}
 
