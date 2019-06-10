@@ -45,6 +45,9 @@ data:
       "execution_context": {
         "namespace": "{{ .Values.engine.executionContext.namespace }}",
         "pvc": "{{ .Values.engine.executionContext.pvc }}"
+      },
+      "dind": {
+        "insecure_registries": ["{{ .Values.imageRegistry.registry }}"]
       }
     }
 
