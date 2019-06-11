@@ -79,7 +79,7 @@ class WorkflowTable extends React.Component {
           />
         </div>
         <Table
-          rowKey={row => row.id}
+          rowKey={row => row.metadata.name}
           onRow={row => {
             return {
               onClick: () => {
