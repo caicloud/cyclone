@@ -56,7 +56,12 @@ const addRequesting = config => {
 const getLoadingInfo = (method, url) => {
   const _querys = url.split('/');
   const subResource = ['stages', 'resources', 'workflows'];
-  const firstResource = ['project', 'integrations', 'templates'];
+  const firstResource = [
+    'projects',
+    'integrations',
+    'templates',
+    'resourcetypes',
+  ];
   const includeSubResource = _.intersection(_querys, subResource);
   const includeFirstResource = _.intersection(_querys, firstResource);
 
@@ -69,6 +74,7 @@ const getLoadingInfo = (method, url) => {
       ? `${intl.get(method)} ${lastResource[0]}`
       : `${intl.get(method)} ${lastResource[0]} ${_querys[index + 1]}`;
   }
+
   return loadingText;
 };
 

@@ -80,11 +80,9 @@ class List extends React.Component {
         key: 'action',
         align: 'right',
         render: (value, rowData) => {
-          const builtin = _.get(rowData, [
-            'metadata',
-            'labels',
-            'cyclone.dev/builtin',
-          ]);
+          const builtin =
+            _.get(rowData, ['metadata', 'labels', 'cyclone.dev/builtin']) ===
+            'true';
           return (
             <MenuAction type={value} disablAll={builtin} history={history} />
           );
