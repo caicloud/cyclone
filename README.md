@@ -43,6 +43,8 @@ $ helm install --name cyclone --namespace cyclone-system ./helm/cyclone
 
 If you want to configure the installation or want to install from source code, please refer to [Cyclone Install Guide](docs/installation.md).
 
+Then you can access Cyclone with kubectl or Cyclone web (http://<node-ip>:30022).
+
 ## Community
 
 - **Slack**: Join [Cyclone Community](https://cycloneworkflow.slack.com/) for disscussions and posting questions. If you are not yet a member of Cyclone Slack, you may sign up [here](https://join.slack.com/t/cycloneworkflow/shared_invite/enQtNjQ2MDI1MTM1NDg4LTI0NzhmOGY1NjU2NDJhZGNmODNmZDQ5MWJmZjdmNzdlOTc2Yjc1N2M0MjZjYWZiODUyMzViMDZhODYzOTI5MDE).
