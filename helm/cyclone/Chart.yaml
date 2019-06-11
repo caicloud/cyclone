@@ -1,11 +1,12 @@
 apiVersion: v1
-AppVersion: v0.9.5
+AppVersion: v1.0.0-alpha
 description: A Helm chart for Cyclone
 name: cyclone
-version: 0.1.1
+version: 0.1.2
 keywords:
   - cicd
   - workflow
   - devops
+  - k8s
 sources:
   - https://github.com/caicloud/cyclone
