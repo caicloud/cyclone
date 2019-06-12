@@ -149,7 +149,7 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 	opt := &v4.ListTreeOptions{
 		Recursive: &recursive,
 		ListOptions: v4.ListOptions{
-			PerPage: scm.ListOptLargePerPage,
+			PerPage: scm.ListOptPerPage,
 		},
 	}
 

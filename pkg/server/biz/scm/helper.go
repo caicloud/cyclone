@@ -17,10 +17,8 @@ import "strings"
 
 const (
 	// ListOptPerPage represents the value for PerPage in list options.
-	ListOptPerPage = 30
-
-	// ListOptLargePerPage represents the value for large PerPage in list options.
-	ListOptLargePerPage = 100
+	// Max is 100 for both GitHub and Gitlab, refer to https://developer.github.com/v3/guides/traversing-with-pagination/#basics-of-pagination
+	ListOptPerPage = 100
 )
 
 // ParseServerURL is a helper func to parse the server url, such as https://github.com/ to return server(github.com).
