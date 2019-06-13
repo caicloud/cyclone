@@ -34,7 +34,9 @@ function usage {
 echo "Report to $REPORT_URL every $HEARTBEAT_INTERVAL seconds."
 while [ true ];
 do
+  echo -e "[`date '+%Y-%m-%d %H:%M:%S'`]: Start to get usage ..."
   json=$(usage "/pvc-data")
-  wget -q --header="Content-Type:application/json" --header="X-Namespace:$NAMESPACE" --post-data="$json" $REPORT_URL;
+  echo -e "[`date '+%Y-%m-%d %H:%M:%S'`]: Finished get usage ..."
+  wget -q -O /dev/null --header="Content-Type:application/json" --header="X-Namespace:$NAMESPACE" --post-data="$json" $REPORT_URL;
   sleep $HEARTBEAT_INTERVAL;
 done
