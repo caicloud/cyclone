@@ -257,7 +257,7 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	opt := &github.SearchOptions{
 		ListOptions: github.ListOptions{
-			PerPage: scm.ListOptLargePerPage,
+			PerPage: scm.ListOptPerPage,
 		},
 	}
 
