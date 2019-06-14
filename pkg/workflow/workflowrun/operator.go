@@ -278,6 +278,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		case v1alpha1.StatusPending:
 			pending = true
 		case v1alpha1.StatusSucceeded:
+		case v1alpha1.StatusCancelled:
 		default:
 			log.WithField("stg", stage).
 				WithField("status", status.Status.Phase).
