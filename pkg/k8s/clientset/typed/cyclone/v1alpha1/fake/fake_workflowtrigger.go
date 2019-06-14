@@ -119,7 +119,7 @@ func (c *FakeWorkflowTriggers) DeleteCollection(options *v1.DeleteOptions, listO
 // Patch applies the patch and returns the patched workflowTrigger.
 func (c *FakeWorkflowTriggers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.WorkflowTrigger, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(workflowtriggersResource, c.ns, name, data, subresources...), &v1alpha1.WorkflowTrigger{})
+		Invokes(testing.NewPatchSubresourceAction(workflowtriggersResource, c.ns, name, pt, data, subresources...), &v1alpha1.WorkflowTrigger{})
 
 	if obj == nil {
 		return nil, err

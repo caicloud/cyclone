@@ -100,7 +100,7 @@ func (c *FakeExecutionClusters) DeleteCollection(options *v1.DeleteOptions, list
 // Patch applies the patch and returns the patched executionCluster.
 func (c *FakeExecutionClusters) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.ExecutionCluster, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(executionclustersResource, name, data, subresources...), &v1alpha1.ExecutionCluster{})
+		Invokes(testing.NewRootPatchSubresourceAction(executionclustersResource, name, pt, data, subresources...), &v1alpha1.ExecutionCluster{})
 	if obj == nil {
 		return nil, err
 	}
