@@ -185,7 +185,6 @@ pull() {
         # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
         if [ ! -z ${SCM_AUTH+x} ]; then
             SCM_URL=$( modifyURL $SCM_URL $SCM_AUTH )
-            echo "SCM_URL: $SCM_URL"
         fi
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
