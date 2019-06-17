@@ -59,7 +59,7 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 	}
 
 	// Launch PVC usage watcher to watch the usage of PVC.
-	err = usage.LaunchPVCUsageWatcher(client, v1alpha1.ExecutionContext{
+	err = usage.LaunchPVCUsageWatcher(client, tenantName, v1alpha1.ExecutionContext{
 		Namespace: nsname,
 		PVC:       pvcName,
 	})
