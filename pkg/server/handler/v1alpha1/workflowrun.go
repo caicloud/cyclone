@@ -314,10 +314,10 @@ func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, co
 	}
 
 	if fileutil.Exists(logFilePath) {
-		return fmt.Errorf("log file %s already exists", logFilePath)
+		log.Infof("log file %s already exists, append logs", logFilePath)
 	}
 
-	file, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Errorf("fail to open the log file %s as %v", logFilePath, err)
 		return err
