@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 )
 
@@ -31,7 +32,7 @@ const (
 const PVCWatcherName = "pvc-watchdog"
 
 // LaunchPVCUsageWatcher launches a pod in a given namespace to report PVC usage regularly.
-func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.ExecutionContext) error {
+func LaunchPVCUsageWatcher(client *kubernetes.Clientset, tenant string, context v1alpha1.ExecutionContext) error {
 	if len(context.PVC) == 0 {
 		return fmt.Errorf("no pvc in execution namespace %s", context.Namespace)
 	}
@@ -72,7 +73,7 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.Execut
 								},
 								{
 									Name:  NamespaceEnvName,
-									Value: context.Namespace,
+									Value: common.TenantNamespace(tenant),
 								},
 							},
 							Resources: corev1.ResourceRequirements{
@@ -82,7 +83,7 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, context v1alpha1.Execut
 								},
 								Limits: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsCPU, "100m")),
-									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "64Mi")),
+									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "128Mi")),
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
