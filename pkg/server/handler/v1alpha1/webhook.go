@@ -156,10 +156,13 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 
 	log.Infof("Trigger wft %s with event data: %v", wft.Name, data)
 
-	name := fmt.Sprintf("%s-%s", wfName, rand.String(5))
+	suffix := rand.String(5)
+	name := fmt.Sprintf("%s-%s", wfName, suffix)
 	alias := name
 	if tag != "" {
 		alias = tag
+	} else {
+		tag = suffix
 	}
 
 	// Create workflowrun.
@@ -187,7 +190,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	// Set "Tag" and "SCM_REVISION" for all resource configs.
 	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
 		for i, p := range r.Parameters {
-			if p.Name == "TAG" && tag != "" {
+			if p.Name == "TAG" {
 				r.Parameters[i].Value = &tag
 			}
 
@@ -200,7 +203,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	// Set "Tag" for all stage configs.
 	for _, s := range wft.Spec.WorkflowRunSpec.Stages {
 		for i, p := range s.Parameters {
-			if p.Name == "tag" && tag != "" {
+			if p.Name == "tag" {
 				s.Parameters[i].Value = &tag
 			}
 		}
