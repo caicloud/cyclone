@@ -84,7 +84,7 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 	}
 
 	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete persistent volume claim %s error %v", pvcName, err)
 		return err
 	}
