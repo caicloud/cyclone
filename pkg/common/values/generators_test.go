@@ -25,19 +25,19 @@ func TestParseRefValue(t *testing.T) {
 			"aaa",
 		},
 		{
-			"$RANDOM:1",
+			"$(random:1)",
 			"A",
 		},
 		{
-			"$RANDOM:2",
+			"$(random:2)",
 			"BB",
 		},
 		{
-			"$RANDOM:x",
-			"$RANDOM:x",
+			"$(random:x)",
+			"$(random:x)",
 		},
 		{
-			"$TIMENOW:RFC3339",
+			"$(timenow:RFC3339)",
 			"2019-05-24T11:10:13+08:00",
 		},
 	}

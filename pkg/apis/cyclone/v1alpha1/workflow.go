@@ -26,6 +26,20 @@ type WorkflowSpec struct {
 
 	// Notification represents the notification config of workflowrun result.
 	Notification Notification `json:"notification,omitempty"`
+
+	// GlobalVariables are global variables can be used in stages or resources parameters. For example, we set a
+	// GlobalVariable 'IMAGE_TAG', we can use it in resource parameter as '${variables.IMAGE_TAG}, please note the
+	// format ${variables.<variable_name>}
+	GlobalVariables []GlobalVariable `json:"globalVariables,omitempty"`
+}
+
+// GlobalVariable defines a global variable, For the moment we support three types of Value:
+// - direct string, for example: latest
+// - $(random:<length>), for example: $(random:5) will generate a 5 characters random string
+// - $(timenow:<format>), for example: $(timenow:RFC1123> will generate a value based on RFC1123 formatted now time
+type GlobalVariable struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 // NotificationPolicy represents the policy to send notifications.

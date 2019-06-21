@@ -20,7 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
+	"github.com/caicloud/cyclone/pkg/workflow/values/ref"
 )
 
 // HandleWorkflowRunNotification handles workflowrun finished notification from workflow engine.
@@ -193,7 +193,7 @@ func getSCMSourceFromWorkflowRun(wfr *v1alpha1.WorkflowRun) (*s_v1alpha1.SCMSour
 	}
 
 	if found {
-		secretRef := pod.NewSecretRefValue()
+		secretRef := ref.NewSecretRefValue()
 		if err := secretRef.Parse(gitToken); err != nil {
 			return nil, err
 		}
