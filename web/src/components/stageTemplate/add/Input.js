@@ -50,11 +50,11 @@ const InputSection = props => {
                             component={
                               a.name === 'cmd' ? TextareaField : InputField
                             }
-                            {...a.name === 'cmd' && {
+                            {...(a.name === 'cmd' && {
                               style: {
                                 height: 150,
                               },
-                            }}
+                            })}
                             hasFeedback
                           />
                         </Col>
