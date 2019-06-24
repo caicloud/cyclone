@@ -130,7 +130,7 @@ func (m *Builder) ResolveArguments() error {
 	// Escape double quotes and '\n'
 	for k, v := range parameters {
 		parameters[k] = strings.Replace(v, "\"", "\\\"", -1)
-		parameters[k] = strings.Replace(v, "\n", "\\n", -1)
+		parameters[k] = strings.Replace(parameters[k], "\n", "\\n", -1)
 	}
 
 	// Handle cases when parameter values containers templates
