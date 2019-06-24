@@ -16,7 +16,7 @@ $ go get github.com/caicloud/cyclone
 # Avoid push to caicloud/cyclone
 $ git config push.default nothing
 
-$ git remove add $USER git@github.com:$USER/cyclone.git
+$ git remote add $USER git@github.com:$USER/cyclone.git
 $ git fetch $USER
 ```
 
