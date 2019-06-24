@@ -43,6 +43,9 @@ type WorkflowRunSpec struct {
 	// of volumes supported, namely HostPath, PV. Users can make use of preset volumes to inject timezone, certificates
 	// from host to containers, or mount data from PV to be used in containers.
 	PresetVolumes []PresetVolume `json:"volumes,omitempty"`
+	// GlobalVariables are global variables of the wfr, its value is a certain string copied or generated from
+	// wf.spec.globalVariables
+	GlobalVariables []GlobalVariable `json:"globalVariables,omitempty"`
 }
 
 // PresetVolume defines a preset volume

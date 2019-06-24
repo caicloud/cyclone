@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -48,29 +47,6 @@ func GetExecutionContext(wfr *v1alpha1.WorkflowRun) *v1alpha1.ExecutionContext {
 		Namespace: controller.Config.ExecutionContext.Namespace,
 		PVC:       controller.Config.ExecutionContext.PVC,
 	}
-}
-
-// ResolveRefStringValue resolves the given secret ref value, if it's not a ref value, return the origin value.
-// Ref value is in format of '$.<ns>.<secret>/<jsonpath>/...' to refer value in a secret.
-func ResolveRefStringValue(ref string, client clientset.Interface) (string, error) {
-	refValue := NewSecretRefValue()
-
-	// Return the origin value if not a valid ref
-	if err := refValue.Parse(ref); err != nil {
-		return ref, nil
-	}
-
-	v, err := refValue.Resolve(client)
-	if err != nil {
-		return "", err
-	}
-
-	strV, ok := v.(string)
-	if !ok {
-		return "", fmt.Errorf("expect string value: %v", v)
-	}
-
-	return strV, nil
 }
 
 // MatchContainerGroup matches a container name against a ContainerGroup, if the container belongs to the container group,
