@@ -78,6 +78,10 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		return
 	}
 
+	if err := operator.Mutate(); err != nil {
+		log.WithField("wfr", wfr.Name).Error("Mutate error: ", err)
+	}
+
 	if err := operator.Reconcile(); err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
 	}

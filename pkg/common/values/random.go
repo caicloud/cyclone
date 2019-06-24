@@ -1,8 +1,14 @@
 package values
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
+)
+
+var (
+	randomRegexpString = `^\$\(random:(\d+)\)$`
+	randomRegexp       = regexp.MustCompile(randomRegexpString)
 )
 
 type randomString struct {
@@ -40,16 +46,16 @@ func (r *randomString) value(param *RandomValueParam) string {
 }
 
 // Parse parses random values from a string. If the input string is a valid random value ref
-// value: $RANDOM:<length>, for example: $RANDOM:5, then generate a random value accordingly,
+// value: $(random:<length>), for example: $(random:5), then generate a random value accordingly,
 // otherwise return the input string itself.
 func (r *randomString) Parse(v string) string {
 	trimed := strings.TrimSpace(v)
-	if !strings.HasPrefix(trimed, "$RANDOM:") {
+	results := randomRegexp.FindStringSubmatch(trimed)
+	if len(results) < 2 {
 		return v
 	}
 
-	p := strings.TrimPrefix(trimed, "$RANDOM:")
-	length, err := strconv.ParseInt(p, 10, 32)
+	length, err := strconv.ParseInt(results[1], 10, 32)
 	if err != nil {
 		return v
 	}

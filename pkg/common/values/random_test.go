@@ -43,8 +43,12 @@ func TestRandomValue(t *testing.T) {
 			"value",
 		},
 		{
-			"$RANDOM:7",
+			"$(random:7)",
 			"AAAAAAA",
+		},
+		{
+			"$(random:12)",
+			"BBBBBBBBBBBB",
 		},
 	}
 

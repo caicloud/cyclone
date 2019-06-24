@@ -22,6 +22,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	"github.com/caicloud/cyclone/pkg/workflow/values/ref"
 )
 
 // Builder is builder used to build pod for stage
@@ -36,6 +37,7 @@ type Builder struct {
 	pvcVolumes       map[string]string
 	executionContext *v1alpha1.ExecutionContext
 	outputResources  []*v1alpha1.Resource
+	refProcessor     *ref.Processor
 }
 
 // NewBuilder creates a new pod builder.
@@ -49,6 +51,7 @@ func NewBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1
 		pod:              &corev1.Pod{},
 		pvcVolumes:       make(map[string]string),
 		executionContext: GetExecutionContext(wfr),
+		refProcessor:     ref.NewProcess(wfr),
 	}
 }
 
@@ -124,7 +127,7 @@ func (m *Builder) ResolveArguments() error {
 
 	for k, v := range parameters {
 		v = values.ParseRefValue(v)
-		resolved, err := ResolveRefStringValue(v, m.client)
+		resolved, err := m.refProcessor.ResolveRefStringValue(v, m.client)
 		if err != nil {
 			log.WithField("key", k).WithField("value", v).Error("resolve ref failed:", err)
 			return err
@@ -408,7 +411,7 @@ func (m *Builder) ResolveInputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
-			resolved, err := ResolveRefStringValue(value, m.client)
+			resolved, err := m.refProcessor.ResolveRefStringValue(value, m.client)
 			if err != nil {
 				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
 			}
@@ -513,7 +516,7 @@ func (m *Builder) ResolveOutputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
-			resolved, err := ResolveRefStringValue(value, m.client)
+			resolved, err := m.refProcessor.ResolveRefStringValue(value, m.client)
 			if err != nil {
 				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
 			}

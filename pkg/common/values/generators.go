@@ -28,8 +28,8 @@ func init() {
 }
 
 // ParseRefValue passes through the input value to all the supported value generators to get the final value. For example,
-// $RANDOM:5 --> xafce
-// $NOWTIME:RFC3339 --> 2019-05-24T11:10:13+08:00
+// $(random:5) --> xafce
+// $(timenow:RFC3339) --> 2019-05-24T11:10:13+08:00
 func ParseRefValue(value string) string {
 	value = RandomString.Parse(value)
 	value = NowTimeString.Parse(value)

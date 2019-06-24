@@ -17,6 +17,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	ccommon "github.com/caicloud/cyclone/pkg/common"
+	"github.com/caicloud/cyclone/pkg/common/values"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
@@ -49,6 +50,9 @@ type Operator interface {
 	GC(lastTry, wfrDeletion bool) error
 	// Run next stages in the Workflow and resolve overall status.
 	Reconcile() error
+
+	// Mutate wfr; like generate variables value from wf variable.
+	Mutate() error
 }
 
 type operator struct {
@@ -566,5 +570,36 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 		}
 	}
 
+	return nil
+}
+
+// Mutate will mutate wfr. For example, we defined variables in workflow using generated value, like $(random:<length>),
+// if wfr's variable is empty, we will mutate wfr's variable with a generated random string.
+func (o *operator) Mutate() error {
+	if o.wf == nil || o.wfr == nil {
+		return fmt.Errorf("wf or wfr is nil")
+	}
+
+	var appendVariables []v1alpha1.GlobalVariable
+
+	for _, wfVariable := range o.wf.Spec.GlobalVariables {
+		var found bool
+		for _, variable := range o.wfr.Spec.GlobalVariables {
+			if variable.Name == wfVariable.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			appendVariables = append(appendVariables, v1alpha1.GlobalVariable{
+				Name:  wfVariable.Name,
+				Value: values.ParseRefValue(wfVariable.Value),
+			})
+		}
+
+	}
+
+	o.wfr.Spec.GlobalVariables = append(o.wfr.Spec.GlobalVariables, appendVariables...)
 	return nil
 }
