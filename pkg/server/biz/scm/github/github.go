@@ -18,6 +18,7 @@ package github
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -51,10 +52,13 @@ const (
 
 	// errorFieldResponse represents the field `Response` of Github error.
 	errorFieldResponse = "Response"
+
+	// publicGithubServer represents the address of public Github.
+	publicGithubServer = "https://github.com"
 )
 
 var (
-	statusURLRegexpStr = `^https://api.github.com/repos/[\S]+/[\S]+/statuses/([\w]+)$`
+	statusURLRegexpStr = `^https://[\S]+/repos/[\S]+/[\S]+/statuses/([\w]+)$`
 	statusURLRegexp    = regexp.MustCompile(statusURLRegexpStr)
 )
 
@@ -74,10 +78,16 @@ type Github struct {
 // NewGithub new Github client.
 func NewGithub(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 	var client *github.Client
+	var err error
 	if scmCfg.Token == "" {
-		client = newClientByBasicAuth(scmCfg.User, scmCfg.Password)
+		client, err = newClientByBasicAuth(scmCfg.Server, scmCfg.User, scmCfg.Password)
 	} else {
-		client = newClientByBasicAuth(scmCfg.User, scmCfg.Token)
+		client, err = newClientByBasicAuth(scmCfg.Server, scmCfg.User, scmCfg.Token)
+	}
+
+	if err != nil {
+		log.Infof("fail to new Github client for %s as %v", scmCfg.Server, err)
+		return nil, err
 	}
 
 	return &Github{scmCfg, client, context.Background()}, nil
@@ -322,8 +332,12 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		return err
 	}
 
+	client, err := newClientByToken(g.scmCfg.Server, g.scmCfg.Token)
+	if err != nil {
+		return err
+	}
+
 	owner, repo := scm.ParseRepo(repoURL)
-	client := newClientByToken(g.scmCfg.Token)
 	email := "cyclone@caicloud.dev"
 	name := "cyclone"
 	context := "continuous-integration/cyclone"
@@ -338,7 +352,7 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		Context:     &context,
 		Creator:     &creator,
 	}
-	_, _, err := client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
+	_, _, err = client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
 	return err
 }
 
@@ -356,28 +370,61 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 // newClientByBasicAuth news Github client by basic auth, supports two types: username with password; username
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
-func newClientByBasicAuth(username, password string) *github.Client {
-	client := &http.Client{
-		Transport: &http.Transport{
-			Proxy: func(req *http.Request) (*url.URL, error) {
-				req.SetBasicAuth(username, password)
-				return nil, nil
-			},
+func newClientByBasicAuth(server, username, password string) (*github.Client, error) {
+	transport := &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			req.SetBasicAuth(username, password)
+			return nil, nil
 		},
 	}
 
-	return github.NewClient(client)
+	httpClient := &http.Client{
+		Transport: transport,
+	}
+
+	if !isPublic(server) {
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		client, err := github.NewEnterpriseClient(server, server, httpClient)
+		if err != nil {
+			log.Error("Fail to new client for enterprise Github as %v", err)
+			return nil, err
+		}
+
+		return client, nil
+	}
+
+	return github.NewClient(httpClient), nil
 }
 
 // newClientByToken news Github client by token.
-func newClientByToken(token string) *github.Client {
+func newClientByToken(server, token string) (*github.Client, error) {
 	// Use token to new Github client.
 	tokenSource := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
-	httpClient := oauth2.NewClient(context.TODO(), tokenSource)
+	c := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+	ctx := context.WithValue(context.TODO(), oauth2.HTTPClient, c)
+	httpClient := oauth2.NewClient(ctx, tokenSource)
 
-	return github.NewClient(httpClient)
+	if !isPublic(server) {
+		client, err := github.NewEnterpriseClient(server, server, httpClient)
+		if err != nil {
+			log.Error("Fail to new client for enterprise Github as %v", err)
+			return nil, err
+		}
+
+		return client, nil
+	}
+
+	return github.NewClient(httpClient), nil
 }
 
 // GetWebhook gets webhook from specified repo.
@@ -596,4 +643,8 @@ func convertGithubError(err error) error {
 	}
 
 	return err
+}
+
+func isPublic(server string) bool {
+	return strings.HasPrefix(server, publicGithubServer)
 }
