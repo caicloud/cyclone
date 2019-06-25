@@ -48,6 +48,9 @@ type WorkflowControllerConfig struct {
 	NotificationURL string `json:"notification_url"`
 	// DindSettings is settings for Docker in Docker
 	DindSettings DindSettings `json:"dind"`
+
+	// RetrySettins is settings for retry mechanism.
+	RetrySettings RetrySettings `json:"retry"`
 }
 
 // LoggingConfig configures logging
@@ -92,6 +95,15 @@ type DindSettings struct {
 	InsecureRegistries []string `json:"insecure_registries"`
 }
 
+// RetrySettings is settings for controller retry mechanism.
+// For example, count: 6, period: 10 defines try to do something every 10 seconds and do it 6 times.
+type RetrySettings struct {
+	// Count is the max retry times.
+	Count int `json:"count"`
+	// Period is the retry mechanism interval time, unit seconds.
+	Period int `json:"period"`
+}
+
 // Config is Workflow Controller config instance
 var Config WorkflowControllerConfig
 
@@ -111,6 +123,8 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return fmt.Errorf("validate config failed")
 	}
 
+	modify(&Config)
+
 	InitLogger(&Config.Logging)
 	return nil
 }
@@ -122,6 +136,17 @@ func validate(config *WorkflowControllerConfig) bool {
 	}
 
 	return true
+}
+
+// modify gives default values if it is empty.
+func modify(config *WorkflowControllerConfig) {
+	if config.RetrySettings.Count == 0 {
+		config.RetrySettings.Count = 3
+	}
+
+	if config.RetrySettings.Period == 0 {
+		config.RetrySettings.Period = 5
+	}
 }
 
 // ImagePullPolicy determines image pull policy based on environment variable DEVELOP_MODE

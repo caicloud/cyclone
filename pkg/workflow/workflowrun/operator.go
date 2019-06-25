@@ -410,7 +410,7 @@ func (o *operator) Reconcile() error {
 // - 'lastTry' indicates whether this is the last try to perform GC on this WorkflowRun object,
 // if set to true, the WorkflowRun would be marked as cleaned regardless whether the GC succeeded or not.
 // - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted. In this case,
-// GC would performed silently, without event recorded, withoug status update.
+// GC would performed silently, without event recorded, without status update.
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
@@ -450,7 +450,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 		}
 	}
 
-	// Get exeuction context of the WorkflowRun, namespace and PVC are defined in the context.
+	// Get execution context of the WorkflowRun, namespace and PVC are defined in the context.
 	executionContext := GetExecutionContext(o.wfr)
 
 	// Create a gc pod to clean data on PV if PVC is configured.

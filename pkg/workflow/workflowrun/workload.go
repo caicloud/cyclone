@@ -7,10 +7,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/retry"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
 )
@@ -75,8 +78,21 @@ func (p *WorkloadProcessor) processPod() error {
 	}
 	log.WithField("stg", p.stg.Name).Debug("Pod manifest created")
 
-	// Create the generated pod.
-	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
+	// Create the generated pod with retry on exceeded quota.
+	// Here is a litter tricky. Cyclone will delete stage related pod to release cpu/memory resource when stage have
+	// been finished, but pod deletion needs some time, so retry on exceeded quota gives the time to waiting previous
+	// stage pod deletion.
+	backoff := wait.Backoff{
+		Steps:    controller.Config.RetrySettings.Count,
+		Duration: time.Duration(controller.Config.RetrySettings.Period) * time.Second,
+		Factor:   1.0,
+		Jitter:   0.1,
+	}
+	origin := *po
+	err = retry.OnExceededQuota(backoff, func() error {
+		po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(&origin)
+		return err
+	})
 	if err != nil {
 		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
