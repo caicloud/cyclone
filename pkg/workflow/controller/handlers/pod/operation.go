@@ -15,6 +15,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
@@ -214,4 +215,15 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			Message:            "Coordinator completed",
 		})
 	}
+
+	// The workload and coordinator containers have all been finished, but maybe some others are still Running,
+	// Delete the pod and release cpu/memory resources after gc delay seconds since it is not necessary.
+	time.AfterFunc(time.Second*controller.Config.GC.DelaySeconds, func() {
+		if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete pod error: ", err)
+		} else {
+			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Pod deleted")
+		}
+	})
+
 }
