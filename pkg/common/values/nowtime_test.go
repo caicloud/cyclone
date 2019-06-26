@@ -45,6 +45,10 @@ func TestNowTimeValue(t *testing.T) {
 			"aaaaa",
 			"aaaaa",
 		},
+		{
+			"$(timenow:20060102150405)",
+			"20190524111013",
+		},
 	}
 
 	for _, c := range cases {
