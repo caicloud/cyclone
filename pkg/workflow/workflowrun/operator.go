@@ -410,7 +410,7 @@ func (o *operator) Reconcile() error {
 // - 'lastTry' indicates whether this is the last try to perform GC on this WorkflowRun object,
 // if set to true, the WorkflowRun would be marked as cleaned regardless whether the GC succeeded or not.
 // - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted. In this case,
-// GC would performed silently, without event recorded, without status update.
+// GC would performed silently, without event recording and status updating.
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
