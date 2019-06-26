@@ -18,7 +18,12 @@ _config:
         from:
           type: Config
           name: platform-config
-          key: "devopsWebhookURL"
+          key: "devopsExternalAccessURL"
+      - name: RECORD_WEB_URL_TEMPLATE
+        from:
+          type: Config
+          name: platform-config
+          key: "devopsRecordWebURLTemplate"
       mounts:
       - name: cyclone-data
         path: /var/lib/cyclone

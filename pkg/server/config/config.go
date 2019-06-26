@@ -17,6 +17,10 @@ const (
 
 	// EnvWebhookURLPrefix is the key of Environment variable to define webhook callback url prefix
 	EnvWebhookURLPrefix = "WEBHOOK_URL_PREFIX"
+
+	// EnvRecordWebURLTemplate is the key of Environment variable to define template of record url which used in
+	// PR status 'Details' to associate PR with WorkflowRun website.
+	EnvRecordWebURLTemplate = "RECORD_WEB_URL_TEMPLATE"
 )
 
 // CycloneServerConfig configures Cyclone Server
@@ -174,8 +178,8 @@ func modifier(config *CycloneServerConfig) {
 	}
 }
 
-// GetWebhookURLPrefix returns webhook callback url prefix. It tries to get the url from "WEBHOOK_URL_PREFIX" environment variable,
-// if the value is empty, then get it from configmap.
+// GetWebhookURLPrefix returns webhook callback url prefix. It tries to get the url from "WEBHOOK_URL_PREFIX"
+// environment variable, if the value is empty, then get it from configmap.
 func GetWebhookURLPrefix() string {
 	urlPrefix := os.Getenv(EnvWebhookURLPrefix)
 	if urlPrefix != "" {
@@ -183,4 +187,14 @@ func GetWebhookURLPrefix() string {
 	}
 
 	return Config.WebhookURLPrefix
+}
+
+// GetRecordWebURLTemplate returns record web URL template. It tries to get the url from "RECORD_WEB_URL_TEMPLATE"
+// environment variable, if the value is empty, then get it from configmap.
+func GetRecordWebURLTemplate() string {
+	template := os.Getenv(EnvRecordWebURLTemplate)
+	if template != "" {
+		return template
+	}
+	return Config.RecordWebURLTemplate
 }

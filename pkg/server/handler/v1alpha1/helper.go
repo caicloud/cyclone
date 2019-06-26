@@ -426,7 +426,7 @@ func generateRecordURL(tenant, project, wfName, wfrName string) (string, error) 
 		wfName,
 		wfrName,
 	}
-	tmpl, err := template.New("recordURL").Parse(config.Config.RecordWebURLTemplate)
+	tmpl, err := template.New("recordURL").Parse(config.GetRecordWebURLTemplate())
 	if err != nil {
 		return "", err
 	}
