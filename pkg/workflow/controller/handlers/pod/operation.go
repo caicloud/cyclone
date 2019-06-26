@@ -217,13 +217,12 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	}
 
 	// The workload and coordinator containers have all been finished, but maybe some others are still Running,
-	// Delete the pod and release cpu/memory resources after gc delay seconds since it is not necessary.
-	time.AfterFunc(time.Second*controller.Config.GC.DelaySeconds, func() {
+	// Delete the pod and release cpu/memory resources if gc delay seconds is 0.
+	if controller.Config.GC.DelaySeconds == 0 {
 		if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete pod error: ", err)
 		} else {
 			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Pod deleted")
 		}
-	})
-
+	}
 }

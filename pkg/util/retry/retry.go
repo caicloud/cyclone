@@ -28,7 +28,7 @@ func OnError(backoff wait.Backoff, fn func() error) error {
 
 // OnExceededQuota executes the provided function repeatedly, retrying if the server returns an exceeded quota error.
 func OnExceededQuota(backoff wait.Backoff, fn func() error) error {
-	var lastConflictErr error
+	var lastErr error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		err := fn()
 		switch {
@@ -36,7 +36,7 @@ func OnExceededQuota(backoff wait.Backoff, fn func() error) error {
 			return true, nil
 		case errors.IsForbidden(err):
 			if strings.Contains(err.Error(), "exceeded quota:") {
-				lastConflictErr = err
+				lastErr = err
 				return false, nil
 			}
 			return false, err
@@ -45,7 +45,7 @@ func OnExceededQuota(backoff wait.Backoff, fn func() error) error {
 		}
 	})
 	if err == wait.ErrWaitTimeout {
-		err = lastConflictErr
+		err = lastErr
 	}
 	return err
 }

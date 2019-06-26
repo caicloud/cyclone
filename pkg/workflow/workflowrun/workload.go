@@ -13,7 +13,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/util/retry"
-	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
 )
@@ -83,14 +82,14 @@ func (p *WorkloadProcessor) processPod() error {
 	// been finished, but pod deletion needs some time, so retry on exceeded quota gives the time to waiting previous
 	// stage pod deletion.
 	backoff := wait.Backoff{
-		Steps:    controller.Config.RetrySettings.Count,
-		Duration: time.Duration(controller.Config.RetrySettings.Period) * time.Second,
-		Factor:   1.0,
+		Steps:    3,
+		Duration: 5 * time.Second,
+		Factor:   1.5,
 		Jitter:   0.1,
 	}
-	origin := *po
+	origin := po.DeepCopy()
 	err = retry.OnExceededQuota(backoff, func() error {
-		po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(&origin)
+		po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(origin)
 		return err
 	})
 	if err != nil {
