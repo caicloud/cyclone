@@ -58,7 +58,7 @@ func (suite *RefSuite) SetupSuite() {
 
 func (suite *RefSuite) TestResolveRefStringValue() {
 	assert := assert.New(suite.T())
-	processor := NewProcess(suite.wfr)
+	processor := NewProcessor(suite.wfr)
 
 	v, err := processor.ResolveRefStringValue("", suite.client)
 	assert.Nil(err)

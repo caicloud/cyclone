@@ -12,8 +12,8 @@ type Processor struct {
 	variableRefValue *VariableRefValue
 }
 
-// NewProcess creates a process object
-func NewProcess(wfr *v1alpha1.WorkflowRun) *Processor {
+// NewProcessor creates a processor object
+func NewProcessor(wfr *v1alpha1.WorkflowRun) *Processor {
 	return &Processor{
 		wfr:              wfr,
 		secretRefValue:   NewSecretRefValue(),
@@ -21,10 +21,10 @@ func NewProcess(wfr *v1alpha1.WorkflowRun) *Processor {
 	}
 }
 
-// ResolveRefStringValue resolves the given secret ref value, if it's not a ref value, return the origin value.
-// Ref value is in format of
+// ResolveRefStringValue resolves a ref kind value, if it's not a ref value, return the origin value.
+// Valid ref values supported now include:
 // - '${secrets.<ns>:<secret>/<jsonpath>/...}' to refer value in a secret
-// - '${stages.<stage>.outputs.<key>}' to refer value from a wf stage output
+// - '${stages.<stage>.outputs.<key>}' to refer value from a stage output
 // - '${variables.<key>}' to refer value from a global variable defined in wfr
 func (p *Processor) ResolveRefStringValue(ref string, client clientset.Interface) (string, error) {
 	var value string
@@ -41,6 +41,7 @@ func (p *Processor) ResolveRefStringValue(ref string, client clientset.Interface
 			return ref, err
 		}
 	} else {
+		// TODO(ChenDe): implement ${stages.<stage>.outputs.<key>} type ref value
 		return ref, nil
 	}
 
