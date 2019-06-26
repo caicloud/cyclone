@@ -50,9 +50,8 @@ type Operator interface {
 	GC(lastTry, wfrDeletion bool) error
 	// Run next stages in the Workflow and resolve overall status.
 	Reconcile() error
-
-	// Mutate wfr; like generate variables value from wf variable.
-	Mutate() error
+	// ResolveGlobalVariables resolves global variables from workflow.
+	ResolveGlobalVariables()
 }
 
 type operator struct {
@@ -573,11 +572,11 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	return nil
 }
 
-// Mutate will mutate wfr. For example, we defined variables in workflow using generated value, like $(random:<length>),
-// if wfr's variable is empty, we will mutate wfr's variable with a generated random string.
-func (o *operator) Mutate() error {
+// ResolveGlobalVariables will resolve global variables in workflowrun For example, generate final value for generation
+// type value defined in workflow. For example, $(random:5) --> 'axyps'
+func (o *operator) ResolveGlobalVariables() {
 	if o.wf == nil || o.wfr == nil {
-		return fmt.Errorf("wf or wfr is nil")
+		return
 	}
 
 	var appendVariables []v1alpha1.GlobalVariable
@@ -594,12 +593,11 @@ func (o *operator) Mutate() error {
 		if !found {
 			appendVariables = append(appendVariables, v1alpha1.GlobalVariable{
 				Name:  wfVariable.Name,
-				Value: values.ParseRefValue(wfVariable.Value),
+				Value: values.GenerateValue(wfVariable.Value),
 			})
 		}
 
 	}
 
 	o.wfr.Spec.GlobalVariables = append(o.wfr.Spec.GlobalVariables, appendVariables...)
-	return nil
 }

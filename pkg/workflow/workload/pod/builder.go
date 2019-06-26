@@ -51,7 +51,7 @@ func NewBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1
 		pod:              &corev1.Pod{},
 		pvcVolumes:       make(map[string]string),
 		executionContext: GetExecutionContext(wfr),
-		refProcessor:     ref.NewProcess(wfr),
+		refProcessor:     ref.NewProcessor(wfr),
 	}
 }
 
@@ -126,7 +126,7 @@ func (m *Builder) ResolveArguments() error {
 	}
 
 	for k, v := range parameters {
-		v = values.ParseRefValue(v)
+		v = values.GenerateValue(v)
 		resolved, err := m.refProcessor.ResolveRefStringValue(v, m.client)
 		if err != nil {
 			log.WithField("key", k).WithField("value", v).Error("resolve ref failed:", err)
