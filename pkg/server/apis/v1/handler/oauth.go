@@ -31,7 +31,7 @@ const (
 var gitlabConf = &oauth2.Config{
 	ClientID:     os.Getenv(GitlabClient),
 	ClientSecret: os.Getenv(GitlabSecret),
-	RedirectURL:  os.Getenv(CycloneServer) + "/api/v1/scms/gitlab/callback",
+	RedirectURL:  os.Getenv(CycloneServer) + "/apis/v1/scms/gitlab/callback",
 	Scopes:       []string{},
 	Endpoint: oauth2.Endpoint{
 		AuthURL:  fmt.Sprintf("%s/oauth/authorize", os.Getenv(GitlabURL)),

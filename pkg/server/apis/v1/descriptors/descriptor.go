@@ -18,7 +18,7 @@ func register(ds ...definition.Descriptor) {
 
 func Descriptor() definition.Descriptor {
 	return definition.Descriptor{
-		Path:        "/api/v1",
+		Path:        "/v1",
 		Description: "It contains all APIs in v1",
 		Consumes:    []string{definition.MIMEAll},
 		Produces:    []string{definition.MIMEJSON},

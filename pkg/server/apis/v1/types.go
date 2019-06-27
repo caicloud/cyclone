@@ -182,6 +182,7 @@ type SCMAuthType string
 const (
 	Password SCMAuthType = "Password"
 	Token                = "Token"
+	OAuth                = "OAuth"
 )
 
 // SVN username and password seperator, because SVN username can not contain ":".
