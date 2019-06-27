@@ -401,12 +401,10 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 				return err
 			}
 		case <-sendTicker.C:
+			// With buf.ReadBytes, when err is not nil (often io.EOF), line is not guaranteed to be empty,
+			// it holds data before the error occurs.
 			line, err = buf.ReadBytes('\n')
-			if err == io.EOF {
-				continue
-			}
-
-			if err != nil {
+			if err != nil && err != io.EOF {
 				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
 				if err != nil {
 					log.Warningf("write close message error:%v", err)
@@ -414,16 +412,18 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 				break
 			}
 
-			err = ws.WriteMessage(websocket.TextMessage, line)
-			if err != nil {
-				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-					return nil
+			if len(line) > 0 {
+				err = ws.WriteMessage(websocket.TextMessage, line)
+				if err != nil {
+					if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
+						return nil
+					}
+					return err
 				}
-				return err
-			}
-			err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
-			if err != nil {
-				log.Warningf("set write deadline error:%v", err)
+				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+				if err != nil {
+					log.Warningf("set write deadline error:%v", err)
+				}
 			}
 		}
 	}
