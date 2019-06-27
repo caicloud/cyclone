@@ -556,14 +556,14 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 			}, c.Resources)
 		}
 
-		if c.Name == "workload-sidecar-c2" {
+		if c.Name == "wsc-c2" {
 			assert.Equal(suite.T(), corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceMemory: resource.MustParse("32Mi"),
-					corev1.ResourceCPU:    resource.MustParse("50m"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 				Limits: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
 					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 			}, c.Resources)
