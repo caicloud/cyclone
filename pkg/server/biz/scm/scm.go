@@ -92,7 +92,9 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 		return nil
 	}
 
-	if config.AuthType != v1alpha1.AuthTypePassword && config.AuthType != v1alpha1.AuthTypeToken && config.AuthType != apiv1.OAuth {
+	if config.AuthType != v1alpha1.AuthTypePassword &&
+		config.AuthType != v1alpha1.AuthTypeToken &&
+		string(config.AuthType) != string(apiv1.OAuth) {
 		return fmt.Errorf("SCM auth type %s upsupported", config.AuthType)
 	}
 

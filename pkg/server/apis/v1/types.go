@@ -172,8 +172,8 @@ type SCMType string
 
 const (
 	Gitlab SCMType = "Gitlab"
-	Github         = "Github"
-	SVN            = "SVN"
+	Github SCMType = "Github"
+	SVN    SCMType = "SVN"
 )
 
 // SCMAuthType represents the type of SCM auth, support password and token.
@@ -181,8 +181,8 @@ type SCMAuthType string
 
 const (
 	Password SCMAuthType = "Password"
-	Token                = "Token"
-	OAuth                = "OAuth"
+	Token    SCMAuthType = "Token"
+	OAuth    SCMAuthType = "OAuth"
 )
 
 // SVN username and password seperator, because SVN username can not contain ":".

@@ -101,21 +101,28 @@ func getUserInfo(token *oauth2.Token) (string, string, error) {
 	gitlabServer := os.Getenv(GitlabURL)
 	userV3API := fmt.Sprintf("%s/api/v3/user?access_token=%s", gitlabServer, accessToken)
 	if req, err := http.NewRequest(http.MethodGet, userV3API, nil); err != nil {
-		log.Error(err.Error())
+		log.Error(err)
 		return "", "", nil
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Error(err.Error())
+			log.Error(err)
+			log.Error(err)
+			return "", "", nil
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Error(err.Error())
+			log.Error(err)
+			return "", "", err
 		}
 		var userInfo = &api.GitlabUserInfo{}
-		json.Unmarshal(body, &userInfo)
+		err = json.Unmarshal(body, &userInfo)
+		if err != nil {
+			log.Error(err)
+			return "", "", err
+		}
 		log.Infof("gitlab user %s info: %v\n", userInfo.Username, userInfo)
 		userName := userInfo.Username
 
