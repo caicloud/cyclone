@@ -427,7 +427,6 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 			}
 		}
 	}
-
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
@@ -443,15 +442,6 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	prefix := fmt.Sprintf("%s_", stage)
 	exclusions := []string{fmt.Sprintf("%s_csc-co", stage), fmt.Sprintf("%s_csc-dind", stage)}
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0)
-
-	//logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
-	//if err != nil {
-	//	return nil, nil, err
-	//}
-	//f, err := os.Open(logFilePath)
-	//if err != nil {
-	//	return nil, nil, err
-	//}
 
 	return folderReader, headers, nil
 }

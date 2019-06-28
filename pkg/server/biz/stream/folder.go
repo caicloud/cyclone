@@ -120,17 +120,12 @@ func (r *folderReader) ReadBytes(delim byte) ([]byte, error) {
 			return line, err
 		}
 
-		// If end of current file, continue to next file
-		if err == io.EOF {
-			continue
-		}
-
 		// If no content read, continue to next file
 		if len(line) <= 0 {
 			continue
 		}
 
-		return line, err
+		return line, nil
 	}
 
 	// No file content found, all files have reach the end.
