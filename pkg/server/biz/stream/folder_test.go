@@ -2,37 +2,116 @@ package stream
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"testing"
-	"time"
 
-	"github.com/caicloud/nirvana/log"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestFolderReader(t *testing.T) {
-	reader := NewFolderReader("/tmp/logs", "cyclone_", []string{"cyclone_c.log"}, time.Second*30)
+const (
+	testDir = "/tmp/cyclone-ut-data-logs"
+)
 
-	ticker := time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			line, err := reader.ReadBytes('\n')
-			if err != nil && err != io.EOF {
-				log.Errorf("Read error: %v", err)
-				return
-			}
-
-			fmt.Print(string(line))
+func prepare() error {
+	if _, err := os.Stat(testDir); os.IsNotExist(err) {
+		err = os.MkdirAll(testDir, 0755)
+		if err != nil {
+			return err
 		}
 	}
 
+	if err := writeFile(fmt.Sprintf("%s/cyclone_i1", testDir), "i1"); err != nil {
+		return err
+	}
+	if err := writeFile(fmt.Sprintf("%s/cyclone_i2", testDir), "i2"); err != nil {
+		return err
+	}
+	if err := writeFile(fmt.Sprintf("%s/cyclone_main", testDir), "main"); err != nil {
+		return err
+	}
+	if err := writeFile(fmt.Sprintf("%s/cyclone_skip", testDir), "skip"); err != nil {
+		return err
+	}
+	if err := writeFile(fmt.Sprintf("%s/cyclone_o1", testDir), "o1"); err != nil {
+		return err
+	}
+	if err := writeFile(fmt.Sprintf("%s/cyclone_o2", testDir), "o2"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func TestRegex(t *testing.T) {
-	fmt.Println(InputContainerRegex.MatchString("i1"))
-	fmt.Println(InputContainerRegex.MatchString("i11"))
-	fmt.Println(InputContainerRegex.MatchString("i1a"))
-	fmt.Println(InputContainerRegex.MatchString("ai1"))
-	fmt.Println(OutputContainerRegex.MatchString("o1"))
-	fmt.Println(OutputContainerRegex.MatchString("o2"))
+func clean() {
+	os.RemoveAll(testDir)
+}
+
+func writeFile(path, content string) error {
+	var _, err = os.Stat(path)
+	if os.IsNotExist(err) {
+		var file, err = os.Create(path)
+		if err != nil {
+			return err
+		}
+		file.WriteString(content)
+		defer file.Close()
+	}
+
+	return nil
+}
+
+func TestFolderReader(t *testing.T) {
+	if err := prepare(); err != nil {
+		t.Errorf("Prepare for test error: %v", err)
+		return
+	}
+	defer clean()
+
+	reader := NewFolderReader(testDir, "cyclone_", []string{"cyclone_skip"}, 0)
+	defer reader.Close()
+
+	expecteds := []string{
+		"i1",
+		"i2",
+		"main",
+		"o1",
+		"o2",
+	}
+	for _, expected := range expecteds {
+		b, err := reader.ReadBytes('\n')
+		assert.Nil(t, err)
+		assert.Equal(t, expected, string(b))
+	}
+}
+
+func TestContainerWeight(t *testing.T) {
+	cases := []struct {
+		name     string
+		expected int
+	}{
+		{
+			name:     "i1",
+			expected: 200 - 1,
+		},
+		{
+			name:     "i2",
+			expected: 200 - 2,
+		},
+		{
+			name:     "i2i",
+			expected: 100,
+		},
+		{
+			name:     "o2",
+			expected: -200 - 2,
+		},
+		{
+			name:     "o1",
+			expected: -200 - 1,
+		},
+	}
+
+	for _, c := range cases {
+		assert.Equal(t, c.expected, containerWeight(c.name))
+	}
 }
