@@ -31,6 +31,7 @@ import (
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
+	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
 // CreateWorkflowRun ...
@@ -383,7 +384,7 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 		return err
 	}
 	prefix := fmt.Sprintf("%s_", stage)
-	exclusions := []string{fmt.Sprintf("%s_csc-co", stage), fmt.Sprintf("%s_csc-dind", stage)}
+	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
 	defer folderReader.Close()
 	var line []byte
@@ -434,13 +435,13 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	headers := make(map[string]string)
 	headers[httputil.HeaderContentType] = "text/plain"
 	if download {
-		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", workflowrun, stage, container)
+		logFileName := fmt.Sprintf("%s-%s-log.txt", workflowrun, stage)
 		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", logFileName)
 	}
 
 	logFolder, _ := getLogFolder(tenant, project, workflow, workflowrun)
 	prefix := fmt.Sprintf("%s_", stage)
-	exclusions := []string{fmt.Sprintf("%s_csc-co", stage), fmt.Sprintf("%s_csc-dind", stage)}
+	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0)
 
 	return folderReader, headers, nil

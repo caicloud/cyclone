@@ -18,7 +18,7 @@ import (
 )
 
 var InputContainerRegex = regexp.MustCompile(`^i\d+$`)
-var OutputContainerRegex = regexp.MustCompile(`^o\d+$`)
+var OutputContainerRegex = regexp.MustCompile(`^csc-o\d+$`)
 
 // FolderReader reads file content from a folder, it simulates single file reader and will
 // read content from all files. Sub-folder will be ignored.
@@ -56,18 +56,18 @@ func (s fileReadersSorter) Len() int {
 // containerWeight gives a weight to each container. Three kinds of containers
 // considered here:
 // - input containers, with container names like 'i1', 'i2'
-// - output containers, with container names like 'o1', 'o2'
+// - output containers, with container names like 'csc-o1', 'csc-o2'
 // - workload containers
 // Input containers should have largest weight, output containers should have the
 // smallest weight. Considering there won't be too many containers in a pod, we
 // can adjust the container index by fix weights 100, 200 to make the trick.
-// If sort by the weight, result will be: i1, i2, ... main ... o1, o2, o3, ...
+// If sort by the weight, result will be: i1, i2, ... main ... csc-o1, csc-o2, ...
 func containerWeight(c string) int {
 	if InputContainerRegex.MatchString(c) {
 		i, _ := strconv.Atoi(strings.TrimPrefix(c, "i"))
 		return -i + 200
 	} else if OutputContainerRegex.MatchString(c) {
-		o, _ := strconv.Atoi(strings.TrimPrefix(c, "o"))
+		o, _ := strconv.Atoi(strings.TrimPrefix(c, "csc-o"))
 		return -o - 200
 	}
 
@@ -200,8 +200,8 @@ func (r *folderReader) Watch(interval time.Duration) {
 // watch watches files in the folder, when new file added, start to serve new file content.
 func (r *folderReader) watch() {
 	var newFiles []*fileReader
-	filepath.Walk(r.folder, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+	_ = filepath.Walk(r.folder, func(path string, info os.FileInfo, err error) error {
+		if info == nil || info.IsDir() {
 			return nil
 		}
 

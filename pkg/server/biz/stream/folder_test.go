@@ -32,10 +32,10 @@ func prepare() error {
 	if err := writeFile(fmt.Sprintf("%s/cyclone_skip", testDir), "skip"); err != nil {
 		return err
 	}
-	if err := writeFile(fmt.Sprintf("%s/cyclone_o1", testDir), "o1"); err != nil {
+	if err := writeFile(fmt.Sprintf("%s/cyclone_csc-o1", testDir), "o1"); err != nil {
 		return err
 	}
-	if err := writeFile(fmt.Sprintf("%s/cyclone_o2", testDir), "o2"); err != nil {
+	if err := writeFile(fmt.Sprintf("%s/cyclone_csc-o2", testDir), "o2"); err != nil {
 		return err
 	}
 
@@ -53,7 +53,10 @@ func writeFile(path, content string) error {
 		if err != nil {
 			return err
 		}
-		file.WriteString(content)
+		_, err = file.WriteString(content)
+		if err != nil {
+			return err
+		}
 		defer file.Close()
 	}
 
@@ -102,11 +105,11 @@ func TestContainerWeight(t *testing.T) {
 			expected: 100,
 		},
 		{
-			name:     "o2",
+			name:     "csc-o2",
 			expected: -200 - 2,
 		},
 		{
-			name:     "o1",
+			name:     "csc-o1",
 			expected: -200 - 1,
 		},
 	}
