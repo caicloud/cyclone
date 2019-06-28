@@ -810,6 +810,10 @@ func (m *Builder) InjectEnvs() error {
 
 // divideResourceRequirements divides resources requirements by n
 func divideResourceRequirements(resources corev1.ResourceRequirements, n int) (*corev1.ResourceRequirements, error) {
+	if n <= 0 {
+		return &resources, fmt.Errorf("containers count %d can not equal or less than 0", n)
+	}
+
 	requirements := resources.DeepCopy()
 	for k, v := range resources.Requests {
 		newValue, err := divideQuantity(v, n)
@@ -862,17 +866,17 @@ func divideQuantity(quantity resource.Quantity, n int) (resource.Quantity, error
 // applyResourceRequirements applies resource requirements to two types of containers.
 // - cyclone containers will be assigned resource requirements with 0(unbounded), since they only
 //   consume negligible resources.
-// - the others containers will average the pod resource requirements
+// - the other containers(workload containers or custom containers, there is only one at most of the time)
+//   will average the pod resource requirements
 func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, averageToContainers bool) []corev1.Container {
 	var results []corev1.Container
 
 	newRequirements := requirements.DeepCopy()
 	if averageToContainers {
-		containerCount := len(containers)
+		containerCount := 0
 		for _, c := range containers {
-			if !common.OnlyCustomContainer(c.Name) {
-				containerCount--
-				continue
+			if common.OnlyCustomContainer(c.Name) {
+				containerCount++
 			}
 		}
 
