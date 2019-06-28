@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	// "github.com/caicloud/cyclone/cmd/worker/options"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1"
-	// "github.com/caicloud/cyclone/pkg/util/os"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"

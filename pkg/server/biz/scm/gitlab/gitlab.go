@@ -93,7 +93,6 @@ func NewGitlab(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 	var client *v4.Client
 	if ensureTokenType(server, token) == PrivateToken {
-		// if len(username) == 0 {
 		client = v4.NewClient(nil, token)
 	} else {
 		client = v4.NewOAuthClient(nil, token)
@@ -111,7 +110,6 @@ func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
 	if ensureTokenType(server, token) == PrivateToken {
-		// if len(username) == 0 {
 		client = gitlab.NewClient(nil, token)
 	} else {
 		client = gitlab.NewOAuthClient(nil, token)
@@ -221,7 +219,6 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	// Set headers.
 	req.Header.Set("Content-Type", "application/json")
 	if ensureTokenType(scmCfg.Server, scmCfg.Token) == PrivateToken {
-		// if scmCfg.User == "" {
 		// Use private token when username is empty.
 		req.Header.Set("PRIVATE-TOKEN", scmCfg.Token)
 	} else {
