@@ -23,6 +23,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	apiv1 "github.com/caicloud/cyclone/pkg/server/apis/v1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )

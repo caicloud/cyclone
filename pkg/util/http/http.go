@@ -110,6 +110,16 @@ const (
 
 	// ResourceTypePathParameterName ...
 	ResourceTypePathParameterName = "resourceType"
+	HEADER_ContentType            = "Content-Type"
+
+	// Scm represents the scm type of oauth include gitlab and github.
+	Scm = "scm"
+
+	// SVNRepoIDPathParameterName represents a svn repository's uuid.
+	SVNRepoIDPathParameterName = "svnrepoid"
+
+	// SVNRevisionQueryParameterName represents the svn commit revision.
+	SVNRevisionQueryParameterName = "revision"
 )
 
 // GetHTTPRequest gets request from context.

@@ -160,6 +160,57 @@ type versionResponse struct {
 	Revision string `json:"revision"`
 }
 
+const (
+	PrivateToken  = "PRIVATE-TOKEN"
+	Authorization = "Authorization"
+)
+
+func ensureTokenType(server, token string) (tokenType string) {
+	tokenType = Authorization
+
+	url := fmt.Sprintf(apiPathForGitlabVersion, server)
+	log.Infof("URL: %s", url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	// Set headers.
+	req.Header.Set("Content-Type", "application/json")
+	// Use private token when username is empty.
+	req.Header.Set(PrivateToken, token)
+
+	do := func(req *http.Request) bool {
+		// Use client with redirect disabled, then status code will be 302
+		// if Gitlab server does not support /api/v4/version request.
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Error(err)
+			return false
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			return true
+		}
+		return false
+	}
+	if do(req) {
+		return PrivateToken
+	}
+	// Use Oauth token when username is not empty.
+	req.Header.Set(Authorization, "Bearer "+token)
+	req.Header.Del(PrivateToken)
+	if do(req) {
+		return Authorization
+	}
+	return
+}
+
 func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	if scmCfg.Token == "" {
 		token, err := getOauthToken(scmCfg)
@@ -180,7 +231,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 
 	// Set headers.
 	req.Header.Set("Content-Type", "application/json")
-	if scmCfg.User == "" {
+	if ensureTokenType(scmCfg.Server, scmCfg.Token) == PrivateToken {
 		// Use private token when username is empty.
 		req.Header.Set("PRIVATE-TOKEN", scmCfg.Token)
 	} else {
