@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"os"
 
-	api "github.com/caicloud/cyclone/pkg/server/apis/v1"
-
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
-
 	"golang.org/x/oauth2"
+
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1"
 )
 
 const (
