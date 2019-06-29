@@ -92,7 +92,7 @@ func NewGitlab(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 // newGitlabV4Client news Gitlab v4 client by token. If username is empty, use private-token instead of oauth2.0 token.
 func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 	var client *v4.Client
-	if len(username) == 0 {
+	if ensureTokenType(server, token) == PrivateToken {
 		client = v4.NewClient(nil, token)
 	} else {
 		client = v4.NewOAuthClient(nil, token)
@@ -109,8 +109,7 @@ func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 // newGitlabV3Client news Gitlab v3 client by token. If username is empty, use private-token instead of oauth2.0 token.
 func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
-
-	if len(username) == 0 {
+	if ensureTokenType(server, token) == PrivateToken {
 		client = gitlab.NewClient(nil, token)
 	} else {
 		client = gitlab.NewOAuthClient(nil, token)
@@ -148,6 +147,57 @@ type versionResponse struct {
 	Revision string `json:"revision"`
 }
 
+const (
+	PrivateToken  = "PRIVATE-TOKEN"
+	Authorization = "Authorization"
+)
+
+func ensureTokenType(server, token string) (tokenType string) {
+	tokenType = Authorization
+
+	url := fmt.Sprintf(apiPathForGitlabVersion, server)
+	log.Infof("URL: %s", url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	// Set headers.
+	req.Header.Set("Content-Type", "application/json")
+	// Use private token when username is empty.
+	req.Header.Set(PrivateToken, token)
+
+	do := func(req *http.Request) bool {
+		// Use client with redirect disabled, then status code will be 302
+		// if Gitlab server does not support /api/v4/version request.
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Error(err)
+			return false
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			return true
+		}
+		return false
+	}
+	if do(req) {
+		return PrivateToken
+	}
+	// Use Oauth token when username is not empty.
+	req.Header.Set(Authorization, "Bearer "+token)
+	req.Header.Del(PrivateToken)
+	if do(req) {
+		return Authorization
+	}
+	return
+}
+
 func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	if scmCfg.Token == "" {
 		token, err := getOauthToken(scmCfg)
@@ -168,7 +218,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 
 	// Set headers.
 	req.Header.Set("Content-Type", "application/json")
-	if scmCfg.User == "" {
+	if ensureTokenType(scmCfg.Server, scmCfg.Token) == PrivateToken {
 		// Use private token when username is empty.
 		req.Header.Set("PRIVATE-TOKEN", scmCfg.Token)
 	} else {

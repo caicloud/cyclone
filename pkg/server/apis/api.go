@@ -4,6 +4,7 @@ package apis
 
 import (
 	"github.com/caicloud/cyclone/pkg/server/apis/middlewares"
+	v1 "github.com/caicloud/cyclone/pkg/server/apis/v1/descriptors"
 	v1alpha1 "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1/descriptors"
 
 	def "github.com/caicloud/nirvana/definition"
@@ -19,6 +20,7 @@ func Descriptor() def.Descriptor {
 		Produces:    []string{def.MIMEJSON},
 		Children: []def.Descriptor{
 			v1alpha1.Descriptor(),
+			v1.Descriptor(),
 		},
 	}
 }
