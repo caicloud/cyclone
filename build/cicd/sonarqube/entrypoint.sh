@@ -68,17 +68,22 @@ params="-Dsonar.sourceEncoding=UTF-8 \
 case ${LANGUAGE} in
     Go)
         testReportFile=$(find . -name "coverage.out" | tr '\n' ',')
-        if [ -n testReportFile ]; then
+        if [[ -n ${testReportFile} ]]; then
             params="$params -Dsonar.go.coverage.reportPaths=$testReportFile"
         fi
         ;;
     Java)
         binFiles=$({ find . -name "*.jar"; find . -name "*.war"; } | tr '\n' ',')
-        if [ -n binFiles ]; then
+        if [[ -n ${binFiles} ]]; then
             params="$params -Dsonar.java.binaries=$binFiles"
         fi
-        reportXMLs=$(grep -l "testsuite" $(find . -name "*.xml") | tr '\n' ',')
-        if [ -n $reportXMLs ]; then
+
+        xmlFiles=$(find . -name "*.xml")
+        if [[ ${#xmlFiles[@]} -ne 0 ]]; then
+            reportXMLs=$(grep -l "<testsuite" ${xmlFiles} | tr '\n' ',')
+        fi
+
+        if [[ -n ${reportXMLs} ]]; then
             params="$params -Dsonar.junit.reportPaths=$reportXMLs"
         fi
         ;;
