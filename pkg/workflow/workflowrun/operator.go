@@ -180,6 +180,9 @@ func (o *operator) Update() error {
 			}
 		}
 
+		// Update golbal variables to resolved values
+		combined.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
+
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
 			len(latest.OwnerReferences) != len(combined.OwnerReferences) {
 			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(combined)
@@ -565,25 +568,7 @@ func (o *operator) ResolveGlobalVariables() {
 
 	o.wfr.Spec.GlobalVariables = append(o.wfr.Spec.GlobalVariables, appendVariables...)
 
-	// Update WorkflowRun's GlobalVariables
 	if len(appendVariables) > 0 {
 		log.WithField("variables", appendVariables).Info("Append variables from wf to wfr")
-		latest, err := o.client.CycloneV1alpha1().WorkflowRuns(o.wfr.Namespace).Get(o.wfr.Name, metav1.GetOptions{})
-		if err != nil {
-			log.WithField("wfr", latest.Name).
-				WithField("error", err).
-				Warn("WorkflowRun global variables updating, get latest WorkflowRun failed.")
-			return
-		}
-
-		latest.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
-		_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(latest)
-		if err != nil {
-			log.WithField("wfr", latest.Name).
-				WithField("error", err).
-				Warn("WorkflowRun global variables updated failed.")
-			return
-		}
 	}
-
 }
