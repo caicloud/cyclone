@@ -168,7 +168,7 @@ pull() {
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        git fetch -v origin $SCM_REVISION
+        git fetch -v --depth=1 origin $SCM_REVISION
         git checkout FETCH_HEAD
     else
         if [ -e $WORKDIR/data ]; then
@@ -186,17 +186,20 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master --single-branch --recursive ${SCM_URL} data
+            git clone -v -b master --depth=1 --single-branch --recursive ${SCM_URL} data
             cd data
-            git fetch origin $SOURCE_BRANCH
+            git fetch --depth=1 origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH --single-branch --recursive ${SCM_URL} data
+            git clone -v -b $TARGET_BRANCH --depth=1 --single-branch --recursive ${SCM_URL} data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
-            git fetch origin $SOURCE_BRANCH
+            # If the fetch depth is too small, the merge command will fail with:
+            #    'fatal: refusing to merge unrelated histories'
+            # And we assume 30 is enough.
+            git fetch --depth=30 origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi
