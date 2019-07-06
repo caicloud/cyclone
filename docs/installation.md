@@ -1,5 +1,7 @@
 # Installation Guide
 
+> Cyclone has been tested with Kubernetes 1.12, 1.13 and 1.14.
+
 ## Install With Helm
 
 ### Prerequisites

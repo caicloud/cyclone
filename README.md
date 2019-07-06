@@ -35,6 +35,8 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 
 ## Quick Start
 
+> Cyclone has been tested with Kubernetes 1.12, 1.13 and 1.14.
+
 Make sure [Helm](https://helm.sh/) with a version higher than **2.10** is installed ([install guide](https://helm.sh/docs/using_helm/#install-helm)), then install Cyclone with:
 
 ```bash
