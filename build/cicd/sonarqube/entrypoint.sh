@@ -101,7 +101,7 @@ sonar-scanner $params -X;
 echo "Wait for scan task completed..."
 while true; do
     ceTaskUrl=$(cat ./.scannerwork/report-task.txt | grep ceTaskUrl | cut -c11-)
-    taskStatus=$(curl $ceTaskUrl 2>/dev/null | tr ',' '\n' | grep "status" | awk -F: '{ print $2 }')
+    taskStatus=$(curl -u ${TOKEN}: $ceTaskUrl 2>/dev/null | tr ',' '\n' | grep "status" | awk -F: '{ print $2 }')
     echo $taskStatus | grep -v FAILED | grep -v SUCCESS || break;
     echo "Check in 3 seconds..."
     sleep 3;
