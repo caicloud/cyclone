@@ -287,6 +287,37 @@ var workflowrun = []definition.Descriptor{
 		},
 	},
 	{
+		Path: "/workflowruns/{workflowrun}/artifacts",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Create,
+				Function:    handler.ReceiveStageArtifacts,
+				Consumes:    []string{definition.MIMEFormData},
+				Description: "Collect stage artifacts",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.NamespaceQueryParameter,
+					},
+					{
+						Source:    definition.Query,
+						Name:      httputil.StageNameQueryParameter,
+						Operators: []definition.Operator{validator.String("required")},
+					},
+				},
+				Results: []definition.Result{
+					{
+						Destination: definition.Error,
+					},
+				},
+			},
+		},
+	},
+	{
 		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/logstream",
 		Definitions: []definition.Definition{
 			{
@@ -374,6 +405,127 @@ var workflowrun = []definition.Descriptor{
 						Destination: definition.Error,
 					},
 				},
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/artifacts",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListArtifacts,
+				Description: "List artifacts produced in the workflowRun",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+				},
+				Results: definition.DataErrorResults("workflowrun"),
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/artifacts/{artifact}",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Produces:    []string{definition.MIMEOctetStream},
+				Function:    handler.DownloadArtifact,
+				Description: "download artifact",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ArtifactNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.StageNameQueryParameter,
+					},
+					{
+						Source:    definition.Query,
+						Name:      httputil.DownloadQueryParameter,
+						Default:   true,
+						Operators: []definition.Operator{validator.Bool("")},
+					},
+				},
+				Results: []definition.Result{
+					{
+						Destination: definition.Data,
+						Description: "artifact",
+					},
+					{
+						Destination: definition.Meta,
+					},
+					{
+						Destination: definition.Error,
+					},
+				},
+			},
+		},
+	},
+	{
+		Path: "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/artifacts/{artifact}",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Delete,
+				Function:    handler.DeleteArtifact,
+				Description: "delete artifact",
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.WorkflowRunNamePathParameterName,
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ArtifactNamePathParameterName,
+					},
+					{
+						Source: definition.Header,
+						Name:   httputil.TenantHeaderName,
+					},
+					{
+						Source: definition.Query,
+						Name:   httputil.StageNameQueryParameter,
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},

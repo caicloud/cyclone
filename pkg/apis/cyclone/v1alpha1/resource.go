@@ -9,6 +9,8 @@ const (
 	GitResourceType = "Git"
 	// SvnResourceType represents svn repo in SCM
 	SvnResourceType = "Svn"
+	// HTTPResourceType represents operating resources by http protocol
+	HTTPResourceType = "Http"
 )
 
 // +genclient

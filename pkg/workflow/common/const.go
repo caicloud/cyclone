@@ -20,6 +20,10 @@ const (
 	EnvWorkflowRunInfo = "WORKFLOWRUN_INFO"
 	// EnvOutputResourcesInfo is an environment which represents output resources information.
 	EnvOutputResourcesInfo = "OUTPUT_RESOURCES_INFO"
+	// EnvMetadataNamespace is an environment which represents namespace of workflows/workflowRuns/stages.
+	EnvMetadataNamespace = "METADATA_NAMESPACE"
+	// EnvWorkflowName is an environment which represents workflow name.
+	EnvWorkflowName = "WORKFLOW_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
 	EnvWorkflowrunName = "WORKFLOWRUN_NAME"
 	// EnvStageName is an environment which represents stage name.

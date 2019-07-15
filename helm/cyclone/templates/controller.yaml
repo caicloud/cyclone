@@ -13,7 +13,9 @@ data:
     {
       "images": {
         "git-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
+        "svn-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
         "image-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
+        "http-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
         "kv-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-kv:{{ .Chart.AppVersion }}",
         "toolbox": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
         "coordinator": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
