@@ -23,7 +23,12 @@ type Sonar struct {
 func NewSonar(url, token string) (*Sonar, error) {
 	valid, err := validate(url, token)
 	if err != nil || !valid {
-		return nil, cerr.ErrorAuthenticationFailed.Error()
+		if cerr.ErrorExternalSystemError.Derived(err) ||
+			cerr.ErrorExternalAuthorizationFailed.Derived(err) ||
+			cerr.ErrorExternalAuthenticationFailed.Derived(err) {
+			return nil, err
+		}
+		return nil, cerr.ErrorExternalAuthenticationFailed.Error(err)
 	}
 
 	return &Sonar{
@@ -48,7 +53,7 @@ func validate(url, token string) (bool, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to validate sonarqube token as %s", err.Error())
-		return false, err
+		return false, convertSonarQubeError(err, resp)
 	}
 	defer resp.Body.Close()
 
@@ -65,7 +70,10 @@ func validate(url, token string) (bool, error) {
 			return false, err
 		}
 
-		return valid.Valid, nil
+		if valid.Valid {
+			return true, nil
+		}
+		return false, cerr.ErrorExternalAuthenticationFailed.Error(valid)
 	}
 
 	err = fmt.Errorf("Fail to validate sonarqube token as %s, resp code: %v ", body, resp.StatusCode)
@@ -74,4 +82,23 @@ func validate(url, token string) (bool, error) {
 
 type validResp struct {
 	Valid bool `json:"valid"`
+}
+
+func convertSonarQubeError(err error, resp *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error("SonarQube", err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+	return err
 }
