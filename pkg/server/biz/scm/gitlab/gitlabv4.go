@@ -295,8 +295,15 @@ func convertGitlabV4Error(err error, resp *v4.Response) error {
 	}
 
 	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorSCMServerInternalError.Error(err)
+		return cerr.ErrorExternalSystemError.Error("GitLab(v4)", err)
 	}
 
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
 	return err
 }

@@ -263,7 +263,7 @@ func createControlClusterIntegration(tenant string) error {
 
 	in, err := createIntegration(tenant, false, in)
 	if err != nil {
-		return cerr.ErrorCreateIntegration.Error(err)
+		return cerr.ErrorCreateIntegrationFailed.Error(in.Name, err)
 	}
 
 	if config.Config.OpenControlCluster {

@@ -383,12 +383,9 @@ func newClientByToken(token string) *github.Client {
 // GetWebhook gets webhook from specified repo.
 func (g *Github) GetWebhook(repo string, webhookURL string) (*github.Hook, error) {
 	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	hooks, _, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
 	if err != nil {
-		if resp.StatusCode == 500 {
-			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return nil, err
+		return nil, convertGithubError(err)
 	}
 
 	for _, hook := range hooks {
@@ -602,8 +599,20 @@ func convertGithubError(err error) error {
 		return err
 	}
 
-	if resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorSCMServerInternalError.Error(err)
+	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error("GitHub", err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		return cerr.ErrorExternalNotFound.Error(err)
 	}
 
 	return err
