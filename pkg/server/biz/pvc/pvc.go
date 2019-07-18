@@ -11,8 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/util/retry"
 )
@@ -59,13 +57,14 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 	}
 
 	// Launch PVC usage watcher to watch the usage of PVC.
-	err = usage.LaunchPVCUsageWatcher(client, tenantName, v1alpha1.ExecutionContext{
-		Namespace: nsname,
-		PVC:       pvcName,
-	})
-	if err != nil {
-		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", nsname, pvcName, err)
-	}
+	//err = usage.LaunchPVCUsageWatcher(client, tenantName, v1alpha1.ExecutionContext{
+	//	Namespace: nsname,
+	//	PVC:       pvcName,
+	//})
+	//if err != nil {
+	//	log.Warningf("Launch PVC usage watcher for %s/%s error: %v", nsname, pvcName, err)
+	//}
+
 	return nil
 }
 
@@ -77,13 +76,13 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 		nsname = namespace
 	}
 
-	err := usage.DeletePVCUsageWatcher(client, nsname)
-	if err != nil && !errors.IsNotFound(err) {
-		log.Errorf("delete pvc usage watcher in namespace %s failed %s", nsname, err)
-		return err
-	}
+	//err := usage.DeletePVCUsageWatcher(client, nsname)
+	//if err != nil && !errors.IsNotFound(err) {
+	//	log.Errorf("delete pvc usage watcher in namespace %s failed %s", nsname, err)
+	//	return err
+	//}
 
-	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
+	err := client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete persistent volume claim %s error %v", pvcName, err)
 		return err
