@@ -192,6 +192,9 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 	resp, err := client.Do(req)
 	if err != nil {
