@@ -128,7 +128,7 @@ func filterIntegrations(integrations []api.Integration, filter string) ([]api.In
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.
-func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
+func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *api.Integration, dryRun bool) (*api.Integration, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, "", "", in)
@@ -137,21 +137,25 @@ func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *ap
 		}
 	}
 
-	return createIntegration(tenant, isPublic, in)
+	return createIntegration(tenant, isPublic, in, dryRun)
 }
 
-func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
+func createIntegration(tenant string, isPublic bool, in *api.Integration, dryRun bool) (*api.Integration, error) {
+	valid, err := validateIntegration(in)
+	if err != nil || !valid {
+		return nil, err
+	}
+
+	if dryRun {
+		return in, nil
+	}
+
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// Open cluster for the tenant, create namespace and pvc
 		err := cluster.Open(handler.K8sClient, in, tenant)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	valid, err := validateIntegration(in)
-	if err != nil || !valid {
-		return nil, err
 	}
 
 	secret, err := integration.ToSecret(tenant, in)
@@ -432,11 +436,6 @@ func ListSCMDockerfiles(ctx context.Context, tenant, integrationName, repo strin
 	}
 
 	return types.NewListResponse(len(dockerfiles), dockerfiles), nil
-}
-
-// ValidateIntegration validates an integration
-func ValidateIntegration(ctx context.Context, in *api.Integration) (bool, error) {
-	return validateIntegration(in)
 }
 
 func validateIntegration(in *api.Integration) (bool, error) {

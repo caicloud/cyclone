@@ -58,6 +58,12 @@ var integration = []definition.Descriptor{
 						Source:      definition.Body,
 						Description: "JSON body to describe the new integration",
 					},
+					{
+						Source:      definition.Header,
+						Name:        httputil.HeaderDryRun,
+						Default:     false,
+						Description: "Whether to do a rehearsal of creating integration",
+					},
 				},
 				Results: definition.DataErrorResults("created integration"),
 			},
@@ -136,24 +142,6 @@ var integration = []definition.Descriptor{
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
-			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/validate",
-		Description: "Integrations auth check APIs",
-		Definitions: []definition.Definition{
-			{
-				Method:      definition.Create,
-				Function:    handler.ValidateIntegration,
-				Description: "Validate the integration but will not create it",
-				Parameters: []definition.Parameter{
-					{
-						Source:      definition.Body,
-						Description: "JSON body to describe the updated integration",
-					},
-				},
-				Results: definition.DataErrorResults("validate result"),
 			},
 		},
 	},
