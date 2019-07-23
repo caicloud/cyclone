@@ -33,6 +33,7 @@ import (
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 const (
@@ -199,7 +200,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return "", err
+		return "", convertGitlabError(err, resp.StatusCode, "")
 	}
 	defer resp.Body.Close()
 
@@ -271,7 +272,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
-		return "", err
+		return "", convertGitlabError(err, resp.StatusCode, "")
 	}
 	defer resp.Body.Close()
 
@@ -291,7 +292,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	}
 
 	err = fmt.Errorf("fail to request for token as %s", body)
-	return "", err
+	return "", convertGitlabError(err, resp.StatusCode, "")
 }
 
 // MergeCommentEvent ...
@@ -528,4 +529,26 @@ func transStatus(status c_v1alpha1.StatusPhase) (string, string) {
 	}
 
 	return state, description
+}
+
+func convertGitlabError(err error, code int, server string) error {
+	if err == nil {
+		return nil
+	}
+
+	if server == "" {
+		server = "GitLab"
+	}
+	if code == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error(server, err)
+	}
+
+	if code == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if code == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+	return err
 }

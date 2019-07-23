@@ -149,18 +149,9 @@ func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.
 		}
 	}
 
-	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
-		err := scm.GenerateSCMToken(in.Spec.SCM)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
-		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
-		if err != nil {
-			return nil, err
-		}
+	valid, err := validateIntegration(in)
+	if err != nil || !valid {
+		return nil, err
 	}
 
 	secret, err := integration.ToSecret(tenant, in)
@@ -211,19 +202,9 @@ func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, 
 		}
 	}
 
-	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
-		err := scm.GenerateSCMToken(in.Spec.SCM)
-		if err != nil {
-			log.Errorf("Generate or check token error: %v", err)
-			return nil, err
-		}
-	}
-
-	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
-		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
-		if err != nil {
-			return nil, err
-		}
+	valid, err := validateIntegration(in)
+	if err != nil || !valid {
+		return nil, err
 	}
 
 	secret, err := integration.ToSecret(tenant, in)
@@ -451,4 +432,28 @@ func ListSCMDockerfiles(ctx context.Context, tenant, integrationName, repo strin
 	}
 
 	return types.NewListResponse(len(dockerfiles), dockerfiles), nil
+}
+
+// ValidateIntegration validates an integration
+func ValidateIntegration(ctx context.Context, in *api.Integration) (bool, error) {
+	return validateIntegration(in)
+}
+
+func validateIntegration(in *api.Integration) (bool, error) {
+	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
+		err := scm.GenerateSCMToken(in.Spec.SCM)
+		if err != nil {
+			log.Errorf("Generate or check token error: %v", err)
+			return false, err
+		}
+	}
+
+	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
+		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
