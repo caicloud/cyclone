@@ -200,7 +200,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return "", convertGitlabError(err, resp.StatusCode, "")
+		return "", convertGitlabError(err, resp)
 	}
 	defer resp.Body.Close()
 
@@ -272,7 +272,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
-		return "", convertGitlabError(err, resp.StatusCode, "")
+		return "", convertGitlabError(err, resp)
 	}
 	defer resp.Body.Close()
 
@@ -292,7 +292,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	}
 
 	err = fmt.Errorf("fail to request for token as %s", body)
-	return "", convertGitlabError(err, resp.StatusCode, "")
+	return "", convertGitlabError(err, resp)
 }
 
 // MergeCommentEvent ...
@@ -535,14 +535,27 @@ func transStatus(status c_v1alpha1.StatusPhase) (string, string) {
 	return state, description
 }
 
-func convertGitlabError(err error, code int, server string) error {
+func convertGitlabError(err error, resp interface{}) error {
 	if err == nil {
 		return nil
 	}
-
-	if server == "" {
-		server = "GitLab"
+	if resp == nil {
+		return err
 	}
+
+	code := 0
+	server := "GitLab"
+	switch v := resp.(type) {
+	case *gitlab.Response:
+		code = v.StatusCode
+		server = "GitLab(v3)"
+	case *v4.Response:
+		code = v.StatusCode
+		server = "GitLab(v4)"
+	case *http.Response:
+		code = v.StatusCode
+	}
+
 	if code == http.StatusInternalServerError {
 		return cerr.ErrorExternalSystemError.Error(server, err)
 	}
