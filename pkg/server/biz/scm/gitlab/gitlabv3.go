@@ -296,16 +296,9 @@ func convertGitlabV3Error(err error, resp *v3.Response) error {
 		return nil
 	}
 
-	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorExternalSystemError.Error("GitLab(v3)", err)
+	if resp != nil {
+		return convertGitlabError(err, resp.StatusCode, "GitLab(v3)")
 	}
 
-	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-		return cerr.ErrorExternalAuthorizationFailed.Error(err)
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusForbidden {
-		return cerr.ErrorExternalAuthenticationFailed.Error(err)
-	}
 	return err
 }

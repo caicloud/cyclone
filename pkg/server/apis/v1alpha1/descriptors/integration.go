@@ -140,6 +140,24 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
+		Path:        "/integrations/{integration}/validate",
+		Description: "Integrations auth check APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Create,
+				Function:    handler.ValidateIntegration,
+				Description: "Validate the integration but will not create it",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Body,
+						Description: "JSON body to describe the updated integration",
+					},
+				},
+				Results: definition.DataErrorResults("validate result"),
+			},
+		},
+	},
+	{
 		Path:        "/integrations/{integration}/opencluster",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
