@@ -73,7 +73,7 @@ func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		projects, resp, err := g.client.Projects.ListProjects(opt)
 		if err != nil {
-			return nil, convertGitlabV3Error(err, resp)
+			return nil, convertGitlabError(err, resp)
 		}
 
 		allProjects = append(allProjects, projects...)
@@ -98,7 +98,7 @@ func (g *V3) ListBranches(repo string) ([]string, error) {
 	branches, resp, err := g.client.Branches.ListBranches(repo)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
-		return nil, convertGitlabV3Error(err, resp)
+		return nil, convertGitlabError(err, resp)
 	}
 
 	branchNames := make([]string, len(branches))
@@ -115,7 +115,7 @@ func (g *V3) ListTags(repo string) ([]string, error) {
 	tags, resp, err := g.client.Tags.ListTags(repo)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
-		return nil, convertGitlabV3Error(err, resp)
+		return nil, convertGitlabError(err, resp)
 	}
 
 	tagNames := make([]string, len(tags))
@@ -148,7 +148,7 @@ func (g *V3) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repo, commit
 		Context:     &context,
 	}
 	_, resp, err := g.client.Commits.SetCommitStatus(repo, commitSha, opt)
-	return convertGitlabV3Error(err, resp)
+	return convertGitlabError(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
@@ -213,7 +213,7 @@ type mergeRequestResponse struct {
 func (g *V3) GetWebhook(repo string, webhookURL string) (*v3.ProjectHook, error) {
 	hooks, resp, err := g.client.Projects.ListProjectHooks(repo, nil)
 	if err != nil {
-		return nil, convertGitlabV3Error(err, resp)
+		return nil, convertGitlabError(err, resp)
 	}
 
 	for _, hook := range hooks {
@@ -240,7 +240,7 @@ func (g *V3) CreateWebhook(repo string, webhook *scm.Webhook) error {
 		hook := generateV3ProjectHook(webhook)
 		_, resp, err := g.client.Projects.AddProjectHook(repo, hook)
 		if err != nil {
-			return convertGitlabV3Error(err, resp)
+			return convertGitlabError(err, resp)
 		}
 		return nil
 	}
@@ -258,7 +258,7 @@ func (g *V3) DeleteWebhook(repo string, webhookURL string) error {
 
 	if resp, err := g.client.Projects.DeleteProjectHook(repo, hook.ID); err != nil {
 		log.Errorf("delete project hook %s for repo error: %v", hook.ID, repo, err)
-		return convertGitlabV3Error(err, resp)
+		return convertGitlabError(err, resp)
 	}
 
 	return nil
@@ -289,23 +289,4 @@ func generateV3ProjectHook(webhook *scm.Webhook) *v3.AddProjectHookOptions {
 	hook.URL = &webhook.URL
 
 	return hook
-}
-
-func convertGitlabV3Error(err error, resp *v3.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorExternalSystemError.Error("GitLab(v3)", err)
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-		return cerr.ErrorExternalAuthorizationFailed.Error(err)
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusForbidden {
-		return cerr.ErrorExternalAuthenticationFailed.Error(err)
-	}
-	return err
 }
