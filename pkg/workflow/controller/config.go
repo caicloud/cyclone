@@ -90,6 +90,8 @@ type DindSettings struct {
 	// InsecureRegistries is list of insecure registries, for docker registries with
 	// self-signed certs, it's useful to bypass the cert check.
 	InsecureRegistries []string `json:"insecure_registries"`
+	// Bip specifies IP subnet used for docker0 bridge
+	Bip string `json:"bip"`
 }
 
 // Config is Workflow Controller config instance
