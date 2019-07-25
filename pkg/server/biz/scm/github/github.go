@@ -532,6 +532,17 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 
 	switch event := event.(type) {
 	case *github.ReleaseEvent:
+		// Only handle when the tag is created.
+		// When you create a new release in your GitHub, GitHub will send
+		// two release X-GitHub-Event(and one push X-GitHub-Event, not discussed here):
+		// - one action is 'created'
+		// - the other one is 'published'
+		// So we only process the 'created' one, otherwise, one release will trigger a workflow twice.
+		action := *event.Action
+		if action != "created" {
+			log.Warningf("Skip unsupported action %s of Github release event, only support created action.", action)
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.TagReleaseEventType,
 			Repo: *event.Repo.FullName,
