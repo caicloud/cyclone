@@ -77,6 +77,8 @@ type GCConfig struct {
 	DelaySeconds time.Duration `json:"delay_seconds"`
 	// RetryCount defines how many times to retry when GC failed, 0 means no retry.
 	RetryCount int `json:"retry"`
+	// ResourceRequirements is default resource requirements for the gc Pod
+	ResourceRequirements corev1.ResourceRequirements `json:"resource_quota"`
 }
 
 // LimitsConfig configures maximum WorkflowRun to keep for each Workflow
