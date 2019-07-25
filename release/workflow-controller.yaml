@@ -56,7 +56,17 @@ _config:
             "gc": {
               "enabled": true,
               "delay_seconds": 0,
-              "retry": 1
+              "retry": 1,
+              "resource_quota": {
+                "limits": {
+                  "cpu": "200m",
+                  "memory": "256Mi"
+                },
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              }
             },
             "limits": {
               "max_workflowruns": 50

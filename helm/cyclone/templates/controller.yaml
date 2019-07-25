@@ -25,7 +25,17 @@ data:
       "gc": {
         "enabled": {{ .Values.engine.gc.enabled }},
         "delay_seconds": {{ .Values.engine.gc.delaySeconds }},
-        "retry": {{ .Values.engine.gc.retry }}
+        "retry": {{ .Values.engine.gc.retry }},
+        "resource_quota": {
+          "limits": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.limits.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.limits.memory }}"
+          },
+          "requests": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.requests.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.requests.memory }}"
+          }
+        }
       },
       "limits": {
         "max_workflowruns": {{ .Values.engine.limits.maxWorkflowRuns }}
