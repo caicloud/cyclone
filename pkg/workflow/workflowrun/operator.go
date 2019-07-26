@@ -9,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
@@ -484,16 +483,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 								SubPath:   common.WorkflowRunsPath(),
 							},
 						},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("100m"),
-								corev1.ResourceMemory: resource.MustParse("64Mi"),
-							},
-							Limits: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("100m"),
-								corev1.ResourceMemory: resource.MustParse("64Mi"),
-							},
-						},
+						Resources: controller.Config.GC.ResourceRequirements,
 					},
 				},
 				Volumes: []corev1.Volume{
