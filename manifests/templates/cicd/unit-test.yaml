@@ -198,8 +198,8 @@
       inputs:
         arguments:
         - name: image
-          value: gradle:3.4.1
-          description: Image to run this stage, for example, 'gradle:3.4.1'
+          value: gradle:5.5.1
+          description: Image to run this stage, for example, 'gradle:5.5.1'
         - name: cmd
           value: >-
             gradle clean test
