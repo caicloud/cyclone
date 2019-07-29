@@ -54,6 +54,8 @@ type Provider interface {
 	ListBranches(repo string) ([]string, error)
 	// ListTags list tags of repo, repo format must be {owner}/{repo}.
 	ListTags(repo string) ([]string, error)
+	// ListPullRequests list pull requests of repo, repo format must be {owner}/{repo}.
+	ListPullRequests(repo, state string) ([]PullRequest, error)
 	ListDockerfiles(repo string) ([]string, error)
 	CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSHA string) error
 	GetPullRequestSHA(repoURL string, number int) (string, error)
@@ -166,4 +168,12 @@ type EventData struct {
 	Branch    string
 	Comment   string
 	CommitSHA string
+}
+
+// PullRequest describes pull requests of SCM repositories.
+type PullRequest struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	State       string `json:"state"`
 }

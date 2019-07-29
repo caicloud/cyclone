@@ -276,6 +276,41 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
+		Path:        "/integrations/{integration}/scmrepos/{repo}/pullrequests",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Get,
+				Function:    handler.ListSCMPullRequests,
+				Description: "List pull requests for integrated SCM",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to get",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "repo",
+						Description: "Name of SCM repo",
+					},
+					{
+						Source:      definition.Query,
+						Name:        "state",
+						Description: "State filters pull requests based on their state. Possible values are: open, closed, all. Default is 'open'",
+						Default:     "open",
+					},
+				},
+				Results: definition.DataErrorResults("pull requests gotten for integrated SCM"),
+			},
+		},
+	},
+	{
 		Path:        "/integrations/{integration}/scmrepos/{repo}/dockerfiles",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
