@@ -126,6 +126,51 @@ func (g *V3) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListPullRequests lists the merge requests for specified repo.
+func (g *V3) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	// GitLab mr state: opened, closed, locked, merged, all
+	var s string
+	switch state {
+	case "open":
+		s = "opened"
+	case "opened", "closed", "locked", "merged", "all":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("GitLab(v3) pull request state", state)
+	}
+
+	opts := &v3.ListMergeRequestsOptions{
+		State: &s,
+		ListOptions: v3.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
+	}
+
+	var allPRs []scm.PullRequest
+	for {
+		prs, resp, err := g.client.MergeRequests.ListMergeRequests(repo, opts)
+		if err != nil {
+			log.Errorf("Fail to list merge requests for %s", repo)
+			return nil, convertGitlabError(err, resp)
+		}
+
+		for _, p := range prs {
+			allPRs = append(allPRs, scm.PullRequest{
+				ID:          p.IID,
+				Title:       p.Title,
+				Description: p.Description,
+				State:       p.State,
+			})
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	return allPRs, nil
+}
+
 // ListDockerfiles lists the Dockerfiles for specified repo.
 func (g *V3) ListDockerfiles(repo string) ([]string, error) {
 	// List Dockerfiles in a project with gitlab v3 api is very inefficient.
