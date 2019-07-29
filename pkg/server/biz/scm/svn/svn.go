@@ -79,6 +79,11 @@ func (s *SVN) ListDockerfiles(repo string) ([]string, error) {
 	return nil, cerr.ErrorNotImplemented.Error("list svn dockerfiles")
 }
 
+// ListPullRequests list pull requests of repo, repo format must be {owner}/{repo}.
+func (s *SVN) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	return nil, cerr.ErrorNotImplemented.Error("list svn pull request")
+}
+
 // CreateStatus ...
 func (s *SVN) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSha string) error {
 	return cerr.ErrorNotImplemented.Error("create status")
