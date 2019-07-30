@@ -243,6 +243,9 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -311,7 +314,12 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
 		return "", err

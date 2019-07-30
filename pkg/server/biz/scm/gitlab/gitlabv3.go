@@ -17,6 +17,7 @@ limitations under the License.
 package gitlab
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -166,8 +167,12 @@ func (g *V3) GetPullRequestSHA(repo string, number int) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to get project merge request as %s", err.Error())
 		return "", err
