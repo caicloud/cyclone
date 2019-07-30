@@ -375,10 +375,6 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 	if !fileutil.Exists(logFilePath) {
 		return fmt.Errorf("log file %s does not exist", logFilePath)
 	}
-
-	pingTicker := time.NewTicker(websocketutil.PingPeriod)
-	sendTicker := time.NewTicker(10 * time.Millisecond)
-
 	logFolder, err := getLogFolder(tenant, project, workflow, workflowrun)
 	if err != nil {
 		return err
@@ -387,15 +383,33 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
 	defer folderReader.Close()
-	var line []byte
+
+	err = writer(ws, folderReader)
+	if err != nil {
+		log.Error("websocket writer error:", err)
+	}
+	return err
+}
+
+func writer(ws *websocket.Conn, folderReader stream.FolderReader) error {
+	pingTicker := time.NewTicker(websocketutil.PingPeriod)
+	sendTicker := time.NewTicker(10 * time.Millisecond)
+	defer func() {
+		log.Info("close ticket and websocket")
+		pingTicker.Stop()
+		sendTicker.Stop()
+		ws.Close()
+	}()
+
 	for {
 		select {
 		case <-pingTicker.C:
 			err := ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
 			if err != nil {
-				log.Warningf("set write deadline error:%v", err)
+				log.Warning("set write deadline error:", err)
 			}
 			if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				log.Warning("write ping message error:", err)
 				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
 					return nil
 				}
@@ -404,26 +418,32 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 		case <-sendTicker.C:
 			// With buf.ReadBytes, when err is not nil (often io.EOF), line is not guaranteed to be empty,
 			// it holds data before the error occurs.
-			line, err = folderReader.ReadBytes('\n')
+			line, err := folderReader.ReadBytes('\n')
 			if err != nil && err != io.EOF {
+				log.Warning("folder reader read bytes error:", err)
+				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+				if err != nil {
+					log.Warning("set write deadline error:", err)
+				}
 				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
 				if err != nil {
-					log.Warningf("write close message error:%v", err)
+					log.Warning("write close message error:", err)
 				}
 				break
 			}
 
 			if len(line) > 0 {
+				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+				if err != nil {
+					log.Warning("set write deadline error:", err)
+				}
 				err = ws.WriteMessage(websocket.TextMessage, line)
 				if err != nil {
+					log.Warning("write text message error:", err)
 					if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
 						return nil
 					}
 					return err
-				}
-				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
-				if err != nil {
-					log.Warningf("set write deadline error:%v", err)
 				}
 			}
 		}
