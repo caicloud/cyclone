@@ -38,6 +38,8 @@ engine:
   executionContext:
     namespace: cyclone-system
     pvc: cyclone-pvc-system
+  dind:
+    bip: 172.18.0.1/16
 
 # Cyclone server variables
 server:

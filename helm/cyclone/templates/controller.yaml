@@ -47,7 +47,8 @@ data:
         "pvc": "{{ .Values.engine.executionContext.pvc }}"
       },
       "dind": {
-        "insecure_registries": ["{{ .Values.imageRegistry.registry }}"]
+        "insecure_registries": ["{{ .Values.imageRegistry.registry }}"],
+        "bip": "{{ .Values.engine.dind.bip }}"
       }
     }
 
