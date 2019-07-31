@@ -71,6 +71,9 @@ _config:
                 "memory": "128Mi"
               }
             },
+            "dind": {
+              "bip": "172.18.0.1/16"
+            },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "[[ kube_apiserver_endpoint_ip ]]:6008",
             "notification_url": "http://[[ kube_apiserver_endpoint_ip ]]:6008/apis/v1alpha1/notifications"
