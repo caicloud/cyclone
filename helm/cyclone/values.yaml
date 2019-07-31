@@ -21,6 +21,14 @@ engine:
     delaySeconds: 300
     # How many times to retry (include the initial one)
     retry: 1
+    # ResourceRequirement for the pod to execute GC
+    resourceRequirement:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
   limits:
     # Maximum number of execution records to keep for each workflow.
     maxWorkflowRuns: 50
