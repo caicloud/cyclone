@@ -1,11 +1,9 @@
 package v1alpha1
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
@@ -22,6 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
+	"github.com/caicloud/cyclone/pkg/server/biz/stream"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -32,6 +31,7 @@ import (
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
+	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
 // CreateWorkflowRun ...
@@ -378,14 +378,15 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 
 	pingTicker := time.NewTicker(websocketutil.PingPeriod)
 	sendTicker := time.NewTicker(10 * time.Millisecond)
-	file, err := os.Open(logFilePath)
+
+	logFolder, err := getLogFolder(tenant, project, workflow, workflowrun)
 	if err != nil {
-		log.Errorf("fail to open the log file %s as %s", logFilePath, err.Error())
 		return err
 	}
-	defer file.Close()
-
-	buf := bufio.NewReader(file)
+	prefix := fmt.Sprintf("%s_", stage)
+	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
+	defer folderReader.Close()
 	var line []byte
 	for {
 		select {
@@ -401,12 +402,10 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 				return err
 			}
 		case <-sendTicker.C:
-			line, err = buf.ReadBytes('\n')
-			if err == io.EOF {
-				continue
-			}
-
-			if err != nil {
+			// With buf.ReadBytes, when err is not nil (often io.EOF), line is not guaranteed to be empty,
+			// it holds data before the error occurs.
+			line, err = folderReader.ReadBytes('\n')
+			if err != nil && err != io.EOF {
 				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
 				if err != nil {
 					log.Warningf("write close message error:%v", err)
@@ -414,58 +413,36 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage, contai
 				break
 			}
 
-			err = ws.WriteMessage(websocket.TextMessage, line)
-			if err != nil {
-				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-					return nil
+			if len(line) > 0 {
+				err = ws.WriteMessage(websocket.TextMessage, line)
+				if err != nil {
+					if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
+						return nil
+					}
+					return err
 				}
-				return err
-			}
-			err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
-			if err != nil {
-				log.Warningf("set write deadline error:%v", err)
+				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
+				if err != nil {
+					log.Warningf("set write deadline error:%v", err)
+				}
 			}
 		}
 	}
-
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
-func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string, download bool) ([]byte, map[string]string, error) {
-	logs, err := getContainerLogs(tenant, project, workflow, workflowrun, stage, container)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string, download bool) (io.ReadCloser, map[string]string, error) {
 	headers := make(map[string]string)
 	headers[httputil.HeaderContentType] = "text/plain"
 	if download {
-		logFileName := fmt.Sprintf("%s-%s-%s-log.txt", workflowrun, stage, container)
+		logFileName := fmt.Sprintf("%s-%s-log.txt", workflowrun, stage)
 		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", logFileName)
 	}
 
-	return []byte(logs), headers, nil
-}
+	logFolder, _ := getLogFolder(tenant, project, workflow, workflowrun)
+	prefix := fmt.Sprintf("%s_", stage)
+	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0)
 
-// getContainerLogs gets the stage container logs.
-func getContainerLogs(tenant, project, workflow, workflowrun, stage, container string) (string, error) {
-	logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
-	if err != nil {
-		return "", err
-	}
-
-	// Check the existence of the log file for this stage. If does not exist, return error when stage is success,
-	// otherwise directly return the got logs as stage is failed or aborted.
-	if !fileutil.Exists(logFilePath) {
-		log.Errorf("log file %s does not exist", logFilePath)
-		return "", fmt.Errorf("log file for stage %s does not exist", stage)
-	}
-
-	// TODO (robin) Read the whole file, need to consider the memory consumption when the log file is too huge.
-	log, err := ioutil.ReadFile(logFilePath)
-	if err != nil {
-		return "", err
-	}
-
-	return string(log), nil
+	return folderReader, headers, nil
 }

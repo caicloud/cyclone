@@ -18,6 +18,7 @@ package gitlab
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -92,10 +93,15 @@ func NewGitlab(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 // newGitlabV4Client news Gitlab v4 client by token. If username is empty, use private-token instead of oauth2.0 token.
 func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 	var client *v4.Client
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
 	if ensureTokenType(server, token) == PrivateToken {
-		client = v4.NewClient(nil, token)
+		client = v4.NewClient(httpClient, token)
 	} else {
-		client = v4.NewOAuthClient(nil, token)
+		client = v4.NewOAuthClient(httpClient, token)
 	}
 
 	if err := client.SetBaseURL(server + "/api/" + v4APIVersion); err != nil {
@@ -109,10 +115,15 @@ func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 // newGitlabV3Client news Gitlab v3 client by token. If username is empty, use private-token instead of oauth2.0 token.
 func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
 	var client *gitlab.Client
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
 	if ensureTokenType(server, token) == PrivateToken {
-		client = gitlab.NewClient(nil, token)
+		client = gitlab.NewClient(httpClient, token)
 	} else {
-		client = gitlab.NewOAuthClient(nil, token)
+		client = gitlab.NewOAuthClient(httpClient, token)
 	}
 
 	if err := client.SetBaseURL(server + "/api/" + v3APIVersion); err != nil {
@@ -232,6 +243,9 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -300,7 +314,12 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
 		return "", err

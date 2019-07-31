@@ -17,6 +17,7 @@ limitations under the License.
 package gitlab
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -94,7 +95,7 @@ func (g *V3) listReposInner(listAll bool) ([]scm.Repository, error) {
 // ListBranches lists the branches for specified repo.
 // Only return first 20 branches, will not support listing all branches as v3 api has been deprecated.
 func (g *V3) ListBranches(repo string) ([]string, error) {
-	branches, resp, err := g.client.Branches.ListBranches(repo, nil)
+	branches, resp, err := g.client.Branches.ListBranches(repo)
 	if err != nil {
 		log.Errorf("Fail to list branches for %s", repo)
 		return nil, convertGitlabV3Error(err, resp)
@@ -111,7 +112,7 @@ func (g *V3) ListBranches(repo string) ([]string, error) {
 // ListTags lists the tags for specified repo.
 // Only return first 20 tags, will not support listing all tags as v3 api has been deprecated.
 func (g *V3) ListTags(repo string) ([]string, error) {
-	tags, resp, err := g.client.Tags.ListTags(repo, nil)
+	tags, resp, err := g.client.Tags.ListTags(repo)
 	if err != nil {
 		log.Errorf("Fail to list tags for %s", repo)
 		return nil, convertGitlabV3Error(err, resp)
@@ -166,8 +167,12 @@ func (g *V3) GetPullRequestSHA(repo string, number int) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to get project merge request as %s", err.Error())
 		return "", err

@@ -57,12 +57,12 @@ if [ ! -z ${SCM_REPO} ]; then
     SCM_URL=${SCM_URL%/}/${SCM_REPO}.git
 fi
 
-# Lock file for the WorkflowRun.
+# Lock folder for the WorkflowRun.
 PULLING_LOCK=$WORKDIR/${WORKFLOWRUN_NAME}-pulling.lock
 
 releaseLock() {
-    if [ -f /tmp/pulling.lock ]; then
-        echo "Remove the created lock file"
+    if [ -d "$PULLING_LOCK" ]; then
+        echo "Remove the created lock folder"
         rm -rf $PULLING_LOCK
     fi
 }
@@ -115,24 +115,21 @@ wrapPull() {
         echo "Found data, wait it to be ready..."
 
         # If there already be data, then we just wait the data to be ready
-        # by checking the lock file. If the lock file exists, it means other
+        # by checking the lock folder. If the lock folder exists, it means other
         # stage is pulling the data.
-        while [ -f $PULLING_LOCK ]
+        while [ -d $PULLING_LOCK ]
         do
             sleep 3
         done
     else
         echo "Trying to acquire lock and pull resource"
-        # If flock command return 0, it means lock is acquired and can pull resources,
-        # otherwise lock is acquired by others and we should wait.
-        result=$(flock -xn $PULLING_LOCK -c "echo ok; touch /tmp/pulling.lock" || echo fail)
-        if [ $result == "ok" ]; then
+        failed=$(mkdir $PULLING_LOCK > /dev/null 2>&1 || echo fail)
+        if [[ $failed != "fail" ]]; then
             echo "Got the lock, start to pulling..."
             pull
         else
-            # If failed to get the lock, should wait others to finish the pulling by
-            # checking the lock file.
-            while [ -f $PULLING_LOCK ]
+            echo "Failed to get the lock, wait others to finish pulling..."
+            while [ -d $PULLING_LOCK ]
             do
                 sleep 3
             done
@@ -171,7 +168,7 @@ pull() {
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        git fetch -v origin $SCM_REVISION
+        git fetch -v --depth=1 origin $SCM_REVISION
         git checkout FETCH_HEAD
     else
         if [ -e $WORKDIR/data ]; then
@@ -189,17 +186,20 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master --single-branch --recursive ${SCM_URL} data
+            git clone -v -b master --depth=1 --single-branch --recursive ${SCM_URL} data
             cd data
-            git fetch origin $SOURCE_BRANCH
+            git fetch --depth=1 origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH --single-branch --recursive ${SCM_URL} data
+            git clone -v -b $TARGET_BRANCH --depth=1 --single-branch --recursive ${SCM_URL} data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
-            git fetch origin $SOURCE_BRANCH
+            # If the fetch depth is too small, the merge command will fail with:
+            #    'fatal: refusing to merge unrelated histories'
+            # And we assume 30 is enough.
+            git fetch --depth=30 origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi

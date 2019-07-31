@@ -9,7 +9,7 @@ USAGE=$(cat <<-END
             -e SERVER=http://192.168.21.96:9000 \\
             -e TOKEN=58a66fa93ee4a5efe5c8cea9351526efdb82b792 \\
             -e ENCODING=UTF-8 \\
-            -e LANGUAGE=go \\
+            -e LANGUAGE=Go \\
             -e PROJECT_NAME=codescan \\
             -e PROJECT_KEY=codescan \\
             -e QUALITY_GATE=1 \\
@@ -67,18 +67,25 @@ params="-Dsonar.sourceEncoding=UTF-8 \
 
 case ${LANGUAGE} in
     Go)
+        echo "Start to find go test reports."
         testReportFile=$(find . -name "coverage.out" | tr '\n' ',')
-        if [ -n testReportFile ]; then
+        if [[ -n ${testReportFile} ]]; then
             params="$params -Dsonar.go.coverage.reportPaths=$testReportFile"
         fi
         ;;
     Java)
+        echo "Start to find java bin files."
         binFiles=$({ find . -name "*.jar"; find . -name "*.war"; } | tr '\n' ',')
-        if [ -n binFiles ]; then
+        if [[ -n ${binFiles} ]]; then
             params="$params -Dsonar.java.binaries=$binFiles"
         fi
-        reportXMLs=$(grep -l "testsuite" $(find . -name "*.xml") | tr '\n' ',')
-        if [ -n $reportXMLs ]; then
+
+        xmlFiles=$(find . -name "*.xml")
+        if [[ ${#xmlFiles[@]} -ne 0 ]]; then
+            reportXMLs=$(grep -l "<testsuite" ${xmlFiles} | tr '\n' ',')
+        fi
+
+        if [[ -n ${reportXMLs} ]]; then
             params="$params -Dsonar.junit.reportPaths=$reportXMLs"
         fi
         ;;
@@ -86,6 +93,7 @@ case ${LANGUAGE} in
         ;;
 esac
 
+echo "[DEBUG] sonar-scanner ${params/$TOKEN/**********} -X"
 # Scan the source files
 sonar-scanner $params -X;
 
@@ -93,7 +101,7 @@ sonar-scanner $params -X;
 echo "Wait for scan task completed..."
 while true; do
     ceTaskUrl=$(cat ./.scannerwork/report-task.txt | grep ceTaskUrl | cut -c11-)
-    taskStatus=$(curl $ceTaskUrl 2>/dev/null | tr ',' '\n' | grep "status" | awk -F: '{ print $2 }')
+    taskStatus=$(curl -u ${TOKEN}: $ceTaskUrl 2>/dev/null | tr ',' '\n' | grep "status" | awk -F: '{ print $2 }')
     echo $taskStatus | grep -v FAILED | grep -v SUCCESS || break;
     echo "Check in 3 seconds..."
     sleep 3;

@@ -556,14 +556,14 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 			}, c.Resources)
 		}
 
-		if c.Name == "workload-sidecar-c2" {
+		if c.Name == "wsc-c2" {
 			assert.Equal(suite.T(), corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceMemory: resource.MustParse("32Mi"),
-					corev1.ResourceCPU:    resource.MustParse("50m"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 				Limits: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
 					corev1.ResourceCPU:    resource.MustParse("100m"),
 				},
 			}, c.Resources)
@@ -601,4 +601,167 @@ func (suite *PodBuilderSuite) TestAddCommonVolumes() {
 
 func TestPodBuilderSuite(t *testing.T) {
 	suite.Run(t, new(PodBuilderSuite))
+}
+
+func TestApplyResourceRequirements(t *testing.T) {
+	d := map[string]struct {
+		containers          []corev1.Container
+		requirements        *corev1.ResourceRequirements
+		averageToContainers bool
+		expects             []corev1.Container
+	}{
+		"t1": {
+			[]corev1.Container{
+				{
+					Name: "c1",
+				},
+				{
+					Name: "wsc-c2",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU: resource.MustParse("100m"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("256Mi"),
+						},
+					},
+				},
+			},
+			&corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+					corev1.ResourceCPU:    resource.MustParse("200m"),
+				},
+			},
+			true,
+			[]corev1.Container{
+				{
+					Name: "c1",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("64Mi"),
+							corev1.ResourceCPU:    resource.MustParse("50m"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("128Mi"),
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+						},
+					},
+				},
+				{
+					Name: "wsc-c2",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("64Mi"),
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("256Mi"),
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+						},
+					},
+				},
+			},
+		},
+		"t2": {
+			[]corev1.Container{
+				{
+					Name: "c1",
+				},
+				{
+					Name:      "csc-c2",
+					Resources: corev1.ResourceRequirements{},
+				},
+			},
+			&corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+					corev1.ResourceCPU:    resource.MustParse("200m"),
+				},
+			},
+			true,
+			[]corev1.Container{
+				{
+					Name: "c1",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("128Mi"),
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("256Mi"),
+							corev1.ResourceCPU:    resource.MustParse("200m"),
+						},
+					},
+				},
+				{
+					Name: "csc-c2",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("0"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("0"),
+						},
+					},
+				},
+			},
+		},
+		"t3": {
+			[]corev1.Container{
+				{
+					Name:      "csc-c2",
+					Resources: corev1.ResourceRequirements{},
+				},
+			},
+			&corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+					corev1.ResourceCPU:    resource.MustParse("200m"),
+				},
+			},
+			true,
+			[]corev1.Container{
+				{
+					Name: "csc-c2",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("0"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("0"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, v := range d {
+		results := applyResourceRequirements(v.containers, v.requirements, v.averageToContainers)
+		for _, c := range results {
+			for _, ec := range v.expects {
+				if c.Name == ec.Name {
+					assert.Equal(t, ec.Resources, c.Resources)
+				}
+			}
+
+		}
+	}
 }
