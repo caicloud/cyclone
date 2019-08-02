@@ -47,6 +47,7 @@ _config:
               "svn-resolver": "[[ registry_release ]]/cyclone-resolver-svn:[[ imageTagFromGitTag ]]",
               "image-resolver": "[[ registry_release ]]/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
               "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
+              "toolbox": "[[ registry_release ]]/cyclone-toolbox:[[ imageTagFromGitTag ]]",
               "gc": "[[ registry_library ]]/alpine:3.7",
               "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs.2"
             },

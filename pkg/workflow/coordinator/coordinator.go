@@ -325,9 +325,6 @@ func (co *Coordinator) getAllContainers() ([]string, error) {
 		return cs, err
 	}
 
-	for _, c := range pod.Spec.InitContainers {
-		cs = append(cs, c.Name)
-	}
 	for _, c := range pod.Spec.Containers {
 		cs = append(cs, c.Name)
 	}
