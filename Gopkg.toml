@@ -117,6 +117,10 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   name = "github.com/mozillazg/go-slugify"
   version = "v0.2.0"
 
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "v0.0.5"
+
 [[override]]
   name = "github.com/json-iterator/go"
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
