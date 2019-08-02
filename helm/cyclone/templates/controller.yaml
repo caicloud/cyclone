@@ -15,6 +15,7 @@ data:
         "git-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
         "image-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
         "kv-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-kv:{{ .Chart.AppVersion }}",
+        "toolbox": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
         "coordinator": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
         "gc": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.gc }}",
         "dind": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.dind }}"
