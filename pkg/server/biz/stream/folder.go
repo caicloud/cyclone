@@ -88,7 +88,7 @@ func (s fileReadersSorter) Swap(i, j int) {
 }
 
 // NewFolderReader creates a folder content reader.
-// - folder Path of the foler
+// - folder Path of the folder
 // - prefix Only file names with given prefix would be read
 // - exclusions Exclude given files
 func NewFolderReader(folder string, prefix string, exclusions []string, duration time.Duration) FolderReader {
