@@ -617,12 +617,12 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:e362dddd08e6e894835074b6de49515939dbfb590c7198980639291bab62db4f"
+  digest = "1:33f31f1c13617634ff0da960c79293c604b6c22b32c9a95bcea5f6007666042d"
   name = "gopkg.in/xanzy/go-gitlab.v0"
   packages = ["."]
   pruneopts = "UT"
-  revision = "be70cf752294cc5c6ee89a18d6ba0caca08aa5c7"
-  version = "v0.16.1"
+  revision = "ee3313ca5478c4786248d63dd75e4cd8e1fad2db"
+  version = "v0.19.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
