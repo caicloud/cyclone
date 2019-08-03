@@ -26,10 +26,10 @@ USAGE=$(cat <<-END
        repo can be given here.
      - SCM_REVISION [Required] Revision of the source code. It has two different
        format. a) Single revision, such as branch 'master', tag 'v1.0'; b). Composite
-       such as pull requests, 'develop:master' indicates merge 'develop' branch to
-       'master'. For GitHub, pull requests can use the single revision form, such as
-       'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
-       'refs/merge-requests/1/head:master'.
+       such as pull requests, 'develop:master' indicates merge 'develop' branch to 'master'.
+       For GitHub and Bitbucket, pull requests can use the single revision form, such as
+       'refs/pull/1/merge' for GitHub and 'refs/pull-requests/1/merge' for Bitbucket; but for
+       Gitlab, composite revision is necessary, such as 'refs/merge-requests/1/head:master'.
      - SCM_AUTH [Optional] For public repository, no need provide auth, but for
        private repository, this should be provided. Auth here supports 2 different formats:
        a. <user>:<password>
