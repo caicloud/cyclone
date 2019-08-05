@@ -75,8 +75,12 @@ func (b *BitbucketServer) GetToken() (string, error) {
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
 func (b *BitbucketServer) CheckToken() error {
-	if _, err := b.listReposInner(false); err != nil {
+	repos, err := b.listReposInner(false)
+	if err != nil {
 		return err
+	}
+	if len(repos) == 0 {
+		return fmt.Errorf("No repositories found")
 	}
 	return nil
 }
