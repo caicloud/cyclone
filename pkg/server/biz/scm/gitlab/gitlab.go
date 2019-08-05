@@ -224,8 +224,8 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		log.Infof("Check v4 api version with status code, %d, will use v3", resp.StatusCode)
 		return v3APIVersion, nil
 	default:
-		log.Warningf("Status code of Gitlab API version request is %d, use v3 in default", resp.StatusCode)
-		return v3APIVersion, nil
+		log.Errorf("Status code of Gitlab API version request is %d", resp.StatusCode)
+		return "", convertGitlabError(fmt.Errorf("Gitlab version detection error"), resp)
 	}
 }
 
