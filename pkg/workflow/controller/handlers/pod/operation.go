@@ -176,7 +176,6 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 
 	// Check coordinator container's status, if it's terminated, we regard the pod completed.
 	var terminatedCoordinatorState *corev1.ContainerStateTerminated
-	var coordinatorReady = false
 	for _, containerStatus := range p.pod.Status.ContainerStatuses {
 		if containerStatus.Name == common.CoordinatorSidecarName {
 			if containerStatus.State.Terminated == nil {
@@ -185,15 +184,14 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			}
 
 			terminatedCoordinatorState = containerStatus.State.Terminated
-			coordinatorReady = containerStatus.Ready
 			// There is only one coordinator container in each pod.
 			break
 		}
 	}
 
 	// Now the workload containers and coordinator container have all been finished. We then:
-	// - Update the stage status in WorkflowRun based on coordinator's exit code and readiness condition.
-	if terminatedCoordinatorState.ExitCode == 0 && coordinatorReady {
+	// - Update the stage status in WorkflowRun based on coordinator's exit code and started time.
+	if terminatedCoordinatorState.ExitCode == 0 && !terminatedCoordinatorState.StartedAt.IsZero() {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
 			WithField("status", v1alpha1.StatusSucceeded).
