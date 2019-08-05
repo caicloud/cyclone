@@ -462,6 +462,10 @@ func ParseEvent(request *http.Request) *scm.EventData {
 
 	switch event := event.(type) {
 	case *gitlab.TagEvent:
+		if event.Before != "0000000000000000000000000000000000000000" {
+			log.Warning("Skip unsupported action 'Tag updated or deleted' of Gitlab.")
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.TagReleaseEventType,
 			Repo: event.Project.PathWithNamespace,
