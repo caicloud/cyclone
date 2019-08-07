@@ -80,7 +80,7 @@ func (b *BitbucketServer) CheckToken() error {
 		return err
 	}
 	if len(repos) == 0 {
-		return cerr.ErrorExternalAuthenticationFailed.Error(fmt.Errorf("No repositories found"))
+		return cerr.ErrorExternalAuthorizationFailed.Error(fmt.Errorf("No repositories found"))
 	}
 	return nil
 }
