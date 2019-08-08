@@ -292,7 +292,7 @@ var workflowrun = []definition.Descriptor{
 			{
 				Method:      definition.Get,
 				Function:    handler.GetContainerLogStream,
-				Description: "Get log stream of containers",
+				Description: "Get log stream of a stage",
 				Parameters: []definition.Parameter{
 					{
 						Source: definition.Path,
@@ -313,10 +313,6 @@ var workflowrun = []definition.Descriptor{
 					{
 						Source: definition.Query,
 						Name:   httputil.StageNameQueryParameter,
-					},
-					{
-						Source: definition.Query,
-						Name:   httputil.ContainerNameQueryParameter,
 					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},

@@ -15,7 +15,7 @@ import (
 
 const (
 	// WriteWait defines time allowed to write a message to the peer.
-	WriteWait = 3 * time.Second
+	WriteWait = 10 * time.Second
 
 	// PongWait defines time allowed to read the next pong message from the peer.
 	PongWait = 30 * time.Second
@@ -71,12 +71,13 @@ func SendStream(server string, reader io.Reader, close <-chan struct{}) error {
 	}
 	defer ws.Close()
 
-	return watchLogs(ws, reader, close)
+	return Send(ws, reader, close)
 }
 
-func watchLogs(ws *websocket.Conn, reader io.Reader, close <-chan struct{}) error {
+// Send sends stream from reader by websocket
+func Send(ws *websocket.Conn, reader io.Reader, close <-chan struct{}) error {
 	buf := bufio.NewReader(reader)
-	err := writer(ws, buf)
+	err := Write(ws, buf)
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
@@ -90,7 +91,8 @@ type ReadBytes interface {
 	ReadBytes(delim byte) ([]byte, error)
 }
 
-func writer(ws *websocket.Conn, reader ReadBytes) error {
+// Write writes message from reader to websocket
+func Write(ws *websocket.Conn, reader ReadBytes) error {
 	pingTicker := time.NewTicker(PingPeriod)
 	sendTicker := time.NewTicker(10 * time.Millisecond)
 	defer func() {
