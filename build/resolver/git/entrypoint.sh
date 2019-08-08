@@ -34,6 +34,10 @@ USAGE=$(cat <<-END
        private repository, this should be provided. Auth here supports 2 different formats:
        a. <user>:<password>
        b. <token>
+     - SCM_USER [Optional] User name of the SCM server. Required when SCM_TYPE is set
+       to 'Bitbucket'
+     - SCM_TYPE [Optional] Indicate the SCM server type. Only when your SCM is 'Bitbucket'
+       and use SCM_AUTH in <token> format, you need specify this field to 'Bitbucket'.
      - PULL_POLICY [Optional] Indicate whether pull resources when there already
        are old data, if set to IfNotPresent, will make use of the old data and
        perform incremental pull, otherwise old data would be removed.
@@ -51,6 +55,7 @@ if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
 if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
 if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
+if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z ${SCM_USER} ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
 
 # If SCM_REPO is provided, embed it to SCM_URL
 if [ ! -z ${SCM_REPO} ]; then
@@ -94,7 +99,13 @@ modifyURL() {
     LEFT=${AUTH%%:*}
     RIGHT=${AUTH##*:}
     if [[ "$LEFT" == "$AUTH" ]]; then
-        AUTH="oauth2:$(urlencode "$AUTH")"
+        if [ "${SCM_TYPE}" = "Bitbucket" ]; then
+            # git clone with Bitbucket personal access token needs user information.
+            # [detail info](https://community.atlassian.com/t5/Bitbucket-questions/How-do-you-clone-a-repository-from-Bit-Bucket-server-using-a/qaq-p/751179#M26518)
+            AUTH="$(urlencode "$SCM_USER"):$(urlencode "$AUTH")"
+        else
+            AUTH="oauth2:$(urlencode "$AUTH")"
+        fi
     else
         AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
     fi
