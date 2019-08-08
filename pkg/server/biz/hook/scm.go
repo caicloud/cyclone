@@ -169,20 +169,13 @@ func LabelSCMTrigger(wft *v1alpha1.WorkflowTrigger) {
 		wft.Labels = make(map[string]string)
 	}
 	wft.Labels[meta.LabelWftEventSource] = wft.Spec.SCM.Secret
-	wft.Labels[meta.LabelWftEventRepo] = encodeRepoValue(wft.Spec.SCM.Repo)
-}
-
-func encodeRepoValue(repo string) string {
-	trimRepo := strings.Trim(repo, "/")
-	return strings.Replace(trimRepo, "/", ".", -1)
 }
 
 // ListSCMWfts list all related SCM type workflow triggers
 func ListSCMWfts(tenant, repo, integration string) (*v1alpha1.WorkflowTriggerList, error) {
 	labelMap := make(map[string]string)
-	if repo != "" {
-		labelMap[meta.LabelWftEventRepo] = encodeRepoValue(repo)
-	}
+
+	// Did not use repo as a label since repo length may greater than the label length limit 64.
 	if integration != "" {
 		labelMap[meta.LabelWftEventSource] = integration
 	}
@@ -191,10 +184,17 @@ func ListSCMWfts(tenant, repo, integration string) (*v1alpha1.WorkflowTriggerLis
 		LabelSelector: labels.Set(labelMap).String(),
 	}
 
-	wfts, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(listOption)
+	originWfts, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(listOption)
 	if err != nil {
 		return nil, err
 	}
 
+	wfts := originWfts.DeepCopy()
+	wfts.Items = make([]v1alpha1.WorkflowTrigger, 0)
+	for _, wft := range originWfts.Items {
+		if wft.Spec.SCM.Repo == repo {
+			wfts.Items = append(wfts.Items, wft)
+		}
+	}
 	return wfts, nil
 }
