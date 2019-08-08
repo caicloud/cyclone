@@ -38,6 +38,11 @@ required = ["github.com/caicloud/nirvana/utils/api"]
   version = "0.4.0"
 
 [[constraint]]
+  name = "gopkg.in/xanzy/go-gitlab.v0"
+  # Limit version for GitLab v4
+  version = "0.19.0"
+
+[[constraint]]
   branch = "master"
   name = "golang.org/x/net"
 
