@@ -162,14 +162,14 @@ func (c *V1Client) NewRequest(method, urlStr string, body interface{}, opt inter
 func (c *V1Client) Do(request *http.Request, v interface{}) (*http.Response, error) {
 	resp, err := c.client.Do(request)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	// check response
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status: %v, Body: %s", resp.Status, string(bodyBytes))
+		return resp, fmt.Errorf("status: %v, Body: %s", resp.Status, string(bodyBytes))
 	}
 	if v != nil {
 		err = json.NewDecoder(resp.Body).Decode(v)
