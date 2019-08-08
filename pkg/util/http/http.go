@@ -83,6 +83,9 @@ const (
 	// PublicHeaderName is a header name to indicate whether the resource is public
 	PublicHeaderName = "X-Public"
 
+	// HeaderDryRun is a header name to indicate do a rehearsal of a performance or procedure before the real one.
+	HeaderDryRun = "X-Dry-Run"
+
 	// DefaultNamespace represents the default namespace 'default'.
 	DefaultNamespace = "default"
 

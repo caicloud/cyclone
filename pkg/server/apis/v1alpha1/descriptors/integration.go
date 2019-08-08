@@ -58,6 +58,12 @@ var integration = []definition.Descriptor{
 						Source:      definition.Body,
 						Description: "JSON body to describe the new integration",
 					},
+					{
+						Source:      definition.Header,
+						Name:        httputil.HeaderDryRun,
+						Default:     false,
+						Description: "Whether to do a rehearsal of creating integration",
+					},
 				},
 				Results: definition.DataErrorResults("created integration"),
 			},

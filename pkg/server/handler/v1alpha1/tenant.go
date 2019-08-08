@@ -261,7 +261,7 @@ func createControlClusterIntegration(tenant string) error {
 		},
 	}
 
-	in, err := createIntegration(tenant, false, in)
+	in, err := createIntegration(tenant, false, in, false)
 	if err != nil {
 		return cerr.ErrorCreateIntegrationFailed.Error(in.Name, err)
 	}
