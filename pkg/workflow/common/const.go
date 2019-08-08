@@ -30,6 +30,8 @@ const (
 	EnvNamespace = "NAMESPACE"
 	// EnvCycloneServerAddr is an environment which represents cyclone server address.
 	EnvCycloneServerAddr = "CYCLONE_SERVER_ADDR"
+	// EnvLogCollectorURL is URL to send logs
+	EnvLogCollectorURL = "LOG_COLLECTOR_URL"
 
 	// DefaultCycloneServerAddr defines default Cyclone Server address
 	DefaultCycloneServerAddr = "cyclone-server"
@@ -78,8 +80,15 @@ const (
 	// CoordinatorArtifactsPath ...
 	CoordinatorArtifactsPath = "/workspace/artifacts"
 
+	// ToolboxPath is path of cyclone tools in containers
+	ToolboxPath = "/usr/bin/cyclone-toolbox"
+	// ToolboxVolumeMountPath is mount path of the toolbox emptyDir volume mounted in container
+	ToolboxVolumeMountPath = "/cyclone-toolbox"
+
 	// DefaultPvVolumeName is name of the default PV used by all workflow stages.
 	DefaultPvVolumeName = "default-pv"
+	// ToolsVolume is name of the volume to inject cyclone tools to containers.
+	ToolsVolume = "toolbox-volume"
 	// CoordinatorSidecarVolumeName is name of the emptyDir volume shared between coordinator and
 	// sidecar containers, e.g. image resolvers. Coordinator would notify resolvers that workload
 	// containers have finished their work, so that resource resolvers can push resources.

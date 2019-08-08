@@ -25,6 +25,8 @@ const (
 	GCImage = "gc"
 	// DindImage is key of the docker-in-docker image in config file
 	DindImage = "dind"
+	// ToolboxImage is key of the cyclone toolbox image in config file
+	ToolboxImage = "toolbox"
 )
 
 // WorkflowControllerConfig configures Workflow Controller
