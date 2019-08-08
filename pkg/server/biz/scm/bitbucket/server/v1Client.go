@@ -80,6 +80,12 @@ type ListOpts struct {
 	Limit *int `url:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// PullRequestListOpts ...
+type PullRequestListOpts struct {
+	ListOpts
+	State string `url:"state,omitempty" json:"state,omitempty"`
+}
+
 // NewClient returns a BitBucket Server client.
 func NewClient(client *http.Client, config Config) (*V1Client, error) {
 	if config.AuthType == BasicAuth && config.Username == "" {
