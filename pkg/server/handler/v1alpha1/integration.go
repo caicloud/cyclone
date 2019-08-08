@@ -128,7 +128,7 @@ func filterIntegrations(integrations []api.Integration, filter string) ([]api.In
 }
 
 // CreateIntegration creates an integration to store external system info for the tenant.
-func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
+func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *api.Integration, dryRun bool) (*api.Integration, error) {
 	modifiers := []CreationModifier{GenerateNameModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, "", "", in)
@@ -137,27 +137,22 @@ func CreateIntegration(ctx context.Context, tenant string, isPublic bool, in *ap
 		}
 	}
 
-	return createIntegration(tenant, isPublic, in)
+	return createIntegration(tenant, isPublic, in, dryRun)
 }
 
-func createIntegration(tenant string, isPublic bool, in *api.Integration) (*api.Integration, error) {
+func createIntegration(tenant string, isPublic bool, in *api.Integration, dryRun bool) (*api.Integration, error) {
+	valid, err := validateIntegration(in)
+	if err != nil || !valid {
+		return nil, err
+	}
+
+	if dryRun {
+		return in, nil
+	}
+
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil && in.Spec.Cluster.IsWorkerCluster {
 		// Open cluster for the tenant, create namespace and pvc
 		err := cluster.Open(handler.K8sClient, in, tenant)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
-		err := scm.GenerateSCMToken(in.Spec.SCM)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
-		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
 		if err != nil {
 			return nil, err
 		}
@@ -211,19 +206,9 @@ func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, 
 		}
 	}
 
-	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
-		err := scm.GenerateSCMToken(in.Spec.SCM)
-		if err != nil {
-			log.Errorf("Generate or check token error: %v", err)
-			return nil, err
-		}
-	}
-
-	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
-		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
-		if err != nil {
-			return nil, err
-		}
+	valid, err := validateIntegration(in)
+	if err != nil || !valid {
+		return nil, err
 	}
 
 	secret, err := integration.ToSecret(tenant, in)
@@ -451,4 +436,23 @@ func ListSCMDockerfiles(ctx context.Context, tenant, integrationName, repo strin
 	}
 
 	return types.NewListResponse(len(dockerfiles), dockerfiles), nil
+}
+
+func validateIntegration(in *api.Integration) (bool, error) {
+	if in.Spec.Type == api.SCM && in.Spec.SCM != nil && in.Spec.SCM.Type != api.SVN {
+		err := scm.GenerateSCMToken(in.Spec.SCM)
+		if err != nil {
+			log.Errorf("Generate or check token error: %v", err)
+			return false, err
+		}
+	}
+
+	if in.Spec.Type == api.SonarQube && in.Spec.SonarQube != nil {
+		_, err := sonarqube.NewSonar(in.Spec.SonarQube.Server, in.Spec.SonarQube.Token)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
