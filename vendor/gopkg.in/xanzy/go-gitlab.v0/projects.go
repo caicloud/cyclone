@@ -22,7 +22,6 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
-	"net/url"
 	"os"
 	"time"
 )
@@ -61,6 +60,7 @@ type Project struct {
 	JobsEnabled                               bool              `json:"jobs_enabled"`
 	WikiEnabled                               bool              `json:"wiki_enabled"`
 	SnippetsEnabled                           bool              `json:"snippets_enabled"`
+	ResolveOutdatedDiffDiscussions            bool              `json:"resolve_outdated_diff_discussions"`
 	ContainerRegistryEnabled                  bool              `json:"container_registry_enabled"`
 	CreatedAt                                 *time.Time        `json:"created_at,omitempty"`
 	LastActivityAt                            *time.Time        `json:"last_activity_at,omitempty"`
@@ -275,7 +275,7 @@ func (s *ProjectsService) ListProjectsUsers(pid interface{}, opt *ListProjectUse
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/users", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/users", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -304,7 +304,7 @@ func (s *ProjectsService) GetProjectLanguages(pid interface{}, options ...Option
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/languages", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/languages", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -339,7 +339,7 @@ func (s *ProjectsService) GetProject(pid interface{}, opt *GetProjectOptions, op
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -400,7 +400,7 @@ func (s *ProjectsService) GetProjectEvents(pid interface{}, opt *GetProjectEvent
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/events", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/events", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -416,7 +416,7 @@ func (s *ProjectsService) GetProjectEvents(pid interface{}, opt *GetProjectEvent
 	return p, resp, err
 }
 
-// CreateProjectOptions represents the available CreateProjects() options.
+// CreateProjectOptions represents the available CreateProject() options.
 //
 // GitLab API docs: https://docs.gitlab.com/ee/api/projects.html#create-project
 type CreateProjectOptions struct {
@@ -445,6 +445,9 @@ type CreateProjectOptions struct {
 	PrintingMergeRequestLinkEnabled           *bool             `url:"printing_merge_request_link_enabled,omitempty" json:"printing_merge_request_link_enabled,omitempty"`
 	CIConfigPath                              *string           `url:"ci_config_path,omitempty" json:"ci_config_path,omitempty"`
 	ApprovalsBeforeMerge                      *int              `url:"approvals_before_merge,omitempty" json:"approvals_before_merge,omitempty"`
+	Mirror                                    *bool             `url:"mirror,omitempty" json:"mirror,omitempty"`
+	MirrorTriggerBuilds                       *bool             `url:"mirror_trigger_builds,omitempty" json:"mirror_trigger_builds,omitempty"`
+	InitializeWithReadme                      *bool             `url:"initialize_with_readme,omitempty" json:"initialize_with_readme,omitempty"`
 }
 
 // CreateProject creates a new project owned by the authenticated user.
@@ -497,7 +500,38 @@ func (s *ProjectsService) CreateProjectForUser(user int, opt *CreateProjectForUs
 // EditProjectOptions represents the available EditProject() options.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#edit-project
-type EditProjectOptions CreateProjectOptions
+type EditProjectOptions struct {
+	Name                                      *string           `url:"name,omitempty" json:"name,omitempty"`
+	Path                                      *string           `url:"path,omitempty" json:"path,omitempty"`
+	DefaultBranch                             *string           `url:"default_branch,omitempty" json:"default_branch,omitempty"`
+	Description                               *string           `url:"description,omitempty" json:"description,omitempty"`
+	IssuesEnabled                             *bool             `url:"issues_enabled,omitempty" json:"issues_enabled,omitempty"`
+	MergeRequestsEnabled                      *bool             `url:"merge_requests_enabled,omitempty" json:"merge_requests_enabled,omitempty"`
+	JobsEnabled                               *bool             `url:"jobs_enabled,omitempty" json:"jobs_enabled,omitempty"`
+	WikiEnabled                               *bool             `url:"wiki_enabled,omitempty" json:"wiki_enabled,omitempty"`
+	SnippetsEnabled                           *bool             `url:"snippets_enabled,omitempty" json:"snippets_enabled,omitempty"`
+	ResolveOutdatedDiffDiscussions            *bool             `url:"resolve_outdated_diff_discussions,omitempty" json:"resolve_outdated_diff_discussions,omitempty"`
+	ContainerRegistryEnabled                  *bool             `url:"container_registry_enabled,omitempty" json:"container_registry_enabled,omitempty"`
+	SharedRunnersEnabled                      *bool             `url:"shared_runners_enabled,omitempty" json:"shared_runners_enabled,omitempty"`
+	Visibility                                *VisibilityValue  `url:"visibility,omitempty" json:"visibility,omitempty"`
+	ImportURL                                 *string           `url:"import_url,omitempty" json:"import_url,omitempty"`
+	PublicBuilds                              *bool             `url:"public_builds,omitempty" json:"public_builds,omitempty"`
+	OnlyAllowMergeIfPipelineSucceeds          *bool             `url:"only_allow_merge_if_pipeline_succeeds,omitempty" json:"only_allow_merge_if_pipeline_succeeds,omitempty"`
+	OnlyAllowMergeIfAllDiscussionsAreResolved *bool             `url:"only_allow_merge_if_all_discussions_are_resolved,omitempty" json:"only_allow_merge_if_all_discussions_are_resolved,omitempty"`
+	MergeMethod                               *MergeMethodValue `url:"merge_method,omitempty" json:"merge_method,omitempty"`
+	LFSEnabled                                *bool             `url:"lfs_enabled,omitempty" json:"lfs_enabled,omitempty"`
+	RequestAccessEnabled                      *bool             `url:"request_access_enabled,omitempty" json:"request_access_enabled,omitempty"`
+	TagList                                   *[]string         `url:"tag_list,omitempty" json:"tag_list,omitempty"`
+	CIConfigPath                              *string           `url:"ci_config_path,omitempty" json:"ci_config_path,omitempty"`
+	ApprovalsBeforeMerge                      *int              `url:"approvals_before_merge,omitempty" json:"approvals_before_merge,omitempty"`
+	ExternalAuthorizationClassificationLabel  *string           `url:"external_authorization_classification_label,omitempty" json:"external_authorization_classification_label,omitempty"`
+	Mirror                                    *bool             `url:"mirror,omitempty" json:"mirror,omitempty"`
+	MirrorTriggerBuilds                       *bool             `url:"mirror_trigger_builds,omitempty" json:"mirror_trigger_builds,omitempty"`
+	MirrorUserID                              *int              `url:"mirror_user_id,omitempty" json:"mirror_user_id,omitempty"`
+	OnlyMirrorProtectedBranches               *bool             `url:"only_mirror_protected_branches,omitempty" json:"only_mirror_protected_branches,omitempty"`
+	MirrorOverwritesDivergedBranches          *bool             `url:"mirror_overwrites_diverged_branches,omitempty" json:"mirror_overwrites_diverged_branches,omitempty"`
+	PackagesEnabled                           *bool             `url:"packages_enabled,omitempty" json:"packages_enabled,omitempty"`
+}
 
 // EditProject updates an existing project.
 //
@@ -507,7 +541,7 @@ func (s *ProjectsService) EditProject(pid interface{}, opt *EditProjectOptions, 
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s", pathEscape(project))
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
@@ -523,18 +557,27 @@ func (s *ProjectsService) EditProject(pid interface{}, opt *EditProjectOptions, 
 	return p, resp, err
 }
 
+// ForkProjectOptions represents the available ForkProject() options.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#fork-project
+type ForkProjectOptions struct {
+	Namespace *string `url:"namespace,omitempty" json:"namespace,omitempty"`
+	Name      *string `url:"name,omitempty" json:"name,omitempty" `
+	Path      *string `url:"path,omitempty" json:"path,omitempty"`
+}
+
 // ForkProject forks a project into the user namespace of the authenticated
 // user.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#fork-project
-func (s *ProjectsService) ForkProject(pid interface{}, options ...OptionFunc) (*Project, *Response, error) {
+func (s *ProjectsService) ForkProject(pid interface{}, opt *ForkProjectOptions, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/fork", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/fork", pathEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, nil, options)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -557,7 +600,7 @@ func (s *ProjectsService) StarProject(pid interface{}, options ...OptionFunc) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/star", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/star", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
@@ -582,7 +625,7 @@ func (s *ProjectsService) UnstarProject(pid interface{}, options ...OptionFunc) 
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/unstar", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/unstar", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
@@ -608,7 +651,7 @@ func (s *ProjectsService) ArchiveProject(pid interface{}, options ...OptionFunc)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/archive", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/archive", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
@@ -634,7 +677,7 @@ func (s *ProjectsService) UnarchiveProject(pid interface{}, options ...OptionFun
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/unarchive", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/unarchive", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
@@ -659,7 +702,7 @@ func (s *ProjectsService) DeleteProject(pid interface{}, options ...OptionFunc) 
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s", pathEscape(project))
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -686,7 +729,7 @@ func (s *ProjectsService) ShareProjectWithGroup(pid interface{}, opt *ShareWithG
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/share", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/share", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -704,7 +747,7 @@ func (s *ProjectsService) DeleteSharedProjectFromGroup(pid interface{}, groupID 
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/share/%d", url.QueryEscape(project), groupID)
+	u := fmt.Sprintf("projects/%s/share/%d", pathEscape(project), groupID)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -763,7 +806,7 @@ func (s *ProjectsService) ListProjectHooks(pid interface{}, opt *ListProjectHook
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/hooks", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/hooks", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -788,7 +831,7 @@ func (s *ProjectsService) GetProjectHook(pid interface{}, hook int, options ...O
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
+	u := fmt.Sprintf("projects/%s/hooks/%d", pathEscape(project), hook)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -832,7 +875,7 @@ func (s *ProjectsService) AddProjectHook(pid interface{}, opt *AddProjectHookOpt
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/hooks", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/hooks", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -876,7 +919,7 @@ func (s *ProjectsService) EditProjectHook(pid interface{}, hook int, opt *EditPr
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
+	u := fmt.Sprintf("projects/%s/hooks/%d", pathEscape(project), hook)
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
@@ -902,7 +945,7 @@ func (s *ProjectsService) DeleteProjectHook(pid interface{}, hook int, options .
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
+	u := fmt.Sprintf("projects/%s/hooks/%d", pathEscape(project), hook)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -978,7 +1021,7 @@ func (s *ProjectsService) UploadFile(pid interface{}, file string, options ...Op
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/uploads", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/uploads", pathEscape(project))
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -1028,7 +1071,7 @@ func (s *ProjectsService) ListProjectForks(pid interface{}, opt *ListProjectsOpt
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/forks", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/forks", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -1071,7 +1114,7 @@ func (s *ProjectsService) GetProjectPushRules(pid interface{}, options ...Option
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/push_rule", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/push_rule", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -1112,7 +1155,7 @@ func (s *ProjectsService) AddProjectPushRule(pid interface{}, opt *AddProjectPus
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/push_rule", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/push_rule", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -1153,7 +1196,7 @@ func (s *ProjectsService) EditProjectPushRule(pid interface{}, opt *EditProjectP
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/push_rule", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/push_rule", pathEscape(project))
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
@@ -1180,7 +1223,7 @@ func (s *ProjectsService) DeleteProjectPushRule(pid interface{}, options ...Opti
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/push_rule", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/push_rule", pathEscape(project))
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -1200,6 +1243,7 @@ type ProjectApprovals struct {
 	ApprovalsBeforeMerge                      int                          `json:"approvals_before_merge"`
 	ResetApprovalsOnPush                      bool                         `json:"reset_approvals_on_push"`
 	DisableOverridingApproversPerMergeRequest bool                         `json:"disable_overriding_approvers_per_merge_request"`
+	MergeRequestsAuthorApproval               bool                         `json:"merge_requests_author_approval"`
 }
 
 // GetApprovalConfiguration get the approval configuration for a project.
@@ -1211,7 +1255,7 @@ func (s *ProjectsService) GetApprovalConfiguration(pid interface{}, options ...O
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/approvals", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/approvals", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -1236,6 +1280,7 @@ type ChangeApprovalConfigurationOptions struct {
 	ApprovalsBeforeMerge                      *int  `url:"approvals_before_merge,omitempty" json:"approvals_before_merge,omitempty"`
 	ResetApprovalsOnPush                      *bool `url:"reset_approvals_on_push,omitempty" json:"reset_approvals_on_push,omitempty"`
 	DisableOverridingApproversPerMergeRequest *bool `url:"disable_overriding_approvers_per_merge_request,omitempty" json:"disable_overriding_approvers_per_merge_request,omitempty"`
+	MergeRequestsAuthorApproval               *bool `url:"merge_requests_author_approval,omitempty" json:"merge_requests_author_approval,omitempty"`
 }
 
 // ChangeApprovalConfiguration updates the approval configuration for a project.
@@ -1247,7 +1292,7 @@ func (s *ProjectsService) ChangeApprovalConfiguration(pid interface{}, opt *Chan
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/approvals", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/approvals", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -1282,7 +1327,7 @@ func (s *ProjectsService) ChangeAllowedApprovers(pid interface{}, opt *ChangeAll
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/approvers", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/approvers", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
