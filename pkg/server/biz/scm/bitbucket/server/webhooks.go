@@ -20,7 +20,7 @@ const (
 
 	releaseRefPrefix = "refs/heads/release/"
 	// pullRefTemplate represents reference template for pull request.
-	pullRefTemplate = "refs/pull-requests/%d/from"
+	pullRefTemplate = "refs/pull-requests/%d/merge"
 )
 
 var supportEventMap = map[string]bool{
