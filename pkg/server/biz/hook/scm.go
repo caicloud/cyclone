@@ -96,7 +96,14 @@ func createSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) err
 		},
 	}
 
-	return sp.CreateWebhook(repo, webhook)
+	err = sp.CreateWebhook(repo, webhook)
+	if cerr.ErrorExternalAuthenticationFailed.Derived(err) || cerr.ErrorExternalAuthorizationFailed.Derived(err) ||
+		// GitHub sends a 404 error when your client isn't properly authenticated.
+		// More info: https://developer.github.com/v3/troubleshooting/
+		(cerr.ErrorExternalNotFound.Derived(err) && scmSource.Type == api.GitHub) {
+		return cerr.ErrorCreateWebhookPermissionDenied.Error()
+	}
+	return err
 }
 
 func generateWebhookURL(tenant, secret string) string {
