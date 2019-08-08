@@ -25,6 +25,7 @@ import (
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	apiv1 "github.com/caicloud/cyclone/pkg/server/apis/v1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 type newProviderFunc func(source *v1alpha1.SCMSource) (Provider, error)
@@ -73,7 +74,7 @@ func GetSCMProvider(scm *v1alpha1.SCMSource) (Provider, error) {
 	scmType := scm.Type
 	pFunc, ok := scmProviders[scmType]
 	if !ok {
-		return nil, fmt.Errorf("SCM type %s upsupported", scmType)
+		return nil, cerr.ErrorUnsupported.Error("SCM type", scmType)
 	}
 
 	return pFunc(scm)
@@ -92,10 +93,8 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 		return nil
 	}
 
-	if config.AuthType != v1alpha1.AuthTypePassword &&
-		config.AuthType != v1alpha1.AuthTypeToken &&
-		string(config.AuthType) != string(apiv1.OAuth) {
-		return fmt.Errorf("SCM auth type %s upsupported", config.AuthType)
+	if config.AuthType != v1alpha1.AuthTypePassword && config.AuthType != v1alpha1.AuthTypeToken && string(config.AuthType) != string(apiv1.OAuth) {
+		return cerr.ErrorUnsupported.Error("SCM auth type", config.AuthType)
 	}
 
 	// Trim suffix '/' of Gitlab server to ensure that the token can work, otherwise there will be 401 error.
@@ -120,7 +119,7 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 			}
 		}
 	default:
-		return fmt.Errorf("SCM type %s unsupported", scmType)
+		return cerr.ErrorUnsupported.Error("SCM type", scmType)
 	}
 
 	if generatedToken != "" && config.AuthType == v1alpha1.AuthTypePassword {
@@ -128,7 +127,7 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 	} else {
 		err := provider.CheckToken()
 		if err != nil {
-			return fmt.Errorf("token unauthorized to repos, error:%v", err)
+			return err
 		}
 	}
 
