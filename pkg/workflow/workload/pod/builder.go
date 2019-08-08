@@ -279,6 +279,18 @@ func (m *Builder) CreateVolumes() error {
 			log.WithField("type", v.Type).Warning("Unknown preset volume type.")
 		}
 	}
+
+	// Create emptyDir volume for cyclone tools. Cyclone will inject some tools to containers via this volume.
+	// For example, 'fstream' for git resolver containers to send their logs to log collector (cyclone-server
+	// if not configured).
+	// Add emptyDir volume to be shared between coordinator and sidecars, e.g. resource resolvers.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.ToolsVolume,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
 	return nil
 }
 
@@ -320,6 +332,30 @@ func (m *Builder) CreateEmptyDirVolume(volumeName string) {
 // ResolveInputResources creates init containers for each input resource and also mount
 // resource to workload containers.
 func (m *Builder) ResolveInputResources() error {
+	var toolboxImage string
+	if img, ok := controller.Config.Images[controller.ToolboxImage]; ok {
+		toolboxImage = img
+	} else {
+		return fmt.Errorf("no toolbox image configured, the image key is '%s'", controller.ToolboxImage)
+	}
+
+	// Add toolbox init container, which will copy necessary tools from cyclone toolbox image to the toolbox
+	// emptyDir volume, so that these tools can be shared by other containers. Here we will copy 'fstream' to
+	// help collect logs to external log collector (cyclone-server by default if not configured)
+	toolbox := corev1.Container{
+		Name:  InputContainerName(0),
+		Image: toolboxImage,
+		Args:  []string{"cp", fmt.Sprintf("%s/fstream", common.ToolboxPath), fmt.Sprintf("%s/resolver-runner.sh", common.ToolboxPath), common.ToolboxVolumeMountPath},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      common.ToolsVolume,
+				MountPath: common.ToolboxVolumeMountPath,
+			},
+		},
+		ImagePullPolicy: controller.ImagePullPolicy(),
+	}
+	m.pod.Spec.InitContainers = append(m.pod.Spec.InitContainers, toolbox)
+
 	for index, r := range m.stg.Spec.Pod.Inputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
 		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
@@ -381,6 +417,12 @@ func (m *Builder) ResolveInputResources() error {
 			})
 		}
 
+		envs = append(envs, corev1.EnvVar{
+			Name: common.EnvLogCollectorURL,
+			Value: fmt.Sprintf("%s/apis/v1alpha1/workflowruns/%s/streamlogs?namespace=%s&stage=%s&container=%s",
+				controller.Config.CycloneServerAddr, m.wfr.Name, m.wfr.Namespace, m.stg.Name, InputContainerName(index+1)),
+		})
+
 		// Get resource resolver for the given resource type. If the resource has resolver set, use it directly,
 		// otherwise get resolver from registered resource types.
 		resolver, err := common.GetResourceResolver(m.client, resource)
@@ -389,15 +431,20 @@ func (m *Builder) ResolveInputResources() error {
 		}
 
 		container := corev1.Container{
-			Name:  InputContainerName(index + 1),
-			Image: resolver,
-			Args:  []string{common.ResourcePullCommand},
-			Env:   envs,
+			Name:    InputContainerName(index + 1),
+			Image:   resolver,
+			Command: []string{fmt.Sprintf("%s/resolver-runner.sh", common.ToolboxPath)},
+			Args:    []string{common.ResourcePullCommand},
+			Env:     envs,
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      volumeName,
 					MountPath: common.ResolverDefaultWorkspacePath,
 					SubPath:   subPath,
+				},
+				{
+					Name:      common.ToolsVolume,
+					MountPath: common.ToolboxPath,
 				},
 			},
 			ImagePullPolicy: controller.ImagePullPolicy(),
