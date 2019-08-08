@@ -418,6 +418,26 @@ func ListSCMTags(ctx context.Context, tenant, integrationName, repo string) (*ty
 	return types.NewListResponse(len(tags), tags), nil
 }
 
+// ListSCMPullRequests lists pull request for specified repo of integrated SCM under given tenant.
+func ListSCMPullRequests(ctx context.Context, tenant, integrationName, repo, state string) (*types.ListResponse, error) {
+	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err = url.PathUnescape(repo)
+	if err != nil {
+		return nil, err
+	}
+	prs, err := listSCMPullRequests(scmSource, repo, state)
+	if err != nil {
+		log.Errorf("Failed to list pull requests for integration %s's repo %s as %v", integrationName, repo, err)
+		return nil, err
+	}
+
+	return types.NewListResponse(len(prs), prs), nil
+}
+
 // ListSCMDockerfiles lists Dockerfiles for specified repo of integrated SCM under given tenant.
 func ListSCMDockerfiles(ctx context.Context, tenant, integrationName, repo string) (*types.ListResponse, error) {
 	scmSource, err := getSCMSourceFromIntegration(tenant, integrationName)

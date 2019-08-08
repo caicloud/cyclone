@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/caicloud/nirvana/log"
+
+	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 )
 
 // RepositoriesService handles communication with the repository related.
@@ -79,6 +81,12 @@ type Tags struct {
 	Values []Tag `json:"values"`
 }
 
+// PullRequests is a set of PullRequest.
+type PullRequests struct {
+	Pagination
+	Values []scm.PullRequest `json:"values"`
+}
+
 // Files is a set of files' name in a repo.
 type Files struct {
 	Pagination
@@ -95,7 +103,7 @@ type StatusReq struct {
 }
 
 // ListRepositories list repositories in the Bitbucket Server.
-func (server *RepositoriesService) ListRepositories(ctx context.Context, project string, opts *ListOpts) (*Repositories, *http.Response, error) {
+func (server *RepositoriesService) ListRepositories(ctx context.Context, project string, opt *ListOpts) (*Repositories, *http.Response, error) {
 	var u string
 	if len(project) == 0 {
 		u = "rest/api/1.0/repos"
@@ -103,7 +111,7 @@ func (server *RepositoriesService) ListRepositories(ctx context.Context, project
 		u = fmt.Sprintf("rest/api/1.0/projects/%s/repos", project)
 	}
 
-	req, err := server.v1Client.NewRequest(http.MethodGet, u, nil, opts)
+	req, err := server.v1Client.NewRequest(http.MethodGet, u, nil, opt)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -147,6 +155,20 @@ func (server *RepositoriesService) ListTags(ctx context.Context, project string,
 	var tags Tags
 	resp, err := server.v1Client.Do(req, &tags)
 	return &tags, resp, err
+}
+
+// ListPullRequests list pull requests on the repository.
+func (server *RepositoriesService) ListPullRequests(ctx context.Context, project, repo string, opt *PullRequestListOpts) (*PullRequests, *http.Response, error) {
+	// Detailed info: https://docs.atlassian.com/bitbucket-server/rest/6.5.1/bitbucket-rest.html#idp254
+	u := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests", project, repo)
+	req, err := server.v1Client.NewRequest(http.MethodGet, u, nil, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var prs PullRequests
+	resp, err := server.v1Client.Do(req, &prs)
+	return &prs, resp, err
 }
 
 // CreateStatus create a commit status.
