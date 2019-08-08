@@ -186,6 +186,51 @@ func (b *BitbucketServer) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListPullRequests lists the pull requests for specified repo.
+func (b *BitbucketServer) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	//  Bitbucket pr state: OPEN, DECLINED, MERGED, ALL
+	var s string
+	switch state {
+	case "open":
+		s = "OPEN"
+	case "all":
+		s = "ALL"
+	case "OPEN", "DECLINED", "MERGED", "ALL":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("Bitbucket pull request state", state)
+	}
+
+	var projectKey string
+	var err error
+	if projectKey, repo, err = parseRepo(b.scmCfg, repo); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	var allPRs []scm.PullRequest
+	opt := PullRequestListOpts{
+		State: s,
+	}
+	for {
+		prs, resp, err := b.v1Client.Repositories.ListPullRequests(context.Background(), projectKey, repo, &opt)
+		if err != nil {
+			log.Errorf("Fail to list pull requests for %s as %v", repo, err)
+			return nil, convertBitBucketError(err, resp)
+		}
+
+		for _, pr := range prs.Values {
+			allPRs = append(allPRs, pr)
+		}
+		if prs.NextPage == nil {
+			break
+		}
+		opt.Start = prs.NextPage
+	}
+
+	return allPRs, nil
+}
+
 // ListDockerfiles lists the Dockerfiles for specified repo.
 func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 	var projectKey string

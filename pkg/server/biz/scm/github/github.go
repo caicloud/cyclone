@@ -253,6 +253,62 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	return tags, nil
 }
 
+// ListPullRequests lists the pull requests for specified repo.
+func (g *Github) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	// GitLab pr state: open, closed, all
+	var s string
+	switch state {
+	case "open", "closed", "all":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("Github pull request state", state)
+	}
+
+	// Same as cyclone supported state
+	opt := &github.PullRequestListOptions{
+		State: s,
+		ListOptions: github.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
+	}
+
+	owner := g.scmCfg.User
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repo)
+			log.Error(err.Error())
+			return nil, err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
+	var allPRs []*github.PullRequest
+	for {
+		prs, resp, err := g.client.PullRequests.List(g.ctx, owner, repo, opt)
+		if err != nil {
+			return nil, convertGithubError(err)
+		}
+		allPRs = append(allPRs, prs...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	prs := make([]scm.PullRequest, len(allPRs))
+	for i, pr := range allPRs {
+		prs[i] = scm.PullRequest{
+			ID:          *pr.Number,
+			Title:       *pr.Title,
+			Description: *pr.Body,
+			State:       *pr.State,
+		}
+	}
+
+	return prs, nil
+}
+
 // ListDockerfiles lists the dockerfiles for specified repo.
 func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	opt := &github.SearchOptions{
