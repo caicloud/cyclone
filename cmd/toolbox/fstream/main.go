@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/spf13/cobra"
 
+	"github.com/caicloud/cyclone/pkg/common/signals"
 	"github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
@@ -43,13 +45,12 @@ func run(cmd *cobra.Command, args []string) {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
+	defer file.Close()
 
-	closeChan := make(chan struct{})
-	defer func() {
-		file.Close()
-		close(closeChan)
-	}()
-	err = websocket.SendStream(server, file, closeChan)
+	ctx, cancel := context.WithCancel(context.Background())
+	signals.GracefulShutdown(cancel)
+
+	err = websocket.SendStream(server, file, ctx.Done())
 	if err != nil {
 		log.Infof("Send file stream %s to %s error:%v", filePath, server, err)
 		os.Exit(1)
