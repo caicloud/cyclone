@@ -215,5 +215,12 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		return cerr.ConvertK8sError(err)
 	}
 
+	// Init pull-request status to pending
+	wfrCopy := wfr.DeepCopy()
+	wfrCopy.Status.Overall.Phase = v1alpha1.StatusRunning
+	err = updatePullRequestStatus(wfrCopy)
+	if err != nil {
+		log.Warningf("Init pull request status for %s error: %v", wfr.Name, err)
+	}
 	return nil
 }
