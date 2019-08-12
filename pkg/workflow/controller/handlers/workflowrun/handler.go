@@ -171,7 +171,12 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 // * notification endpoint is configured
 // * without notification sent label
 func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
-	if meta.LabelExists(wfr.Labels, meta.LabelWorkflowRunNotificationSent) {
+	// Get latest WorkflowRun.
+	latestWfr, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	if meta.LabelExists(latestWfr.Labels, meta.LabelWorkflowRunNotificationSent) {
 		return nil
 	}
 
