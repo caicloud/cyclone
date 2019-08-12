@@ -11,7 +11,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/informers"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
+	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
 // NewWorkflowRunController ...
@@ -66,10 +68,15 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 	})
 
 	return &Controller{
-		name:         "WorkflowRun Controller",
-		clientSet:    client,
-		informer:     informer,
-		queue:        queue,
-		eventHandler: handlers.New(client),
+		name:      "WorkflowRun Controller",
+		clientSet: client,
+		informer:  informer,
+		queue:     queue,
+		eventHandler: &handlers.Handler{
+			Client:           client,
+			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
+			GCProcessor:      workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
+			LimitedQueues:    workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
+		},
 	}
 }

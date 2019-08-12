@@ -13,7 +13,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/cyclone/pkg/util/kmutex"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
@@ -26,22 +25,10 @@ type Handler struct {
 	TimeoutProcessor *workflowrun.TimeoutProcessor
 	GCProcessor      *workflowrun.GCProcessor
 	LimitedQueues    *workflowrun.LimitedQueues
-	notifyLock       *kmutex.Kmutex
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
-
-// New creates a workflowrun Handler
-func New(client clientset.Interface) *Handler {
-	return &Handler{
-		Client:           client,
-		TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
-		GCProcessor:      workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
-		LimitedQueues:    workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
-		notifyLock:       kmutex.New(),
-	}
-}
 
 // ObjectCreated handles a newly created WorkflowRun
 func (h *Handler) ObjectCreated(obj interface{}) {
@@ -185,9 +172,6 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 // * notification endpoint is configured
 // * without notification sent label
 func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
-	h.notifyLock.Lock(wfr.Name)
-	defer h.notifyLock.Unlock(wfr.Name)
-
 	// Get latest WorkflowRun.
 	latestWfr, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
 	if err != nil {
