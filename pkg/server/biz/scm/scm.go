@@ -176,4 +176,6 @@ type PullRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	State       string `json:"state"`
+	// TargetBranch used for GitLab to indicate to which branch the merge-request should merge.
+	TargetBranch string `json:"targetBranch"`
 }
