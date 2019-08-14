@@ -163,6 +163,10 @@ func ConvertK8sError(err error) error {
 // Yes, will translate it to the type;
 // No, return it originally.
 func AutoAnalyse(err error) error {
+	if err == nil {
+		return nil
+	}
+
 	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
 		return ErrorExternalConnectionRefused.Error(err)
 	}
