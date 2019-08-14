@@ -540,7 +540,8 @@ func convertGitlabError(err error, resp interface{}) error {
 	if err == nil {
 		return nil
 	}
-	if reflect.ValueOf(resp).IsNil() {
+
+	if resp == nil || reflect.ValueOf(resp).IsNil() {
 		return cerr.AutoAnalyse(err)
 	}
 
