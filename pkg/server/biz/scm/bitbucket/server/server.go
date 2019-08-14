@@ -501,5 +501,6 @@ func convertBitBucketError(err error, resp *http.Response) error {
 	if resp != nil && resp.StatusCode == http.StatusForbidden {
 		return cerr.ErrorExternalAuthenticationFailed.Error(err)
 	}
-	return err
+
+	return cerr.AutoAnalyse(err)
 }
