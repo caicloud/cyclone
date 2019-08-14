@@ -156,10 +156,11 @@ func (g *V3) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
 
 		for _, p := range prs {
 			allPRs = append(allPRs, scm.PullRequest{
-				ID:          p.IID,
-				Title:       p.Title,
-				Description: p.Description,
-				State:       p.State,
+				ID:           p.IID,
+				Title:        p.Title,
+				Description:  p.Description,
+				State:        p.State,
+				TargetBranch: p.TargetBranch,
 			})
 		}
 		if resp.NextPage == 0 {
