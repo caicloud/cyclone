@@ -636,12 +636,12 @@ func convertGithubError(err error) error {
 	respField := value.FieldByName(errorFieldResponse)
 	if !respField.IsValid() {
 		log.Warningf("response filed of Github error is invalid: %v", err)
-		return err
+		return cerr.AutoAnalyse(err)
 	}
 
 	resp, ok := respField.Interface().(*http.Response)
 	if !ok {
-		return err
+		return cerr.AutoAnalyse(err)
 	}
 
 	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
@@ -660,5 +660,5 @@ func convertGithubError(err error) error {
 		return cerr.ErrorExternalNotFound.Error(err)
 	}
 
-	return err
+	return cerr.AutoAnalyse(err)
 }

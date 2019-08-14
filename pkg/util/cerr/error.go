@@ -2,6 +2,7 @@ package cerr
 
 import (
 	"fmt"
+	"strings"
 
 	nerror "github.com/caicloud/nirvana/errors"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -26,8 +27,14 @@ const (
 	ReasonAuthenticationFailed = "ReasonAuthenticationFailed"
 	// ReasonNotFound represents not found error
 	ReasonNotFound = "ReasonNotFound"
-	// ReasonExistAccelerateRunningWorkflows represents error that update persisten volume while there are accelerated workflows running.
-	ReasonExistAccelerateRunningWorkflows = "ReasonExistAccelerateRunningWorkflows"
+	// ReasonConnectionRefused represents connection refused error
+	ReasonConnectionRefused = "ReasonConnectionRefused"
+	// ReasonNoSuchHost represents no such host error
+	ReasonNoSuchHost = "ReasonNoSuchHost"
+	// ReasonIOTimeout represents io timeout error
+	ReasonIOTimeout = "ReasonIOTimeout"
+	// ReasonExistRunningWorkflows represents error that update persisten volume while there are workflows running.
+	ReasonExistRunningWorkflows = "ReasonExistRunningWorkflows"
 	// ReasonCreateIntegrationFailed represents creating integration failed error
 	ReasonCreateIntegrationFailed = "ReasonCreateIntegrationFailed"
 )
@@ -118,9 +125,18 @@ var (
 	// ErrorExternalNotFound defines error that not found for external system, NotFound 404.
 	ErrorExternalNotFound = nerror.InternalServerError.Build(ReasonNotFound, "not found: ${error}")
 
-	// ErrorExistAccelerateRunningWorkflows defines error that can not update persisten volume while there are accelerated workflows running.
-	ErrorExistAccelerateRunningWorkflows = nerror.InternalServerError.Build(ReasonExistAccelerateRunningWorkflows,
-		"can not update persistent volume, since there are workflows turned on acceleration running, need to stop following workflows firstly: ${workflows}")
+	// ErrorExternalConnectionRefused defines error that connection refused while sending requests to external system.
+	ErrorExternalConnectionRefused = nerror.InternalServerError.Build(ReasonConnectionRefused, "connection refused: ${error}")
+
+	// ErrorExternalNoSuchHost defines error that no such host while sending requests to external system.
+	ErrorExternalNoSuchHost = nerror.InternalServerError.Build(ReasonNoSuchHost, "no such host: ${error}")
+
+	// ErrorExternalIOTimeout defines error that io timeout while sending requests to external system.
+	ErrorExternalIOTimeout = nerror.InternalServerError.Build(ReasonIOTimeout, "i/o timeout: ${error}")
+
+	// ErrorExistRunningWorkflows defines error that can not update persisten volume while there are workflows running.
+	ErrorExistRunningWorkflows = nerror.InternalServerError.Build(ReasonExistRunningWorkflows,
+		"can not update persistent volume, since there are workflows running, need to stop following workflows firstly: ${workflows}")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.
@@ -141,4 +157,23 @@ func ConvertK8sError(err error) error {
 	}
 
 	return ErrorUnknownInternal.Error(err)
+}
+
+// AutoAnalyse analyses if an error belongs to a concrete type error,
+// Yes, will translate it to the type;
+// No, return it originally.
+func AutoAnalyse(err error) error {
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
+		return ErrorExternalConnectionRefused.Error(err)
+	}
+
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "no such host") {
+		return ErrorExternalNoSuchHost.Error(err)
+	}
+
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "i/o timeout") {
+		return ErrorExternalIOTimeout.Error(err)
+	}
+
+	return err
 }

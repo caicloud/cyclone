@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
@@ -434,13 +435,13 @@ type MergeRequest struct {
 		UpdatedAt string `json:"updated_at"`
 		DueDate   string `json:"due_date"`
 	} `json:"milestone"`
-	MergeWhenBuildSucceeds  bool   `json:"merge_when_build_succeeds"`
-	MergeStatus             string `json:"merge_status"`
-	Subscribed              bool   `json:"subscribed"`
-	UserNotesCount          int    `json:"user_notes_count"`
-	SouldRemoveSourceBranch bool   `json:"should_remove_source_branch"`
-	ForceRemoveSourceBranch bool   `json:"force_remove_source_branch"`
-	Changes                 []struct {
+	MergeWhenBuildSucceeds   bool   `json:"merge_when_build_succeeds"`
+	MergeStatus              string `json:"merge_status"`
+	Subscribed               bool   `json:"subscribed"`
+	UserNotesCount           int    `json:"user_notes_count"`
+	ShouldRemoveSourceBranch bool   `json:"should_remove_source_branch"`
+	ForceRemoveSourceBranch  bool   `json:"force_remove_source_branch"`
+	Changes                  []struct {
 		OldPath     string `json:"old_path"`
 		NewPath     string `json:"new_path"`
 		AMode       string `json:"a_mode"`
@@ -471,7 +472,7 @@ const (
 	PushHookEvent = "Push Hook"
 )
 
-// parseWebhook parses the body from webhook requeset.
+// parseWebhook parses the body from webhook request.
 func parseWebhook(r *http.Request) (payload interface{}, err error) {
 	eventType := r.Header.Get(EventTypeHeader)
 	switch eventType {
@@ -590,8 +591,8 @@ func convertGitlabError(err error, resp interface{}) error {
 	if err == nil {
 		return nil
 	}
-	if resp == nil {
-		return err
+	if reflect.ValueOf(resp).IsNil() {
+		return cerr.AutoAnalyse(err)
 	}
 
 	code := 0
@@ -618,5 +619,5 @@ func convertGitlabError(err error, resp interface{}) error {
 	if code == http.StatusForbidden {
 		return cerr.ErrorExternalAuthenticationFailed.Error(err)
 	}
-	return err
+	return cerr.AutoAnalyse(err)
 }
