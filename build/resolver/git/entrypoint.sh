@@ -57,6 +57,13 @@ if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
 if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
 if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z ${SCM_USER} ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
 
+# Git clone with "--depth" option will fail when the server is Bitbucket which version less than 
+# v0.6.4(This version is not guaranteed to be accurate, I tested v0.6.4 support "--depth", but v0.5.4.9 not support)
+if [ "${SCM_TYPE}" != "Bitbucket" ]; then
+    GIT_DEPTH_OPTION="--depth=1"
+    GIT_DEPTH_OPTION_DEEPER="--depth=30"
+fi
+
 # If SCM_REPO is provided, embed it to SCM_URL
 if [ ! -z ${SCM_REPO} ]; then
     SCM_URL=${SCM_URL%/}/${SCM_REPO}.git
@@ -180,7 +187,7 @@ pull() {
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        git fetch -v --depth=1 origin $SCM_REVISION
+        git fetch -v ${GIT_DEPTH_OPTION:-} origin $SCM_REVISION
         git checkout FETCH_HEAD
     else
         if [ -e $WORKDIR/data ]; then
@@ -198,20 +205,20 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master --depth=1 --single-branch --recursive ${SCM_URL} data
+            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
             cd data
-            git fetch --depth=1 origin $SOURCE_BRANCH
+            git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH --depth=1 --single-branch --recursive ${SCM_URL} data
+            git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
             # If the fetch depth is too small, the merge command will fail with:
             #    'fatal: refusing to merge unrelated histories'
             # And we assume 30 is enough.
-            git fetch --depth=30 origin $SOURCE_BRANCH
+            git fetch ${GIT_DEPTH_OPTION_DEEPER:-} origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi
