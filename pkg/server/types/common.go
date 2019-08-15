@@ -4,8 +4,8 @@ import "reflect"
 
 // QueryParams describes pagination of request, start and limit defined.
 type QueryParams struct {
-	Start  int64  `source:"query,start,default=0"`
-	Limit  int64  `source:"query,limit,default=99999"`
+	Start  uint64 `source:"query,start,default=0"`
+	Limit  uint64 `source:"query,limit,default=99999"`
 	Filter string `source:"query,filter"`
 	// Sort will sorts the results by metadata.creationTimestamp
 	Sort bool `source:"query,sort"`
