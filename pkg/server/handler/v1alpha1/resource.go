@@ -42,7 +42,7 @@ func ListResources(ctx context.Context, project, tenant string, query *types.Que
 	}
 
 	items := resources.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Resource{}), nil
 	}

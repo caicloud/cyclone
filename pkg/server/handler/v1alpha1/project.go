@@ -44,7 +44,7 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 		}
 	}
 
-	size := int64(len(results))
+	size := uint64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Project{}), nil
 	}
