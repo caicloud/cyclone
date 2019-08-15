@@ -24,7 +24,7 @@ func AllWorkflows(ctx context.Context, label string, query *types.QueryParams) (
 	}
 
 	items := workflows.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Workflow{}), nil
 	}
@@ -48,7 +48,7 @@ func AllStages(ctx context.Context, label string, query *types.QueryParams) (*ty
 	}
 
 	items := stages.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}
@@ -72,7 +72,7 @@ func AllResources(ctx context.Context, label string, query *types.QueryParams) (
 	}
 
 	items := resources.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Resource{}), nil
 	}
@@ -97,7 +97,7 @@ func AllWorkflowRuns(ctx context.Context, label string, query *types.QueryParams
 
 	items := workflowruns.Items
 	sort.Sort(sorter.NewWorkflowRunSorter(items, false))
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil
 	}
@@ -121,7 +121,7 @@ func AllWorkflowTriggers(ctx context.Context, label string, query *types.QueryPa
 	}
 
 	items := triggers.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowTrigger{}), nil
 	}

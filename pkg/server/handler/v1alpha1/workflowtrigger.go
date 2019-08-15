@@ -61,7 +61,7 @@ func ListWorkflowTriggers(ctx context.Context, tenant, project, workflow string,
 
 	items := workflowTriggers.Items
 
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowTrigger{}), nil
 	}

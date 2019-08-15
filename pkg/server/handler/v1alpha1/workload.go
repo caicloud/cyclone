@@ -43,7 +43,7 @@ func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParam
 	}
 
 	items := pods.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []core_v1.Pod{}), nil
 	}

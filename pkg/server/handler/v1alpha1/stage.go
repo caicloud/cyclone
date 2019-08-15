@@ -42,7 +42,7 @@ func ListStages(ctx context.Context, project, tenant string, query *types.QueryP
 	}
 
 	items := stages.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Stage{}), nil
 	}

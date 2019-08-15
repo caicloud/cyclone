@@ -79,7 +79,7 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 		}
 	}
 
-	size := int64(len(results))
+	size := uint64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.Workflow{}), nil
 	}
