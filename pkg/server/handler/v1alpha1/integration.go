@@ -72,7 +72,7 @@ func ListIntegrations(ctx context.Context, tenant string, includePublic bool, qu
 		return nil, err
 	}
 
-	size := int64(len(results))
+	size := uint64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []api.Integration{}), nil
 	}
