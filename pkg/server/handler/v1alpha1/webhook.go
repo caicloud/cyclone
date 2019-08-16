@@ -119,14 +119,14 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		if st.TagRelease.Enabled {
 			trigger = true
 			tag = data.Ref
-			splitTags := strings.Split(data.Ref, "/")
-			if len(splitTags) == 3 {
-				tag = splitTags[2]
+			// If tag contains "/", trim it.
+			if index := strings.LastIndex(tag, "/"); index >= 0 && len(tag) > index+1 {
+				tag = tag[index+1:]
 			}
 		}
 	case scm.PushEventType:
 		trimmedBranch := data.Branch
-		if index := strings.LastIndex(data.Branch, "/"); index >= 0 {
+		if index := strings.LastIndex(trimmedBranch, "/"); index >= 0 && len(trimmedBranch) > index+1 {
 			trimmedBranch = trimmedBranch[index+1:]
 		}
 		for _, branch := range st.Push.Branches {
