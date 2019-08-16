@@ -13,6 +13,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/integration"
 	"github.com/caicloud/cyclone/pkg/server/biz/pvc"
 	"github.com/caicloud/cyclone/pkg/server/biz/tenant"
+	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -136,12 +137,12 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 	}()
 	cluster := in.Spec.Cluster
 
-	//// new cluster clientset
-	//clusterClient, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
-	//if err != nil {
-	//	log.Errorf("new cluster client error %v", err)
-	//	return
-	//}
+	// new cluster clientset
+	clusterClient, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+	if err != nil {
+		log.Errorf("new cluster client error %v", err)
+		return
+	}
 
 	// delete namespace which is created by cyclone
 	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
@@ -175,10 +176,10 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 	}
 
 	// Delete the PVC watcher deployment.
-	//err = usage.DeletePVCUsageWatcher(clusterClient, cluster.Namespace)
-	//if err != nil {
-	//	log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
-	//}
+	err = usage.DeletePVCUsageWatcher(clusterClient, cluster.Namespace)
+	if err != nil {
+		log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
+	}
 
 	// delete pvc which is created by cyclone
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
