@@ -59,7 +59,7 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 	}
 
 	// Launch PVC usage watcher to watch the usage of PVC.
-	err = usage.LaunchPVCUsageWatcher(client, tenantName, v1alpha1.ExecutionContext{
+	err = usage.NewWatcherController(client, tenantName).LaunchPVCUsageWatcher(v1alpha1.ExecutionContext{
 		Namespace: nsname,
 		PVC:       pvcName,
 	})
@@ -78,7 +78,7 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 		nsname = namespace
 	}
 
-	err := usage.DeletePVCUsageWatcher(client, nsname)
+	err := usage.NewWatcherController(client, tenantName).DeletePVCUsageWatcher(nsname)
 	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete pvc usage watcher in namespace %s failed %s", nsname, err)
 		return err

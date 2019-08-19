@@ -31,6 +31,9 @@ const (
 	// AnnotationTenantStorageUsage is annotation to store storage usuage information
 	AnnotationTenantStorageUsage = "tenant.cyclone.dev/storage-usage"
 
+	// AnnotationPVCWatcherResourceRequirements is annotation to describe pvc watcher resource requirements
+	AnnotationPVCWatcherResourceRequirements = "pvc-watch.cyclone.dev/resource-requirements"
+
 	// AnnotationMetaNamespace is annotation applied to pod to specify the namespace where Workflow, WorkflowRun etc belong to.
 	AnnotationMetaNamespace = "cyclone.dev/meta-namespace"
 

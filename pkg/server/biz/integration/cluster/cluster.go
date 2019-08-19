@@ -176,7 +176,7 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 	}
 
 	// Delete the PVC watcher deployment.
-	err = usage.DeletePVCUsageWatcher(clusterClient, cluster.Namespace)
+	err = usage.NewWatcherController(clusterClient, tenant).DeletePVCUsageWatcher(cluster.Namespace)
 	if err != nil {
 		log.Warningf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
 	}

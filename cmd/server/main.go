@@ -36,6 +36,7 @@ import (
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/biz/templates"
+	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
@@ -84,6 +85,9 @@ func initialize(opts *Options) {
 
 	handler.Init(client)
 	log.Info("Init handlers succeed.")
+
+	usage.Init(client)
+	log.Info("Init usage control cluster client succeed.")
 
 	if config.Config.InitDefaultTenant {
 		err = v1alpha1.CreateDefaultTenant()

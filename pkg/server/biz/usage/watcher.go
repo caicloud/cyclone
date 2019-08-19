@@ -3,6 +3,7 @@ package usage
 import (
 	"fmt"
 
+	"github.com/caicloud/nirvana/log"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -28,17 +29,54 @@ const (
 	PVCWatcherLabelValue = "pvc-watcher"
 )
 
+var (
+	// K8sClient is used to operate k8s resources in control cluster
+	controlClusterClient kubernetes.Interface
+)
+
+// Init initializes the control cluster client.
+func Init(c kubernetes.Interface) {
+	controlClusterClient = c
+}
+
 // PVCWatcherName is name of the PVC watcher deployment and pod
 const PVCWatcherName = "pvc-watchdog"
 
+// WatcherController controls pvc watcher
+type WatcherController struct {
+	tenant     string
+	userClient kubernetes.Interface
+	recorder   Recorder
+}
+
+// NewWatcherController creates a PVC WatcherController
+func NewWatcherController(client kubernetes.Interface, tenant string) *WatcherController {
+	return &WatcherController{
+		userClient: client,
+		tenant:     tenant,
+		recorder:   NewNamespaceRecorder(controlClusterClient, common.TenantNamespace(tenant)),
+	}
+}
+
 // LaunchPVCUsageWatcher launches a pod in a given namespace to report PVC usage regularly.
-func LaunchPVCUsageWatcher(client *kubernetes.Clientset, tenant string, context v1alpha1.ExecutionContext) error {
+func (w *WatcherController) LaunchPVCUsageWatcher(context v1alpha1.ExecutionContext) error {
 	if len(context.PVC) == 0 {
 		return fmt.Errorf("no pvc in execution namespace %s", context.Namespace)
 	}
 
 	watcherConfig := config.Config.StorageUsageWatcher
-	_, err := client.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
+	resourceRequirements := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsCPU, "50m")),
+			corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsMemory, "32Mi")),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsCPU, "100m")),
+			corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "128Mi")),
+		},
+	}
+
+	_, err := w.userClient.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      PVCWatcherName,
 			Namespace: context.Namespace,
@@ -73,19 +111,10 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, tenant string, context 
 								},
 								{
 									Name:  NamespaceEnvName,
-									Value: common.TenantNamespace(tenant),
+									Value: common.TenantNamespace(w.tenant),
 								},
 							},
-							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsCPU, "50m")),
-									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceRequestsMemory, "32Mi")),
-								},
-								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsCPU, "100m")),
-									corev1.ResourceMemory: resource.MustParse(getOrDefault(&watcherConfig, corev1.ResourceLimitsMemory, "128Mi")),
-								},
-							},
+							Resources: resourceRequirements,
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "cv",
@@ -112,6 +141,9 @@ func LaunchPVCUsageWatcher(client *kubernetes.Clientset, tenant string, context 
 		},
 	})
 
+	if recordErr := w.recorder.RecordWatcherResource(resourceRequirements); err != nil {
+		log.Warningf("record pvc watcher resource requirements error: %v", recordErr)
+	}
 	return err
 }
 
@@ -126,9 +158,26 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 }
 
 // DeletePVCUsageWatcher delete the pvc usage watcher deployment
-func DeletePVCUsageWatcher(client *kubernetes.Clientset, namespace string) error {
+func (w *WatcherController) DeletePVCUsageWatcher(namespace string) error {
 	foreground := metav1.DeletePropagationForeground
-	return client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
+	err := w.userClient.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
 		PropagationPolicy: &foreground,
 	})
+
+	zeroQuantity := resource.MustParse("0")
+	resourceRequirements := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    zeroQuantity,
+			corev1.ResourceMemory: zeroQuantity,
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    zeroQuantity,
+			corev1.ResourceMemory: zeroQuantity,
+		},
+	}
+	if recordErr := w.recorder.RecordWatcherResource(resourceRequirements); err != nil {
+		log.Warningf("record pvc watcher resource requirements error: %v", recordErr)
+	}
+
+	return err
 }

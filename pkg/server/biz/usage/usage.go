@@ -121,7 +121,7 @@ func getUsage(client clientset.Interface, tenant string) (*PVCUsage, error) {
 	name := common.TenantNamespace(tenant)
 	ns, err := client.CoreV1().Namespaces().Get(common.TenantNamespace(tenant), metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("get namesapce %s for tenant %s error: %v", name, tenant, err)
+		return nil, fmt.Errorf("get namespace %s for tenant %s error: %v", name, tenant, err)
 	}
 
 	raw, ok := ns.Annotations[meta.AnnotationTenantStorageUsage]
