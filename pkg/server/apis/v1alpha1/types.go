@@ -248,3 +248,40 @@ type StorageUsage struct {
 type StorageCleanup struct {
 	Paths []string `json:"paths"`
 }
+
+// ExecutionContextSpec describes the execution context
+type ExecutionContextSpec struct {
+	Cluster     string `json:"cluster"`
+	Namespace   string `json:"namespace"`
+	Integration string `json:"integration"`
+	PVC         string `json:"pvc"`
+}
+
+// ExecutionContextStatus describe the status of execution context, it contains information that affects
+// pipeline execution, like reserved resources, pvc status.
+type ExecutionContextStatus struct {
+	// Phase of the execution context, could be 'Ready', 'NotReady' or 'Unknown'
+	Phase             ExecutionContextPhase                `json:"phase"`
+	ReservedResources map[core_v1.ResourceName]string      `json:"reservedResources"`
+	PVC               *core_v1.PersistentVolumeClaimStatus `json:"pvc"`
+}
+
+// ExecutionContext represtents a context used to execute workflows.
+type ExecutionContext struct {
+	// Metadata for the particular object, including name, namespace, labels, etc
+	meta_v1.ObjectMeta `json:"metadata,omitempty"`
+	Spec               ExecutionContextSpec   `json:"spec"`
+	Status             ExecutionContextStatus `json:"status"`
+}
+
+// ExecutionContextPhase represents the phase of ExecutionContext.
+type ExecutionContextPhase string
+
+const (
+	// ExecutionContextReady is ready phase
+	ExecutionContextReady ExecutionContextPhase = "Ready"
+	// ExecutionContextNotReady is not ready phase
+	ExecutionContextNotReady ExecutionContextPhase = "NotReady"
+	// ExecutionContextNotUnknown is unknown phase
+	ExecutionContextNotUnknown ExecutionContextPhase = "Unknown"
+)
