@@ -88,4 +88,27 @@ var tenant = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/tenants/{tenant}/precheck",
+		Description: "Checks worker clusters' status before running workflows",
+		Definitions: []definition.Definition{
+			{
+				Method: definition.Get,
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.TenantNamePathParameterName,
+					},
+					{
+						Source:      definition.Query,
+						Name:        "checklist",
+						Description: "Items to check",
+						Default:     "ReservedResources",
+					},
+				},
+				Function: handler.Precheck,
+				Results:  definition.DataErrorResults("worker cluster status"),
+			},
+		},
+	},
 }
