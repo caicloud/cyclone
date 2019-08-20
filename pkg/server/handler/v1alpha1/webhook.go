@@ -80,19 +80,79 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 		return newWebhookResponse(err.Error()), err
 	}
 
-	sftName := make([]string, 0)
+	triggeredWfts := make([]string, 0)
 	for _, wft := range wfts.Items {
+		if !needTrigger(wft, data.Type, data.Ref) {
+			continue
+		}
+
 		log.Infof("Trigger workflow trigger %s", wft.Name)
-		sftName = append(sftName, wft.Name)
+		triggeredWfts = append(triggeredWfts, wft.Name)
 		if err = createWorkflowRun(tenant, wft, data); err != nil {
 			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
 		}
 	}
-	if len(sftName) > 0 {
-		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, sftName)), nil
+	if len(triggeredWfts) > 0 {
+		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, triggeredWfts)), nil
 	}
 
 	return newWebhookResponse(ignoredMsg), nil
+}
+
+// needTrigger returns false only when there are workflows in following conditions:
+//   - triggered by the tag release event type, same with the incoming trigger event;
+//   - still Running;
+//   - have same SCM_REVISION with the incoming trigger event.
+// otherwise, returns true.
+func needTrigger(wft v1alpha1.WorkflowTrigger, eventType scm.EventType, revision string) bool {
+	workflowRef := wft.Spec.WorkflowRef
+	workflowRuns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(workflowRef.Namespace).List(metav1.ListOptions{
+		LabelSelector: meta.WorkflowSelector(workflowRef.Name),
+	})
+	if err != nil {
+		return true
+	}
+
+	for _, workflowRun := range workflowRuns.Items {
+		if workflowRun.Annotations == nil {
+			return true
+		}
+
+		if workflowRun.Annotations[meta.AnnotationWorkflowRunTrigger] != string(eventType) {
+			return true
+		}
+
+		if eventType != scm.TagReleaseEventType {
+			return true
+		}
+
+		if getSCMRevision(workflowRun) != revision {
+			return true
+		}
+
+		phase := workflowRun.Status.Overall.Phase
+		if phase == v1alpha1.StatusRunning ||
+			phase == v1alpha1.StatusPending ||
+			phase == v1alpha1.StatusWaiting {
+			log.Infof("Event %s revision %s does not need to trigger a new workflowRun, workflowRun %s is still in Status %s.",
+				eventType, revision, workflowRun.Name, phase)
+			return false
+		}
+	}
+
+	return true
+}
+
+func getSCMRevision(wfr v1alpha1.WorkflowRun) string {
+	// "SCM_REVISION" for all resource configs.
+	for _, resource := range wfr.Spec.Resources {
+		for _, parameter := range resource.Parameters {
+			if parameter.Name == "SCM_REVISION" {
+				return *parameter.Value
+			}
+		}
+	}
+	return ""
 }
 
 func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {

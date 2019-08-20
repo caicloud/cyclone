@@ -501,6 +501,7 @@ func convertToGithubEvents(events []scm.EventType) []string {
 			ge = append(ge, "push")
 		case scm.TagReleaseEventType:
 			ge = append(ge, "release")
+			ge = append(ge, "create")
 		default:
 			log.Errorf("The event type %s is not supported, will be ignored", e)
 		}
@@ -540,6 +541,17 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 	}
 
 	switch event := event.(type) {
+	case *github.CreateEvent:
+		refType := *event.RefType
+		if refType != "tag" {
+			log.Warningf("Skip unsupported ref type %s of Github create event, only support create tag event.", refType)
+			return nil
+		}
+		return &scm.EventData{
+			Type: scm.TagReleaseEventType,
+			Repo: *event.Repo.FullName,
+			Ref:  fmt.Sprintf(tagRefTemplate, *event.Ref),
+		}
 	case *github.ReleaseEvent:
 		// Only handle when the tag is created.
 		// When you create a new release in your GitHub, GitHub will send
