@@ -39,10 +39,9 @@ func ListExecutionContexts(ctx context.Context, tenant string) (*types.ListRespo
 
 		executionContext := api.ExecutionContext{
 			Spec: api.ExecutionContextSpec{
-				Integration: integration.Name,
-				Cluster:     cluster.ClusterName,
-				Namespace:   cluster.Namespace,
-				PVC:         pvcName,
+				Cluster:   cluster.ClusterName,
+				Namespace: cluster.Namespace,
+				PVC:       pvcName,
 			},
 			Status: api.ExecutionContextStatus{
 				Phase:             api.ExecutionContextNotUnknown,
@@ -50,16 +49,20 @@ func ListExecutionContexts(ctx context.Context, tenant string) (*types.ListRespo
 			},
 		}
 
-		pvcStatus, err := getPVCStatus(tenant, pvcName, cluster)
-		if err != nil {
-			log.Warningf("Get PVC status in %s/%s", cluster.ClusterName, cluster.Namespace)
-		} else {
-			executionContext.Status.PVC = pvcStatus
-			if pvcStatus.Phase == "Bound" {
-				executionContext.Status.Phase = api.ExecutionContextReady
+		if cluster.IsWorkerCluster {
+			pvcStatus, err := getPVCStatus(tenant, pvcName, cluster)
+			if err != nil {
+				log.Warningf("Get PVC status in %s/%s", cluster.ClusterName, cluster.Namespace)
 			} else {
-				executionContext.Status.Phase = api.ExecutionContextNotReady
+				executionContext.Status.PVC = pvcStatus
+				if pvcStatus.Phase == corev1.ClaimBound {
+					executionContext.Status.Phase = api.ExecutionContextReady
+				} else {
+					executionContext.Status.Phase = api.ExecutionContextNotReady
+				}
 			}
+		} else {
+			executionContext.Status.Phase = api.ExecutionContextClosed
 		}
 
 		executionContexts = append(executionContexts, executionContext)
