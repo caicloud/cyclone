@@ -88,4 +88,21 @@ var tenant = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/tenants/{tenant}/executioncontexts",
+		Description: "List execution contexts of a tenant, an execution context describes context of workflow execution, including information about cluster, namespace, pvc, etc.",
+		Definitions: []definition.Definition{
+			{
+				Method: definition.List,
+				Parameters: []definition.Parameter{
+					{
+						Source: definition.Path,
+						Name:   httputil.TenantNamePathParameterName,
+					},
+				},
+				Function: handler.ListExecutionContexts,
+				Results:  definition.DataErrorResults("worker cluster status"),
+			},
+		},
+	},
 }
