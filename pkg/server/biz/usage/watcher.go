@@ -32,7 +32,7 @@ const (
 const PVCWatcherName = "pvc-watchdog"
 
 // LaunchPVCUsageWatcher launches a pod in a given namespace to report PVC usage regularly.
-func LaunchPVCUsageWatcher(client *kubernetes.Clientset, tenant string, context v1alpha1.ExecutionContext) error {
+func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v1alpha1.ExecutionContext) error {
 	if len(context.PVC) == 0 {
 		return fmt.Errorf("no pvc in execution namespace %s", context.Namespace)
 	}
@@ -126,7 +126,7 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 }
 
 // DeletePVCUsageWatcher delete the pvc usage watcher deployment
-func DeletePVCUsageWatcher(client *kubernetes.Clientset, namespace string) error {
+func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error {
 	foreground := metav1.DeletePropagationForeground
 	return client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
 		PropagationPolicy: &foreground,
