@@ -81,14 +81,16 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 		return newWebhookResponse(err.Error()), err
 	}
 
+	triggeredWfts := make([]string, 0)
 	for _, wft := range wfts.Items {
 		log.Infof("Trigger workflow trigger %s", wft.Name)
+		triggeredWfts = append(triggeredWfts, wft.Name)
 		if err = createWorkflowRun(tenant, wft, data); err != nil {
 			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
 		}
 	}
-	if triggered {
-		return newWebhookResponse(succeededMsg), nil
+	if len(triggeredWfts) > 0 {
+		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, triggeredWfts)), nil
 	}
 
 	return newWebhookResponse(ignoredMsg), nil
