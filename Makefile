@@ -90,7 +90,9 @@ $(GOMETALINTER):
 	gometalinter --install &> /dev/null
 
 test:
-	go test $(PKGS)
+	go test $(PKGS) -coverprofile cover.out;                                           \
+	go tool cover -func cover.out | tail -n 1 | awk '{ print "Total coverage: " $$3 }';\
+	rm cover.out
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
