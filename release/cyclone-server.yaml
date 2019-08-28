@@ -24,6 +24,7 @@ _config:
         path: /var/lib/cyclone
       - path: /etc/localtime
         name: timezone
+        propagation: HostToContainer
       ports:
       - port: 7099
         protocol: TCP
