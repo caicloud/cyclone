@@ -26,6 +26,7 @@ _config:
       mounts:
       - path: /etc/localtime
         name: timezone
+        propagation: HostToContainer
     volumes:
     - name: timezone
       type: HostPath
