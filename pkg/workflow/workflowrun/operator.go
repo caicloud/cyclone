@@ -284,6 +284,7 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 			pending = true
 		case v1alpha1.StatusSucceeded:
 		case v1alpha1.StatusCancelled:
+			err = !IsTrivial(o.wf, stage)
 		default:
 			log.WithField("stg", stage).
 				WithField("status", status.Status.Phase).
