@@ -53,6 +53,7 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 				Key:       key,
 				EventType: UPDATE,
 				Object:    new,
+				OldObject: old,
 			})
 		},
 	})

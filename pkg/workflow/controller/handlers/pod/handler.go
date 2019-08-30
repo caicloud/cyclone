@@ -27,8 +27,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(obj interface{}) {
-	h.onUpdate(obj)
+func (h *Handler) ObjectUpdated(old, new interface{}) {
+	h.onUpdate(new)
 }
 
 // ObjectDeleted ...

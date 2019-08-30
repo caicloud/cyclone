@@ -33,8 +33,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(obj interface{}) {
-	cluster, ok := obj.(*v1alpha1.ExecutionCluster)
+func (h *Handler) ObjectUpdated(old, new interface{}) {
+	cluster, ok := new.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.Warning("unknown resource type")
 		return

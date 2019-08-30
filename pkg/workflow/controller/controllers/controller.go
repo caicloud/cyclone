@@ -42,6 +42,7 @@ type Event struct {
 	Key       string
 	EventType EventType
 	Object    interface{}
+	OldObject interface{}
 }
 
 // Run ...
@@ -96,7 +97,7 @@ func (c *Controller) doWork(e Event) error {
 	case CREATE:
 		c.eventHandler.ObjectCreated(e.Object)
 	case UPDATE:
-		c.eventHandler.ObjectUpdated(e.Object)
+		c.eventHandler.ObjectUpdated(e.OldObject, e.Object)
 	case DELETE:
 		c.eventHandler.ObjectDeleted(e.Object)
 	}
