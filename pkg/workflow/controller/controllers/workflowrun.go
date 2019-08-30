@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"reflect"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -41,9 +39,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			})
 		},
 		UpdateFunc: func(old, new interface{}) {
-			if reflect.DeepEqual(old, new) {
-				return
-			}
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				return
@@ -52,6 +47,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 				Key:       key,
 				EventType: UPDATE,
 				Object:    new,
+				OldObject: old,
 			})
 		},
 		DeleteFunc: func(obj interface{}) {

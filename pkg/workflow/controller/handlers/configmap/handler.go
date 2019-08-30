@@ -21,8 +21,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(obj interface{}) {
-	h.process(obj)
+func (h *Handler) ObjectUpdated(old, new interface{}) {
+	h.process(new)
 }
 
 // ObjectDeleted ...

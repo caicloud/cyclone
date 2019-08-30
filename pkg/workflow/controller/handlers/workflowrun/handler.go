@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,20 +86,25 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 }
 
 // ObjectUpdated handles a updated WorkflowRun
-func (h *Handler) ObjectUpdated(obj interface{}) {
-	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+func (h *Handler) ObjectUpdated(old, new interface{}) {
+	originWfr, ok := new.(*v1alpha1.WorkflowRun)
 	if !ok {
 		log.Warning("unknown resource type")
 		return
 	}
-	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
 
 	if !validate(originWfr) {
+		log.WithField("wfr", originWfr.Name).Warning("Invalid wfr")
 		return
 	}
 
 	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
 	h.LimitedQueues.Refresh(originWfr)
+
+	if reflect.DeepEqual(old, new) {
+		return
+	}
+	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
 
 	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
 	// the GC queue.

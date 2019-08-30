@@ -51,6 +51,7 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 				Key:       key,
 				EventType: UPDATE,
 				Object:    new,
+				OldObject: old,
 			})
 		},
 		DeleteFunc: func(obj interface{}) {

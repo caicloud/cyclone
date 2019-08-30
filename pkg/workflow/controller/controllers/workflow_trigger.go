@@ -53,6 +53,7 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 				Key:       key,
 				EventType: UPDATE,
 				Object:    new,
+				OldObject: old,
 			})
 		},
 		DeleteFunc: func(obj interface{}) {

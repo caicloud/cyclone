@@ -26,8 +26,8 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(obj interface{}) {
-	if wft, err := ToWorkflowTrigger(obj); err != nil {
+func (h *Handler) ObjectUpdated(old, new interface{}) {
+	if wft, err := ToWorkflowTrigger(new); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
 	} else {
 		h.CronManager.UpdateCron(wft)
