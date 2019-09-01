@@ -87,7 +87,7 @@ $(GOMETALINTER):
 	gometalinter --install &> /dev/null
 
 test:
-	@go test -cover $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
+	@go test $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
 	@go tool cover -func coverage.out | tail -n 1 | awk '{ print "Total coverage: " $$3 }'
 
 build-local:
