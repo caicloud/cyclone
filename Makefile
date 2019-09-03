@@ -48,9 +48,6 @@ SCENE ?= cicd
 # These variables should not need tweaking.
 #
 
-# A list of all packages.
-PKGS := $(shell go list ./... | grep -v /vendor | grep -v /test)
-
 # Project main package location (can be multiple ones).
 CMD_DIR := ./cmd
 
@@ -90,7 +87,8 @@ $(GOMETALINTER):
 	gometalinter --install &> /dev/null
 
 test:
-	go test $(PKGS)
+	@go test $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
+	@go tool cover -func coverage.out | tail -n 1 | awk '{ print "Total coverage: " $$3 }'
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
