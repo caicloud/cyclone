@@ -41,6 +41,16 @@ data:
       "limits": {
         "max_workflowruns": {{ .Values.engine.limits.maxWorkflowRuns }}
       },
+      "parallelism": {
+        "overall": {
+          "max_parallel": {{ .Values.engine.parallelism.overall.maxParallel }},
+          "max_queue_size": {{ .Values.engine.parallelism.overall.maxQueueSize }}
+        },
+        "single_workflow": {
+          "max_parallel": {{ .Values.engine.parallelism.singleWorkflow.maxParallel }},,
+          "max_queue_size": {{ .Values.engine.parallelism.singleWorkflow.maxQueueSize }}
+        }
+      },
       "default_resource_quota": {
         "limits": {
           "cpu": "{{ .Values.engine.resourceRequirement.default.limits.cpu }}",
