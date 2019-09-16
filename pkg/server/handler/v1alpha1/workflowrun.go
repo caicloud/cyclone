@@ -15,7 +15,6 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8s_types "k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -377,7 +376,7 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	defer folderReader.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	go watchStageStatus(common.TenantNamespace(tenant), workflowrun, stage, cancel)
+	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
 	err = websocketutil.Write(ws, folderReader, ctx.Done())
 	if err != nil {
 		log.Error("websocket writer error:", err)
@@ -385,39 +384,34 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	return err
 }
 
-// watchStageStatus watches status of a specific stage, when it is terminated, call the cancel func.
-func watchStageStatus(namespace, wfrName, stgName string, cancel context.CancelFunc) {
-	w, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Watch(metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name==%s", wfrName),
-	})
-	if err != nil {
-		log.Warningf("Watch workflowRun %s error: %v", wfrName, err)
-		return
-	}
-
-	for event := range w.ResultChan() {
-		switch event.Type {
-		case watch.Added, watch.Modified:
-			wfr, ok := event.Object.(*v1alpha1.WorkflowRun)
-			if !ok {
-				log.Warning("unknown resource type")
-				return
-			}
-			for stage, status := range wfr.Status.Stages {
-				if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
-					status.Status.Phase == v1alpha1.StatusFailed ||
-					status.Status.Phase == v1alpha1.StatusCancelled) {
-					cancel()
-					return
-				}
-			}
-		case watch.Deleted:
-			cancel()
+// watchStageTermination watches status of the WorkflowRun and the specific Stage, when it is terminated, call the onTerminatedCallback func.
+func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallback context.CancelFunc) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for ; true; <-ticker.C {
+		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, metav1.GetOptions{})
+		if err != nil {
+			log.Warningf("Get workflowRun %s error: %v", wfrName, err)
+			onTerminatedCallback()
 			return
 		}
-	}
 
-	return
+		if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+			onTerminatedCallback()
+			return
+		}
+
+		for stage, status := range wfr.Status.Stages {
+			if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
+				status.Status.Phase == v1alpha1.StatusFailed ||
+				status.Status.Phase == v1alpha1.StatusCancelled) {
+				onTerminatedCallback()
+				return
+			}
+		}
+	}
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.

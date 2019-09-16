@@ -97,7 +97,7 @@ func Write(ws *websocket.Conn, reader ReadBytes, stopCh <-chan struct{}) error {
 	sendTicker := time.NewTicker(10 * time.Millisecond)
 	exit := make(chan struct{})
 	defer func() {
-		log.Info("close ticket and websocket")
+		log.Info("close ticker and websocket")
 		pingTicker.Stop()
 		sendTicker.Stop()
 		ws.Close()
@@ -105,17 +105,15 @@ func Write(ws *websocket.Conn, reader ReadBytes, stopCh <-chan struct{}) error {
 	}()
 
 	stop := make(chan struct{})
-	// delay exit to ensure remanent message sending.
+	// delay exit to ensure remained messages sent.
 	go func() {
-		for {
-			select {
-			case <-stopCh:
-				time.Sleep(5 * time.Second)
-				close(stop)
-				return
-			case <-exit:
-				return
-			}
+		select {
+		case <-stopCh:
+			time.Sleep(30 * time.Second)
+			close(stop)
+			return
+		case <-exit:
+			return
 		}
 	}()
 
