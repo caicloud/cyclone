@@ -15,6 +15,7 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8s_types "k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -375,11 +376,48 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
 	defer folderReader.Close()
 
-	err = websocketutil.Write(ws, folderReader)
+	ctx, cancel := context.WithCancel(context.Background())
+	go watchStageStatus(common.TenantNamespace(tenant), workflowrun, stage, cancel)
+	err = websocketutil.Write(ws, folderReader, ctx.Done())
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
 	return err
+}
+
+// watchStageStatus watches status of a specific stage, when it is terminated, call the cancel func.
+func watchStageStatus(namespace, wfrName, stgName string, cancel context.CancelFunc) {
+	w, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Watch(metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name==%s", wfrName),
+	})
+	if err != nil {
+		log.Warningf("Watch workflowRun %s error: %v", wfrName, err)
+		return
+	}
+
+	for event := range w.ResultChan() {
+		switch event.Type {
+		case watch.Added, watch.Modified:
+			wfr, ok := event.Object.(*v1alpha1.WorkflowRun)
+			if !ok {
+				log.Warning("unknown resource type")
+				return
+			}
+			for stage, status := range wfr.Status.Stages {
+				if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
+					status.Status.Phase == v1alpha1.StatusFailed ||
+					status.Status.Phase == v1alpha1.StatusCancelled) {
+					cancel()
+					return
+				}
+			}
+		case watch.Deleted:
+			cancel()
+			return
+		}
+	}
+
+	return
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
