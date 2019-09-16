@@ -77,7 +77,7 @@ func SendStream(server string, reader io.Reader, close <-chan struct{}) error {
 // Send sends stream from reader by websocket
 func Send(ws *websocket.Conn, reader io.Reader, close <-chan struct{}) error {
 	buf := bufio.NewReader(reader)
-	err := Write(ws, buf)
+	err := Write(ws, buf, close)
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
@@ -92,14 +92,29 @@ type ReadBytes interface {
 }
 
 // Write writes message from reader to websocket
-func Write(ws *websocket.Conn, reader ReadBytes) error {
+func Write(ws *websocket.Conn, reader ReadBytes, stopCh <-chan struct{}) error {
 	pingTicker := time.NewTicker(PingPeriod)
 	sendTicker := time.NewTicker(10 * time.Millisecond)
+	exit := make(chan struct{})
 	defer func() {
-		log.Info("close ticket and websocket")
+		log.Info("close ticker and websocket")
 		pingTicker.Stop()
 		sendTicker.Stop()
 		ws.Close()
+		close(exit)
+	}()
+
+	stop := make(chan struct{})
+	// delay exit to ensure remained messages sent.
+	go func() {
+		select {
+		case <-stopCh:
+			time.Sleep(30 * time.Second)
+			close(stop)
+			return
+		case <-exit:
+			return
+		}
 	}()
 
 	for {
@@ -147,6 +162,17 @@ func Write(ws *websocket.Conn, reader ReadBytes) error {
 					return err
 				}
 			}
+		case <-stop:
+			err := ws.SetWriteDeadline(time.Now().Add(WriteWait))
+			if err != nil {
+				log.Warning("set write deadline error:", err)
+			}
+			err = ws.WriteMessage(websocket.CloseMessage, []byte("Message sending complete, TERMINATE"))
+			if err != nil {
+				log.Error("write close message error: ", err)
+				return err
+			}
+			return nil
 		}
 	}
 }

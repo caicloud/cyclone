@@ -375,11 +375,43 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
 	defer folderReader.Close()
 
-	err = websocketutil.Write(ws, folderReader)
+	ctx, cancel := context.WithCancel(context.Background())
+	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
+	err = websocketutil.Write(ws, folderReader, ctx.Done())
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
 	return err
+}
+
+// watchStageTermination watches status of the WorkflowRun and the specific Stage, when it is terminated, call the onTerminatedCallback func.
+func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallback context.CancelFunc) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for ; true; <-ticker.C {
+		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, metav1.GetOptions{})
+		if err != nil {
+			log.Warningf("Get workflowRun %s error: %v", wfrName, err)
+			onTerminatedCallback()
+			return
+		}
+
+		if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+			onTerminatedCallback()
+			return
+		}
+
+		for stage, status := range wfr.Status.Stages {
+			if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
+				status.Status.Phase == v1alpha1.StatusFailed ||
+				status.Status.Phase == v1alpha1.StatusCancelled) {
+				onTerminatedCallback()
+				return
+			}
+		}
+	}
 }
 
 // GetContainerLogs handles the request to get container logs, only supports finished stage records.
