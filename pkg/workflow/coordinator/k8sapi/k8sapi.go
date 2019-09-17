@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	cyclone_common "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
@@ -106,13 +108,20 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 		return err
 	}
 
-	closeLog := make(chan struct{})
 	defer func() {
 		stream.Close()
-		close(closeLog)
 	}()
 
-	err = k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream, closeLog)
+	err = k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarkLogEOF marks the end of stage logs
+func (k *Executor) MarkLogEOF(workflowrun, stage string) error {
+	err := k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, cyclone_common.FolderEOFFile, strings.NewReader(""))
 	if err != nil {
 		return err
 	}
