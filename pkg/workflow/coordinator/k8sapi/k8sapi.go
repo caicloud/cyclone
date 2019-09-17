@@ -46,50 +46,51 @@ func (k *Executor) WaitContainers(expectState common.ContainerState, selectors .
 	defer ticker.Stop()
 
 	log.Infof("Starting to wait for containers of pod %s to be %s ...", k.podName, expectState)
-	for {
-		select {
-		case <-ticker.C:
-			pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
-			if err != nil {
-				log.WithField("ns", k.namespace).WithField("pod", k.podName).Error("get pod failed")
-				return err
+	for range ticker.C {
+		pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+		if err != nil {
+			log.WithField("ns", k.namespace).WithField("pod", k.podName).Error("get pod failed")
+			return err
+		}
+
+		var reachGoals = true
+		for _, c := range pod.Spec.Containers {
+			// Skip containers that are not selected.
+			if !common.Pass(c.Name, selectors) {
+				continue
 			}
 
-			var unexpectedCount int
-			for _, c := range pod.Spec.Containers {
-				// Skip containers that are not selected.
-				if !common.Pass(c.Name, selectors) {
-					continue
-				}
-
-				var s *core_v1.ContainerStatus
-				for _, cs := range pod.Status.ContainerStatuses {
-					if c.Name == cs.Name {
-						s = &cs
-						break
-					}
-				}
-
-				switch expectState {
-				case common.ContainerStateTerminated:
-					if s == nil || s.State.Terminated == nil {
-						log.WithField("container", c.Name).WithField("expected", expectState).Debugf("Container not expected status")
-						unexpectedCount++
-					}
-				case common.ContainerStateInitialized:
-					if s == nil || (s.State.Running == nil && s.State.Terminated == nil) {
-						log.WithField("container", c.Name).WithField("expected", expectState).Debugf("Container not in expected status")
-						unexpectedCount++
-					}
+			var s *core_v1.ContainerStatus
+			for _, cs := range pod.Status.ContainerStatuses {
+				if c.Name == cs.Name {
+					s = &cs
+					break
 				}
 			}
 
-			if unexpectedCount == 0 {
-				log.WithField("pod", pod.Name).WithField("expected", expectState).Info("All containers reached expected status")
-				return nil
+			switch expectState {
+			case common.ContainerStateTerminated:
+				if s == nil || s.State.Terminated == nil {
+					log.WithField("container", c.Name).WithField("expected", expectState).Debugf("Container not expected status")
+					reachGoals = false
+				}
+			case common.ContainerStateInitialized:
+				if s == nil || (s.State.Running == nil && s.State.Terminated == nil) {
+					log.WithField("container", c.Name).WithField("expected", expectState).Debugf("Container not in expected status")
+					reachGoals = false
+				}
+			default:
+				return fmt.Errorf("Unsupported state: %s, Only support: %s, %s", expectState, common.ContainerStateTerminated, common.ContainerStateInitialized)
 			}
 		}
+
+		if reachGoals {
+			log.WithField("pod", pod.Name).WithField("expected", expectState).Info("All containers reached expected status")
+			return nil
+		}
 	}
+
+	return nil
 }
 
 // GetPod get the stage pod.

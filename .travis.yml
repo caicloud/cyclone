@@ -6,7 +6,7 @@ services:
   - docker
 
 go:
-  - 1.11
+  - 1.12.9
 
 git:
   depth: 1
@@ -25,7 +25,7 @@ install:
 
 script:
   - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
-  - golangci-lint run --disable=gosimple --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
+  - GOGC=5 golangci-lint run --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile

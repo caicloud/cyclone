@@ -95,11 +95,8 @@ func (m *TimeoutProcessor) Add(wfr *v1alpha1.WorkflowRun) error {
 // Run will check timeout of managed WorkflowRun and process items that have expired their time.
 func (m *TimeoutProcessor) Run(interval time.Duration) {
 	ticker := time.NewTicker(interval)
-	for {
-		select {
-		case <-ticker.C:
-			m.process()
-		}
+	for range ticker.C {
+		m.process()
 	}
 }
 

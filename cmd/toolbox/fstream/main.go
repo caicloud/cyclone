@@ -57,5 +57,4 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	log.Info("Send log stream end")
-	return
 }

@@ -192,7 +192,7 @@ func (m *Builder) EnsureContainerNames() error {
 			continue
 		}
 
-		for true {
+		for {
 			if _, ok := nameMap[fmt.Sprintf("c%d", nameIndex)]; !ok {
 				break
 			}

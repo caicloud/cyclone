@@ -219,9 +219,7 @@ func (b *BitbucketServer) ListPullRequests(repo, state string) ([]scm.PullReques
 			return nil, convertBitBucketError(err, resp)
 		}
 
-		for _, pr := range prs.Values {
-			allPRs = append(allPRs, pr)
-		}
+		allPRs = append(allPRs, prs.Values...)
 		if prs.NextPage == nil {
 			break
 		}
