@@ -70,7 +70,7 @@ func TestFolderReader(t *testing.T) {
 	}
 	defer clean()
 
-	reader := NewFolderReader(testDir, "cyclone_", []string{"cyclone_skip"}, 0)
+	reader := NewFolderReader(testDir, "cyclone_", []string{"cyclone_skip"}, 0, nil)
 	defer reader.Close()
 
 	expecteds := []string{

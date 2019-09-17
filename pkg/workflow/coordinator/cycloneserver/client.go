@@ -20,7 +20,7 @@ const (
 
 // Client ...
 type Client interface {
-	PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close chan struct{}) error
+	PushLogStream(ns, workflowrun, stage, container string, reader io.Reader) error
 }
 
 type client struct {
@@ -42,7 +42,7 @@ func NewClient(cycloneServer string) Client {
 }
 
 // PushLogStream ...
-func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close chan struct{}) error {
+func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader io.Reader) error {
 	path := fmt.Sprintf(apiPathForLogStream, workflowrun)
 	host := strings.TrimPrefix(c.baseURL, "http://")
 	host = strings.TrimPrefix(host, "https://")
@@ -54,6 +54,5 @@ func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader 
 	}
 
 	log.Infof("Path: %s", requestURL.String())
-	return websocketutil.SendStream(requestURL.String(), reader, close)
-
+	return websocketutil.SendStream(requestURL.String(), reader, make(chan struct{}))
 }
