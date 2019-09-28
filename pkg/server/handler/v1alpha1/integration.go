@@ -333,7 +333,7 @@ func CloseCluster(ctx context.Context, tenant, name string) error {
 	}
 
 	// close cluster for the tenant, delete namespace
-	err = cluster.Close(handler.K8sClient, in, tenant)
+	err = cluster.Close(in, tenant)
 	if err != nil {
 		return err
 	}
@@ -345,6 +345,55 @@ func CloseCluster(ctx context.Context, tenant, name string) error {
 	}
 
 	return updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
+}
+
+// StartPVCWatcher is used for cluster type integration, it will create a pvc watcher deployment
+// to watch pvc usages.
+func StartPVCWatcher(ctx context.Context, tenant, name string) error {
+	ns := svrcommon.TenantNamespace(tenant)
+	in, err := getIntegration(ns, name)
+	if err != nil {
+		return err
+	}
+
+	if in.Spec.Type != api.Cluster {
+		return cerr.ErrorIntegrationTypeNotCorrect.Error(name, api.Cluster, in.Spec.Type)
+	}
+
+	if in.Spec.Cluster == nil {
+		return cerr.ErrorUnknownInternal.Error("cluster is nil")
+	}
+
+	err = cluster.StartPVCWatcher(in, tenant)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// StopPVCWatcher is used for cluster type integration, it will delete the pvc watcher deployment.
+func StopPVCWatcher(ctx context.Context, tenant, name string) error {
+	ns := svrcommon.TenantNamespace(tenant)
+	in, err := getIntegration(ns, name)
+	if err != nil {
+		return err
+	}
+
+	if in.Spec.Type != api.Cluster {
+		return cerr.ErrorIntegrationTypeNotCorrect.Error(name, api.Cluster, in.Spec.Type)
+	}
+
+	if in.Spec.Cluster == nil {
+		return cerr.ErrorUnknownInternal.Error("cluster is nil")
+	}
+
+	err = cluster.StopPVCWatcher(in, tenant)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getSCMSourceFromIntegration(tenant, integrationName string) (*api.SCMSource, error) {
