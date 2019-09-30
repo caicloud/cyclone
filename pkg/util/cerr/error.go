@@ -33,8 +33,8 @@ const (
 	ReasonNoSuchHost = "ReasonNoSuchHost"
 	// ReasonIOTimeout represents io timeout error
 	ReasonIOTimeout = "ReasonIOTimeout"
-	// ReasonExistRunningWorkflows represents error that update persisten volume while there are workflows running.
-	ReasonExistRunningWorkflows = "ReasonExistRunningWorkflows"
+	// ReasonExistRunningWorkflowRuns represents error that update persisten volume while there are workflowRuns running.
+	ReasonExistRunningWorkflowRuns = "ReasonExistRunningWorkflows"
 	// ReasonCreateIntegrationFailed represents creating integration failed error
 	ReasonCreateIntegrationFailed = "ReasonCreateIntegrationFailed"
 )
@@ -134,9 +134,9 @@ var (
 	// ErrorExternalIOTimeout defines error that io timeout while sending requests to external system.
 	ErrorExternalIOTimeout = nerror.InternalServerError.Build(ReasonIOTimeout, "i/o timeout: ${error}")
 
-	// ErrorExistRunningWorkflows defines error that can not update persisten volume while there are workflows running.
-	ErrorExistRunningWorkflows = nerror.InternalServerError.Build(ReasonExistRunningWorkflows,
-		"can not update persistent volume, since there are workflows running, need to stop following workflows firstly: ${workflows}")
+	// ErrorExistRunningWorkflowRuns defines error that can not update persisten volume while there are workflowRuns running.
+	ErrorExistRunningWorkflowRuns = nerror.InternalServerError.Build(ReasonExistRunningWorkflowRuns,
+		"can not update persistent volume, since there are WorkflowRuns running, need to stop following WorkflowRuns firstly: ${workflows}")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.
