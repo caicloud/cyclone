@@ -49,7 +49,7 @@ Then you can access Cyclone with kubectl or Cyclone web (http://<node-ip>:30022)
 
 ## Community
 
-- **Slack**: Join [Cyclone Community](https://cycloneworkflow.slack.com/) for disscussions and posting questions. If you are not yet a member of Cyclone Slack, you may sign up [here](https://join.slack.com/t/cycloneworkflow/shared_invite/enQtNjQ2MDI1MTM1NDg4LTI0NzhmOGY1NjU2NDJhZGNmODNmZDQ5MWJmZjdmNzdlOTc2Yjc1N2M0MjZjYWZiODUyMzViMDZhODYzOTI5MDE).
+- **Slack**: Join [Cyclone Community](https://cycloneworkflow.slack.com/) for disscussions and posting questions. If you are not yet a member of Cyclone Slack, you may sign up [here](https://join.slack.com/t/cycloneworkflow/shared_invite/enQtNzc3NzY1MjY1MTY4LTNmZTQ2ZjQxOTM1ZDE0ZDJlMDhiOTk2YTU4MzdmYmVhNDE0NDYxMTk1ODYyNmRmNzkzNWRiYTMzYmI0ZWIxMWU).
 
 ## Aditional Tools
 
