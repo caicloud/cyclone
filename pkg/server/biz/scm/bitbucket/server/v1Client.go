@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/caicloud/nirvana/log"
 	"github.com/google/go-querystring/query"
 )
 
@@ -172,7 +173,12 @@ func (c *V1Client) Do(request *http.Request, v interface{}) (*http.Response, err
 	}
 
 	// check response
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
+
 	if resp.StatusCode/100 != 2 {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		return resp, fmt.Errorf("status: %v, Body: %s", resp.Status, string(bodyBytes))

@@ -72,11 +72,8 @@ func (p *GCProcessor) Enable() {
 
 func (p *GCProcessor) run() {
 	ticker := time.NewTicker(time.Second * 5)
-	for {
-		select {
-		case <-ticker.C:
-			p.process()
-		}
+	for range ticker.C {
+		p.process()
 	}
 }
 

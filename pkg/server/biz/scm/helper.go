@@ -54,11 +54,7 @@ func IsDockerfile(path string) bool {
 
 	parts := strings.Split(path, "/")
 	name := parts[len(parts)-1]
-	if !strings.HasPrefix(name, "Dockerfile") {
-		return false
-	}
-
-	return true
+	return strings.HasPrefix(name, "Dockerfile")
 }
 
 // IsInDep judges whether the path is in dep folders.

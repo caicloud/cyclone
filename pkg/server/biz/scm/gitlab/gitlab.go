@@ -203,7 +203,12 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		log.Error(err)
 		return "", convertGitlabError(err, resp)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
 
 	switch resp.StatusCode {
 	case http.StatusOK:
@@ -275,7 +280,12 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 		log.Errorf("Fail to request for token as %s", err.Error())
 		return "", convertGitlabError(err, resp)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

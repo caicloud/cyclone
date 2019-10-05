@@ -223,7 +223,12 @@ func (g *V3) GetPullRequestSHA(repo string, number int) (string, error) {
 		log.Errorf("Fail to get project merge request as %s", err.Error())
 		return "", err
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

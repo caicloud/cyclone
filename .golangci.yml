@@ -1,0 +1,26 @@
+run:
+  # concurrency: 2
+  deadline: 5m
+  skip-dirs:
+    - pkg/k8s/
+    - tools/generator
+
+linter-settings:
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+
+linters:
+  enable:
+ #  - golint
+ #  - goconst
+    - gofmt
+    - goimports
+    - misspell
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    - path: _test.go
+      linters:
+        - errcheck

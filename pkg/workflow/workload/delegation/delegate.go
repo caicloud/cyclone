@@ -31,19 +31,24 @@ func Delegate(request *Request) error {
 		return fmt.Errorf("marshal request error: %v", err)
 	}
 
-	rsp, err := http.DefaultClient.Post(httputil.EnsureProtocolScheme(delegation.URL), "application/json", bytes.NewReader(raw))
+	resp, err := http.DefaultClient.Post(httputil.EnsureProtocolScheme(delegation.URL), "application/json", bytes.NewReader(raw))
 	if err != nil {
 		return fmt.Errorf("POST %s error: %v", delegation.URL, err)
 	}
-	defer rsp.Body.Close()
 
-	if rsp.StatusCode/100 != 2 {
-		b, err := ioutil.ReadAll(rsp.Body)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
+
+	if resp.StatusCode/100 != 2 {
+		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
 
-		msg := fmt.Sprintf("Delegation response status %d, body: %s", rsp.StatusCode, string(b))
+		msg := fmt.Sprintf("Delegation response status %d, body: %s", resp.StatusCode, string(b))
 		return errors.New(msg)
 	}
 
