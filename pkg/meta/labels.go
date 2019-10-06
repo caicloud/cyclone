@@ -96,6 +96,7 @@ func ResourceSelector(project string) string {
 	return fmt.Sprintf("%s=%s,!%s", LabelProjectName, project, LabelResourceTemplate)
 }
 
+// ResourceTypeSelector returns the label of resource template.
 func ResourceTypeSelector() string {
 	return LabelResourceTemplate
 }

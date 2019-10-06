@@ -87,13 +87,13 @@ func filterProjects(projects []v1alpha1.Project, filter string) ([]v1alpha1.Proj
 	}
 	value := strings.ToLower(kv[1])
 
-	if kv[0] == "name" {
+	if kv[0] == queryFilterName {
 		for _, item := range projects {
 			if strings.Contains(item.Name, value) {
 				results = append(results, item)
 			}
 		}
-	} else if kv[0] == "alias" {
+	} else if kv[0] == queryFilterAlias {
 		for _, item := range projects {
 			if item.Annotations != nil {
 				if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {

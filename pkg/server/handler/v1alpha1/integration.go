@@ -107,7 +107,7 @@ func filterIntegrations(integrations []api.Integration, filter string) ([]api.In
 		selected = true
 		for key, value := range filters {
 			switch key {
-			case "type":
+			case queryFilterType:
 				if itg.Labels != nil {
 					if itgType, ok := itg.Labels[meta.LabelIntegrationType]; ok {
 						if strings.EqualFold(itgType, value) {

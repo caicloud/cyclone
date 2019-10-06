@@ -101,7 +101,7 @@ func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, 
 			return nil, cerr.ErrorQueryParamNotCorrect.Error(filter)
 		}
 
-		if kv[0] == "type" {
+		if kv[0] == queryFilterType {
 			if kv[1] != TemplateTypeBuiltin && kv[1] != TemplateTypeCustom {
 				return nil, cerr.ErrorValidationFailed.Error(filter, fmt.Errorf("template types only support: %s, %s", TemplateTypeBuiltin, TemplateTypeCustom))
 			}
@@ -115,11 +115,11 @@ func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, 
 		selected = true
 		for key, value := range filters {
 			switch key {
-			case "name":
+			case queryFilterName:
 				if !strings.Contains(item.Name, value) {
 					selected = false
 				}
-			case "alias":
+			case queryFilterAlias:
 				if item.Annotations != nil {
 					if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
 						if strings.Contains(alias, value) {
@@ -129,7 +129,7 @@ func filterTemplates(stages []v1alpha1.Stage, filter string) ([]v1alpha1.Stage, 
 				}
 
 				selected = false
-			case "type":
+			case queryFilterType:
 				if item.Labels != nil {
 					// Templates will be skipped when meet one of the conditions:
 					// * there is builtin label, and the query type is custom

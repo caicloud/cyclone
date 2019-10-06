@@ -19,7 +19,10 @@ import (
 	"github.com/caicloud/nirvana/log"
 )
 
+// InputContainerRegex represents the regex of input container name.
 var InputContainerRegex = regexp.MustCompile(`^i\d+$`)
+
+// OutputContainerRegex represents the regex of output container name.
 var OutputContainerRegex = regexp.MustCompile(`^csc-o\d+$`)
 
 // FolderReader reads file content from a folder, it simulates single file reader and will
@@ -170,9 +173,9 @@ func (r *folderReader) Read(p []byte) (int, error) {
 		if n > 0 {
 			if err == io.EOF {
 				return n, nil
-			} else {
-				return n, err
 			}
+
+			return n, err
 		}
 
 		if err != nil {

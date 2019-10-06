@@ -131,9 +131,9 @@ func (g *V3) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
 	// GitLab mr state: opened, closed, locked, merged, all
 	var s string
 	switch state {
-	case "open":
-		s = "opened"
-	case "opened", "closed", "locked", "merged", "all":
+	case scm.PullRequestStateOpen:
+		s = openedPullRequestState
+	case openedPullRequestState, "closed", "locked", "merged", "all":
 		s = state
 	default:
 		return nil, cerr.ErrorUnsupported.Error("GitLab(v3) pull request state", state)

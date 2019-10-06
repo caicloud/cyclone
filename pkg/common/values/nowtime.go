@@ -34,6 +34,7 @@ type nowTimeString struct {
 	nowTimeGetter func() time.Time
 }
 
+// NowTimeStringParam represents the param of nowtime.
 type NowTimeStringParam struct {
 	Format string `json:"format"`
 }

@@ -123,11 +123,11 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 		selected = true
 		for key, value := range filters {
 			switch key {
-			case "name":
+			case queryFilterName:
 				if !strings.Contains(wfr.Name, value) {
 					selected = false
 				}
-			case "alias":
+			case queryFilterAlias:
 				if wfr.Annotations != nil {
 					if alias, ok := wfr.Annotations[meta.AnnotationAlias]; ok {
 						if strings.Contains(alias, value) {

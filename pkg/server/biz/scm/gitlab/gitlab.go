@@ -49,6 +49,8 @@ const (
 
 	// mergeRefTemplate represents reference template for Gitlab merge request and merge target branch
 	mergeRefTemplate = "refs/merge-requests/%d/head:%s"
+
+	openedPullRequestState string = "opened"
 )
 
 var gitlabServerAPIVersions = make(map[string]string)

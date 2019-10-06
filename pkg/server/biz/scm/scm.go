@@ -46,6 +46,11 @@ func RegisterProvider(scmType v1alpha1.SCMType, pFunc newProviderFunc) error {
 	return nil
 }
 
+const (
+	// PullRequestStateOpen represents the open state of pull request.
+	PullRequestStateOpen string = "open"
+)
+
 // Provider represents the interface of SCM provider.
 type Provider interface {
 	GetToken() (string, error)
