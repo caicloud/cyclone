@@ -32,6 +32,14 @@ const InputSection = props => {
               )}
               {_.get(values, 'spec.pod.inputs.arguments', []).map(
                 (a, index) => {
+                  const style =
+                    a.name === 'cmd'
+                      ? {
+                          style: {
+                            height: 150,
+                          },
+                        }
+                      : {};
                   return (
                     <FormItem key={index}>
                       <Row gutter={16}>
@@ -50,11 +58,7 @@ const InputSection = props => {
                             component={
                               a.name === 'cmd' ? TextareaField : InputField
                             }
-                            {...(a.name === 'cmd' && {
-                              style: {
-                                height: 150,
-                              },
-                            })}
+                            {...style}
                             hasFeedback
                           />
                         </Col>
