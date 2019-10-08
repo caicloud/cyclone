@@ -74,7 +74,7 @@ func IsTrivial(wf *v1alpha1.Workflow, stage string) bool {
 	return false
 }
 
-// staticStatus masks timestamp in status, safe for comparision of status.
+// staticStatus masks timestamp in status, safe for comparison of status.
 func staticStatus(status *v1alpha1.WorkflowRunStatus) *v1alpha1.WorkflowRunStatus {
 	t := metav1.Time{Time: time.Unix(0, 0)}
 	copy := status.DeepCopy()

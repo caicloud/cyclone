@@ -219,9 +219,7 @@ func (b *BitbucketServer) ListPullRequests(repo, state string) ([]scm.PullReques
 			return nil, convertBitBucketError(err, resp)
 		}
 
-		for _, pr := range prs.Values {
-			allPRs = append(allPRs, pr)
-		}
+		allPRs = append(allPRs, prs.Values...)
 		if prs.NextPage == nil {
 			break
 		}
@@ -440,7 +438,13 @@ func GetBitbucketVersion(client *http.Client, base *url.URL) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
+
 	var property Property
 	if resp.StatusCode/100 == 2 {
 		err = json.NewDecoder(resp.Body).Decode(&property)

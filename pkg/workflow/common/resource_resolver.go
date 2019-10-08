@@ -14,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
+// GetResourceTypes gets supported types of resources.
 func GetResourceTypes(client clientset.Interface, namespaces []string, operation string) ([]v1alpha1.Resource, error) {
 	var results []v1alpha1.Resource
 	for _, ns := range namespaces {

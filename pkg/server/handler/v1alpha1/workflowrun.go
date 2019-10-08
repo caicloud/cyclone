@@ -123,11 +123,11 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 		selected = true
 		for key, value := range filters {
 			switch key {
-			case "name":
+			case queryFilterName:
 				if !strings.Contains(wfr.Name, value) {
 					selected = false
 				}
-			case "alias":
+			case queryFilterAlias:
 				if wfr.Annotations != nil {
 					if alias, ok := wfr.Annotations[meta.AnnotationAlias]; ok {
 						if strings.Contains(alias, value) {
@@ -284,7 +284,12 @@ func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stag
 		log.Errorf(fmt.Sprintf("Unable to upgrade websocket for err: %v", err))
 		return cerr.ErrorUnknownInternal.Error(err)
 	}
-	defer ws.Close()
+
+	defer func() {
+		if err := ws.Close(); err != nil {
+			log.Errorf("Fail to close websocket as: %v", err)
+		}
+	}()
 
 	if err := receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, container, ws); err != nil {
 		log.Errorf("Fail to receive log stream for workflow(%s):stage(%s):container(%s) : %s",
@@ -322,7 +327,12 @@ func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, co
 		log.Errorf("fail to open the log file %s as %v", logFilePath, err)
 		return err
 	}
-	defer file.Close()
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Errorf("Fail to close file as: %v", err)
+		}
+	}()
 
 	var message []byte
 	for {
@@ -353,7 +363,12 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 		log.Error(fmt.Sprintf("Unable to upgrade websocket for err: %s", err.Error()))
 		return cerr.ErrorUnknownInternal.Error(err.Error())
 	}
-	defer ws.Close()
+
+	defer func() {
+		if err := ws.Close(); err != nil {
+			log.Errorf("Fail to close websocket as: %v", err)
+		}
+	}()
 
 	if err := getContainerLogStream(tenant, project, workflow, workflowrun, stage, ws); err != nil {
 		log.Errorf("Unable to get logstream for %s/%s for err: %s", workflowrun, stage, err)
@@ -374,7 +389,12 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
 	ctx, cancel := context.WithCancel(context.Background())
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10, cancel)
-	defer folderReader.Close()
+
+	defer func() {
+		if err := folderReader.Close(); err != nil {
+			log.Errorf("Fail to close folder reader as: %v", err)
+		}
+	}()
 
 	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
 	err = websocketutil.Write(ws, folderReader, ctx.Done())

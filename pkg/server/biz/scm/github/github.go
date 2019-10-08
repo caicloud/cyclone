@@ -268,7 +268,7 @@ func (g *Github) ListPullRequests(repo, state string) ([]scm.PullRequest, error)
 	// GitLab pr state: open, closed, all
 	var s string
 	switch state {
-	case "open", "closed", "all":
+	case scm.PullRequestStateOpen, "closed", "all":
 		s = state
 	default:
 		return nil, cerr.ErrorUnsupported.Error("Github pull request state", state)

@@ -131,9 +131,9 @@ func (g *V3) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
 	// GitLab mr state: opened, closed, locked, merged, all
 	var s string
 	switch state {
-	case "open":
-		s = "opened"
-	case "opened", "closed", "locked", "merged", "all":
+	case scm.PullRequestStateOpen:
+		s = openedPullRequestState
+	case openedPullRequestState, "closed", "locked", "merged", "all":
 		s = state
 	default:
 		return nil, cerr.ErrorUnsupported.Error("GitLab(v3) pull request state", state)
@@ -223,7 +223,12 @@ func (g *V3) GetPullRequestSHA(repo string, number int) (string, error) {
 		log.Errorf("Fail to get project merge request as %s", err.Error())
 		return "", err
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

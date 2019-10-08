@@ -88,7 +88,7 @@ var (
 	ErrorUpdateFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to update ${name}: ${error}")
 	// ErrorDeleteFailed defines error that failed deleting of something.
 	ErrorDeleteFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to delete ${name}: ${error}")
-	// ErrorGetFailed defines error that failed geting of something.
+	// ErrorGetFailed defines error that failed getting of something.
 	ErrorGetFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to get ${name}: ${error}")
 	// ErrorListFailed defines error that failed listing of something.
 	ErrorListFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to list ${name}: ${error}")

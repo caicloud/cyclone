@@ -69,7 +69,12 @@ func SendStream(server string, reader io.Reader, close <-chan struct{}) error {
 		log.Errorf("Fail to new the WebSocket connection as %s", err.Error())
 		return err
 	}
-	defer ws.Close()
+
+	defer func() {
+		if err := ws.Close(); err != nil {
+			log.Errorf("Fail to close websocket as: %v", err)
+		}
+	}()
 
 	return Send(ws, reader, close)
 }
@@ -100,7 +105,9 @@ func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}) error {
 		log.Info("close ticker and websocket")
 		pingTicker.Stop()
 		sendTicker.Stop()
-		ws.Close()
+		if err := ws.Close(); err != nil {
+			log.Errorf("Fail to close websocket as: %v", err)
+		}
 		close(exit)
 	}()
 

@@ -30,6 +30,13 @@ const (
 
 	// logsFolderName is the folder name for logs files.
 	logsFolderName = "logs"
+
+	// queryFilterName represents filter by name.
+	queryFilterName = "name"
+	// queryFilterAlias represents filter by alias.
+	queryFilterAlias = "alias"
+	// queryFilterType represents filter by type.
+	queryFilterType = "type"
 )
 
 func getLogFilePath(tenant, project, workflow, workflowrun, stage, container string) (string, error) {

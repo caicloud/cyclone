@@ -15,6 +15,7 @@ type randomString struct {
 	stringGenerator func(int) string
 }
 
+// RandomValueParam represents the param of random value.
 type RandomValueParam struct {
 	Length int `json:"length"`
 }

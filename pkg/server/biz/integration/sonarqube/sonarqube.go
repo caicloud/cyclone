@@ -55,7 +55,11 @@ func validate(url, token string) (bool, error) {
 		log.Errorf("Fail to validate sonarqube token as %s", err.Error())
 		return false, convertSonarQubeError(err, resp)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorf("Fail to close response body as: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

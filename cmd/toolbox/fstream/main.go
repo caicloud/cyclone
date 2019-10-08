@@ -45,7 +45,12 @@ func run(cmd *cobra.Command, args []string) {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
-	defer file.Close()
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Errorf("Fail to close file as: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	signals.GracefulShutdown(cancel)
@@ -57,5 +62,4 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	log.Info("Send log stream end")
-	return
 }

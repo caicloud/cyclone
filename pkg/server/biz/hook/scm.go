@@ -22,7 +22,7 @@ import (
 
 var scmManager *SCMManager
 
-// SCMManager
+// SCMManager represents manager of SCM instances.
 type SCMManager struct {
 	mutex sync.Mutex
 }

@@ -78,7 +78,11 @@ func sendNotifications(wfr *v1alpha1.WorkflowRun) error {
 
 			log.WithField("wfr", wfr.Name).Errorf("Failed to send notification for %s: %v", endpoint.Name, err)
 			if resp != nil {
-				defer resp.Body.Close()
+				defer func() {
+					if err := resp.Body.Close(); err != nil {
+						log.WithField("wfr", wfr.Name).Errorf("Fail to close response body as: %v", err)
+					}
+				}()
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					log.Error(err)

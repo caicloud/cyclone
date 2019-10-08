@@ -57,13 +57,13 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 		}
 		value := strings.ToLower(kv[1])
 
-		if kv[0] == "name" {
+		if kv[0] == queryFilterName {
 			for _, item := range items {
 				if strings.Contains(item.Name, value) {
 					results = append(results, item)
 				}
 			}
-		} else if kv[0] == "alias" {
+		} else if kv[0] == queryFilterAlias {
 			for _, item := range items {
 				if item.Annotations != nil {
 					if alias, ok := item.Annotations[meta.AnnotationAlias]; ok {
