@@ -23,3 +23,5 @@ bin
 .generated
 
 node_modules/
+
+.history/*
