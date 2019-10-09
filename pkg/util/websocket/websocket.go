@@ -92,7 +92,7 @@ type ReadBytes interface {
 }
 
 // Write writes message from reader to websocket
-func Write(ws *websocket.Conn, reader ReadBytes, stopCh <-chan struct{}) error {
+func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}) error {
 	pingTicker := time.NewTicker(PingPeriod)
 	sendTicker := time.NewTicker(10 * time.Millisecond)
 	exit := make(chan struct{})
@@ -102,19 +102,6 @@ func Write(ws *websocket.Conn, reader ReadBytes, stopCh <-chan struct{}) error {
 		sendTicker.Stop()
 		ws.Close()
 		close(exit)
-	}()
-
-	stop := make(chan struct{})
-	// delay exit to ensure remained messages sent.
-	go func() {
-		select {
-		case <-stopCh:
-			time.Sleep(30 * time.Second)
-			close(stop)
-			return
-		case <-exit:
-			return
-		}
 	}()
 
 	for {

@@ -68,6 +68,13 @@ func main() {
 	if err != nil {
 		return
 	}
+	defer func() {
+		go func() {
+			if err := c.MarkLogEOF(); err != nil {
+				log.Warn("Mark log EOF error: ", err)
+			}
+		}()
+	}()
 
 	// Wait workload containers completion, so we can notify output resolvers.
 	log.Info("Wait workload containers completion ... ")
