@@ -83,7 +83,7 @@
   "devDependencies": {
     "autoprefixer": "7.1.6",
     "babel-core": "6.26.0",
-    "babel-eslint": "7.2.3",
+    "babel-eslint": "8.2.1",
     "babel-jest": "^24.8.0",
     "babel-loader": "7.1.2",
     "babel-plugin-import": "^1.6.3",
@@ -97,7 +97,7 @@
     "eslint-config-prettier": "^3.3.0",
     "eslint-config-react-app": "^2.0.1",
     "eslint-loader": "2.1.1",
-    "eslint-plugin-flowtype": "2.39.1",
+    "eslint-plugin-flowtype": "2.41.0",
     "eslint-plugin-import": "2.8.0",
     "eslint-plugin-jsx-a11y": "5.1.1",
     "eslint-plugin-prettier": "^3.0.0",
@@ -134,5 +134,5 @@
     "webpack-manifest-plugin": "2.0.4"
   },
   "peerDependencies": {},
-  "proxy": "http://192.168.21.105:30011"
+  "proxy": "http://192.168.17.101:30022"
 }
