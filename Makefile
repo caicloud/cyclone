@@ -68,7 +68,7 @@ VERSION ?= $(TAG)
 
 # Golang standard bin directory.
 BIN_DIR := $(GOPATH)/bin
-GOMETALINTER := $(BIN_DIR)/gometalinter
+GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
 
 #
 # Define all targets. At least the following commands are required:
@@ -77,14 +77,13 @@ GOMETALINTER := $(BIN_DIR)/gometalinter
 # All targets.
 .PHONY: lint test build container push
 
-lint: $(GOMETALINTER)
-	golangci-lint run --disable=gosimple --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
+lint: $(GOLANGCI_LINT)
+	@$(GOLANGCI_LINT) run
 
 build: build-local
 
-$(GOMETALINTER):
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install &> /dev/null
+$(GOLANGCI_LINT):
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(BIN_DIR) v1.16.0
 
 test:
 	@go test $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
