@@ -104,6 +104,7 @@ func (p *WorkloadProcessor) processPod() error {
 		return err
 	}
 
+	log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Debug("Create pod for stage succeeded")
 	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", p.stg.Name)
 	p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 		Phase:              v1alpha1.StatusRunning,
