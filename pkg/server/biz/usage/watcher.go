@@ -146,7 +146,7 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 		return nil
 	}
 
-	var zero int64 = 0
+	var zero int64
 	for _, pod := range pods.Items {
 		err = client.CoreV1().Pods(namespace).Delete(pod.Name, &metav1.DeleteOptions{
 			PropagationPolicy:  &foreground,

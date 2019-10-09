@@ -194,11 +194,11 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/integrations/{integration}/startpvcwatcher",
+		Path:        "/integrations/{integration}/pvcwatcher",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
 			{
-				Method:      definition.Update,
+				Method:      definition.Create,
 				Function:    handler.StartPVCWatcher,
 				Description: "Start pvc watcher for the integration",
 				Parameters: []definition.Parameter{
@@ -218,11 +218,11 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/integrations/{integration}/stoppvcwatcher",
+		Path:        "/integrations/{integration}/pvcwatcher",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{
 			{
-				Method:      definition.Update,
+				Method:      definition.Delete,
 				Function:    handler.StopPVCWatcher,
 				Description: "Stop pvc watcher for the integration",
 				Parameters: []definition.Parameter{

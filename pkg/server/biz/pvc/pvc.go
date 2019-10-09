@@ -108,7 +108,7 @@ func UpdatePVC(tenantName, storageClass, size string, namespace string, client *
 		return err
 	}
 
-	var wfrsName = make(map[string]struct{}, 0)
+	var wfrsName = make(map[string]struct{})
 	for _, pod := range pods.Items {
 		if pod.Labels != nil && pod.Labels[meta.LabelWorkflowRunName] != "" {
 			wfrsName[pod.Labels[meta.LabelWorkflowRunName]] = struct{}{}
