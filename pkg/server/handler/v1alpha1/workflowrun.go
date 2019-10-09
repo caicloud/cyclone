@@ -372,23 +372,25 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 
 	prefix := fmt.Sprintf("%s_", stage)
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
-	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
+	ctx, cancel := context.WithCancel(context.Background())
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10, cancel)
 	defer folderReader.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
 	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
 	err = websocketutil.Write(ws, folderReader, ctx.Done())
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
+	log.Infof("End of log stream for wfr '%s', stage '%s'", workflowrun, stage)
+
 	return err
 }
 
-// watchStageTermination watches status of the WorkflowRun and the specific Stage, when it is terminated, call the onTerminatedCallback func.
+// watchStageTermination ensures to close the log WebSocket finally when FolderReader can't be terminated (no EOF file in the folder)
 func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallback context.CancelFunc) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
-	for ; true; <-ticker.C {
+	for range ticker.C {
 		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, metav1.GetOptions{})
 		if err != nil {
 			log.Warningf("Get workflowRun %s error: %v", wfrName, err)
@@ -426,7 +428,7 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	logFolder, _ := getLogFolder(tenant, project, workflow, workflowrun)
 	prefix := fmt.Sprintf("%s_", stage)
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
-	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0)
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0, nil)
 
 	return folderReader, headers, nil
 }
