@@ -183,7 +183,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 			continue
 		}
 
-		err := cluster.Close(handler.K8sClient, &integration, name)
+		err := cluster.Close(&integration, name)
 		if err != nil {
 			log.Warningf("close cluster %s for tenant %s error %v", integration.Name, name, err)
 			continue

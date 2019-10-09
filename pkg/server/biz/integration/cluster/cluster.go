@@ -130,7 +130,7 @@ func Open(client clientset.Interface, in *api.Integration, tenantName string) (e
 }
 
 // Close closes a cluster
-func Close(client clientset.Interface, in *api.Integration, tenant string) (err error) {
+func Close(in *api.Integration, tenant string) (err error) {
 	// Convert the returned error if it is a k8s error.
 	defer func() {
 		err = cerr.ConvertK8sError(err)
@@ -148,7 +148,7 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
 		// if is a user cluster and namespace are created by cyclone, delete the namespace directly
 		if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-			err = client.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
+			err = clusterClient.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 			if err != nil {
 				if !errors.IsNotFound(err) {
 					log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
@@ -165,7 +165,7 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 
 	// delete resource quota
 	quotaName := svrcommon.TenantResourceQuota(tenant)
-	err = client.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
+	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.Errorf("delete resource quota %s error %v", quotaName, err)
@@ -183,7 +183,7 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 
 	// delete pvc which is created by cyclone
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
-		err = client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
+		err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				log.Errorf("delete pvc %s error %v", cluster.PVC, err)
@@ -193,6 +193,59 @@ func Close(client clientset.Interface, in *api.Integration, tenant string) (err 
 			err = nil
 		}
 		return
+	}
+
+	return nil
+}
+
+// StartPVCWatcher creates a pvc watcher deployment for the integration
+func StartPVCWatcher(in *api.Integration, tenant string) (err error) {
+	// Convert the returned error if it is a k8s error.
+	defer func() {
+		err = cerr.ConvertK8sError(err)
+	}()
+	cluster := in.Spec.Cluster
+
+	// new cluster clientset
+	clusterClient, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+	if err != nil {
+		log.Errorf("new cluster client error %v", err)
+		return
+	}
+
+	// Launch PVC usage watcher to watch the usage of PVC.
+	err = usage.LaunchPVCUsageWatcher(clusterClient, tenant, v1alpha1.ExecutionContext{
+		Namespace: cluster.Namespace,
+		PVC:       cluster.PVC,
+	})
+	if err != nil {
+		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", cluster.Namespace, cluster.PVC, err)
+		return err
+	}
+
+	return nil
+}
+
+// StopPVCWatcher deletes the pvc watcher deployment for the integration
+func StopPVCWatcher(in *api.Integration, tenant string) (err error) {
+	// Convert the returned error if it is a k8s error.
+	defer func() {
+		err = cerr.ConvertK8sError(err)
+	}()
+	cluster := in.Spec.Cluster
+
+	// new cluster clientset
+	clusterClient, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+	if err != nil {
+		log.Errorf("new cluster client error %v", err)
+		return
+	}
+
+	// Delete the PVC watcher deployment.
+	err = usage.DeletePVCUsageWatcher(clusterClient, cluster.Namespace)
+	if err != nil {
+		log.Errorf("Delete PVC watcher '%s' error: %v", usage.PVCWatcherName, err)
+		return err
 	}
 
 	return nil
@@ -230,7 +283,7 @@ func UpdateClusterIntegration(client clientset.Interface, tenant, name string, i
 	// Turn off worker cluster
 	if oldCluster.IsWorkerCluster && !cluster.IsWorkerCluster {
 		// close cluster for the tenant, delete namespace
-		err := Close(client, oldIn, tenant)
+		err := Close(oldIn, tenant)
 		if err != nil {
 			return err
 		}
