@@ -1,5 +1,6 @@
 import { Table } from 'antd';
 import PropTypes from 'prop-types';
+import { FormatTime } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
 
 @inject('project')
@@ -22,6 +23,12 @@ class StageList extends React.Component {
         title: intl.get('name'),
         dataIndex: 'metadata.name',
         key: 'name',
+      },
+      {
+        title: intl.get('creationTime'),
+        dataIndex: 'metadata.creationTimestamp',
+        key: 'creationTime',
+        render: value => FormatTime(value),
       },
     ];
 

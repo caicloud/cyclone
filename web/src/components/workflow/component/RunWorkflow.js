@@ -109,10 +109,13 @@ class RunWorkflow extends React.Component {
             visible={visible}
             onCancel={this.closeModal}
             onOk={props.handleSubmit}
+            width={600}
           >
             <Form.Item
               label={intl.get('workflowrun.version.method')}
               {...defaultFormItemLayout}
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 18 }}
             >
               <Radio.Group
                 defaultValue={versionMethod}
