@@ -194,6 +194,54 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
+		Path:        "/integrations/{integration}/pvcwatcher",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Create,
+				Function:    handler.StartPVCWatcher,
+				Description: "Start pvc watcher for the integration",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to operate",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to operate",
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
+		Path:        "/integrations/{integration}/pvcwatcher",
+		Description: "Integrations APIs",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Delete,
+				Function:    handler.StopPVCWatcher,
+				Description: "Stop pvc watcher for the integration",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose integration to operate",
+					},
+					{
+						Source:      definition.Path,
+						Name:        "integration",
+						Description: "Name of the integration to operate",
+					},
+				},
+				Results: []definition.Result{definition.ErrorResult()},
+			},
+		},
+	},
+	{
 		Path:        "/integrations/{integration}/scmrepos",
 		Description: "Integrations APIs",
 		Definitions: []definition.Definition{

@@ -3,6 +3,7 @@ package usage
 import (
 	"fmt"
 
+	"github.com/caicloud/nirvana/log"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -128,7 +129,33 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 // DeletePVCUsageWatcher delete the pvc usage watcher deployment
 func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error {
 	foreground := metav1.DeletePropagationForeground
-	return client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
+	err := client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
 		PropagationPolicy: &foreground,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// Try to delete pvc watcher pod immediately to accelerate the related pvc deletion.
+	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", PVCWatcherLabelName, PVCWatcherLabelValue),
+	})
+	if err != nil {
+		log.Warning("list pvc watcher pods error: ", err)
+		return nil
+	}
+
+	var zero int64
+	for _, pod := range pods.Items {
+		err = client.CoreV1().Pods(namespace).Delete(pod.Name, &metav1.DeleteOptions{
+			PropagationPolicy:  &foreground,
+			GracePeriodSeconds: &zero,
+		})
+		if err != nil {
+			log.Warningf("delete pvc watcher pods: %s error: %v", pod.Name, err)
+		}
+	}
+
+	return nil
 }

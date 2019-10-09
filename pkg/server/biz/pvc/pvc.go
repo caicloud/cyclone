@@ -1,6 +1,8 @@
 package pvc
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/caicloud/nirvana/log"
@@ -12,8 +14,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 	"github.com/caicloud/cyclone/pkg/util/retry"
 )
 
@@ -95,7 +99,32 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 
 // UpdatePVC delete the old pvc and recreate another one, so the data of the pvc will lost.
 func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
-	err := DeletePVC(tenantName, namespace, client)
+	// Can not update pvc when there are workflows running.
+	pods, err := client.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s!=%s", usage.PVCWatcherLabelName, usage.PVCWatcherLabelValue),
+	})
+	if err != nil {
+		log.Warning("list pvc watcher pods error: ", err)
+		return err
+	}
+
+	var wfrsName = make(map[string]struct{})
+	for _, pod := range pods.Items {
+		if pod.Labels != nil && pod.Labels[meta.LabelWorkflowRunName] != "" {
+			wfrsName[pod.Labels[meta.LabelWorkflowRunName]] = struct{}{}
+		}
+	}
+
+	if len(wfrsName) > 0 {
+		var wfrsNameString string
+		for name := range wfrsName {
+			wfrsNameString = fmt.Sprintf("%s,%s", wfrsNameString, name)
+		}
+		return cerr.ErrorExistRunningWorkflowRuns.Error(strings.Trim(wfrsNameString, ","))
+	}
+
+	// Recreate PVC
+	err = DeletePVC(tenantName, namespace, client)
 	if err != nil {
 		return err
 	}
