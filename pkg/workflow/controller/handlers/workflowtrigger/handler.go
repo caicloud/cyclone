@@ -3,6 +3,7 @@ package workflowtrigger
 import (
 	log "github.com/sirupsen/logrus"
 
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -20,7 +21,7 @@ var (
 func (h *Handler) ObjectCreated(obj interface{}) {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else {
+	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.CreateCron(wft)
 	}
 }
@@ -29,7 +30,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 func (h *Handler) ObjectUpdated(old, new interface{}) {
 	if wft, err := ToWorkflowTrigger(new); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else {
+	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.UpdateCron(wft)
 	}
 }
@@ -38,7 +39,7 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 func (h *Handler) ObjectDeleted(obj interface{}) {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else {
+	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.DeleteCron(wft)
 	}
 }
