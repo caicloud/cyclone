@@ -27,6 +27,7 @@ class App extends React.Component {
     project: PropTypes.string,
     validateForm: PropTypes.func,
     setTouched: PropTypes.func,
+    history: PropTypes.object,
   };
 
   constructor(props) {
@@ -87,6 +88,11 @@ class App extends React.Component {
   prev = update => {
     const current = this.state.current - 1;
     this.setState({ current });
+  };
+
+  // cancel create workflow
+  cancel = () => {
+    this.props.history.goBack();
   };
 
   saveGraph = graphData => {
@@ -180,6 +186,11 @@ class App extends React.Component {
               {intl.get('prev')}
             </Button>
           )}
+          {
+            <Button style={{ marginLeft: 8 }} onClick={() => this.cancel()}>
+              {intl.get('cancel')}
+            </Button>
+          }
         </div>
       </Form>
     );

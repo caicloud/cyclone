@@ -138,6 +138,7 @@ class AddWorkflow extends React.Component {
             handleDepend={this.setStageDepend}
             saveStagePostition={this.saveStagePosition}
             submitting={submitting}
+            history={this.props.history}
           />
         )}
       />

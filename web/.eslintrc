@@ -16,7 +16,7 @@
     "react/prop-types": "warn",
     "prettier/prettier": "error",
     "no-useless-escape": "off",
-    "no-console": "warn",
+    "no-console": ["error", { "allow": ["warn", "error"] }],
     "react/display-name": [2]
   }
 }

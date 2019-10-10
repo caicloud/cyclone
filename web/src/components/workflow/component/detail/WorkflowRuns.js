@@ -40,23 +40,21 @@ class WorkflowRuns extends React.Component {
     listWorkflowRuns(projectName, workflowName, listParams, data => {
       const items = _.get(data, 'items', []);
       const loop = this.shouldLoopRequest(items);
-      if (loop) {
+      if (loop && !this.workflowRunInterval) {
         this.pollRequest(5000);
       }
     });
   }
 
   pollRequest = time => {
-    this.setState({
-      intervalId: setInterval(() => {
-        const { query, status } = this.state;
-        this.requestListWorkflowRuns({
-          ...listParams,
-          filter: `name=${query}${status === 'all' ? '' : `,status=${status}`}`,
-          silent: true,
-        });
-      }, time),
-    });
+    this.workflowRunInterval = window.setInterval(() => {
+      const { query, status } = this.state;
+      this.requestListWorkflowRuns({
+        ...listParams,
+        filter: `name=${query}${status === 'all' ? '' : `,status=${status}`}`,
+        silent: true,
+      });
+    }, time);
   };
 
   shouldLoopRequest = list => {
@@ -75,19 +73,7 @@ class WorkflowRuns extends React.Component {
     return loop;
   };
 
-  stopPollRequest = id => {
-    this.setState(
-      {
-        intervalId: undefined,
-      },
-      () => {
-        clearInterval(id);
-      }
-    );
-  };
-
   componentDidUpdate(prevProps) {
-    const { intervalId } = this.state;
     const {
       workflow: { workflowRuns },
       projectName,
@@ -99,18 +85,17 @@ class WorkflowRuns extends React.Component {
       []
     );
     const loop = this.shouldLoopRequest(items);
-    if (loop && !intervalId) {
+    if (loop && !this.workflowRunInterval) {
       this.pollRequest(5000);
     }
-    if (!loop && intervalId) {
-      this.stopPollRequest(intervalId);
+    if (!loop && this.workflowRunInterval) {
+      window.clearInterval(this.workflowRunInterval);
     }
   }
 
   componentWillUnmount() {
-    const { intervalId } = this.state;
-    if (intervalId) {
-      this.stopPollRequest(intervalId);
+    if (this.workflowRunInterval) {
+      window.clearInterval(this.workflowRunInterval);
     }
   }
 
