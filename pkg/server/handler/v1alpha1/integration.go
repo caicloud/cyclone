@@ -309,7 +309,13 @@ func OpenCluster(ctx context.Context, tenant, name string) error {
 		return err
 	}
 
-	return updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
+	err = updateSecret(ns, integration.GetSecretName(name), in.Spec.Type, secret)
+	if err != nil {
+		return err
+	}
+
+	log.Info("Open cluster succeeded, start to reconcile WorkflowTriggers' execution context")
+	return cluster.ReconcileTriggerExecutionContext(tenant)
 }
 
 // CloseCluster closes cluster type integration that used to execute workflow
