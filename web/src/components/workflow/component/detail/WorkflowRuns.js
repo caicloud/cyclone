@@ -248,6 +248,18 @@ class WorkflowRuns extends React.Component {
         </div>
         <Table
           rowKey={row => row.metadata.name}
+          onRow={row => {
+            return {
+              onClick: () => {
+                this.props.history.push(
+                  `/projects/${projectName}/workflows/${workflowName}/workflowRuns/${_.get(
+                    row,
+                    'metadata.name'
+                  )}`
+                );
+              },
+            };
+          }}
           columns={columns}
           dataSource={[...items]}
         />

@@ -5,6 +5,8 @@ class Workflow {
   @observable workflowList = {};
   @observable workflowDetail = {};
   @observable workflowRuns = {};
+  @observable workflowRunDetail = {};
+  @observable workflowRunLogs = {};
 
   @action.bound
   listWorklow(projectID, query) {
@@ -59,6 +61,26 @@ class Workflow {
   delelteWorkflowRun(project, workflow, record, listQuery = {}) {
     return fetchApi.deleteWorkflowRun(project, workflow, record).then(() => {
       this.listWorkflowRuns(project, workflow, listQuery);
+    });
+  }
+
+  @action.bound
+  getWorkflowRun(params) {
+    return fetchApi
+      .getWorkflowrun(
+        _.get(params, 'projectName'),
+        _.get(params, 'workflowName'),
+        _.get(params, 'workflowRun')
+      )
+      .then(data => {
+        this.workflowRunDetail[_.get(params, 'workflowRun')] = data;
+      });
+  }
+
+  @action.bound
+  getWorkflowRunLog(params, query) {
+    return fetchApi.getWorkflowRunLog(params, query).then(data => {
+      this.workflowRunLogs[_.get(query, 'stage')] = data;
     });
   }
 }
