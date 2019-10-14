@@ -20,6 +20,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
+var once sync.Once
 var scmManager *SCMManager
 
 // SCMManager represents manager of SCM instances.
@@ -29,11 +30,11 @@ type SCMManager struct {
 
 // getScmManager returns the scm manager instance
 func getScmManager() *SCMManager {
-	if scmManager == nil {
+	once.Do(func() {
 		scmManager = &SCMManager{
 			mutex: sync.Mutex{},
 		}
-	}
+	})
 
 	return scmManager
 }
@@ -53,7 +54,7 @@ func (*SCMManager) Register(tenant string, wft v1alpha1.WorkflowTrigger) error {
 	}
 
 	if len(wfts.Items) > 0 {
-		log.Infof("webhook of %s/%s has already registered, using wfts length:%s", repo, secretName, len(wfts.Items))
+		log.Infof("webhook of %s/%s has already registered, using wfts length: %d", repo, secretName, len(wfts.Items))
 		return nil
 	}
 
@@ -126,7 +127,7 @@ func (o *SCMManager) Unregister(tenant string, wft v1alpha1.WorkflowTrigger) err
 	}
 
 	if len(wfts.Items) > 1 {
-		log.Infof("there are other wfts using the webhook %s/%s, skip deleting, using wfts length:", repo, secretName, len(wfts.Items))
+		log.Infof("there are other wfts using the webhook %s/%s, skip deleting, using wfts length: %d", repo, secretName, len(wfts.Items))
 		return nil
 	}
 
