@@ -109,7 +109,7 @@ build-linux:
 	      -e GOARCH=amd64                                                              \
 	      -e GOPATH=/go                                                                \
 	      -e CGO_ENABLED=0                                                             \
-	        golang:1.10-alpine3.8                                                      \
+	        golang:1.12.9-stretch                                                      \
 	          go build -i -v -o $(OUTPUT_DIR)/$${target}                               \
 	            -ldflags "-s -w -X $(ROOT)/pkg/version.VERSION=$(VERSION)              \
 	            -X $(ROOT)/pkg/version.COMMIT=$(COMMIT)                                \
@@ -182,9 +182,8 @@ swagger:
 	  -e GOARCH=amd64                                                                 \
 	  -e GOPATH=/go                                                                   \
 	  -e CGO_ENABLED=0                                                                \
-	  golang:1.10-alpine3.8                                                           \
-	  sh -c "apk add git &&                                                           \
-	  go get -u github.com/caicloud/nirvana/cmd/nirvana &&                            \
+	  golang:1.12.9-stretch                                                           \
+	  sh -c "go get -u github.com/caicloud/nirvana/cmd/nirvana &&                     \
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
 	  nirvana api --output web/public pkg/server/apis"
 
