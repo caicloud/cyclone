@@ -134,5 +134,5 @@
     "webpack-manifest-plugin": "2.0.4"
   },
   "peerDependencies": {},
-  "proxy": "http://192.168.17.101:30022"
+  "proxy": "http://192.168.21.107:30022"
 }

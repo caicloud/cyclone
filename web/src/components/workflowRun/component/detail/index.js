@@ -15,15 +15,17 @@ class RunDetail extends React.Component {
     } = this.props;
     if (!_.get(workflowRunDetail, _.get(params, 'workflowRun'))) {
       getWorkflowRun(params);
-      // getWorkflowRunLog(params, { stage: 'qme-wf-stg0', container: 'i1' });
+      // http://localhost:8080/apis/v1alpha1/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}/logs
+      getWorkflowRunLog(params, { stage: 'qme-wf-stg0', container: '' });
     }
   }
   render() {
     const {
-      workflow: { workflowRunDetail },
+      workflow: { workflowRunDetail, workflowRunLogs },
       match: { params },
     } = this.props;
 
+    console.error('workflowRunLogs', JSON.stringify(workflowRunLogs));
     const detail = toJS(_.get(workflowRunDetail, _.get(params, 'workflowRun')));
     if (!detail) {
       return <Spin />;
