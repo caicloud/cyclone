@@ -134,6 +134,12 @@ type StageStatus struct {
 	Status Status `json:"status"`
 	// Key-value outputs of this stage
 	Outputs []KeyValue `json:"outputs"`
+	// Stages that this stage depends on.
+	Depends []string `json:"depends"`
+	// Trivial indicates whether this stage is critical in the workflow. If set to true, it means the workflow
+	// can tolerate failure of this stage. In this case, all other stages can continue to execute and the overall
+	// status of the workflow execution can still be succeed.
+	Trivial bool `json:"trivial"`
 }
 
 // StatusPhase represents the phase of stage status or workflowrun status.
