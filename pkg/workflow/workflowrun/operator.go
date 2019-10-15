@@ -119,7 +119,7 @@ func (o *operator) GetRecorder() record.EventRecorder {
 	return o.recorder
 }
 
-// InitStagesStatus initializes all missing stages' status to pending.
+// InitStagesStatus initializes all missing stages' status to pending, and record workflow topology at this time to workflowRun status.
 func (o *operator) InitStagesStatus() {
 	if o.wfr.Status.Stages == nil {
 		o.wfr.Status.Stages = make(map[string]*v1alpha1.StageStatus)
@@ -131,6 +131,8 @@ func (o *operator) InitStagesStatus() {
 				Status: v1alpha1.Status{
 					Phase: v1alpha1.StatusPending,
 				},
+				Depends: stg.Depends,
+				Trivial: stg.Trivial,
 			}
 		}
 	}
