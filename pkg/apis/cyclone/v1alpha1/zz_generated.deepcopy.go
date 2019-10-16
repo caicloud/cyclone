@@ -1022,6 +1022,11 @@ func (in *StageStatus) DeepCopyInto(out *StageStatus) {
 		*out = make([]KeyValue, len(*in))
 		copy(*out, *in)
 	}
+	if in.Depends != nil {
+		in, out := &in.Depends, &out.Depends
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
