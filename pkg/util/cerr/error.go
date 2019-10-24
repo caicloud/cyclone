@@ -100,7 +100,7 @@ var (
 
 	// ErrorCreateIntegrationFailed defines error that failed to create integration.
 	ErrorCreateIntegrationFailed = nerror.InternalServerError.Build(ReasonCreateIntegrationFailed,
-		"create integration ${name} failed: ${error}, please check your auth infomation")
+		"create integration ${name} failed: ${error}, please check your auth information")
 
 	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
 	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build(ReasonCreateWebhookPermissionDenied,
