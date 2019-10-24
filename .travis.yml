@@ -16,7 +16,7 @@ go_import_path: github.com/caicloud/cyclone
 before_install:
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
-  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.20.1
 
 install:
   - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
