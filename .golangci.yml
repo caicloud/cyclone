@@ -5,12 +5,6 @@ run:
     - pkg/k8s/
     - tools/generator
 
-# all available settings of specific linters
-linters-settings:
-  misspell:
-    ignore-words:
-      - noteable
-
 linters:
   enable:
     - golint
