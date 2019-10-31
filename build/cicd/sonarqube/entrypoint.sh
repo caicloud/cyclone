@@ -14,6 +14,7 @@ USAGE=$(cat <<-END
             -e PROJECT_KEY=codescan \\
             -e QUALITY_GATE=1 \\
             -e SOURCE_PATH=./ \\
+            -e EXTENSION_PARAMETERS="-Dsonar.exclusions=vendor/***,node_modules/***" \\
             cyclone-cicd-sonarqube:latest
 
      Arguments:
@@ -24,6 +25,8 @@ USAGE=$(cat <<-END
      - PROJECT_NAME [Required] Name of the project that will be displayed on the SonarQube web interface
      - PROJECT_KEY [Required] The project's unique key. Allowed characters are: letters, numbers, - , _ , . and : , with at least one non-digit
      - QUALITY_GATE [Optional] Quality gate enforces a quality policy by defining a set of Boolean conditions based on measure thresholds against which projects are measured.
+     - SOURCE_PATH [Optional] Comma-separated paths to directories containing main source files.
+     - EXTENSION_PARAMETERS [Optional] Bland-separated extension parameters to sonar scanner.
 END
 )
 echo $1
@@ -37,6 +40,9 @@ if [ -z ${SERVER} ]; then echo "SERVER is unset"; exit 1; fi
 if [ -z ${TOKEN} ]; then echo "TOKEN is unset"; exit 1; fi
 if [ -z ${PROJECT_NAME} ]; then echo "PROJECT_NAME is unset"; exit 1; fi
 if [ -z ${PROJECT_KEY} ]; then echo "PROJECT_KEY is unset"; exit 1; fi
+
+if [ -z ${ENCODING} ]; then echo "ENCODING is unset, set it to UTF-8"; ENCODING=UTF-8; fi
+if [ -z ${SOURCE_PATH} ]; then echo "SOURCE_PATH is unset, set it to ./"; SOURCE_PATH=./ ; fi
 
 # Create project if not exist
 status=$(curl -I -u ${TOKEN}: ${SERVER}/api/components/show?component=${PROJECT_KEY} 2>/dev/null | head -n 1 | cut -d$' ' -f2)
@@ -56,14 +62,13 @@ curl -XPOST -u ${TOKEN}: "${SERVER}/api/qualitygates/select?gateId=${QUALITY_GAT
     exit 1
 }
 
-params="-Dsonar.sourceEncoding=UTF-8 \
+params="-Dsonar.sourceEncoding=${ENCODING} \
     -Dsonar.projectName=${PROJECT_NAME} \
     -Dsonar.projectKey=${PROJECT_KEY} \
     -Dsonar.sources=${SOURCE_PATH} \
     -Dsonar.projectBaseDir=${SOURCE_PATH} \
     -Dsonar.host.url=${SERVER} \
-    -Dsonar.login=${TOKEN} \
-    -Dsonar.exclusions=vendor/***,node_modules/***"
+    -Dsonar.login=${TOKEN}"
 
 case ${LANGUAGE} in
     Go)
@@ -92,6 +97,9 @@ case ${LANGUAGE} in
     *)
         ;;
 esac
+
+# Set sonar-scanner extension parameters
+if [[ -n ${EXTENSION_PARAMETERS} ]]; then echo "EXTENSION_PARAMETERS: ${EXTENSION_PARAMETERS}"; params="$params $EXTENSION_PARAMETERS"; fi
 
 echo "[DEBUG] sonar-scanner ${params/$TOKEN/**********} -X"
 # Scan the source files
