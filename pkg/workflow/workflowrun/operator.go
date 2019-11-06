@@ -179,6 +179,10 @@ func (o *operator) Update() error {
 			if len(s.Outputs) == 0 {
 				combined.Status.Stages[stage].Outputs = status.Outputs
 			}
+			if len(s.Depends) == 0 {
+				combined.Status.Stages[stage].Depends = status.Depends
+			}
+			combined.Status.Stages[stage].Trivial = status.Trivial
 		}
 
 		// Update golbal variables to resolved values

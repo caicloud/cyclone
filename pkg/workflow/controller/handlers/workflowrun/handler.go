@@ -63,7 +63,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
 	err := h.TimeoutProcessor.Add(originWfr)
 	if err != nil {
-		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed", err)
+		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed: ", err)
 	}
 
 	wfr := originWfr.DeepCopy()
