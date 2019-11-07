@@ -35,11 +35,11 @@ _config:
         protocol: TCP
       resources:
         limits:
-          cpu: "2"
-          memory: "2Gi"
+          cpu: "200m"
+          memory: "500Mi"
         requests:
-          cpu: "250m"
-          memory: "256Mi"
+          cpu: "50m"
+          memory: "200Mi"
     controller:
       replica: 1
     pod:
