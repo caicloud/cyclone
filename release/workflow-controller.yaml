@@ -18,11 +18,11 @@ _config:
         value: "false"
       resources:
         limits:
-          cpu: "2"
-          memory: "2Gi"
+          cpu: "200m"
+          memory: "200Mi"
         requests:
-          cpu: "250m"
-          memory: "256Mi"
+          cpu: "50m"
+          memory: "100Mi"
       mounts:
       - path: /etc/localtime
         name: timezone
