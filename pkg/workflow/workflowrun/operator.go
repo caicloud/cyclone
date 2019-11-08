@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -420,6 +421,7 @@ func (o *operator) Reconcile() error {
 // - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted. In this case,
 // GC would performed silently, without event recording and status updating.
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
+	wg := sync.WaitGroup{}
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
 		// For non-terminated stage, update status to cancelled.
@@ -454,9 +456,36 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "Delete pod '%s' error: %v", status.Pod.Name, err)
 			}
 		} else {
-			log.WithField("ns", status.Pod.Namespace).WithField("pod", status.Pod.Name).Info("Pod deleted")
+			log.WithField("ns", status.Pod.Namespace).WithField("pod", status.Pod.Name).Info("Start to delete pod")
+
+			wg.Add(1)
+			go func(namespace, podName string) {
+				defer wg.Done()
+
+				timeout := time.After(5 * time.Minute)
+				ticker := time.NewTicker(5 * time.Second)
+				defer ticker.Stop()
+				for {
+					select {
+					case <-timeout:
+						log.WithField("ns", namespace).WithField("pod", podName).Warn("Pod deletion timeout")
+						return
+					case <-ticker.C:
+						_, err := o.clusterClient.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+						if err != nil && errors.IsNotFound(err) {
+							log.WithField("ns", namespace).WithField("pod", podName).Info("Pod deleted")
+							return
+						}
+					}
+				}
+			}(status.Pod.Namespace, status.Pod.Name)
 		}
 	}
+
+	// Wait all workflowRun related workload pods deleting completed, then start gc pod to clean data on PV.
+	// Otherwise, if the path which is used by workload pods in the PV is deleted before workload pods deletion,
+	// the pod deletion process will get stuck on Terminating status.
+	wg.Wait()
 
 	// Get execution context of the WorkflowRun, namespace and PVC are defined in the context.
 	executionContext := GetExecutionContext(o.wfr)

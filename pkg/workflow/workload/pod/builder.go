@@ -83,6 +83,7 @@ func (m *Builder) Prepare() error {
 		Labels: map[string]string{
 			meta.LabelWorkflowRunName: m.wfr.Name,
 			meta.LabelPodCreatedBy:    meta.CycloneCreator,
+			meta.LabelPodKind:         meta.PodKindWorkload.String(),
 		},
 		Annotations: map[string]string{
 			meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
