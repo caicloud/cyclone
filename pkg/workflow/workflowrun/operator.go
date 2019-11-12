@@ -422,6 +422,7 @@ func (o *operator) Reconcile() error {
 // GC would performed silently, without event recording and status updating.
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	wg := sync.WaitGroup{}
+	allPodsFinished := true
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
 		// For non-terminated stage, update status to cancelled.
@@ -468,6 +469,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				for {
 					select {
 					case <-timeout:
+						allPodsFinished = false
 						log.WithField("ns", namespace).WithField("pod", podName).Warn("Pod deletion timeout")
 						return
 					case <-ticker.C:
@@ -486,6 +488,15 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// Otherwise, if the path which is used by workload pods in the PV is deleted before workload pods deletion,
 	// the pod deletion process will get stuck on Terminating status.
 	wg.Wait()
+
+	// If there are pods not finished and this is not the last gc try process, we will not start gc pod to clean
+	// data on PV. The last gc try process will ensure data could be cleaned.
+	if !allPodsFinished && !lastTry {
+		if !wfrDeletion {
+			o.recorder.Eventf(o.wfr, corev1.EventTypeWarning, "GC", "There are stage pods not Finished")
+		}
+		return nil
+	}
 
 	// Get execution context of the WorkflowRun, namespace and PVC are defined in the context.
 	executionContext := GetExecutionContext(o.wfr)
