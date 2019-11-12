@@ -84,6 +84,8 @@ func (pk PodKind) String() string {
 const (
 	// PodKindGC represents the pod is used for GC purpose.
 	PodKindGC PodKind = "gc"
+	// PodKindWorkload represents the pod is used to run a stage workload.
+	PodKindWorkload PodKind = "workload"
 )
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
@@ -185,6 +187,21 @@ func WorkflowRunSelector() string {
 	}
 
 	return fmt.Sprintf("%s=%s", LabelControllerInstance, instance)
+}
+
+// WorkflowRunPodSelector selects pods that belongs to a WorkflowRun.
+func WorkflowRunPodSelector(wfr string) string {
+	return fmt.Sprintf("%s=%s", LabelWorkflowRunName, wfr)
+}
+
+// WorkloadPodSelector selects pods that used to execute workload.
+func WorkloadPodSelector() string {
+	return fmt.Sprintf("%s=%s", LabelPodKind, PodKindWorkload.String())
+}
+
+// WorkflowRunWorkloadPodSelector selects pods that used to execute a WorkflowRun's workload.
+func WorkflowRunWorkloadPodSelector(wfr string) string {
+	return fmt.Sprintf("%s,%s", WorkflowRunPodSelector(wfr), WorkloadPodSelector())
 }
 
 // LabelExistsSelector returns a label selector to query resources with label key exists.
