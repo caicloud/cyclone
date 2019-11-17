@@ -39,6 +39,8 @@ type RuntimeExecutor interface {
 	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
 	// CollectLog collects container logs to cyclone server.
 	CollectLog(container, wrorkflowrun, stage string) error
+	// MarkLogEOF marks end of stage logs.
+	MarkLogEOF(workflowrun, stage string) error
 	// CopyFromContainer copy a file or directory from container:path to dst.
 	CopyFromContainer(container, path, dst string) error
 	// GetPod get the stage related pod.
@@ -112,6 +114,11 @@ func (co *Coordinator) CollectLogs() error {
 	}
 
 	return nil
+}
+
+// MarkLogEOF marks end of stage logs.
+func (co *Coordinator) MarkLogEOF() error {
+	return co.runtimeExec.MarkLogEOF(co.Wfr.Name, co.Stage.Name)
 }
 
 // WaitRunning waits all containers to start run.
@@ -325,9 +332,6 @@ func (co *Coordinator) getAllContainers() ([]string, error) {
 		return cs, err
 	}
 
-	for _, c := range pod.Spec.InitContainers {
-		cs = append(cs, c.Name)
-	}
 	for _, c := range pod.Spec.Containers {
 		cs = append(cs, c.Name)
 	}

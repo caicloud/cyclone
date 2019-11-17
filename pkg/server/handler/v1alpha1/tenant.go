@@ -60,7 +60,7 @@ func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResp
 		tenants = append(tenants, *t)
 	}
 
-	size := int64(len(tenants))
+	size := uint64(len(tenants))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []api.Tenant{}), nil
 	}
@@ -261,9 +261,9 @@ func createControlClusterIntegration(tenant string) error {
 		},
 	}
 
-	in, err := createIntegration(tenant, false, in)
+	in, err := createIntegration(tenant, false, in, false)
 	if err != nil {
-		return cerr.ErrorCreateIntegration.Error(err)
+		return cerr.ErrorCreateIntegrationFailed.Error(in.Name, err)
 	}
 
 	if config.Config.OpenControlCluster {

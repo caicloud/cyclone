@@ -61,9 +61,9 @@ func (b *BitbucketServer) GetToken() (string, error) {
 				Name:        "continuous-integration/cyclone",
 				Permissions: []string{ProjectRead, RepoAdmin},
 			}
-			token, _, err := b.v1Client.Authorizations.CreateAccessToken(context.Background(), b.scmCfg.User, opt)
+			token, resp, err := b.v1Client.Authorizations.CreateAccessToken(context.Background(), b.scmCfg.User, opt)
 			if err != nil {
-				return "", err
+				return "", convertBitBucketError(err, resp)
 			}
 			return token, nil
 		}
@@ -75,8 +75,12 @@ func (b *BitbucketServer) GetToken() (string, error) {
 
 // CheckToken checks whether the token has the authority of repo by trying ListRepos with the token.
 func (b *BitbucketServer) CheckToken() error {
-	if _, err := b.listReposInner(false); err != nil {
+	repos, err := b.listReposInner(false)
+	if err != nil {
 		return err
+	}
+	if len(repos) == 0 {
+		return cerr.ErrorExternalAuthorizationFailed.Error(fmt.Errorf("No repositories found"))
 	}
 	return nil
 }
@@ -95,10 +99,7 @@ func (b *BitbucketServer) listReposInner(listAll bool) ([]scm.Repository, error)
 	for {
 		repos, resp, err := b.v1Client.Repositories.ListRepositories(context.Background(), "", &opt)
 		if err != nil {
-			if resp != nil && resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(err)
-			}
-			return nil, err
+			return nil, convertBitBucketError(err, resp)
 		}
 		allRepos = append(allRepos, repos.Values...)
 		if repos.NextPage == nil || !listAll {
@@ -135,10 +136,7 @@ func (b *BitbucketServer) ListBranches(repo string) ([]string, error) {
 		branches, resp, err := b.v1Client.Repositories.ListBranches(context.Background(), projectKey, repo, &opt)
 		if err != nil {
 			log.Errorf("Fail to list branches for %s as %v", repo, err)
-			if resp != nil && resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(err)
-			}
-			return nil, err
+			return nil, convertBitBucketError(err, resp)
 		}
 
 		allBranches = append(allBranches, branches.Values...)
@@ -170,10 +168,7 @@ func (b *BitbucketServer) ListTags(repo string) ([]string, error) {
 		tags, resp, err := b.v1Client.Repositories.ListTags(context.Background(), projectKey, repo, &opt)
 		if err != nil {
 			log.Errorf("Fail to list tags for %s as %v", repo, err)
-			if resp != nil && resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(err)
-			}
-			return nil, err
+			return nil, convertBitBucketError(err, resp)
 		}
 
 		allTags = append(allTags, tags.Values...)
@@ -191,6 +186,51 @@ func (b *BitbucketServer) ListTags(repo string) ([]string, error) {
 	return tagNames, nil
 }
 
+// ListPullRequests lists the pull requests for specified repo.
+func (b *BitbucketServer) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	//  Bitbucket pr state: OPEN, DECLINED, MERGED, ALL
+	var s string
+	switch state {
+	case "open":
+		s = "OPEN"
+	case "all":
+		s = "ALL"
+	case "OPEN", "DECLINED", "MERGED", "ALL":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("Bitbucket pull request state", state)
+	}
+
+	var projectKey string
+	var err error
+	if projectKey, repo, err = parseRepo(b.scmCfg, repo); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	var allPRs []scm.PullRequest
+	opt := PullRequestListOpts{
+		State: s,
+	}
+	for {
+		prs, resp, err := b.v1Client.Repositories.ListPullRequests(context.Background(), projectKey, repo, &opt)
+		if err != nil {
+			log.Errorf("Fail to list pull requests for %s as %v", repo, err)
+			return nil, convertBitBucketError(err, resp)
+		}
+
+		for _, pr := range prs.Values {
+			allPRs = append(allPRs, pr)
+		}
+		if prs.NextPage == nil {
+			break
+		}
+		opt.Start = prs.NextPage
+	}
+
+	return allPRs, nil
+}
+
 // ListDockerfiles lists the Dockerfiles for specified repo.
 func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 	var projectKey string
@@ -205,10 +245,7 @@ func (b *BitbucketServer) ListDockerfiles(repo string) ([]string, error) {
 		files, resp, err := b.v1Client.Repositories.ListFiles(context.Background(), projectKey, repo, &opt)
 		if err != nil {
 			log.Errorf("Fail to list files for %s as %s", repo, err)
-			if resp != nil && resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(err)
-			}
-			return nil, err
+			return nil, convertBitBucketError(err, resp)
 		}
 
 		allFiles = append(allFiles, files.Values...)
@@ -261,17 +298,17 @@ func (b *BitbucketServer) CreateStatus(status c_v1alpha1.StatusPhase, targetURL,
 		URL:         targetURL,
 		Description: description,
 	}
-	_, err := b.v1Client.Repositories.CreateStatus(context.Background(), commitSha, opt)
-	return err
+	resp, err := b.v1Client.Repositories.CreateStatus(context.Background(), commitSha, opt)
+	return convertBitBucketError(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
 func (b *BitbucketServer) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	projectKey, name := scm.ParseRepo(repoURL)
-	pr, _, err := b.v1Client.PullRequests.GetPullRequest(context.Background(), projectKey, name, number)
+	pr, resp, err := b.v1Client.PullRequests.GetPullRequest(context.Background(), projectKey, name, number)
 	if err != nil {
 		log.Error(err)
-		return "", err
+		return "", convertBitBucketError(err, resp)
 	}
 
 	return pr.FromRef.LatestCommit, nil
@@ -331,11 +368,11 @@ func (b *BitbucketServer) CreateWebhook(repo string, webhook *scm.Webhook) error
 		}
 
 		project, name := scm.ParseRepo(repo)
-		_, _, err = b.v1Client.Repositories.CreateWebhook(context.Background(), project, name, webhookReq)
+		_, resp, err := b.v1Client.Repositories.CreateWebhook(context.Background(), project, name, webhookReq)
 		if err != nil {
 			log.Errorf("Create Webhook error: %v", err)
 		}
-		return err
+		return convertBitBucketError(err, resp)
 	}
 
 	log.Warningf("Webhook already existed: %+v", webhook)
@@ -350,9 +387,9 @@ func (b *BitbucketServer) DeleteWebhook(repo string, webhookURL string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := b.v1Client.Repositories.DeleteWebhook(context.Background(), project, name, webhook.ID); err != nil {
+	if resp, err := b.v1Client.Repositories.DeleteWebhook(context.Background(), project, name, webhook.ID); err != nil {
 		log.Errorf("delete project hook %s for %s/%s error: %v", webhook.ID, project, name, err)
-		return err
+		return convertBitBucketError(err, resp)
 	}
 	return nil
 }
@@ -366,10 +403,7 @@ func (b *BitbucketServer) GetWebhook(repo string, webhookURL string) (*Webhook, 
 	for {
 		hooks, resp, err := b.v1Client.Repositories.ListWebhook(context.Background(), project, name)
 		if err != nil {
-			if resp != nil && resp.StatusCode == 500 {
-				return nil, cerr.ErrorSCMServerInternalError.Error(err)
-			}
-			return nil, err
+			return nil, convertBitBucketError(err, resp)
 		}
 
 		allWebhooks = append(allWebhooks, hooks.Values...)
@@ -449,4 +483,24 @@ func IsHigherVersion(version string, refVersion string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func convertBitBucketError(err error, resp *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error("BitBucket", err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+
+	return cerr.AutoAnalyse(err)
 }

@@ -25,6 +25,8 @@ const (
 	GCImage = "gc"
 	// DindImage is key of the docker-in-docker image in config file
 	DindImage = "dind"
+	// ToolboxImage is key of the cyclone toolbox image in config file
+	ToolboxImage = "toolbox"
 )
 
 // WorkflowControllerConfig configures Workflow Controller
@@ -77,6 +79,8 @@ type GCConfig struct {
 	DelaySeconds time.Duration `json:"delay_seconds"`
 	// RetryCount defines how many times to retry when GC failed, 0 means no retry.
 	RetryCount int `json:"retry"`
+	// ResourceRequirements is default resource requirements for the gc Pod
+	ResourceRequirements corev1.ResourceRequirements `json:"resource_quota"`
 }
 
 // LimitsConfig configures maximum WorkflowRun to keep for each Workflow
@@ -90,6 +94,8 @@ type DindSettings struct {
 	// InsecureRegistries is list of insecure registries, for docker registries with
 	// self-signed certs, it's useful to bypass the cert check.
 	InsecureRegistries []string `json:"insecure_registries"`
+	// Bip specifies IP subnet used for docker0 bridge
+	Bip string `json:"bip"`
 }
 
 // Config is Workflow Controller config instance

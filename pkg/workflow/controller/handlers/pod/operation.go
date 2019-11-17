@@ -184,26 +184,14 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			}
 
 			terminatedCoordinatorState = containerStatus.State.Terminated
-
 			// There is only one coordinator container in each pod.
 			break
 		}
 	}
 
 	// Now the workload containers and coordinator container have all been finished. We then:
-	// - Update the stage status in WorkflowRun based on coordinator's exit code.
-	if terminatedCoordinatorState.ExitCode != 0 {
-		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
-			WithField("stg", p.stage).
-			WithField("status", v1alpha1.StatusFailed).
-			Info("To update stage status")
-		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusFailed,
-			LastTransitionTime: metav1.Time{Time: time.Now()},
-			Reason:             terminatedCoordinatorState.Reason,
-			Message:            terminatedCoordinatorState.Message,
-		})
-	} else {
+	// - Update the stage status in WorkflowRun based on coordinator's exit code and started time.
+	if terminatedCoordinatorState.ExitCode == 0 && !terminatedCoordinatorState.StartedAt.IsZero() {
 		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
 			WithField("stg", p.stage).
 			WithField("status", v1alpha1.StatusSucceeded).
@@ -213,6 +201,17 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Reason:             "CoordinatorCompleted",
 			Message:            "Coordinator completed",
+		})
+	} else {
+		log.WithField("wfr", wfrOperator.GetWorkflowRun().Name).
+			WithField("stg", p.stage).
+			WithField("status", v1alpha1.StatusFailed).
+			Info("To update stage status")
+		wfrOperator.UpdateStageStatus(p.stage, &v1alpha1.Status{
+			Phase:              v1alpha1.StatusFailed,
+			LastTransitionTime: metav1.Time{Time: time.Now()},
+			Reason:             terminatedCoordinatorState.Reason,
+			Message:            terminatedCoordinatorState.Message,
 		})
 	}
 

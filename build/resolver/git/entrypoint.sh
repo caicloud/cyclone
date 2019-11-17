@@ -26,14 +26,18 @@ USAGE=$(cat <<-END
        repo can be given here.
      - SCM_REVISION [Required] Revision of the source code. It has two different
        format. a) Single revision, such as branch 'master', tag 'v1.0'; b). Composite
-       such as pull requests, 'develop:master' indicates merge 'develop' branch to
-       'master'. For GitHub, pull requests can use the single revision form, such as
-       'refs/pull/1/merge', but for Gitlab, composite revision is necessary, such as
-       'refs/merge-requests/1/head:master'.
+       such as pull requests, 'develop:master' indicates merge 'develop' branch to 'master'.
+       For GitHub and Bitbucket, pull requests can use the single revision form, such as
+       'refs/pull/1/merge' for GitHub and 'refs/pull-requests/1/merge' for Bitbucket; but for
+       Gitlab, composite revision is necessary, such as 'refs/merge-requests/1/head:master'.
      - SCM_AUTH [Optional] For public repository, no need provide auth, but for
        private repository, this should be provided. Auth here supports 2 different formats:
        a. <user>:<password>
        b. <token>
+     - SCM_USER [Optional] User name of the SCM server. Required when SCM_TYPE is set
+       to 'Bitbucket'
+     - SCM_TYPE [Optional] Indicate the SCM server type. Only when your SCM is 'Bitbucket'
+       and use SCM_AUTH in <token> format, you need specify this field to 'Bitbucket'.
      - PULL_POLICY [Optional] Indicate whether pull resources when there already
        are old data, if set to IfNotPresent, will make use of the old data and
        perform incremental pull, otherwise old data would be removed.
@@ -51,6 +55,14 @@ if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
 if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
 if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
 if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
+if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z ${SCM_USER} ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
+
+# Git clone with "--depth" option will fail when the server is Bitbucket which version less than 
+# v0.6.4(This version is not guaranteed to be accurate, I tested v0.6.4 support "--depth", but v0.5.4.9 not support)
+if [ "${SCM_TYPE}" != "Bitbucket" ]; then
+    GIT_DEPTH_OPTION="--depth=1"
+    GIT_DEPTH_OPTION_DEEPER="--depth=30"
+fi
 
 # If SCM_REPO is provided, embed it to SCM_URL
 if [ ! -z ${SCM_REPO} ]; then
@@ -94,7 +106,13 @@ modifyURL() {
     LEFT=${AUTH%%:*}
     RIGHT=${AUTH##*:}
     if [[ "$LEFT" == "$AUTH" ]]; then
-        AUTH="oauth2:$(urlencode "$AUTH")"
+        if [ "${SCM_TYPE}" = "Bitbucket" ]; then
+            # git clone with Bitbucket personal access token needs user information.
+            # [detail info](https://community.atlassian.com/t5/Bitbucket-questions/How-do-you-clone-a-repository-from-Bit-Bucket-server-using-a/qaq-p/751179#M26518)
+            AUTH="$(urlencode "$SCM_USER"):$(urlencode "$AUTH")"
+        else
+            AUTH="oauth2:$(urlencode "$AUTH")"
+        fi
     else
         AUTH="$(urlencode "$LEFT"):$(urlencode "$RIGHT")"
     fi
@@ -157,6 +175,7 @@ parseRevision
 
 pull() {
     git config --global http.sslVerify false
+    git config --global http.postBuffer 500M
 
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
     if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
@@ -168,7 +187,7 @@ pull() {
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        git fetch -v --depth=1 origin $SCM_REVISION
+        git fetch -v ${GIT_DEPTH_OPTION:-} origin $SCM_REVISION
         git checkout FETCH_HEAD
     else
         if [ -e $WORKDIR/data ]; then
@@ -186,20 +205,20 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master --depth=1 --single-branch --recursive ${SCM_URL} data
+            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
             cd data
-            git fetch --depth=1 origin $SOURCE_BRANCH
+            git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH --depth=1 --single-branch --recursive ${SCM_URL} data
+            git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
             # If the fetch depth is too small, the merge command will fail with:
             #    'fatal: refusing to merge unrelated histories'
             # And we assume 30 is enough.
-            git fetch --depth=30 origin $SOURCE_BRANCH
+            git fetch ${GIT_DEPTH_OPTION_DEEPER:-} origin $SOURCE_BRANCH
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi

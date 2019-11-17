@@ -21,6 +21,14 @@ engine:
     delaySeconds: 300
     # How many times to retry (include the initial one)
     retry: 1
+    # ResourceRequirement for the pod to execute GC
+    resourceRequirement:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
   limits:
     # Maximum number of execution records to keep for each workflow.
     maxWorkflowRuns: 50
@@ -38,6 +46,8 @@ engine:
   executionContext:
     namespace: cyclone-system
     pvc: cyclone-pvc-system
+  dind:
+    bip: 172.18.0.1/16
 
 # Cyclone server variables
 server:

@@ -253,6 +253,62 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	return tags, nil
 }
 
+// ListPullRequests lists the pull requests for specified repo.
+func (g *Github) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	// GitLab pr state: open, closed, all
+	var s string
+	switch state {
+	case "open", "closed", "all":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("Github pull request state", state)
+	}
+
+	// Same as cyclone supported state
+	opt := &github.PullRequestListOptions{
+		State: s,
+		ListOptions: github.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
+	}
+
+	owner := g.scmCfg.User
+	if strings.Contains(repo, "/") {
+		parts := strings.Split(repo, "/")
+		if len(parts) != 2 {
+			err := fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repo)
+			log.Error(err.Error())
+			return nil, err
+		}
+		owner, repo = parts[0], parts[1]
+	}
+
+	var allPRs []*github.PullRequest
+	for {
+		prs, resp, err := g.client.PullRequests.List(g.ctx, owner, repo, opt)
+		if err != nil {
+			return nil, convertGithubError(err)
+		}
+		allPRs = append(allPRs, prs...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	prs := make([]scm.PullRequest, len(allPRs))
+	for i, pr := range allPRs {
+		prs[i] = scm.PullRequest{
+			ID:          *pr.Number,
+			Title:       *pr.Title,
+			Description: *pr.Body,
+			State:       *pr.State,
+		}
+	}
+
+	return prs, nil
+}
+
 // ListDockerfiles lists the dockerfiles for specified repo.
 func (g *Github) ListDockerfiles(repo string) ([]string, error) {
 	opt := &github.SearchOptions{
@@ -383,12 +439,9 @@ func newClientByToken(token string) *github.Client {
 // GetWebhook gets webhook from specified repo.
 func (g *Github) GetWebhook(repo string, webhookURL string) (*github.Hook, error) {
 	owner, name := scm.ParseRepo(repo)
-	hooks, resp, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
+	hooks, _, err := g.client.Repositories.ListHooks(g.ctx, owner, name, nil)
 	if err != nil {
-		if resp.StatusCode == 500 {
-			return nil, cerr.ErrorSCMServerInternalError.Error(g.scmCfg.Server, err)
-		}
-		return nil, err
+		return nil, convertGithubError(err)
 	}
 
 	for _, hook := range hooks {
@@ -447,7 +500,7 @@ func convertToGithubEvents(events []scm.EventType) []string {
 		case scm.PushEventType:
 			ge = append(ge, "push")
 		case scm.TagReleaseEventType:
-			ge = append(ge, "release")
+			ge = append(ge, "create")
 		default:
 			log.Errorf("The event type %s is not supported, will be ignored", e)
 		}
@@ -487,11 +540,16 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 	}
 
 	switch event := event.(type) {
-	case *github.ReleaseEvent:
+	case *github.CreateEvent:
+		refType := *event.RefType
+		if refType != "tag" {
+			log.Warningf("Skip unsupported ref type %s of Github create event, only support create tag event.", refType)
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.TagReleaseEventType,
 			Repo: *event.Repo.FullName,
-			Ref:  fmt.Sprintf(tagRefTemplate, *event.Release.TagName),
+			Ref:  fmt.Sprintf(tagRefTemplate, *event.Ref),
 		}
 	case *github.PullRequestEvent:
 		// Only handle when the pull request are created.
@@ -583,17 +641,29 @@ func convertGithubError(err error) error {
 	respField := value.FieldByName(errorFieldResponse)
 	if !respField.IsValid() {
 		log.Warningf("response filed of Github error is invalid: %v", err)
-		return err
+		return cerr.AutoAnalyse(err)
 	}
 
 	resp, ok := respField.Interface().(*http.Response)
 	if !ok {
-		return err
+		return cerr.AutoAnalyse(err)
 	}
 
-	if resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorSCMServerInternalError.Error(err)
+	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error("GitHub", err)
 	}
 
-	return err
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		return cerr.ErrorExternalNotFound.Error(err)
+	}
+
+	return cerr.AutoAnalyse(err)
 }

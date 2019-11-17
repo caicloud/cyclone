@@ -3,6 +3,7 @@ package stream
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/nirvana/log"
 )
 
@@ -36,6 +38,7 @@ type folderReader struct {
 	filesMap    map[string]struct{}
 	lock        *sync.Mutex
 	watcherStop chan struct{}
+	eofCallback context.CancelFunc
 }
 
 type fileReader struct {
@@ -63,6 +66,12 @@ func (s fileReadersSorter) Len() int {
 // can adjust the container index by fix weights 100, 200 to make the trick.
 // If sort by the weight, result will be: i1, i2, ... main ... csc-o1, csc-o2, ...
 func containerWeight(c string) int {
+	// EOF file of the folder to indicate end of the folder content it should have
+	// the smallest weight.
+	if c == common.FolderEOFFile {
+		return -1000
+	}
+
 	if InputContainerRegex.MatchString(c) {
 		i, _ := strconv.Atoi(strings.TrimPrefix(c, "i"))
 		return -i + 200
@@ -88,10 +97,10 @@ func (s fileReadersSorter) Swap(i, j int) {
 }
 
 // NewFolderReader creates a folder content reader.
-// - folder Path of the foler
+// - folder Path of the folder
 // - prefix Only file names with given prefix would be read
 // - exclusions Exclude given files
-func NewFolderReader(folder string, prefix string, exclusions []string, duration time.Duration) FolderReader {
+func NewFolderReader(folder string, prefix string, exclusions []string, duration time.Duration, eofCallback context.CancelFunc) FolderReader {
 	folderRdr := &folderReader{
 		folder:      folder,
 		prefix:      prefix,
@@ -100,6 +109,7 @@ func NewFolderReader(folder string, prefix string, exclusions []string, duration
 		filesMap:    make(map[string]struct{}),
 		lock:        &sync.Mutex{},
 		watcherStop: make(chan struct{}),
+		eofCallback: eofCallback,
 	}
 
 	folderRdr.watch()
@@ -113,6 +123,15 @@ func NewFolderReader(folder string, prefix string, exclusions []string, duration
 // ReadBytes reads content from each file in the folder
 func (r *folderReader) ReadBytes(delim byte) ([]byte, error) {
 	for _, reader := range r.readers {
+		// Attempt to read EOF file means end of the folder content
+		if strings.Contains(reader.name, common.FolderEOFFile) {
+			if r.eofCallback != nil {
+				r.eofCallback()
+			}
+
+			return nil, io.EOF
+		}
+
 		line, err := reader.reader.ReadBytes(delim)
 
 		// Some non io.EOF error, exit directly
@@ -139,6 +158,14 @@ func (r *folderReader) ReadBytes(delim byte) ([]byte, error) {
 // returns what is available instead of waiting for more.
 func (r *folderReader) Read(p []byte) (int, error) {
 	for _, reader := range r.readers {
+		// Attempt to read EOF file means end of the folder content
+		if strings.Contains(reader.name, common.FolderEOFFile) {
+			if r.eofCallback != nil {
+				r.eofCallback()
+			}
+			return 0, io.EOF
+		}
+
 		n, err := reader.reader.Read(p)
 		if n > 0 {
 			if err == io.EOF {

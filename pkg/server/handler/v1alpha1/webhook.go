@@ -47,7 +47,6 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 
 	var data *scm.EventData
 
-	triggered := false
 	if request.Header.Get(github.EventTypeHeader) != "" {
 		in, err := getIntegration(common.TenantNamespace(tenant), integration)
 		if err != nil {
@@ -81,14 +80,16 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 		return newWebhookResponse(err.Error()), err
 	}
 
+	triggeredWfts := make([]string, 0)
 	for _, wft := range wfts.Items {
 		log.Infof("Trigger workflow trigger %s", wft.Name)
+		triggeredWfts = append(triggeredWfts, wft.Name)
 		if err = createWorkflowRun(tenant, wft, data); err != nil {
 			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
 		}
 	}
-	if triggered {
-		return newWebhookResponse(succeededMsg), nil
+	if len(triggeredWfts) > 0 {
+		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, triggeredWfts)), nil
 	}
 
 	return newWebhookResponse(ignoredMsg), nil
@@ -118,14 +119,14 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		if st.TagRelease.Enabled {
 			trigger = true
 			tag = data.Ref
-			splitTags := strings.Split(data.Ref, "/")
-			if len(splitTags) == 3 {
-				tag = splitTags[2]
+			// If tag contains "/", trim it.
+			if index := strings.LastIndex(tag, "/"); index >= 0 && len(tag) > index+1 {
+				tag = tag[index+1:]
 			}
 		}
 	case scm.PushEventType:
 		trimmedBranch := data.Branch
-		if index := strings.LastIndex(data.Branch, "/"); index >= 0 {
+		if index := strings.LastIndex(trimmedBranch, "/"); index >= 0 && len(trimmedBranch) > index+1 {
 			trimmedBranch = trimmedBranch[index+1:]
 		}
 		for _, branch := range st.Push.Branches {
@@ -215,5 +216,12 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		return cerr.ConvertK8sError(err)
 	}
 
+	// Init pull-request status to pending
+	wfrCopy := wfr.DeepCopy()
+	wfrCopy.Status.Overall.Phase = v1alpha1.StatusRunning
+	err = updatePullRequestStatus(wfrCopy)
+	if err != nil {
+		log.Warningf("Init pull request status for %s error: %v", wfr.Name, err)
+	}
 	return nil
 }

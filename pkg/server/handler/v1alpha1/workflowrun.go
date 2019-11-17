@@ -83,7 +83,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 		}
 	}
 
-	size := int64(len(results))
+	size := uint64(len(results))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []v1alpha1.WorkflowRun{}), nil
 	}
@@ -342,8 +342,8 @@ func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, co
 	}
 }
 
-// GetContainerLogStream gets real-time log of container within stage.
-func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, tenant, stage, container string) error {
+// GetContainerLogStream gets real-time logs of a certain stage.
+func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, tenant, stage string) error {
 	request := contextutil.GetHTTPRequest(ctx)
 	writer := contextutil.GetHTTPResponseWriter(ctx)
 
@@ -355,9 +355,8 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 	}
 	defer ws.Close()
 
-	if err := getContainerLogStream(tenant, project, workflow, workflowrun, stage, container, ws); err != nil {
-		log.Errorf("Unable to get logstream for %s/%s/%s for err: %s",
-			workflowrun, stage, container, err)
+	if err := getContainerLogStream(tenant, project, workflow, workflowrun, stage, ws); err != nil {
+		log.Errorf("Unable to get logstream for %s/%s for err: %s", workflowrun, stage, err)
 		return cerr.ErrorUnknownInternal.Error(err.Error())
 	}
 
@@ -365,66 +364,53 @@ func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, 
 }
 
 // getContainerLogStream watches the log files and sends the content to the log stream.
-func getContainerLogStream(tenant, project, workflow, workflowrun, stage, container string, ws *websocket.Conn) error {
-	logFilePath, err := getLogFilePath(tenant, project, workflow, workflowrun, stage, container)
-	if err != nil {
-		log.Errorf("get log path failed: %v", err)
-		return err
-	}
-
-	if !fileutil.Exists(logFilePath) {
-		return fmt.Errorf("log file %s does not exist", logFilePath)
-	}
-
-	pingTicker := time.NewTicker(websocketutil.PingPeriod)
-	sendTicker := time.NewTicker(10 * time.Millisecond)
-
+func getContainerLogStream(tenant, project, workflow, workflowrun, stage string, ws *websocket.Conn) error {
 	logFolder, err := getLogFolder(tenant, project, workflow, workflowrun)
 	if err != nil {
 		return err
 	}
+
 	prefix := fmt.Sprintf("%s_", stage)
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
-	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10)
+	ctx, cancel := context.WithCancel(context.Background())
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, time.Second*10, cancel)
 	defer folderReader.Close()
-	var line []byte
-	for {
-		select {
-		case <-pingTicker.C:
-			err := ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
-			if err != nil {
-				log.Warningf("set write deadline error:%v", err)
-			}
-			if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-					return nil
-				}
-				return err
-			}
-		case <-sendTicker.C:
-			// With buf.ReadBytes, when err is not nil (often io.EOF), line is not guaranteed to be empty,
-			// it holds data before the error occurs.
-			line, err = folderReader.ReadBytes('\n')
-			if err != nil && err != io.EOF {
-				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
-				if err != nil {
-					log.Warningf("write close message error:%v", err)
-				}
-				break
-			}
 
-			if len(line) > 0 {
-				err = ws.WriteMessage(websocket.TextMessage, line)
-				if err != nil {
-					if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-						return nil
-					}
-					return err
-				}
-				err = ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait))
-				if err != nil {
-					log.Warningf("set write deadline error:%v", err)
-				}
+	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
+	err = websocketutil.Write(ws, folderReader, ctx.Done())
+	if err != nil {
+		log.Error("websocket writer error:", err)
+	}
+	log.Infof("End of log stream for wfr '%s', stage '%s'", workflowrun, stage)
+
+	return err
+}
+
+// watchStageTermination ensures to close the log WebSocket finally when FolderReader can't be terminated (no EOF file in the folder)
+func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallback context.CancelFunc) {
+	ticker := time.NewTicker(30 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, metav1.GetOptions{})
+		if err != nil {
+			log.Warningf("Get workflowRun %s error: %v", wfrName, err)
+			onTerminatedCallback()
+			return
+		}
+
+		if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
+			wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+			onTerminatedCallback()
+			return
+		}
+
+		for stage, status := range wfr.Status.Stages {
+			if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
+				status.Status.Phase == v1alpha1.StatusFailed ||
+				status.Status.Phase == v1alpha1.StatusCancelled) {
+				onTerminatedCallback()
+				return
 			}
 		}
 	}
@@ -442,7 +428,7 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	logFolder, _ := getLogFolder(tenant, project, workflow, workflowrun)
 	prefix := fmt.Sprintf("%s_", stage)
 	exclusions := []string{fmt.Sprintf("%s_%s", stage, wfcommon.CoordinatorSidecarName), fmt.Sprintf("%s_%s", stage, wfcommon.DockerInDockerSidecarName)}
-	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0)
+	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0, nil)
 
 	return folderReader, headers, nil
 }

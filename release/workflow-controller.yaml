@@ -26,6 +26,7 @@ _config:
       mounts:
       - path: /etc/localtime
         name: timezone
+        propagation: HostToContainer
     volumes:
     - name: timezone
       type: HostPath
@@ -47,6 +48,7 @@ _config:
               "svn-resolver": "[[ registry_release ]]/cyclone-resolver-svn:[[ imageTagFromGitTag ]]",
               "image-resolver": "[[ registry_release ]]/cyclone-resolver-image:[[ imageTagFromGitTag ]]",
               "coordinator": "[[ registry_release ]]/cyclone-workflow-coordinator:[[ imageTagFromGitTag ]]",
+              "toolbox": "[[ registry_release ]]/cyclone-toolbox:[[ imageTagFromGitTag ]]",
               "gc": "[[ registry_library ]]/alpine:3.7",
               "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs.2"
             },
@@ -56,7 +58,17 @@ _config:
             "gc": {
               "enabled": true,
               "delay_seconds": 0,
-              "retry": 1
+              "retry": 1,
+              "resource_quota": {
+                "limits": {
+                  "cpu": "200m",
+                  "memory": "256Mi"
+                },
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              }
             },
             "limits": {
               "max_workflowruns": 50
@@ -70,6 +82,9 @@ _config:
                 "cpu": "100m",
                 "memory": "128Mi"
               }
+            },
+            "dind": {
+              "bip": "172.18.0.1/16"
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "[[ kube_apiserver_endpoint_ip ]]:6008",

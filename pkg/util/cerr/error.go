@@ -2,6 +2,7 @@ package cerr
 
 import (
 	"fmt"
+	"strings"
 
 	nerror "github.com/caicloud/nirvana/errors"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -14,6 +15,28 @@ const (
 	ReasonInternal = "ReasonInternal"
 	// ReasonRequest is a type about request errors
 	ReasonRequest = "ReasonRequest"
+	// ReasonCreateWebhookPermissionDenied is a type of errors about creating webhook
+	ReasonCreateWebhookPermissionDenied = "ReasonCreateWebhookPermissionDenied"
+	// ReasonExternalSystemError is a type of errors that occurred in external system
+	ReasonExternalSystemError = "ReasonExternalSystemError"
+	// ReasonPRNotFound is a type of errors about pull request not found
+	ReasonPRNotFound = "ReasonPRNotFound"
+	// ReasonAuthorizationFailed represents authorization error
+	ReasonAuthorizationFailed = "ReasonAuthorizationFailed"
+	// ReasonAuthenticationFailed represents authentication error
+	ReasonAuthenticationFailed = "ReasonAuthenticationFailed"
+	// ReasonNotFound represents not found error
+	ReasonNotFound = "ReasonNotFound"
+	// ReasonConnectionRefused represents connection refused error
+	ReasonConnectionRefused = "ReasonConnectionRefused"
+	// ReasonNoSuchHost represents no such host error
+	ReasonNoSuchHost = "ReasonNoSuchHost"
+	// ReasonIOTimeout represents io timeout error
+	ReasonIOTimeout = "ReasonIOTimeout"
+	// ReasonExistRunningWorkflows represents error that update persisten volume while there are workflows running.
+	ReasonExistRunningWorkflows = "ReasonExistRunningWorkflows"
+	// ReasonCreateIntegrationFailed represents creating integration failed error
+	ReasonCreateIntegrationFailed = "ReasonCreateIntegrationFailed"
 )
 
 var (
@@ -42,11 +65,14 @@ var (
 	// ErrorAlreadyExist defines conflict error.
 	ErrorAlreadyExist = nerror.Conflict.Build(ReasonRequest, "conflict: ${resource} already exist")
 
-	// ErrorAuthenticationRequired defines error that authentication not provided.
-	ErrorAuthenticationRequired = nerror.Unauthorized.Build(ReasonRequest, "authentication required")
+	// ErrorAuthorizationRequired defines error that authorization not provided.
+	ErrorAuthorizationRequired = nerror.Unauthorized.Build(ReasonRequest, "authorization required")
+
+	// ErrorAuthorizationFailed defines error that authorization failed.
+	ErrorAuthorizationFailed = nerror.Unauthorized.Build(ReasonRequest, "authorization failed")
 
 	// ErrorAuthenticationFailed defines error that authentication failed.
-	ErrorAuthenticationFailed = nerror.Unauthorized.Build(ReasonRequest, "authentication failed")
+	ErrorAuthenticationFailed = nerror.Forbidden.Build(ReasonRequest, "authentication failed")
 
 	// ErrorInternalTypeError defines internal type error
 	//ErrorInternalTypeError = nerror.InternalServerError.Build(ReasonInternal, "type of ${resource} should be ${expect}, but got ${real}")
@@ -67,23 +93,50 @@ var (
 	// ErrorListFailed defines error that failed listing of something.
 	ErrorListFailed = nerror.InternalServerError.Build(ReasonInternal, "failed to list ${name}: ${error}")
 
-	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
-	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build("ReasonCreateWebhookPermissionDenied",
-		"failed to create webhook of pipeline ${pipeline}, please check your account permissions.")
-
 	// ErrorUnsupported defines some feature/field not supported yet.
 	ErrorUnsupported = nerror.BadRequest.Build("ReasonUnsupported", "unsupported ${resource}: ${type}")
 	// ErrorNotImplemented defines some feature not implemented yet.
 	ErrorNotImplemented = nerror.InternalServerError.Build("ReasonNotImplemented", "not implement: ${feature}")
 
-	// ErrorCreateIntegration defines error that failed to create integration,
-	// this error is used to indicate create control cluster integration failed while creating tenant.
-	ErrorCreateIntegration = nerror.InternalServerError.Build("ReasonCreateIntegration",
-		"tenant created, but the related control cluster integration created failed: ${error}")
+	// ErrorCreateIntegrationFailed defines error that failed to create integration.
+	ErrorCreateIntegrationFailed = nerror.InternalServerError.Build(ReasonCreateIntegrationFailed,
+		"create integration ${name} failed: ${error}, please check your auth infomation")
 
-	// ErrorSCMServerInternalError defines error that occurred in SCM(GitHub GitLab SVN) server side.
-	ErrorSCMServerInternalError = nerror.InternalServerError.Build("SCMServerInternalError",
-		"SCM server internal error: ${error}, Maybe the SCM server is not running well, Please contact your SCM administrator if this problem persists.")
+	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
+	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build(ReasonCreateWebhookPermissionDenied,
+		"failed to create webhook, please check your account permissions.")
+
+	// ErrorExternalSystemError defines error that occurred in external system (GitHub GitLab SVN SonarQube) server side.
+	ErrorExternalSystemError = nerror.InternalServerError.Build(ReasonExternalSystemError,
+		"External system ${system-type} internal error: ${error}, Maybe the external server is not running well, Please contact the administrator of the external system if this problem persists.")
+
+	// ErrorPRNotFound defines error that failed creating webhook as permission denied.
+	ErrorPRNotFound = nerror.InternalServerError.Build(ReasonPRNotFound,
+		"failed to find the PR ${id} in your SCM server ${server}, please check if it exists.")
+
+	// ErrorExternalAuthorizationFailed defines error that authorization failed for external system, Unauthorized 401.
+	ErrorExternalAuthorizationFailed = nerror.InternalServerError.Build(ReasonAuthorizationFailed,
+		"authentication failed: ${error}")
+
+	// ErrorExternalAuthenticationFailed defines error that authentication failed for external system, Forbidden 403.
+	ErrorExternalAuthenticationFailed = nerror.InternalServerError.Build(ReasonAuthenticationFailed,
+		"authentication failed: ${error}")
+
+	// ErrorExternalNotFound defines error that not found for external system, NotFound 404.
+	ErrorExternalNotFound = nerror.InternalServerError.Build(ReasonNotFound, "not found: ${error}")
+
+	// ErrorExternalConnectionRefused defines error that connection refused while sending requests to external system.
+	ErrorExternalConnectionRefused = nerror.InternalServerError.Build(ReasonConnectionRefused, "connection refused: ${error}")
+
+	// ErrorExternalNoSuchHost defines error that no such host while sending requests to external system.
+	ErrorExternalNoSuchHost = nerror.InternalServerError.Build(ReasonNoSuchHost, "no such host: ${error}")
+
+	// ErrorExternalIOTimeout defines error that io timeout while sending requests to external system.
+	ErrorExternalIOTimeout = nerror.InternalServerError.Build(ReasonIOTimeout, "i/o timeout: ${error}")
+
+	// ErrorExistRunningWorkflows defines error that can not update persisten volume while there are workflows running.
+	ErrorExistRunningWorkflows = nerror.InternalServerError.Build(ReasonExistRunningWorkflows,
+		"can not update persistent volume, since there are workflows running, need to stop following workflows firstly: ${workflows}")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.
@@ -104,4 +157,27 @@ func ConvertK8sError(err error) error {
 	}
 
 	return ErrorUnknownInternal.Error(err)
+}
+
+// AutoAnalyse analyses if an error belongs to a concrete type error,
+// Yes, will translate it to the type;
+// No, return it originally.
+func AutoAnalyse(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
+		return ErrorExternalConnectionRefused.Error(err)
+	}
+
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "no such host") {
+		return ErrorExternalNoSuchHost.Error(err)
+	}
+
+	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "i/o timeout") {
+		return ErrorExternalIOTimeout.Error(err)
+	}
+
+	return err
 }

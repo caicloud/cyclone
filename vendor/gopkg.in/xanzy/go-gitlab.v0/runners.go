@@ -18,7 +18,6 @@ package gitlab
 
 import (
 	"fmt"
-	"net/url"
 	"time"
 )
 
@@ -80,7 +79,9 @@ type RunnerDetails struct {
 // https://docs.gitlab.com/ce/api/runners.html#list-owned-runners
 type ListRunnersOptions struct {
 	ListOptions
-	Scope *string `url:"scope,omitempty" json:"scope,omitempty"`
+	Scope  *string `url:"scope,omitempty" json:"scope,omitempty"`
+	Status *string `url:"status,omitempty" json:"status,omitempty"`
+	Type   *string `url:"type,omitempty" json:"type,omitempty"`
 }
 
 // ListRunners gets a list of runners accessible by the authenticated user.
@@ -256,7 +257,7 @@ func (s *RunnersService) ListProjectRunners(pid interface{}, opt *ListProjectRun
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/runners", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/runners", pathEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -290,7 +291,7 @@ func (s *RunnersService) EnableProjectRunner(pid interface{}, opt *EnableProject
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/runners", url.QueryEscape(project))
+	u := fmt.Sprintf("projects/%s/runners", pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -310,16 +311,12 @@ func (s *RunnersService) EnableProjectRunner(pid interface{}, opt *EnableProject
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/runners.html#disable-a-runner-from-project
-func (s *RunnersService) DisableProjectRunner(pid interface{}, rid interface{}, options ...OptionFunc) (*Response, error) {
+func (s *RunnersService) DisableProjectRunner(pid interface{}, runner int, options ...OptionFunc) (*Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, err
 	}
-	runner, err := parseID(rid)
-	if err != nil {
-		return nil, err
-	}
-	u := fmt.Sprintf("projects/%s/runners/%s", url.QueryEscape(project), url.QueryEscape(runner))
+	u := fmt.Sprintf("projects/%s/runners/%d", pathEscape(project), runner)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {

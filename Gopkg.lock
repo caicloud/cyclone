@@ -434,12 +434,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
+  digest = "1:e096613fb7cf34743d49af87d197663cfccd61876e2219853005a57baedfa562"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
+  revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
+  version = "v0.0.5"
 
 [[projects]]
   digest = "1:68ea4e23713989dc20b1bded5d9da2c5f9be14ff9885beef481848edd18c26cb"
@@ -617,12 +617,12 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:e362dddd08e6e894835074b6de49515939dbfb590c7198980639291bab62db4f"
+  digest = "1:33f31f1c13617634ff0da960c79293c604b6c22b32c9a95bcea5f6007666042d"
   name = "gopkg.in/xanzy/go-gitlab.v0"
   packages = ["."]
   pruneopts = "UT"
-  revision = "be70cf752294cc5c6ee89a18d6ba0caca08aa5c7"
-  version = "v0.16.1"
+  revision = "ee3313ca5478c4786248d63dd75e4cd8e1fad2db"
+  version = "v0.19.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
@@ -970,6 +970,7 @@
     "github.com/mozillazg/go-slugify",
     "github.com/robfig/cron",
     "github.com/sirupsen/logrus",
+    "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",

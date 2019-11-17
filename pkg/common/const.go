@@ -24,6 +24,9 @@ const (
 	// EnvSystemNamespace is the evn key to indicate which namespace the cyclone system components installed in.
 	// Cyclone built-in resources(such as stage templates) will be stored in the namespace too.
 	EnvSystemNamespace = "SYSTEM_NAMESPACE"
+
+	// FolderEOFFile is a file placed in a folder to indicate content are all ready. It's used in FolderReader.
+	FolderEOFFile = "__eof__"
 )
 
 // GetSystemNamespace ...

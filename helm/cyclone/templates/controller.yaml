@@ -15,6 +15,7 @@ data:
         "git-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
         "image-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
         "kv-resolver": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-resolver-kv:{{ .Chart.AppVersion }}",
+        "toolbox": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
         "coordinator": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.project }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
         "gc": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.gc }}",
         "dind": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.dind }}"
@@ -25,7 +26,17 @@ data:
       "gc": {
         "enabled": {{ .Values.engine.gc.enabled }},
         "delay_seconds": {{ .Values.engine.gc.delaySeconds }},
-        "retry": {{ .Values.engine.gc.retry }}
+        "retry": {{ .Values.engine.gc.retry }},
+        "resource_quota": {
+          "limits": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.limits.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.limits.memory }}"
+          },
+          "requests": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.requests.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.requests.memory }}"
+          }
+        }
       },
       "limits": {
         "max_workflowruns": {{ .Values.engine.limits.maxWorkflowRuns }}
@@ -47,7 +58,8 @@ data:
         "pvc": "{{ .Values.engine.executionContext.pvc }}"
       },
       "dind": {
-        "insecure_registries": ["{{ .Values.imageRegistry.registry }}"]
+        "insecure_registries": ["{{ .Values.imageRegistry.registry }}"],
+        "bip": "{{ .Values.engine.dind.bip }}"
       }
     }
 

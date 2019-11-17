@@ -11,7 +11,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
-	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/types"
 )
@@ -35,7 +34,7 @@ func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParam
 		return nil, fmt.Errorf("create cluster client error: %v", err)
 	}
 
-	pods, err := client.CoreV1().Pods(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{
+	pods, err := client.CoreV1().Pods(cluster.Namespace).List(metav1.ListOptions{
 		LabelSelector: meta.LabelExistsSelector(meta.LabelWorkflowRunName),
 	})
 	if err != nil {
@@ -44,7 +43,7 @@ func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParam
 	}
 
 	items := pods.Items
-	size := int64(len(items))
+	size := uint64(len(items))
 	if query.Start >= size {
 		return types.NewListResponse(int(size), []core_v1.Pod{}), nil
 	}

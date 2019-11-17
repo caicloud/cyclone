@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
@@ -33,6 +34,7 @@ import (
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
 const (
@@ -250,7 +252,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return "", err
+		return "", convertGitlabError(err, resp)
 	}
 	defer resp.Body.Close()
 
@@ -275,8 +277,8 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 		log.Infof("Check v4 api version with status code, %d, will use v3", resp.StatusCode)
 		return v3APIVersion, nil
 	default:
-		log.Warningf("Status code of Gitlab API version request is %d, use v3 in default", resp.StatusCode)
-		return v3APIVersion, nil
+		log.Errorf("Status code of Gitlab API version request is %d", resp.StatusCode)
+		return "", convertGitlabError(fmt.Errorf("Gitlab version detection error"), resp)
 	}
 }
 
@@ -322,7 +324,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Fail to request for token as %s", err.Error())
-		return "", err
+		return "", convertGitlabError(err, resp)
 	}
 	defer resp.Body.Close()
 
@@ -342,7 +344,7 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	}
 
 	err = fmt.Errorf("fail to request for token as %s", body)
-	return "", err
+	return "", convertGitlabError(err, resp)
 }
 
 // MergeCommentEvent ...
@@ -433,13 +435,13 @@ type MergeRequest struct {
 		UpdatedAt string `json:"updated_at"`
 		DueDate   string `json:"due_date"`
 	} `json:"milestone"`
-	MergeWhenBuildSucceeds  bool   `json:"merge_when_build_succeeds"`
-	MergeStatus             string `json:"merge_status"`
-	Subscribed              bool   `json:"subscribed"`
-	UserNotesCount          int    `json:"user_notes_count"`
-	SouldRemoveSourceBranch bool   `json:"should_remove_source_branch"`
-	ForceRemoveSourceBranch bool   `json:"force_remove_source_branch"`
-	Changes                 []struct {
+	MergeWhenBuildSucceeds   bool   `json:"merge_when_build_succeeds"`
+	MergeStatus              string `json:"merge_status"`
+	Subscribed               bool   `json:"subscribed"`
+	UserNotesCount           int    `json:"user_notes_count"`
+	ShouldRemoveSourceBranch bool   `json:"should_remove_source_branch"`
+	ForceRemoveSourceBranch  bool   `json:"force_remove_source_branch"`
+	Changes                  []struct {
 		OldPath     string `json:"old_path"`
 		NewPath     string `json:"new_path"`
 		AMode       string `json:"a_mode"`
@@ -470,7 +472,7 @@ const (
 	PushHookEvent = "Push Hook"
 )
 
-// parseWebhook parses the body from webhook requeset.
+// parseWebhook parses the body from webhook request.
 func parseWebhook(r *http.Request) (payload interface{}, err error) {
 	eventType := r.Header.Get(EventTypeHeader)
 	switch eventType {
@@ -512,6 +514,10 @@ func ParseEvent(request *http.Request) *scm.EventData {
 
 	switch event := event.(type) {
 	case *gitlab.TagEvent:
+		if event.Before != "0000000000000000000000000000000000000000" {
+			log.Warning("Skip unsupported action 'Tag updated or deleted' of Gitlab.")
+			return nil
+		}
 		return &scm.EventData{
 			Type: scm.TagReleaseEventType,
 			Repo: event.Project.PathWithNamespace,
@@ -579,4 +585,40 @@ func transStatus(status c_v1alpha1.StatusPhase) (string, string) {
 	}
 
 	return state, description
+}
+
+func convertGitlabError(err error, resp interface{}) error {
+	if err == nil {
+		return nil
+	}
+
+	if resp == nil || reflect.ValueOf(resp).IsNil() {
+		return cerr.AutoAnalyse(err)
+	}
+
+	code := 0
+	server := "GitLab"
+	switch v := resp.(type) {
+	case *gitlab.Response:
+		code = v.StatusCode
+		server = "GitLab(v3)"
+	case *v4.Response:
+		code = v.StatusCode
+		server = "GitLab(v4)"
+	case *http.Response:
+		code = v.StatusCode
+	}
+
+	if code == http.StatusInternalServerError {
+		return cerr.ErrorExternalSystemError.Error(server, err)
+	}
+
+	if code == http.StatusUnauthorized {
+		return cerr.ErrorExternalAuthorizationFailed.Error(err)
+	}
+
+	if code == http.StatusForbidden {
+		return cerr.ErrorExternalAuthenticationFailed.Error(err)
+	}
+	return cerr.AutoAnalyse(err)
 }

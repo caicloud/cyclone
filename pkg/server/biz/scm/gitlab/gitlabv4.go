@@ -18,7 +18,6 @@ package gitlab
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/caicloud/nirvana/log"
 	v4 "gopkg.in/xanzy/go-gitlab.v0"
@@ -70,7 +69,7 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 	for {
 		projects, resp, err := g.client.Projects.ListProjects(opt)
 		if err != nil {
-			return nil, convertGitlabV4Error(err, resp)
+			return nil, convertGitlabError(err, resp)
 		}
 
 		allProjects = append(allProjects, projects...)
@@ -100,7 +99,7 @@ func (g *V4) ListBranches(repo string) ([]string, error) {
 		branches, resp, err := g.client.Branches.ListBranches(repo, opts)
 		if err != nil {
 			log.Errorf("Fail to list branches for %s", repo)
-			return nil, convertGitlabV4Error(err, resp)
+			return nil, convertGitlabError(err, resp)
 		}
 
 		for _, b := range branches {
@@ -128,7 +127,7 @@ func (g *V4) ListTags(repo string) ([]string, error) {
 		tags, resp, err := g.client.Tags.ListTags(repo, opts)
 		if err != nil {
 			log.Errorf("Fail to list tags for %s", repo)
-			return nil, convertGitlabV4Error(err, resp)
+			return nil, convertGitlabError(err, resp)
 		}
 
 		for _, t := range tags {
@@ -141,6 +140,52 @@ func (g *V4) ListTags(repo string) ([]string, error) {
 	}
 
 	return allTags, nil
+}
+
+// ListPullRequests lists the merge requests for specified repo.
+func (g *V4) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
+	// GitLab mr state: opened, closed, locked, merged, all
+	var s string
+	switch state {
+	case "open":
+		s = "opened"
+	case "opened", "closed", "locked", "merged", "all":
+		s = state
+	default:
+		return nil, cerr.ErrorUnsupported.Error("GitLab(v4) pull request state", state)
+	}
+
+	opts := &v4.ListProjectMergeRequestsOptions{
+		State: &s,
+		ListOptions: v4.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
+	}
+
+	var allPRs []scm.PullRequest
+	for {
+		prs, resp, err := g.client.MergeRequests.ListProjectMergeRequests(repo, opts)
+		if err != nil {
+			log.Errorf("Fail to list merge requests for %s", repo)
+			return nil, convertGitlabError(err, resp)
+		}
+
+		for _, p := range prs {
+			allPRs = append(allPRs, scm.PullRequest{
+				ID:           p.IID,
+				Title:        p.Title,
+				Description:  p.Description,
+				State:        p.State,
+				TargetBranch: p.TargetBranch,
+			})
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	return allPRs, nil
 }
 
 // ListDockerfiles lists the Dockerfiles for specified repo.
@@ -158,7 +203,7 @@ func (g *V4) ListDockerfiles(repo string) ([]string, error) {
 		treeNode, resp, err := g.client.Repositories.ListTree(repo, opt)
 		if err != nil {
 			log.Errorf("Fail to list dockerfile for %s", repo)
-			return nil, convertGitlabV4Error(err, resp)
+			return nil, convertGitlabError(err, resp)
 		}
 
 		treeNodes = append(treeNodes, treeNode...)
@@ -192,14 +237,14 @@ func (g *V4) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repo, commit
 		Context:     &context,
 	}
 	_, resp, err := g.client.Commits.SetCommitStatus(repo, commitSha, opt)
-	return convertGitlabV4Error(err, resp)
+	return convertGitlabError(err, resp)
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
 func (g *V4) GetPullRequestSHA(repo string, number int) (string, error) {
 	mr, resp, err := g.client.MergeRequests.GetMergeRequest(repo, number, nil)
 	if err != nil {
-		return "", convertGitlabV4Error(err, resp)
+		return "", convertGitlabError(err, resp)
 	}
 
 	return mr.SHA, nil
@@ -210,7 +255,7 @@ func (g *V4) GetWebhook(repo string, webhookURL string) (*v4.ProjectHook, error)
 	// log.Infof("repo: %s", url.PathEscape(repo))
 	hooks, resp, err := g.client.Projects.ListProjectHooks(repo, nil)
 	if err != nil {
-		return nil, convertGitlabV4Error(err, resp)
+		return nil, convertGitlabError(err, resp)
 	}
 
 	for _, hook := range hooks {
@@ -238,7 +283,7 @@ func (g *V4) CreateWebhook(repo string, webhook *scm.Webhook) error {
 		hook := generateV4ProjectHook(webhook)
 		_, resp, err := g.client.Projects.AddProjectHook(repo, hook)
 		if err != nil {
-			return convertGitlabV4Error(err, resp)
+			return convertGitlabError(err, resp)
 		}
 		return nil
 	}
@@ -256,7 +301,7 @@ func (g *V4) DeleteWebhook(repo string, webhookURL string) error {
 
 	if resp, err := g.client.Projects.DeleteProjectHook(repo, hook.ID); err != nil {
 		log.Errorf("delete project hook %s for %s/%s error: %v", hook.ID, repo, err)
-		return convertGitlabV4Error(err, resp)
+		return convertGitlabError(err, resp)
 	}
 
 	return nil
@@ -287,16 +332,4 @@ func generateV4ProjectHook(webhook *scm.Webhook) *v4.AddProjectHookOptions {
 	hook.URL = &webhook.URL
 
 	return hook
-}
-
-func convertGitlabV4Error(err error, resp *v4.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusInternalServerError {
-		return cerr.ErrorSCMServerInternalError.Error(err)
-	}
-
-	return err
 }

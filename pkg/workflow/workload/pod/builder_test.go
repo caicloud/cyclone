@@ -426,10 +426,19 @@ func (suite *PodBuilderSuite) TestCreatePVCVolume() {
 }
 
 func (suite *PodBuilderSuite) TestResolveInputResources() {
+	controller.Config = controller.WorkflowControllerConfig{
+		Images: map[string]string{
+			controller.ToolboxImage: "cyclone-toolbox:v0.1",
+		},
+	}
+	defer func() {
+		controller.Config = controller.WorkflowControllerConfig{}
+	}()
+
 	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "stage1"))
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
-	initContainer := builder.pod.Spec.InitContainers[0]
+	initContainer := builder.pod.Spec.InitContainers[1]
 	assert.Equal(suite.T(), "i1", initContainer.Name)
 	assert.Equal(suite.T(), GetResourceVolumeName("git"), initContainer.VolumeMounts[0].Name)
 	assert.Equal(suite.T(), "", initContainer.VolumeMounts[0].SubPath)
@@ -443,7 +452,7 @@ func (suite *PodBuilderSuite) TestResolveInputResources() {
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveInputResources())
-	initContainer = builder.pod.Spec.InitContainers[0]
+	initContainer = builder.pod.Spec.InitContainers[1]
 	assert.Equal(suite.T(), "i1", initContainer.Name)
 	assert.Equal(suite.T(), common.InputResourceVolumeName("git-persistent"), initContainer.VolumeMounts[0].Name)
 	assert.Equal(suite.T(), "/persistent", initContainer.VolumeMounts[0].SubPath)
@@ -493,7 +502,11 @@ func (suite *PodBuilderSuite) TestResolveOutputResources() {
 }
 
 func (suite *PodBuilderSuite) TestResolveInputArtifacts() {
-	controller.Config = controller.WorkflowControllerConfig{}
+	controller.Config = controller.WorkflowControllerConfig{
+		Images: map[string]string{
+			controller.ToolboxImage: "cyclone-toolbox:v0.1",
+		},
+	}
 	defer func() {
 		controller.Config = controller.WorkflowControllerConfig{}
 	}()
@@ -526,7 +539,11 @@ func (suite *PodBuilderSuite) TestApplyResourceRequirements() {
 			corev1.ResourceCPU:    resource.MustParse("25m"),
 		},
 	}
-	controller.Config = controller.WorkflowControllerConfig{}
+	controller.Config = controller.WorkflowControllerConfig{
+		Images: map[string]string{
+			controller.ToolboxImage: "cyclone-toolbox:v0.1",
+		},
+	}
 	controller.Config.ResourceRequirements = configured
 	defer func() {
 		controller.Config = controller.WorkflowControllerConfig{}
