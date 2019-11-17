@@ -14,10 +14,8 @@ const Fragment = React.Fragment;
 class AddStage extends React.Component {
   constructor(props) {
     super(props);
-    const { templateName, values } = props;
-    const currentStage = _.get(values, 'currentStage');
-    const stages = _.get(values, 'stages', []);
-    const modify = stages.includes(currentStage);
+    const { templateName } = props;
+    const modify = this.getCreateMethod();
     this.state = {
       creationMethod: modify && !templateName ? 'custom' : 'template',
       argDes: null,
@@ -48,6 +46,23 @@ class AddStage extends React.Component {
       }
     });
   }
+
+  componentDidUpdate(prev) {
+    const { templateName } = this.props;
+    const modify = this.getCreateMethod();
+    if (templateName !== prev.templateName) {
+      this.setState({
+        creationMethod: modify && !templateName ? 'custom' : 'template',
+      });
+    }
+  }
+
+  getCreateMethod = () => {
+    const { values } = this.props;
+    const currentStage = _.get(values, 'currentStage');
+    const stages = _.get(values, 'stages', []);
+    return stages.includes(currentStage);
+  };
 
   handleChange = e => {
     const { setFieldValue, values } = this.props;
