@@ -494,6 +494,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			// NOTE: v3 ObjectAttributes has `Iid`, but v4 replaces it with `IID`. This has no effect as both of their json field are `iid`.
 			Ref:       fmt.Sprintf(mergeRefTemplate, objectAttributes.Iid, objectAttributes.TargetBranch),
 			CommitSHA: objectAttributes.LastCommit.ID,
+			Branch:    objectAttributes.TargetBranch,
 		}
 	case *MergeCommentEvent:
 		if event.MergeRequest == nil {
