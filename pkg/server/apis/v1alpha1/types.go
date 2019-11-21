@@ -135,7 +135,7 @@ const (
 	SVN = "SVN"
 	// Bitbucket is the Bitbucket scm
 	Bitbucket = "Bitbucket"
-	// Gogs is the Gogs scm developed by unknwon
+	// Gogs is the Gogs project
 	Gogs = "Gogs"
 )
 
@@ -225,7 +225,7 @@ type StatsPhase struct {
 	Succeeded int `json:"succeeded"`
 	// Failed wfr count
 	Failed int `json:"failed"`
-	// Cancelled wfr count
+	// Canceled wfr count
 	Cancelled int `json:"cancelled"`
 }
 

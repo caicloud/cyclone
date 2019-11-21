@@ -13,30 +13,29 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 )
 
+// EventTypeHeader Gogs header event type
 const EventTypeHeader = "X-Gogs-Event"
 
+// ParseEvent parse the Gogs web hook message
 func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) (eventData *scm.EventData) {
 	var err error
 
 	var payload []byte
 	if payload, err = ioutil.ReadAll(request.Body); err != nil {
 		log.Errorln(err)
-		err = nil
 		return
 	}
 
 	eventKey := request.Header.Get(EventTypeHeader)
 	switch eventKey {
-	case string(GogsEventCreate):
+	case string(EventCreate):
 		var createPayload = new(gogs.CreatePayload)
 		if err = json.Unmarshal(payload, createPayload); err != nil {
 			log.Errorln(err)
-			err = nil
 			return
 		}
 		if createPayload.Repo == nil {
 			log.Errorln("Gogs webhook event 'create' cannot get the repo name")
-			err = nil
 			return
 		}
 		eventData = &scm.EventData{
@@ -45,16 +44,14 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) (eventData *s
 			Ref:  createPayload.Ref,
 		}
 		return
-	case string(GogsEventPR):
+	case string(EventPR):
 		var prPayload = new(gogs.PullRequestPayload)
 		if err = json.Unmarshal(payload, prPayload); err != nil {
 			log.Errorln(err)
-			err = nil
 			return
 		}
 		if prPayload.PullRequest == nil {
 			log.Errorln("Gogs webhook event 'pull_request' cannot get the pull request repo info")
-			err = nil
 			return
 		}
 		eventData = &scm.EventData{
@@ -63,16 +60,14 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) (eventData *s
 			Ref:  fmt.Sprintf("refs/pull/%d/head", prPayload.PullRequest.Index),
 		}
 		return
-	case string(GogsEventPush):
+	case string(EventPush):
 		var pushPayload = new(gogs.PushPayload)
 		if err = json.Unmarshal(payload, pushPayload); err != nil {
 			log.Errorln(err)
-			err = nil
 			return
 		}
 		if pushPayload.Repo == nil {
 			log.Errorln("Gogs web hook event 'create' cannot get the repo name")
-			err = nil
 			return
 		}
 		eventData = &scm.EventData{

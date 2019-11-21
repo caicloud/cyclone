@@ -21,13 +21,10 @@ func init() {
 	}
 }
 
+// TokenName cyclone register a new token on Gogs
 const TokenName = "cyclone-auth-token"
 
-type Token struct {
-	Name string `json:"name"`
-	Sha1 string `json:"sha1"`
-}
-
+// Gogs Gogs instance
 type Gogs struct {
 	scmCfg *v1alpha1.SCMSource
 	client *gogs.Client
@@ -119,6 +116,7 @@ func (g *Gogs) ListRepos() (repos []scm.Repository, err error) {
 	return
 }
 
+// ListBranches list all of branch for specified repo
 func (g *Gogs) ListBranches(repoName string) (branches []string, err error) {
 	var owner, repo string
 	owner, repo = scm.ParseRepo(repoName)
@@ -179,26 +177,31 @@ func (g *Gogs) ListTags(repoName string) (tags []string, err error) {
 	return
 }
 
+// ListPullRequests list all of the pr for specified repo
 func (g *Gogs) ListPullRequests(repo, state string) (pr []scm.PullRequest, err error) {
 	err = cerr.ErrorNotImplemented.Error("get pull request")
 	return
 }
 
+// ListDockerfiles list dockerfile in specified repo
 func (g *Gogs) ListDockerfiles(repo string) (dockerfiles []string, err error) {
 	err = cerr.ErrorNotImplemented.Error("list dockerfiles")
 	return
 }
 
+// CreateStatus create status in specified repo
 func (g *Gogs) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL, commitSHA string) (err error) {
 	err = cerr.ErrorNotImplemented.Error("create status")
 	return
 }
 
+// GetPullRequestSHA get pr's sha
 func (g *Gogs) GetPullRequestSHA(repoURL string, number int) (prHash string, err error) {
 	err = cerr.ErrorNotImplemented.Error("get pull request SHA")
 	return
 }
 
+// CheckToken check the token is valid or not
 func (g *Gogs) CheckToken() (err error) {
 	var repos []scm.Repository
 	if repos, err = g.ListRepos(); err != nil {
@@ -214,6 +217,7 @@ func (g *Gogs) CheckToken() (err error) {
 	return
 }
 
+// CreateWebhook crate web hook for specified repo
 func (g *Gogs) CreateWebhook(repoName string, webhook *scm.Webhook) (err error) {
 	var owner, repo string
 	owner, repo = scm.ParseRepo(repoName)
@@ -236,12 +240,16 @@ func (g *Gogs) CreateWebhook(repoName string, webhook *scm.Webhook) (err error) 
 	return
 }
 
-type GogsEvent string
+// Event Gogs event type
+type Event string
 
 const (
-	GogsEventPR     GogsEvent = "pull_request"
-	GogsEventPush   GogsEvent = "push"
-	GogsEventCreate GogsEvent = "create"
+	// EventPR Gogs event pull request
+	EventPR Event = "pull_request"
+	// EventPush Gogs event push
+	EventPush Event = "push"
+	// EventCreate Gogs event create
+	EventCreate Event = "create"
 )
 
 // convertToGogsEvents converts the defined event types to Gogs event types.
@@ -249,19 +257,19 @@ func convertToGogsEvents(events []scm.EventType) (ge []string) {
 	for _, e := range events {
 		switch e {
 		case scm.PullRequestEventType:
-			ge = append(ge, string(GogsEventPR))
+			ge = append(ge, string(EventPR))
 		case scm.PushEventType:
-			ge = append(ge, string(GogsEventPush))
+			ge = append(ge, string(EventPush))
 		case scm.TagReleaseEventType:
-			ge = append(ge, string(GogsEventCreate))
+			ge = append(ge, string(EventCreate))
 		default:
 			log.Errorf("The event type %s is not supported, will be ignored", e)
 		}
 	}
-
 	return
 }
 
+// DeleteWebhook delete specified repo web hook
 func (g *Gogs) DeleteWebhook(repoName string, webhookURL string) (err error) {
 	var owner, repo string
 	owner, repo = scm.ParseRepo(repoName)
@@ -273,13 +281,13 @@ func (g *Gogs) DeleteWebhook(repoName string, webhookURL string) (err error) {
 	if hooks, err = g.client.ListRepoHooks(owner, repo); err != nil {
 		return
 	}
-	var hooksIdDeleting []int64
+	var hooksIDDeleting []int64
 	for _, h := range hooks {
 		if h.Config["url"] == webhookURL {
-			hooksIdDeleting = append(hooksIdDeleting, h.ID)
+			hooksIDDeleting = append(hooksIDDeleting, h.ID)
 		}
 	}
-	for _, h := range hooksIdDeleting {
+	for _, h := range hooksIDDeleting {
 		if err = g.client.DeleteRepoHook(owner, repo, h); err != nil {
 			return
 		}

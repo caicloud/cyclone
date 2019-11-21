@@ -23,9 +23,9 @@ func ToSecret(tenant string, in *api.Integration) (*core_v1.Secret, error) {
 	if in.Spec.Type == api.Cluster && in.Spec.Cluster != nil {
 		if in.Spec.Cluster.IsWorkerCluster {
 			objectMeta.Labels = meta.AddSchedulableClusterLabel(objectMeta.Labels)
-		} else if _, ok := objectMeta.Labels[meta.LabelIntegrationSchedulableCluster]; ok {
-			delete(objectMeta.Labels, meta.LabelIntegrationSchedulableCluster)
 		}
+
+		delete(objectMeta.Labels, meta.LabelIntegrationSchedulableCluster) // fix lint gosimple
 	}
 
 	integration, err := json.Marshal(in.Spec)

@@ -17,6 +17,7 @@ type LoginInfo struct {
 	Password string `json:"password"`
 }
 
+// genCookie generate a auth cookie
 func genCookie(scmCfg *v1alpha1.SCMSource) (cookie string, err error) {
 	var request = gorequest.New().Timeout(time.Second * 5)
 	var response gorequest.Response

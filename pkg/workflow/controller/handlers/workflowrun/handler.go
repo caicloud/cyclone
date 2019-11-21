@@ -110,7 +110,7 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 	// the GC queue.
 	h.GCProcessor.Add(originWfr)
 
-	// If the WorkflowRun has already been terminated(Completed, Failed, Cancelled), send notifications if necessary,
+	// If the WorkflowRun has already been terminated(Completed, Failed, Canceled), send notifications if necessary,
 	// otherwise directly skip it.
 	if workflowrun.IsWorkflowRunTerminated(originWfr) {
 		// Send notification after workflowrun terminated.

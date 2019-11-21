@@ -14,7 +14,7 @@ import (
 // resolveStatus determines the final status from two given status, one is latest status, and
 // another one is the new status reported.
 func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
-	// If the latest status is already a terminated status (Completed, Failed, Cancelled), no need to
+	// If the latest status is already a terminated status (Completed, Failed, Canceled), no need to
 	// update it, we just return the latest status.
 	if latest.Phase == v1alpha1.StatusSucceeded || latest.Phase == v1alpha1.StatusFailed || latest.Phase == v1alpha1.StatusCancelled {
 		return latest

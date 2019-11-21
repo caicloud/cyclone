@@ -13,6 +13,13 @@ linters:
     - goimports
     - misspell
 
+linters-settings:
+  misspell:
+    locale: US
+    ignore-words:
+      - noteable # gitlab parameters
+      - cancelled # some of them should be fix after check
+
 issues:
   exclude-use-default: false
   exclude-rules:

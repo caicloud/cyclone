@@ -154,7 +154,7 @@ const (
 	StatusSucceeded StatusPhase = "Succeeded"
 	// StatusFailed indicates something wrong in the execution of Stage or WorkflowRun.
 	StatusFailed StatusPhase = "Failed"
-	// StatusCancelled indicates WorkflowRun have been cancelled.
+	// StatusCancelled indicates WorkflowRun have been canceled.
 	StatusCancelled StatusPhase = "Cancelled"
 )
 

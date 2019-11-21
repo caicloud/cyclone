@@ -416,7 +416,7 @@ func (o *operator) Reconcile() error {
 func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	// For each pod created, delete it.
 	for stg, status := range o.wfr.Status.Stages {
-		// For non-terminated stage, update status to cancelled.
+		// For non-terminated stage, update status to canceled.
 		if status.Status.Phase == v1alpha1.StatusPending ||
 			status.Status.Phase == v1alpha1.StatusRunning ||
 			status.Status.Phase == v1alpha1.StatusWaiting {

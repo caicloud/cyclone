@@ -100,7 +100,7 @@ var (
 
 	// ErrorCreateIntegrationFailed defines error that failed to create integration.
 	ErrorCreateIntegrationFailed = nerror.InternalServerError.Build(ReasonCreateIntegrationFailed,
-		"create integration ${name} failed: ${error}, please check your auth infomation")
+		"create integration ${name} failed: ${error}, please check your auth information")
 
 	// ErrorCreateWebhookPermissionDenied defines error that failed creating webhook as permission denied.
 	ErrorCreateWebhookPermissionDenied = nerror.InternalServerError.Build(ReasonCreateWebhookPermissionDenied,
@@ -159,7 +159,7 @@ func ConvertK8sError(err error) error {
 	return ErrorUnknownInternal.Error(err)
 }
 
-// AutoAnalyse analyses if an error belongs to a concrete type error,
+// AutoAnalyse analyzes if an error belongs to a concrete type error,
 // Yes, will translate it to the type;
 // No, return it originally.
 func AutoAnalyse(err error) error {
