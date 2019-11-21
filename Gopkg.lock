@@ -18,6 +18,22 @@
   revision = "13fe51c7d94052f3f4d91bf4495c2bde50c2dfac"
 
 [[projects]]
+  digest = "1:573fa46f8d413d4bc3f7cc5e86b2c43cb21559f4fb0a19d9874d228e28fdc07c"
+  name = "github.com/PuerkitoBio/goquery"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2d2796f41742ece03e8086188fa4db16a3a0b458"
+  version = "v1.5.0"
+
+[[projects]]
+  digest = "1:24ffaa1636eba8f0cfc7671121d05a9a2040605adb1927a93be88fbc2ea6cfdb"
+  name = "github.com/andybalholm/cascadia"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b69f6c92dfc187ebfe3914df716c2647a3af0ba0"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
@@ -109,6 +125,14 @@
   pruneopts = "UT"
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b42ffd0031a058b1d52030d2df788b0b812db8eaa31e07fed6c1bb4d31b3a671"
+  name = "github.com/gogs/go-gogs-client"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7ec4fd4f4907e7dd009e45eb116e7fb90fee3400"
 
 [[projects]]
   digest = "1:2edd2416f89b4e841df0e4a78802ce14d2bc7ad79eba1a45986e39f0f8cb7d87"
@@ -304,6 +328,14 @@
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:7c56e4e9c4d34167c30636d4b22ac2316d74ce1d14a78bc7a828f03603d410f3"
+  name = "github.com/parnurzeal/gorequest"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b735e503d8bf955a72baf89723cdb50ab0bd668c"
+  version = "v0.2.16"
+
+[[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -477,15 +509,18 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a5dbc9899aaf1495a2e1ec31feeab15665a54e915fd66dcdcf630ddffc90233"
+  digest = "1:7f996f15911883c425f4de9b17ea6ff82c237e51b5d89c4fd07389f74a50c391"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
     "http2",
     "http2/hpack",
     "idna",
     "lex/httplex",
+    "publicsuffix",
   ]
   pruneopts = "UT"
   revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
@@ -958,6 +993,14 @@
   revision = "c55fbcfc754a5b2ec2fbae8fb9dcac36bdba6a12"
 
 [[projects]]
+  digest = "1:dcf3f88f6708650807512eef67b77f7547f992475df5ae6534eeec778cf9744b"
+  name = "moul.io/http2curl"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5cd742060b0e0de91f875277b77dd7d7e68b23ca"
+  version = "v2"
+
+[[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
   name = "sigs.k8s.io/yaml"
   packages = ["."]
@@ -970,6 +1013,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/PaesslerAG/jsonpath",
+    "github.com/PuerkitoBio/goquery",
     "github.com/caicloud/nirvana",
     "github.com/caicloud/nirvana/config",
     "github.com/caicloud/nirvana/definition",
@@ -983,11 +1027,13 @@
     "github.com/caicloud/nirvana/service",
     "github.com/caicloud/nirvana/utils/api",
     "github.com/cbroglie/mustache",
+    "github.com/gogs/go-gogs-client",
     "github.com/golang/glog",
     "github.com/google/go-github/github",
     "github.com/google/go-querystring/query",
     "github.com/gorilla/websocket",
     "github.com/mozillazg/go-slugify",
+    "github.com/parnurzeal/gorequest",
     "github.com/robfig/cron",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
