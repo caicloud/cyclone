@@ -10,6 +10,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/common"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
+	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -50,12 +51,12 @@ func ListExecutionContexts(ctx context.Context, tenant string) (*types.ListRespo
 		}
 
 		if cluster.IsWorkerCluster {
-			pvcStatus, err := getPVCStatus(tenant, pvcName, cluster)
+			overallStatus, err := getPVCOverallStatus(tenant, pvcName, cluster)
 			if err != nil {
 				log.Warningf("Get PVC status in %s/%s", cluster.ClusterName, cluster.Namespace)
 			} else {
-				executionContext.Status.PVC = pvcStatus
-				if pvcStatus.Phase == corev1.ClaimBound {
+				executionContext.Status.PVC = overallStatus
+				if overallStatus.Status != nil && overallStatus.Status.Phase == corev1.ClaimBound {
 					executionContext.Status.Phase = api.ExecutionContextReady
 				} else {
 					executionContext.Status.Phase = api.ExecutionContextNotReady
@@ -69,6 +70,25 @@ func ListExecutionContexts(ctx context.Context, tenant string) (*types.ListRespo
 	}
 
 	return types.NewListResponse(len(executionContexts), executionContexts), nil
+}
+
+func getPVCOverallStatus(tenant, pvcName string, cluster *api.ClusterSource) (overallStatus api.PVCOverallStatus, err error) {
+	overallStatus.Status, err = getPVCStatus(tenant, pvcName, cluster)
+	if err != nil {
+		return overallStatus, err
+	}
+
+	reporter, err := usage.NewPVCReporter(handler.K8sClient, tenant)
+	if err != nil {
+		log.Warningf("Create pvc reporter for tenant %s error: %v", tenant, err)
+	} else {
+		overallStatus.Usage = &api.PVCUsageStatus{
+			PVCUsage:       reporter.ReadableUsage().PVCUsage,
+			UsedPercentage: reporter.OverallUsedPercentage(),
+		}
+	}
+
+	return overallStatus, nil
 }
 
 func getPVCStatus(tenant, pvcName string, cluster *api.ClusterSource) (*corev1.PersistentVolumeClaimStatus, error) {
