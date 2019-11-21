@@ -135,11 +135,13 @@ const (
 	SVN = "SVN"
 	// Bitbucket is the Bitbucket scm
 	Bitbucket = "Bitbucket"
+	// Gogs is the Gogs scm developed by unknwon
+	Gogs = "Gogs"
 )
 
 // SCMSource represents Source Code Management to manage code.
 type SCMSource struct {
-	// Type is the type of scm, e.g. GitLab, GitHub, SVN
+	// Type is the type of scm, e.g. GitLab, GitHub, SVN, Gogs
 	Type SCMType `json:"type"`
 	// Server represents the domain of docker registry.
 	Server string `json:"server"`
