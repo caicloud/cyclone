@@ -31,6 +31,8 @@ type Gogs struct {
 	cookie string
 }
 
+const checkPassword = ", please try again later or check your username and password"
+
 // NewGogs create new Gogs client, due to Gogs API not satisfy us,
 // so some of the data should be catch from HTML, fontend should auth with
 // username and password.
@@ -45,6 +47,7 @@ func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
 
 	var accessTokens []*gogs.AccessToken
 	if accessTokens, err = client.ListAccessTokens(scmCfg.User, scmCfg.Password); err != nil {
+		err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
 		return
 	}
 
@@ -59,10 +62,11 @@ func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
 		var opt = gogs.CreateAccessTokenOption{Name: TokenName}
 		var accessToken *gogs.AccessToken
 		if accessToken, err = client.CreateAccessToken(scmCfg.User, scmCfg.Password, opt); err != nil {
+			err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
 			return
 		}
 		if accessToken == nil || accessToken.Sha1 == "" {
-			err = fmt.Errorf("Gogs generate token with an error, try again or check your username and password")
+			err = fmt.Errorf("Gogs generate token with an error%s", checkPassword)
 			return
 		}
 		// got a new valid token

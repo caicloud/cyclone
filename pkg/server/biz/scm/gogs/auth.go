@@ -29,11 +29,11 @@ func genCookie(scmCfg *v1alpha1.SCMSource) (cookie string, err error) {
 		return
 	}
 	if response == nil {
-		err = fmt.Errorf("request Gogs server with fatal error: %s", url)
+		err = fmt.Errorf("request url: %s got an error%s", url, checkPassword)
 		return
 	}
 	if response.StatusCode != 200 {
-		err = fmt.Errorf("request Gogs server got code: %d, url: %s", response.StatusCode, url)
+		err = fmt.Errorf("request Gogs server got code: %d, url: %s%s", response.StatusCode, url, checkPassword)
 		return
 	}
 	for k, v := range response.Header {
@@ -64,11 +64,11 @@ func genCookie(scmCfg *v1alpha1.SCMSource) (cookie string, err error) {
 		return
 	}
 	if response == nil {
-		err = fmt.Errorf("request Gogs server with fatal error: %s", url)
+		err = fmt.Errorf("request url: %s Gogs server go an error%s", url, checkPassword)
 		return
 	}
 	if response.StatusCode != 200 {
-		err = fmt.Errorf("request Gogs server got code: %d, url: %s", response.StatusCode, url)
+		err = fmt.Errorf("request Gogs server got code: %d, url: %s%s", response.StatusCode, url, checkPassword)
 		return
 	}
 	return
