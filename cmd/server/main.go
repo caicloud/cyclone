@@ -34,6 +34,7 @@ import (
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gogs"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/biz/templates"
 	"github.com/caicloud/cyclone/pkg/server/config"
