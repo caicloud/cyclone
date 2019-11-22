@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/caicloud/nirvana/log"
 	gogs "github.com/gogs/go-gogs-client"
 
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
+	"github.com/caicloud/nirvana/log"
 )
 
 // EventTypeHeader Gogs header event type

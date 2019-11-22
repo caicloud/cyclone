@@ -38,13 +38,14 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, r := range repos {
-		fmt.Printf("Repositority %s tags:\n", r.Name)
-		var tags []string
-		if tags, err = provider.ListTags(r.Name); err != nil {
-			log.Fatal(err)
+		fmt.Printf("Repositority %s branches:\n", r.Name)
+		var branches []string
+		if branches, err = provider.ListBranches(r.Name); err != nil {
+			log.Println(err)
+			//log.Fatal(err)
 		}
-		for _, t := range tags {
-			fmt.Printf("\t%s\n", t)
+		for _, branch := range branches {
+			fmt.Printf("\t%s\n", branch)
 		}
 	}
 }

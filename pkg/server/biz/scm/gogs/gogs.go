@@ -2,17 +2,13 @@ package gogs
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/PuerkitoBio/goquery"
-	"github.com/caicloud/nirvana/log"
-	gogs "github.com/gogs/go-gogs-client"
-	"github.com/parnurzeal/gorequest"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/nirvana/log"
+	gogs "github.com/gogs/go-gogs-client"
 )
 
 func init() {
@@ -28,7 +24,6 @@ const TokenName = "cyclone-auth-token"
 type Gogs struct {
 	scmCfg *v1alpha1.SCMSource
 	client *gogs.Client
-	cookie string
 }
 
 const checkPassword = ", please try again later or check your username and password"
@@ -37,31 +32,78 @@ const checkPassword = ", please try again later or check your username and passw
 // so some of the data should be catch from HTML, fontend should auth with
 // username and password.
 func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
-	if scmCfg.User == "" || scmCfg.Password == "" {
-		err = fmt.Errorf("Gogs's username or password is missing")
-		return
+	var client = gogs.NewClient(scmCfg.Server, "") // just create a nil gogs client
+	if scmCfg.Token != "" {
+		client = gogs.NewClient(scmCfg.Server, scmCfg.Token)
+	} else {
+		if scmCfg.User == "" || scmCfg.Password == "" {
+			err = fmt.Errorf("fail to new Gogs client%s", checkPassword)
+			return
+		} else {
+			var accessTokens []*gogs.AccessToken
+			if accessTokens, err = client.ListAccessTokens(scmCfg.User, scmCfg.Password); err != nil {
+				err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
+				return
+			}
+
+			var token string
+			for _, t := range accessTokens {
+				if t.Name == TokenName {
+					token = t.Sha1
+				}
+			}
+			if token == "" {
+				var opt = gogs.CreateAccessTokenOption{Name: TokenName}
+				var accessToken *gogs.AccessToken
+				if accessToken, err = client.CreateAccessToken(scmCfg.User, scmCfg.Password, opt); err != nil {
+					err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
+					return
+				}
+				if accessToken == nil || accessToken.Sha1 == "" {
+					err = fmt.Errorf("Gogs generate token with an error%s", checkPassword)
+					return
+				}
+				// got a new valid token
+				token = accessToken.Sha1
+			}
+			client = gogs.NewClient(scmCfg.Server, token)
+		}
 	}
 
-	// just create a nil gogs client
-	var client = gogs.NewClient(scmCfg.Server, "")
+	provider = &Gogs{
+		scmCfg: scmCfg,
+		client: client,
+	}
+	return
+}
 
+// GetToken get Gogs's token
+func (g *Gogs) GetToken() (token string, err error) {
+	token, err = g.getToken()
+	return
+}
+
+func (g *Gogs) getToken() (token string, err error) {
+	if len(g.scmCfg.User) == 0 || len(g.scmCfg.Password) == 0 {
+		return "", fmt.Errorf("Gogs username or password is missing")
+	}
+
+	var client = gogs.NewClient(g.scmCfg.Server, "")
 	var accessTokens []*gogs.AccessToken
-	if accessTokens, err = client.ListAccessTokens(scmCfg.User, scmCfg.Password); err != nil {
+	if accessTokens, err = client.ListAccessTokens(g.scmCfg.User, g.scmCfg.Password); err != nil {
 		err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
 		return
 	}
 
-	var token string
 	for _, t := range accessTokens {
 		if t.Name == TokenName {
 			token = t.Sha1
 		}
 	}
-
 	if token == "" {
 		var opt = gogs.CreateAccessTokenOption{Name: TokenName}
 		var accessToken *gogs.AccessToken
-		if accessToken, err = client.CreateAccessToken(scmCfg.User, scmCfg.Password, opt); err != nil {
+		if accessToken, err = client.CreateAccessToken(g.scmCfg.User, g.scmCfg.Password, opt); err != nil {
 			err = fmt.Errorf("Gogs got an error: %v%s", err, checkPassword)
 			return
 		}
@@ -72,23 +114,6 @@ func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
 		// got a new valid token
 		token = accessToken.Sha1
 	}
-
-	var cookie string
-	if cookie, err = genCookie(scmCfg); err != nil {
-		return
-	}
-
-	provider = &Gogs{
-		scmCfg: scmCfg,
-		client: gogs.NewClient(scmCfg.Server, token),
-		cookie: cookie,
-	}
-	return
-}
-
-// GetToken get Gogs's token
-func (g *Gogs) GetToken() (token string, err error) {
-	token = g.scmCfg.Token
 	return
 }
 
@@ -140,44 +165,7 @@ func (g *Gogs) ListBranches(repoName string) (branches []string, err error) {
 
 // ListTags list all of repo's tags
 func (g *Gogs) ListTags(repoName string) (tags []string, err error) {
-	var owner, repo string
-	owner, repo = scm.ParseRepo(repoName)
-	if len(owner) == 0 || len(repo) == 0 {
-		err = fmt.Errorf("invalid repo %s, must in format of '{owner}/{repo}'", repoName)
-		return
-	}
-
-	var request = gorequest.New()
-	var response gorequest.Response
-	var errs []error
-
-	var body string
-	var url = fmt.Sprintf("%s/%s/%s", strings.TrimSuffix(g.scmCfg.Server, "/"), owner, repo)
-	if response, body, errs = request.Get(url).Set("Cookie", g.cookie).End(); len(errs) != 0 {
-		err = errs[len(errs)-1]
-		return
-	}
-	if response == nil {
-		err = fmt.Errorf("request Gogs server with fatal error: %s", url)
-		return
-	}
-	if response.StatusCode != 200 {
-		err = fmt.Errorf("request Gogs server got code: %d, url: %s", response.StatusCode, url)
-		return
-	}
-
-	var bodyReader = strings.NewReader(body)
-
-	var document *goquery.Document
-
-	if document, err = goquery.NewDocumentFromReader(bodyReader); err != nil {
-		return
-	}
-
-	document.Find("#tag-list .item").Each(func(_ int, selection *goquery.Selection) {
-		tags = append(tags, strings.TrimSpace(selection.Text()))
-	})
-
+	err = cerr.ErrorNotImplemented.Error("get tag list")
 	return
 }
 
@@ -207,17 +195,7 @@ func (g *Gogs) GetPullRequestSHA(repoURL string, number int) (prHash string, err
 
 // CheckToken check the token is valid or not
 func (g *Gogs) CheckToken() (err error) {
-	var repos []scm.Repository
-	if repos, err = g.ListRepos(); err != nil {
-		return
-	}
-
-	if len(repos) > 0 {
-		if _, err = g.ListTags(repos[0].Name); err != nil {
-			return
-		}
-	}
-
+	_, err = g.ListRepos()
 	return
 }
 
