@@ -31,16 +31,18 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis"
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
-	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
-	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
-	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
-	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/biz/templates"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/version"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
+
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gogs"
+	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 )
 
 // Options contains all options(config) for cyclone server

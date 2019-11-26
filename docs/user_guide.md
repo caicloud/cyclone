@@ -34,6 +34,7 @@ Supported external systems including:
 | SCM    | GitHub    | [Public](https://github.com/) | enterprise edition is unsupported |
 |        | GitLab    | [Public](https://gitlab.com/), Private >= 8.13.6         | May [affect 10.6 and later versions](#GitLab-Webhooks) to create a SCM webhook automatically triggered pipeline |
 |        | BitBucket | \>= 5.0 | BitBucket cloud is unsupported;<br> Different edition may affect [BitBucket Token and Webhooks](#BitBucket-Token-and-Webhooks) |
+|        | Gogs      | [Public](http://try.gogs.io/), Private \>= 0.11.19 | [try.gogs.io](https://gitea.com/) is supported, but it is a temporary scm server |
 |        | SVN       | All                | |
 | Cluster |          | All                | |
 | DockerRegistry |   | All                | |

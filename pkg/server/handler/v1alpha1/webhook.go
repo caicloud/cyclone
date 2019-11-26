@@ -19,6 +19,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm/gogs"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
@@ -65,6 +66,14 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 			return newWebhookResponse(err.Error()), err
 		}
 		data = bitbucket.ParseEvent(in.Spec.SCM, request)
+	}
+
+	if request.Header.Get(gogs.EventTypeHeader) != "" {
+		in, err := getIntegration(common.TenantNamespace(tenant), integration)
+		if err != nil {
+			return newWebhookResponse(err.Error()), err
+		}
+		data = gogs.ParseEvent(in.Spec.SCM, request)
 	}
 
 	if request.Header.Get(svn.EventTypeHeader) != "" {
