@@ -17,6 +17,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/hook"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
+	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitea"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
@@ -69,6 +70,14 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 
 	if request.Header.Get(svn.EventTypeHeader) != "" {
 		data = svn.ParseEvent(request)
+	}
+
+	if request.Header.Get(gitea.EventTypeHeader) != "" {
+		in, err := getIntegration(common.TenantNamespace(tenant), integration)
+		if err != nil {
+			return newWebhookResponse(err.Error()), err
+		}
+		data = gitea.ParseEvent(in.Spec.SCM, request)
 	}
 
 	if data == nil {

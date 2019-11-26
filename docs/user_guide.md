@@ -32,8 +32,9 @@ Supported external systems including:
 |  Name  | Sub Class | Supported Versions | Note  |
 | :---:  | :---:     | :---:              | :---: |
 | SCM    | GitHub    | [Public](https://github.com/) | enterprise edition is unsupported |
-|        | GitLab    | [Public](https://gitlab.com/), Private >= 8.13.6         | May [affect 10.6 and later versions](#GitLab-Webhooks) to create a SCM webhook automatically triggered pipeline |
+|        | GitLab    | [Public](https://gitlab.com/), Private >= 8.13.6 | May [affect 10.6 and later versions](#GitLab-Webhooks) to create a SCM webhook automatically triggered pipeline |
 |        | BitBucket | \>= 5.0 | BitBucket cloud is unsupported;<br> Different edition may affect [BitBucket Token and Webhooks](#BitBucket-Token-and-Webhooks) |
+|        | Gitea     | [Public](https://gitea.com/), Private \>= 1.8.0 | [Gitea.com](https://gitea.com/) is supported |
 |        | SVN       | All                | |
 | Cluster |          | All                | |
 | DockerRegistry |   | All                | |

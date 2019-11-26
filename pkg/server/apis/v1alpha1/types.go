@@ -135,11 +135,13 @@ const (
 	SVN = "SVN"
 	// Bitbucket is the Bitbucket scm
 	Bitbucket = "Bitbucket"
+	// Gitea is the Gitea scm
+	Gitea = "Gitea"
 )
 
 // SCMSource represents Source Code Management to manage code.
 type SCMSource struct {
-	// Type is the type of scm, e.g. GitLab, GitHub, SVN
+	// Type is the type of scm, e.g. GitLab, GitHub, SVN, Gitea
 	Type SCMType `json:"type"`
 	// Server represents the domain of docker registry.
 	Server string `json:"server"`

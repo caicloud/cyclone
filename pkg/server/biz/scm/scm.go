@@ -115,7 +115,7 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 	var generatedToken string
 
 	switch scmType {
-	case v1alpha1.GitHub, v1alpha1.GitLab, v1alpha1.Bitbucket:
+	case v1alpha1.GitHub, v1alpha1.GitLab, v1alpha1.Bitbucket, v1alpha1.Gitea:
 		// If username and password is provided, generate the new token.
 		if len(config.User) != 0 && len(config.Password) != 0 {
 			generatedToken, err = provider.GetToken()
