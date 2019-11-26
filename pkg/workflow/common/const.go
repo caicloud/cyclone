@@ -10,7 +10,7 @@ type ContainerState string
 
 const (
 	// ResyncPeriod defines resync period for controllers
-	ResyncPeriod = time.Minute * 5
+	ResyncPeriod = time.Minute * 3
 
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"

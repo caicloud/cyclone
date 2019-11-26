@@ -32,6 +32,21 @@ engine:
   limits:
     # Maximum number of execution records to keep for each workflow.
     maxWorkflowRuns: 50
+  # Parallelism constraints for WorkflowRun execution, value 0 or negative indicate
+  # no constraint on the corresponding item.
+  parallelism:
+    overall:
+      # How many WorkflowRuns are allowed to run in parallel
+      maxParallel: 20
+      # How many WorkflowRuns are allowed to wait for executing, when this limit
+      # exceeded, new WorkflowRuns will fail directly.
+      maxQueueSize: 100
+    singleWorkflow:
+      # How many WorkflowRuns are allowed to run in parallel for a single Workflow
+      maxParallel: 3
+      # How many WorkflowRuns are allowed to wait for executing, when this limit
+      # exceeded, new WorkflowRuns will fail directly.
+      maxQueueSize: 10
   resourceRequirement:
     default:
       requests:

@@ -39,6 +39,8 @@ type WorkflowControllerConfig struct {
 	GC GCConfig `json:"gc"`
 	// Limits of each resources should be retained
 	Limits LimitsConfig `json:"limits"`
+	// Parallelism configures how many WorkflowRun allows to run in parallel
+	Parallelism *ParallelismConfig `json:"parallelism"`
 	// ResourceRequirements is default resource requirements for containers in stage Pod
 	ResourceRequirements corev1.ResourceRequirements `json:"default_resource_quota"`
 	// ExecutionContext defines default namespace and pvc used to run workflow.
@@ -87,6 +89,24 @@ type GCConfig struct {
 type LimitsConfig struct {
 	// Maximum WorkflowRuns to be kept for each Workflow
 	MaxWorkflowRuns int `json:"max_workflowruns"`
+}
+
+// ParallelismConstraint puts constraints on parallelism
+type ParallelismConstraint struct {
+	// MaxParallel specifies max number of WorkflowRun allows to run in parallel
+	MaxParallel int64 `json:"max_parallel"`
+	// MaxQueueSize specifies max number WorkflowRun allows to wait for running in queue
+	MaxQueueSize int64 `json:"max_queue_size"`
+}
+
+// ParallelismConfig configures how many WorkflowRun allows to run in parallel. If maximum parallelism exceeded,
+// new WorkflowRun will wait in waiting queue. Waiting queue will also have a maxinum size, if maxinum size exceeded,
+// new WorkflowRun will fail directly.
+type ParallelismConfig struct {
+	// Overall controls overall parallelism of WorkflowRun executions
+	Overall ParallelismConstraint `json:"overall"`
+	// SingleWorkflow controls parallelism of WorkflowRun executions for single Workflow
+	SingleWorkflow ParallelismConstraint `json:"single_workflow"`
 }
 
 // DindSettings is settings for Docker in Docker.

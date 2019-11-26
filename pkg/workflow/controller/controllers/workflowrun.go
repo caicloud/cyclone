@@ -69,10 +69,11 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		informer:  informer,
 		queue:     queue,
 		eventHandler: &handlers.Handler{
-			Client:           client,
-			TimeoutProcessor: workflowrun.NewTimeoutProcessor(client),
-			GCProcessor:      workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
-			LimitedQueues:    workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
+			Client:                client,
+			TimeoutProcessor:      workflowrun.NewTimeoutProcessor(client),
+			GCProcessor:           workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
+			LimitedQueues:         workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
+			ParallelismController: workflowrun.NewParallelismController(controller.Config.Parallelism),
 		},
 	}
 }

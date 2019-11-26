@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,10 +23,11 @@ import (
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
-	Client           clientset.Interface
-	TimeoutProcessor *workflowrun.TimeoutProcessor
-	GCProcessor      *workflowrun.GCProcessor
-	LimitedQueues    *workflowrun.LimitedQueues
+	Client                clientset.Interface
+	TimeoutProcessor      *workflowrun.TimeoutProcessor
+	GCProcessor           *workflowrun.GCProcessor
+	LimitedQueues         *workflowrun.LimitedQueues
+	ParallelismController workflowrun.ParallelismController
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -58,6 +60,25 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		originWfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
 		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
 		return
+	}
+
+	// If the WorkflowRun has not yet be started to execute, check the parallelism constraints to determine
+	// whether to execute it.
+	if originWfr.Status.Overall.Phase == "" {
+		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
+		case workflowrun.AttemptActionQueued:
+			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
+			return
+		case workflowrun.AttemptActionFailed:
+			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
+				Phase:              v1alpha1.StatusFailed,
+				Reason:             "TooManyWaiting",
+				LastTransitionTime: metav1.Time{Time: time.Now()},
+			}); err != nil {
+				log.WithField("wfr", originWfr.Name).Error("Set status to Failed error, ", err)
+				return
+			}
+		}
 	}
 
 	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
@@ -101,7 +122,30 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
 	h.LimitedQueues.Refresh(originWfr)
 
-	if reflect.DeepEqual(old, new) {
+	// If the WorkflowRun has not yet be started to execute, check the parallelism constraints to determine
+	// whether to execute it.
+	var toRun bool
+	if originWfr.Status.Overall.Phase == "" {
+		log.WithField("wfr", originWfr.Name).Info("Attempt to run WorkflowRun")
+		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
+		case workflowrun.AttemptActionQueued:
+			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
+			return
+		case workflowrun.AttemptActionFailed:
+			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
+				Phase:              v1alpha1.StatusFailed,
+				Reason:             "TooManyWaiting",
+				LastTransitionTime: metav1.Time{Time: time.Now()},
+			}); err != nil {
+				log.WithField("wfr", originWfr.Name).Error("Set status to Failed error, ", err)
+				return
+			}
+		case workflowrun.AttemptActionStart:
+			toRun = true
+		}
+	}
+
+	if !toRun && reflect.DeepEqual(old, new) {
 		return
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
@@ -113,6 +157,9 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 	// If the WorkflowRun has already been terminated(Completed, Failed, Cancelled), send notifications if necessary,
 	// otherwise directly skip it.
 	if workflowrun.IsWorkflowRunTerminated(originWfr) {
+		// If the WorkflowRun already terminated, mark it in the ParallelismController.
+		h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name)
+
 		// Send notification after workflowrun terminated.
 		err := h.sendNotification(originWfr)
 		if err != nil {
@@ -154,6 +201,11 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 		return
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
+
+	// Mark the WorkflowRun terminated in ParallelismController
+	defer func() {
+		h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Name, originWfr.Spec.WorkflowRef.Name)
+	}()
 
 	wfr := originWfr.DeepCopy()
 	clusterClient := common.GetExecutionClusterClient(wfr)
@@ -236,6 +288,30 @@ func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
 	}
 
 	return nil
+}
+
+func (h *Handler) SetStatus(ns, wfr string, status *v1alpha1.Status) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(ns).Get(wfr, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if latest.Status.Overall.Phase == status.Phase {
+			return nil
+		}
+
+		toUpdate := latest.DeepCopy()
+		toUpdate.Status.Overall = *status
+		_, err = h.Client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(toUpdate)
+		if err == nil {
+			log.WithField("wfr", toUpdate.Name).
+				WithField("status", status.Phase).
+				Info("WorkflowRun status updated successfully.")
+		}
+
+		return err
+	})
 }
 
 // validate workflow run
