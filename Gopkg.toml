@@ -129,3 +129,22 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 [[override]]
   name = "github.com/json-iterator/go"
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+[[constraint]]
+  branch = "master"
+  name = "github.com/gogs/go-gogs-client"
+
+[[constraint]]
+  name = "github.com/PuerkitoBio/goquery"
+  version = "1.5.0"
+
+[[constraint]]
+  name = "github.com/parnurzeal/gorequest"
+  version = "0.2.16"
+
+[[constraint]]
+  branch = "master"
+  name = "code.gitea.io/sdk"
+
+[[constraint]]
+  name = "code.gitea.io/gitea"
+  version = "1.10.0"

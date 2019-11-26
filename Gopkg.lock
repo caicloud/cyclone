@@ -2,6 +2,22 @@
 
 
 [[projects]]
+  digest = "1:3164c76ca6355ac2ddb02cc3e55be1f6ca1e82af47c8815ca2dcf1669d2fc7ca"
+  name = "code.gitea.io/gitea"
+  packages = ["modules/structs"]
+  pruneopts = "UT"
+  revision = "9619ccf0e54c0f8502b5e1bc7dad4d3471330f9c"
+  version = "v1.10.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:53b2097ea973f4095fbe93629bf173597baba40fc7d3dba07756cec033b6606f"
+  name = "code.gitea.io/sdk"
+  packages = ["gitea"]
+  pruneopts = "UT"
+  revision = "b374d7ccc4b455f1e1829ab3ff0808de80bc39e0"
+
+[[projects]]
   digest = "1:56229084733e7170d8a034a4325bd1a379ca07fae091f476c6830e00cd54294c"
   name = "github.com/PaesslerAG/gval"
   packages = ["."]
@@ -969,6 +985,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "code.gitea.io/gitea/modules/structs",
+    "code.gitea.io/sdk/gitea",
     "github.com/PaesslerAG/jsonpath",
     "github.com/caicloud/nirvana",
     "github.com/caicloud/nirvana/config",
