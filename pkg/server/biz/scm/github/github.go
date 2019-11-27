@@ -615,6 +615,7 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 			Repo:      *event.Repo.FullName,
 			Ref:       fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
 			CommitSHA: commitSHA,
+			Branch:    *event.PullRequest.Base.Ref,
 		}
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {

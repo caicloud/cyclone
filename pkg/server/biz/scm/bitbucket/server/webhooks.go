@@ -105,6 +105,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Repo:      fmt.Sprintf("%s/%s", strings.ToLower(payload.PullRequest.ToRef.Repository.Project.Key), payload.PullRequest.ToRef.Repository.Slug),
 			Ref:       fmt.Sprintf(pullRefTemplate, payload.PullRequest.ID),
 			CommitSHA: payload.PullRequest.FromRef.LatestCommit,
+			Branch:    payload.PullRequest.ToRef.DisplayID,
 		}
 	case PrModified:
 		return &scm.EventData{

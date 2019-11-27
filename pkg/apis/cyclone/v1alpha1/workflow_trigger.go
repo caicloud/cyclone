@@ -106,6 +106,9 @@ type SCMTriggerPush struct {
 // SCMTriggerPullRequest represents trigger policy for pull request events.
 type SCMTriggerPullRequest struct {
 	SCMTriggerBasic `json:",inline"`
+
+	// Branches represents the pr target branches list to filter PullRequest events.
+	Branches []string `json:"branches"`
 }
 
 // SCMTriggerPullRequestComment represents trigger policy for pull request comment events.

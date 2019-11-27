@@ -136,8 +136,22 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 			}
 		}
 	case scm.PullRequestEventType:
-		if st.PullRequest.Enabled {
+		log.Infof("target branch name: %s", data.Branch)
+		if !st.PullRequest.Enabled {
+			break
+		}
+
+		// Always trigger if Branches are not specified
+		if len(st.PullRequest.Branches) == 0 {
 			trigger = true
+			break
+		}
+
+		for _, branch := range st.PullRequest.Branches {
+			if branch == data.Branch {
+				trigger = true
+				break
+			}
 		}
 	case scm.PullRequestCommentEventType:
 		for _, comment := range st.PullRequestComment.Comments {
