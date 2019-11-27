@@ -290,6 +290,7 @@ func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
 	return nil
 }
 
+// SetStatus sets workflowRun status
 func (h *Handler) SetStatus(ns, wfr string, status *v1alpha1.Status) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(ns).Get(wfr, metav1.GetOptions{})

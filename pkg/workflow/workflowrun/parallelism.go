@@ -8,20 +8,21 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
+// AttemptAction defines the action while try to run a new workflowRun
 type AttemptAction string
 
 const (
-	AttemptActionStart  AttemptAction = "Start"
+	// AttemptActionStart represents the WorkflowRun can start to run
+	AttemptActionStart AttemptAction = "Start"
+	// AttemptActionQueued represents the WorkflowRun is queued
 	AttemptActionQueued AttemptAction = "Queued"
+	// AttemptActionFailed represents the WorkflowRun will fail directly due to queue full
 	AttemptActionFailed AttemptAction = "Failed"
 )
 
-// ParallelismController is interface to manage parallelism of WorkflowRun executions
+// ParallelismController is an interface to manage parallelism of WorkflowRun executions
 type ParallelismController interface {
-	// AttemptNew tries to run a new WorkflowRun, and returning the corresponding action.
-	// AttemptActionStart -- The WorkflowRun can start to run
-	// AttemptActionQueued -- The WorkflowRun is queued
-	// AttemptActionFailed -- The WorkflowRun will fail directly due to queue full
+	// AttemptNew tries to run a new WorkflowRun, and returns the corresponding action.
 	AttemptNew(ns, wf, wfr string) AttemptAction
 	// MarkFinished mark a WorkflowRun execution finished
 	MarkFinished(ns, wf, wfr string)
@@ -48,6 +49,7 @@ type parallelismController struct {
 	lock    *sync.Mutex
 }
 
+// NewParallelismController creates a ParallelismController
 func NewParallelismController(parallelismConfig *controller.ParallelismConfig) ParallelismController {
 	return &parallelismController{
 		config: parallelismConfig,
@@ -57,9 +59,6 @@ func NewParallelismController(parallelismConfig *controller.ParallelismConfig) P
 }
 
 // AttemptNew tries to run a new WorkflowRun, and returning the corresponding action.
-// AttemptActionStart -- The WorkflowRun can start to run
-// AttemptActionQueued -- The WorkflowRun is queued
-// AttemptActionFailed -- The WorkflowRun will fail directly due to queue full
 func (c *parallelismController) AttemptNew(ns, wf, wfr string) AttemptAction {
 	// If no parallelism constraint configured, always allow WorkflowRun to execute
 	if c.config == nil {
@@ -131,7 +130,7 @@ func (c *parallelismController) AttemptNew(ns, wf, wfr string) AttemptAction {
 			}
 		}
 
-		if _, ook := c.wfMap[wf].waitingWfrMap[wfr]; !ook {
+		if _, ok := c.wfMap[wf].waitingWfrMap[wfr]; !ok {
 			c.overall.waiting++
 			c.wfMap[wf].waitingWfrMap[wfr] = struct{}{}
 		}
@@ -146,7 +145,7 @@ func (c *parallelismController) AttemptNew(ns, wf, wfr string) AttemptAction {
 			waitingWfrMap: make(map[string]struct{}),
 		}
 	}
-	if _, ook := c.wfMap[wf].runningWfrMap[wfr]; !ook {
+	if _, ok := c.wfMap[wf].runningWfrMap[wfr]; !ok {
 		c.overall.total++
 		c.wfMap[wf].runningWfrMap[wfr] = struct{}{}
 	}
@@ -175,7 +174,7 @@ func (c *parallelismController) MarkFinished(ns, wf, wfr string) {
 		if _, ook := m.runningWfrMap[wfr]; ook {
 			c.overall.total--
 			delete(m.runningWfrMap, wfr)
-			log.Infof("Delete %s from running map, %d remained", wfr, len(m.runningWfrMap))
+			log.Infof("Delete %s from running map, %d remained for workflow %s", wfr, len(m.runningWfrMap), wf)
 		}
 	}
 }
