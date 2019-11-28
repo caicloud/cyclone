@@ -649,6 +649,10 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 			CommitSHA: commitSHA,
 		}
 	case *github.PushEvent:
+		if event.After != nil && *event.After == "0000000000000000000000000000000000000000" {
+			log.Warning("Skip unsupported action 'Branch deleted' of GitHub.")
+			return nil
+		}
 		return &scm.EventData{
 			Type:   scm.PushEventType,
 			Repo:   *event.Repo.FullName,

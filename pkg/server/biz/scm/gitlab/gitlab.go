@@ -509,6 +509,10 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			CommitSHA: event.MergeRequest.LastCommit.ID,
 		}
 	case *gitlab.PushEvent:
+		if event.After == "0000000000000000000000000000000000000000" {
+			log.Warning("Skip unsupported action 'Branch deleted' of Gitlab.")
+			return nil
+		}
 		return &scm.EventData{
 			Type:   scm.PushEventType,
 			Repo:   event.Project.PathWithNamespace,
