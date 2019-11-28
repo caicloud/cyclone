@@ -9,17 +9,13 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 )
 
 // PVCUsage represents PVC usages in a tenant, values are in human readable format, for example, '8K', '1.2G'.
 type PVCUsage struct {
-	// Total is total space
-	Total string `json:"total"`
-	// Used is space used
-	Used string `json:"used"`
-	// Items are space used by each folder, for example, 'caches' -> '1.2G'
-	Items map[string]string `json:"items"`
+	api.PVCUsage
 }
 
 // PVCUsageFloat64 is same to PVCUsage, but have all values in float64 type.
@@ -65,11 +61,13 @@ func (u *PVCUsage) ToFloat64() (*PVCUsageFloat64, error) {
 type PVCReporter interface {
 	OverallUsedPercentage() float64
 	UsedPercentage(folder string) (float64, error)
+	ReadableUsage() PVCUsage
 }
 
 type pvcReporter struct {
-	tenant string
-	usage  *PVCUsageFloat64
+	tenant        string
+	usage         *PVCUsageFloat64
+	readableUsage *PVCUsage
 }
 
 // NewPVCReporter creates a PVC usage reporter.
@@ -89,9 +87,15 @@ func NewPVCReporter(client clientset.Interface, tenant string) (PVCReporter, err
 	}
 
 	return &pvcReporter{
-		tenant: tenant,
-		usage:  usage,
+		tenant:        tenant,
+		usage:         usage,
+		readableUsage: u,
 	}, nil
+}
+
+// ReadableUsage get pvc usage status in human readable format.
+func (p *pvcReporter) ReadableUsage() PVCUsage {
+	return *p.readableUsage
 }
 
 // OverallUsedPercentage get overall usage of PVC, for example, 80%.

@@ -265,7 +265,29 @@ type ExecutionContextStatus struct {
 	// can not be used by workflows execution.
 	ReservedResources map[core_v1.ResourceName]string `json:"reservedResources"`
 	// PVC describes status of PVC
-	PVC *core_v1.PersistentVolumeClaimStatus `json:"pvc"`
+	PVC PVCOverallStatus `json:"pvc"`
+}
+
+// PVCOverallStatus includes upstream kubernetes PersistentVolumeClaimStatus and human readable pvc usage profile
+type PVCOverallStatus struct {
+	Usage  *PVCUsageStatus                      `json:"usage"`
+	Status *core_v1.PersistentVolumeClaimStatus `json:"status"`
+}
+
+// PVCUsageStatus describe PVSUsage and calculate the used percentage of PVC.
+type PVCUsageStatus struct {
+	PVCUsage
+	UsedPercentage float64 `json:"usedPercentage"`
+}
+
+// PVCUsage represents PVC usages in a tenant, values are in human readable format, for example, '8K', '1.2G'.
+type PVCUsage struct {
+	// Total is total space
+	Total string `json:"total"`
+	// Used is space used
+	Used string `json:"used"`
+	// Items are space used by each folder, for example, 'caches' -> '1.2G'
+	Items map[string]string `json:"items"`
 }
 
 // ExecutionContext represtents a context used to execute workflows.
