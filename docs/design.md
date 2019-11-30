@@ -22,6 +22,8 @@ workflow Directed Acyclic Graph (DAG) scheduling, resource lifecycle management,
 * WorkflowRun: running record of a workflow.
 * WorkflowTrigger: auto-trigger policy for workflows.
 
+More Details: [Kubernetes Resources Used by Cyclone](./develop/crd.md)
+
 ## Implementation
 
 ### Workflow Engine
