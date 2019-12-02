@@ -159,3 +159,8 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 
 	return nil
 }
+
+// GetPVCUsageWatcher gets the pvc watch dog deployment.
+func GetPVCUsageWatcher(client kubernetes.Interface, namespace string) (*v1beta1.Deployment, error) {
+	return client.ExtensionsV1beta1().Deployments(namespace).Get(PVCWatcherName, metav1.GetOptions{})
+}
