@@ -68,7 +68,8 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 		PVC:       pvcName,
 	})
 	if err != nil {
-		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", nsname, pvcName, err)
+		log.Errorf("Launch PVC usage watcher for %s/%s error: %v", nsname, pvcName, err)
+		return err
 	}
 
 	return nil
@@ -91,6 +92,34 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete persistent volume claim %s error %v", pvcName, err)
+		return err
+	}
+
+	return nil
+}
+
+// ConfirmPVCDeleted confirms whether the PVC and PVC watchdog have been deleted.
+// Only return nil represents the PVC and PVC watchdog have been deleted.
+func ConfirmPVCDeleted(tenantName, namespace string, client *kubernetes.Clientset) error {
+	pvcName := common.TenantPVC(tenantName)
+	nsname := common.TenantNamespace(tenantName)
+	if namespace != "" {
+		nsname = namespace
+	}
+
+	_, err := usage.GetPVCUsageWatcher(client, nsname)
+	if err == nil {
+		return fmt.Errorf("PVC watchdog for tenant %s has not been deleted", tenantName)
+	}
+	if !errors.IsNotFound(err) {
+		return err
+	}
+
+	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Get(pvcName, meta_v1.GetOptions{})
+	if err == nil {
+		return fmt.Errorf("PVC for tenant %s has not been deleted", tenantName)
+	}
+	if !errors.IsNotFound(err) {
 		return err
 	}
 
@@ -130,12 +159,21 @@ func UpdatePVC(tenantName, storageClass, size string, namespace string, client *
 	}
 
 	backoff := wait.Backoff{
-		Steps:    18,
-		Duration: 10 * time.Second,
+		Steps:    12,
+		Duration: 5 * time.Second,
 		Factor:   1.0,
 		Jitter:   0.1,
 	}
 
+	// Wait for the PVC and PVC watchdog deleting completed
+	err = retry.OnError(backoff, func() error {
+		return ConfirmPVCDeleted(tenantName, namespace, client)
+	})
+	if err != nil {
+		return err
+	}
+
+	// Create a new PVC
 	err = retry.OnError(backoff, func() error {
 		return CreatePVC(tenantName, storageClass, size, namespace, client)
 	})
