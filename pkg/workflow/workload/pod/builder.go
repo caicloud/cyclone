@@ -588,7 +588,7 @@ func (m *Builder) ResolveOutputResources() error {
 	// Add a docker-in-docker sidecar when there are image type resource to output.
 	args := []string{"dockerd"}
 	if len(controller.Config.DindSettings.Bip) > 0 {
-		args = append(args, "--bip", controller.Config.DindSettings.Bip)
+		args = append(args, "--host=unix:///var/run/docker.sock", "--host=tcp://0.0.0.0:2375", "--bip", controller.Config.DindSettings.Bip)
 	}
 	for _, r := range controller.Config.DindSettings.InsecureRegistries {
 		args = append(args, "--insecure-registry", r)
