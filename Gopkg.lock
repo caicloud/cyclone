@@ -111,6 +111,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:b42ffd0031a058b1d52030d2df788b0b812db8eaa31e07fed6c1bb4d31b3a671"
+  name = "github.com/gogs/go-gogs-client"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7ec4fd4f4907e7dd009e45eb116e7fb90fee3400"
+
+[[projects]]
   digest = "1:2edd2416f89b4e841df0e4a78802ce14d2bc7ad79eba1a45986e39f0f8cb7d87"
   name = "github.com/golang/glog"
   packages = ["."]
@@ -983,6 +991,7 @@
     "github.com/caicloud/nirvana/service",
     "github.com/caicloud/nirvana/utils/api",
     "github.com/cbroglie/mustache",
+    "github.com/gogs/go-gogs-client",
     "github.com/golang/glog",
     "github.com/google/go-github/github",
     "github.com/google/go-querystring/query",
