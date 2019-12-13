@@ -16,24 +16,32 @@ type Handler struct {
 var _ handlers.Interface = (*Handler)(nil)
 
 // ObjectCreated ...
-func (h *Handler) ObjectCreated(obj interface{}) {
-	h.process(obj)
+func (h *Handler) ObjectCreated(obj interface{}) error {
+	return h.process(obj)
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(old, new interface{}) {
-	h.process(new)
+func (h *Handler) ObjectUpdated(old, new interface{}) error {
+	return h.process(new)
 }
 
 // ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) {
-}
-
-func (h *Handler) process(obj interface{}) {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
 	cm, ok := obj.(*api_v1.ConfigMap)
 	if !ok {
 		log.Warning("unknown resource type")
-		return
+		return nil
+	}
+
+	log.WithField("name", cm.Name).Warn("Observed ConfigMap deletion.")
+	return nil
+}
+
+func (h *Handler) process(obj interface{}) error {
+	cm, ok := obj.(*api_v1.ConfigMap)
+	if !ok {
+		log.Warning("unknown resource type")
+		return nil
 	}
 	log.WithField("name", cm.Name).Debug("Start to process ConfigMap.")
 
@@ -42,4 +50,6 @@ func (h *Handler) process(obj interface{}) {
 	if err := controller.LoadConfig(cm); err != nil {
 		log.WithField("configMap", cm.Name).Errorf("reload config from ConfigMap error: %v", err)
 	}
+
+	return nil
 }

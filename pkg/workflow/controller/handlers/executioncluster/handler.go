@@ -18,46 +18,55 @@ type Handler struct {
 var _ handlers.Interface = (*Handler)(nil)
 
 // ObjectCreated ...
-func (h *Handler) ObjectCreated(obj interface{}) {
+func (h *Handler) ObjectCreated(obj interface{}) error {
 	cluster, ok := obj.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.Warning("unknown resource type")
-		return
+		return nil
 	}
 	log.WithField("name", cluster.Name).Debug("Observed new execution cluster")
 
 	err := store.RegisterClusterController(cluster)
 	if err != nil {
 		log.WithField("name", cluster.Name).Error("Register execution cluster controller error: ", err)
+		return err
 	}
+
+	return nil
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(old, new interface{}) {
+func (h *Handler) ObjectUpdated(old, new interface{}) error {
 	cluster, ok := new.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.Warning("unknown resource type")
-		return
+		return nil
 	}
 	log.WithField("name", cluster.Name).Debug("Observed new update to execution cluster")
 
 	err := store.RegisterClusterController(cluster)
 	if err != nil {
 		log.WithField("name", cluster.Name).Error("Register execution cluster controller error: ", err)
+		return err
 	}
+
+	return nil
 }
 
 // ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
 	cluster, ok := obj.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.Warning("unknown resource type")
-		return
+		return nil
 	}
 	log.WithField("name", cluster.Name).Debug("Observed execution cluster deletion")
 
 	err := store.RemoveClusterController(cluster)
 	if err != nil {
 		log.WithField("name", cluster.Name).Error("Remove execution cluster controller error: ", err)
+		return err
 	}
+
+	return nil
 }

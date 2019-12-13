@@ -95,12 +95,11 @@ func (c *Controller) nextWork() bool {
 func (c *Controller) doWork(e Event) error {
 	switch e.EventType {
 	case CREATE:
-		c.eventHandler.ObjectCreated(e.Object)
+		return c.eventHandler.ObjectCreated(e.Object)
 	case UPDATE:
-		c.eventHandler.ObjectUpdated(e.OldObject, e.Object)
+		return c.eventHandler.ObjectUpdated(e.OldObject, e.Object)
 	case DELETE:
-		c.eventHandler.ObjectDeleted(e.Object)
+		return c.eventHandler.ObjectDeleted(e.Object)
 	}
-
 	return nil
 }

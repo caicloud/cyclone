@@ -18,28 +18,34 @@ var (
 )
 
 // ObjectCreated ...
-func (h *Handler) ObjectCreated(obj interface{}) {
+func (h *Handler) ObjectCreated(obj interface{}) error {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
 	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.CreateCron(wft)
 	}
+
+	return nil
 }
 
 // ObjectUpdated ...
-func (h *Handler) ObjectUpdated(old, new interface{}) {
+func (h *Handler) ObjectUpdated(old, new interface{}) error {
 	if wft, err := ToWorkflowTrigger(new); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
 	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.UpdateCron(wft)
 	}
+
+	return nil
 }
 
 // ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
 	if wft, err := ToWorkflowTrigger(obj); err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
 	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.DeleteCron(wft)
 	}
+
+	return nil
 }
