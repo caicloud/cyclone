@@ -78,6 +78,7 @@ func (c *Controller) nextWork() bool {
 
 	defer c.queue.Done(event)
 	err := c.doWork(event.(Event))
+	// log.WithField("requeue number", c.queue.NumRequeues(event)).WithField("error", err).WithField("key", event.(Event).Key).Debug("do work test info")
 	if err == nil {
 		c.queue.Forget(event)
 	} else if c.queue.NumRequeues(event) < 3 {

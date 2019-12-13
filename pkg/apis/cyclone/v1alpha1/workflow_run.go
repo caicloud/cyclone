@@ -146,9 +146,10 @@ type StageStatus struct {
 type StatusPhase string
 
 const (
-	// StatusPending means stage is not executed yet when used for stage. When
-	// used for WorkflowRun overall status, it means no stages in WorkflowRun
-	// are started to execute.
+	// StatusPending means no stages in WorkflowRun are started to execute when
+	// used for WorkflowRun overall status. When used for stage, it means stage
+	// is not executed yet or stage have been executed but returned a retryable
+	// error.
 	StatusPending StatusPhase = "Pending"
 	// StatusRunning means Stage or WorkflowRun is running.
 	StatusRunning StatusPhase = "Running"
@@ -189,6 +190,18 @@ type Status struct {
 	Message string `json:"message,omitempty"`
 
 	// StartTime is the start time of processing stage/workflowrun
+	StartTime metav1.Time `json:"startTime,omitempty"`
+
+	// RetryStatus describes status of retry for a stage.
+	RetryStatus *RetryStatus `json:"retryStatus,omitempty"`
+}
+
+// RetryStatus describes status of retry for a stage which has been
+// executed but not succeeded for some retryable reason.
+type RetryStatus struct {
+	// Times records the execution times, e.g. 1 represents the first time to execute.
+	Times int `json:"times,omitempty"`
+	// StartTime records the start time of the first execution
 	StartTime metav1.Time `json:"startTime,omitempty"`
 }
 

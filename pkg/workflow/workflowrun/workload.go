@@ -2,17 +2,17 @@ package workflowrun
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/util/retry"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
 )
@@ -76,23 +76,40 @@ func (p *WorkloadProcessor) processPod() error {
 		return err
 	}
 	log.WithField("stg", p.stg.Name).Debug("Pod manifest created")
-
-	// Create the generated pod with retry on exceeded quota.
-	// Here is a litter tricky. Cyclone will delete stage related pod to release cpu/memory resource when stage have
-	// been finished, but pod deletion needs some time, so retry on exceeded quota gives the time to waiting previous
-	// stage pod deletion.
-	backoff := wait.Backoff{
-		Steps:    3,
-		Duration: 5 * time.Second,
-		Factor:   1.5,
-		Jitter:   0.1,
-	}
-	origin := po.DeepCopy()
-	err = retry.OnExceededQuota(backoff, func() error {
-		po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(origin)
-		return err
-	})
+	t1 := time.Now()
+	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
+	t2 := time.Now()
+	log.WithField("time", t2.Sub(t1)).WithField("stg", p.stg.Name).Debug("Create pod for stage cost time")
 	if err != nil {
+		if kerr.IsForbidden(err) && strings.Contains(err.Error(), "exceeded quota:") {
+			log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
+			p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
+
+			newStatus := &v1alpha1.Status{}
+			if stageStatus, ok := p.wfr.Status.Stages[p.stg.Name]; ok {
+				newStatus = stageStatus.Status.DeepCopy()
+
+				if newStatus.RetryStatus != nil {
+					newStatus.RetryStatus.Times++
+					newStatus.Phase = v1alpha1.StatusPending
+				} else {
+					// First execute
+					newStatus = &v1alpha1.Status{
+						Phase:              v1alpha1.StatusPending,
+						Reason:             "ExceededQuota",
+						LastTransitionTime: metav1.Time{Time: time.Now()},
+						Message:            fmt.Sprintf("Failed to create pod: %v", err),
+						RetryStatus: &v1alpha1.RetryStatus{
+							Times:     1,
+							StartTime: metav1.Time{Time: time.Now()},
+						},
+					}
+				}
+			}
+			p.wfrOper.UpdateStageStatus(p.stg.Name, newStatus)
+			return err
+		}
+
 		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
 		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{

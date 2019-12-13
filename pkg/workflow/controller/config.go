@@ -52,6 +52,8 @@ type WorkflowControllerConfig struct {
 	NotificationURL string `json:"notification_url"`
 	// DindSettings is settings for Docker in Docker
 	DindSettings DindSettings `json:"dind"`
+	// Retry configuration for retry on stage
+	Retry RetryConfig `json:"retry"`
 }
 
 // LoggingConfig configures logging
@@ -107,6 +109,14 @@ type ParallelismConfig struct {
 	Overall ParallelismConstraint `json:"overall"`
 	// SingleWorkflow controls parallelism of WorkflowRun executions for single Workflow
 	SingleWorkflow ParallelismConstraint `json:"single_workflow"`
+}
+
+// RetryConfig configures retry times and duration for retrying to execute a stage.
+type RetryConfig struct {
+	// Times of a stage can be totally retried
+	Times int `json:"times"`
+	// Duration defines how long a stage can be retried to execute from it's first execution.
+	Duration time.Duration `json:"duration_seconds"`
 }
 
 // DindSettings is settings for Docker in Docker.

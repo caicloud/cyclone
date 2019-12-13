@@ -34,22 +34,37 @@ func resolveStatus(latest, update *v1alpha1.Status) *v1alpha1.Status {
 	return latest
 }
 
-// NextStages determine next stages that can be started to execute. It returns
-// stages that are not started yet but have all depended stages finished.
-func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
+// NextStages returns next stages that can be started to execute(stages that
+// are not started yet but have all depended stages finished.) and stages that
+// retry chances exhausted(Pending phase and retryStatus is not compliant with
+// retry configuration).
+func NextStages(duration time.Duration, times int, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) ([]string, []string) {
 	var nextStages []string
+	var nonRetryableStages []string
 	for _, stage := range wf.Spec.Stages {
-		// If this stage already have status set and not pending, it means it's already been started, skip it.
-		if s, ok := wfr.Status.Stages[stage.Name]; ok && s.Status.Phase != v1alpha1.StatusPending {
-			continue
+
+		if s, ok := wfr.Status.Stages[stage.Name]; ok {
+			// If this stage already have status set and not pending, it means it's already been started, skip it.
+			if s.Status.Phase != v1alpha1.StatusPending {
+				continue
+			}
+
+			// If this stage already have status set pending and retryStatus is not nil, determine whether should
+			// continue to execute it.
+			if s.Status.RetryStatus != nil && (times <= 0 || duration.String() == "0s" ||
+				s.Status.RetryStatus.Times > times ||
+				time.Now().After(s.Status.RetryStatus.StartTime.Add(time.Second*duration))) {
+				nonRetryableStages = append(nonRetryableStages, stage.Name)
+				continue
+			}
 		}
 
 		// All depended stages must have been successfully finished, otherwise this
 		// stage would be skipped.
 		safeToRun := true
 		for _, d := range stage.Depends {
-			status, ok := wfr.Status.Stages[d]
-			if !(ok && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)))) {
+			status, ook := wfr.Status.Stages[d]
+			if !(ook && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)))) {
 				safeToRun = false
 				break
 			}
@@ -60,7 +75,7 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		}
 	}
 
-	return nextStages
+	return nextStages, nonRetryableStages
 }
 
 // IsTrivial returns whether a stage is trivial in a workflow
@@ -148,4 +163,30 @@ func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
 // GCPodName generates a pod name for GC pod
 func GCPodName(wfr string) string {
 	return fmt.Sprintf("wfrgc--%s", wfr)
+}
+
+// NextStageStatus returns the status of next to execute stage.
+// returns a new Running status if the stage is first time to execute,
+// and returns a Running status with old retryStatus if the stage is
+// retryable.
+func NextStageStatus(stagesStatus map[string]*v1alpha1.StageStatus, stage string) *v1alpha1.Status {
+	if stageStatus, ok := stagesStatus[stage]; ok {
+		status := stageStatus.Status.DeepCopy()
+		if status.RetryStatus != nil {
+			return &v1alpha1.Status{
+				Phase:              v1alpha1.StatusRunning,
+				Reason:             "StageInitialized",
+				LastTransitionTime: metav1.Time{Time: time.Now()},
+				StartTime:          metav1.Time{Time: time.Now()},
+				RetryStatus:        status.RetryStatus,
+			}
+		}
+	}
+
+	return &v1alpha1.Status{
+		Phase:              v1alpha1.StatusRunning,
+		Reason:             "StageInitialized",
+		LastTransitionTime: metav1.Time{Time: time.Now()},
+		StartTime:          metav1.Time{Time: time.Now()},
+	}
 }

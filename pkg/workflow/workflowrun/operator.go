@@ -184,6 +184,9 @@ func (o *operator) Update() error {
 				combined.Status.Stages[stage].Depends = status.Depends
 			}
 			combined.Status.Stages[stage].Trivial = status.Trivial
+			if status.Status.RetryStatus != nil {
+				combined.Status.Stages[stage].Status.RetryStatus = status.Status.RetryStatus
+			}
 		}
 
 		// Update golbal variables to resolved values
@@ -222,6 +225,12 @@ func (o *operator) UpdateStageStatus(stage string, status *v1alpha1.Status) {
 		if originStatus.Phase != v1alpha1.StatusPending {
 			o.wfr.Status.Stages[stage].Status.StartTime = originStatus.StartTime
 		}
+
+		// update retryStatus if it is not nil
+		if status.RetryStatus != nil {
+			o.wfr.Status.Stages[stage].Status.RetryStatus = status.RetryStatus
+		}
+
 	}
 }
 
@@ -353,21 +362,33 @@ func (o *operator) Reconcile() error {
 	}
 
 	// Get next stages that need to be run.
-	nextStages := NextStages(o.wf, o.wfr)
+	nextStages, nonRetryableStages := NextStages(controller.Config.Retry.Duration, controller.Config.Retry.Times, o.wf, o.wfr)
 	if len(nextStages) == 0 {
 		log.WithField("wfr", o.wfr.Name).Debug("No next stages to run")
 	} else {
 		log.WithField("stg", nextStages).Info("Next stages to run")
 	}
 
-	for _, stage := range nextStages {
-		o.UpdateStageStatus(stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusRunning,
-			Reason:             "StageInitialized",
-			LastTransitionTime: metav1.Time{Time: time.Now()},
-			StartTime:          metav1.Time{Time: time.Now()},
-		})
+	if len(nonRetryableStages) == 0 {
+		log.WithField("wfr", o.wfr.Name).Debug("No non retryable stages")
+	} else {
+		log.WithField("stg", nonRetryableStages).Info("Set non retryable stages phase to Failed")
 	}
+
+	for _, stage := range nextStages {
+		status := NextStageStatus(o.wfr.Status.Stages, stage)
+		o.UpdateStageStatus(stage, status)
+	}
+	for _, stage := range nonRetryableStages {
+		s, ok := o.wfr.Status.Stages[stage]
+		if !ok {
+			return fmt.Errorf("get stage status for %s error: not found", stage)
+		}
+		status := s.Status.DeepCopy()
+		status.Phase = v1alpha1.StatusFailed
+		o.UpdateStageStatus(stage, status)
+	}
+
 	overall, err := o.OverallStatus()
 	if err != nil {
 		return fmt.Errorf("resolve overall status error: %v", err)
@@ -384,6 +405,7 @@ func (o *operator) Reconcile() error {
 		return nil
 	}
 
+	var processErr error
 	// Create pod to run stages.
 	for _, stage := range nextStages {
 		log.WithField("stg", stage).Info("Start to run stage")
@@ -397,6 +419,7 @@ func (o *operator) Reconcile() error {
 		err = NewWorkloadProcessor(o.clusterClient, o.client, o.wf, o.wfr, stg, o).Process()
 		if err != nil {
 			log.WithField("stg", stage).Error("Process workload error: ", err)
+			processErr = err
 			continue
 		}
 	}
@@ -412,7 +435,7 @@ func (o *operator) Reconcile() error {
 		return err
 	}
 
-	return nil
+	return processErr
 }
 
 // Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.

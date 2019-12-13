@@ -103,9 +103,9 @@ func (h *Handler) ObjectCreated(obj interface{}) error {
 	operator.ResolveGlobalVariables()
 	if err := operator.Reconcile(); err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
+		return err
 	}
 
-	// TODO: return retryable error
 	return nil
 }
 
@@ -193,9 +193,9 @@ func (h *Handler) ObjectUpdated(old, new interface{}) error {
 
 	if err := operator.Reconcile(); err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
+		return err
 	}
 
-	// TODO: return retryable error
 	return nil
 }
 

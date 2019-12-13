@@ -117,8 +117,9 @@ func TestNextStages(t *testing.T) {
 		},
 	}
 	expected := []string{"B", "C"}
-	nexts := NextStages(wf, wfr)
+	nexts, nonRetryStages := NextStages(0, 1, wf, wfr)
 	assert.Equal(t, expected, nexts)
+	assert.Nil(t, nonRetryStages)
 
 	wf = &v1alpha1.Workflow{
 		Spec: v1alpha1.WorkflowSpec{
@@ -145,9 +146,11 @@ func TestNextStages(t *testing.T) {
 			},
 		},
 	}
+
 	expected = []string{"C"}
-	nexts = NextStages(wf, wfr)
+	nexts, nonRetryStages = NextStages(0, 1, wf, wfr)
 	assert.Equal(t, expected, nexts)
+	assert.Nil(t, nonRetryStages)
 
 	wf = &v1alpha1.Workflow{
 		Spec: v1alpha1.WorkflowSpec{
@@ -174,9 +177,92 @@ func TestNextStages(t *testing.T) {
 			},
 		},
 	}
+
 	expected = []string{"C"}
-	nexts = NextStages(wf, wfr)
+	nexts, nonRetryStages = NextStages(0, 1, wf, wfr)
 	assert.Equal(t, expected, nexts)
+	assert.Nil(t, nonRetryStages)
+
+	wf = &v1alpha1.Workflow{
+		Spec: v1alpha1.WorkflowSpec{
+			Stages: []v1alpha1.StageItem{
+				{
+					Name: "A",
+				},
+				{
+					Name:    "B",
+					Depends: []string{"A"},
+				},
+				{
+					Name: "C",
+				},
+			},
+		},
+	}
+	wfr = &v1alpha1.WorkflowRun{
+		Status: v1alpha1.WorkflowRunStatus{
+			Stages: map[string]*v1alpha1.StageStatus{
+				"B": {
+					Status: v1alpha1.Status{
+						Phase: v1alpha1.StatusPending,
+						RetryStatus: &v1alpha1.RetryStatus{
+							Times:     3,
+							StartTime: metav1.Time{Time: time.Now()},
+						},
+					},
+				},
+				"A": {
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
+				},
+			},
+		},
+	}
+
+	expected = []string{"B", "C"}
+	nexts, nonRetryStages = NextStages(300, 4, wf, wfr)
+	assert.Equal(t, expected, nexts)
+	assert.Nil(t, nonRetryStages)
+
+	wf = &v1alpha1.Workflow{
+		Spec: v1alpha1.WorkflowSpec{
+			Stages: []v1alpha1.StageItem{
+				{
+					Name: "A",
+				},
+				{
+					Name:    "B",
+					Depends: []string{"A"},
+				},
+				{
+					Name: "C",
+				},
+			},
+		},
+	}
+	wfr = &v1alpha1.WorkflowRun{
+		Status: v1alpha1.WorkflowRunStatus{
+			Stages: map[string]*v1alpha1.StageStatus{
+				"B": {
+					Status: v1alpha1.Status{
+						Phase: v1alpha1.StatusPending,
+						RetryStatus: &v1alpha1.RetryStatus{
+							Times:     3,
+							StartTime: metav1.Time{Time: time.Now()},
+						},
+					},
+				},
+				"A": {
+					Status: v1alpha1.Status{Phase: v1alpha1.StatusSucceeded},
+				},
+			},
+		},
+	}
+
+	expected = []string{"C"}
+	expectedNonRetry := []string{"B"}
+	nexts, nonRetryStages = NextStages(300, 2, wf, wfr)
+	assert.Equal(t, expected, nexts)
+	assert.Equal(t, expectedNonRetry, nonRetryStages)
 }
 
 func TestStaticStatus(t *testing.T) {
@@ -270,4 +356,55 @@ func TestIsWorkflowRunTerminated(t *testing.T) {
 
 func TestGCPodName(t *testing.T) {
 	assert.Equal(t, GCPodName("wfr"), "wfrgc--wfr")
+}
+
+func TestNextStageStatus(t *testing.T) {
+	retryStatus := &v1alpha1.RetryStatus{
+		Times:     2,
+		StartTime: metav1.Time{Time: time.Now()},
+	}
+
+	statusPendingRetry := &v1alpha1.StageStatus{
+		Status: v1alpha1.Status{
+			Phase:       v1alpha1.StatusPending,
+			RetryStatus: retryStatus,
+		},
+	}
+
+	statusPending := &v1alpha1.StageStatus{
+		Status: v1alpha1.Status{
+			Phase: v1alpha1.StatusPending,
+		},
+	}
+
+	stagesStatus := make(map[string]*v1alpha1.StageStatus)
+	stagesStatus["retry"] = statusPendingRetry
+	stagesStatus["pending"] = statusPending
+
+	testCases := map[string]struct {
+		stage               string
+		expectedPhase       v1alpha1.StatusPhase
+		expectedRetryStatus *v1alpha1.RetryStatus
+	}{
+		"retry": {
+			stage:               "retry",
+			expectedPhase:       v1alpha1.StatusRunning,
+			expectedRetryStatus: retryStatus,
+		},
+		"normal": {
+			stage:               "pending",
+			expectedPhase:       v1alpha1.StatusRunning,
+			expectedRetryStatus: nil,
+		},
+	}
+
+	for d, tc := range testCases {
+		result := NextStageStatus(stagesStatus, tc.stage)
+		if result.Phase != tc.expectedPhase {
+			t.Errorf("Fail to determine next stage status for %s: expect phase %s, but got %s", d, tc.expectedPhase, result.Phase)
+		}
+		if !assert.Equal(t, tc.expectedRetryStatus, result.RetryStatus) {
+			t.Errorf("Fail to determine next status for %s: expect retry status %v, but got %v", d, tc.expectedRetryStatus, result.RetryStatus)
+		}
+	}
 }
