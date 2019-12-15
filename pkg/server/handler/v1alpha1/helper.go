@@ -21,6 +21,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/exec"
 	"github.com/caicloud/cyclone/pkg/util/slugify"
 )
 
@@ -367,6 +368,87 @@ func InjectWorkflowLabelModifier(tenant, project, wf string, object interface{})
 	}
 	objectMeta.Labels[meta.LabelWorkflowName] = wf
 	return nil
+}
+
+// WorkflowTrggerSVNModifier is a modifier of SVN post commit workflowTrigger.
+// It will add rootURL and SVN repo UUID to workflowTrigger.
+func WorkflowTrggerSVNModifier(tenant, project, wf string, object interface{}) error {
+	wft, ok := object.(*v1alpha1.WorkflowTrigger)
+	if !ok {
+		return fmt.Errorf("only support modify workflowTrigger")
+	}
+
+	if wft.Spec.Type != v1alpha1.TriggerTypeSCM {
+		return nil
+	}
+
+	if !wft.Spec.SCM.PostCommit.Enabled {
+		return nil
+	}
+
+	if wft.Spec.SCM.PostCommit.WorkflowURL == "" {
+		return fmt.Errorf("workflowURL of post commit can not be empty")
+	}
+
+	if wft.Spec.SCM.Repo != "" && wft.Spec.SCM.PostCommit.RootURL != "" {
+		return nil
+	}
+
+	in, err := getIntegration(wft.Namespace, wft.Spec.SCM.Secret)
+	if err != nil {
+		return err
+	}
+
+	if in.Spec.Type != api.SCM || in.Spec.SCM == nil {
+		return fmt.Errorf("integration %s invalid", in.Name)
+	}
+
+	uuid, err := RetrieveRepoUUID(wft.Spec.SCM.PostCommit.WorkflowURL, in.Spec.SCM.User, in.Spec.SCM.Password)
+	if err != nil {
+		return err
+	}
+
+	rootURL, err := RetrieveRepoRootURL(wft.Spec.SCM.PostCommit.WorkflowURL, in.Spec.SCM.User, in.Spec.SCM.Password)
+	if err != nil {
+		return err
+	}
+
+	wft.Spec.SCM.Repo = uuid
+	wft.Spec.SCM.PostCommit.RootURL = rootURL
+	return nil
+}
+
+// RetrieveRepoUUID retrieve svn repository uuid by command:
+//
+// 'svn info --show-item repos-uuid --username {user} --password {password}
+// --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+// --no-auth-cache {remote-svn-address}'
+func RetrieveRepoUUID(url, username, password string) (string, error) {
+	return retrieveSVNRepoInfo(url, username, password, "repos-uuid")
+}
+
+// RetrieveRepoRootURL retrieve svn repository root-url by command:
+//
+// 'svn info --show-item repos-root-url --username {user} --password {password}
+// --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+// --no-auth-cache {remote-svn-address}'
+func RetrieveRepoRootURL(url, username, password string) (string, error) {
+	return retrieveSVNRepoInfo(url, username, password, "repos-root-url")
+}
+
+func retrieveSVNRepoInfo(url, username, password, item string) (string, error) {
+
+	args := []string{"info", "--show-item", item, "--username", username, "--password", password, "--non-interactive",
+		"--trust-server-cert-failures", "unknown-ca,cn-mismatch,expired,not-yet-valid,other", "--no-auth-cache", url}
+
+	output, err := exec.RunInDir("./", "svn", args...)
+	log.Infof("Command output: %+v", string(output))
+	if err != nil {
+		log.Errorf("Error when retrieve repo %s as : %v", item, err)
+		return strings.TrimSpace(string(output)), err
+	}
+
+	return strings.TrimSpace(string(output)), nil
 }
 
 func listSCMRepos(scmSource *api.SCMSource) ([]scm.Repository, error) {

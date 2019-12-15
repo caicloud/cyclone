@@ -157,12 +157,30 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		for _, comment := range st.PullRequestComment.Comments {
 			if comment == data.Comment {
 				trigger = true
+				break
 			}
 		}
 	case scm.PostCommitEventType:
-		if st.PostCommit.Enabled {
-			trigger = true
+		if !st.PostCommit.Enabled {
+			break
 		}
+
+		// For Backward Compatibility, old version workflowTriggers lack of these field
+		// and can normally trigger workflow
+		if st.PostCommit.RootURL == "" || st.PostCommit.WorkflowURL == "" ||
+			data.ChangedFiles == nil || len(data.ChangedFiles) == 0 {
+			trigger = true
+			break
+		}
+
+		for _, file := range data.ChangedFiles {
+			fullPath := st.PostCommit.RootURL + "/" + file
+			if strings.Contains(fullPath, st.PostCommit.WorkflowURL) {
+				trigger = true
+				break
+			}
+		}
+
 	}
 
 	if !trigger {

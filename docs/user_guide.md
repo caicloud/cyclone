@@ -95,11 +95,12 @@ REV="$2"
 TXN_NAME="$3"
 
 UUID=`svnlook uuid $REPOS`
+CHANGED=`svnlook changed --revision ${REV} ${REPOS}`
 
 /usr/bin/curl --request POST \
               --header "Content-Type:application/json;charset=UTF-8" \
               --header "X-Subversion-Event:Post-Commit" \
-              --data "{\"repoUUID\":\"${UUID}\", \"revision\":\"${REV}\"}" \
+              --data "{\"repoUUID\":\"${UUID}\", \"revision\":\"${REV}\", \"changed\":\"${CHANGED}\"}" \
               http://{cyclone-server-address}/apis/v1alpha1/tenants/{tenant}/webhook?sourceType=SCM
 
 EOF
@@ -110,7 +111,4 @@ Please replace `{cyclone-server-address}` and `{tenant}` with correct value.
 
 ### Create SCM type workflowtriggers
 
-Note that the `workflowtrigger.spc.scm.repo` field should be SVN repository's uuid, you can get it by:
-```
-svn info --show-item repos-uuid --username {user} --password {password} --non-interactive --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other --no-auth-cache {svn-repo-url}
-```
+Note that the `workflowtrigger.spc.scm.postCommit.workflowURL` field *MUST* be specified while creating workflowTrigger, WorkflowURL represents repository url of the workflow that the wrokflowTrigger related to, Cyclone will checkout code from this URL while executing WorkflowRun(e.g: http://192.168.21.97/svn/caicloud/cyclone).
