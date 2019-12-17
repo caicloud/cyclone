@@ -83,14 +83,9 @@ func (w *LimitedQueues) AddOrRefresh(wfr *v1alpha1.WorkflowRun) {
 // refresh time.
 func (w *LimitedQueues) AutoScan() {
 	ticker := time.NewTicker(time.Hour)
-	for {
-		select {
-		case <-ticker.C:
-			for _, q := range w.Queues {
-				scanQueue(q)
-			}
-		default:
-			continue
+	for range ticker.C {
+		for _, q := range w.Queues {
+			scanQueue(q)
 		}
 	}
 }

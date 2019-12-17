@@ -23,7 +23,6 @@ import (
 	"github.com/caicloud/nirvana/log"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	apiv1 "github.com/caicloud/cyclone/pkg/server/apis/v1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
@@ -95,7 +94,7 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 		return nil
 	}
 
-	if config.AuthType != v1alpha1.AuthTypePassword && config.AuthType != v1alpha1.AuthTypeToken && string(config.AuthType) != string(apiv1.OAuth) {
+	if config.AuthType != v1alpha1.AuthTypePassword && config.AuthType != v1alpha1.AuthTypeToken {
 		return cerr.ErrorUnsupported.Error("SCM auth type", config.AuthType)
 	}
 

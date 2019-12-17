@@ -16,7 +16,7 @@ go_import_path: github.com/caicloud/cyclone
 before_install:
   - go get github.com/mattn/goveralls
   - go get github.com/go-playground/overalls
-  - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
 
 install:
   - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
@@ -25,7 +25,7 @@ install:
 
 script:
   - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis
-  - golangci-lint run --disable=gosimple --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
+  - GOGC=5 golangci-lint run --disable=gosimple --skip-dirs=pkg/k8s/ --deadline=300s ./pkg/... ./cmd/...
 
 after_success:
   - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=overalls.coverprofile
