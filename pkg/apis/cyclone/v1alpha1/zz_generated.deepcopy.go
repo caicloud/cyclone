@@ -785,7 +785,7 @@ func (in *SCMTriggerPolicy) DeepCopyInto(out *SCMTriggerPolicy) {
 	*out = *in
 	in.Push.DeepCopyInto(&out.Push)
 	out.TagRelease = in.TagRelease
-	out.PullRequest = in.PullRequest
+	in.PullRequest.DeepCopyInto(&out.PullRequest)
 	in.PullRequestComment.DeepCopyInto(&out.PullRequestComment)
 	out.PostCommit = in.PostCommit
 	return
@@ -822,6 +822,11 @@ func (in *SCMTriggerPostCommit) DeepCopy() *SCMTriggerPostCommit {
 func (in *SCMTriggerPullRequest) DeepCopyInto(out *SCMTriggerPullRequest) {
 	*out = *in
 	out.SCMTriggerBasic = in.SCMTriggerBasic
+	if in.Branches != nil {
+		in, out := &in.Branches, &out.Branches
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

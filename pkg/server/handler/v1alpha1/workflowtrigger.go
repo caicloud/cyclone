@@ -21,7 +21,12 @@ import (
 
 // CreateWorkflowTrigger ...
 func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
-	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowLabelModifier, InjectWorkflowOwnerRefModifier}
+	modifiers := []CreationModifier{
+		GenerateNameModifier,
+		InjectProjectLabelModifier,
+		InjectWorkflowLabelModifier,
+		InjectWorkflowOwnerRefModifier,
+		WorkflowTrggerSVNModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, workflow, wft)
 		if err != nil {
@@ -86,6 +91,14 @@ func GetWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflow
 
 // UpdateWorkflowTrigger ...
 func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflowtrigger string, wft *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
+	modifiers := []CreationModifier{WorkflowTrggerSVNModifier}
+	for _, modifier := range modifiers {
+		err := modifier(tenant, project, workflow, wft)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
 		if err != nil {

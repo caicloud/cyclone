@@ -167,12 +167,13 @@ const (
 
 // EventData represents the data parsed from SCM events.
 type EventData struct {
-	Type      EventType
-	Repo      string
-	Ref       string
-	Branch    string
-	Comment   string
-	CommitSHA string
+	Type         EventType
+	Repo         string
+	Ref          string
+	Branch       string
+	Comment      string
+	CommitSHA    string
+	ChangedFiles []string
 }
 
 // PullRequest describes pull requests of SCM repositories.

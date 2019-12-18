@@ -65,6 +65,13 @@ type SCMTrigger struct {
 	// Secret represents the secret of integrated SCM.
 	Secret string `json:"secret"`
 	// Repo represents full repo name without server address.
+	// for GitHub, GitLab, Bitbucket, it is ordinarily in format of 'owner/repo-name',
+	// for SVN, it is stored of the RepoUUID of the SVN repo. you can get the SVN repo
+	// UUID by command:
+	//
+	// 'svn info --show-item repos-uuid --username {user} --password {password} --non-interactive
+	// --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+	// --no-auth-cache {remote-svn-address}'
 	Repo string `json:"repo"`
 	// SCMTriggerPolicy represents trigger policies for SCM events.
 	SCMTriggerPolicy `json:",inline"`
@@ -121,6 +128,20 @@ type SCMTriggerPullRequestComment struct {
 // SCMTriggerPostCommit represents trigger policy for post commit events.
 type SCMTriggerPostCommit struct {
 	SCMTriggerBasic `json:",inline"`
+
+	// RootURL represents SVN repository root url, this root is retrieved by
+	//
+	// 'svn info --show-item repos-root-url --username {user} --password {password} --non-interactive
+	// --trust-server-cert-failures unknown-ca,cn-mismatch,expired,not-yet-valid,other
+	// --no-auth-cache {remote-svn-address}'
+	//
+	// e.g: http://192.168.21.97/svn/caicloud
+	RootURL string `json:"rootURL"`
+
+	// WorkflowURL represents repository url of the workflow that the wrokflowTrigger related to,
+	// Cyclone will checkout code from this URL while executing WorkflowRun.
+	// e.g: http://192.168.21.97/svn/caicloud/cyclone
+	WorkflowURL string `json:"workflowURL"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

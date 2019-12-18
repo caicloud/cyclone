@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/caicloud/nirvana/log"
 
@@ -111,45 +112,72 @@ func (s *SVN) DeleteWebhook(repo string, webhookURL string) error {
 
 // ParseEvent parses data from SVN events, only support Post-Commit.
 func ParseEvent(request *http.Request) *scm.EventData {
-	event, err := parseWebhook(request)
+	log.Info("svn start to parse event")
+	data, err := parseWebhook(request)
 	if err != nil {
-		log.Errorln(err)
+		log.Errorf("svn parse event error: %v", err)
 		return nil
 	}
 
-	switch event := event.(type) {
-	case *PostCommit:
-		return &scm.EventData{
-			Type: scm.PostCommitEventType,
-			Repo: event.RepoUUID,
-			Ref:  event.Revision,
-		}
-	default:
-		log.Warningln("Skip unsupported Gitlab event")
-		return nil
-	}
+	return data
 }
 
 // parseWebhook parses the body from webhook requeset.
-func parseWebhook(r *http.Request) (payload interface{}, err error) {
+func parseWebhook(r *http.Request) (*scm.EventData, error) {
+	var data *scm.EventData
 	eventType := r.Header.Get(EventTypeHeader)
-	switch eventType {
-	case PostCommitEvent:
-		payload = &PostCommit{}
-	default:
-		return nil, fmt.Errorf("event type %v not support", eventType)
+	if eventType != PostCommitEvent {
+		return data, fmt.Errorf("SVN only support %s type trigger", PostCommitEvent)
 	}
 
+	payload := &PostCommit{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("fail to read request body")
+		return data, fmt.Errorf("Fail to read request body")
 	}
 
 	if err := json.Unmarshal(body, &payload); err != nil {
-		return nil, err
+		return data, err
+	}
+	if payload.RepoUUID == "" {
+		return data, fmt.Errorf("uuid can not be empty")
 	}
 
-	return payload, nil
+	if payload.Revision == "" {
+		return data, fmt.Errorf("revision can not be empty")
+	}
+
+	log.Infof("svn changed: %s", payload.Changed)
+	files := getSVNChangedFiles(string(payload.Changed))
+
+	data = &scm.EventData{
+		Type:         scm.PostCommitEventType,
+		Repo:         payload.RepoUUID,
+		Ref:          payload.Revision,
+		ChangedFiles: files,
+	}
+	return data, nil
+}
+
+// getSVNChangedFiles gets svn changed file from message.
+// eg:
+// input message:`
+// U   cyclone/README.txt
+// U   cyclone/test.go
+// `
+// output will be: [cyclone/README.txt, cyclone/test.go]
+func getSVNChangedFiles(message string) []string {
+	fs := []string{}
+	lineinfos := strings.Split(message, "\n")
+	for _, lineinfo := range lineinfos {
+		words := strings.Fields(lineinfo)
+		if len(words) == 2 {
+			fs = append(fs, words[1])
+		}
+
+	}
+
+	return fs
 }
 
 // PostCommit is PostCommit Event type body struct
@@ -163,6 +191,8 @@ type PostCommit struct {
 	// `svnlook uuid {repoPath}`
 	// can get the repo uuid
 	RepoUUID string `json:"repoUUID"`
-	// RepoName represents the revision of this trigger commit
+	// Revision represents the revision of this trigger commit
 	Revision string `json:"revision"`
+	// Changed describes the changed content of a svn commit
+	Changed string `json:"changed"`
 }
