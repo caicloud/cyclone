@@ -47,7 +47,7 @@ data:
           "max_queue_size": {{ .Values.engine.parallelism.overall.maxQueueSize }}
         },
         "single_workflow": {
-          "max_parallel": {{ .Values.engine.parallelism.singleWorkflow.maxParallel }},,
+          "max_parallel": {{ .Values.engine.parallelism.singleWorkflow.maxParallel }},
           "max_queue_size": {{ .Values.engine.parallelism.singleWorkflow.maxQueueSize }}
         }
       },

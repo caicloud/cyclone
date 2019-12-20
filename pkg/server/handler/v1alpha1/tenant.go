@@ -209,10 +209,13 @@ func DeleteTenant(ctx context.Context, name string) error {
 // - Create PVC
 func CreateDefaultTenant() error {
 	ns := svrcommon.TenantNamespace(svrcommon.DefaultTenant)
-	_, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
-	if err == nil {
-		log.Infof("Default namespace %s already exist", ns)
-		return nil
+	oldNs, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
+	if err == nil && oldNs.Labels != nil {
+		if _, ok := oldNs.Labels[meta.LabelTenantName]; ok {
+			log.Infof("Default namespace %s already exists, default tenant %s exists.", ns, svrcommon.DefaultTenant)
+			return nil
+		}
+		log.Infof("Default namespace %s already exists, start to init default tenant %s.", ns, svrcommon.DefaultTenant)
 	}
 
 	annotations := make(map[string]string)
@@ -261,9 +264,9 @@ func createControlClusterIntegration(tenant string) error {
 		},
 	}
 
-	in, err := createIntegration(tenant, false, in, false)
-	if err != nil {
-		return cerr.ErrorCreateIntegrationFailed.Error(in.Name, err)
+	_, err := createIntegration(tenant, false, in, false)
+	if err != nil && !cerr.ErrorAlreadyExist.Derived(err) {
+		return cerr.ErrorCreateIntegrationFailed.Error(common.ControlClusterName, err)
 	}
 
 	if config.Config.OpenControlCluster {

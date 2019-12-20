@@ -75,6 +75,7 @@ server:
     defaultTenant: true
   openControlCluster: true
   pvc:
+    # Default storageClass which Cyclone will use to create PVC.
     storageClass: ""
     size: 10Gi
   resourceRequirement:
