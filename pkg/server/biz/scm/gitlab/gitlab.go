@@ -100,7 +100,7 @@ func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
-	if len(username) == 0 {
+	if ensureTokenType(server, token) == PrivateToken {
 		client = v4.NewClient(httpClient, token)
 	} else {
 		client = v4.NewOAuthClient(httpClient, token)
@@ -122,7 +122,7 @@ func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
-	if len(username) == 0 {
+	if ensureTokenType(server, token) == PrivateToken {
 		client = gitlab.NewClient(httpClient, token)
 	} else {
 		client = gitlab.NewOAuthClient(httpClient, token)
