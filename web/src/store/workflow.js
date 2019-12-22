@@ -1,5 +1,6 @@
 import { observable, action } from 'mobx';
 import fetchApi from '../api/index.js';
+import { formatWorkflowLog } from '@/lib/util';
 
 class Workflow {
   @observable workflowList = {};
@@ -80,7 +81,7 @@ class Workflow {
   @action.bound
   getWorkflowRunLog(params, query) {
     return fetchApi.getWorkflowRunLog(params, query).then(data => {
-      this.workflowRunLogs[_.get(query, 'stage')] = data;
+      this.workflowRunLogs[_.get(query, 'stage')] = formatWorkflowLog(data);
     });
   }
 }

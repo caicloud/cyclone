@@ -29,6 +29,7 @@ class WorkflowRuns extends React.Component {
     }),
     projectName: PropTypes.string,
     workflowName: PropTypes.string,
+    history: PropTypes.func,
   };
 
   componentDidMount() {

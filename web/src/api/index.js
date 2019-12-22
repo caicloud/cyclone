@@ -261,7 +261,6 @@ const fetchApi = {
   },
 
   getWorkflowRunLog(params, query) {
-    console.error('params', params, query);
     return http
       .get(
         `/projects/${_.get(params, 'projectName')}/workflows/${_.get(
@@ -272,7 +271,6 @@ const fetchApi = {
         }&stage=${query.stage}`
       )
       .then(data => {
-        console.error('data', JSON.stringify(data));
         return data;
       });
   },

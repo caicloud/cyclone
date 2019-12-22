@@ -38,44 +38,36 @@ class RunWorkflow extends React.Component {
 
   submitForm = value => {
     const {
-      workflow: { runWorkflow },
+      workflow: { runWorkflow, workflowDetail },
       handleModalClose,
       projectName,
       workflowName,
     } = this.props;
     const { versionMethod } = this.state;
-    if (versionMethod === 'auto') {
-      const version = moment().format('YYYYMMDDhhmmss');
-      runWorkflow(
-        projectName,
-        workflowName,
-        {
-          metadata: {
-            name: version,
-          },
+    const workflowInfo = _.get(workflowDetail, workflowName);
+    const version = moment().format('YYYYMMDDhhmmss');
+
+    const submitData = {
+      metadata: {
+        name: versionMethod === 'auto' ? version : _.get(value, 'version'),
+        annotations: {
+          stagePosition: _.get(
+            workflowInfo,
+            'metadata.annotations.stagePosition'
+          ),
         },
-        // the parameters of list workflowrun callback
-        {
-          sort: true,
-          ascending: false,
-        }
-      );
-    } else {
-      runWorkflow(
-        projectName,
-        workflowName,
-        {
-          metadata: {
-            name: value.version,
-          },
-        },
-        // the parameters of list workflowrun callback
-        {
-          sort: true,
-          ascending: false,
-        }
-      );
-    }
+      },
+    };
+    runWorkflow(
+      projectName,
+      workflowName,
+      submitData,
+      // the parameters of list workflowrun callback
+      {
+        sort: true,
+        ascending: false,
+      }
+    );
 
     this.setState({ visible: false });
     handleModalClose(false);
