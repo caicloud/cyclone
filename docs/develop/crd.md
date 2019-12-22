@@ -10,7 +10,7 @@ As we known Cyclone is implemented with native Kubernetes resources with no extr
 
     * Metadata namespace: Stores metadata for one tenant, and holds its basic information in annotations. *MUST* be in the control cluster where Cyclone runs, named in format of `cyclone-{tenant-name}`
 
-    * Workload namespace: Where workloads execute. Can be in control cluster OR user clusters.
+    * Workload namespace: Where workloads execute. Can be in control cluster OR worker clusters.
 
     However you can explicitly specify the two namespaces as one: `cyclone-{tenant-name}`, then Cyclone will store metadata and execute Workload in it. But we do **NOT** recommend it for single responsibility reason, we can easily recover when workload namespace gets ruined if it is not responsible for storing metadata.
 
@@ -37,19 +37,19 @@ As we known Cyclone is implemented with native Kubernetes resources with no extr
     There are three types of pods used by Cyclone, and they all running in their own Workload namespace for each tenant:
     * Workload pod(OR called Stage Pod): One pod per stage. A workload pod executes tasks defined in a stage.
     * GC pod: One pod per WorkflowRun. As mentioned above that tenant scope PVC shares runtime data, which is temporary data and needs to be cleaned after WorkflowRun completes. The GC pod does the cleaning work.
-    * PVC watchdog: One pod per tenant. Long-Running in each Workload namespace. It watches the usages of tenant scope PVC and reports the usage information to Cyclone-server periodically.
+    * PVC watchdog: One pod per tenant. It is a long running pod in each Workload namespace. It watches the usages of tenant scope PVC and reports the usage information to Cyclone-server periodically.
 
 ## Custom Resources (Cyclone Defined)
 
-* **ExecutionCluster**: cluster scope, ExecutionCluster keeps cluster auth information. Cyclone-workflow-engine watches ExecutionCluster, once there is an ExecutionCluster created, Cyclone-workflow-engine will use the cluster auth information to start a Pod Controller to watch Pods in the cluster which the corresponding ExecutionCluster specified.
+* **ExecutionCluster**: cluster scope, ExecutionCluster keeps cluster auth information. When Cyclone-workflow-engine watches the creation of ExecutionCluster, it will use the cluster auth information to start a Pod Controller to watch Pods in the cluster specified by the ExecutionCluster.
 
-* **Project**: tenant scope, We mostly regard the project as a logical concept, it manages a group of workflows and their shared configs(like default quota used by Stage Pod)
+* **Project**: tenant scope, We mostly regard the project as a logical concept, it manages a group of workflows and their shared configs(like default quota used by Stage Pod).
 
-* **Resource**: tenant scope, the data used by stages as input or output, such as git repository's codes or docker images, Each type resource needs a `Resolver` to implement pull(input) and push(output) resource.
+* **Resource**: tenant scope, the data used by stages as inputs or outputs, such as git repository's codes or docker images. Each type of resource needs a `Resolver` to pull(input) and push(output) resources.
 
-* **Stage**: tenant scope, the minimum executable unit for a Workflow, Stage defines the certain workload specification in two types:
-    * Pod workload: Use Kubernetes pod spec(required) and Cyclone input/output Resource(if needed) to order Cyclone starting a Stage Pod to perform workload.
-    * Delegation workload: Delegate the task to an external system by a URL, the external system *MUST* notify the result of the workload otherwise Cyclone will Wait until timeout.
+* **Stage**: tenant scope, the minimum executable unit for a Workflow. Stage defines the workloads into two types:
+    * Pod workload: Use Kubernetes pod spec(required) and Cyclone input/output Resource(if needed) to perform workload.
+    * Delegation workload: Delegate the task to an external system by a URL, and the external system *MUST* report the result of the workload otherwise Cyclone will wait until timeout.
 
 * **Workflow**: tenant scope, executable DAG graph composed of stages.
 
@@ -57,17 +57,15 @@ As we known Cyclone is implemented with native Kubernetes resources with no extr
     * Cron
     * SCM webhook
 
-* **WorkflowRun**: tenant scope, running record of a Workflow. Once there is a WorkflowRun created, Cyclone-workflow-engine will start to run the Workflow and record the running status into WorkflowRun.
+* **WorkflowRun**: tenant scope, running record of a Workflow. Once there is a WorkflowRun created, Cyclone-workflow-engine will start to run the Workflow and record the running status into a WorkflowRun.
 
 ---
 
-## Running a Workflow step by step
+## Running a Workflow Step by Step
 
-How does cyclone run a Workflow step by step? Suppose you have two clusters,
-- one called control cluster installed cyclone
-- the other one called worker cluster is used to running Workflow as planned.
+Suppose you separate the running of Workflow and Cyclone components into different clusters, then there will be a control cluster where Cyclone is installed, and a worker cluster to run Workflow.
 
-What resources do you have in your clusters?
+How does Cyclone run a Workflow step by step? What resources will be created in these clusters?
 
 ![run-workflow-init](./images/run-workflow-init.png)
 
@@ -75,15 +73,16 @@ What resources do you have in your clusters?
 
 ![run-workflow-create-tenant](./images/run-workflow-create-tenant.png)
 
-2. Create Cluster type integration to save worker cluster's auth information; Cyclone will store it in `cyclone-devops` namespace by secret.
+2. Create cluster type integration to config worker cluster's auth information. Cyclone will store it in `cyclone-devops` namespace by secret.
 
 ![run-workflow-integration-cluster](./images/run-workflow-integration-cluster.png)
 
-3. Configure a namespace(e.g. `cyclone-devops-worker`) in the worker cluster to execute Workflows; In the worker cluster's workload namespace, Cyclone will create a ResourceQuota, a tenant scope PVC, and a Long-Running watchdog Pod. In the control cluster, Cyclone will create an ExecutionCluster for the worker cluster if it does not exist.
+3. Configure a namespace(e.g. `cyclone-devops-worker`) in the worker cluster to execute Workflows. In the worker cluster's workload namespace, Cyclone will create a ResourceQuota, a tenant scope PVC, and a long running watchdog Pod. 
+In the control cluster, Cyclone will create an ExecutionCluster for the worker cluster if it does not exist.
 
 ![run-workflow-open-cluster](./images/run-workflow-open-cluster.png)
 
-4. After all of the above has been done, now we can construct our Workflow by creating Resources, Stages, and Workflows.
+4. After all of the above has been done, we can construct our Workflow by creating Resources, Stages, and Workflows.
 
 ![run-workflow-create-workflow](./images/run-workflow-create-workflow.png)
 
@@ -91,7 +90,6 @@ What resources do you have in your clusters?
 
 ![run-workflow-execute-workflow](./images/run-workflow-execute-workflow.png)
 
-6. When the WorkflowRun execute completed, Cyclone will launch a GC Pod to cleanup data generated by this WorkflowRun in the PVC.
+6. When the WorkflowRun execute completed, Cyclone will launch a GC Pod to cleanup the data generated by this WorkflowRun in the PVC.
 
 ![run-workflow-gc](./images/run-workflow-gc.png)
-
