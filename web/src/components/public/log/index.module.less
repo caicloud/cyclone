@@ -1,0 +1,16 @@
+.log-item {
+  display: flex;
+  align-items: flex-start;
+  :global {
+    .key {
+      width: 30px;
+    }
+    .value {
+      width: calc("100% - 30px");
+    }
+  }
+}
+.log-body {
+  height: 400px;
+  overflow-y: scroll;
+}
