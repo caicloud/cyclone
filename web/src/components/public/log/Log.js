@@ -23,6 +23,7 @@ class Log extends React.Component {
     this.state = {};
     this.logs = [];
     this.index = 1;
+    this.logCoreInstance = React.createRef();
   }
 
   componentDidMount() {
@@ -31,13 +32,13 @@ class Log extends React.Component {
     this.updateThrottle = _.throttle(this.updateData, throttleWait);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { url, queryParams } = this.props;
-    const { url: nextUrl, queryParams: nextQueryParams } = nextProps;
+    const { url: prevUrl, queryParams: prevQueryParams } = prevProps;
 
-    if (nextUrl !== url || !_.isEqual(nextQueryParams, queryParams)) {
+    if (prevUrl !== url || !_.isEqual(prevQueryParams, queryParams)) {
       this.reset();
-      this.fetchData(nextUrl, nextQueryParams);
+      this.fetchData(url, queryParams);
     }
   }
 
@@ -182,7 +183,7 @@ class Log extends React.Component {
   render() {
     const { data } = this.state;
     return (
-      <div ref={div => (this.logCoreInstance = div)}>
+      <div ref={this.logCoreInstance}>
         <div className={styles['log-body']}>{this.logContent(data)}</div>
       </div>
     );

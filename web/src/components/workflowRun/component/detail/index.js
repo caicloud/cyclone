@@ -150,7 +150,7 @@ class RunDetail extends React.Component {
           />
         </DetailContent>
         <Modal
-          title={`${activeStage} 的日志`}
+          title={`${activeStage} ${intl.get('workflowrun.log')}`}
           visible={showLog}
           width={800}
           bodyStyle={{ padding: '24px 0 24px 24px' }}
@@ -160,7 +160,7 @@ class RunDetail extends React.Component {
                 this.setState({ showLog: false });
               }}
             >
-              关闭
+              {intl.get('cluster.close')}
             </Button>
           }
           onCancel={() => {

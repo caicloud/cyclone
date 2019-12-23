@@ -251,3 +251,4 @@ workflowrun:
     method: 版本生成
     auto: 自动生成
     manual: 手动输入
+  log: 日志
