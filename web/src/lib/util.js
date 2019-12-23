@@ -5,6 +5,8 @@ import {
   SPECIAL_EDGE_TYPE,
 } from '@/components/workflow/component/add/graph-config';
 
+export const LINE_FEED = /(?:\r\n|\r|\n)/;
+
 export function FormatTime(time, formatStr = 'YYYY-MM-DD HH:mm:ss') {
   return moment(time).format(formatStr);
 }
@@ -53,6 +55,16 @@ export const getQuery = str => {
   return query;
 };
 
+export const formatWorkflowRunStage = stages => {
+  let stageArr = [];
+  _.forEach(stages, (v, k) => {
+    let tmp = _.pick(v, ['depends', 'status']);
+    tmp.name = k;
+    stageArr.push(tmp);
+  });
+  return stageArr;
+};
+
 export const tranformStage = (stages, position) => {
   let nodes = [];
   let edges = [];
@@ -63,6 +75,7 @@ export const tranformStage = (stages, position) => {
       id: `stage_${k}`,
       title: v.name,
       type: STAGE,
+      status: _.get(v, 'status.phase'),
       ..._.pick(pos, ['x', 'y']),
     };
     nodes.push(node);
@@ -115,3 +128,22 @@ export const getIntegrationName = _argument => {
     return integration;
   }
 };
+
+export const formatWorkflowLog = data => {
+  const logs = data ? data.split(LINE_FEED) : [];
+  return logs;
+};
+
+// http address to ws address
+export function convertHttpUrlToWs(url) {
+  if (!url || !_.isString(url)) {
+    return '';
+  }
+  // Remove protocol to get host part
+  const urlArr = url.split('://');
+  const host = urlArr.length > 1 ? urlArr[1] : urlArr[0];
+
+  // Determine the connection protocol based on the protocol of the current page, http => ws & https => wss
+  const pro = window.location.protocol.replace(':', '');
+  return (pro === 'http' ? 'ws://' : 'wss://') + host;
+}

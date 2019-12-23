@@ -249,6 +249,32 @@ const fetchApi = {
       return data;
     });
   },
+
+  getWorkflowrun(project, workflow, workflowRun, config = {}) {
+    return http
+      .get(
+        `/projects/${project}/workflows/${workflow}/workflowruns/${workflowRun}`,
+        config
+      )
+      .then(data => {
+        return data;
+      });
+  },
+
+  getWorkflowRunLog(params, query) {
+    return http
+      .get(
+        `/projects/${_.get(params, 'projectName')}/workflows/${_.get(
+          params,
+          'workflowName'
+        )}/workflowruns/${_.get(params, 'workflowRun')}/logs?container=${
+          query.container
+        }&stage=${query.stage}`
+      )
+      .then(data => {
+        return data;
+      });
+  },
 };
 
 export default fetchApi;

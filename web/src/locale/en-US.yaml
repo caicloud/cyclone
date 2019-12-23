@@ -251,3 +251,4 @@ workflowrun:
     method: Version Method
     auto: Auto Generate
     manual: Manual Input
+  log: Log

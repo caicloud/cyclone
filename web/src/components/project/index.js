@@ -3,6 +3,7 @@ import ProjectDetail from './component/detail';
 import CreateProject from './component/addProject';
 import CreateWorkflow from '@/components/workflow/component/add/Form';
 import WorkflowDetail from '@/components/workflow/component/detail';
+import WorkflowRunDetail from '@/components/workflowRun/component/detail';
 import { Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
@@ -13,6 +14,12 @@ const ProjectRoutes = ({ match }) => {
       <Route
         path={`${match.path}/:projectName/workflows/add`}
         component={CreateWorkflow}
+      />
+      <Route
+        path={`${
+          match.path
+        }/:projectName/workflows/:workflowName/workflowRuns/:workflowRun`}
+        component={WorkflowRunDetail}
       />
       <Route
         path={`${match.path}/:projectName/workflows/:workflowName/update`}

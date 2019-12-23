@@ -1,10 +1,13 @@
 import { observable, action } from 'mobx';
 import fetchApi from '../api/index.js';
+import { formatWorkflowLog } from '@/lib/util';
 
 class Workflow {
   @observable workflowList = {};
   @observable workflowDetail = {};
   @observable workflowRuns = {};
+  @observable workflowRunDetail = {};
+  @observable workflowRunLogs = {};
 
   @action.bound
   listWorklow(projectID, query) {
@@ -59,6 +62,28 @@ class Workflow {
   delelteWorkflowRun(project, workflow, record, listQuery = {}) {
     return fetchApi.deleteWorkflowRun(project, workflow, record).then(() => {
       this.listWorkflowRuns(project, workflow, listQuery);
+    });
+  }
+
+  @action.bound
+  getWorkflowRun(params, config = {}, cb) {
+    return fetchApi
+      .getWorkflowrun(
+        _.get(params, 'projectName'),
+        _.get(params, 'workflowName'),
+        _.get(params, 'workflowRun'),
+        config
+      )
+      .then(data => {
+        this.workflowRunDetail[_.get(params, 'workflowRun')] = data;
+        cb && cb(data);
+      });
+  }
+
+  @action.bound
+  getWorkflowRunLog(params, query) {
+    return fetchApi.getWorkflowRunLog(params, query).then(data => {
+      this.workflowRunLogs[_.get(query, 'stage')] = formatWorkflowLog(data);
     });
   }
 }

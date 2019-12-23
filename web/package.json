@@ -19,6 +19,7 @@
     "react-digraph": "^6.2.2",
     "react-syntax-highlighter": "^10.3.0",
     "recharts": "^1.6.2",
+    "reconnecting-websocket": "^4.2.0",
     "redoc": "^2.0.0-alpha.41",
     "yaml-loader": "0.5.0"
   },
@@ -134,5 +135,5 @@
     "webpack-manifest-plugin": "2.0.4"
   },
   "peerDependencies": {},
-  "proxy": "http://192.168.17.101:30022"
+  "proxy": "http://192.168.21.107:30022"
 }

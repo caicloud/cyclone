@@ -65,7 +65,10 @@ class WorkflowDetail extends React.Component {
         <DetailContent>
           <Tabs defaultActiveKey="record" type="card">
             <TabPane tab={intl.get('workflow.runRecord')} key="record">
-              <WorkflowRuns {..._.get(this.props, 'match.params')} />
+              <WorkflowRuns
+                {..._.get(this.props, 'match.params')}
+                history={history}
+              />
             </TabPane>
             <TabPane tab={intl.get('workflow.basicInfo')} key="workflow">
               <StageDepend detail={detail} />

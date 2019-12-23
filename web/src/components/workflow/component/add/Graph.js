@@ -8,13 +8,23 @@ import GraphConfig, {
   SPECIAL_EDGE_TYPE,
 } from './graph-config'; // Configures node/edge types
 import AddStage from '../stage/AddStage';
-import classNames from 'classnames';
+import classNames from 'classnames/bind';
 import styles from '../index.module.less';
 import PropTypes from 'prop-types';
 import { formatStage, revertFormArg } from './util';
 import { formatTouchedField } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
+import Icons from './Icons';
 
+const clsStyle = classNames.bind(styles);
+
+const statusMap = {
+  Failed: 'Failed',
+  Succeeded: 'Succeeded',
+  Running: 'Loading',
+  Pending: 'Loading',
+  Waiting: 'Waiting',
+};
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
 // elsewhere in the App or be generated from some other state upstream of this component.
@@ -27,7 +37,6 @@ class Graph extends React.Component {
     super(props);
 
     const { initialGraph } = props;
-
     this.state = {
       copiedNode: null,
       graph: _.isEmpty(initialGraph)
@@ -49,7 +58,7 @@ class Graph extends React.Component {
   componentWillUnmount() {
     const { saveGraphWhenUnmount } = this.props;
     const { graph } = this.state;
-    saveGraphWhenUnmount(graph);
+    saveGraphWhenUnmount && saveGraphWhenUnmount(graph);
   }
 
   getNodePosition = initialGraph => {
@@ -254,8 +263,15 @@ class Graph extends React.Component {
       resource: { getStage },
       project,
       values,
+      readOnly,
+      handleStageLog,
     } = this.props;
     if (depnedLoading) {
+      return;
+    }
+
+    if (readOnly) {
+      handleStageLog && handleStageLog(_.get(viewNode, 'title'));
       return;
     }
     // Deselect events will send Null viewNode
@@ -562,16 +578,29 @@ class Graph extends React.Component {
   // render note text
   renderNodeText = (data, id, isSelected) => {
     const lineOffset = 6;
-    const cls = classNames('node-text', { selected: isSelected });
+    const cls = clsStyle('node-text', { selected: isSelected });
+    const status = _.get(data, 'status');
     return (
-      <text className={cls} textAnchor="middle">
-        {!!data.typeText && <tspan opacity="0.5">{data.typeText}</tspan>}
-        {data.title && (
-          <tspan x={0} dy={lineOffset} fontSize="16px">
-            {data.title}
-          </tspan>
+      <React.Fragment>
+        {status && (
+          <g
+            height="36"
+            width="36"
+            transform="translate(-60, -5)"
+            className="f-rotate"
+          >
+            {_.get(Icons, _.get(statusMap, status, 'Waiting'))}
+          </g>
         )}
-      </text>
+        <text className={cls} textAnchor="middle">
+          {!!data.typeText && <tspan opacity="0.5">{data.typeText}</tspan>}
+          {data.title && (
+            <tspan x={0} dy={lineOffset} fontSize="16px">
+              {data.title}
+            </tspan>
+          )}
+        </text>
+      </React.Fragment>
     );
   };
 
@@ -586,7 +615,7 @@ class Graph extends React.Component {
       selected,
     } = this.state;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-    const { values, update, project } = this.props;
+    const { values, update, project, readOnly, className } = this.props;
     const currentStage = _.get(values, 'currentStage');
     const stages = _.get(values, 'stages', []);
     const modify = stages.includes(currentStage);
@@ -596,17 +625,21 @@ class Graph extends React.Component {
       ''
     );
 
+    const graphsCls = clsStyle('graph', { [className]: !!className });
+
     return (
-      <div id="graph" className={styles['graph']}>
-        <div className="graph-header">
-          <Button
-            type="primary"
-            onClick={this.addStartNode}
-            disabled={depnedLoading}
-          >
-            {intl.get('workflow.addStage')}
-          </Button>
-        </div>
+      <div id="graph" className={graphsCls}>
+        {!readOnly && (
+          <div className="graph-header">
+            <Button
+              type="primary"
+              onClick={this.addStartNode}
+              disabled={depnedLoading}
+            >
+              {intl.get('workflow.addStage')}
+            </Button>
+          </div>
+        )}
         <GraphView
           ref={el => (this.GraphView = el)}
           nodeKey={NODE_KEY}
@@ -627,7 +660,7 @@ class Graph extends React.Component {
           onCopySelected={this.onCopySelected}
           onPasteSelected={this.onPasteSelected}
           renderNodeText={this.renderNodeText}
-          readOnly={depnedLoading}
+          readOnly={depnedLoading || readOnly}
           showGraphControls={false}
         />
         <Drawer
@@ -656,6 +689,10 @@ class Graph extends React.Component {
   }
 }
 
+Graph.defaultProps = {
+  readOnly: false,
+};
+
 Graph.propTypes = {
   values: PropTypes.object,
   setFieldValue: PropTypes.func,
@@ -663,6 +700,7 @@ Graph.propTypes = {
   updateStagePosition: PropTypes.func,
   initialGraph: PropTypes.object,
   update: PropTypes.bool,
+  readOnly: PropTypes.bool,
   project: PropTypes.string,
   workflowName: PropTypes.string,
   resource: PropTypes.object,
@@ -670,6 +708,8 @@ Graph.propTypes = {
   workflow: PropTypes.object,
   validateForm: PropTypes.func,
   setTouched: PropTypes.func,
+  className: PropTypes.string,
+  handleStageLog: PropTypes.func,
 };
 
 export default Graph;

@@ -8243,6 +8243,11 @@ recharts@^1.6.2:
     recharts-scale "^0.4.2"
     reduce-css-calc "^1.3.0"
 
+reconnecting-websocket@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.npm.taobao.org/reconnecting-websocket/download/reconnecting-websocket-4.2.0.tgz#2395f84b5d0acee439ff5df34c3fd0853d11be7c"
+  integrity sha1-I5X4S10KzuQ5/13zTD/QhT0Rvnw=
+
 recursive-readdir@2.2.2:
   version "2.2.2"
   resolved "http://registry.npm.taobao.org/recursive-readdir/download/recursive-readdir-2.2.2.tgz#9946fb3274e1628de6e36b2f6714953b4845094f"
