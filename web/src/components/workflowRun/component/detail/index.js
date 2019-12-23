@@ -34,8 +34,36 @@ class RunDetail extends React.Component {
       match: { params },
     } = this.props;
     if (!_.get(workflowRunDetail, _.get(params, 'workflowRun'))) {
-      getWorkflowRun(params);
+      getWorkflowRun(params, {}, data => {
+        const status = _.get(data, 'status.overall.phase');
+        this.getDetailInterval(status);
+      });
+    } else {
+      const status = _.get(workflowRunDetail, [
+        _.get(params, 'workflowRun'),
+        'status',
+        'overall',
+        'phase',
+      ]);
+      this.getDetailInterval(status);
     }
+  }
+
+  getDetailInterval = status => {
+    const {
+      workflow: { getWorkflowRun },
+      match: { params },
+    } = this.props;
+    if (!recordFinishStatus.includes(status)) {
+      this.timer = window.setInterval(() => {
+        // silent without request loading
+        getWorkflowRun(params, { params: { silent: true } });
+      }, 5000);
+    }
+  };
+
+  componentWillUnmount() {
+    this.timer && window.clearInterval(this.timer);
   }
 
   showStageLog = stageId => {

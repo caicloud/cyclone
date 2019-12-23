@@ -250,10 +250,11 @@ const fetchApi = {
     });
   },
 
-  getWorkflowrun(project, workflow, workflowRun) {
+  getWorkflowrun(project, workflow, workflowRun, config = {}) {
     return http
       .get(
-        `/projects/${project}/workflows/${workflow}/workflowruns/${workflowRun}`
+        `/projects/${project}/workflows/${workflow}/workflowruns/${workflowRun}`,
+        config
       )
       .then(data => {
         return data;

@@ -66,15 +66,17 @@ class Workflow {
   }
 
   @action.bound
-  getWorkflowRun(params) {
+  getWorkflowRun(params, config = {}, cb) {
     return fetchApi
       .getWorkflowrun(
         _.get(params, 'projectName'),
         _.get(params, 'workflowName'),
-        _.get(params, 'workflowRun')
+        _.get(params, 'workflowRun'),
+        config
       )
       .then(data => {
         this.workflowRunDetail[_.get(params, 'workflowRun')] = data;
+        cb && cb(data);
       });
   }
 

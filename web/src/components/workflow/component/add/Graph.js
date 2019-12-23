@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Drawer, notification, Icon } from 'antd';
+import { Button, Drawer, notification } from 'antd';
 import { GraphView } from 'react-digraph';
 import GraphConfig, {
   NODE_KEY,
@@ -14,15 +14,16 @@ import PropTypes from 'prop-types';
 import { formatStage, revertFormArg } from './util';
 import { formatTouchedField } from '@/lib/util';
 import { inject, observer } from 'mobx-react';
+import Icons from './Icons';
 
 const clsStyle = classNames.bind(styles);
 
 const statusMap = {
-  Failed: 'close-circle',
-  Succeeded: 'check-circle',
-  Running: 'redo',
-  Pending: 'redo',
-  Waiting: 'hourglass',
+  Failed: 'Failed',
+  Succeeded: 'Succeeded',
+  Running: 'Loading',
+  Pending: 'Loading',
+  Waiting: 'Waiting',
 };
 // NOTE: Edges must have 'source' & 'target' attributes
 // In a more realistic use case, the graph would probably originate
@@ -580,20 +581,26 @@ class Graph extends React.Component {
     const cls = clsStyle('node-text', { selected: isSelected });
     const status = _.get(data, 'status');
     return (
-      <text className={cls} textAnchor="middle">
-        {!!data.typeText && <tspan opacity="0.5">{data.typeText}</tspan>}
-        {data.title && (
-          <tspan x={0} dy={lineOffset} fontSize="16px">
-            {status && (
-              <Icon
-                type={_.get(statusMap, status, 'redo')}
-                spin={['Pending', 'Running'].includes(status)}
-              />
-            )}
-            {data.title}
-          </tspan>
+      <React.Fragment>
+        {status && (
+          <g
+            height="36"
+            width="36"
+            transform="translate(-60, -5)"
+            className="f-rotate"
+          >
+            {_.get(Icons, _.get(statusMap, status, 'Waiting'))}
+          </g>
         )}
-      </text>
+        <text className={cls} textAnchor="middle">
+          {!!data.typeText && <tspan opacity="0.5">{data.typeText}</tspan>}
+          {data.title && (
+            <tspan x={0} dy={lineOffset} fontSize="16px">
+              {data.title}
+            </tspan>
+          )}
+        </text>
+      </React.Fragment>
     );
   };
 
