@@ -98,9 +98,7 @@ class TemplateStage extends React.Component {
                           }
                           tooltip={_.get(argDes, r.name)}
                           hasFeedback
-                          required={
-                            r.name === 'output-artifact-path' ? false : true
-                          }
+                          required={r.name !== 'output-artifact-path'}
                           validate={required}
                           formItemLayout={drawerFormItemLayout}
                         />
