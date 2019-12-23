@@ -42,6 +42,11 @@ class Log extends React.Component {
     }
   }
 
+  reset() {
+    this.index = 1;
+    this.logs = [];
+  }
+
   componentWillUnmount() {
     this.destroyNetwork();
   }
