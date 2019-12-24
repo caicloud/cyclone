@@ -89,7 +89,18 @@ class RunDetail extends React.Component {
     } else {
       // Running 状态再去获取日志, Pending 和 Waiting 状态获取不到日志
       if (status === 'Running') {
-        // TODO: streamlog
+        requestQuery['tenant'] = 'system';
+        let _host = window.location.host;
+        _host = _host.split(':');
+        const queryString = qs.stringify(requestQuery);
+        const url = `ws://${`${_host[0]}:30011`}/apis/v1alpha1/projects/${_.get(
+          params,
+          'projectName'
+        )}/workflows/${_.get(params, 'workflowName')}/workflowruns/${_.get(
+          params,
+          'workflowRun'
+        )}/logstream?${queryString}`;
+        return url;
       }
     }
   };

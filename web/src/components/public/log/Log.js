@@ -23,11 +23,11 @@ class Log extends React.Component {
     this.state = {};
     this.logs = [];
     this.index = 1;
-    this.logCoreInstance = React.createRef();
   }
 
   componentDidMount() {
     const { url, queryParams, throttleWait } = this.props;
+    this.logCoreInstance = React.createRef();
     this.fetchData(url, queryParams);
     this.updateThrottle = _.throttle(this.updateData, throttleWait);
   }
@@ -45,6 +45,7 @@ class Log extends React.Component {
   reset() {
     this.index = 1;
     this.logs = [];
+    this.setState({ data: [] });
   }
 
   componentWillUnmount() {
@@ -62,7 +63,7 @@ class Log extends React.Component {
       return;
     }
 
-    //TODO: destroy request instance first
+    this.destroyNetwork();
     this.isWebSocket = _.startsWith(url, 'ws');
     if (this.isWebSocket) {
       this.fetchDataWithSocket(url);
@@ -135,6 +136,7 @@ class Log extends React.Component {
   };
 
   updateData = () => {
+    const { data = [] } = this.state;
     const cacheLogs = _.map(this.logs, log => {
       return {
         key: this.index++,
@@ -146,32 +148,28 @@ class Log extends React.Component {
 
     this.setState(
       {
-        data: cacheLogs,
+        data: data.concat(cacheLogs),
       },
       () => {
-        // TODO: steam log position
-        // const bodyDOM = this.logCoreInstance.getBodyDOM();
-        // if (this.isWebSocket) {
-        //   // websocket 不断追加数据的时候，需要变更对去顶部/底部按钮的状态
-        //   this.logCoreInstance.scrollButtonUpdate();
-        //   // scroll 至最新的实时日志位置
-        //   showLatestScreamLog && (bodyDOM.scrollTop = bodyDOM.scrollHeight);
-        //   return;
-        // }
-        // const originValue = bodyDOM.scrollTop;
-        // originValue !== 0 && (bodyDOM.scrollTop += offsetWhenDataChange);
-        // // Less than one page, manually start loading the next page data.
-        // bodyDOM.offsetHeight === bodyDOM.scrollHeight && this.update();
+        const bodyDOM = this.logCoreInstance.current;
+        if (this.isWebSocket) {
+          // scroll to latest log
+          const scrollHeight = bodyDOM.scrollHeight;
+          const clientHeight = bodyDOM.clientHeight;
+          this.logCoreInstance.current.scrollTop = scrollHeight - clientHeight;
+        }
       }
     );
   };
 
   logContent = data => {
+    const { loading } = this.state;
     return (
       <List
         dataSource={data}
         size="small"
         footer={null}
+        loading={loading}
         header={null}
         bordered={false}
         split={false}
@@ -188,8 +186,10 @@ class Log extends React.Component {
   render() {
     const { data } = this.state;
     return (
-      <div ref={this.logCoreInstance}>
-        <div className={styles['log-body']}>{this.logContent(data)}</div>
+      <div>
+        <div className={styles['log-body']} ref={this.logCoreInstance}>
+          {this.logContent(data)}
+        </div>
       </div>
     );
   }
