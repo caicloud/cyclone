@@ -21,8 +21,8 @@ const clsStyle = classNames.bind(styles);
 const statusMap = {
   Failed: 'Failed',
   Succeeded: 'Succeeded',
-  Running: 'Loading',
-  Pending: 'Loading',
+  Running: 'Spinner',
+  Pending: 'Spinner',
   Waiting: 'Waiting',
 };
 // NOTE: Edges must have 'source' & 'target' attributes
@@ -583,12 +583,7 @@ class Graph extends React.Component {
     return (
       <React.Fragment>
         {status && (
-          <g
-            height="36"
-            width="36"
-            transform="translate(-60, -5)"
-            className="f-rotate"
-          >
+          <g height="36" width="36" transform="translate(-60, -5)">
             {_.get(Icons, _.get(statusMap, status, 'Waiting'))}
           </g>
         )}

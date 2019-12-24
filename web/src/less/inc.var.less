@@ -117,5 +117,11 @@ code {
 }
 
 .f-rotate {
-  animation: rotate 2s linear infinite;
+  animation: loadingCircle 2s linear infinite;
+}
+
+@keyframes loadingCircle {
+  100% {
+    transform: rotate(360deg);
+  }
 }
