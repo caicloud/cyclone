@@ -11,6 +11,7 @@ import PropTypes from 'prop-types';
 import Detail from '@/components/public/detail';
 import Log from '@/components/public/log';
 import Graph from '@/components/workflow/component/add/Graph';
+
 const { DetailHead, DetailHeadItem, DetailContent } = Detail;
 
 export const LINE_FEED = /(?:\r\n|\r|\n)/;
@@ -81,7 +82,6 @@ class RunDetail extends React.Component {
     };
     if (recordFinishStatus.includes(status)) {
       const queryString = qs.stringify(requestQuery);
-
       return `/projects/${_.get(params, 'projectName')}/workflows/${_.get(
         params,
         'workflowName'
