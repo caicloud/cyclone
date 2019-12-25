@@ -100,7 +100,7 @@ class TemplateStage extends React.Component {
                           hasFeedback
                           required={r.name !== 'output-artifact-path'}
                           validate={
-                            r.name !== 'output-artifact-path' && required
+                            r.name === 'output-artifact-path' ? null : required
                           }
                           formItemLayout={drawerFormItemLayout}
                         />
