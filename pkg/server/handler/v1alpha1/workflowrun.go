@@ -353,7 +353,14 @@ func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, co
 }
 
 // GetContainerLogStream gets real-time logs of a certain stage.
-func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, tenant, stage string) error {
+func GetContainerLogStream(ctx context.Context, project, workflow, workflowrun, tenant, stage, qt string) error {
+	// If there is no tenant info in Header, we will get it from query, since front end is hard to
+	// pass information in Header while using Websockets
+	// More info: https://stackoverflow.com/questions/4361173/http-headers-in-websockets-client-api
+	if tenant == "" {
+		tenant = qt
+	}
+
 	request := contextutil.GetHTTPRequest(ctx)
 	writer := contextutil.GetHTTPResponseWriter(ctx)
 

@@ -314,6 +314,10 @@ var workflowrun = []definition.Descriptor{
 						Source: definition.Query,
 						Name:   httputil.StageNameQueryParameter,
 					},
+					{
+						Source: definition.Query,
+						Name:   "tenant",
+					},
 				},
 				Results: []definition.Result{definition.ErrorResult()},
 			},
