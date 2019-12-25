@@ -55,6 +55,17 @@ class Graph extends React.Component {
     this.GraphView = React.createRef();
   }
 
+  componentDidUpdate(prevProps) {
+    const { initialGraph } = this.props;
+    if (
+      initialGraph &&
+      _.get(prevProps, 'initialGraph') &&
+      !_.isEqual(initialGraph, _.get(prevProps, 'initialGraph'))
+    ) {
+      this.setState({ graph: initialGraph });
+    }
+  }
+
   componentWillUnmount() {
     const { saveGraphWhenUnmount } = this.props;
     const { graph } = this.state;
