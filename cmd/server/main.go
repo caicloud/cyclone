@@ -82,7 +82,12 @@ func initialize(opts *Options) {
 		log.Fatalf("Load config from ConfigMap %s error: %s", opts.ConfigMap, err)
 	}
 
-	handler.Init(client)
+	rateLimitClient, err := utilk8s.GetRateLimitClient(opts.KubeConfig, config.Config.ClientSet.QPS, config.Config.ClientSet.Burst)
+	if err != nil {
+		log.Fatalf("Create k8s client error: %v", err)
+	}
+
+	handler.Init(rateLimitClient)
 	log.Info("Init handlers succeed.")
 
 	if config.Config.InitDefaultTenant {
