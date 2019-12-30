@@ -9,6 +9,33 @@ import (
 
 // GetClient creates a client for k8s cluster
 func GetClient(kubeConfigPath string) (clientset.Interface, error) {
+	config, err := getKubeConfig(kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientset.NewForConfig(config)
+}
+
+// GetRateLimitClient creates a client for k8s cluster with custom defined qps and burst.
+func GetRateLimitClient(kubeConfigPath string, qps float32, burst int) (clientset.Interface, error) {
+	config, err := getKubeConfig(kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if qps > 0.0 {
+		config.QPS = float32(qps)
+	}
+
+	if burst > 0 {
+		config.Burst = burst
+	}
+
+	return clientset.NewForConfig(config)
+}
+
+func getKubeConfig(kubeConfigPath string) (*rest.Config, error) {
 	var config *rest.Config
 	var err error
 	if kubeConfigPath != "" {
@@ -22,6 +49,5 @@ func GetClient(kubeConfigPath string) (clientset.Interface, error) {
 			return nil, err
 		}
 	}
-
-	return clientset.NewForConfig(config)
+	return config, nil
 }
