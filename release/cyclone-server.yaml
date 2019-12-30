@@ -111,5 +111,9 @@ _config:
                 "name": "devops",
                 "url": "http://devops-admin.default.svc.cluster.local:7088/api/v2/pipeline/notifications"
               }
-            ]
+            ],
+            "client_set": {
+              "qps": 10.0,
+              "burst": 20
+            }
           }
