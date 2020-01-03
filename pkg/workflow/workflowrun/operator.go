@@ -191,6 +191,10 @@ func (o *operator) Update() error {
 
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
 			len(latest.OwnerReferences) != len(combined.OwnerReferences) {
+
+			// If status has any change, the overall last transition time need to update
+			combined.Status.Overall.LastTransitionTime = metav1.Time{Time: time.Now()}
+
 			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(combined)
 			if err == nil {
 				log.WithField("wfr", latest.Name).
