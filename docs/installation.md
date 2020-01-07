@@ -56,7 +56,7 @@ $ helm delete --purge cyclone
 | Parameter | Description | Default |
 | --------- | --------- | --------- |
 | `imageRegistry.registry` | Image registry where to pull images | `docker.io` |
-| `imageRegistry.project` | Project in the registry where to pull Cyclone component images | `k8sdevops` |
+| `imageRegistry.project` | Project in the registry where to pull Cyclone component images | `caicloud` |
 | `imageRegistry.libraryProject` | Project in the registry where to pull common images, like `busybox` | `library` |
 | `serverAddress` | Address of the Cyclone Server (provides Restful APIs) | `cyclone-server.default.svc.cluster.local::7099` |
 | `systemNamespace` | Namespace where Cyclone will be installed | `default` |

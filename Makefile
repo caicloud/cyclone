@@ -135,13 +135,11 @@ build-web-local:
 	  yarn;                                                                            \
 	  yarn build'
 
-container: build-linux
-	@for image in $(IMAGES); do                                                        \
-	  for registry in $(REGISTRIES); do                                                \
-	    imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                        \
-	    docker build -t $${registry}/$${imageName}:$(VERSION)                          \
-	      -f $(BUILD_DIR)/$${image}/Dockerfile .;                                      \
-	  done                                                                             \
+container-web: build-web
+	@for registry in $(REGISTRIES); do                                                 \
+	  imageName=$(IMAGE_PREFIX)web$(IMAGE_SUFFIX);                                     \
+	  docker build -t $${registry}/$${imageName}:$(VERSION)                            \
+	    -f $(BUILD_DIR)/web/Dockerfile.local .;                                        \
 	done
 
 container-web-local: build-web-local
@@ -149,6 +147,15 @@ container-web-local: build-web-local
 	  imageName=$(IMAGE_PREFIX)web$(IMAGE_SUFFIX);                                     \
 	  docker build -t $${registry}/$${imageName}:$(VERSION)                            \
 	    -f $(BUILD_DIR)/web/Dockerfile.local .;                                        \
+	done
+
+container: build-linux
+	@for image in $(IMAGES); do                                                        \
+	  for registry in $(REGISTRIES); do                                                \
+	    imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                        \
+	    docker build -t $${registry}/$${imageName}:$(VERSION)                          \
+	      -f $(BUILD_DIR)/$${image}/Dockerfile .;                                      \
+	  done                                                                             \
 	done
 
 container-local: build-local
