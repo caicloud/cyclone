@@ -1,5 +1,5 @@
 apiVersion: v1
-AppVersion: v1.0.0-alpha
+AppVersion: v1.0.0
 description: A Helm chart for Cyclone
 name: cyclone
 version: 0.1.2

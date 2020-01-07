@@ -17,8 +17,8 @@
       inputs:
         arguments:
         - name: image
-          value: k8sdevops/cyclone-cicd-sonarcube:v0.9.5-beta
-          description: Image to run this stage, for example, 'k8sdevops/cyclone-cicd-sonarcube:v0.9.5'
+          value: caicloud/cyclone-cicd-sonarcube:v1.0.0
+          description: Image to run this stage, for example, 'caicloud/cyclone-cicd-sonarcube:v1.0.0'
         - name: sonarURL
           description: URL of the SonarQube server, for example, 'http://192.168.21.97:9000'
         - name: sonarToken

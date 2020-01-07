@@ -15,8 +15,8 @@
       inputs:
         arguments:
         - name: image
-          value: k8sdevops/cyclone-cicd-cd:v0.9.5
-          description: Image to run this stage, for example, 'k8sdevops/cyclone-cicd-cd:v0.9.5'
+          value: caicloud/cyclone-cicd-cd:v1.0.0
+          description: Image to run this stage, for example, 'caicloud/cyclone-cicd-cd:v1.0.0'
         - name: config
           value: >-
             {
