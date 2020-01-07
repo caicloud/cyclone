@@ -3,7 +3,7 @@
 # These two projects can be definitely set to the same value.
 imageRegistry:
   registry: docker.io
-  project: k8sdevops
+  project: caicloud
   libraryProject: library
 
 # Address of Cyclone server
