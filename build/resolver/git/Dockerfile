@@ -1,13 +1,12 @@
-FROM ubuntu:18.10
+FROM alpine:3.8
 
-LABEL maintainer="chende@caicloud.io"
+LABEL maintainer="zhujian@caicloud.io"
 
 ENV WORKDIR /workspace
 WORKDIR $WORKDIR
 
-RUN apt-get update \
-    && apt-get install -y git \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add --no-cache ca-certificates git bash coreutils
 
 COPY ./build/resolver/git/entrypoint.sh /
 
