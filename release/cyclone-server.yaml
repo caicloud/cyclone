@@ -113,7 +113,7 @@ _config:
               }
             ],
             "client_set": {
-              "qps": 10.0,
-              "burst": 20
+              "qps": 50.0,
+              "burst": 100
             }
           }
