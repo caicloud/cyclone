@@ -34,12 +34,19 @@ func GroupResource(resource string) schema.GroupResource {
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Resource{},
+		&ResourceList{},
 		&Workflow{},
+		&WorkflowList{},
 		&WorkflowRun{},
+		&WorkflowRunList{},
 		&Stage{},
+		&StageList{},
 		&WorkflowTrigger{},
+		&WorkflowTriggerList{},
 		&Project{},
+		&ProjectList{},
 		&ExecutionCluster{},
+		&ExecutionClusterList{},
 	)
 	// Add the watch version that applies
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
