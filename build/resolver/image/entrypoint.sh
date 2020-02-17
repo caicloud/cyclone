@@ -70,8 +70,24 @@ END
     ls -al /root/.docker/config.json
 fi
 
-pull() {
-    docker pull $IMAGE
+# push image with retry logic
+push() {
+    i=1
+    while [ $i -le 3 ]
+    do
+        docker push $IMAGE
+        status=$?
+        if [ $status -eq 0 ]
+        then
+          echo "pushed $IMAGE successfully."
+          break
+        else
+          echo "pushed $IMAGE failed, number of push retries: $i"
+          [ $i -lt 3 ] && sleep 10
+        fi
+        i=$(( i + 1 ))
+        false
+    done || exit
 }
 
 # Wait until resource data is ready.
@@ -92,7 +108,8 @@ case $COMMAND in
             echo "Load images from file ${IMAGE_FILE}"
             docker load -i ${WORKDIR}/data/${IMAGE_FILE}
         fi
-        docker push $IMAGE
+        # docker push $IMAGE
+        push
         ;;
     * )
         echo "$USAGE"
