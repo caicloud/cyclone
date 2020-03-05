@@ -1,7 +1,5 @@
 FROM arm64v8/openjdk:8-alpine3.8
 
-LABEL maintainer="Ryan Mitchell <mitch@ryansmitchell.com>"
-
 RUN apk add --no-cache curl grep sed unzip bash nodejs nodejs-npm
 
 # Set timezone to CST
