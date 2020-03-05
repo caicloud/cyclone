@@ -1,6 +1,6 @@
 FROM alpine:3.8
 
-LABEL maintainer="chende@caicloud.io"
+LABEL maintainer="zhujian@caicloud.io"
 
 ENV WORKDIR /workspace
 ENV DOCKER_VERSION 18.03.1-ce

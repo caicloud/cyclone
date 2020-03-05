@@ -1,6 +1,6 @@
 FROM alpine:3.8
 
-LABEL maintainer="chende@caicloud.io"
+LABEL maintainer="zhujian@caicloud.io"
 
 WORKDIR /workspace
 
