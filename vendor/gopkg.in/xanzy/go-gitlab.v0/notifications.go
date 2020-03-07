@@ -3,6 +3,7 @@ package gitlab
 import (
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 // NotificationSettingsService handles communication with the notification settings
@@ -23,7 +24,7 @@ type NotificationSettings struct {
 	Events            *NotificationEvents    `json:"events"`
 }
 
-// NotificationEvents represents the available notification setting events.
+// NotificationEvents represents the avialable notification setting events.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/notification_settings.html#notification-settings
@@ -121,7 +122,7 @@ func (s *NotificationSettingsService) GetSettingsForGroup(gid interface{}, optio
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s/notification_settings", pathEscape(group))
+	u := fmt.Sprintf("groups/%s/notification_settings", url.QueryEscape(group))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -146,7 +147,7 @@ func (s *NotificationSettingsService) GetSettingsForProject(pid interface{}, opt
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/notification_settings", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/notification_settings", url.QueryEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -171,7 +172,7 @@ func (s *NotificationSettingsService) UpdateSettingsForGroup(gid interface{}, op
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s/notification_settings", pathEscape(group))
+	u := fmt.Sprintf("groups/%s/notification_settings", url.QueryEscape(group))
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
@@ -196,7 +197,7 @@ func (s *NotificationSettingsService) UpdateSettingsForProject(pid interface{}, 
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/notification_settings", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/notification_settings", url.QueryEscape(project))
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {

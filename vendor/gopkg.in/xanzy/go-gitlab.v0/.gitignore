@@ -22,7 +22,3 @@ _testmain.go
 *.exe
 *.test
 *.prof
-
-# IDE specific files and folders
-.idea
-*.iml

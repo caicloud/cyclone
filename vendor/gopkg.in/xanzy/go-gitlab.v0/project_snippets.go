@@ -1,5 +1,5 @@
 //
-// Copyright 2017, Sander van Harmelen
+// Copyright 2015, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package gitlab
 import (
 	"bytes"
 	"fmt"
+	"net/url"
+	"time"
 )
 
 // ProjectSnippetsService handles communication with the project snippets
@@ -29,20 +31,46 @@ type ProjectSnippetsService struct {
 	client *Client
 }
 
-// ListProjectSnippetsOptions represents the available ListSnippets() options.
+// Snippet represents a GitLab project snippet.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/project_snippets.html
+type Snippet struct {
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	FileName string `json:"file_name"`
+	Author   struct {
+		ID        int        `json:"id"`
+		Username  string     `json:"username"`
+		Email     string     `json:"email"`
+		Name      string     `json:"name"`
+		State     string     `json:"state"`
+		CreatedAt *time.Time `json:"created_at"`
+	} `json:"author"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	CreatedAt *time.Time `json:"created_at"`
+}
+
+func (s Snippet) String() string {
+	return Stringify(s)
+}
+
+// ListSnippetsOptions represents the available ListSnippets() options.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/project_snippets.html#list-snippets
-type ListProjectSnippetsOptions ListOptions
+type ListSnippetsOptions struct {
+	ListOptions
+}
 
 // ListSnippets gets a list of project snippets.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/project_snippets.html#list-snippets
-func (s *ProjectSnippetsService) ListSnippets(pid interface{}, opt *ListProjectSnippetsOptions, options ...OptionFunc) ([]*Snippet, *Response, error) {
+func (s *ProjectSnippetsService) ListSnippets(pid interface{}, opt *ListSnippetsOptions, options ...OptionFunc) ([]*Snippet, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/snippets", url.QueryEscape(project))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -67,7 +95,7 @@ func (s *ProjectSnippetsService) GetSnippet(pid interface{}, snippet int, option
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets/%d", pathEscape(project), snippet)
+	u := fmt.Sprintf("projects/%s/snippets/%d", url.QueryEscape(project), snippet)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -83,16 +111,15 @@ func (s *ProjectSnippetsService) GetSnippet(pid interface{}, snippet int, option
 	return ps, resp, err
 }
 
-// CreateProjectSnippetOptions represents the available CreateSnippet() options.
+// CreateSnippetOptions represents the available CreateSnippet() options.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#create-new-snippet
-type CreateProjectSnippetOptions struct {
-	Title       *string          `url:"title,omitempty" json:"title,omitempty"`
-	FileName    *string          `url:"file_name,omitempty" json:"file_name,omitempty"`
-	Description *string          `url:"description,omitempty" json:"description,omitempty"`
-	Code        *string          `url:"code,omitempty" json:"code,omitempty"`
-	Visibility  *VisibilityValue `url:"visibility,omitempty" json:"visibility,omitempty"`
+type CreateSnippetOptions struct {
+	Title           *string               `url:"title,omitempty" json:"title,omitempty"`
+	FileName        *string               `url:"file_name,omitempty" json:"file_name,omitempty"`
+	Code            *string               `url:"code,omitempty" json:"code,omitempty"`
+	VisibilityLevel *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
 }
 
 // CreateSnippet creates a new project snippet. The user must have permission
@@ -100,12 +127,12 @@ type CreateProjectSnippetOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#create-new-snippet
-func (s *ProjectSnippetsService) CreateSnippet(pid interface{}, opt *CreateProjectSnippetOptions, options ...OptionFunc) (*Snippet, *Response, error) {
+func (s *ProjectSnippetsService) CreateSnippet(pid interface{}, opt *CreateSnippetOptions, options ...OptionFunc) (*Snippet, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/snippets", url.QueryEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -121,16 +148,15 @@ func (s *ProjectSnippetsService) CreateSnippet(pid interface{}, opt *CreateProje
 	return ps, resp, err
 }
 
-// UpdateProjectSnippetOptions represents the available UpdateSnippet() options.
+// UpdateSnippetOptions represents the available UpdateSnippet() options.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#update-snippet
-type UpdateProjectSnippetOptions struct {
-	Title       *string          `url:"title,omitempty" json:"title,omitempty"`
-	FileName    *string          `url:"file_name,omitempty" json:"file_name,omitempty"`
-	Description *string          `url:"description,omitempty" json:"description,omitempty"`
-	Code        *string          `url:"code,omitempty" json:"code,omitempty"`
-	Visibility  *VisibilityValue `url:"visibility,omitempty" json:"visibility,omitempty"`
+type UpdateSnippetOptions struct {
+	Title           *string               `url:"title,omitempty" json:"title,omitempty"`
+	FileName        *string               `url:"file_name,omitempty" json:"file_name,omitempty"`
+	Code            *string               `url:"code,omitempty" json:"code,omitempty"`
+	VisibilityLevel *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
 }
 
 // UpdateSnippet updates an existing project snippet. The user must have
@@ -138,12 +164,12 @@ type UpdateProjectSnippetOptions struct {
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#update-snippet
-func (s *ProjectSnippetsService) UpdateSnippet(pid interface{}, snippet int, opt *UpdateProjectSnippetOptions, options ...OptionFunc) (*Snippet, *Response, error) {
+func (s *ProjectSnippetsService) UpdateSnippet(pid interface{}, snippet int, opt *UpdateSnippetOptions, options ...OptionFunc) (*Snippet, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets/%d", pathEscape(project), snippet)
+	u := fmt.Sprintf("projects/%s/snippets/%d", url.QueryEscape(project), snippet)
 
 	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
@@ -170,7 +196,7 @@ func (s *ProjectSnippetsService) DeleteSnippet(pid interface{}, snippet int, opt
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets/%d", pathEscape(project), snippet)
+	u := fmt.Sprintf("projects/%s/snippets/%d", url.QueryEscape(project), snippet)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -189,7 +215,7 @@ func (s *ProjectSnippetsService) SnippetContent(pid interface{}, snippet int, op
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/snippets/%d/raw", pathEscape(project), snippet)
+	u := fmt.Sprintf("projects/%s/snippets/%d/raw", url.QueryEscape(project), snippet)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {

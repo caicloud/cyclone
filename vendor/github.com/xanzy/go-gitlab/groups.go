@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package gitlab
 
 import (
 	"fmt"
-	"time"
 )
 
 // GroupsService handles communication with the group related methods of
@@ -33,12 +32,36 @@ type GroupsService struct {
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/groups.html
 type Group struct {
-	ID          int                `json:"id"`
-	Name        string             `json:"name"`
-	Path        string             `json:"path"`
-	Description string             `json:"description"`
-	Projects    []*Project         `json:"projects"`
-	Statistics  *StorageStatistics `json:"statistics"`
+	ID                             int                        `json:"id"`
+	Name                           string                     `json:"name"`
+	Path                           string                     `json:"path"`
+	Description                    string                     `json:"description"`
+	MembershipLock                 bool                       `json:"membership_lock"`
+	Visibility                     VisibilityValue            `json:"visibility"`
+	LFSEnabled                     bool                       `json:"lfs_enabled"`
+	AvatarURL                      string                     `json:"avatar_url"`
+	WebURL                         string                     `json:"web_url"`
+	RequestAccessEnabled           bool                       `json:"request_access_enabled"`
+	FullName                       string                     `json:"full_name"`
+	FullPath                       string                     `json:"full_path"`
+	ParentID                       int                        `json:"parent_id"`
+	Projects                       []*Project                 `json:"projects"`
+	Statistics                     *StorageStatistics         `json:"statistics"`
+	CustomAttributes               []*CustomAttribute         `json:"custom_attributes"`
+	ShareWithGroupLock             bool                       `json:"share_with_group_lock"`
+	RequireTwoFactorAuth           bool                       `json:"require_two_factor_authentication"`
+	TwoFactorGracePeriod           int                        `json:"two_factor_grace_period"`
+	ProjectCreationLevel           ProjectCreationLevelValue  `json:"project_creation_level"`
+	AutoDevopsEnabled              bool                       `json:"auto_devops_enabled"`
+	SubGroupCreationLevel          SubGroupCreationLevelValue `json:"subgroup_creation_level"`
+	EmailsDisabled                 bool                       `json:"emails_disabled"`
+	MentionsDisabled               bool                       `json:"mentions_disabled"`
+	RunnersToken                   string                     `json:"runners_token"`
+	SharedProjects                 []*Project                 `json:"shared_projects"`
+	LDAPCN                         string                     `json:"ldap_cn"`
+	LDAPAccess                     AccessLevelValue           `json:"ldap_access"`
+	SharedRunnersMinutesLimit      int                        `json:"shared_runners_minutes_limit"`
+	ExtraSharedRunnersMinutesLimit int                        `json:"extra_shared_runners_minutes_limit"`
 }
 
 // ListGroupsOptions represents the available ListGroups() options.
@@ -46,11 +69,18 @@ type Group struct {
 // GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#list-project-groups
 type ListGroupsOptions struct {
 	ListOptions
-	Search     *string `url:"search,omitempty" json:"search,omitempty"`
-	Statistics *bool   `url:"statistics,omitempty" json:"statistics,omitempty"`
+	AllAvailable         *bool             `url:"all_available,omitempty" json:"all_available,omitempty"`
+	MinAccessLevel       *AccessLevelValue `url:"min_access_level,omitempty" json:"min_access_level,omitempty"`
+	OrderBy              *string           `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Owned                *bool             `url:"owned,omitempty" json:"owned,omitempty"`
+	Search               *string           `url:"search,omitempty" json:"search,omitempty"`
+	SkipGroups           []int             `url:"skip_groups,omitempty" json:"skip_groups,omitempty"`
+	Sort                 *string           `url:"sort,omitempty" json:"sort,omitempty"`
+	Statistics           *bool             `url:"statistics,omitempty" json:"statistics,omitempty"`
+	WithCustomAttributes *bool             `url:"with_custom_attributes,omitempty" json:"with_custom_attributes,omitempty"`
 }
 
-// ListGroups gets a list of groups. (As user: my groups, as admin: all groups)
+// ListGroups gets a list of groups (as user: my groups, as admin: all groups).
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/groups.html#list-project-groups
@@ -77,7 +107,7 @@ func (s *GroupsService) GetGroup(gid interface{}, options ...OptionFunc) (*Group
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s", group)
+	u := fmt.Sprintf("groups/%s", pathEscape(group))
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -97,10 +127,24 @@ func (s *GroupsService) GetGroup(gid interface{}, options ...OptionFunc) (*Group
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#new-group
 type CreateGroupOptions struct {
-	Name            *string               `url:"name,omitempty" json:"name,omitempty"`
-	Path            *string               `url:"path,omitempty" json:"path,omitempty"`
-	Description     *string               `url:"description,omitempty" json:"description,omitempty"`
-	VisibilityLevel *VisibilityLevelValue `url:"visibility_level" json:"visibility_level,omitempty"`
+	Name                           *string                     `url:"name,omitempty" json:"name,omitempty"`
+	Path                           *string                     `url:"path,omitempty" json:"path,omitempty"`
+	Description                    *string                     `url:"description,omitempty" json:"description,omitempty"`
+	MembershipLock                 *bool                       `url:"membership_lock,omitempty" json:"membership_lock,omitempty"`
+	Visibility                     *VisibilityValue            `url:"visibility,omitempty" json:"visibility,omitempty"`
+	ShareWithGroupLock             *bool                       `url:"share_with_group_lock,omitempty" json:"share_with_group_lock,omitempty"`
+	RequireTwoFactorAuth           *bool                       `url:"require_two_factor_authentication,omitempty" json:"require_two_factor_authentication,omitempty"`
+	TwoFactorGracePeriod           *int                        `url:"two_factor_grace_period,omitempty" json:"two_factor_grace_period,omitempty"`
+	ProjectCreationLevel           *ProjectCreationLevelValue  `url:"project_creation_level,omitempty" json:"project_creation_level,omitempty"`
+	AutoDevopsEnabled              *bool                       `url:"auto_devops_enabled,omitempty" json:"auto_devops_enabled,omitempty"`
+	SubGroupCreationLevel          *SubGroupCreationLevelValue `url:"subgroup_creation_level,omitempty" json:"subgroup_creation_level,omitempty"`
+	EmailsDisabled                 *bool                       `url:"emails_disabled,omitempty" json:"emails_disabled,omitempty"`
+	MentionsDisabled               *bool                       `url:"mentions_disabled,omitempty" json:"mentions_disabled,omitempty"`
+	LFSEnabled                     *bool                       `url:"lfs_enabled,omitempty" json:"lfs_enabled,omitempty"`
+	RequestAccessEnabled           *bool                       `url:"request_access_enabled,omitempty" json:"request_access_enabled,omitempty"`
+	ParentID                       *int                        `url:"parent_id,omitempty" json:"parent_id,omitempty"`
+	SharedRunnersMinutesLimit      *int                        `url:"shared_runners_minutes_limit,omitempty" json:"shared_runners_minutes_limit,omitempty"`
+	ExtraSharedRunnersMinutesLimit *int                        `url:"extra_shared_runners_minutes_limit,omitempty" json:"extra_shared_runners_minutes_limit,omitempty"`
 }
 
 // CreateGroup creates a new project group. Available only for users who can
@@ -127,14 +171,49 @@ func (s *GroupsService) CreateGroup(opt *CreateGroupOptions, options ...OptionFu
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/groups.html#transfer-project-to-group
-func (s *GroupsService) TransferGroup(gid interface{}, project int, options ...OptionFunc) (*Group, *Response, error) {
+func (s *GroupsService) TransferGroup(gid interface{}, pid interface{}, options ...OptionFunc) (*Group, *Response, error) {
 	group, err := parseID(gid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s/projects/%d", group, project)
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("groups/%s/projects/%s", pathEscape(group), pathEscape(project))
 
 	req, err := s.client.NewRequest("POST", u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	g := new(Group)
+	resp, err := s.client.Do(req, g)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return g, resp, err
+}
+
+// UpdateGroupOptions represents the set of available options to update a Group;
+// as of today these are exactly the same available when creating a new Group.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#update-group
+type UpdateGroupOptions CreateGroupOptions
+
+// UpdateGroup updates an existing group; only available to group owners and
+// administrators.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#update-group
+func (s *GroupsService) UpdateGroup(gid interface{}, opt *UpdateGroupOptions, options ...OptionFunc) (*Group, *Response, error) {
+	group, err := parseID(gid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("groups/%s", pathEscape(group))
+
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -156,7 +235,7 @@ func (s *GroupsService) DeleteGroup(gid interface{}, options ...OptionFunc) (*Re
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("groups/%s", group)
+	u := fmt.Sprintf("groups/%s", pathEscape(group))
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -189,73 +268,38 @@ func (s *GroupsService) SearchGroup(query string, options ...OptionFunc) ([]*Gro
 	return g, resp, err
 }
 
-// GroupMember represents a GitLab group member.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/groups.html
-type GroupMember struct {
-	ID          int              `json:"id"`
-	Username    string           `json:"username"`
-	Email       string           `json:"email"`
-	Name        string           `json:"name"`
-	State       string           `json:"state"`
-	CreatedAt   *time.Time       `json:"created_at"`
-	AccessLevel AccessLevelValue `json:"access_level"`
-}
-
-// ListGroupMembersOptions represents the available ListGroupMembers()
-// options.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-group-members
-type ListGroupMembersOptions struct {
-	ListOptions
-}
-
-// ListGroupMembers get a list of group members viewable by the authenticated
-// user.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-group-members
-func (s *GroupsService) ListGroupMembers(gid interface{}, opt *ListGroupMembersOptions, options ...OptionFunc) ([]*GroupMember, *Response, error) {
-	group, err := parseID(gid)
-	if err != nil {
-		return nil, nil, err
-	}
-	u := fmt.Sprintf("groups/%s/members", group)
-
-	req, err := s.client.NewRequest("GET", u, opt, options)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var g []*GroupMember
-	resp, err := s.client.Do(req, &g)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return g, resp, err
-}
-
 // ListGroupProjectsOptions represents the available ListGroupProjects()
 // options.
 //
 // GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-a-group-s-projects
+// https://docs.gitlab.com/ce/api/groups.html#list-a-group-39-s-projects
 type ListGroupProjectsOptions struct {
 	ListOptions
+	Archived                 *bool            `url:"archived,omitempty" json:"archived,omitempty"`
+	Visibility               *VisibilityValue `url:"visibility,omitempty" json:"visibility,omitempty"`
+	OrderBy                  *string          `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort                     *string          `url:"sort,omitempty" json:"sort,omitempty"`
+	Search                   *string          `url:"search,omitempty" json:"search,omitempty"`
+	Simple                   *bool            `url:"simple,omitempty" json:"simple,omitempty"`
+	Owned                    *bool            `url:"owned,omitempty" json:"owned,omitempty"`
+	Starred                  *bool            `url:"starred,omitempty" json:"starred,omitempty"`
+	WithIssuesEnabled        *bool            `url:"with_issues_enabled,omitempty" json:"with_issues_enabled,omitempty"`
+	WithMergeRequestsEnabled *bool            `url:"with_merge_requests_enabled,omitempty" json:"with_merge_requests_enabled,omitempty"`
+	WithShared               *bool            `url:"with_shared,omitempty" json:"with_shared,omitempty"`
+	IncludeSubgroups         *bool            `url:"include_subgroups,omitempty" json:"include_subgroups,omitempty"`
+	WithCustomAttributes     *bool            `url:"with_custom_attributes,omitempty" json:"with_custom_attributes,omitempty"`
 }
 
 // ListGroupProjects get a list of group projects
 //
 // GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-a-group-s-projects
+// https://docs.gitlab.com/ce/api/groups.html#list-a-group-39-s-projects
 func (s *GroupsService) ListGroupProjects(gid interface{}, opt *ListGroupProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
 	group, err := parseID(gid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s/projects", group)
+	u := fmt.Sprintf("groups/%s/projects", pathEscape(group))
 
 	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
@@ -271,88 +315,34 @@ func (s *GroupsService) ListGroupProjects(gid interface{}, opt *ListGroupProject
 	return p, resp, err
 }
 
-// AddGroupMemberOptions represents the available AddGroupMember() options.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#add-group-member
-type AddGroupMemberOptions struct {
-	UserID      *int              `url:"user_id,omitempty" json:"user_id,omitempty"`
-	AccessLevel *AccessLevelValue `url:"access_level,omitempty" json:"access_level,omitempty"`
-}
-
-// AddGroupMember adds a user to the list of group members.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-group-members
-func (s *GroupsService) AddGroupMember(gid interface{}, opt *AddGroupMemberOptions, options ...OptionFunc) (*GroupMember, *Response, error) {
-	group, err := parseID(gid)
-	if err != nil {
-		return nil, nil, err
-	}
-	u := fmt.Sprintf("groups/%s/members", group)
-
-	req, err := s.client.NewRequest("POST", u, opt, options)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	g := new(GroupMember)
-	resp, err := s.client.Do(req, g)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return g, resp, err
-}
-
-// UpdateGroupMemberOptions represents the available UpdateGroupMember()
+// ListSubgroupsOptions represents the available ListSubgroupsOptions()
 // options.
 //
 // GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#edit-group-team-member
-type UpdateGroupMemberOptions struct {
-	AccessLevel *AccessLevelValue `url:"access_level,omitempty" json:"access_level,omitempty"`
-}
+// https://docs.gitlab.com/ce/api/groups.html#list-a-groups-s-subgroups
+type ListSubgroupsOptions ListGroupsOptions
 
-// UpdateGroupMember updates a group team member to a specified access level.
+// ListSubgroups gets a list of subgroups for a given project.
 //
 // GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#list-group-members
-func (s *GroupsService) UpdateGroupMember(gid interface{}, user int, opt *UpdateGroupMemberOptions, options ...OptionFunc) (*GroupMember, *Response, error) {
+// https://docs.gitlab.com/ce/api/groups.html#list-a-groups-s-subgroups
+func (s *GroupsService) ListSubgroups(gid interface{}, opt *ListSubgroupsOptions, options ...OptionFunc) ([]*Group, *Response, error) {
 	group, err := parseID(gid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("groups/%s/members/%d", group, user)
+	u := fmt.Sprintf("groups/%s/subgroups", pathEscape(group))
 
-	req, err := s.client.NewRequest("PUT", u, opt, options)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	g := new(GroupMember)
-	resp, err := s.client.Do(req, g)
+	var g []*Group
+	resp, err := s.client.Do(req, &g)
 	if err != nil {
 		return nil, resp, err
 	}
 
 	return g, resp, err
-}
-
-// RemoveGroupMember removes user from user team.
-//
-// GitLab API docs:
-// https://docs.gitlab.com/ce/api/groups.html#remove-user-from-user-team
-func (s *GroupsService) RemoveGroupMember(gid interface{}, user int, options ...OptionFunc) (*Response, error) {
-	group, err := parseID(gid)
-	if err != nil {
-		return nil, err
-	}
-	u := fmt.Sprintf("groups/%s/members/%d", group, user)
-
-	req, err := s.client.NewRequest("DELETE", u, nil, options)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.client.Do(req, nil)
 }

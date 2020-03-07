@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"fmt"
+	"net/url"
 )
 
 // BuildVariablesService handles communication with the project variables related methods
@@ -16,33 +17,26 @@ type BuildVariablesService struct {
 //
 // Gitlab API Docs : https://docs.gitlab.com/ce/api/build_variables.html
 type BuildVariable struct {
-	Key       string `json:"key"`
-	Value     string `json:"value"`
-	Protected bool   `json:"protected"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func (v BuildVariable) String() string {
 	return Stringify(v)
 }
 
-// ListBuildVariablesOptions are the parameters to ListBuildVariables()
-//
-// Gitlab API Docs:
-// https://docs.gitlab.com/ce/api/build_variables.html#list-project-variables
-type ListBuildVariablesOptions ListOptions
-
 // ListBuildVariables gets the a list of project variables in a project
 //
 // Gitlab API Docs:
 // https://docs.gitlab.com/ce/api/build_variables.html#list-project-variables
-func (s *BuildVariablesService) ListBuildVariables(pid interface{}, opts *ListBuildVariablesOptions, options ...OptionFunc) ([]*BuildVariable, *Response, error) {
+func (s *BuildVariablesService) ListBuildVariables(pid interface{}, options ...OptionFunc) ([]*BuildVariable, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/variables", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/variables", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opts, options)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,7 +59,7 @@ func (s *BuildVariablesService) GetBuildVariable(pid interface{}, key string, op
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/variables/%s", pathEscape(project), key)
+	u := fmt.Sprintf("projects/%s/variables/%s", url.QueryEscape(project), key)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -81,28 +75,18 @@ func (s *BuildVariablesService) GetBuildVariable(pid interface{}, key string, op
 	return v, resp, err
 }
 
-// CreateBuildVariableOptions are the parameters to CreateBuildVariable()
-//
-// Gitlab API Docs:
-// https://docs.gitlab.com/ce/api/build_variables.html#create-variable
-type CreateBuildVariableOptions struct {
-	Key       *string `url:"key" json:"key"`
-	Value     *string `url:"value" json:"value"`
-	Protected *bool   `url:"protected,omitempty" json:"protected,omitempty"`
-}
-
 // CreateBuildVariable creates a variable for a given project
 //
 // Gitlab API Docs:
 // https://docs.gitlab.com/ce/api/build_variables.html#create-variable
-func (s *BuildVariablesService) CreateBuildVariable(pid interface{}, opt *CreateBuildVariableOptions, options ...OptionFunc) (*BuildVariable, *Response, error) {
+func (s *BuildVariablesService) CreateBuildVariable(pid interface{}, key, value string, options ...OptionFunc) (*BuildVariable, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/variables", pathEscape(project))
+	u := fmt.Sprintf("projects/%s/variables", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, opt, options)
+	req, err := s.client.NewRequest("POST", u, BuildVariable{key, value}, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -116,29 +100,19 @@ func (s *BuildVariablesService) CreateBuildVariable(pid interface{}, opt *Create
 	return v, resp, err
 }
 
-// UpdateBuildVariableOptions are the parameters to UpdateBuildVariable()
-//
-// Gitlab API Docs:
-// https://docs.gitlab.com/ce/api/build_variables.html#update-variable
-type UpdateBuildVariableOptions struct {
-	Key       *string `url:"key" json:"key"`
-	Value     *string `url:"value" json:"value"`
-	Protected *bool   `url:"protected,omitempty" json:"protected,omitempty"`
-}
-
 // UpdateBuildVariable updates an existing project variable
 // The variable key must exist
 //
 // Gitlab API Docs:
 // https://docs.gitlab.com/ce/api/build_variables.html#update-variable
-func (s *BuildVariablesService) UpdateBuildVariable(pid interface{}, key string, opt *UpdateBuildVariableOptions, options ...OptionFunc) (*BuildVariable, *Response, error) {
+func (s *BuildVariablesService) UpdateBuildVariable(pid interface{}, key, value string, options ...OptionFunc) (*BuildVariable, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
-	u := fmt.Sprintf("projects/%s/variables/%s", pathEscape(project), key)
+	u := fmt.Sprintf("projects/%s/variables/%s", url.QueryEscape(project), key)
 
-	req, err := s.client.NewRequest("PUT", u, opt, options)
+	req, err := s.client.NewRequest("PUT", u, BuildVariable{key, value}, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -161,7 +135,7 @@ func (s *BuildVariablesService) RemoveBuildVariable(pid interface{}, key string,
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("projects/%s/variables/%s", pathEscape(project), key)
+	u := fmt.Sprintf("projects/%s/variables/%s", url.QueryEscape(project), key)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {

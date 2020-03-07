@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 type stage struct {
@@ -48,9 +50,8 @@ func (s *stageStack) pop() stage {
 
 type infixBuilder func(a, b Evaluable) (Evaluable, error)
 
-func (l Language) isSymbolOperation(r rune) bool {
-	_, in := l.operatorSymbols[r]
-	return in
+func isSymbolOperation(r rune) bool { //TODO operators (and following prefixes) shouldn't be restricted by symbol set
+	return r > 0 && !strings.ContainsRune("{([,:\"`])}", r) && (unicode.IsSymbol(r) || unicode.IsPunct(r))
 }
 
 func (op *infix) initiate(name string) {
@@ -290,7 +291,7 @@ func (op directInfix) merge(op2 operator) operator {
 	return op
 }
 
-type prefix func(context.Context, *Parser) (Evaluable, error)
+type prefix func(context.Context,*Parser) (Evaluable, error)
 
 type postfix struct {
 	operatorPrecedence

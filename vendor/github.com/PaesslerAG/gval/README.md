@@ -1,47 +1,44 @@
 Gval
 ====
 
-[![Build Status](https://api.travis-ci.org/PaesslerAG/gval.svg?branch=master)](https://travis-ci.org/PaesslerAG/gval)
+[![Build Status](https://travis-ci.org/PaesslerAG/gval.svg?branch=master)](https://travis-ci.org/PaesslerAG/gval)
 [![Godoc](https://godoc.org/github.com/PaesslerAG/gval?status.png)](https://godoc.org/github.com/PaesslerAG/gval)
-[![Go Report Card](https://goreportcard.com/badge/github.com/PaesslerAG/gval)](https://goreportcard.com/report/github.com/PaesslerAG/gval)
 
-Gval (Go eVALuate) provides support for evaluating arbitrary expressions, in particular Go-like expressions.
-
-<img src="./prtg-batmin-gopher.png" alt="gopher" width="200px"/>
+Gval (Go EVALuate) provides support for evaluating arbitrary expressions, in particular Go-like expressions.
 
 Evaluate
 --
 
 Gval can evaluate expressions with parameters, arimethetic, logical, and string operations:
 
-- basic expression: [10 > 0](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Basic)
-- parameterized expression: [foo > 0](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Parameter)
-- nested parameterized expression: [foo.bar > 0](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--NestedParameter)
-- arithmetic expression: [(requests_made * requests_succeeded / 100) >= 90](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Arithmetic)
-- string expression: [http_response_body == "service is ok"](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--String)
-- float64 expression: [(mem_used / total_mem) * 100](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Float64)
+- basic expression: [10 > 0](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_basic)
+- parameterized expression: [foo > 0](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_parameter)
+- nested parameterized expression: [foo.bar > 0](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_nestedParameter)
+- arithmetic expression: [(requests_made * requests_succeeded / 100) >= 90](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_arithmetic)
+- string expression: [http_response_body == "service is ok"](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_string)
+- float64 expression: [(mem_used / total_mem) * 100](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_float64)
 
 It can easily be extended with custom functions or operators:
 
-- custom date comparator: [date(\`2014-01-02\`) > date(\`2014-01-01 23:59:59\`)](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--DateComparison)
-- string length: [strlen("someReallyLongInputString") <= 16](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Strlen)
+- custom date comparator: [date(\`2014-01-02\`) > date(\`2014-01-01 23:59:59\`)](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_dateComparison)
+- string length: [strlen("someReallyLongInputString") <= 16](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_basic)
 
 You can parse gval.Expressions once and re-use them multiple times. Parsing is the compute-intensive phase of the process, so if you intend to use the same expression with different parameters, just parse it once:
 
-- [Parsing and Evaluation](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluable)
+- [Parsing and Evaluation](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluable)
 
 The normal Go-standard order of operators is respected. When writing an expression, be sure that you either order the operators correctly, or use parentheses to clarify which portions of an expression should be run first.
 
 Strings, numbers, and booleans can be used like in Go:
 
-- [(7 < "47" == true ? "hello world!\n\u263a") + \` more text\`](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Encoding)
+- [(7 < "47" == true ? "hello world!\n\u263a") + \` more text\`](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluable)
 
 Maps and Arrays
 --
 
 Parameter names like response-time will be interpreted as response minus time. While gval doesn't support these parameter names directly, you can easily access them via [JSON Path](https://github.com/PaesslerAG/jsonpath):
 
-- [$["response-time"]](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Jsonpath)
+- [$["response-time"]](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_jsonpath)
 
 Jsonpath is also suitable for accessing array elements.
 
@@ -50,12 +47,12 @@ Accessors
 
 If you have structs in your parameters, you can access their fields and methods in the usual way:
 
-- [foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--FlatAccessor)
+- [foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_flatAccessor)
 
 It also works if the parameter is a struct directly
-[Hello + World()](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--Accessor)
+[Hello + World()](https://godoc.org/github.com/PaesslerAG/gval/#accessor)
 or if the fields are nested
-[foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example-Evaluate--NestedAccessor)
+[foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example_Evaluate_nestedAccessor)
 
 This may be convenient but note that using accessors makes the expression about four times slower than just using a parameter (consult the benchmarks for more precise measurements on your system). If there are functions you want to use, it's faster (and probably cleaner) to define them as functions (see the Evaluate section). These approaches use no reflection, and are designed to be fast and clean.
 
@@ -83,7 +80,7 @@ Customize
 
 Gval is completly customizable. Every constant, function or operator can be defined separately and existing expressing languages can be reused:
 
-- [foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example-Language)
+- [foo.Hello + foo.World()](https://godoc.org/github.com/PaesslerAG/gval/#example_Language)
 
 For details see [Godoc](https://godoc.org/github.com/PaesslerAG/gval).
 
@@ -131,13 +128,11 @@ ok
 API Breaks
 --
 
-The library is designed for API stability but still in beta. Stable releases will explicitly state when an API break happens via an increased the major version number.
+The library is designed for API stability but the classification of gvals sub languages is not final yet. Releases will explicitly state when an API break happens, and if they do not specify an API break it should be safe to upgrade.
 
 Missing Features
 --
 
-- [ ] Expression Formatter (a new Language that formats a expressions)
-- [ ] SQL Expression (a new Language that converts a expression into a SQL expression)
-
--------------------------------------
-Credits to Reene French for the gophers.
+- [ ] Expression Formatter
+- [ ] SQL Expression
+- [ ] Examples for Language

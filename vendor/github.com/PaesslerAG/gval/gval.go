@@ -15,7 +15,7 @@ import (
 func Evaluate(expression string, parameter interface{}, opts ...Language) (interface{}, error) {
 	l := full
 	if len(opts) > 0 {
-		l = NewLanguage(append([]Language{l}, opts...)...)
+		l = NewLanguage(append(opts, l)...)
 	}
 	eval, err := l.NewEvaluable(expression)
 	if err != nil {
@@ -89,6 +89,8 @@ func Base() Language {
 }
 
 var full = NewLanguage(arithmetic, bitmask, text, propositionalLogic, ljson,
+
+	//TODO following language parts should be moved to subpackages
 
 	InfixOperator("in", inArray),
 

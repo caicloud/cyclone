@@ -1,12 +1,23 @@
 #!/bin/bash
 
 # Script that runs tests, code coverage, and benchmarks all at once.
+# Builds a symlink in /tmp, mostly to avoid messing with GOPATH at the user's shell level.
 
-GVAL_PATH=$HOME/gopath/src/github.com/PaesslerAG/gval
+TEMPORARY_PATH="/tmp/govaluate_test"
+SRC_PATH="${TEMPORARY_PATH}/src"
+FULL_PATH="${TEMPORARY_PATH}/src/govaluate"
+
+# set up temporary directory
+rm -rf "${FULL_PATH}"
+mkdir -p "${SRC_PATH}"
+
+ln -s $(pwd) "${FULL_PATH}"
+export GOPATH="${TEMPORARY_PATH}"
+
+pushd "${TEMPORARY_PATH}/src/govaluate"
 
 # run the actual tests.
-cd "${GVAL_PATH}"
-go test -bench=. -benchmem -timeout 10m -coverprofile coverage.out
+go test -bench=. -benchmem -coverprofile coverage.out
 status=$?
 
 if [ "${status}" != 0 ];
@@ -14,8 +25,8 @@ then
 	exit $status
 fi
 
-# run random test for a longer period.
-go test -bench=Random -benchtime 5m -timeout 30m -benchmem -coverprofile coverage.out
+# run the actual tests.
+go test -bench=Random -benchtime 10m -timeout 30m -benchmem -coverprofile coverage.out
 status=$?
 
 if [ "${status}" != 0 ];
@@ -23,3 +34,5 @@ then
 	exit $status
 fi
 
+
+popd
