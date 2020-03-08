@@ -55,6 +55,9 @@ export SHELL := /bin/bash
 # It's necessary to set the errexit flags for the bash shell.
 export SHELLOPTS := errexit
 
+# This will force go to use the vendor files instead of using the `$GOPATH/pkg/mod`. (vendor mode)
+export GOFLAGS := -mod=vendor
+
 # Project main package location (can be multiple ones).
 CMD_DIR := ./cmd
 
@@ -121,6 +124,7 @@ build-linux:
 	  -e GOARCH=amd64                                                                  \
 	  -e GOPATH=/go                                                                    \
 	  -e CGO_ENABLED=0                                                                 \
+	  -e GOFLAGS=$(GOFLAGS)                                                            \
 	  -e SHELLOPTS=$(SHELLOPTS)                                                        \
 	  $(BASE_REGISTRY)/golang:1.12.12-stretch                                          \
 	    /bin/bash -c 'for target in $(TARGETS); do                                     \
@@ -191,6 +195,7 @@ swagger:
 	  -e GOARCH=amd64                                                                 \
 	  -e GOPATH=/go                                                                   \
 	  -e CGO_ENABLED=0                                                                \
+	  -e GOFLAGS=$(GOFLAGS)                                                           \
 	  $(BASE_REGISTRY)/golang:1.12.12-stretch                                         \
 	  sh -c "go get -u github.com/caicloud/nirvana/cmd/nirvana &&                     \
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
