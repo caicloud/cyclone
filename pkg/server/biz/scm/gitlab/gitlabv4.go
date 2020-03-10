@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/caicloud/nirvana/log"
-	v4 "gopkg.in/xanzy/go-gitlab.v0"
+	v4 "github.com/xanzy/go-gitlab"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
@@ -91,7 +91,9 @@ func (g *V4) listReposInner(listAll bool) ([]scm.Repository, error) {
 // ListBranches lists the branches for specified repo.
 func (g *V4) ListBranches(repo string) ([]string, error) {
 	opts := &v4.ListBranchesOptions{
-		PerPage: scm.ListOptPerPage,
+		ListOptions: v4.ListOptions{
+			PerPage: scm.ListOptPerPage,
+		},
 	}
 
 	var allBranches []string

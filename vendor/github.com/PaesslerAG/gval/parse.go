@@ -73,9 +73,9 @@ func (p *Parser) parseOperator(c context.Context, stack *stageStack, eval Evalua
 		scan := p.Scan()
 		op := p.TokenText()
 		mustOp := false
-		if p.isSymbolOperation(scan) {
+		if isSymbolOperation(scan) {
 			scan = p.Peek()
-			for p.isSymbolOperation(scan) {
+			for isSymbolOperation(scan) {
 				mustOp = true
 				op += string(scan)
 				p.Next()

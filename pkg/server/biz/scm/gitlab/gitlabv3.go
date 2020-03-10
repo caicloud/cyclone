@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
-	v3 "github.com/xanzy/go-gitlab"
+	v3 "gopkg.in/xanzy/go-gitlab.v0"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"

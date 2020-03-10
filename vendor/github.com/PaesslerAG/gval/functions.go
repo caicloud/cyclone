@@ -15,10 +15,29 @@ func toFunc(f interface{}) function {
 		fun := reflect.ValueOf(f)
 		t := fun.Type()
 
-		in, err := createCallArguments(t, args)
-		if err != nil {
-			return nil, err
+		variadic := t.IsVariadic()
+		numIn := t.NumIn()
+
+		if (!variadic && len(args) != numIn) || (variadic && len(args) < numIn-1) {
+			return nil, fmt.Errorf("invalid number of parameters")
 		}
+
+		in := make([]reflect.Value, len(args))
+		var inType reflect.Type
+		for i, arg := range args {
+			if !variadic || i < numIn-1 {
+				inType = t.In(i)
+			} else if i == numIn-1 {
+				inType = t.In(numIn - 1).Elem()
+			}
+			argVal := reflect.ValueOf(arg)
+			if arg == nil || !argVal.Type().AssignableTo(inType) {
+				return nil, fmt.Errorf("expected type %s for parameter %d but got %T",
+					inType.String(), i, arg)
+			}
+			in[i] = argVal
+		}
+
 		out := fun.Call(in)
 
 		r := make([]interface{}, len(out))
@@ -26,9 +45,9 @@ func toFunc(f interface{}) function {
 			r[i] = e.Interface()
 		}
 
-		err = nil
+		err := error(nil)
 		errorInterface := reflect.TypeOf((*error)(nil)).Elem()
-		if len(r) > 0 && t.Out(len(r)-1).Implements(errorInterface) {
+		if len(r) > 0 && fun.Type().Out(len(r)-1).Implements(errorInterface) {
 			if r[len(r)-1] != nil {
 				err = r[len(r)-1].(error)
 			}
@@ -44,30 +63,4 @@ func toFunc(f interface{}) function {
 			return r, err
 		}
 	}
-}
-
-func createCallArguments(t reflect.Type, args []interface{}) ([]reflect.Value, error) {
-	variadic := t.IsVariadic()
-	numIn := t.NumIn()
-
-	if (!variadic && len(args) != numIn) || (variadic && len(args) < numIn-1) {
-		return nil, fmt.Errorf("invalid number of parameters")
-	}
-
-	in := make([]reflect.Value, len(args))
-	var inType reflect.Type
-	for i, arg := range args {
-		if !variadic || i < numIn-1 {
-			inType = t.In(i)
-		} else if i == numIn-1 {
-			inType = t.In(numIn - 1).Elem()
-		}
-		argVal := reflect.ValueOf(arg)
-		if arg == nil || !argVal.Type().AssignableTo(inType) {
-			return nil, fmt.Errorf("expected type %s for parameter %d but got %T",
-				inType.String(), i, arg)
-		}
-		in[i] = argVal
-	}
-	return in, nil
 }

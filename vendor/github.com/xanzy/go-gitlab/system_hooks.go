@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ func (s *SystemHooksService) AddHook(opt *AddHookOptions, options ...OptionFunc)
 	return h, resp, err
 }
 
-// HookEvent represents an event triggert by a GitLab system hook.
+// HookEvent represents an event trigger by a GitLab system hook.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/system_hooks.html
 type HookEvent struct {

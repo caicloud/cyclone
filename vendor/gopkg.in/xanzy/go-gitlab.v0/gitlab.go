@@ -1,5 +1,5 @@
 //
-// Copyright 2017, Sander van Harmelen
+// Copyright 2015, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,30 +28,27 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/go-querystring/query"
-	"golang.org/x/oauth2"
 )
 
 const (
-	defaultBaseURL = "https://gitlab.com/"
-	apiVersionPath = "api/v4/"
-	userAgent      = "go-gitlab"
+	libraryVersion = "0.1.1"
+	defaultBaseURL = "https://gitlab.com/api/v3/"
+	userAgent      = "go-gitlab/" + libraryVersion
 )
 
-// authType represents an authentication type within GitLab.
+// tokenType represents a token type within GitLab.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/
-type authType int
+type tokenType int
 
-// List of available authentication types.
+// List of available token type
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/
 const (
-	basicAuth authType = iota
+	privateToken tokenType = iota
 	oAuthToken
-	privateToken
 )
 
 // AccessLevelValue represents a permission level within GitLab.
@@ -64,78 +60,12 @@ type AccessLevelValue int
 //
 // GitLab API docs: https://docs.gitlab.com/ce/permissions/permissions.html
 const (
-	NoPermissions         AccessLevelValue = 0
-	GuestPermissions      AccessLevelValue = 10
-	ReporterPermissions   AccessLevelValue = 20
-	DeveloperPermissions  AccessLevelValue = 30
-	MaintainerPermissions AccessLevelValue = 40
-	OwnerPermissions      AccessLevelValue = 50
-
-	// These are deprecated and should be removed in a future version
-	MasterPermissions AccessLevelValue = 40
-	OwnerPermission   AccessLevelValue = 50
+	GuestPermissions     AccessLevelValue = 10
+	ReporterPermissions  AccessLevelValue = 20
+	DeveloperPermissions AccessLevelValue = 30
+	MasterPermissions    AccessLevelValue = 40
+	OwnerPermission      AccessLevelValue = 50
 )
-
-// BuildStateValue represents a GitLab build state.
-type BuildStateValue string
-
-// These constants represent all valid build states.
-const (
-	Pending  BuildStateValue = "pending"
-	Running  BuildStateValue = "running"
-	Success  BuildStateValue = "success"
-	Failed   BuildStateValue = "failed"
-	Canceled BuildStateValue = "canceled"
-	Skipped  BuildStateValue = "skipped"
-)
-
-// ISOTime represents an ISO 8601 formatted date
-type ISOTime time.Time
-
-// ISO 8601 date format
-const iso8601 = "2006-01-02"
-
-// MarshalJSON implements the json.Marshaler interface
-func (t ISOTime) MarshalJSON() ([]byte, error) {
-	if y := time.Time(t).Year(); y < 0 || y >= 10000 {
-		// ISO 8901 uses 4 digits for the years
-		return nil, errors.New("ISOTime.MarshalJSON: year outside of range [0,9999]")
-	}
-
-	b := make([]byte, 0, len(iso8601)+2)
-	b = append(b, '"')
-	b = time.Time(t).AppendFormat(b, iso8601)
-	b = append(b, '"')
-
-	return b, nil
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface
-func (t *ISOTime) UnmarshalJSON(data []byte) error {
-	// Ignore null, like in the main JSON package
-	if string(data) == "null" {
-		return nil
-	}
-
-	isotime, err := time.Parse(`"`+iso8601+`"`, string(data))
-	*t = ISOTime(isotime)
-
-	return err
-}
-
-// EncodeValues implements the query.Encoder interface
-func (t *ISOTime) EncodeValues(key string, v *url.Values) error {
-	if t == nil || (time.Time(*t)).IsZero() {
-		return nil
-	}
-	v.Add(key, t.String())
-	return nil
-}
-
-// String implements the Stringer interface
-func (t ISOTime) String() string {
-	return time.Time(t).Format(iso8601)
-}
 
 // NotificationLevelValue represents a notification level.
 type NotificationLevelValue int
@@ -162,8 +92,6 @@ func (l *NotificationLevelValue) UnmarshalJSON(data []byte) error {
 		*l = NotificationLevelValue(raw)
 	case string:
 		*l = notificationLevelTypes[raw]
-	case nil:
-		// No action needed.
 	default:
 		return fmt.Errorf("json: cannot unmarshal %T into Go value of type %T", raw, *l)
 	}
@@ -199,68 +127,18 @@ var notificationLevelTypes = map[string]NotificationLevelValue{
 	"custom":        CustomNotificationLevel,
 }
 
-// VisibilityValue represents a visibility level within GitLab.
+// VisibilityLevelValue represents a visibility level within GitLab.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/
-type VisibilityValue string
+type VisibilityLevelValue int
 
 // List of available visibility levels
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/
 const (
-	PrivateVisibility  VisibilityValue = "private"
-	InternalVisibility VisibilityValue = "internal"
-	PublicVisibility   VisibilityValue = "public"
-)
-
-// MergeMethodValue represents a project merge type within GitLab.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#project-merge-method
-type MergeMethodValue string
-
-// List of available merge type
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#project-merge-method
-const (
-	NoFastForwardMerge MergeMethodValue = "merge"
-	FastForwardMerge   MergeMethodValue = "ff"
-	RebaseMerge        MergeMethodValue = "rebase_merge"
-)
-
-// EventTypeValue represents actions type for contribution events
-type EventTypeValue string
-
-// List of available action type
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/events.html#action-types
-const (
-	CreatedEventType   EventTypeValue = "created"
-	UpdatedEventType   EventTypeValue = "updated"
-	ClosedEventType    EventTypeValue = "closed"
-	ReopenedEventType  EventTypeValue = "reopened"
-	PushedEventType    EventTypeValue = "pushed"
-	CommentedEventType EventTypeValue = "commented"
-	MergedEventType    EventTypeValue = "merged"
-	JoinedEventType    EventTypeValue = "joined"
-	LeftEventType      EventTypeValue = "left"
-	DestroyedEventType EventTypeValue = "destroyed"
-	ExpiredEventType   EventTypeValue = "expired"
-)
-
-// EventTargetTypeValue represents actions type value for contribution events
-type EventTargetTypeValue string
-
-// List of available action type
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/events.html#target-types
-const (
-	IssueEventTargetType        EventTargetTypeValue = "issue"
-	MilestoneEventTargetType    EventTargetTypeValue = "milestone"
-	MergeRequestEventTargetType EventTargetTypeValue = "merge_request"
-	NoteEventTargetType         EventTargetTypeValue = "note"
-	ProjectEventTargetType      EventTargetTypeValue = "project"
-	SnippetEventTargetType      EventTargetTypeValue = "snippet"
-	UserEventTargetType         EventTargetTypeValue = "user"
+	PrivateVisibility  VisibilityLevelValue = 0
+	InternalVisibility VisibilityLevelValue = 10
+	PublicVisibility   VisibilityLevelValue = 20
 )
 
 // A Client manages communication with the GitLab API.
@@ -269,92 +147,45 @@ type Client struct {
 	client *http.Client
 
 	// Base URL for API requests. Defaults to the public GitLab API, but can be
-	// set to a domain endpoint to use with a self hosted GitLab server. baseURL
+	// set to a domain endpoint to use with aself hosted GitLab server. baseURL
 	// should always be specified with a trailing slash.
 	baseURL *url.URL
 
-	// Token type used to make authenticated API calls.
-	authType authType
+	// token type used to make authenticated API calls.
+	tokenType tokenType
 
-	// Username and password used for basix authentication.
-	username, password string
-
-	// Token used to make authenticated API calls.
+	// token used to make authenticated API calls.
 	token string
 
 	// User agent used when communicating with the GitLab API.
 	UserAgent string
 
 	// Services used for talking to different parts of the GitLab API.
-	AccessRequests        *AccessRequestsService
-	AwardEmoji            *AwardEmojiService
-	Boards                *IssueBoardsService
-	Branches              *BranchesService
-	BroadcastMessage      *BroadcastMessagesService
-	BuildVariables        *BuildVariablesService
-	CIYMLTemplate         *CIYMLTemplatesService
-	Commits               *CommitsService
-	ContainerRegistry     *ContainerRegistryService
-	CustomAttribute       *CustomAttributesService
-	DeployKeys            *DeployKeysService
-	Deployments           *DeploymentsService
-	Discussions           *DiscussionsService
-	Environments          *EnvironmentsService
-	Epics                 *EpicsService
-	Events                *EventsService
-	Features              *FeaturesService
-	GitIgnoreTemplates    *GitIgnoreTemplatesService
-	GroupBadges           *GroupBadgesService
-	GroupIssueBoards      *GroupIssueBoardsService
-	GroupLabels           *GroupLabelsService
-	GroupMembers          *GroupMembersService
-	GroupMilestones       *GroupMilestonesService
-	GroupVariables        *GroupVariablesService
-	Groups                *GroupsService
-	IssueLinks            *IssueLinksService
-	Issues                *IssuesService
-	Jobs                  *JobsService
-	Keys                  *KeysService
-	Labels                *LabelsService
-	License               *LicenseService
-	LicenseTemplates      *LicenseTemplatesService
-	MergeRequestApprovals *MergeRequestApprovalsService
-	MergeRequests         *MergeRequestsService
-	Milestones            *MilestonesService
-	Namespaces            *NamespacesService
-	Notes                 *NotesService
-	NotificationSettings  *NotificationSettingsService
-	PagesDomains          *PagesDomainsService
-	PipelineSchedules     *PipelineSchedulesService
-	PipelineTriggers      *PipelineTriggersService
-	Pipelines             *PipelinesService
-	ProjectBadges         *ProjectBadgesService
-	ProjectCluster        *ProjectClustersService
-	ProjectImportExport   *ProjectImportExportService
-	ProjectMembers        *ProjectMembersService
-	ProjectSnippets       *ProjectSnippetsService
-	ProjectVariables      *ProjectVariablesService
-	Projects              *ProjectsService
-	ProtectedBranches     *ProtectedBranchesService
-	ProtectedTags         *ProtectedTagsService
-	ReleaseLinks          *ReleaseLinksService
-	Releases              *ReleasesService
-	Repositories          *RepositoriesService
-	RepositoryFiles       *RepositoryFilesService
-	ResourceLabelEvents   *ResourceLabelEventsService
-	Runners               *RunnersService
-	Search                *SearchService
-	Services              *ServicesService
-	Settings              *SettingsService
-	Sidekiq               *SidekiqService
-	Snippets              *SnippetsService
-	SystemHooks           *SystemHooksService
-	Tags                  *TagsService
-	Todos                 *TodosService
-	Users                 *UsersService
-	Validate              *ValidateService
-	Version               *VersionService
-	Wikis                 *WikisService
+	Branches             *BranchesService
+	BuildVariables       *BuildVariablesService
+	Builds               *BuildsService
+	Commits              *CommitsService
+	DeployKeys           *DeployKeysService
+	Groups               *GroupsService
+	Issues               *IssuesService
+	Labels               *LabelsService
+	MergeRequests        *MergeRequestsService
+	Milestones           *MilestonesService
+	Namespaces           *NamespacesService
+	Notes                *NotesService
+	NotificationSettings *NotificationSettingsService
+	Projects             *ProjectsService
+	ProjectSnippets      *ProjectSnippetsService
+	Pipelines            *PipelinesService
+	Repositories         *RepositoriesService
+	RepositoryFiles      *RepositoryFilesService
+	Services             *ServicesService
+	Session              *SessionService
+	Settings             *SettingsService
+	SystemHooks          *SystemHooksService
+	Tags                 *TagsService
+	TimeStats            *TimeStatsService
+	Users                *UsersService
 }
 
 // ListOptions specifies the optional parameters to various List methods that
@@ -369,142 +200,54 @@ type ListOptions struct {
 
 // NewClient returns a new GitLab API client. If a nil httpClient is
 // provided, http.DefaultClient will be used. To use API methods which require
-// authentication, provide a valid private or personal token.
+// authentication, provide a valid private token.
 func NewClient(httpClient *http.Client, token string) *Client {
-	client := newClient(httpClient)
-	client.authType = privateToken
-	client.token = token
-	return client
-}
-
-// NewBasicAuthClient returns a new GitLab API client. If a nil httpClient is
-// provided, http.DefaultClient will be used. To use API methods which require
-// authentication, provide a valid username and password.
-func NewBasicAuthClient(httpClient *http.Client, endpoint, username, password string) (*Client, error) {
-	client := newClient(httpClient)
-	client.authType = basicAuth
-	client.username = username
-	client.password = password
-	client.SetBaseURL(endpoint)
-
-	err := client.requestOAuthToken(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func (c *Client) requestOAuthToken(ctx context.Context) error {
-	config := &oauth2.Config{
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  fmt.Sprintf("%s://%s/oauth/authorize", c.BaseURL().Scheme, c.BaseURL().Host),
-			TokenURL: fmt.Sprintf("%s://%s/oauth/token", c.BaseURL().Scheme, c.BaseURL().Host),
-		},
-	}
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, c.client)
-	t, err := config.PasswordCredentialsToken(ctx, c.username, c.password)
-	if err != nil {
-		return err
-	}
-	c.token = t.AccessToken
-	return nil
+	return newClient(httpClient, privateToken, token)
 }
 
 // NewOAuthClient returns a new GitLab API client. If a nil httpClient is
 // provided, http.DefaultClient will be used. To use API methods which require
 // authentication, provide a valid oauth token.
 func NewOAuthClient(httpClient *http.Client, token string) *Client {
-	client := newClient(httpClient)
-	client.authType = oAuthToken
-	client.token = token
-	return client
+	return newClient(httpClient, oAuthToken, token)
 }
 
-func newClient(httpClient *http.Client) *Client {
+func newClient(httpClient *http.Client, tokenType tokenType, token string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
-	c := &Client{client: httpClient, UserAgent: userAgent}
+	c := &Client{client: httpClient, tokenType: tokenType, token: token, UserAgent: userAgent}
 	if err := c.SetBaseURL(defaultBaseURL); err != nil {
-		// Should never happen since defaultBaseURL is our constant.
+		// should never happen since defaultBaseURL is our constant
 		panic(err)
 	}
 
-	// Create the internal timeStats service.
-	timeStats := &timeStatsService{client: c}
-
-	// Create all the public services.
-	c.AccessRequests = &AccessRequestsService{client: c}
-	c.AwardEmoji = &AwardEmojiService{client: c}
-	c.Boards = &IssueBoardsService{client: c}
 	c.Branches = &BranchesService{client: c}
-	c.BroadcastMessage = &BroadcastMessagesService{client: c}
 	c.BuildVariables = &BuildVariablesService{client: c}
-	c.CIYMLTemplate = &CIYMLTemplatesService{client: c}
+	c.Builds = &BuildsService{client: c}
 	c.Commits = &CommitsService{client: c}
-	c.ContainerRegistry = &ContainerRegistryService{client: c}
-	c.CustomAttribute = &CustomAttributesService{client: c}
 	c.DeployKeys = &DeployKeysService{client: c}
-	c.Deployments = &DeploymentsService{client: c}
-	c.Discussions = &DiscussionsService{client: c}
-	c.Environments = &EnvironmentsService{client: c}
-	c.Epics = &EpicsService{client: c}
-	c.Events = &EventsService{client: c}
-	c.Features = &FeaturesService{client: c}
-	c.GitIgnoreTemplates = &GitIgnoreTemplatesService{client: c}
-	c.GroupBadges = &GroupBadgesService{client: c}
-	c.GroupIssueBoards = &GroupIssueBoardsService{client: c}
-	c.GroupLabels = &GroupLabelsService{client: c}
-	c.GroupMembers = &GroupMembersService{client: c}
-	c.GroupMilestones = &GroupMilestonesService{client: c}
-	c.GroupVariables = &GroupVariablesService{client: c}
 	c.Groups = &GroupsService{client: c}
-	c.IssueLinks = &IssueLinksService{client: c}
-	c.Issues = &IssuesService{client: c, timeStats: timeStats}
-	c.Jobs = &JobsService{client: c}
-	c.Keys = &KeysService{client: c}
+	c.Issues = &IssuesService{client: c}
 	c.Labels = &LabelsService{client: c}
-	c.License = &LicenseService{client: c}
-	c.LicenseTemplates = &LicenseTemplatesService{client: c}
-	c.MergeRequestApprovals = &MergeRequestApprovalsService{client: c}
-	c.MergeRequests = &MergeRequestsService{client: c, timeStats: timeStats}
+	c.MergeRequests = &MergeRequestsService{client: c}
 	c.Milestones = &MilestonesService{client: c}
 	c.Namespaces = &NamespacesService{client: c}
 	c.Notes = &NotesService{client: c}
 	c.NotificationSettings = &NotificationSettingsService{client: c}
-	c.PagesDomains = &PagesDomainsService{client: c}
-	c.PipelineSchedules = &PipelineSchedulesService{client: c}
-	c.PipelineTriggers = &PipelineTriggersService{client: c}
-	c.Pipelines = &PipelinesService{client: c}
-	c.ProjectBadges = &ProjectBadgesService{client: c}
-	c.ProjectCluster = &ProjectClustersService{client: c}
-	c.ProjectImportExport = &ProjectImportExportService{client: c}
-	c.ProjectMembers = &ProjectMembersService{client: c}
-	c.ProjectSnippets = &ProjectSnippetsService{client: c}
-	c.ProjectVariables = &ProjectVariablesService{client: c}
 	c.Projects = &ProjectsService{client: c}
-	c.ProtectedBranches = &ProtectedBranchesService{client: c}
-	c.ProtectedTags = &ProtectedTagsService{client: c}
-	c.ReleaseLinks = &ReleaseLinksService{client: c}
-	c.Releases = &ReleasesService{client: c}
+	c.ProjectSnippets = &ProjectSnippetsService{client: c}
+	c.Pipelines = &PipelinesService{client: c}
 	c.Repositories = &RepositoriesService{client: c}
 	c.RepositoryFiles = &RepositoryFilesService{client: c}
-	c.ResourceLabelEvents = &ResourceLabelEventsService{client: c}
-	c.Runners = &RunnersService{client: c}
-	c.Search = &SearchService{client: c}
 	c.Services = &ServicesService{client: c}
+	c.Session = &SessionService{client: c}
 	c.Settings = &SettingsService{client: c}
-	c.Sidekiq = &SidekiqService{client: c}
-	c.Snippets = &SnippetsService{client: c}
 	c.SystemHooks = &SystemHooksService{client: c}
 	c.Tags = &TagsService{client: c}
-	c.Todos = &TodosService{client: c}
+	c.TimeStats = &TimeStatsService{client: c}
 	c.Users = &UsersService{client: c}
-	c.Validate = &ValidateService{client: c}
-	c.Version = &VersionService{client: c}
-	c.Wikis = &WikisService{client: c}
 
 	return c
 }
@@ -523,19 +266,9 @@ func (c *Client) SetBaseURL(urlStr string) error {
 		urlStr += "/"
 	}
 
-	baseURL, err := url.Parse(urlStr)
-	if err != nil {
-		return err
-	}
-
-	if !strings.HasSuffix(baseURL.Path, apiVersionPath) {
-		baseURL.Path += apiVersionPath
-	}
-
-	// Update the base URL of the client.
-	c.baseURL = baseURL
-
-	return nil
+	var err error
+	c.baseURL, err = url.Parse(urlStr)
+	return err
 }
 
 // NewRequest creates an API request. A relative URL path can be provided in
@@ -545,14 +278,8 @@ func (c *Client) SetBaseURL(urlStr string) error {
 // request body.
 func (c *Client) NewRequest(method, path string, opt interface{}, options []OptionFunc) (*http.Request, error) {
 	u := *c.baseURL
-	unescaped, err := url.PathUnescape(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the encoded path data
-	u.RawPath = c.baseURL.Path + path
-	u.Path = c.baseURL.Path + unescaped
+	// Set the encoded opaque data
+	u.Opaque = c.baseURL.Path + path
 
 	if opt != nil {
 		q, err := query.Values(opt)
@@ -573,10 +300,6 @@ func (c *Client) NewRequest(method, path string, opt interface{}, options []Opti
 	}
 
 	for _, fn := range options {
-		if fn == nil {
-			continue
-		}
-
 		if err := fn(req); err != nil {
 			return nil, err
 		}
@@ -591,20 +314,17 @@ func (c *Client) NewRequest(method, path string, opt interface{}, options []Opti
 
 		u.RawQuery = ""
 		req.Body = ioutil.NopCloser(bodyReader)
-		req.GetBody = func() (io.ReadCloser, error) {
-			return ioutil.NopCloser(bodyReader), nil
-		}
 		req.ContentLength = int64(bodyReader.Len())
 		req.Header.Set("Content-Type", "application/json")
 	}
 
 	req.Header.Set("Accept", "application/json")
 
-	switch c.authType {
-	case basicAuth, oAuthToken:
-		req.Header.Set("Authorization", "Bearer "+c.token)
+	switch c.tokenType {
 	case privateToken:
 		req.Header.Set("PRIVATE-TOKEN", c.token)
+	case oAuthToken:
+		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
 
 	if c.UserAgent != "" {
@@ -621,53 +341,64 @@ type Response struct {
 	*http.Response
 
 	// These fields provide the page values for paginating through a set of
-	// results. Any or all of these may be set to the zero value for
+	// results.  Any or all of these may be set to the zero value for
 	// responses that are not part of a paginated set, or for which there
 	// are no additional pages.
-	TotalItems   int
-	TotalPages   int
-	ItemsPerPage int
-	CurrentPage  int
-	NextPage     int
-	PreviousPage int
+
+	NextPage  int
+	PrevPage  int
+	FirstPage int
+	LastPage  int
 }
 
-// newResponse creates a new Response for the provided http.Response.
+// newResponse creats a new Response for the provided http.Response.
 func newResponse(r *http.Response) *Response {
 	response := &Response{Response: r}
 	response.populatePageValues()
 	return response
 }
 
-const (
-	xTotal      = "X-Total"
-	xTotalPages = "X-Total-Pages"
-	xPerPage    = "X-Per-Page"
-	xPage       = "X-Page"
-	xNextPage   = "X-Next-Page"
-	xPrevPage   = "X-Prev-Page"
-)
-
 // populatePageValues parses the HTTP Link response headers and populates the
-// various pagination link values in the Response.
+// various pagination link values in the Reponse.
 func (r *Response) populatePageValues() {
-	if totalItems := r.Response.Header.Get(xTotal); totalItems != "" {
-		r.TotalItems, _ = strconv.Atoi(totalItems)
-	}
-	if totalPages := r.Response.Header.Get(xTotalPages); totalPages != "" {
-		r.TotalPages, _ = strconv.Atoi(totalPages)
-	}
-	if itemsPerPage := r.Response.Header.Get(xPerPage); itemsPerPage != "" {
-		r.ItemsPerPage, _ = strconv.Atoi(itemsPerPage)
-	}
-	if currentPage := r.Response.Header.Get(xPage); currentPage != "" {
-		r.CurrentPage, _ = strconv.Atoi(currentPage)
-	}
-	if nextPage := r.Response.Header.Get(xNextPage); nextPage != "" {
-		r.NextPage, _ = strconv.Atoi(nextPage)
-	}
-	if previousPage := r.Response.Header.Get(xPrevPage); previousPage != "" {
-		r.PreviousPage, _ = strconv.Atoi(previousPage)
+	if links, ok := r.Response.Header["Link"]; ok && len(links) > 0 {
+		for _, link := range strings.Split(links[0], ",") {
+			segments := strings.Split(strings.TrimSpace(link), ";")
+
+			// link must at least have href and rel
+			if len(segments) < 2 {
+				continue
+			}
+
+			// ensure href is properly formatted
+			if !strings.HasPrefix(segments[0], "<") || !strings.HasSuffix(segments[0], ">") {
+				continue
+			}
+
+			// try to pull out page parameter
+			url, err := url.Parse(segments[0][1 : len(segments[0])-1])
+			if err != nil {
+				continue
+			}
+			page := url.Query().Get("page")
+			if page == "" {
+				continue
+			}
+
+			for _, segment := range segments[1:] {
+				switch strings.TrimSpace(segment) {
+				case `rel="next"`:
+					r.NextPage, _ = strconv.Atoi(page)
+				case `rel="prev"`:
+					r.PrevPage, _ = strconv.Atoi(page)
+				case `rel="first"`:
+					r.FirstPage, _ = strconv.Atoi(page)
+				case `rel="last"`:
+					r.LastPage, _ = strconv.Atoi(page)
+				}
+
+			}
+		}
 	}
 }
 
@@ -682,14 +413,6 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusUnauthorized && c.authType == basicAuth {
-		err = c.requestOAuthToken(req.Context())
-		if err != nil {
-			return nil, err
-		}
-		return c.Do(req, v)
-	}
 
 	response := newResponse(resp)
 
@@ -707,7 +430,6 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 			err = json.NewDecoder(resp.Body).Decode(v)
 		}
 	}
-
 	return response, err
 }
 
@@ -724,23 +446,17 @@ func parseID(id interface{}) (string, error) {
 	}
 }
 
-// Helper function to escape a project identifier.
-func pathEscape(s string) string {
-	return strings.Replace(url.PathEscape(s), ".", "%2E", -1)
-}
-
 // An ErrorResponse reports one or more errors caused by an API request.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/README.html#data-validation-and-error-reporting
 type ErrorResponse struct {
-	Body     []byte
 	Response *http.Response
 	Message  string
 }
 
 func (e *ErrorResponse) Error() string {
-	path, _ := url.QueryUnescape(e.Response.Request.URL.Path)
+	path, _ := url.QueryUnescape(e.Response.Request.URL.Opaque)
 	u := fmt.Sprintf("%s://%s%s", e.Response.Request.URL.Scheme, e.Response.Request.URL.Host, path)
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, u, e.Response.StatusCode, e.Message)
 }
@@ -748,21 +464,19 @@ func (e *ErrorResponse) Error() string {
 // CheckResponse checks the API response for errors, and returns them if present.
 func CheckResponse(r *http.Response) error {
 	switch r.StatusCode {
-	case 200, 201, 202, 204, 304:
+	case 200, 201, 304:
 		return nil
 	}
 
 	errorResponse := &ErrorResponse{Response: r}
 	data, err := ioutil.ReadAll(r.Body)
 	if err == nil && data != nil {
-		errorResponse.Body = data
-
 		var raw interface{}
 		if err := json.Unmarshal(data, &raw); err != nil {
 			errorResponse.Message = "failed to parse unknown error format"
-		} else {
-			errorResponse.Message = parseError(raw)
 		}
+
+		errorResponse.Message = parseError(raw)
 	}
 
 	return errorResponse
@@ -804,7 +518,7 @@ func parseError(raw interface{}) string {
 			errs = append(errs, fmt.Sprintf("{%s: %s}", k, parseError(v)))
 		}
 		sort.Strings(errs)
-		return strings.Join(errs, ", ")
+		return fmt.Sprintf("%s", strings.Join(errs, ", "))
 
 	default:
 		return fmt.Sprintf("failed to parse unexpected error type: %T", raw)
@@ -820,12 +534,16 @@ type OptionFunc func(*http.Request) error
 // WithSudo takes either a username or user ID and sets the SUDO request header
 func WithSudo(uid interface{}) OptionFunc {
 	return func(req *http.Request) error {
-		user, err := parseID(uid)
-		if err != nil {
-			return err
+		switch uid := uid.(type) {
+		case int:
+			req.Header.Set("SUDO", strconv.Itoa(uid))
+			return nil
+		case string:
+			req.Header.Set("SUDO", uid)
+			return nil
+		default:
+			return fmt.Errorf("uid must be either a username or user ID")
 		}
-		req.Header.Set("SUDO", user)
-		return nil
 	}
 }
 
@@ -870,14 +588,6 @@ func AccessLevel(v AccessLevelValue) *AccessLevelValue {
 	return p
 }
 
-// BuildState is a helper routine that allocates a new BuildStateValue
-// to store v and returns a pointer to it.
-func BuildState(v BuildStateValue) *BuildStateValue {
-	p := new(BuildStateValue)
-	*p = v
-	return p
-}
-
 // NotificationLevel is a helper routine that allocates a new NotificationLevelValue
 // to store v and returns a pointer to it.
 func NotificationLevel(v NotificationLevelValue) *NotificationLevelValue {
@@ -886,39 +596,10 @@ func NotificationLevel(v NotificationLevelValue) *NotificationLevelValue {
 	return p
 }
 
-// Visibility is a helper routine that allocates a new VisibilityValue
+// VisibilityLevel is a helper routine that allocates a new VisibilityLevelValue
 // to store v and returns a pointer to it.
-func Visibility(v VisibilityValue) *VisibilityValue {
-	p := new(VisibilityValue)
+func VisibilityLevel(v VisibilityLevelValue) *VisibilityLevelValue {
+	p := new(VisibilityLevelValue)
 	*p = v
 	return p
-}
-
-// MergeMethod is a helper routine that allocates a new MergeMethod
-// to sotre v and returns a pointer to it.
-func MergeMethod(v MergeMethodValue) *MergeMethodValue {
-	p := new(MergeMethodValue)
-	*p = v
-	return p
-}
-
-// BoolValue is a boolean value with advanced json unmarshaling features.
-type BoolValue bool
-
-// UnmarshalJSON allows 1 and 0 to be considered as boolean values
-// Needed for https://gitlab.com/gitlab-org/gitlab-ce/issues/50122
-func (t *BoolValue) UnmarshalJSON(b []byte) error {
-	switch string(b) {
-	case `"1"`:
-		*t = true
-		return nil
-	case `"0"`:
-		*t = false
-		return nil
-	default:
-		var v bool
-		err := json.Unmarshal(b, &v)
-		*t = BoolValue(v)
-		return err
-	}
 }

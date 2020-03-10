@@ -29,7 +29,7 @@ import (
 	"github.com/caicloud/nirvana/log"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
-	v4 "gopkg.in/xanzy/go-gitlab.v0"
+	v3 "gopkg.in/xanzy/go-gitlab.v0"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
@@ -95,17 +95,17 @@ func NewGitlab(scmCfg *v1alpha1.SCMSource) (scm.Provider, error) {
 }
 
 // newGitlabV4Client news Gitlab v4 client by token. If username is empty, use private-token instead of oauth2.0 token.
-func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
-	var client *v4.Client
+func newGitlabV4Client(server, username, token string) (*gitlab.Client, error) {
+	var client *gitlab.Client
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
 	if len(username) == 0 {
-		client = v4.NewClient(httpClient, token)
+		client = gitlab.NewClient(httpClient, token)
 	} else {
-		client = v4.NewOAuthClient(httpClient, token)
+		client = gitlab.NewOAuthClient(httpClient, token)
 	}
 
 	if err := client.SetBaseURL(server + "/api/" + v4APIVersion); err != nil {
@@ -117,17 +117,17 @@ func newGitlabV4Client(server, username, token string) (*v4.Client, error) {
 }
 
 // newGitlabV3Client news Gitlab v3 client by token. If username is empty, use private-token instead of oauth2.0 token.
-func newGitlabV3Client(server, username, token string) (*gitlab.Client, error) {
-	var client *gitlab.Client
+func newGitlabV3Client(server, username, token string) (*v3.Client, error) {
+	var client *v3.Client
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
 	if len(username) == 0 {
-		client = gitlab.NewClient(httpClient, token)
+		client = v3.NewClient(httpClient, token)
 	} else {
-		client = gitlab.NewOAuthClient(httpClient, token)
+		client = v3.NewOAuthClient(httpClient, token)
 	}
 
 	if err := client.SetBaseURL(server + "/api/" + v3APIVersion); err != nil {
@@ -442,11 +442,11 @@ func parseWebhook(r *http.Request) (payload interface{}, err error) {
 		// parsing time "2018-05-31 02:19:38 UTC" as "2006-01-02T15:04:05Z07:00" will fail.
 		payload = &MergeCommentEvent{}
 	case MergeRequestHookEvent:
-		payload = &gitlab.MergeEvent{}
+		payload = &v3.MergeEvent{}
 	case TagPushHookEvent:
-		payload = &gitlab.TagEvent{}
+		payload = &v3.TagEvent{}
 	case PushHookEvent:
-		payload = &gitlab.PushEvent{}
+		payload = &v3.PushEvent{}
 	default:
 		return nil, fmt.Errorf("event type %v not support", eventType)
 	}
@@ -472,7 +472,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 	}
 
 	switch event := event.(type) {
-	case *gitlab.TagEvent:
+	case *v3.TagEvent:
 		if event.Before != "0000000000000000000000000000000000000000" {
 			log.Warning("Skip unsupported action 'Tag updated or deleted' of Gitlab.")
 			return nil
@@ -482,7 +482,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Repo: event.Project.PathWithNamespace,
 			Ref:  event.Ref,
 		}
-	case *gitlab.MergeEvent:
+	case *v3.MergeEvent:
 		objectAttributes := event.ObjectAttributes
 		if objectAttributes.Action != "open" && objectAttributes.Action != "update" {
 			log.Warningf("Skip unsupported action %s of Gitlab merge event, only support open and update action.", objectAttributes.Action)
@@ -508,7 +508,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Comment:   event.ObjectAttributes.Note,
 			CommitSHA: event.MergeRequest.LastCommit.ID,
 		}
-	case *gitlab.PushEvent:
+	case *v3.PushEvent:
 		if event.After == "0000000000000000000000000000000000000000" {
 			log.Warning("Skip unsupported action 'Branch deleted' of Gitlab.")
 			return nil
@@ -563,10 +563,10 @@ func convertGitlabError(err error, resp interface{}) error {
 	code := 0
 	server := "GitLab"
 	switch v := resp.(type) {
-	case *gitlab.Response:
+	case *v3.Response:
 		code = v.StatusCode
 		server = "GitLab(v3)"
-	case *v4.Response:
+	case *gitlab.Response:
 		code = v.StatusCode
 		server = "GitLab(v4)"
 	case *http.Response:
