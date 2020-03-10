@@ -11,7 +11,7 @@ import (
 
 	clientset "github.com/caicloud/cyclone/pkg/k8s/clientset"
 	cyclone "github.com/caicloud/cyclone/pkg/k8s/informers/cyclone"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	informers "k8s.io/client-go/informers"
 	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
 )

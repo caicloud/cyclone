@@ -156,7 +156,7 @@ func (in *ExecutionCluster) DeepCopyObject() runtime.Object {
 func (in *ExecutionClusterList) DeepCopyInto(out *ExecutionClusterList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ExecutionCluster, len(*in))
@@ -560,7 +560,7 @@ func (in *Project) DeepCopyObject() runtime.Object {
 func (in *ProjectList) DeepCopyInto(out *ProjectList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Project, len(*in))
@@ -680,7 +680,7 @@ func (in *ResourceItem) DeepCopy() *ResourceItem {
 func (in *ResourceList) DeepCopyInto(out *ResourceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Resource, len(*in))
@@ -958,7 +958,7 @@ func (in *StageItem) DeepCopy() *StageItem {
 func (in *StageList) DeepCopyInto(out *StageList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Stage, len(*in))
@@ -1115,7 +1115,7 @@ func (in *Workflow) DeepCopyObject() runtime.Object {
 func (in *WorkflowList) DeepCopyInto(out *WorkflowList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Workflow, len(*in))
@@ -1176,7 +1176,7 @@ func (in *WorkflowRun) DeepCopyObject() runtime.Object {
 func (in *WorkflowRunList) DeepCopyInto(out *WorkflowRunList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]WorkflowRun, len(*in))
@@ -1372,7 +1372,7 @@ func (in *WorkflowTrigger) DeepCopyObject() runtime.Object {
 func (in *WorkflowTriggerList) DeepCopyInto(out *WorkflowTriggerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]WorkflowTrigger, len(*in))
