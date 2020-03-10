@@ -6,7 +6,7 @@ services:
   - docker
 
 go:
-  - 1.11
+  - 1.13
 
 git:
   depth: 1
@@ -19,9 +19,9 @@ before_install:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.20.1
 
 install:
-  - go build -o cyclone-server github.com/caicloud/cyclone/cmd/server
-  - go build -o workflow-controller github.com/caicloud/cyclone/cmd/workflow/controller
-  - go build -o workflow-coordinator github.com/caicloud/cyclone/cmd/workflow/coordinator
+  - go build -mod=vendor -o cyclone-server github.com/caicloud/cyclone/cmd/server
+  - go build -mod=vendor -o workflow-controller github.com/caicloud/cyclone/cmd/workflow/controller
+  - go build -mod=vendor -o workflow-coordinator github.com/caicloud/cyclone/cmd/workflow/coordinator
 
 script:
   - overalls -project=github.com/caicloud/cyclone -covermode=count -debug -ignore=Godeps,vendor,tests,.git,scripts,node_modules,docs,tools,build,hack,manifests,release,web,pkg/k8s,pkg/apis

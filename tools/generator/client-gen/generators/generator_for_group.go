@@ -89,16 +89,20 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 	}
 
 	m := map[string]interface{}{
-		"group":                          g.group,
-		"version":                        g.version,
-		"groupName":                      groupName,
-		"GroupGoName":                    g.groupGoName,
-		"Version":                        namer.IC(g.version),
-		"types":                          g.types,
-		"apiPath":                        apiPath(g.group),
-		"schemaGroupVersion":             c.Universe.Type(types.Name{Package: "k8s.io/apimachinery/pkg/runtime/schema", Name: "GroupVersion"}),
-		"runtimeAPIVersionInternal":      c.Universe.Variable(types.Name{Package: "k8s.io/apimachinery/pkg/runtime", Name: "APIVersionInternal"}),
-		"serializerDirectCodecFactory":   c.Universe.Type(types.Name{Package: "k8s.io/apimachinery/pkg/runtime/serializer", Name: "DirectCodecFactory"}),
+		"group":                     g.group,
+		"version":                   g.version,
+		"groupName":                 groupName,
+		"GroupGoName":               g.groupGoName,
+		"Version":                   namer.IC(g.version),
+		"types":                     g.types,
+		"apiPath":                   apiPath(g.group),
+		"schemaGroupVersion":        c.Universe.Type(types.Name{Package: "k8s.io/apimachinery/pkg/runtime/schema", Name: "GroupVersion"}),
+		"runtimeAPIVersionInternal": c.Universe.Variable(types.Name{Package: "k8s.io/apimachinery/pkg/runtime", Name: "APIVersionInternal"}),
+		// DirectCodecFactory was renamed to WithoutConversionCodecFactory in 1.15
+		// Ref:
+		// https://github.com/kubernetes/apimachinery/commit/ed8af178d620cdb55580cddff6bfef9d3b00a7d7
+		// https://github.com/kubernetes/apimachinery/commit/4fac835274d8f4a7de6666ac9544f793d2884b84#diff-71b26e1e133ec6d3c4da26366b6502ac
+		"serializerDirectCodecFactory":   c.Universe.Type(types.Name{Package: "k8s.io/apimachinery/pkg/runtime/serializer", Name: "WithoutConversionCodecFactory"}),
 		"restConfig":                     c.Universe.Type(types.Name{Package: "k8s.io/client-go/rest", Name: "Config"}),
 		"restDefaultKubernetesUserAgent": c.Universe.Function(types.Name{Package: "k8s.io/client-go/rest", Name: "DefaultKubernetesUserAgent"}),
 		"restRESTClientInterface":        c.Universe.Type(types.Name{Package: "k8s.io/client-go/rest", Name: "Interface"}),
