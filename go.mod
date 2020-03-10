@@ -1,6 +1,6 @@
 module github.com/caicloud/cyclone
 
-go 1.12
+go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.0.0-20181129101437-13fe51c7d940
