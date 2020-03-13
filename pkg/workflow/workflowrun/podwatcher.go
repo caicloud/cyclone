@@ -18,6 +18,7 @@ import (
 
 // PodEventWatcher watches Kubernetes events for a pod and records Warning type events to WorkflowRun status.
 type PodEventWatcher interface {
+	// Invoke Work in background goroutine, this is a blocking method.
 	Work(stage, podNamespace, podName string)
 }
 
@@ -45,7 +46,9 @@ func newPodEventWatcher(clusterClient kubernetes.Interface, client clientset.Int
 func (p *podEventWatcher) Work(stage, namespace, podName string) {
 	c := make(chan struct{})
 	go p.watchPodEvent(stage, namespace, podName, c)
-	go p.watchPod(namespace, podName, c)
+	p.watchPod(namespace, podName, c)
+	// Wait 1 second for workflowRun updating
+	time.Sleep(1 * time.Second)
 }
 
 func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-chan struct{}) {

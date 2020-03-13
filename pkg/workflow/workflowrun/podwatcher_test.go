@@ -200,7 +200,7 @@ func (suite *PodWatcherSuite) SetupTest() {
 }
 
 func (suite *PodWatcherSuite) TestPodEventWatch() {
-	newPodEventWatcher(suite.client, suite.client, metaNs, wfrName).Work(stgName, workloadNs, podName)
+	go newPodEventWatcher(suite.client, suite.client, metaNs, wfrName).Work(stgName, workloadNs, podName)
 	// wait to work
 	time.Sleep(1 * time.Second)
 	wfr, err := suite.client.CycloneV1alpha1().WorkflowRuns(metaNs).Get(wfrName, metav1.GetOptions{})

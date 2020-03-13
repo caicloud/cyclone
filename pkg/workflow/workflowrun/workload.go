@@ -21,23 +21,25 @@ import (
 // With pod, Cyclone would create a pod to run the stage. With delegation, Cyclone would send
 // a POST request to the given URL in the workload spec.
 type WorkloadProcessor struct {
-	clusterClient kubernetes.Interface
-	client        clientset.Interface
-	wf            *v1alpha1.Workflow
-	wfr           *v1alpha1.WorkflowRun
-	stg           *v1alpha1.Stage
-	wfrOper       Operator
+	clusterClient   kubernetes.Interface
+	client          clientset.Interface
+	wf              *v1alpha1.Workflow
+	wfr             *v1alpha1.WorkflowRun
+	stg             *v1alpha1.Stage
+	wfrOper         Operator
+	podEventWatcher PodEventWatcher
 }
 
 // NewWorkloadProcessor ...
 func NewWorkloadProcessor(clusterClient kubernetes.Interface, client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage *v1alpha1.Stage, wfrOperator Operator) *WorkloadProcessor {
 	return &WorkloadProcessor{
-		client:        client,
-		clusterClient: clusterClient,
-		wf:            wf,
-		wfr:           wfr,
-		stg:           stage,
-		wfrOper:       wfrOperator,
+		client:          client,
+		clusterClient:   clusterClient,
+		wf:              wf,
+		wfr:             wfr,
+		stg:             stage,
+		wfrOper:         wfrOperator,
+		podEventWatcher: newPodEventWatcher(clusterClient, client, wfr.Namespace, wfr.Name),
 	}
 }
 
@@ -107,7 +109,7 @@ func (p *WorkloadProcessor) processPod() error {
 	log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Debug("Create pod for stage succeeded")
 	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", p.stg.Name)
 
-	newPodEventWatcher(p.clusterClient, p.client, p.wfr.Namespace, p.wfr.Name).Work(p.stg.Name, po.Namespace, po.Name)
+	go p.podEventWatcher.Work(p.stg.Name, po.Namespace, po.Name)
 
 	p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 		Phase:              v1alpha1.StatusRunning,

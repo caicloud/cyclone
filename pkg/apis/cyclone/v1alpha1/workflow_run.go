@@ -141,7 +141,7 @@ type StageStatus struct {
 	// status of the workflow execution can still be succeed.
 	Trivial bool `json:"trivial"`
 	// Events of the stage
-	Events []StageEvent
+	Events []StageEvent `json:"events"`
 }
 
 // StageEvent describes pod warning events for a stage
@@ -150,19 +150,13 @@ type StageEvent struct {
 	Name string `json:"name"`
 	// This should be a short, machine understandable string that gives the reason
 	// for the transition into the object's current status.
-	// TODO: provide exact specification for format.
-	// +optional
-	Reason string `json:"reason,omitempty" protobuf:"bytes,3,opt,name=reason"`
+	Reason string `json:"reason,omitempty"`
 	// A human-readable description of the status of this operation.
-	// TODO: decide on maximum length.
-	// +optional
-	Message string `json:"message,omitempty" protobuf:"bytes,4,opt,name=message"`
+	Message string `json:"message,omitempty"`
 	// The time at which the most recent occurrence of this event was recorded.
-	// +optional
-	LastTimestamp metav1.Time `json:"lastTimestamp,omitempty" protobuf:"bytes,7,opt,name=lastTimestamp"`
+	LastTimestamp metav1.Time `json:"lastTimestamp,omitempty"`
 	// The number of times this event has occurred.
-	// +optional
-	Count int32 `json:"count,omitempty" protobuf:"varint,8,opt,name=count"`
+	Count int32 `json:"count,omitempty"`
 }
 
 // StatusPhase represents the phase of stage status or workflowrun status.
