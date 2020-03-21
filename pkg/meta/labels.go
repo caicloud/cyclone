@@ -86,6 +86,8 @@ const (
 	PodKindGC PodKind = "gc"
 	// PodKindWorkload represents the pod is used to run a stage workload.
 	PodKindWorkload PodKind = "workload"
+	// PodKindAccelerationGC represents the pod is used for acceleration cache GC purpose.
+	PodKindAccelerationGC PodKind = "acceleration-gc"
 )
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label

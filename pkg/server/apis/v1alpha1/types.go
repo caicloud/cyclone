@@ -310,3 +310,26 @@ const (
 	// open the related cluster integration firstly.
 	ExecutionContextClosed ExecutionContextPhase = "Closed"
 )
+
+// CacheCleanupStatus describes status of cache cleanup.
+// Only acceleration caches could be processed.
+type CacheCleanupStatus struct {
+	Acceleration AccelerationCacheCleanupOverallStatus `json:"acceleration"`
+}
+
+// AccelerationCacheCleanupOverallStatus holds latest succeeded cache cleanup time and latest cleanup status of acceleration.
+type AccelerationCacheCleanupOverallStatus struct {
+	LatestSucceededTimestamp meta_v1.Time                   `json:"latestSucceededTimestamp"`
+	LatestStatus             AccelerationCacheCleanupStatus `json:"latestStatus"`
+}
+
+// AccelerationCacheCleanupStatus ...
+type AccelerationCacheCleanupStatus struct {
+	// Cyclone will launch a pod to cleanup acceleration cache, and the pod name will be used as TaskID.
+	TaskID             string       `json:"taskID"`
+	Phase              string       `json:"phase"`
+	StartTime          meta_v1.Time `json:"startTime"`
+	LastTransitionTime meta_v1.Time `json:"lastTransitionTime"`
+	// Reason holds information of why the task failed.
+	Reason string `json:"reason"`
+}

@@ -103,6 +103,15 @@ _config:
                 "requests.memory": "32Mi"
               }
             },
+            "cache_cleaner": {
+              "image": "[[ registry_library ]]/alpine:3.7",
+              "resource_requirements": {
+                "limits.cpu": "100m",
+                "limits.memory": "64Mi",
+                "requests.cpu": "50m",
+                "requests.memory": "32Mi"
+              }
+            },
             "images": {
               "gc": "[[ registry_library ]]/alpine:3.7"
             },
