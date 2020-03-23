@@ -124,7 +124,7 @@ func (suite *CleanerSuite) TestClean() {
 	runningStatus, err := cleaner.Clean(workloadNs, pvcName)
 	assert.Nil(suite.T(), err)
 
-	assert.Equal(suite.T(), runningStatus.Phase, "Running")
+	assert.Equal(suite.T(), runningStatus.Phase, serverv1alpha1.CacheCleanupRunning)
 
 	// wait to work
 	time.Sleep(1 * time.Second)
@@ -136,7 +136,7 @@ func (suite *CleanerSuite) TestClean() {
 	var actual serverv1alpha1.CacheCleanupStatus
 	err = json.Unmarshal([]byte(p.Annotations[meta.AnnotationCacheCleanupStatus]), &actual)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), actual.Acceleration.LatestStatus.Phase, "Succeeded")
+	assert.Equal(suite.T(), actual.Acceleration.LatestStatus.Phase, serverv1alpha1.CacheCleanupSucceeded)
 }
 
 func TestCleanerSuite(t *testing.T) {

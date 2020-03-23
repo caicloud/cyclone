@@ -105,7 +105,7 @@ func (c *Cleaner) Clean(pvcNamespace, pvcName string) (*v1alpha1.AccelerationCac
 	startTime := pod.DeepCopy().CreationTimestamp
 	status := &v1alpha1.AccelerationCacheCleanupStatus{
 		TaskID:             pod.Name,
-		Phase:              "Running",
+		Phase:              v1alpha1.CacheCleanupRunning,
 		StartTime:          startTime,
 		LastTransitionTime: startTime,
 	}
@@ -149,7 +149,7 @@ func (c *Cleaner) watch(namespace, podName string) {
 			case corev1.PodSucceeded:
 				statusToUpdate = &v1alpha1.AccelerationCacheCleanupStatus{
 					TaskID:             pod.Name,
-					Phase:              "Succeeded",
+					Phase:              v1alpha1.CacheCleanupSucceeded,
 					StartTime:          pod.DeepCopy().CreationTimestamp,
 					LastTransitionTime: metav1.NewTime(time.Now()),
 				}
@@ -164,7 +164,7 @@ func (c *Cleaner) watch(namespace, podName string) {
 						if pod.Status.ContainerStatuses[0].State.Terminated.ExitCode == 0 {
 							statusToUpdate = &v1alpha1.AccelerationCacheCleanupStatus{
 								TaskID:             pod.Name,
-								Phase:              "Succeeded",
+								Phase:              v1alpha1.CacheCleanupSucceeded,
 								StartTime:          pod.DeepCopy().CreationTimestamp,
 								LastTransitionTime: pod.Status.ContainerStatuses[0].State.Terminated.FinishedAt,
 								Reason:             pod.Status.ContainerStatuses[0].State.Terminated.Reason,
@@ -172,7 +172,7 @@ func (c *Cleaner) watch(namespace, podName string) {
 						} else {
 							statusToUpdate = &v1alpha1.AccelerationCacheCleanupStatus{
 								TaskID:             pod.Name,
-								Phase:              "Failed",
+								Phase:              v1alpha1.CacheCleanupFailed,
 								StartTime:          pod.DeepCopy().CreationTimestamp,
 								LastTransitionTime: pod.Status.ContainerStatuses[0].State.Terminated.FinishedAt,
 								Reason:             pod.Status.ContainerStatuses[0].State.Terminated.Reason,
@@ -212,7 +212,7 @@ func (c *Cleaner) writeDownResult(status *v1alpha1.AccelerationCacheCleanupStatu
 			project.Annotations = make(map[string]string)
 		}
 
-		if status.Phase == "Succeeded" && status.LastTransitionTime.After(latestStatus.Acceleration.LatestSucceededTimestamp.Time) {
+		if status.Phase == v1alpha1.CacheCleanupSucceeded && status.LastTransitionTime.After(latestStatus.Acceleration.LatestSucceededTimestamp.Time) {
 			latestStatus.Acceleration.LatestSucceededTimestamp = status.LastTransitionTime
 		}
 		latestStatus.Acceleration.LatestStatus = *status
@@ -235,7 +235,7 @@ func (c *Cleaner) stopClean(namespace, name string) error {
 }
 
 func (c *Cleaner) podName(project string) string {
-	return fmt.Sprintf("cleanup-acceleration-cache-%s", project)
+	return fmt.Sprintf("%s-cache-cleaner", project)
 }
 
 // getOrDefault gets resource requirement from config, if not set, use default value.

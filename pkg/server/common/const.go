@@ -42,5 +42,5 @@ const (
 	DefaultCacheVolumeName = "default-cache-pv"
 
 	// CacheCleanupContainerName is container name of the pod used to cleanup acceleration cache.
-	CacheCleanupContainerName = "cleanup"
+	CacheCleanupContainerName = "cache-cleaner"
 )

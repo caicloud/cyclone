@@ -53,8 +53,6 @@ func (a *Accelerator) Accelerate() {
 		return
 	}
 
-	log.Warningf(" Acceleration Test, project name: %v", a.project)
-
 	if a.wfr.Labels != nil && a.wfr.Labels[meta.LabelWorkflowRunAcceleration] == meta.LabelValueTrue {
 		a.wfr.Spec.PresetVolumes = append(a.wfr.Spec.PresetVolumes, []v1alpha1.PresetVolume{
 			{

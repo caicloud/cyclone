@@ -326,10 +326,22 @@ type AccelerationCacheCleanupOverallStatus struct {
 // AccelerationCacheCleanupStatus ...
 type AccelerationCacheCleanupStatus struct {
 	// Cyclone will launch a pod to cleanup acceleration cache, and the pod name will be used as TaskID.
-	TaskID             string       `json:"taskID"`
-	Phase              string       `json:"phase"`
-	StartTime          meta_v1.Time `json:"startTime"`
-	LastTransitionTime meta_v1.Time `json:"lastTransitionTime"`
+	TaskID             string            `json:"taskID"`
+	Phase              CacheCleanupPhase `json:"phase"`
+	StartTime          meta_v1.Time      `json:"startTime"`
+	LastTransitionTime meta_v1.Time      `json:"lastTransitionTime"`
 	// Reason holds information of why the task failed.
 	Reason string `json:"reason"`
 }
+
+// CacheCleanupPhase defines phases of cache cleanup
+type CacheCleanupPhase string
+
+const (
+	// CacheCleanupRunning ...
+	CacheCleanupRunning CacheCleanupPhase = "Running"
+	// CacheCleanupFailed ...
+	CacheCleanupFailed CacheCleanupPhase = "Failed"
+	// CacheCleanupSucceeded ...
+	CacheCleanupSucceeded CacheCleanupPhase = "Succeeded"
+)
