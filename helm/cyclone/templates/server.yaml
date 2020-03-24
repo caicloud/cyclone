@@ -42,8 +42,21 @@ data:
           "requests.memory": "{{ .Values.server.storageWatcher.resourceRequirements.requests.memory }}"
         }
       },
+      "cache_cleaner": {
+        "image": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.server.cacheCleaner.image }}",
+        "resource_requirements": {
+          "limits.cpu": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.cpu }}",
+          "limits.memory": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.memory }}",
+          "requests.cpu": "{{ .Values.server.cacheCleaner.resourceRequirements.requests.cpu }}",
+          "requests.memory": "{{ .Values.server.cacheCleaner.resourceRequirements.requests.memory }}"
+        }
+      },
       "images": {
         "gc": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.gc }}"
+      },
+      "client_set": {
+        "qps": {{ .Values.server.clientSet.qps }},
+        "burst": {{ .Values.server.clientSet.burst }}
       }
     }
 
