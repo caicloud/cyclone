@@ -60,6 +60,21 @@ type CycloneServerConfig struct {
 
 	// RecordWebURLTemplate represents the URL template to generate web URLs for workflowruns.
 	RecordWebURLTemplate string `json:"record_web_url_template"`
+
+	// ClientSet holds the common attributes that can be passed to a Kubernetes client on cyclone server handlers
+	// initialization.
+	ClientSet ClientSetConfig `json:"client_set"`
+}
+
+// ClientSetConfig defines rate limit config for a Kubernetes client
+type ClientSetConfig struct {
+	// QPS indicates the maximum QPS to the master from this client.
+	// If it's zero, the created RESTClient will use DefaultQPS: 5
+	QPS float32 `json:"qps"`
+
+	// Maximum burst for throttle.
+	// If it's zero, the created RESTClient will use DefaultBurst: 10.
+	Burst int `json:"burst"`
 }
 
 // PVCConfig contains the PVC information
