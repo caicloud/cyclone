@@ -96,6 +96,18 @@ server:
       limits:
         cpu: 100m
         memory: 64Mi
+  cacheCleaner:
+    image: alpine:3.8
+    resourceRequirements:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+  clientSet:
+    qps: 50.0
+    burst: 100
 
 # Cyclone web variables
 web:

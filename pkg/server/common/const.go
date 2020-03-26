@@ -37,4 +37,10 @@ const (
 
 	// CachePrefixPath is the prefix path of acceleration caches
 	CachePrefixPath = "caches"
+
+	// DefaultCacheVolumeName is name of the default acceleration cache PV used by all workflow stages.
+	DefaultCacheVolumeName = "default-cache-pv"
+
+	// CacheCleanupContainerName is container name of the pod used to cleanup acceleration cache.
+	CacheCleanupContainerName = "cache-cleaner"
 )

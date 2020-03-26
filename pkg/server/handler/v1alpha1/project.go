@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -10,11 +11,14 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator/cleaner"
+	"github.com/caicloud/cyclone/pkg/server/biz/integration/cluster"
 	"github.com/caicloud/cyclone/pkg/server/biz/statistic"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
-	"github.com/caicloud/cyclone/pkg/server/common"
+	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -27,7 +31,7 @@ import (
 // - query Query params includes start, limit and filter.
 func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
-	projects, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).List(metav1.ListOptions{})
+	projects, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{})
 	if err != nil {
 		log.Errorf("Get project from k8s with tenant %s error: %v", tenant, err)
 		return nil, err
@@ -61,7 +65,7 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 	items = results[query.Start:end]
 	if query.Detail {
 		for i := range items {
-			workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+			workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{
 				LabelSelector: meta.ProjectSelector(items[i].Name),
 			})
 			if err != nil {
@@ -120,12 +124,12 @@ func CreateProject(ctx context.Context, tenant string, project *v1alpha1.Project
 		}
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Create(project)
+	return handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Create(project)
 }
 
 // GetProject gets a project with the given project name under given tenant.
 func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, error) {
-	project, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+	project, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
 	if err != nil {
 		log.Infof("get project %v of tenant %v error %v", name, tenant, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -137,7 +141,7 @@ func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, er
 // the updated project.
 func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.Project) (*v1alpha1.Project, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(pName, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(pName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -145,7 +149,7 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 		newProject.Spec = project.Spec
 		newProject.Annotations = utils.MergeMap(project.Annotations, newProject.Annotations)
 		newProject.Labels = utils.MergeMap(project.Labels, newProject.Labels)
-		_, err = handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Update(newProject)
+		_, err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Update(newProject)
 		return err
 	})
 
@@ -163,13 +167,13 @@ func DeleteProject(ctx context.Context, tenant, project string) error {
 		return err
 	}
 
-	err = handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
+	err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 
 // GetProjectStatistics handles the request to get a project's statistics.
 func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.Statistic, error) {
-	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
@@ -177,4 +181,49 @@ func GetProjectStatistics(ctx context.Context, tenant, project, start, end strin
 	}
 
 	return statistic.Stats(wfrs, start, end)
+}
+
+// CleanupCache handles the request to cleanup acceleration cache for a project.
+func CleanupCache(ctx context.Context, tenant, project string) (*api.AccelerationCacheCleanupStatus, error) {
+	var status *api.AccelerationCacheCleanupStatus
+	namespace := svrcommon.TenantNamespace(tenant)
+	integrations, err := cluster.GetSchedulableClusters(handler.K8sClient, tenant)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(integrations) == 0 {
+		return nil, fmt.Errorf("schedulable cluster not found")
+	}
+
+	for _, integration := range integrations {
+		cluster := integration.Spec.Cluster
+		if cluster == nil {
+			log.Warningf("cluster of integration %s is nil", integration.Name)
+			continue
+		}
+
+		if !cluster.IsWorkerCluster {
+			log.Infof("%s is not worker cluster, skip", integration.Name)
+			continue
+		}
+
+		client, err := common.NewClusterClient(&cluster.Credential, cluster.IsControlCluster)
+		if err != nil {
+			log.Warningf("new cluster client for integration %s error %v", integration.Name, err)
+			continue
+		}
+
+		pvcName := svrcommon.TenantPVC(tenant)
+		nsname := svrcommon.TenantNamespace(tenant)
+		if cluster.Namespace != "" {
+			nsname = cluster.Namespace
+		}
+		status, err = cleaner.NewCleaner(client, handler.K8sClient, namespace, project).Clean(nsname, pvcName)
+		if err != nil {
+			log.Errorf("Clean cache for tenant %s project %s error: %v", tenant, project, err)
+			return nil, err
+		}
+	}
+	return status, nil
 }

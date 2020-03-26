@@ -47,6 +47,9 @@ type CycloneServerConfig struct {
 	// StorageUsageWatcher configures PVC storage usage watchers.
 	StorageUsageWatcher StorageUsageWatcher `json:"storage_usage_watcher"`
 
+	// CacheCleaner configures acceleration caches cleaner.
+	CacheCleaner CacheCleaner `json:"cache_cleaner"`
+
 	// CreateBuiltinTemplates configures whether to create builtin stage templates while cyclone server start up.
 	CreateBuiltinTemplates bool `json:"create_builtin_templates"`
 
@@ -105,6 +108,14 @@ type StorageUsageWatcher struct {
 	// IntervalSeconds is intervals to report storage usage
 	IntervalSeconds string `json:"interval_seconds"`
 	// ResourceRequirements specifies resource requirements of the watcher container.
+	ResourceRequirements map[core_v1.ResourceName]string `json:"resource_requirements"`
+}
+
+// CacheCleaner configures acceleration caches cleaner.
+type CacheCleaner struct {
+	// Image is image for the acceleration caches cleaner, for example 'alpine:3.7'
+	Image string `json:"image"`
+	// ResourceRequirements specifies resource requirements of the acceleration caches cleaner.
 	ResourceRequirements map[core_v1.ResourceName]string `json:"resource_requirements"`
 }
 

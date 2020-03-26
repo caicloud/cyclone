@@ -151,4 +151,27 @@ var project = []definition.Descriptor{
 			},
 		},
 	},
+	{
+		Path:        "/projects/{project}/cleancachetasks",
+		Description: "Project cache cleanup API",
+		Definitions: []definition.Definition{
+			{
+				Method:      definition.Create,
+				Function:    handler.CleanupCache,
+				Description: "Cleanup acceleration cache of the project",
+				Parameters: []definition.Parameter{
+					{
+						Source:      definition.Header,
+						Name:        httputil.TenantHeaderName,
+						Description: "Name of the tenant whose project to cleanup cache",
+					},
+					{
+						Source: definition.Path,
+						Name:   httputil.ProjectNamePathParameterName,
+					},
+				},
+				Results: definition.DataErrorResults("cache cleanup status"),
+			},
+		},
+	},
 }

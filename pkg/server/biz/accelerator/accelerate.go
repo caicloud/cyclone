@@ -6,7 +6,6 @@ import (
 	"github.com/caicloud/nirvana/log"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	api "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
@@ -23,13 +22,13 @@ type Accelerator struct {
 	// project the wfr belongs to
 	project string
 	// wfr represents a workflowrun
-	wfr *api.WorkflowRun
+	wfr *v1alpha1.WorkflowRun
 	// reporter reports PVC usage used for workflow in the tenant
 	reporter usage.PVCReporter
 }
 
 // NewAccelerator new an accelerator
-func NewAccelerator(tenant, project string, wfr *api.WorkflowRun) *Accelerator {
+func NewAccelerator(tenant, project string, wfr *v1alpha1.WorkflowRun) *Accelerator {
 	reporter, err := usage.NewPVCReporter(handler.K8sClient, tenant)
 	if err != nil {
 		log.Warningf("Create pvc reporter for tenant %s error: %v", tenant, err)

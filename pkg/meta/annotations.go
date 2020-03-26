@@ -39,4 +39,7 @@ const (
 
 	// AnnotationIstioInject is annotation to decide whether to inject istio sidecar
 	AnnotationIstioInject = "sidecar.istio.io/inject"
+
+	// AnnotationCacheCleanupStatus is the annotation key used to describe cache cleanup status.
+	AnnotationCacheCleanupStatus = "project.cyclone.dev/cache-cleanup-status"
 )
