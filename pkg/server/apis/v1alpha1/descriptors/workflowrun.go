@@ -470,12 +470,6 @@ var workflowrun = []definition.Descriptor{
 						Source: definition.Query,
 						Name:   httputil.StageNameQueryParameter,
 					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.DownloadQueryParameter,
-						Default:   true,
-						Operators: []definition.Operator{validator.Bool("")},
-					},
 				},
 				Results: []definition.Result{
 					{

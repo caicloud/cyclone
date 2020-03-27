@@ -574,11 +574,9 @@ func ListArtifacts(ctx context.Context, project, workflow, workflowrun, tenant s
 }
 
 // DownloadArtifact handles the request to download a artifact of a stage produced by a workflowRun.
-func DownloadArtifact(ctx context.Context, project, workflow, workflowrun, artifact, tenant, stage string, download bool) (io.ReadCloser, map[string]string, error) {
+func DownloadArtifact(ctx context.Context, project, workflow, workflowrun, artifact, tenant, stage string) (io.ReadCloser, map[string]string, error) {
 	headers := make(map[string]string)
-	if download {
-		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", artifact)
-	}
+	headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", artifact)
 
 	artifactFolder, err := getArtifactFolder(tenant, project, workflow, workflowrun, stage)
 	if err != nil {
