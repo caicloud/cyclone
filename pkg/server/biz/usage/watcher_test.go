@@ -35,13 +35,13 @@ func (suite *WatcherSuite) TestLaunchPVCUsageWatcher() {
 	err := LaunchPVCUsageWatcher(suite.client, suite.tenant, context)
 	assert.Nil(suite.T(), err)
 
-	_, err = suite.client.ExtensionsV1beta1().Deployments(context.Namespace).Get(PVCWatcherName, metav1.GetOptions{})
+	_, err = suite.client.AppsV1().Deployments(context.Namespace).Get(PVCWatcherName, metav1.GetOptions{})
 	assert.Nil(suite.T(), err)
 }
 
 func (suite *WatcherSuite) TestDeletePVCUsageWatcher() {
 	testNamespace := "test-namespace"
-	_, err := suite.client.ExtensionsV1beta1().Deployments(testNamespace).Create(&v1beta1.Deployment{
+	_, err := suite.client.AppsV1().Deployments(testNamespace).Create(&v1beta1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: PVCWatcherName,
 		},
@@ -53,7 +53,7 @@ func (suite *WatcherSuite) TestDeletePVCUsageWatcher() {
 	err = DeletePVCUsageWatcher(suite.client, testNamespace)
 	assert.Nil(suite.T(), err)
 
-	_, err = suite.client.ExtensionsV1beta1().Deployments(testNamespace).Get(PVCWatcherName, metav1.GetOptions{})
+	_, err = suite.client.AppsV1().Deployments(testNamespace).Get(PVCWatcherName, metav1.GetOptions{})
 	assert.NotNil(suite.T(), err)
 	assert.Contains(suite.T(), err.Error(), "not found")
 
