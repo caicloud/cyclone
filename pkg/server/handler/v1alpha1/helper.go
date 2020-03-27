@@ -38,6 +38,9 @@ const (
 	queryFilterAlias = "alias"
 	// queryFilterType represents filter by type.
 	queryFilterType = "type"
+
+	// artifactFolderName is the folder name for artifacts.
+	artifactFolderName = "artifacts"
 )
 
 func getLogFilePath(tenant, project, workflow, workflowrun, stage, container string) (string, error) {
@@ -55,9 +58,16 @@ func getLogFolder(tenant, project, workflow, workflowrun string) (string, error)
 	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, logsFolderName}, string(os.PathSeparator)), nil
 }
 
+func getArtifactFolder(tenant, project, workflow, workflowrun, stage string) (string, error) {
+	if tenant == "" || project == "" || workflow == "" || workflowrun == "" || stage == "" {
+		return "", fmt.Errorf("tenant/project/workflow/workflowrun/stage can not be empty")
+	}
+	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, artifactFolderName, stage}, string(os.PathSeparator)), nil
+}
+
 // deleteCollections deletes collections in the sub paths of a tenant in the pvc, collections including:
 // - logs
-// - artifacts (WIP)
+// - artifacts/stage
 // subpaths could be:
 // - project
 // - workflow

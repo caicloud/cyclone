@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"time"
+
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -345,3 +347,12 @@ const (
 	// CacheCleanupSucceeded ...
 	CacheCleanupSucceeded CacheCleanupPhase = "Succeeded"
 )
+
+// StageArtifact describes artifacts produced by a workflowRun
+type StageArtifact struct {
+	// Stage name
+	Stage string `json:"stage"`
+	// Files name
+	File              string    `json:"file"`
+	CreationTimestamp time.Time `json:"creationTimestamp"`
+}

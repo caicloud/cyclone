@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
+	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
 	"github.com/caicloud/cyclone/pkg/server/biz/stream"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
@@ -32,6 +34,11 @@ import (
 	httputil "github.com/caicloud/cyclone/pkg/util/http"
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 	wfcommon "github.com/caicloud/cyclone/pkg/workflow/common"
+)
+
+const (
+	// stageArtifactFormFileKey is the form file key to receive stage artifact
+	stageArtifactFormFileKey = "file"
 )
 
 // CreateWorkflowRun ...
@@ -458,4 +465,151 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	folderReader := stream.NewFolderReader(logFolder, prefix, exclusions, 0, nil)
 
 	return folderReader, headers, nil
+}
+
+// ReceiveArtifacts receives artifacts produced by workflowrun stage.
+func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string) error {
+	// get workflowrun
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
+	if err != nil {
+		log.Errorf("get wfr %s/%s error %s", namespace, workflowrun, err)
+		return err
+	}
+
+	// get tenant, project, workflow from workflowrun
+	tenant := common.NamespaceTenant(namespace)
+	var project, workflow string
+	if wfr.Labels != nil {
+		project = wfr.Labels[meta.LabelProjectName]
+		workflow = wfr.Labels[meta.LabelWorkflowName]
+	}
+	if project == "" || workflow == "" {
+		return fmt.Errorf("failed to get project or workflow from workflowrun labels")
+	}
+
+	request := contextutil.GetHTTPRequest(ctx)
+
+	file, fileHeader, err := request.FormFile(stageArtifactFormFileKey)
+	if err != nil {
+		log.Infof("Form file by key %s error: %v", stageArtifactFormFileKey, err)
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Errorf("Fail to close file as: %v", err)
+		}
+	}()
+
+	folder, err := getArtifactFolder(tenant, project, workflow, workflowrun, stage)
+	if err != nil {
+		log.Errorf("Get workflowrun %s artifact folder failed: %v", workflowrun, err)
+		return err
+	}
+
+	// create artifact folders.
+	fileutil.CreateDirectory(folder)
+	// copy file
+	f, err := os.OpenFile(fmt.Sprintf("%s/%s", folder, fileHeader.Filename), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Errorf("Fail to close file as: %v", err)
+		}
+	}()
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		log.Infof("copy artifact %s error: %v", fileHeader.Filename, err)
+	}
+
+	return err
+}
+
+// ListArtifacts handles the request to list artifacts produced in a workflowRun.
+func ListArtifacts(ctx context.Context, project, workflow, workflowrun, tenant string) (*types.ListResponse, error) {
+	var artifacts []api.StageArtifact
+
+	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stage := range wf.Spec.Stages {
+		artifactFolder, _ := getArtifactFolder(tenant, project, workflow, workflowrun, stage.Name)
+		artifactFolderInfo, err := os.Stat(artifactFolder)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if !artifactFolderInfo.IsDir() {
+			continue
+		}
+
+		files, err := ioutil.ReadDir(artifactFolder)
+		if err != nil {
+			log.Infof("Readdir %s error:%v", artifactFolder, err)
+			return nil, err
+		}
+
+		for _, file := range files {
+			// Only support display files, since we can not collect folders, all files will be compressed to a tar file.
+			if file.IsDir() {
+				continue
+			}
+			artifact := api.StageArtifact{
+				Stage:             stage.Name,
+				File:              file.Name(),
+				CreationTimestamp: file.ModTime(),
+			}
+
+			log.Info(artifact)
+			artifacts = append(artifacts, artifact)
+		}
+	}
+
+	return types.NewListResponse(len(artifacts), artifacts), nil
+}
+
+// DownloadArtifact handles the request to download a artifact of a stage produced by a workflowRun.
+func DownloadArtifact(ctx context.Context, project, workflow, workflowrun, artifact, tenant, stage string, download bool) (io.ReadCloser, map[string]string, error) {
+	headers := make(map[string]string)
+	if download {
+		headers["Content-Disposition"] = fmt.Sprintf("attachment; filename=%s", artifact)
+	}
+
+	artifactFolder, err := getArtifactFolder(tenant, project, workflow, workflowrun, stage)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	artifactFilePath := artifactFolder + "/" + artifact
+
+	artifactFile, err := os.Open(artifactFilePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	go func() {
+		for range ctx.Done() {
+			if err := artifactFile.Close(); err != nil {
+				log.Errorf("Fail to close file as: %v", err)
+			}
+		}
+	}()
+
+	return artifactFile, headers, nil
+}
+
+// DeleteArtifact handles the request to delete a artifact of a stage produced by a workflowRun.
+func DeleteArtifact(ctx context.Context, project, workflow, workflowrun, artifact, tenant, stage string) error {
+	artifactFolder, err := getArtifactFolder(tenant, project, workflow, workflowrun, stage)
+	if err != nil {
+		return err
+	}
+
+	artifactFilePath := artifactFolder + "/" + artifact
+	return os.RemoveAll(artifactFilePath)
 }

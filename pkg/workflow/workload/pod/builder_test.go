@@ -474,6 +474,7 @@ func (suite *PodBuilderSuite) TestResolveOutputResources() {
 	assert.Nil(suite.T(), builder.Prepare())
 	assert.Nil(suite.T(), builder.ResolveArguments())
 	assert.Nil(suite.T(), builder.ResolveOutputResources())
+	assert.Nil(suite.T(), builder.InjectEnvs())
 
 	var sidecar corev1.Container
 	for _, c := range builder.pod.Spec.Containers {
@@ -488,6 +489,10 @@ func (suite *PodBuilderSuite) TestResolveOutputResources() {
 		envs = append(envs, e.Name)
 	}
 	assert.Contains(suite.T(), envs, "IMAGE")
+	assert.Contains(suite.T(), envs, common.EnvMetadataNamespace)
+	assert.Contains(suite.T(), envs, common.EnvWorkflowName)
+	assert.Contains(suite.T(), envs, common.EnvWorkflowrunName)
+	assert.Contains(suite.T(), envs, common.EnvStageName)
 	assert.Equal(suite.T(), corev1.PullIfNotPresent, sidecar.ImagePullPolicy)
 	var vms []string
 	var mountPaths []string

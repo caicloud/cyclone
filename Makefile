@@ -26,7 +26,7 @@ ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
 TARGETS := server workflow/controller workflow/coordinator cicd/cd toolbox/fstream
-IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image watcher cicd/cd cicd/sonarqube toolbox web
+IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image resolver/http watcher cicd/cd cicd/sonarqube toolbox web
 
 # Container image prefix and suffix added to targets.
 # The final built images are:

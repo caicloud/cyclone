@@ -50,6 +50,9 @@ const (
 	// WorkflowRunNamePathParameterName represents the name of the path parameter for workflowrun name.
 	WorkflowRunNamePathParameterName = "workflowrun"
 
+	// ArtifactNamePathParameterName represents the name of the path parameter for artifact name.
+	ArtifactNamePathParameterName = "artifact"
+
 	// WorkflowTriggerNamePathParameterName represents the name of the path parameter for workflowtrigger name.
 	WorkflowTriggerNamePathParameterName = "workflowtrigger"
 

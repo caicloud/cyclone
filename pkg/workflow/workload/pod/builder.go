@@ -500,6 +500,7 @@ func (m *Builder) ResolveOutputResources() error {
 		// Create container for each output resource and project all parameters into the
 		// container through environment variables.
 		envsMap := make(map[string]string)
+
 		for _, p := range resource.Spec.Parameters {
 			if p.Value != nil {
 				envsMap[p.Name] = *p.Value
@@ -842,6 +843,14 @@ func (m *Builder) AddCoordinator() error {
 func (m *Builder) InjectEnvs() error {
 	envs := []corev1.EnvVar{
 		{
+			Name:  common.EnvMetadataNamespace,
+			Value: m.wf.Namespace,
+		},
+		{
+			Name:  common.EnvWorkflowName,
+			Value: m.wf.Name,
+		},
+		{
 			Name:  common.EnvWorkflowrunName,
 			Value: m.wfr.Name,
 		},
@@ -1007,6 +1016,24 @@ func (m *Builder) ApplyServiceAccount() error {
 	return nil
 }
 
+// ArtifactFileName gets artifact file name from artifacts path.
+func (m *Builder) ArtifactFileName(stageName, artifactName string) (string, error) {
+	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("stg", stageName).Error("Get stage error: ", err)
+		return "", err
+	}
+
+	for _, artifact := range stage.Spec.Pod.Outputs.Artifacts {
+		if artifact.Name == artifactName {
+			parts := strings.Split(strings.TrimSuffix(artifact.Path, "/"), "/")
+			return parts[len(parts)-1], nil
+		}
+	}
+
+	return "", fmt.Errorf("output artifact '%s' not found in stage '%s'", artifactName, stageName)
+}
+
 // Build ...
 func (m *Builder) Build() (*corev1.Pod, error) {
 	err := m.Prepare()
@@ -1075,22 +1102,4 @@ func (m *Builder) Build() (*corev1.Pod, error) {
 	}
 
 	return m.pod, nil
-}
-
-// ArtifactFileName gets artifact file name from artifacts path.
-func (m *Builder) ArtifactFileName(stageName, artifactName string) (string, error) {
-	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
-	if err != nil {
-		log.WithField("stg", stageName).Error("Get stage error: ", err)
-		return "", err
-	}
-
-	for _, artifact := range stage.Spec.Pod.Outputs.Artifacts {
-		if artifact.Name == artifactName {
-			parts := strings.Split(strings.TrimSuffix(artifact.Path, "/"), "/")
-			return parts[len(parts)-1], nil
-		}
-	}
-
-	return "", fmt.Errorf("output artifact '%s' not found in stage '%s'", artifactName, stageName)
 }
