@@ -348,7 +348,7 @@ const (
 	CacheCleanupSucceeded CacheCleanupPhase = "Succeeded"
 )
 
-// StageArtifact describes artifacts produced by a certain stage
+// StageArtifact describes artifacts produced by a workflowRun
 type StageArtifact struct {
 	// Stage name
 	Stage string `json:"stage"`

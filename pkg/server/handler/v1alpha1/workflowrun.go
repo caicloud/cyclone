@@ -467,8 +467,8 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 	return folderReader, headers, nil
 }
 
-// ReceiveStageArtifacts receives artifacts produced by workflowrun stage.
-func ReceiveStageArtifacts(ctx context.Context, workflowrun, namespace, stage string) error {
+// ReceiveArtifacts receives artifacts produced by workflowrun stage.
+func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string) error {
 	// get workflowrun
 	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
 	if err != nil {
@@ -555,7 +555,7 @@ func ListArtifacts(ctx context.Context, project, workflow, workflowrun, tenant s
 		}
 
 		for _, file := range files {
-			// Only support display files
+			// Only support display files, since we can not collect folders, all files will be compressed to a tar file.
 			if file.IsDir() {
 				continue
 			}

@@ -22,7 +22,7 @@ USAGE=$(cat <<-END
         to a remote server.
         deep dive in implementation with pseudocode:
           $ tar -cvf $COMPRESS_FILE_NAME ${WORKDIR}/data
-          $ curl $URL -H $HEADERS -X $METHOD -F "$FORM_FILE_KEY@$COMPRESS_FILE_NAME" $CURL_EXTENSION
+          $ curl $URL -H $HEADERS -X $METHOD -F "$FORM_FILE_KEY=@$COMPRESS_FILE_NAME" $CURL_EXTENSION
 
       Arguments:
       - URL [Required] URL of the remote server, for the moment, only HTTP is supported.

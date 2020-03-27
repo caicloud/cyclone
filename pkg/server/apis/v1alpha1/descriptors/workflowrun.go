@@ -291,7 +291,7 @@ var workflowrun = []definition.Descriptor{
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
-				Function:    handler.ReceiveStageArtifacts,
+				Function:    handler.ReceiveArtifacts,
 				Consumes:    []string{definition.MIMEFormData},
 				Description: "Collect stage artifacts",
 				Parameters: []definition.Parameter{
