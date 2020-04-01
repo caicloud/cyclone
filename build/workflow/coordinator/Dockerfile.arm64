@@ -11,7 +11,7 @@ RUN apk update && apk add ca-certificates &&\
 #    kubectl version --client
 
 ENV DOCKER_VERSION=18.06.0
-RUN curl -O https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}-ce.tgz && \
+RUN curl -O https://download.docker.com/linux/static/stable/aarch64/docker-${DOCKER_VERSION}-ce.tgz && \
     tar -xzf docker-${DOCKER_VERSION}-ce.tgz && \
     mv docker/docker /usr/local/bin/docker && \
     rm -rf ./docker docker-${DOCKER_VERSION}-ce.tgz
