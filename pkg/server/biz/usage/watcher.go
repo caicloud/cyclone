@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/caicloud/nirvana/log"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -39,12 +39,13 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 	}
 
 	watcherConfig := config.Config.StorageUsageWatcher
-	_, err := client.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
+
+	_, err := client.AppsV1().Deployments(context.Namespace).Create(&appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      PVCWatcherName,
 			Namespace: context.Namespace,
 		},
-		Spec: v1beta1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					PVCWatcherLabelName: PVCWatcherLabelValue,
@@ -129,7 +130,7 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 // DeletePVCUsageWatcher delete the pvc usage watcher deployment
 func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error {
 	foreground := metav1.DeletePropagationForeground
-	err := client.ExtensionsV1beta1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
+	err := client.AppsV1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
 		PropagationPolicy: &foreground,
 	})
 
@@ -161,6 +162,6 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 }
 
 // GetPVCUsageWatcher gets the pvc watch dog deployment.
-func GetPVCUsageWatcher(client kubernetes.Interface, namespace string) (*v1beta1.Deployment, error) {
-	return client.ExtensionsV1beta1().Deployments(namespace).Get(PVCWatcherName, metav1.GetOptions{})
+func GetPVCUsageWatcher(client kubernetes.Interface, namespace string) (*appsv1.Deployment, error) {
+	return client.AppsV1().Deployments(namespace).Get(PVCWatcherName, metav1.GetOptions{})
 }
