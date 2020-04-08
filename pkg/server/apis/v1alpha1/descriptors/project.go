@@ -117,60 +117,60 @@ var project = []definition.Descriptor{
 				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
-	},
-	{
-		Path:        "/projects/{project}/stats",
-		Description: "Project stats API",
-		Definitions: []definition.Definition{
+		Children: []definition.Descriptor{
 			{
-				Method:      definition.Get,
-				Function:    handler.GetProjectStatistics,
-				Description: "Get statistics of the project",
-				Parameters: []definition.Parameter{
+				Path: "/stats",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose project to stats",
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
-					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.StartTimeQueryParameter,
-						Operators: []definition.Operator{validator.String("required")},
-					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.EndTimeQueryParameter,
-						Operators: []definition.Operator{validator.String("required")},
+						Method:      definition.Get,
+						Function:    handler.GetProjectStatistics,
+						Description: "Get statistics of the project",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose project to stats",
+							},
+							{
+								Source: definition.Path,
+								Name:   httputil.ProjectNamePathParameterName,
+							},
+							{
+								Source:    definition.Query,
+								Name:      httputil.StartTimeQueryParameter,
+								Operators: []definition.Operator{validator.String("required")},
+							},
+							{
+								Source:    definition.Query,
+								Name:      httputil.EndTimeQueryParameter,
+								Operators: []definition.Operator{validator.String("required")},
+							},
+						},
+						Results: definition.DataErrorResults("project stats"),
 					},
 				},
-				Results: definition.DataErrorResults("project stats"),
 			},
-		},
-	},
-	{
-		Path:        "/projects/{project}/cleancachetasks",
-		Description: "Project cache cleanup API",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Create,
-				Function:    handler.CleanupCache,
-				Description: "Cleanup acceleration cache of the project",
-				Parameters: []definition.Parameter{
+				Path: "/cleancachetasks",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose project to cleanup cache",
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
+						Method:      definition.Create,
+						Function:    handler.CleanupCache,
+						Description: "Cleanup acceleration cache of the project",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose project to cleanup cache",
+							},
+							{
+								Source: definition.Path,
+								Name:   httputil.ProjectNamePathParameterName,
+							},
+						},
+						Results: definition.DataErrorResults("cache cleanup status"),
 					},
 				},
-				Results: definition.DataErrorResults("cache cleanup status"),
 			},
 		},
 	},

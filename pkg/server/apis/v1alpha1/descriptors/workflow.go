@@ -145,41 +145,42 @@ var workflow = []definition.Descriptor{
 				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
-	},
-	{
-		Path:        "/projects/{project}/workflows/{workflow}/stats",
-		Description: "Workflow stats API",
-		Definitions: []definition.Definition{
+		Children: []definition.Descriptor{
 			{
-				Method:      definition.Get,
-				Function:    handler.GetWFStatistics,
-				Description: "Get statistics of the workflow",
-				Parameters: []definition.Parameter{
+				Path: "/stats",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose project to stats",
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.ProjectNamePathParameterName,
-					},
-					{
-						Source: definition.Path,
-						Name:   httputil.WorkflowNamePathParameterName,
-					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.StartTimeQueryParameter,
-						Operators: []definition.Operator{validator.String("required")},
-					},
-					{
-						Source:    definition.Query,
-						Name:      httputil.EndTimeQueryParameter,
-						Operators: []definition.Operator{validator.String("required")},
+						Method:      definition.Get,
+						Function:    handler.GetWFStatistics,
+						Description: "Get statistics of the workflow",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose project to stats",
+							},
+							{
+								Source: definition.Path,
+								Name:   httputil.ProjectNamePathParameterName,
+							},
+							{
+								Source: definition.Path,
+								Name:   httputil.WorkflowNamePathParameterName,
+							},
+							{
+								Source:    definition.Query,
+								Name:      httputil.StartTimeQueryParameter,
+								Operators: []definition.Operator{validator.String("required")},
+							},
+							{
+								Source:    definition.Query,
+								Name:      httputil.EndTimeQueryParameter,
+								Operators: []definition.Operator{validator.String("required")},
+							},
+						},
+						Results: definition.DataErrorResults("workflow stats"),
 					},
 				},
-				Results: definition.DataErrorResults("workflow stats"),
 			},
 		},
 	},

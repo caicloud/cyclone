@@ -33,12 +33,6 @@ var usages = []definition.Descriptor{
 				},
 				Results: []definition.Result{definition.ErrorResult()},
 			},
-		},
-	},
-	{
-		Path:        "/storage/usages",
-		Description: "Storage usages APIs",
-		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
 				Function:    handler.GetStorageUsage,

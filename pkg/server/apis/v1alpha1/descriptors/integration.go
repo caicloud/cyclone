@@ -144,100 +144,98 @@ var integration = []definition.Descriptor{
 				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
-	},
-	{
-		Path:        "/integrations/{integration}/opencluster",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
+		Children: []definition.Descriptor{
 			{
-				Method:      definition.Update,
-				Function:    handler.OpenCluster,
-				Description: "Open cluster type integration to execute workflow",
-				Parameters: []definition.Parameter{
+				Path: "/opencluster",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to operate",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to operate",
+						Method:      definition.Update,
+						Function:    handler.OpenCluster,
+						Description: "Open cluster type integration to execute workflow",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to operate",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to operate",
+							},
+						},
+						Results: []definition.Result{definition.ErrorResult()},
 					},
 				},
-				Results: []definition.Result{definition.ErrorResult()},
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/closecluster",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Update,
-				Function:    handler.CloseCluster,
-				Description: "Close cluster type integration that used to execute workflow",
-				Parameters: []definition.Parameter{
+				Path: "/closecluster",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to operate",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to operate",
+						Method:      definition.Update,
+						Function:    handler.CloseCluster,
+						Description: "Close cluster type integration that used to execute workflow",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to operate",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to operate",
+							},
+						},
+						Results: []definition.Result{definition.ErrorResult()},
 					},
 				},
-				Results: []definition.Result{definition.ErrorResult()},
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/pvcwatcher",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Create,
-				Function:    handler.StartPVCWatcher,
-				Description: "Start pvc watcher for the integration",
-				Parameters: []definition.Parameter{
+				Path: "/pvcwatcher",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to operate",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to operate",
+						Method:      definition.Create,
+						Function:    handler.StartPVCWatcher,
+						Description: "Start pvc watcher for the integration",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to operate",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to operate",
+							},
+						},
+						Results: []definition.Result{definition.ErrorResult()},
 					},
 				},
-				Results: []definition.Result{definition.ErrorResult()},
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/pvcwatcher",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Delete,
-				Function:    handler.StopPVCWatcher,
-				Description: "Stop pvc watcher for the integration",
-				Parameters: []definition.Parameter{
+				Path: "/pvcwatcher",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to operate",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to operate",
+						Method:      definition.Delete,
+						Function:    handler.StopPVCWatcher,
+						Description: "Stop pvc watcher for the integration",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to operate",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to operate",
+							},
+						},
+						Results: []definition.Result{definition.ErrorResult()},
 					},
 				},
-				Results: []definition.Result{definition.ErrorResult()},
 			},
 		},
 	},
@@ -266,124 +264,126 @@ var integration = []definition.Descriptor{
 		},
 	},
 	{
-		Path:        "/integrations/{integration}/scmrepos/{repo}/branches",
+		Path:        "/integrations/{integration}/scmrepos/{repo}",
 		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
+		Children: []definition.Descriptor{
 			{
-				Method:      definition.Get,
-				Function:    handler.ListSCMBranches,
-				Description: "List branches for integrated SCM",
-				Parameters: []definition.Parameter{
+				Path: "/branches",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "repo",
-						Description: "Name of SCM repo",
+						Method:      definition.Get,
+						Function:    handler.ListSCMBranches,
+						Description: "List branches for integrated SCM",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "repo",
+								Description: "Name of SCM repo",
+							},
+						},
+						Results: definition.DataErrorResults("branches gotten for integrated SCM"),
 					},
 				},
-				Results: definition.DataErrorResults("branches gotten for integrated SCM"),
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/scmrepos/{repo}/tags",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Get,
-				Function:    handler.ListSCMTags,
-				Description: "List tags for integrated SCM",
-				Parameters: []definition.Parameter{
+				Path: "/tags",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "repo",
-						Description: "Name of SCM repo",
+						Method:      definition.Get,
+						Function:    handler.ListSCMTags,
+						Description: "List tags for integrated SCM",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "repo",
+								Description: "Name of SCM repo",
+							},
+						},
+						Results: definition.DataErrorResults("tags gotten for integrated SCM"),
 					},
 				},
-				Results: definition.DataErrorResults("tags gotten for integrated SCM"),
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/scmrepos/{repo}/pullrequests",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Get,
-				Function:    handler.ListSCMPullRequests,
-				Description: "List pull requests for integrated SCM",
-				Parameters: []definition.Parameter{
+				Path: "/pullrequests",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "repo",
-						Description: "Name of SCM repo",
-					},
-					{
-						Source:      definition.Query,
-						Name:        "state",
-						Description: "State filters pull requests based on their state. Possible values are: open, closed, all. Default is 'open'",
-						Default:     "open",
+						Method:      definition.Get,
+						Function:    handler.ListSCMPullRequests,
+						Description: "List pull requests for integrated SCM",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "repo",
+								Description: "Name of SCM repo",
+							},
+							{
+								Source:      definition.Query,
+								Name:        "state",
+								Description: "State filters pull requests based on their state. Possible values are: open, closed, all. Default is 'open'",
+								Default:     "open",
+							},
+						},
+						Results: definition.DataErrorResults("pull requests gotten for integrated SCM"),
 					},
 				},
-				Results: definition.DataErrorResults("pull requests gotten for integrated SCM"),
 			},
-		},
-	},
-	{
-		Path:        "/integrations/{integration}/scmrepos/{repo}/dockerfiles",
-		Description: "Integrations APIs",
-		Definitions: []definition.Definition{
 			{
-				Method:      definition.Get,
-				Function:    handler.ListSCMDockerfiles,
-				Description: "List Dockerfiles for integrated SCM",
-				Parameters: []definition.Parameter{
+				Path: "/dockerfiles",
+				Definitions: []definition.Definition{
 					{
-						Source:      definition.Header,
-						Name:        httputil.TenantHeaderName,
-						Description: "Name of the tenant whose integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "integration",
-						Description: "Name of the integration to get",
-					},
-					{
-						Source:      definition.Path,
-						Name:        "repo",
-						Description: "Name of SCM repo",
+						Method:      definition.Get,
+						Function:    handler.ListSCMDockerfiles,
+						Description: "List Dockerfiles for integrated SCM",
+						Parameters: []definition.Parameter{
+							{
+								Source:      definition.Header,
+								Name:        httputil.TenantHeaderName,
+								Description: "Name of the tenant whose integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "integration",
+								Description: "Name of the integration to get",
+							},
+							{
+								Source:      definition.Path,
+								Name:        "repo",
+								Description: "Name of SCM repo",
+							},
+						},
+						Results: definition.DataErrorResults("Dockerfiles gotten for integrated SCM"),
 					},
 				},
-				Results: definition.DataErrorResults("Dockerfiles gotten for integrated SCM"),
 			},
 		},
 	},
