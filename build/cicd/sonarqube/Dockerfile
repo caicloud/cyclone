@@ -1,12 +1,9 @@
-FROM newtmitch/sonar-scanner:3.3.0-alpine
+FROM caicloud/cyclone-base-openjdk:v1.0.0
 
 LABEL maintainer="zhujian@caicloud.io"
 
 ENV WORKDIR /workspace
 WORKDIR $WORKDIR
-
-RUN wget -O /bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
-    chmod +x /bin/jq
 
 COPY ./build/cicd/sonarqube/entrypoint.sh /
 
