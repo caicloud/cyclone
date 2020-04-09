@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -41,7 +41,7 @@ func (suite *WatcherSuite) TestLaunchPVCUsageWatcher() {
 
 func (suite *WatcherSuite) TestDeletePVCUsageWatcher() {
 	testNamespace := "test-namespace"
-	_, err := suite.client.AppsV1().Deployments(testNamespace).Create(&v1beta1.Deployment{
+	_, err := suite.client.AppsV1().Deployments(testNamespace).Create(&appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: PVCWatcherName,
 		},

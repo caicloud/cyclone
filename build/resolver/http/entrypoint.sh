@@ -33,7 +33,13 @@ USAGE=$(cat <<-END
         named with this argument, by default is 'artifact.tar'.
       - FORM_FILE_KEY [Optional] The key of curl '-F' option (Specify HTTP multipart POST data) used to 
         upload files, by default is 'file'.
-      - CURL_EXTENSION [Optional] Some other extent options of cURL
+      - CURL_EXTENTION [Optional] Some other extent options of cURL
+      - FIND_OPTIONS [Optional] is only used in output http resources. We will pass the FIND_OPTIONS to Linux
+        command "find" to find files in the ${WORKDIR}/data/${DATA_SUBDIR} folder, and then we will tar and push them.
+        E.g. ". -path './output' -name '*.jar'" will populate the command "find . -path './output' -name *.jar".
+        Default value is ". -name '*'".
+      - DATA_SUBDIR [Optional] is only used in output http resources. If DATA_SUBDIR is not empty, will find
+        output resources in the ${WORKDIR}/data/${DATA_SUBDIR} folder.
 
       Notes:
       - This tool will replease the following strings, built-in environments set by workflow
@@ -65,10 +71,22 @@ URL=${URL//'${WORKFLOWRUN_NAME}'/${WORKFLOWRUN_NAME}}
 wrapPush() {
     if [ -z ${COMPRESS_FILE_NAME} ]; then COMPRESS_FILE_NAME="artifact.tar"; fi
     if [ -z ${FORM_FILE_KEY} ]; then FORM_FILE_KEY="file"; fi
+    if [ -z ${FIND_OPTIONS} ]; then FIND_OPTIONS=". -name '*'"; fi
 
-    echo "Start to compress files under ${WORKDIR}/data into file ${COMPRESS_FILE_NAME}"
-    cd ${WORKDIR}/data
-    tar -cvf ${WORKDIR}/${COMPRESS_FILE_NAME} *
+    cd ${WORKDIR}/data/${DATA_SUBDIR}
+    mkdir -p ${WORKDIR}/__output_resources;
+
+    echo "Start to find and copy files: find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
+    eval "find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
+
+    if [ -z "$(ls -A "${WORKDIR}/__output_resources")" ]; then
+       echo "No files should be sent, exit."
+       exit 0
+    fi
+
+    echo "Start to compress files under ${WORKDIR}/__output_resources into file ${COMPRESS_FILE_NAME}"
+    cd ${WORKDIR}/__output_resources
+    tar -cvf ${WORKDIR}/${COMPRESS_FILE_NAME} ./*
     cd ${WORKDIR}
 
     for header in ${HEADERS}; do
@@ -101,7 +119,7 @@ case $COMMAND in
         ;;
     push )
         wait_ok
-        ls -la /${WORKDIR}/data
+        ls -la ${WORKDIR}/data
         wrapPush
         ;;
     * )
