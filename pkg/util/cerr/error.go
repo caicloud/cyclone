@@ -37,6 +37,8 @@ const (
 	ReasonExistRunningWorkflowRuns = "ReasonExistRunningWorkflows"
 	// ReasonCreateIntegrationFailed represents creating integration failed error
 	ReasonCreateIntegrationFailed = "ReasonCreateIntegrationFailed"
+	// ReasonNoSpaceLeftForHTTPResource represents no space left to store http resources error
+	ReasonNoSpaceLeftForHTTPResource = "ReasonNoSpaceLeftForHTTPResource"
 )
 
 var (
@@ -137,6 +139,10 @@ var (
 	// ErrorExistRunningWorkflowRuns defines error that can not update persisten volume while there are workflowRuns running.
 	ErrorExistRunningWorkflowRuns = nerror.InternalServerError.Build(ReasonExistRunningWorkflowRuns,
 		"can not update persistent volume, since there are WorkflowRuns running, need to stop following WorkflowRuns firstly: ${workflows}")
+
+	// ErrorNoSpaceLeftForHTTPResource defines error that can not update persisten volume while there are workflowRuns running.
+	ErrorNoSpaceLeftForHTTPResource = nerror.InternalServerError.Build(ReasonNoSpaceLeftForHTTPResource,
+		"no enough space left to store artifacts for ${namespace}/${workflowRun}/${stage}, available disk percentage ${percentage}")
 )
 
 // ConvertK8sError converts k8s error to Cyclone errors.

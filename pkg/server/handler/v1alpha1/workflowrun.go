@@ -22,9 +22,11 @@ import (
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/accelerator"
+	"github.com/caicloud/cyclone/pkg/server/biz/artifact"
 	"github.com/caicloud/cyclone/pkg/server/biz/stream"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
@@ -42,7 +44,11 @@ const (
 )
 
 // CreateWorkflowRun ...
-func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
+func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wfr *v1alpha1.WorkflowRun, dryrun bool) (*v1alpha1.WorkflowRun, error) {
+	if dryrun {
+		return workflowRunCreationDryRun(project, workflow, tenant, wfr)
+	}
+
 	modifiers := []CreationModifier{GenerateNameModifier, InjectProjectLabelModifier, InjectWorkflowLabelModifier, InjectWorkflowOwnerRefModifier}
 	for _, modifier := range modifiers {
 		err := modifier(tenant, project, workflow, wfr)
@@ -57,6 +63,45 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
 	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
+}
+
+func workflowRunCreationDryRun(project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
+	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	artifactManager := artifact.NewManager()
+	go artifactManager.CleanPeriodically(config.Config.Artifact.RetentionSeconds * time.Second)
+
+	for _, stage := range wf.Spec.Stages {
+		stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		if stg.Spec.Pod == nil {
+			return nil, nil
+		}
+
+		// Check disk space for output http resources
+		for _, resource := range stg.Spec.Pod.Outputs.Resources {
+			if resource.Type == v1alpha1.HTTPResourceType {
+				percentage, err := artifactManager.GetDiskAvailablePercentage()
+				if err != nil {
+					log.Errorf("Get disk available space error: %v", err)
+					return nil, err
+				}
+				if percentage < config.Config.Artifact.AvailableDiskPercentage {
+					err = cerr.ErrorNoSpaceLeftForHTTPResource.Error(common.TenantNamespace(tenant), wfr.Name, stage.Name, percentage)
+					log.Error(err)
+					return nil, err
+				}
+				return nil, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // workflowReference returns a workflowRef
@@ -469,6 +514,19 @@ func GetContainerLogs(ctx context.Context, project, workflow, workflowrun, tenan
 
 // ReceiveArtifacts receives artifacts produced by workflowrun stage.
 func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string) error {
+	artifactManager := artifact.NewManager()
+	percentage, err := artifactManager.GetDiskAvailablePercentage()
+	if err != nil {
+		log.Errorf("Get disk available space error: %v", err)
+		return err
+	}
+
+	if percentage < config.Config.Artifact.AvailableDiskPercentage {
+		err = cerr.ErrorNoSpaceLeftForHTTPResource.Error(namespace, workflowrun, stage, percentage)
+		log.Error(err)
+		return nil
+	}
+
 	// get workflowrun
 	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
 	if err != nil {

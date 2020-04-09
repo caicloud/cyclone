@@ -17,6 +17,7 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"github.com/caicloud/nirvana"
 	nconfig "github.com/caicloud/nirvana/config"
@@ -31,6 +32,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis"
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
+	"github.com/caicloud/cyclone/pkg/server/biz/artifact"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
@@ -114,6 +116,9 @@ func main() {
 	opts.AddFlags()
 
 	initialize(opts)
+
+	artifactManager := artifact.NewManager()
+	go artifactManager.CleanPeriodically(config.Config.Artifact.RetentionSeconds * time.Second)
 
 	// Create nirvana command.
 	cmd := nconfig.NewNamedNirvanaCommand("cyclone-server", &nconfig.Option{

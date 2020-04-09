@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
@@ -71,6 +72,20 @@ type CycloneServerConfig struct {
 	// ClientSet holds the common attributes that can be passed to a Kubernetes client on cyclone server handlers
 	// initialization.
 	ClientSet ClientSetConfig `json:"client_set"`
+
+	// Artifact config for artifacts which are managed by cyclone server
+	Artifact ArtifactConfig `json:"artifact"`
+}
+
+// ArtifactConfig configures artifacts which are managed by cyclone server
+type ArtifactConfig struct {
+	// RetentionSeconds describes the retention time for artifacts, cyclone will delete artifacts exceeded retention
+	// time periodically.
+	RetentionSeconds time.Duration `json:"retention_seconds"`
+
+	// AvailableDiskPercentage is a threshold, if disk available space is less than this value, artifacts can not
+	// be stored.
+	AvailableDiskPercentage float64 `json:"available_disk_percentage"`
 }
 
 // ClientSetConfig defines rate limit config for a Kubernetes client
@@ -201,6 +216,16 @@ func modifier(config *CycloneServerConfig) {
 			core_v1.ResourceRequestsCPU:    common.QuotaCPURequest,
 			core_v1.ResourceRequestsMemory: common.QuotaMemoryRequest,
 		}
+	}
+
+	if config.Artifact.RetentionSeconds == 0 {
+		log.Warning("artifact RetentionSeconds not configured, will use default value '604800'")
+		config.Artifact.RetentionSeconds = 60 * 60 * 24 * 7
+	}
+
+	if config.Artifact.AvailableDiskPercentage == 0 {
+		log.Warning("artifact AvailableDiskPercentage not configured, will use default value '0.2'")
+		config.Artifact.AvailableDiskPercentage = 0.2
 	}
 }
 

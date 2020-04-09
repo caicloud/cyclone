@@ -43,4 +43,7 @@ const (
 
 	// CacheCleanupContainerName is container name of the pod used to cleanup acceleration cache.
 	CacheCleanupContainerName = "cache-cleaner"
+
+	// CycloneHome is the home folder for Cyclone.
+	CycloneHome = "/var/lib/cyclone"
 )
