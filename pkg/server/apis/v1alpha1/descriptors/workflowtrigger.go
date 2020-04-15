@@ -31,6 +31,7 @@ var workflowtrigger = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows/{workflow}/workflowtriggers",
 		Description: "workflowtrigger APIs",
+		Tags:        []string{"workflowtrigger"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -86,6 +87,7 @@ var workflowtrigger = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows/{workflow}/workflowtriggers/{workflowtrigger}",
 		Description: "workflowtrigger APIs",
+		Tags:        []string{"workflowtrigger"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

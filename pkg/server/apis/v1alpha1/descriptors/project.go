@@ -16,6 +16,7 @@ var project = []definition.Descriptor{
 	{
 		Path:        "/projects",
 		Description: "Projects APIs",
+		Tags:        []string{"project"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -57,6 +58,7 @@ var project = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}",
 		Description: "Projects APIs",
+		Tags:        []string{"project"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

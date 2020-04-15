@@ -15,6 +15,7 @@ var resourceTypes = []definition.Descriptor{
 	{
 		Path:        "/resourcetypes",
 		Description: "Resource types APIs",
+		Tags:        []string{"resourcetype"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -54,6 +55,7 @@ var resourceTypes = []definition.Descriptor{
 	{
 		Path:        "/resourcetypes/{resourceType}",
 		Description: "Resource type APIs",
+		Tags:        []string{"resourcetype"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

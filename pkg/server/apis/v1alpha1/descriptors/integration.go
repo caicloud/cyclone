@@ -15,6 +15,7 @@ var integration = []definition.Descriptor{
 	{
 		Path:        "/integrations",
 		Description: "Integration APIs",
+		Tags:        []string{"integration"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -72,6 +73,7 @@ var integration = []definition.Descriptor{
 	{
 		Path:        "/integrations/{integration}",
 		Description: "Integrations APIs",
+		Tags:        []string{"integration"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -242,6 +244,7 @@ var integration = []definition.Descriptor{
 	{
 		Path:        "/integrations/{integration}/scmrepos",
 		Description: "Integrations APIs",
+		Tags:        []string{"integration"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -266,6 +269,7 @@ var integration = []definition.Descriptor{
 	{
 		Path:        "/integrations/{integration}/scmrepos/{repo}",
 		Description: "Integrations APIs",
+		Tags:        []string{"integration"},
 		Children: []definition.Descriptor{
 			{
 				Path: "/branches",
