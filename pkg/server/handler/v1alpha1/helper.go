@@ -26,8 +26,6 @@ import (
 )
 
 const (
-	// cycloneHome is the home folder for Cyclone.
-	cycloneHome = "/var/lib/cyclone"
 
 	// logsFolderName is the folder name for logs files.
 	logsFolderName = "logs"
@@ -55,14 +53,14 @@ func getLogFolder(tenant, project, workflow, workflowrun string) (string, error)
 	if tenant == "" || project == "" || workflow == "" || workflowrun == "" {
 		return "", fmt.Errorf("tenant/project/workflow/workflowrun can not be empty")
 	}
-	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, logsFolderName}, string(os.PathSeparator)), nil
+	return strings.Join([]string{common.CycloneHome, tenant, project, workflow, workflowrun, logsFolderName}, string(os.PathSeparator)), nil
 }
 
 func getArtifactFolder(tenant, project, workflow, workflowrun, stage string) (string, error) {
 	if tenant == "" || project == "" || workflow == "" || workflowrun == "" || stage == "" {
 		return "", fmt.Errorf("tenant/project/workflow/workflowrun/stage can not be empty")
 	}
-	return strings.Join([]string{cycloneHome, tenant, project, workflow, workflowrun, artifactFolderName, stage}, string(os.PathSeparator)), nil
+	return strings.Join([]string{common.CycloneHome, tenant, project, workflow, workflowrun, artifactFolderName, stage}, string(os.PathSeparator)), nil
 }
 
 // deleteCollections deletes collections in the sub paths of a tenant in the pvc, collections including:
@@ -90,7 +88,7 @@ func deleteCollections(tenant string, subpaths ...string) error {
 }
 
 func getCollectionFolder(tenant string, subpaths ...string) string {
-	paths := []string{cycloneHome, tenant}
+	paths := []string{common.CycloneHome, tenant}
 	paths = append(paths, subpaths...)
 	return strings.Join(paths, string(os.PathSeparator))
 }

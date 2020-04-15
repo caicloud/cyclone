@@ -108,6 +108,9 @@ server:
   clientSet:
     qps: 50.0
     burst: 100
+  artifact:
+    retentionSeconds: 604800
+    retentionDiskProtectionThreshold: 0.2
 
 # Cyclone web variables
 web:

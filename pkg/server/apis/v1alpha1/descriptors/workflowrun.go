@@ -54,6 +54,12 @@ var workflowrun = []definition.Descriptor{
 						Source:      definition.Body,
 						Description: "JSON body to describe the new workflowrun",
 					},
+					{
+						Source:      definition.Header,
+						Name:        httputil.HeaderDryRun,
+						Default:     false,
+						Description: "Whether to do a rehearsal of creating workflowRun",
+					},
 				},
 				Results: definition.DataErrorResults("workflowrun"),
 			},

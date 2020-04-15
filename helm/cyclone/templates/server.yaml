@@ -57,6 +57,10 @@ data:
       "client_set": {
         "qps": {{ .Values.server.clientSet.qps }},
         "burst": {{ .Values.server.clientSet.burst }}
+      },
+      "artifact": {
+        "retention_seconds": {{ .Values.server.artifact.retentionSeconds }},
+        "retention_disk_protection_threshold": {{ .Values.server.artifact.retentionDiskProtectionThreshold }}
       }
     }
 

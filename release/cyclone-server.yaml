@@ -64,8 +64,8 @@ _config:
         modes:
         - ReadWriteMany
       storage:
-        request: 200Gi
-        limit: 200Gi
+        request: 10Gi
+        limit: 10Gi
     configs:
     - name: cyclone-server-config
       data:
@@ -124,5 +124,9 @@ _config:
             "client_set": {
               "qps": 50.0,
               "burst": 100
+            },
+            "artifact": {
+              "retention_seconds": 604800,
+              "retention_disk_protection_threshold": 0.1
             }
           }
