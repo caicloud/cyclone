@@ -88,7 +88,7 @@ func (p *Option) Configure(cfg *nirvana.Config) error {
 	cfg.Configure(
 		nirvana.IP(p.IP),
 		nirvana.Port(p.Port),
-		nirvana.TLS(p.Key, p.Cert),
+		nirvana.TLS(p.Cert, p.Key),
 	)
 	return nil
 }

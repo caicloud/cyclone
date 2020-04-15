@@ -47,7 +47,7 @@ const (
 
 // DestinationHandler is used to handle the results from API handlers.
 type DestinationHandler interface {
-	// Type returns definition.Type which the type handler can handle.
+	// Destination returns definition.Destination which the destination handler can handle.
 	Destination() definition.Destination
 	// Priority returns priority of the type handler. Type handler with higher priority will prior execute.
 	Priority() int
@@ -91,9 +91,16 @@ func RegisterDestinationHandler(handler DestinationHandler) error {
 // If there is no error, it always expect that the next handler goes on.
 type MetaDestinationHandler struct{}
 
+// Destination returns definition.Destination which the destination handler can handle.
 func (h *MetaDestinationHandler) Destination() definition.Destination { return definition.Meta }
-func (h *MetaDestinationHandler) Priority() int                       { return MediumPriority }
-func (h *MetaDestinationHandler) Validate(target reflect.Type) error  { return nil }
+
+// Priority returns priority of the type handler.
+func (h *MetaDestinationHandler) Priority() int { return MediumPriority }
+
+// Validate validates whether the type handler can handle the target type.
+func (h *MetaDestinationHandler) Validate(target reflect.Type) error { return nil }
+
+// Handle handles a value. If the handler has something wrong, it should return an error.
 func (h *MetaDestinationHandler) Handle(ctx context.Context, producers []Producer, code int, value interface{}) (goon bool, err error) {
 	if value == nil {
 		return true, nil
@@ -112,9 +119,16 @@ func (h *MetaDestinationHandler) Handle(ctx context.Context, producers []Produce
 // If value is nil, the handler does nothing.
 type DataDestinationHandler struct{}
 
+// Destination returns definition.Destination which the destination handler can handle.
 func (h *DataDestinationHandler) Destination() definition.Destination { return definition.Data }
-func (h *DataDestinationHandler) Priority() int                       { return LowPriority }
-func (h *DataDestinationHandler) Validate(target reflect.Type) error  { return nil }
+
+// Priority returns priority of the type handler.
+func (h *DataDestinationHandler) Priority() int { return LowPriority }
+
+// Validate validates whether the type handler can handle the target type.
+func (h *DataDestinationHandler) Validate(target reflect.Type) error { return nil }
+
+// Handle handles a value. If the handler has something wrong, it should return an error.
 func (h *DataDestinationHandler) Handle(ctx context.Context, producers []Producer, code int, value interface{}) (goon bool, err error) {
 	if value == nil {
 		return true, nil
@@ -127,9 +141,16 @@ func (h *DataDestinationHandler) Handle(ctx context.Context, producers []Produce
 // If there is no error, the handler does nothing.
 type ErrorDestinationHandler struct{}
 
+// Destination returns definition.Destination which the destination handler can handle.
 func (h *ErrorDestinationHandler) Destination() definition.Destination { return definition.Error }
-func (h *ErrorDestinationHandler) Priority() int                       { return HighPriority }
-func (h *ErrorDestinationHandler) Validate(target reflect.Type) error  { return nil }
+
+// Priority returns priority of the type handler.
+func (h *ErrorDestinationHandler) Priority() int { return HighPriority }
+
+// Validate validates whether the type handler can handle the target type.
+func (h *ErrorDestinationHandler) Validate(target reflect.Type) error { return nil }
+
+// Handle handles a value. If the handler has something wrong, it should return an error.
 func (h *ErrorDestinationHandler) Handle(ctx context.Context, producers []Producer, code int, value interface{}) (goon bool, err error) {
 	if value == nil {
 		return true, nil
@@ -147,7 +168,7 @@ func writeError(ctx context.Context, producers []Producer, err interface{}) erro
 		return noProducerToWrite.Error(ats)
 	}
 	code := http.StatusInternalServerError
-	msg := interface{}(nil)
+	var msg interface{}
 	switch e := err.(type) {
 	case Error:
 		code = e.Code()

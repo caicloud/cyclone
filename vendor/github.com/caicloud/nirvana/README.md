@@ -27,6 +27,9 @@ docs are kept up-to-date.
 - [中文](https://caicloud.github.io/nirvana/zh-hans)
 - [English (Expired)](https://caicloud.github.io/nirvana/en)
 
+In addition, [nirvana-practice](https://github.com/caicloud/nirvana-practice) provides a practical way for you
+to get familiar with Nirvana.
+
 ## Features
 
 - API Framework based on Descriptors

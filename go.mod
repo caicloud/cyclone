@@ -6,15 +6,13 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/PaesslerAG/jsonpath v0.0.0-20181129101437-13fe51c7d940
 	github.com/aws/aws-sdk-go v1.28.2 // indirect
-	github.com/caicloud/nirvana v0.0.0-20190415142005-32ebf1fc8710
+	github.com/caicloud/nirvana v0.2.3
 	github.com/cbroglie/mustache v1.0.1
 	github.com/cilium/ebpf v0.0.0-20191025125908-95b36a581eed // indirect
 	github.com/coredns/corefile-migration v1.0.6 // indirect
 	github.com/docker/libnetwork v0.8.0-dev.2.0.20190925143933-c8a5fca4a652 // indirect
 	github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153 // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
-	github.com/go-playground/locales v0.12.1 // indirect
-	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect
@@ -30,19 +28,17 @@ require (
 	github.com/mozillazg/go-unidecode v0.1.0 // indirect
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/xanzy/go-gitlab v0.28.0
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gonum.org/v1/gonum v0.6.2 // indirect
 	google.golang.org/grpc v1.26.0 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.23.0 // indirect
 	gopkg.in/xanzy/go-gitlab.v0 v0.5.1
 	k8s.io/api v0.17.3

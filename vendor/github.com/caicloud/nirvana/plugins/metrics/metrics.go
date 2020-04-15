@@ -66,7 +66,7 @@ func newMetricsMiddleware(namespace string) definition.Middleware {
 		prometheus.SummaryOpts{
 			Namespace: namespace,
 			Name:      "request_latencies_summary",
-			Help:      "Response latency summary in microseconds for each verb and resource.",
+			Help:      "Response latency summary in milliseconds for each verb and resource.",
 			MaxAge:    time.Hour,
 		},
 		[]string{"method", "path"},

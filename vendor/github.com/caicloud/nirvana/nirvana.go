@@ -27,10 +27,14 @@ import (
 	"github.com/caicloud/nirvana/errors"
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
+
+	// This blank import will make it in the dependencies of projects using Nirvana
+	// for API docs generation.
+	_ "github.com/caicloud/nirvana/utils/api"
 )
 
 // Server is a complete API server.
-// The server contains a router to handle all requests form clients.
+// The server contains a router to handle all requests from clients.
 type Server interface {
 	// Serve starts to listen and serve requests.
 	// The method won't return except an error occurs.
@@ -129,7 +133,7 @@ func (c *Config) Set(name string, config interface{}) {
 	}
 }
 
-// forEach traverse all plugin configs.
+// forEach traverses all plugin configs.
 func (c *Config) forEach(f func(name string, config interface{}) error) error {
 	for name, cfg := range c.configSet {
 		if err := f(name, cfg); err != nil {
@@ -169,13 +173,9 @@ func NewDefaultConfig() *Config {
 // modifiers for specific scenario, please use NewDefaultConfig().
 func NewConfig() *Config {
 	return &Config{
-		ip:          "",
-		port:        8080,
-		logger:      &log.SilentLogger{},
-		filters:     []service.Filter{},
-		descriptors: []definition.Descriptor{},
-		modifiers:   []service.DefinitionModifier{},
-		configSet:   make(map[string]interface{}),
+		port:      8080,
+		logger:    &log.SilentLogger{},
+		configSet: make(map[string]interface{}),
 	}
 }
 
