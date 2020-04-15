@@ -64,8 +64,8 @@ _config:
         modes:
         - ReadWriteMany
       storage:
-        request: 500Gi
-        limit: 500Gi
+        request: 10Gi
+        limit: 10Gi
     configs:
     - name: cyclone-server-config
       data:
@@ -127,6 +127,6 @@ _config:
             },
             "artifact": {
               "retention_seconds": 604800,
-              "available_disk_percentage": 0.1
+              "retention_disk_protection_threshold": 0.1
             }
           }

@@ -83,9 +83,9 @@ type ArtifactConfig struct {
 	// time periodically.
 	RetentionSeconds time.Duration `json:"retention_seconds"`
 
-	// AvailableDiskPercentage is a threshold, if disk available space is less than this value, artifacts can not
-	// be stored.
-	AvailableDiskPercentage float64 `json:"available_disk_percentage"`
+	// RetentionDiskProtectionThreshold is a threshold in percentage format, if disk available space is less than this
+	// value, artifacts can not be stored.
+	RetentionDiskProtectionThreshold float64 `json:"retention_disk_protection_threshold"`
 }
 
 // ClientSetConfig defines rate limit config for a Kubernetes client
@@ -223,9 +223,9 @@ func modifier(config *CycloneServerConfig) {
 		config.Artifact.RetentionSeconds = 60 * 60 * 24 * 7
 	}
 
-	if config.Artifact.AvailableDiskPercentage == 0 {
-		log.Warning("artifact AvailableDiskPercentage not configured, will use default value '0.2'")
-		config.Artifact.AvailableDiskPercentage = 0.2
+	if config.Artifact.RetentionDiskProtectionThreshold == 0 {
+		log.Warning("artifact RetentionDiskProtectionThreshold not configured, will use default value '0.2'")
+		config.Artifact.RetentionDiskProtectionThreshold = 0.2
 	}
 }
 

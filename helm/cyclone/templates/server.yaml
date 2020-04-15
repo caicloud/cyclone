@@ -60,7 +60,7 @@ data:
       },
       "artifact": {
         "retention_seconds": {{ .Values.server.artifact.retentionSeconds }},
-        "available_disk_percentage": {{ .Values.server.artifact.availableDiskPercentage }}
+        "retention_disk_protection_threshold": {{ .Values.server.artifact.retentionDiskProtectionThreshold }}
       }
     }
 

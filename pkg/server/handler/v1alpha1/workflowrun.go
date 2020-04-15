@@ -92,7 +92,7 @@ func workflowRunCreationDryRun(project, workflow, tenant string, wfr *v1alpha1.W
 					log.Errorf("Get disk available space error: %v", err)
 					return nil, err
 				}
-				if percentage < config.Config.Artifact.AvailableDiskPercentage {
+				if percentage < config.Config.Artifact.RetentionDiskProtectionThreshold {
 					err = cerr.ErrorNoSpaceLeftForHTTPResource.Error(common.TenantNamespace(tenant), wfr.Name, stage.Name, percentage)
 					log.Error(err)
 					return nil, err
@@ -521,7 +521,7 @@ func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string)
 		return err
 	}
 
-	if percentage < config.Config.Artifact.AvailableDiskPercentage {
+	if percentage < config.Config.Artifact.RetentionDiskProtectionThreshold {
 		err = cerr.ErrorNoSpaceLeftForHTTPResource.Error(namespace, workflowrun, stage, percentage)
 		log.Error(err)
 		return nil
