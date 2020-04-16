@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 )
@@ -57,6 +58,7 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 					Namespace: context.Namespace,
 					Labels: map[string]string{
 						PVCWatcherLabelName: PVCWatcherLabelValue,
+						meta.LabelPodKind:   meta.PodKindPVCWatcher.String(),
 					},
 				},
 				Spec: corev1.PodSpec{

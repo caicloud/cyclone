@@ -88,6 +88,8 @@ const (
 	PodKindWorkload PodKind = "workload"
 	// PodKindAccelerationGC represents the pod is used for acceleration cache GC purpose.
 	PodKindAccelerationGC PodKind = "acceleration-gc"
+	// PodKindPVCWatcher represents the pod is used to watch pvc.
+	PodKindPVCWatcher PodKind = "pvc-watcher"
 )
 
 // ProjectSelector is a selector for cyclone CRD resources which have corresponding project label
@@ -199,6 +201,16 @@ func WorkflowRunPodSelector(wfr string) string {
 // WorkloadPodSelector selects pods that used to execute workload.
 func WorkloadPodSelector() string {
 	return fmt.Sprintf("%s=%s", LabelPodKind, PodKindWorkload.String())
+}
+
+// GCPodSelector selects pods that used to gc workload.
+func GCPodSelector() string {
+	return fmt.Sprintf("%s=%s", LabelPodKind, PodKindGC.String())
+}
+
+// AccelerationGCPodSelector selects pods that used to gc acceleration caches.
+func AccelerationGCPodSelector() string {
+	return fmt.Sprintf("%s=%s", LabelPodKind, PodKindAccelerationGC.String())
 }
 
 // WorkflowRunWorkloadPodSelector selects pods that used to execute a WorkflowRun's workload.

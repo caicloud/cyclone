@@ -15,6 +15,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator/cleaner"
 	"github.com/caicloud/cyclone/pkg/server/biz/usage"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
@@ -89,6 +90,12 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 		return err
 	}
 
+	err = cleaner.StopReasonNoNeed(client, nsname, cleaner.NoNeedReasonPVCDeleted)
+	if err != nil {
+		log.Errorf("stop caches cleanup pod error: %s", err)
+		return err
+	}
+
 	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete persistent volume claim %s error %v", pvcName, err)
@@ -130,7 +137,7 @@ func ConfirmPVCDeleted(tenantName, namespace string, client *kubernetes.Clientse
 func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
 	// Can not update pvc when there are workflows running.
 	pods, err := client.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s!=%s", usage.PVCWatcherLabelName, usage.PVCWatcherLabelValue),
+		LabelSelector: fmt.Sprintf("%s in (%s, %s)", meta.LabelPodKind, meta.PodKindWorkload, meta.PodKindGC),
 	})
 	if err != nil {
 		log.Warning("list pvc watcher pods error: ", err)

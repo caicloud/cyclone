@@ -47,7 +47,6 @@ func (c *Cleaner) Clean(pvcNamespace, pvcName string) (*v1alpha1.AccelerationCac
 			Name:      c.podName(c.projectName),
 			Namespace: pvcNamespace,
 			Labels: map[string]string{
-				// meta.LabelWorkflowRunName: o.wfr.Name,
 				meta.LabelPodKind:      meta.PodKindAccelerationGC.String(),
 				meta.LabelPodCreatedBy: meta.CycloneCreator,
 			},
@@ -145,6 +144,18 @@ func (c *Cleaner) watch(namespace, podName string) {
 				log.Warningf("Watch cache cleanup, object is not a pod, event type: %v, event object: %v", e.Type, e.Object)
 			}
 
+			if pod.Labels != nil {
+				if reason, ok := pod.Labels[LabelCleanupPodNoNeedReason]; ok && len(reason) > 0 {
+					statusToUpdate = &v1alpha1.AccelerationCacheCleanupStatus{
+						TaskID:             pod.Name,
+						Phase:              v1alpha1.CacheCleanupSucceeded,
+						StartTime:          pod.DeepCopy().CreationTimestamp,
+						LastTransitionTime: metav1.NewTime(time.Now()),
+						Reason:             reason,
+					}
+					return
+				}
+			}
 			switch pod.Status.Phase {
 			case corev1.PodSucceeded:
 				statusToUpdate = &v1alpha1.AccelerationCacheCleanupStatus{
@@ -246,4 +257,105 @@ func getOrDefault(config *config.CacheCleaner, key corev1.ResourceName, defaultV
 	}
 
 	return defaultValue
+}
+
+// InitCacheCleanupStatus should only be invoked when cyclone server startup, it will update all Running status
+// of Cleanup to Failed
+func InitCacheCleanupStatus(client clientset.Interface) error {
+	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{
+		LabelSelector: meta.LabelExistsSelector(meta.LabelTenantName),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, namespace := range namespaces.Items {
+		projects, err := client.CycloneV1alpha1().Projects(namespace.Name).List(metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+
+		for _, p := range projects.Items {
+			project := p.DeepCopy()
+			if project.Annotations == nil {
+				continue
+			}
+
+			s, ok := project.Annotations[meta.AnnotationCacheCleanupStatus]
+			if !ok || len(s) == 0 {
+				continue
+			}
+
+			var latestStatus v1alpha1.CacheCleanupStatus
+			if err = json.Unmarshal([]byte(s), &latestStatus); err != nil {
+				return err
+			}
+
+			if latestStatus.Acceleration.LatestStatus.Phase != v1alpha1.CacheCleanupRunning {
+				continue
+			}
+
+			latestStatus.Acceleration.LatestStatus.Phase = v1alpha1.CacheCleanupFailed
+			latestStatus.Acceleration.LatestStatus.Reason = "Server restarted"
+			ss, err := json.Marshal(latestStatus)
+			if err != nil {
+				return err
+			}
+			project.Annotations[meta.AnnotationCacheCleanupStatus] = string(ss)
+
+			// update project
+			_, err = client.CycloneV1alpha1().Projects(namespace.Name).Update(project)
+			return err
+		}
+	}
+	return nil
+}
+
+const (
+	// LabelCleanupPodNoNeedReason is the label key used to describe the caches cleanup
+	// pod no need reason
+	LabelCleanupPodNoNeedReason = "pod.cyclone.dev/no-need-reason"
+
+	// NoNeedReasonPVCDeleted ...
+	NoNeedReasonPVCDeleted = "pvc-deleted"
+)
+
+// StopReasonNoNeed deletes all cache cleaner pods under a namespace, since cleanup is no need.
+// No need means cleanup status will be Succeeded instead of Failed.
+// Scenarios no need may including:
+//   - The pvc is deleted by other components
+func StopReasonNoNeed(client kubernetes.Interface, namespace, reason string) error {
+	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		LabelSelector: meta.AccelerationGCPodSelector(),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, p := range pods.Items {
+		pod := p.DeepCopy()
+		if pod.Labels == nil {
+			continue
+		}
+
+		// Add the NoNeedReason label before deleting will notify the related pod watcher to
+		// record the caches cleanup result as Succeeded instead of Failed.
+		pod.Labels[LabelCleanupPodNoNeedReason] = reason
+		_, err = client.CoreV1().Pods(namespace).Update(pod)
+		if err != nil {
+			log.Warningf("Update caches cleanup pod %s error: %v", pod.Name, err)
+		}
+
+		foreground := metav1.DeletePropagationForeground
+		var zero int64
+		err = client.CoreV1().Pods(namespace).Delete(pod.Name, &metav1.DeleteOptions{
+			PropagationPolicy:  &foreground,
+			GracePeriodSeconds: &zero,
+		})
+		if err != nil {
+			log.Warningf("Delete caches cleanup pod %s error: %v", pod.Name, err)
+		}
+	}
+
+	return nil
 }
