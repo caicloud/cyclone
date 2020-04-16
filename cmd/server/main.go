@@ -32,6 +32,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis"
 	"github.com/caicloud/cyclone/pkg/server/apis/filters"
 	"github.com/caicloud/cyclone/pkg/server/apis/modifiers"
+	"github.com/caicloud/cyclone/pkg/server/biz/accelerator/cleaner"
 	"github.com/caicloud/cyclone/pkg/server/biz/artifact"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/bitbucket"
 	_ "github.com/caicloud/cyclone/pkg/server/biz/scm/github"
@@ -106,6 +107,12 @@ func initialize(opts *Options) {
 	} else {
 		log.Info("create_builtin_templates is false, skip create built-in stage templates")
 	}
+
+	// Init cache cleanup status of project, update all Running status to Failed
+	if err := cleaner.InitCacheCleanupStatus(rateLimitClient); err != nil {
+		log.Warningf("Init cache cleanup status error: %v", err)
+	}
+
 }
 
 func main() {
