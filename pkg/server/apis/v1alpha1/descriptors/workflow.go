@@ -32,6 +32,7 @@ var workflow = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows",
 		Description: "workflow APIs",
+		Tags:        []string{"workflow"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -79,6 +80,7 @@ var workflow = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows/{workflow}",
 		Description: "workflow APIs",
+		Tags:        []string{"workflow"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

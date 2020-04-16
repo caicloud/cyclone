@@ -15,6 +15,7 @@ var usages = []definition.Descriptor{
 	{
 		Path:        "/storage/usages",
 		Description: "Storage usages APIs",
+		Tags:        []string{"storage"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -51,6 +52,7 @@ var usages = []definition.Descriptor{
 	{
 		Path:        "/storage/cleanup",
 		Description: "Clean storage paths",
+		Tags:        []string{"storage"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,

@@ -15,6 +15,7 @@ var resource = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/resources",
 		Description: "Resource APIs",
+		Tags:        []string{"resource"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -61,6 +62,7 @@ var resource = []definition.Descriptor{
 	},
 	{
 		Path: "/projects/{project}/resources/{resource}",
+		Tags: []string{"resource"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

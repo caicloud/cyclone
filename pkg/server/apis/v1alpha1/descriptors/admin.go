@@ -31,6 +31,7 @@ var all = []definition.Descriptor{
 	{
 		Path:        "/workflows",
 		Description: "APIs to list all workflows",
+		Tags:        []string{"workflow"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -55,6 +56,7 @@ var all = []definition.Descriptor{
 	{
 		Path:        "/stages",
 		Description: "APIs to list all stages",
+		Tags:        []string{"stage"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -79,6 +81,7 @@ var all = []definition.Descriptor{
 	{
 		Path:        "/resources",
 		Description: "APIs to list all resources",
+		Tags:        []string{"resource"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -103,6 +106,7 @@ var all = []definition.Descriptor{
 	{
 		Path:        "/workflowruns",
 		Description: "APIs to list all workflowruns",
+		Tags:        []string{"workflowrun"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -127,6 +131,7 @@ var all = []definition.Descriptor{
 	{
 		Path:        "/workflowtriggers",
 		Description: "APIs to list all workflowtriggers",
+		Tags:        []string{"workflowtrigger"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,

@@ -69,37 +69,37 @@ func PathParameterFor(name string, description string) Parameter {
 	return ParameterFor(Path, name, description)
 }
 
-// QueryParameterFor creates a path parameter
+// QueryParameterFor creates a query parameter
 func QueryParameterFor(name string, description string) Parameter {
 	return ParameterFor(Query, name, description)
 }
 
-// HeaderParameterFor creates a path parameter
+// HeaderParameterFor creates a header parameter
 func HeaderParameterFor(name string, description string) Parameter {
 	return ParameterFor(Header, name, description)
 }
 
-// FormParameterFor creates a path parameter
+// FormParameterFor creates a form parameter
 func FormParameterFor(name string, description string) Parameter {
 	return ParameterFor(Form, name, description)
 }
 
-// FileParameterFor creates a path parameter
+// FileParameterFor creates a file parameter
 func FileParameterFor(name string, description string) Parameter {
 	return ParameterFor(File, name, description)
 }
 
-// BodyParameterFor creates a path parameter
+// BodyParameterFor creates a body parameter
 func BodyParameterFor(description string) Parameter {
 	return ParameterFor(Body, "", description)
 }
 
-// PrefabParameterFor creates a path parameter
+// PrefabParameterFor creates a prefab parameter
 func PrefabParameterFor(name string, description string) Parameter {
 	return ParameterFor(Prefab, name, description)
 }
 
-// AutoParameterFor creates a path parameter
+// AutoParameterFor creates an auto parameter
 func AutoParameterFor(description string) Parameter {
 	return ParameterFor(Auto, "", description)
 }
@@ -122,7 +122,7 @@ func DataResultFor(description string) Result {
 	return ResultFor(Data, description)
 }
 
-// ErrorResult creates data result.
+// ErrorResult creates error result.
 func ErrorResult() Result {
 	return ResultFor(Error, "")
 }
@@ -226,7 +226,14 @@ func (o *operatorRef) Out() reflect.Type {
 
 // Operate operates an object and return one.
 func (o *operatorRef) Operate(ctx context.Context, field string, object interface{}) (interface{}, error) {
-	results := o.value.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(field), reflect.ValueOf(object)})
+	var objectValue reflect.Value
+	if object == nil {
+		objectValue = reflect.Zero(o.in)
+	} else {
+		objectValue = reflect.ValueOf(object)
+	}
+
+	results := o.value.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(field), objectValue})
 	v := results[1]
 	if v.IsNil() {
 		return results[0].Interface(), nil

@@ -32,6 +32,7 @@ var workflowrun = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows/{workflow}/workflowruns",
 		Description: "workflowrun APIs",
+		Tags:        []string{"workflowrun"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -93,6 +94,7 @@ var workflowrun = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/workflows/{workflow}/workflowruns/{workflowrun}",
 		Description: "workflowrun APIs",
+		Tags:        []string{"workflowrun"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -464,6 +466,7 @@ var workflowrun = []definition.Descriptor{
 	},
 	{
 		Path: "/workflowruns/{workflowrun}/streamlogs",
+		Tags: []string{"workflowrun"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
@@ -497,6 +500,7 @@ var workflowrun = []definition.Descriptor{
 	},
 	{
 		Path: "/workflowruns/{workflowrun}/artifacts",
+		Tags: []string{"workflowrun"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,

@@ -109,18 +109,21 @@ func (b *builder) SetModifier(m DefinitionModifier) {
 // AddDescriptor adds descriptors to router.
 func (b *builder) AddDescriptor(descriptors ...definition.Descriptor) error {
 	for _, descriptor := range descriptors {
-		b.addDescriptor("", nil, nil, descriptor)
+		b.addDescriptor("", nil, nil, nil, descriptor)
 	}
 	return nil
 }
 
-func (b *builder) addDescriptor(prefix string, consumes []string, produces []string, descriptor definition.Descriptor) {
+func (b *builder) addDescriptor(prefix string, consumes []string, produces []string, tags []string, descriptor definition.Descriptor) {
 	path := strings.Join([]string{prefix, strings.Trim(descriptor.Path, "/")}, "/")
 	if descriptor.Consumes != nil {
 		consumes = descriptor.Consumes
 	}
 	if descriptor.Produces != nil {
 		produces = descriptor.Produces
+	}
+	if descriptor.Tags != nil {
+		tags = descriptor.Tags
 	}
 	if len(descriptor.Middlewares) > 0 || len(descriptor.Definitions) > 0 {
 		bd, ok := b.bindings[path]
@@ -133,17 +136,17 @@ func (b *builder) addDescriptor(prefix string, consumes []string, produces []str
 		}
 		if len(descriptor.Definitions) > 0 {
 			for _, d := range descriptor.Definitions {
-				bd.definitions = append(bd.definitions, *b.copyDefinition(&d, consumes, produces))
+				bd.definitions = append(bd.definitions, *b.copyDefinition(&d, consumes, produces, tags))
 			}
 		}
 	}
 	for _, child := range descriptor.Children {
-		b.addDescriptor(strings.TrimRight(path, "/"), consumes, produces, child)
+		b.addDescriptor(strings.TrimRight(path, "/"), consumes, produces, tags, child)
 	}
 }
 
 // copyDefinition creates a copy from original definition. Those fields with type interface{} only have shallow copies.
-func (b *builder) copyDefinition(d *definition.Definition, consumes []string, produces []string) *definition.Definition {
+func (b *builder) copyDefinition(d *definition.Definition, consumes []string, produces []string, tags []string) *definition.Definition {
 	newOne := &definition.Definition{
 		Method:      d.Method,
 		Summary:     d.Summary,
@@ -161,6 +164,12 @@ func (b *builder) copyDefinition(d *definition.Definition, consumes []string, pr
 	}
 	newOne.Produces = make([]string, len(produces))
 	copy(newOne.Produces, produces)
+
+	if len(d.Tags) > 0 {
+		tags = d.Tags
+	}
+	newOne.Tags = make([]string, len(tags))
+	copy(newOne.Tags, tags)
 
 	if len(d.ErrorProduces) > 0 {
 		produces = d.ErrorProduces
@@ -209,7 +218,7 @@ func (b *builder) Definitions() map[string][]definition.Definition {
 		if len(bd.definitions) > 0 {
 			definitions := make([]definition.Definition, len(bd.definitions))
 			for i, d := range bd.definitions {
-				newCopy := b.copyDefinition(&d, nil, nil)
+				newCopy := b.copyDefinition(&d, nil, nil, nil)
 				if b.modifier != nil {
 					b.modifier(newCopy)
 				}

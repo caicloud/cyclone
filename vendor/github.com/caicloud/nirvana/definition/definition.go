@@ -194,6 +194,9 @@ type Definition struct {
 	// Produces indicates how many content types the handler can produce.
 	// It will override parent descriptor's produces.
 	Produces []string
+	// Tags indicates tags of the API handler.
+	// It will override parent descriptor's tags.
+	Tags []string
 	// ErrorProduces is used to generate data for error. If this field is empty,
 	// it means that this field equals to Produces.
 	// In some cases, succeessful data and error data should be generated in
@@ -228,6 +231,9 @@ type Descriptor struct {
 	// and child definitions can produce.
 	// It will override parent descriptor's produces.
 	Produces []string
+	// Tags indicates tags of current definitions and child definitions.
+	// It will override parent descriptor's tags.
+	Tags []string
 	// Middlewares contains path middlewares.
 	Middlewares []Middleware
 	// Definitions contains definitions for current path.

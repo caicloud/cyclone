@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This will force go to use the vendor files instead of using the `$GOPATH/pkg/mod`. (vendor mode)
+# more info: https://github.com/golang/go/wiki/Modules#how-do-i-use-vendoring-with-modules-is-vendoring-going-away
+export GOFLAGS := -mod=vendor
+
 .PHONY: test
 test:
 	hack/verify_boilerplate.py
-	hack/verify-govet.sh
-	hack/verify-gofmt.sh
 	@go test -race -cover ./...
-
 
 .PHONY: license
 license:

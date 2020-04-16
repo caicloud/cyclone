@@ -15,6 +15,7 @@ var template = []definition.Descriptor{
 	{
 		Path:        "/templates",
 		Description: "Stage template APIs",
+		Tags:        []string{"template"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.List,
@@ -62,6 +63,7 @@ var template = []definition.Descriptor{
 	{
 		Path:        "/templates/{template}",
 		Description: "Stage template APIs",
+		Tags:        []string{"template"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

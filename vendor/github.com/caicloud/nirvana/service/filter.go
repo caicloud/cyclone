@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -87,6 +88,7 @@ func ParseRequestForm() Filter {
 	}
 }
 
+// isGTZero returns a boolean result indicating if the content length is greater than 0.
 func isGTZero(length string) bool {
 	if length == "" {
 		return false
@@ -126,9 +128,13 @@ func AcceptTypes(req *http.Request) ([]string, error) {
 	return parseAcceptTypes(ct)
 }
 
+type acceptType struct {
+	name       string
+	preference float64
+}
+
 func parseAcceptTypes(v string) ([]string, error) {
-	types := []string{}
-	factors := []float64{}
+	var types []acceptType
 	strs := strings.Split(v, ",")
 	for _, str := range strs {
 		fields := strings.Split(str, ";")
@@ -158,24 +164,17 @@ func parseAcceptTypes(v string) ([]string, error) {
 				ctFields = append(ctFields, fmt.Sprintf("%s=%s", key, value))
 			}
 		}
-		types = append(types, strings.Join(ctFields, ";"))
-		factors = append(factors, factor)
+		types = append(types, acceptType{
+			name:       strings.Join(ctFields, ";"),
+			preference: factor,
+		})
 	}
-	if len(types) <= 1 {
-		return types, nil
+	sort.Slice(types, func(i, j int) bool {
+		return types[i].preference > types[j].preference
+	})
+	var ret []string
+	for _, t := range types {
+		ret = append(ret, t.name)
 	}
-	// In most cases, bubble sort is enough.
-	// Can optimize here.
-	exchanged := true
-	for exchanged {
-		exchanged = false
-		for i := 1; i < len(factors); i++ {
-			if factors[i] > factors[i-1] {
-				types[i-1], types[i] = types[i], types[i-1]
-				factors[i-1], factors[i] = factors[i], factors[i-1]
-				exchanged = true
-			}
-		}
-	}
-	return types, nil
+	return ret, nil
 }

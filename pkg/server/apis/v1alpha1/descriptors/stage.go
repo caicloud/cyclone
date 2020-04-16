@@ -31,6 +31,7 @@ var stage = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/stages",
 		Description: "Stage APIs",
+		Tags:        []string{"stage"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -78,6 +79,7 @@ var stage = []definition.Descriptor{
 	{
 		Path:        "/projects/{project}/stages/{stage}",
 		Description: "Stage APIs",
+		Tags:        []string{"stage"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,

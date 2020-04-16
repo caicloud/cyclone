@@ -15,6 +15,7 @@ var tenant = []definition.Descriptor{
 	{
 		Path:        "/tenants",
 		Description: "Tenant APIs",
+		Tags:        []string{"tenant"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Create,
@@ -45,6 +46,7 @@ var tenant = []definition.Descriptor{
 	},
 	{
 		Path: "/tenants/{tenant}",
+		Tags: []string{"tenant"},
 		Definitions: []definition.Definition{
 			{
 				Method:      definition.Get,
