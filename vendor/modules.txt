@@ -65,7 +65,7 @@ github.com/google/uuid
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
-# github.com/gorilla/websocket v1.4.0
+# github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
 # github.com/hashicorp/golang-lru v0.5.1
 github.com/hashicorp/golang-lru
