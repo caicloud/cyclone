@@ -169,6 +169,22 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 	})
 	assert.Nil(suite.T(), err)
 
+	podName := generatePodName(pName)
+	_, err = client.CoreV1().Pods(metaNs).Create(&corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: metaNs,
+			Labels: map[string]string{
+				meta.LabelPodKind:      meta.PodKindAccelerationGC.String(),
+				meta.LabelPodCreatedBy: meta.CycloneCreator,
+			},
+			Annotations: map[string]string{
+				meta.AnnotationIstioInject: meta.AnnotationValueFalse,
+			},
+		},
+	})
+	assert.Nil(suite.T(), err)
+
 	_, err = client.CoreV1().Namespaces().Create(&corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: metaNs,
@@ -191,6 +207,10 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 	err = json.Unmarshal([]byte(initStatusString), &initStatus)
 	assert.Nil(suite.T(), err)
 	assert.EqualValues(suite.T(), serverv1alpha1.CacheCleanupFailed, initStatus.Acceleration.LatestStatus.Phase)
+
+	_, err = suite.client.CoreV1().Pods(metaNs).Get(podName, metav1.GetOptions{})
+	assert.NotNil(suite.T(), err)
+	assert.True(suite.T(), k8serr.IsNotFound(err))
 }
 
 func (suite *CleanerSuite) TestStopReasonNoNeed() {

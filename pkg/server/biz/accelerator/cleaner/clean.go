@@ -44,7 +44,7 @@ func (c *Cleaner) Clean(pvcNamespace, pvcName string) (*v1alpha1.AccelerationCac
 	// Create a cache clean pod to clean acceleration cache data on PV.
 	cacheCleanPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.podName(c.projectName),
+			Name:      generatePodName(c.projectName),
 			Namespace: pvcNamespace,
 			Labels: map[string]string{
 				meta.LabelPodKind:      meta.PodKindAccelerationGC.String(),
@@ -122,7 +122,7 @@ func (c *Cleaner) watch(namespace, podName string) {
 		if err := c.writeDownResult(statusToUpdate); err != nil {
 			log.Errorf("write down result error: %v, result: %v", err, statusToUpdate)
 		}
-		if err := c.stopClean(ns, name); err != nil {
+		if err := stopClean(c.clusterClient, ns, name); err != nil {
 			log.Errorf("Stop cache cleaner pod %s/%s error: %v", ns, name, err)
 		}
 	}(namespace, podName)
@@ -240,12 +240,17 @@ func (c *Cleaner) writeDownResult(status *v1alpha1.AccelerationCacheCleanupStatu
 	})
 }
 
-// StopClean stops cache cleanup work, note this will NOT update project cache cleanup status.
-func (c *Cleaner) stopClean(namespace, name string) error {
-	return c.clusterClient.CoreV1().Pods(namespace).Delete(name, metav1.NewDeleteOptions(0))
+// stopClean stops cache cleanup work, note this will NOT update project cache cleanup status.
+func stopClean(client kubernetes.Interface, namespace, name string) error {
+	foreground := metav1.DeletePropagationForeground
+	var zero int64
+	return client.CoreV1().Pods(namespace).Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy:  &foreground,
+		GracePeriodSeconds: &zero,
+	})
 }
 
-func (c *Cleaner) podName(project string) string {
+func generatePodName(project string) string {
 	return fmt.Sprintf("%s-cache-cleaner", project)
 }
 
@@ -293,6 +298,13 @@ func InitCacheCleanupStatus(client clientset.Interface) error {
 
 			if latestStatus.Acceleration.LatestStatus.Phase != v1alpha1.CacheCleanupRunning {
 				continue
+			}
+
+			// stopClean unless will block next clean task by pod already exist.
+			podName := generatePodName(project.Name)
+			err = stopClean(client, namespace.Name, podName)
+			if err != nil {
+				log.Warningf("Delete caches cleanup pod %s error: %v", podName, err)
 			}
 
 			latestStatus.Acceleration.LatestStatus.Phase = v1alpha1.CacheCleanupFailed
@@ -346,12 +358,7 @@ func StopReasonNoNeed(client kubernetes.Interface, namespace, reason string) err
 			log.Warningf("Update caches cleanup pod %s error: %v", pod.Name, err)
 		}
 
-		foreground := metav1.DeletePropagationForeground
-		var zero int64
-		err = client.CoreV1().Pods(namespace).Delete(pod.Name, &metav1.DeleteOptions{
-			PropagationPolicy:  &foreground,
-			GracePeriodSeconds: &zero,
-		})
+		err = stopClean(client, namespace, pod.Name)
 		if err != nil {
 			log.Warningf("Delete caches cleanup pod %s error: %v", pod.Name, err)
 		}
