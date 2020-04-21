@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -51,8 +53,11 @@ type JSONPatch struct {
 
 // BuildWfrStatusPatch builds patch for updating status of workflowrun
 func BuildWfrStatusPatch(statusPhase v1alpha1.StatusPhase) ([]byte, error) {
+	now := metav1.Time{Time: time.Now()}
+
 	p := map[string]string{
-		"/status/overall/phase": string(statusPhase),
+		"/status/overall/phase":              string(statusPhase),
+		"/status/overall/lastTransitionTime": now.UTC().Format(time.RFC3339),
 	}
 	return BuildPatch(p)
 }
