@@ -126,7 +126,7 @@ build-linux:
 	  -e CGO_ENABLED=0                                                                 \
 	  -e GOFLAGS=$(GOFLAGS)                                                            \
 	  -e SHELLOPTS=$(SHELLOPTS)                                                        \
-	  $(BASE_REGISTRY)/golang:1.13.6-stretch                                           \
+	  $(BASE_REGISTRY)/golang:1.13.9-stretch                                           \
 	    /bin/bash -c 'for target in $(TARGETS); do                                     \
 	      go build -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)                        \
 	        -ldflags "-s -w -X $(ROOT)/pkg/server/version.VERSION=$(VERSION)           \
@@ -196,7 +196,7 @@ swagger:
 	  -e GOPATH=/go                                                                   \
 	  -e CGO_ENABLED=0                                                                \
 	  -e GOFLAGS=$(GOFLAGS)                                                           \
-	  $(BASE_REGISTRY)/golang:1.13.6-stretch                                          \
+	  $(BASE_REGISTRY)/golang:1.13.9-stretch                                          \
 	  sh -c "go get -u github.com/caicloud/nirvana/cmd/nirvana &&                     \
 	  go get -u github.com/golang/dep/cmd/dep &&                                      \
 	  nirvana api --output web/public pkg/server/apis"
