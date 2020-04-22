@@ -49,7 +49,8 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		safeToRun := true
 		for _, d := range stage.Depends {
 			status, ok := wfr.Status.Stages[d]
-			if !(ok && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)))) {
+			if !(ok && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)) ||
+				(status.Status.Phase == v1alpha1.StatusCancelled && IsTrivial(wf, d)))) {
 				safeToRun = false
 				break
 			}
