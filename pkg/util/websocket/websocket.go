@@ -3,6 +3,7 @@ package websocket
 import (
 	"bufio"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -98,71 +99,92 @@ type ReadBytes interface {
 
 // Write writes message from reader to websocket
 func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}) error {
+	go func() {
+		// Handle ping message send by peer, since the ping Handler function will be
+		// called from the NextReader, ReadMessage and message reader Read methods.
+		for {
+			_, _, err := ws.ReadMessage()
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	ws.SetPongHandler(func(string) error {
+		log.Info("Handle pong, Connection OK")
+		return nil
+	})
+
+	ws.SetPingHandler(func(message string) error {
+		log.Info("Handle ping ...")
+		err := ws.WriteControl(websocket.PongMessage, []byte(message), time.Now().Add(WriteWait))
+		if err == websocket.ErrCloseSent {
+			return nil
+		} else if e, ok := err.(net.Error); ok && e.Temporary() {
+			return nil
+		}
+		return err
+	})
+
 	pingTicker := time.NewTicker(PingPeriod)
 	sendTicker := time.NewTicker(10 * time.Millisecond)
-	exit := make(chan struct{})
 	defer func() {
-		log.Info("close ticker and websocket")
+		log.Info("close pingTicker and sendTicker")
 		pingTicker.Stop()
 		sendTicker.Stop()
-		if err := ws.Close(); err != nil {
-			log.Errorf("Fail to close websocket as: %v", err)
-		}
-		close(exit)
 	}()
 
 	for {
 		select {
 		case <-pingTicker.C:
-			err := ws.SetWriteDeadline(time.Now().Add(WriteWait))
-			if err != nil {
+			if err := ws.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 				log.Warning("set write deadline error:", err)
 			}
 			if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				log.Warning("write ping message error:", err)
-				if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-					return nil
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+					return err
 				}
-				return err
+				return nil
 			}
 		case <-sendTicker.C:
 			// With buf.ReadBytes, when err is not nil (often io.EOF), line is not guaranteed to be empty,
 			// it holds data before the error occurs.
-			line, err := reader.ReadBytes('\n')
-			if err != nil && err != io.EOF {
-				log.Warning("folder reader read bytes error:", err)
-				err = ws.SetWriteDeadline(time.Now().Add(WriteWait))
-				if err != nil {
+			line, readErr := reader.ReadBytes('\n')
+			if readErr != nil && readErr != io.EOF {
+				log.Warning("reader read bytes error:", readErr)
+				if err := ws.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 					log.Warning("set write deadline error:", err)
 				}
-				err = ws.WriteMessage(websocket.CloseMessage, []byte("Interval error happens, TERMINATE"))
-				if err != nil {
+
+				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Interval error happens, TERMINATE")
+				if err := ws.WriteMessage(websocket.CloseMessage, closeMsg); err != nil {
 					log.Warning("write close message error:", err)
 				}
 				break
 			}
 
 			if len(line) > 0 {
-				err = ws.SetWriteDeadline(time.Now().Add(WriteWait))
-				if err != nil {
+				if err := ws.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 					log.Warning("set write deadline error:", err)
 				}
-				err = ws.WriteMessage(websocket.TextMessage, line)
-				if err != nil {
+
+				if err := ws.WriteMessage(websocket.TextMessage, line); err != nil {
 					log.Warning("write text message error:", err)
-					if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-						return nil
+					if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+						return err
 					}
-					return err
+					return nil
 				}
 			}
 		case <-stop:
-			err := ws.SetWriteDeadline(time.Now().Add(WriteWait))
-			if err != nil {
+			log.Info("receive stop signal")
+			if err := ws.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 				log.Warning("set write deadline error:", err)
 			}
-			err = ws.WriteMessage(websocket.CloseMessage, []byte("Message sending complete, TERMINATE"))
-			if err != nil {
+
+			closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Stop sending message, TERMINATE")
+			if err := ws.WriteMessage(websocket.CloseMessage, closeMsg); err != nil {
 				log.Error("write close message error: ", err)
 				return err
 			}

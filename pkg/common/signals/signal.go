@@ -23,10 +23,10 @@ func GracefulShutdown(cancel context.CancelFunc) {
 	signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		s := <-c
-		log.WithField("signal", s).Debug("System signal caught, cancel context.")
+		log.WithField("signal", s).Info("System signal caught, cancel context.")
 		cancel()
 		s = <-c
-		log.WithField("signal", s).Debug("Another system signal caught, exit directly.")
+		log.WithField("signal", s).Info("Another system signal caught, exit directly.")
 		os.Exit(1)
 	}()
 }

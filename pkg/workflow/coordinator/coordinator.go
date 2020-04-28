@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -30,6 +31,7 @@ type Coordinator struct {
 	Wfr *v1alpha1.WorkflowRun
 	// OutputResources represents output resources the related stage configured.
 	OutputResources []*v1alpha1.Resource
+	ctx             context.Context
 }
 
 // RuntimeExecutor is an interface defined some methods
@@ -38,9 +40,9 @@ type RuntimeExecutor interface {
 	// WaitContainers waits selected containers to state.
 	WaitContainers(state common.ContainerState, selectors ...common.ContainerSelector) error
 	// CollectLog collects container logs to cyclone server.
-	CollectLog(container, wrorkflowrun, stage string) error
+	CollectLog(container, wrorkflowrun, stage string, close <-chan struct{}) error
 	// MarkLogEOF marks end of stage logs.
-	MarkLogEOF(workflowrun, stage string) error
+	MarkLogEOF(workflowrun, stage string, close <-chan struct{}) error
 	// CopyFromContainer copy a file or directory from container:path to dst.
 	CopyFromContainer(container, path, dst string) error
 	// GetPod get the stage related pod.
@@ -51,7 +53,7 @@ type RuntimeExecutor interface {
 }
 
 // NewCoordinator create a coordinator instance.
-func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
+func NewCoordinator(ctx context.Context, client clientset.Interface) (*Coordinator, error) {
 	// Get stage from Env
 	var stage *v1alpha1.Stage
 	stageInfo := os.Getenv(common.EnvStageInfo)
@@ -94,6 +96,7 @@ func NewCoordinator(client clientset.Interface) (*Coordinator, error) {
 		Stage:             stage,
 		Wfr:               wfr,
 		OutputResources:   rscs,
+		ctx:               ctx,
 	}, nil
 }
 
@@ -105,12 +108,12 @@ func (co *Coordinator) CollectLogs() error {
 	}
 
 	for _, c := range cs {
-		go func(container, workflowrun, stage string) {
-			err := co.runtimeExec.CollectLog(container, workflowrun, stage)
+		go func(container, workflowrun, stage string, done <-chan struct{}) {
+			err := co.runtimeExec.CollectLog(container, workflowrun, stage, done)
 			if err != nil {
 				log.Errorf("Collect %s log failed:%v", container, err)
 			}
-		}(c, co.Wfr.Name, co.Stage.Name)
+		}(c, co.Wfr.Name, co.Stage.Name, co.ctx.Done())
 	}
 
 	return nil
@@ -118,7 +121,7 @@ func (co *Coordinator) CollectLogs() error {
 
 // MarkLogEOF marks end of stage logs.
 func (co *Coordinator) MarkLogEOF() error {
-	return co.runtimeExec.MarkLogEOF(co.Wfr.Name, co.Stage.Name)
+	return co.runtimeExec.MarkLogEOF(co.Wfr.Name, co.Stage.Name, co.ctx.Done())
 }
 
 // WaitRunning waits all containers to start run.
