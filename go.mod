@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.0.0-20181129101437-13fe51c7d940
-	github.com/caicloud/nirvana v0.2.3
+	github.com/caicloud/nirvana v0.2.4
 	github.com/cbroglie/mustache v1.0.1
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
