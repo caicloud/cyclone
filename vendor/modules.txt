@@ -4,13 +4,14 @@ github.com/PaesslerAG/gval
 github.com/PaesslerAG/jsonpath
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
-# github.com/caicloud/nirvana v0.2.3
+# github.com/caicloud/nirvana v0.2.4
 github.com/caicloud/nirvana
 github.com/caicloud/nirvana/config
 github.com/caicloud/nirvana/definition
 github.com/caicloud/nirvana/errors
 github.com/caicloud/nirvana/log
 github.com/caicloud/nirvana/operators/validator
+github.com/caicloud/nirvana/plugins/healthcheck
 github.com/caicloud/nirvana/plugins/logger
 github.com/caicloud/nirvana/plugins/metrics
 github.com/caicloud/nirvana/plugins/reqlog

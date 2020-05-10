@@ -30,6 +30,26 @@ _config:
       - path: /etc/localtime
         name: timezone
         propagation: HostToContainer
+      probe:
+        liveness:
+          handler:
+            type: HTTP
+            method:
+              path: /healthz?type=liveness
+              port: 7099
+          delay: 10
+          period: 10
+          threshold:
+            failure: 3
+            success: 1
+          timeout: 1
+        readiness:
+          handler:
+            type: HTTP
+            method:
+              path: /healthz?type=readiness
+              port: 7099
+          delay: 10
       ports:
       - port: 7099
         protocol: TCP

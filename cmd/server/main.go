@@ -22,9 +22,9 @@ import (
 	"github.com/caicloud/nirvana"
 	nconfig "github.com/caicloud/nirvana/config"
 	"github.com/caicloud/nirvana/log"
+	"github.com/caicloud/nirvana/plugins/healthcheck"
 	"github.com/caicloud/nirvana/plugins/logger"
 	"github.com/caicloud/nirvana/plugins/metrics"
-	"github.com/caicloud/nirvana/plugins/reqlog"
 	pversion "github.com/caicloud/nirvana/plugins/version"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -140,8 +140,7 @@ func main() {
 	// Create plugin options.
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
 	loggerOption := logger.NewDefaultOption()   // Logger plugin.
-	reqlogOption := reqlog.NewDefaultOption()   // Request log plugin.
-	versionOption := pversion.NewOption(        // Version plugin.
+	versionOption := pversion.NewOption( // Version plugin.
 		"server",
 		version.Version,
 		version.Commit,
@@ -149,13 +148,14 @@ func main() {
 	)
 
 	// Enable plugins.
-	cmd.EnablePlugin(metricsOption, loggerOption, reqlogOption, versionOption)
+	cmd.EnablePlugin(metricsOption, loggerOption, versionOption)
 
 	// Create server config.
 	serverConfig := nirvana.NewConfig()
 
 	// Configure APIs. These configurations may be changed by plugins.
 	serverConfig.Configure(
+		healthcheck.CheckerWithType(nil),
 		nirvana.Logger(log.DefaultLogger()), // Will be changed by logger plugin.
 		nirvana.Filter(filters.Filters()...),
 		nirvana.Modifier(modifiers.Modifiers()...),
