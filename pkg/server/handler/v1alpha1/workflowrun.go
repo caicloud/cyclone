@@ -386,20 +386,40 @@ func receiveContainerLogStream(tenant, project, workflow, workflowrun, stage, co
 		}
 	}()
 
+	// Send ping message periodically to keep the connection not idle.
+	go ping(ws)
+
 	var message []byte
 	for {
 		_, message, err = ws.ReadMessage()
 		if err != nil {
-			if !websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-				return nil
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+				log.Errorf("read message for %s/%s/%s/%s error: %v", tenant, workflowrun, stage, container, err)
+				return err
 			}
 
-			log.Infoln(err)
-			return err
+			return nil
 		}
 		_, err = file.Write(message)
 		if err != nil {
 			return err
+		}
+	}
+}
+
+func ping(ws *websocket.Conn) {
+	pingTicker := time.NewTicker(websocketutil.PingPeriod)
+	defer func() {
+		pingTicker.Stop()
+	}()
+
+	for range pingTicker.C {
+		if err := ws.SetWriteDeadline(time.Now().Add(websocketutil.WriteWait)); err != nil {
+			return
+		}
+
+		if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			return
 		}
 	}
 }
@@ -456,6 +476,7 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 	}()
 
 	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
+
 	err = websocketutil.Write(ws, folderReader, ctx.Done())
 	if err != nil {
 		log.Error("websocket writer error:", err)

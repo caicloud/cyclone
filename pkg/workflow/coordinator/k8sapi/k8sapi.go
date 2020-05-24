@@ -99,7 +99,7 @@ func (k *Executor) GetPod() (*core_v1.Pod, error) {
 }
 
 // CollectLog collects container logs.
-func (k *Executor) CollectLog(container, workflowrun, stage string) error {
+func (k *Executor) CollectLog(container, workflowrun, stage string, close <-chan struct{}) error {
 	log.Infof("Start to collect %s log", container)
 	stream, err := k.client.CoreV1().Pods(k.namespace).GetLogs(k.podName, &core_v1.PodLogOptions{
 		Container: container,
@@ -115,7 +115,7 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 		}
 	}()
 
-	err = k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream)
+	err = k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, container, stream, close)
 	if err != nil {
 		return err
 	}
@@ -123,8 +123,8 @@ func (k *Executor) CollectLog(container, workflowrun, stage string) error {
 }
 
 // MarkLogEOF marks the end of stage logs
-func (k *Executor) MarkLogEOF(workflowrun, stage string) error {
-	err := k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, cyclone_common.FolderEOFFile, strings.NewReader(""))
+func (k *Executor) MarkLogEOF(workflowrun, stage string, close <-chan struct{}) error {
+	err := k.cycloneClient.PushLogStream(k.metaNamespace, workflowrun, stage, cyclone_common.FolderEOFFile, strings.NewReader(""), close)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (k *Executor) CopyFromContainer(container, path, dst string) error {
 	cmd := exec.Command("docker", args...)
 	log.WithField("args", args).Info()
 	ret, err := cmd.CombinedOutput()
-	log.WithField("message", string(ret)).WithField("error", err).Info("copy file result")
+	log.WithField("message", string(ret)).WithField("error", err).WithField("container", container).Info("copy file result")
 	if err != nil {
 		return fmt.Errorf("%s, error: %v", string(ret), err)
 	}
