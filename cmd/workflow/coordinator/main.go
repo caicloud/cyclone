@@ -35,9 +35,10 @@ func main() {
 	signals.GracefulShutdown(cancel)
 	defer func() {
 		// graceful showdown, need delay time to collect logs of other containers
-		time.Sleep(exitDelayTime / 3 * 2)
+		time.Sleep(exitDelayTime)
 		cancel()
-		time.Sleep(exitDelayTime / 3)
+		// sleep 1 second to let the background processes do exit
+		time.Sleep(time.Second)
 		if err != nil {
 			log.Error(message)
 			os.Exit(1)
