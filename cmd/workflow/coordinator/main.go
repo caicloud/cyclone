@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caicloud/cyclone/pkg/common"
+	"github.com/caicloud/cyclone/pkg/common/signals"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator"
 )
@@ -29,9 +31,14 @@ func main() {
 
 	var err error
 	var message string
+	ctx, cancel := context.WithCancel(context.Background())
+	signals.GracefulShutdown(cancel)
 	defer func() {
 		// graceful showdown, need delay time to collect logs of other containers
 		time.Sleep(exitDelayTime)
+		cancel()
+		// sleep 1 second to let the background processes do exit
+		time.Sleep(time.Second)
 		if err != nil {
 			log.Error(message)
 			os.Exit(1)
@@ -49,9 +56,9 @@ func main() {
 	}
 
 	// New workflow stage coordinator.
-	c, err := coordinator.NewCoordinator(client)
+	c, err := coordinator.NewCoordinator(ctx, client)
 	if err != nil {
-		log.Errorf("New coornidator failed: %v", err)
+		log.Errorf("New coordinator failed: %v", err)
 		return
 	}
 

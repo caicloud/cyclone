@@ -6,7 +6,10 @@ set -o pipefail
 
 function finish {
   echo "sleep 1 second to collect logs"
-  sleep 1
+  sleep 0.5
+  # kill child process fstream
+  pkill -P $$
+  sleep 0.5
 }
 trap finish EXIT
 
