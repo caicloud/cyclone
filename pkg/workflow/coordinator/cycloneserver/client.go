@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	websocketutil "github.com/caicloud/cyclone/pkg/util/websocket"
 )
 
@@ -20,7 +18,7 @@ const (
 
 // Client ...
 type Client interface {
-	PushLogStream(ns, workflowrun, stage, container string, reader io.Reader) error
+	PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close <-chan struct{}) error
 }
 
 type client struct {
@@ -42,7 +40,7 @@ func NewClient(cycloneServer string) Client {
 }
 
 // PushLogStream ...
-func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader io.Reader) error {
+func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader io.Reader, close <-chan struct{}) error {
 	path := fmt.Sprintf(apiPathForLogStream, workflowrun)
 	host := strings.TrimPrefix(c.baseURL, "http://")
 	host = strings.TrimPrefix(host, "https://")
@@ -53,6 +51,5 @@ func (c *client) PushLogStream(ns, workflowrun, stage, container string, reader 
 		Scheme:   "ws",
 	}
 
-	log.Infof("Path: %s", requestURL.String())
-	return websocketutil.SendStream(requestURL.String(), reader, make(chan struct{}))
+	return websocketutil.SendStream(requestURL.String(), reader, close)
 }
