@@ -17,29 +17,29 @@ var (
 	_ handlers.Interface = (*Handler)(nil)
 )
 
-// ObjectCreated ...
-func (h *Handler) ObjectCreated(obj interface{}) {
-	if wft, err := ToWorkflowTrigger(obj); err != nil {
+// Reconcile compares the actual state with the desired, and attempts to
+// converge the two.
+func (h *Handler) Reconcile(obj interface{}) error {
+	wft, err := ToWorkflowTrigger(obj)
+	if err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
-		h.CronManager.CreateCron(wft)
+		return err
 	}
-}
-
-// ObjectUpdated ...
-func (h *Handler) ObjectUpdated(old, new interface{}) {
-	if wft, err := ToWorkflowTrigger(new); err != nil {
-		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
+	if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.UpdateCron(wft)
 	}
+	return nil
 }
 
 // ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) {
-	if wft, err := ToWorkflowTrigger(obj); err != nil {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
+	wft, err := ToWorkflowTrigger(obj)
+	if err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-	} else if wft.Spec.Type == v1alpha1.TriggerTypeCron {
+		return err
+	}
+	if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.CronManager.DeleteCron(wft)
 	}
+	return nil
 }

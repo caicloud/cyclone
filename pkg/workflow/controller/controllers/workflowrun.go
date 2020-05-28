@@ -16,6 +16,7 @@ import (
 
 // NewWorkflowRunController ...
 func NewWorkflowRunController(client clientset.Interface) *Controller {
+	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -32,42 +33,31 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: CREATE,
-				Object:    obj,
-			})
+			queue.Add(key)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: UPDATE,
-				Object:    new,
-				OldObject: old,
-			})
+			queue.Add(key)
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: DELETE,
-				Object:    obj,
-			})
+			drCollection.Add(key, obj)
+			queue.Add(key)
 		},
 	})
 
 	return &Controller{
-		name:      "WorkflowRun Controller",
-		clientSet: client,
-		informer:  informer,
-		queue:     queue,
+		name:         "WorkflowRun Controller",
+		clientSet:    client,
+		informer:     informer,
+		queue:        queue,
+		drCollection: drCollection,
 		eventHandler: &handlers.Handler{
 			Client:                client,
 			TimeoutProcessor:      workflowrun.NewTimeoutProcessor(client),

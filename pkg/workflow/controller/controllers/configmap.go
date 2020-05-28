@@ -16,6 +16,7 @@ import (
 
 // NewConfigMapController ...
 func NewConfigMapController(client clientset.Interface, namespace string, cm string) *Controller {
+	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -34,11 +35,7 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 				return
 			}
 			log.WithField("name", key).Debug("new configMap observed")
-			queue.Add(Event{
-				Key:       key,
-				EventType: CREATE,
-				Object:    obj,
-			})
+			queue.Add(key)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			if reflect.DeepEqual(old, new) {
@@ -49,12 +46,7 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 				return
 			}
 			log.WithField("name", key).Debug("configMap update observed")
-			queue.Add(Event{
-				Key:       key,
-				EventType: UPDATE,
-				Object:    new,
-				OldObject: old,
-			})
+			queue.Add(key)
 		},
 	})
 
@@ -63,6 +55,7 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 		clientSet:    client,
 		informer:     informer,
 		queue:        queue,
+		drCollection: drCollection,
 		eventHandler: &configmap.Handler{},
 	}
 }

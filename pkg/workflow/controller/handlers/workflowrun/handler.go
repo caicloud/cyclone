@@ -3,12 +3,13 @@ package workflowrun
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -28,109 +29,42 @@ type Handler struct {
 	GCProcessor           *workflowrun.GCProcessor
 	LimitedQueues         *workflowrun.LimitedQueues
 	ParallelismController workflowrun.ParallelismController
+	Informer              cache.SharedIndexInformer
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
-// ObjectCreated handles a newly created WorkflowRun
-func (h *Handler) ObjectCreated(obj interface{}) {
+// Reconcile compares the actual state with the desired, and attempts to
+// converge the two.
+func (h *Handler) Reconcile(obj interface{}) error {
 	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
 	if !ok {
-		log.Warning("unknown resource type")
-		return
+		log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
 	}
-	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun create")
 
 	if !validate(originWfr) {
-		return
+		log.WithField("wfr", originWfr.Name).Warning("Invalid wfr")
+		return fmt.Errorf("invalid workflowRun")
 	}
 
-	// AddOrRefresh adds a WorkflowRun to its corresponding queue, if the queue size exceed the
-	// maximum size, the oldest one would be deleted. And if the WorkflowRun already exists in
-	// the queue, its 'refresh' time field would be refreshed.
+	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
 	h.LimitedQueues.AddOrRefresh(originWfr)
 
 	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
 	// the GC queue.
 	h.GCProcessor.Add(originWfr)
 
-	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
-	if originWfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
-		return
-	}
-
 	// If the WorkflowRun has not yet be started to execute, check the parallelism constraints to determine
 	// whether to execute it.
-	if originWfr.Status.Overall.Phase == "" {
-		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
-		case workflowrun.AttemptActionQueued:
-			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
-			return
-		case workflowrun.AttemptActionFailed:
-			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
-				Phase:              v1alpha1.StatusFailed,
-				Reason:             "TooManyWaiting",
-				LastTransitionTime: metav1.Time{Time: time.Now()},
-			}); err != nil {
-				log.WithField("wfr", originWfr.Name).Error("Set status to Failed error, ", err)
-				return
-			}
-		}
-	}
-
-	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
-	err := h.TimeoutProcessor.Add(originWfr)
-	if err != nil {
-		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed: ", err)
-	}
-
-	wfr := originWfr.DeepCopy()
-	clusterClient := common.GetExecutionClusterClient(wfr)
-	if clusterClient == nil {
-		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
-		return
-	}
-
-	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
-		return
-	}
-
-	operator.ResolveGlobalVariables()
-	if err := operator.Reconcile(); err != nil {
-		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
-	}
-}
-
-// ObjectUpdated handles a updated WorkflowRun
-func (h *Handler) ObjectUpdated(old, new interface{}) {
-	originWfr, ok := new.(*v1alpha1.WorkflowRun)
-	if !ok {
-		log.Warning("unknown resource type")
-		return
-	}
-
-	if !validate(originWfr) {
-		log.WithField("wfr", originWfr.Name).Warning("Invalid wfr")
-		return
-	}
-
-	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
-	h.LimitedQueues.Refresh(originWfr)
-
-	// If the WorkflowRun has not yet be started to execute, check the parallelism constraints to determine
-	// whether to execute it.
-	var toRun bool
 	if originWfr.Status.Overall.Phase == "" {
 		log.WithField("wfr", originWfr.Name).Info("Attempt to run WorkflowRun")
-		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
+		attemptAction := h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name)
+		switch attemptAction {
 		case workflowrun.AttemptActionQueued:
 			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
-			return
+			return fmt.Errorf("too many WorkflowRun are running")
 		case workflowrun.AttemptActionFailed:
 			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
 				Phase:              v1alpha1.StatusFailed,
@@ -138,21 +72,13 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 				LastTransitionTime: metav1.Time{Time: time.Now()},
 			}); err != nil {
 				log.WithField("wfr", originWfr.Name).Error("Set status to Failed error, ", err)
-				return
+				return fmt.Errorf("too many WorkflowRun are running, and set status to Failed error")
 			}
-		case workflowrun.AttemptActionStart:
-			toRun = true
 		}
+		log.WithField("name", originWfr.Name).WithField("attemptAction", attemptAction).Debug("Attempt to run WorkflowRun")
 	}
 
-	if !toRun && reflect.DeepEqual(old, new) {
-		return
-	}
-	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun update")
-
-	// Add the WorkflowRun object to GC processor, it will be checked before actually added to
-	// the GC queue.
-	h.GCProcessor.Add(originWfr)
+	log.WithField("name", originWfr.Name).Debug("Start to process WorkflowRun")
 
 	// If the WorkflowRun has already been terminated(Completed, Failed, Cancelled), send notifications if necessary,
 	// otherwise directly skip it.
@@ -165,40 +91,47 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 		if err != nil {
 			log.WithField("wfr", originWfr.Name).Warn("send notification failed", err)
 		}
-		return
+		return nil
 	}
 
-	// If the WorkflowRun has already been terminated or waiting for external events, skip it.
-	if originWfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
-		originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
-		return
+	// Add this WorkflowRun to timeout processor, so that it would be cleaned up when time expired.
+	err := h.TimeoutProcessor.AddIfNotExist(originWfr)
+	if err != nil {
+		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed: ", err)
+	}
+
+	// If the WorkflowRun is waiting for external events, skip it.
+	if originWfr.Status.Overall.Phase == v1alpha1.StatusWaiting {
+		return nil
 	}
 
 	wfr := originWfr.DeepCopy()
 	clusterClient := common.GetExecutionClusterClient(wfr)
 	if clusterClient == nil {
 		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
-		return
+		return fmt.Errorf("execution cluster client not found")
 	}
 
 	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
-		return
+		return err
 	}
 
-	if err := operator.Reconcile(); err != nil {
+	operator.ResolveGlobalVariables()
+	err = operator.Reconcile()
+	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
 	}
+	return err
 }
 
 // ObjectDeleted handles the case when a WorkflowRun get deleted. It will perform GC immediately for this WorkflowRun.
-func (h *Handler) ObjectDeleted(obj interface{}) {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
 	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
 	if !ok {
-		log.Warning("unknown resource type")
-		return
+		log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
 	}
 	log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
 
@@ -208,22 +141,24 @@ func (h *Handler) ObjectDeleted(obj interface{}) {
 	}()
 
 	wfr := originWfr.DeepCopy()
+	log.WithField("name", wfr.Name).WithField("wfr", wfr).Debug(" ========== Test for wfr deleted")
 	clusterClient := common.GetExecutionClusterClient(wfr)
 	if clusterClient == nil {
 		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
-		return
+		return fmt.Errorf("Execution cluster client not found")
 	}
 
 	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
-		return
+		return err
 	}
 
 	err = operator.GC(true, true)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Warn("GC failed", err)
 	}
+	return err
 }
 
 // sendNotification sends notifications for workflowruns when:

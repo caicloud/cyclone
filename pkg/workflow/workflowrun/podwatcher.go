@@ -69,6 +69,7 @@ func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-ch
 			event, ok := e.Object.(*corev1.Event)
 			if !ok {
 				log.WithField("event type", e.Type).WithField("event object", e.Object).Warn("Not an event")
+				continue
 			}
 
 			// Skip Normal event

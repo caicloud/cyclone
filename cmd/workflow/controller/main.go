@@ -57,19 +57,19 @@ func main() {
 
 	// Watch configure changes in ConfigMap.
 	cmController := controllers.NewConfigMapController(client, systemNamespace, *configMap)
-	go cmController.Run(ctx.Done())
+	go cmController.Run(1, ctx.Done())
 
 	// Watch workflowTrigger who will start workflowRun on schedule
 	wftController := controllers.NewWorkflowTriggerController(client)
-	go wftController.Run(ctx.Done())
+	go wftController.Run(controller.Config.WorkersNumber.WorkflowTrigger, ctx.Done())
 
 	// Create and start WorkflowRun controller.
 	wfrController := controllers.NewWorkflowRunController(client)
-	go wfrController.Run(ctx.Done())
+	go wfrController.Run(controller.Config.WorkersNumber.WorkflowRun, ctx.Done())
 
 	// Create and start execution cluster controller.
 	clusterController := controllers.NewExecutionClusterController(client)
-	go clusterController.Run(ctx.Done())
+	go clusterController.Run(controller.Config.WorkersNumber.ExecutionCluster, ctx.Done())
 
 	// Watch for execution cluster, start pod controller for it.
 	for {
@@ -78,7 +78,7 @@ func main() {
 			return
 		case cluster := <-store.NewClusterChan:
 			podController := controllers.NewPodController(cluster.Client, client)
-			go podController.Run(cluster.StopCh)
+			go podController.Run(controller.Config.WorkersNumber.Pod, cluster.StopCh)
 		}
 	}
 }

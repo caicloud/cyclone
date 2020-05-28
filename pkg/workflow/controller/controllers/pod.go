@@ -17,6 +17,7 @@ import (
 
 // NewPodController ...
 func NewPodController(clusterClient kubernetes.Interface, client clientset.Interface) *Controller {
+	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		clusterClient,
@@ -33,11 +34,7 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: CREATE,
-				Object:    obj,
-			})
+			queue.Add(key)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			if reflect.DeepEqual(old, new) {
@@ -47,23 +44,15 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: UPDATE,
-				Object:    new,
-				OldObject: old,
-			})
+			queue.Add(key)
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err != nil {
 				return
 			}
-			queue.Add(Event{
-				Key:       key,
-				EventType: DELETE,
-				Object:    obj,
-			})
+			drCollection.Add(key, obj)
+			queue.Add(key)
 		},
 	})
 
@@ -73,6 +62,7 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 		clusterClient: clusterClient,
 		informer:      informer,
 		queue:         queue,
+		drCollection:  drCollection,
 		eventHandler: &pod.Handler{
 			ClusterClient: clusterClient,
 			Client:        client,
