@@ -34,8 +34,12 @@ func TestNowTimeValue(t *testing.T) {
 			"2019-05-24T11:10:13+08:00",
 		},
 		{
-			"$TIMENOW:RFC3339",
+			"$(timenow:RFC3339)",
 			"2019-05-24T11:10:13+08:00",
+		},
+		{
+			"$(timenow:)",
+			"1558667413",
 		},
 		{
 			"aaaaa",

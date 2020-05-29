@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseRefValue(t *testing.T) {
+func TestGenerateValue(t *testing.T) {
 	RandomString = &randomString{stringGenerator: stringGenerator}
 	NowTimeString = &nowTimeString{
 		nowTimeGetter: Now,
@@ -25,24 +25,24 @@ func TestParseRefValue(t *testing.T) {
 			"aaa",
 		},
 		{
-			"$RANDOM:1",
+			"$(random:1)",
 			"A",
 		},
 		{
-			"$RANDOM:2",
+			"$(random:2)",
 			"BB",
 		},
 		{
-			"$RANDOM:x",
-			"$RANDOM:x",
+			"$(random:x)",
+			"$(random:x)",
 		},
 		{
-			"$TIMENOW:RFC3339",
+			"$(timenow:RFC3339)",
 			"2019-05-24T11:10:13+08:00",
 		},
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.Expected, ParseRefValue(c.Origin))
+		assert.Equal(t, c.Expected, GenerateValue(c.Origin))
 	}
 }

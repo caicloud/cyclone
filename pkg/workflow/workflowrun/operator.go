@@ -17,6 +17,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	ccommon "github.com/caicloud/cyclone/pkg/common"
+	"github.com/caicloud/cyclone/pkg/common/values"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
@@ -49,6 +50,8 @@ type Operator interface {
 	GC(lastTry, wfrDeletion bool) error
 	// Run next stages in the Workflow and resolve overall status.
 	Reconcile() error
+	// ResolveGlobalVariables resolves global variables from workflow.
+	ResolveGlobalVariables()
 }
 
 type operator struct {
@@ -176,6 +179,9 @@ func (o *operator) Update() error {
 				combined.Status.Stages[stage].Outputs = status.Outputs
 			}
 		}
+
+		// Update golbal variables to resolved values
+		combined.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
 
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
 			len(latest.OwnerReferences) != len(combined.OwnerReferences) {
@@ -568,4 +574,36 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 	}
 
 	return nil
+}
+
+// ResolveGlobalVariables will resolve global variables in workflowrun For example, generate final value for generation
+// type value defined in workflow. For example, $(random:5) --> 'axyps'
+func (o *operator) ResolveGlobalVariables() {
+	if o.wf == nil || o.wfr == nil {
+		return
+	}
+
+	var appendVariables []v1alpha1.GlobalVariable
+	for _, wfVariable := range o.wf.Spec.GlobalVariables {
+		var found bool
+		for _, variable := range o.wfr.Spec.GlobalVariables {
+			if variable.Name == wfVariable.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			appendVariables = append(appendVariables, v1alpha1.GlobalVariable{
+				Name:  wfVariable.Name,
+				Value: values.GenerateValue(wfVariable.Value),
+			})
+		}
+	}
+
+	o.wfr.Spec.GlobalVariables = append(o.wfr.Spec.GlobalVariables, appendVariables...)
+
+	if len(appendVariables) > 0 {
+		log.WithField("variables", appendVariables).Info("Append variables from wf to wfr")
+	}
 }

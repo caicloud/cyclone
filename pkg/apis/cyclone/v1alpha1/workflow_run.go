@@ -43,6 +43,13 @@ type WorkflowRunSpec struct {
 	// of volumes supported, namely HostPath, PV. Users can make use of preset volumes to inject timezone, certificates
 	// from host to containers, or mount data from PV to be used in containers.
 	PresetVolumes []PresetVolume `json:"volumes,omitempty"`
+	// GlobalVariables are global variables that can be used in all stages within the workflow in a run. Different to
+	// global values defined in workflow, values defined here MUST be concrete value (string only for the moment). We
+	// can regard global variables in workflow as value templates (for example, $(random:5)), and final values must be
+	// populated in workflow run.
+	// Values defined here will override those defined in the workflow. If a variable is defined in workflow but not here,
+	// it would be populated (final value generated) here when workflowrun created by workflowrun controller.
+	GlobalVariables []GlobalVariable `json:"globalVariables,omitempty"`
 }
 
 // PresetVolume defines a preset volume

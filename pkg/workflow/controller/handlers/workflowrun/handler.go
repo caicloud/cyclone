@@ -78,6 +78,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 		return
 	}
 
+	operator.ResolveGlobalVariables()
 	if err := operator.Reconcile(); err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
 	}
