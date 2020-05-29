@@ -180,6 +180,9 @@ func (o *operator) Update() error {
 			}
 		}
 
+		// Update golbal variables to resolved values
+		combined.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
+
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
 			len(latest.OwnerReferences) != len(combined.OwnerReferences) {
 
@@ -580,7 +583,6 @@ func (o *operator) ResolveGlobalVariables() {
 	}
 
 	var appendVariables []v1alpha1.GlobalVariable
-
 	for _, wfVariable := range o.wf.Spec.GlobalVariables {
 		var found bool
 		for _, variable := range o.wfr.Spec.GlobalVariables {
@@ -596,8 +598,11 @@ func (o *operator) ResolveGlobalVariables() {
 				Value: values.GenerateValue(wfVariable.Value),
 			})
 		}
-
 	}
 
 	o.wfr.Spec.GlobalVariables = append(o.wfr.Spec.GlobalVariables, appendVariables...)
+
+	if len(appendVariables) > 0 {
+		log.WithField("variables", appendVariables).Info("Append variables from wf to wfr")
+	}
 }
