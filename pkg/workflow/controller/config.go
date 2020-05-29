@@ -147,7 +147,7 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return fmt.Errorf("validate config failed")
 	}
 
-	modify(&Config)
+	defaultValues(&Config)
 	InitLogger(&Config.Logging)
 	return nil
 }
@@ -161,8 +161,8 @@ func validate(config *WorkflowControllerConfig) bool {
 	return true
 }
 
-// modify modifies the config, give the config some default value if they are not set.
-func modify(config *WorkflowControllerConfig) {
+// defaultValues give the config some default value if they are not set.
+func defaultValues(config *WorkflowControllerConfig) {
 	if config.WorkersNumber.ExecutionCluster == 0 {
 		config.WorkersNumber.ExecutionCluster = 1
 		log.Info("WorkersNumber.ExecutionCluster not configured, will use default value '1'")

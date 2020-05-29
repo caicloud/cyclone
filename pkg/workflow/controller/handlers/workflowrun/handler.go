@@ -119,11 +119,12 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	}
 
 	operator.ResolveGlobalVariables()
-	err = operator.Reconcile()
-	if err != nil {
+
+	if err := operator.Reconcile(); err != nil {
 		log.WithField("wfr", wfr.Name).Error("Reconcile error: ", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // ObjectDeleted handles the case when a WorkflowRun get deleted. It will perform GC immediately for this WorkflowRun.
@@ -154,11 +155,11 @@ func (h *Handler) ObjectDeleted(obj interface{}) error {
 		return err
 	}
 
-	err = operator.GC(true, true)
-	if err != nil {
+	if err = operator.GC(true, true); err != nil {
 		log.WithField("wfr", wfr.Name).Warn("GC failed", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // sendNotification sends notifications for workflowruns when:

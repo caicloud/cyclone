@@ -49,11 +49,11 @@ func (h *Handler) ObjectDeleted(obj interface{}) error {
 		return err
 	}
 
-	err = operator.OnDelete()
-	if err != nil {
+	if err := operator.OnDelete(); err != nil {
 		log.WithField("pod", pod.Name).Error("process deleted pod error: ", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (h *Handler) onUpdate(obj interface{}) error {
@@ -77,9 +77,9 @@ func (h *Handler) onUpdate(obj interface{}) error {
 		return err
 	}
 
-	err = operator.OnUpdated()
-	if err != nil {
+	if err := operator.OnUpdated(); err != nil {
 		log.WithField("pod", pod.Name).Error("process updated pod error: ", err)
+		return err
 	}
-	return err
+	return nil
 }

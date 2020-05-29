@@ -29,11 +29,11 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	}
 	log.WithField("name", cluster.Name).Debug("Observed execution cluster")
 
-	err := store.RegisterClusterController(cluster)
-	if err != nil {
+	if err := store.RegisterClusterController(cluster); err != nil {
 		log.WithField("name", cluster.Name).Error("Register execution cluster controller error: ", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // ObjectDeleted ...
@@ -45,10 +45,10 @@ func (h *Handler) ObjectDeleted(obj interface{}) error {
 	}
 	log.WithField("name", cluster.Name).Debug("Observed execution cluster deletion")
 
-	err := store.RemoveClusterController(cluster)
-	if err != nil {
+	if err := store.RemoveClusterController(cluster); err != nil {
 		log.WithField("name", cluster.Name).Error("Remove execution cluster controller error: ", err)
+		return err
 	}
 
-	return err
+	return nil
 }

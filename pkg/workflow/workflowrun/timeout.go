@@ -82,7 +82,8 @@ func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
 // AddIfNotExist adds a WorkflowRun to the timeout manager if it is not exist.
 func (m *TimeoutProcessor) AddIfNotExist(wfr *v1alpha1.WorkflowRun) error {
 	item := newWorkflowRunItem(wfr)
-	if _, ok := m.items[item.String()]; ok {
+	key := item.String()
+	if _, ok := m.items[key]; ok {
 		return nil
 	}
 
@@ -91,7 +92,7 @@ func (m *TimeoutProcessor) AddIfNotExist(wfr *v1alpha1.WorkflowRun) error {
 		return fmt.Errorf("invalid timeout value '%s', error: %v", wfr.Spec.Timeout, err)
 	}
 
-	m.items[item.String()] = item
+	m.items[key] = item
 
 	return nil
 }
