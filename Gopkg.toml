@@ -10,7 +10,7 @@ required = ["github.com/caicloud/nirvana/utils/api"]
 
 [[constraint]]
   name = "github.com/gorilla/websocket"
-  version = "1.2.0"
+  version = "1.4.2"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
