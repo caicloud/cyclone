@@ -140,7 +140,7 @@ func main() {
 	// Create plugin options.
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
 	loggerOption := logger.NewDefaultOption()   // Logger plugin.
-	versionOption := pversion.NewOption( // Version plugin.
+	versionOption := pversion.NewOption(        // Version plugin.
 		"server",
 		version.Version,
 		version.Commit,

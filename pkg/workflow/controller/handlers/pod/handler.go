@@ -1,6 +1,8 @@
 package pod
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -18,68 +20,66 @@ type Handler struct {
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
-// ObjectCreated ...
-func (h *Handler) ObjectCreated(obj interface{}) {
+// Reconcile compares the actual state with the desired, and attempts to
+// converge the two.
+func (h *Handler) Reconcile(obj interface{}) error {
 	// If Workflow Controller got restarted, previous started pods would be
 	// observed by controller with create event. We need to handle update in
 	// this case as well. Otherwise WorkflowRun may stuck in running state.
-	h.onUpdate(obj)
-}
-
-// ObjectUpdated ...
-func (h *Handler) ObjectUpdated(old, new interface{}) {
-	h.onUpdate(new)
+	return h.onUpdate(obj)
 }
 
 // ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) {
+func (h *Handler) ObjectDeleted(obj interface{}) error {
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
-		log.Warning("unknown resource type")
-		return
+		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
 	}
 	log.WithField("name", pod.Name).Debug("Observed pod deleted")
 
 	// Check whether it's GC pod.
 	if IsGCPod(pod) {
-		return
+		return nil
 	}
 
 	operator, err := NewOperator(h.ClusterClient, h.Client, pod)
 	if err != nil {
 		log.Error("Create operator error: ", err)
-		return
+		return err
 	}
 
-	err = operator.OnDelete()
-	if err != nil {
+	if err := operator.OnDelete(); err != nil {
 		log.WithField("pod", pod.Name).Error("process deleted pod error: ", err)
+		return err
 	}
+	return nil
 }
 
-func (h *Handler) onUpdate(obj interface{}) {
+func (h *Handler) onUpdate(obj interface{}) error {
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
-		log.Warning("unknown resource type")
-		return
+		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
 	}
 	log.WithField("name", pod.Name).Debug("Observed pod updated")
 
 	// Check whether it's GC pod.
 	if IsGCPod(pod) {
 		GCPodUpdated(h.ClusterClient, pod)
-		return
+		return nil
 	}
 
 	// For stage pod, create operator to handle it.
 	operator, err := NewOperator(h.ClusterClient, h.Client, pod)
 	if err != nil {
 		log.Error("Create operator error: ", err)
-		return
+		return err
 	}
 
-	err = operator.OnUpdated()
-	if err != nil {
+	if err := operator.OnUpdated(); err != nil {
 		log.WithField("pod", pod.Name).Error("process updated pod error: ", err)
+		return err
 	}
+	return nil
 }

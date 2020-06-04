@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -21,6 +22,7 @@ type Controller struct {
 	clusterClient kubernetes.Interface
 	clientSet     clientset.Interface
 	queue         workqueue.RateLimitingInterface
+	drCollection  deletedResourceCollectionInterface
 	informer      cache.SharedIndexInformer
 	eventHandler  handlers.Interface
 }
@@ -46,7 +48,7 @@ type Event struct {
 }
 
 // Run ...
-func (c *Controller) Run(stopCh <-chan struct{}) {
+func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer c.queue.ShutDown()
 
 	log.WithField("name", c.name).Info("Start controller.")
@@ -57,7 +59,14 @@ func (c *Controller) Run(stopCh <-chan struct{}) {
 		utilruntime.HandleError(fmt.Errorf("timeout to sync caches"))
 	}
 
-	wait.Until(c.work, time.Second, stopCh)
+	log.Infof("Cyclone controller %s synced and ready", c.name)
+
+	for i := 0; i < threadiness; i++ {
+		go wait.Until(c.work, time.Second, stopCh)
+	}
+
+	<-stopCh
+	glog.Infof("Shutting down %s controller", c.name)
 }
 
 // HasSynced ...
@@ -71,36 +80,44 @@ func (c *Controller) work() {
 }
 
 func (c *Controller) nextWork() bool {
-	event, shutdown := c.queue.Get()
+	key, shutdown := c.queue.Get()
 	if shutdown {
 		return false
 	}
 
-	defer c.queue.Done(event)
-	err := c.doWork(event.(Event))
+	defer c.queue.Done(key)
+	err := c.doWork(key.(string))
 	if err == nil {
-		c.queue.Forget(event)
-	} else if c.queue.NumRequeues(event) < 3 {
-		log.Errorf("process %s failed (will retry): %v", event.(Event).Key, err)
-		c.queue.AddRateLimited(event)
+		c.queue.Forget(key)
+	} else if c.queue.NumRequeues(key) < 3 {
+		log.Errorf("process %s failed (will retry): %v", key, err)
+		c.queue.AddRateLimited(key)
 	} else {
-		log.Errorf("process %s failed (gave up): %v", event.(Event).Key, err)
-		c.queue.Forget(event)
+		log.Errorf("process %s failed (gave up): %v", key, err)
+		c.queue.Forget(key)
 		utilruntime.HandleError(err)
 	}
 
 	return true
 }
 
-func (c *Controller) doWork(e Event) error {
-	switch e.EventType {
-	case CREATE:
-		c.eventHandler.ObjectCreated(e.Object)
-	case UPDATE:
-		c.eventHandler.ObjectUpdated(e.OldObject, e.Object)
-	case DELETE:
-		c.eventHandler.ObjectDeleted(e.Object)
+func (c *Controller) doWork(key string) error {
+	obj, exists, err := c.informer.GetIndexer().GetByKey(key)
+	if err != nil {
+		return fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
 	}
 
-	return nil
+	if !exists {
+		deleteObj, err := c.drCollection.Get(key)
+		if err != nil {
+			log.WithField("key", key).Error("Deleted object lost")
+			return nil
+		}
+		if err := c.eventHandler.ObjectDeleted(deleteObj); err != nil {
+			return err
+		}
+		c.drCollection.Remove(key)
+		return nil
+	}
+	return c.eventHandler.Reconcile(obj)
 }

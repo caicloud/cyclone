@@ -52,6 +52,8 @@ type WorkflowControllerConfig struct {
 	NotificationURL string `json:"notification_url"`
 	// DindSettings is settings for Docker in Docker
 	DindSettings DindSettings `json:"dind"`
+	// WorkersNumber defines workers number for various controller
+	WorkersNumber WorkersNumber `json:"workers_number"`
 }
 
 // LoggingConfig configures logging
@@ -118,6 +120,14 @@ type DindSettings struct {
 	Bip string `json:"bip"`
 }
 
+// WorkersNumber defines workers number for various controller
+type WorkersNumber struct {
+	ExecutionCluster int `json:"execution_cluster"`
+	WorkflowTrigger  int `json:"workflow_trigger"`
+	WorkflowRun      int `json:"workflow_run"`
+	Pod              int `json:"pod"`
+}
+
 // Config is Workflow Controller config instance
 var Config WorkflowControllerConfig
 
@@ -137,6 +147,7 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return fmt.Errorf("validate config failed")
 	}
 
+	defaultValues(&Config)
 	InitLogger(&Config.Logging)
 	return nil
 }
@@ -148,6 +159,26 @@ func validate(config *WorkflowControllerConfig) bool {
 	}
 
 	return true
+}
+
+// defaultValues give the config some default value if they are not set.
+func defaultValues(config *WorkflowControllerConfig) {
+	if config.WorkersNumber.ExecutionCluster == 0 {
+		config.WorkersNumber.ExecutionCluster = 1
+		log.Info("WorkersNumber.ExecutionCluster not configured, will use default value '1'")
+	}
+	if config.WorkersNumber.Pod == 0 {
+		config.WorkersNumber.Pod = 1
+		log.Info("WorkersNumber.Pod not configured, will use default value '1'")
+	}
+	if config.WorkersNumber.WorkflowTrigger == 0 {
+		config.WorkersNumber.WorkflowTrigger = 1
+		log.Info("WorkersNumber.WorkflowTrigger not configured, will use default value '1'")
+	}
+	if config.WorkersNumber.WorkflowRun == 0 {
+		config.WorkersNumber.WorkflowRun = 1
+		log.Info("WorkersNumber.WorkflowRun not configured, will use default value '1'")
+	}
 }
 
 // ImagePullPolicy determines image pull policy based on environment variable DEVELOP_MODE

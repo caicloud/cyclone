@@ -74,14 +74,11 @@ func (m *CronTriggerManager) DeleteTrigger(wftKey string) {
 		wft.Cron.Stop()
 		wft.IsRunning = false
 		delete(m.CronTriggerMap, wftKey)
-	} else {
-		log.Warnf("failed to delete cronTrigger(%s), not exist\n", wftKey)
 	}
 }
 
 // ToWorkflowTrigger converts to workflow trigger.
 func ToWorkflowTrigger(obj interface{}) (*v1alpha1.WorkflowTrigger, error) {
-
 	wft, ok := obj.(*v1alpha1.WorkflowTrigger)
 	if !ok {
 		return nil, fmt.Errorf("I want type: WorkflowTrigger, but it is: %T", obj)
