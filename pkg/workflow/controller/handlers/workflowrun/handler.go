@@ -18,6 +18,7 @@ import (
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
+	finalizer "github.com/caicloud/cyclone/pkg/workflow/controller/finalizers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
@@ -30,10 +31,26 @@ type Handler struct {
 	LimitedQueues         *workflowrun.LimitedQueues
 	ParallelismController workflowrun.ParallelismController
 	Informer              cache.SharedIndexInformer
+	Finalizers            finalizer.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
+
+// NewHandler ...
+func NewHandler(client clientset.Interface, gcEnable bool, maxWorkflowRuns int, parallelism *controller.ParallelismConfig) *Handler {
+	return &Handler{
+		Client:                client,
+		TimeoutProcessor:      workflowrun.NewTimeoutProcessor(client),
+		GCProcessor:           workflowrun.NewGCProcessor(client, gcEnable),
+		LimitedQueues:         workflowrun.NewLimitedQueues(client, maxWorkflowRuns),
+		ParallelismController: workflowrun.NewParallelismController(parallelism),
+		Finalizers: finalizer.NewFinalizer(client, nil, updateFinalizer, appendFinalizer, removeFinalizer, map[string]finalizer.Handler{
+			finalizerGC:          handleFinalizerGC,
+			finalizerParallelism: handleFinalizerParallelism,
+		}),
+	}
+}
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
@@ -47,6 +64,19 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	if !validate(originWfr) {
 		log.WithField("wfr", originWfr.Name).Warning("Invalid wfr")
 		return fmt.Errorf("invalid workflowRun")
+	}
+
+	wfr := originWfr.DeepCopy()
+
+	// Process deleting
+	if !h.Finalizers.IsBeingDeleted(wfr) {
+		if err := h.Finalizers.AddFinalizersIfNotExist(wfr); err != nil {
+			return err
+		}
+	} else {
+		if err := h.Finalizers.DoFinalize(wfr); err != nil {
+			return err
+		}
 	}
 
 	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
@@ -105,7 +135,6 @@ func (h *Handler) Reconcile(obj interface{}) error {
 		return nil
 	}
 
-	wfr := originWfr.DeepCopy()
 	clusterClient := common.GetExecutionClusterClient(wfr)
 	if clusterClient == nil {
 		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
@@ -129,36 +158,36 @@ func (h *Handler) Reconcile(obj interface{}) error {
 
 // ObjectDeleted handles the case when a WorkflowRun get deleted. It will perform GC immediately for this WorkflowRun.
 func (h *Handler) ObjectDeleted(obj interface{}) error {
-	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
-	if !ok {
-		log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
-	}
-	log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
+	// originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+	// if !ok {
+	// 	log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
+	// 	return fmt.Errorf("unknown resource type")
+	// }
+	// log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
 
-	// Mark the WorkflowRun terminated in ParallelismController
-	defer func() {
-		h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Name, originWfr.Spec.WorkflowRef.Name)
-	}()
+	// // Mark the WorkflowRun terminated in ParallelismController
+	// defer func() {
+	// 	h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Name, originWfr.Spec.WorkflowRef.Name)
+	// }()
 
-	wfr := originWfr.DeepCopy()
-	log.WithField("name", wfr.Name).WithField("wfr", wfr).Debug(" ========== Test for wfr deleted")
-	clusterClient := common.GetExecutionClusterClient(wfr)
-	if clusterClient == nil {
-		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
-		return fmt.Errorf("Execution cluster client not found")
-	}
+	// wfr := originWfr.DeepCopy()
+	// // log.WithField("name", wfr.Name).WithField("wfr", wfr).Debug(" ========== Test for wfr deleted")
+	// clusterClient := common.GetExecutionClusterClient(wfr)
+	// if clusterClient == nil {
+	// 	log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+	// 	return fmt.Errorf("Execution cluster client not found")
+	// }
 
-	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
-		return err
-	}
+	// operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
+	// if err != nil {
+	// 	log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
+	// 	return err
+	// }
 
-	if err = operator.GC(true, true); err != nil {
-		log.WithField("wfr", wfr.Name).Warn("GC failed", err)
-		return err
-	}
+	// if err = operator.GC(true, true); err != nil {
+	// 	log.WithField("wfr", wfr.Name).Warn("GC failed", err)
+	// 	return err
+	// }
 	return nil
 }
 

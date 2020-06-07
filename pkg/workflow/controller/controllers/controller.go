@@ -119,5 +119,6 @@ func (c *Controller) doWork(key string) error {
 		c.drCollection.Remove(key)
 		return nil
 	}
+
 	return c.eventHandler.Reconcile(obj)
 }

@@ -63,9 +63,6 @@ func NewPodController(clusterClient kubernetes.Interface, client clientset.Inter
 		informer:      informer,
 		queue:         queue,
 		drCollection:  drCollection,
-		eventHandler: &pod.Handler{
-			ClusterClient: clusterClient,
-			Client:        client,
-		},
+		eventHandler:  pod.NewHandler(client, clusterClient),
 	}
 }

@@ -65,8 +65,6 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 		informer:     informer,
 		queue:        queue,
 		drCollection: drCollection,
-		eventHandler: &workflowtrigger.Handler{
-			CronManager: workflowtrigger.NewTriggerManager(client),
-		},
+		eventHandler: workflowtrigger.NewHandler(client),
 	}
 }

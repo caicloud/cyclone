@@ -186,7 +186,7 @@ func (o *operator) Update() error {
 			combined.Status.Stages[stage].Trivial = status.Trivial
 		}
 
-		// Update golbal variables to resolved values
+		// Update global variables to resolved values
 		combined.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
 
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||
