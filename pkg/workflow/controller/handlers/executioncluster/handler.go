@@ -7,27 +7,28 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	finalizer "github.com/caicloud/cyclone/pkg/workflow/controller/finalizers"
+	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
 
 // Handler ...
 type Handler struct {
-	Client     clientset.Interface
-	Finalizers finalizer.Interface
+	Client clientset.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
 
+const (
+	// finalizerExecutioncluster is the cyclone related finalizer key for execution cluster.
+	finalizerExecutioncluster string = "executioncluster.cyclone.dev/finalizer"
+)
+
 // NewHandler ...
 func NewHandler(client clientset.Interface) *Handler {
 	return &Handler{
 		Client: client,
-		Finalizers: finalizer.NewFinalizer(client, nil, updateFinalizer, appendFinalizer, removeFinalizer, map[string]finalizer.Handler{
-			finalizerDeleteClusterController: handleFinalizerDeleteClusterController,
-		}),
 	}
 }
 
@@ -48,19 +49,56 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	return nil
 }
 
-// ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) error {
-	// cluster, ok := obj.(*v1alpha1.ExecutionCluster)
-	// if !ok {
-	// 	log.WithField("obj", obj).Warning("Expect ExecutionCluster, got unknown type resource")
-	// 	return fmt.Errorf("unknown resource type")
-	// }
-	// log.WithField("name", cluster.Name).Debug("Observed execution cluster deletion")
-
-	// if err := store.RemoveClusterController(cluster); err != nil {
-	// 	log.WithField("name", cluster.Name).Error("Remove execution cluster controller error: ", err)
-	// 	return err
-	// }
+// finalize ...
+func (h *Handler) finalize(ec *v1alpha1.ExecutionCluster) error {
+	if err := store.RemoveClusterController(ec); err != nil {
+		log.WithField("name", ec.Name).Error("Remove execution cluster controller error: ", err)
+		return err
+	}
 
 	return nil
+}
+
+// AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
+func (h *Handler) AddFinalizer(obj interface{}) error {
+	originCluster, ok := obj.(*v1alpha1.ExecutionCluster)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect ExecutionCluster, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	if slice.ContainsString(originCluster.Finalizers, finalizerExecutioncluster) {
+		return nil
+	}
+	log.WithField("name", originCluster.Name).Debug("Start to add finalizer for executionCluster")
+
+	ec := originCluster.DeepCopy()
+	ec.ObjectMeta.Finalizers = append(ec.ObjectMeta.Finalizers, finalizerExecutioncluster)
+	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(ec)
+	return err
+}
+
+// HandleFinalizer does the finalizer key representing things.
+func (h *Handler) HandleFinalizer(obj interface{}) error {
+	originCluster, ok := obj.(*v1alpha1.ExecutionCluster)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect ExecutionCluster, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	if !slice.ContainsString(originCluster.Finalizers, finalizerExecutioncluster) {
+		return nil
+	}
+
+	log.WithField("name", originCluster.Name).Debug("Start to process finalizer for executionCluster")
+
+	// Handler finalizer
+	ec := originCluster.DeepCopy()
+	if err := h.finalize(ec); err != nil {
+		return nil
+	}
+
+	ec.ObjectMeta.Finalizers = slice.RemoveString(ec.ObjectMeta.Finalizers, finalizerExecutioncluster)
+	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(ec)
+	return err
 }

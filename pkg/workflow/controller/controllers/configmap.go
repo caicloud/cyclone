@@ -16,7 +16,6 @@ import (
 
 // NewConfigMapController ...
 func NewConfigMapController(client clientset.Interface, namespace string, cm string) *Controller {
-	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -55,7 +54,6 @@ func NewConfigMapController(client clientset.Interface, namespace string, cm str
 		clientSet:    client,
 		informer:     informer,
 		queue:        queue,
-		drCollection: drCollection,
 		eventHandler: &configmap.Handler{},
 	}
 }

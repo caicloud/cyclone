@@ -15,7 +15,6 @@ import (
 
 // NewWorkflowRunController ...
 func NewWorkflowRunController(client clientset.Interface) *Controller {
-	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -46,7 +45,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			drCollection.Add(key, obj)
 			queue.Add(key)
 		},
 	})
@@ -56,7 +54,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		clientSet:    client,
 		informer:     informer,
 		queue:        queue,
-		drCollection: drCollection,
 		eventHandler: handlers.NewHandler(client, controller.Config.GC.Enabled, controller.Config.Limits.MaxWorkflowRuns, controller.Config.Parallelism),
 	}
 }

@@ -16,9 +16,9 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
+	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
-	finalizer "github.com/caicloud/cyclone/pkg/workflow/controller/finalizers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
@@ -31,11 +31,15 @@ type Handler struct {
 	LimitedQueues         *workflowrun.LimitedQueues
 	ParallelismController workflowrun.ParallelismController
 	Informer              cache.SharedIndexInformer
-	Finalizers            finalizer.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
+
+const (
+	// finalizerWorkflowRun is the cyclone related finalizer key for workflow run.
+	finalizerWorkflowRun string = "workflowrun.cyclone.dev/finalizer"
+)
 
 // NewHandler ...
 func NewHandler(client clientset.Interface, gcEnable bool, maxWorkflowRuns int, parallelism *controller.ParallelismConfig) *Handler {
@@ -45,10 +49,6 @@ func NewHandler(client clientset.Interface, gcEnable bool, maxWorkflowRuns int, 
 		GCProcessor:           workflowrun.NewGCProcessor(client, gcEnable),
 		LimitedQueues:         workflowrun.NewLimitedQueues(client, maxWorkflowRuns),
 		ParallelismController: workflowrun.NewParallelismController(parallelism),
-		Finalizers: finalizer.NewFinalizer(client, nil, updateFinalizer, appendFinalizer, removeFinalizer, map[string]finalizer.Handler{
-			finalizerGC:          handleFinalizerGC,
-			finalizerParallelism: handleFinalizerParallelism,
-		}),
 	}
 }
 
@@ -64,19 +64,6 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	if !validate(originWfr) {
 		log.WithField("wfr", originWfr.Name).Warning("Invalid wfr")
 		return fmt.Errorf("invalid workflowRun")
-	}
-
-	wfr := originWfr.DeepCopy()
-
-	// Process deleting
-	if !h.Finalizers.IsBeingDeleted(wfr) {
-		if err := h.Finalizers.AddFinalizersIfNotExist(wfr); err != nil {
-			return err
-		}
-	} else {
-		if err := h.Finalizers.DoFinalize(wfr); err != nil {
-			return err
-		}
 	}
 
 	// Refresh updates 'refresh' time field of the WorkflowRun in the queue.
@@ -135,6 +122,7 @@ func (h *Handler) Reconcile(obj interface{}) error {
 		return nil
 	}
 
+	wfr := originWfr.DeepCopy()
 	clusterClient := common.GetExecutionClusterClient(wfr)
 	if clusterClient == nil {
 		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
@@ -156,39 +144,76 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	return nil
 }
 
-// ObjectDeleted handles the case when a WorkflowRun get deleted. It will perform GC immediately for this WorkflowRun.
-func (h *Handler) ObjectDeleted(obj interface{}) error {
-	// originWfr, ok := obj.(*v1alpha1.WorkflowRun)
-	// if !ok {
-	// 	log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
-	// 	return fmt.Errorf("unknown resource type")
-	// }
-	// log.WithField("name", originWfr.Name).Debug("Start to GC for WorkflowRun delete")
+// finalize handles the case when a WorkflowRun get deleted.
+// It will perform GC immediately for this WorkflowRun.
+func (h *Handler) finalize(wfr *v1alpha1.WorkflowRun) error {
+	clusterClient := common.GetExecutionClusterClient(wfr)
+	if clusterClient == nil {
+		log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
+		return fmt.Errorf("Execution cluster client not found")
+	}
 
-	// // Mark the WorkflowRun terminated in ParallelismController
-	// defer func() {
-	// 	h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Name, originWfr.Spec.WorkflowRef.Name)
-	// }()
+	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
+	if err != nil {
+		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
+		return err
+	}
 
-	// wfr := originWfr.DeepCopy()
-	// // log.WithField("name", wfr.Name).WithField("wfr", wfr).Debug(" ========== Test for wfr deleted")
-	// clusterClient := common.GetExecutionClusterClient(wfr)
-	// if clusterClient == nil {
-	// 	log.WithField("wfr", wfr.Name).Error("Execution cluster client not found")
-	// 	return fmt.Errorf("Execution cluster client not found")
-	// }
-
-	// operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
-	// if err != nil {
-	// 	log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
-	// 	return err
-	// }
-
-	// if err = operator.GC(true, true); err != nil {
-	// 	log.WithField("wfr", wfr.Name).Warn("GC failed", err)
-	// 	return err
-	// }
+	if err = operator.GC(true, true); err != nil {
+		log.WithField("wfr", wfr.Name).Warn("GC failed", err)
+		return err
+	}
 	return nil
+}
+
+// AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
+func (h *Handler) AddFinalizer(obj interface{}) error {
+	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	if slice.ContainsString(originWfr.Finalizers, finalizerWorkflowRun) {
+		return nil
+	}
+
+	log.WithField("name", originWfr.Name).Debug("Start to add finalizer for workflowRun")
+
+	wfr := originWfr.DeepCopy()
+	wfr.ObjectMeta.Finalizers = append(wfr.ObjectMeta.Finalizers, finalizerWorkflowRun)
+	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
+	return err
+}
+
+// HandleFinalizer does the finalizer key representing things.
+func (h *Handler) HandleFinalizer(obj interface{}) error {
+	originWfr, ok := obj.(*v1alpha1.WorkflowRun)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect WorkflowRun, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	if !slice.ContainsString(originWfr.Finalizers, finalizerWorkflowRun) {
+		return nil
+	}
+
+	log.WithField("name", originWfr.Name).Debug("Start to process finalizer for workflowRun")
+
+	// Mark the WorkflowRun terminated in ParallelismController
+	defer func() {
+		h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Name, originWfr.Spec.WorkflowRef.Name)
+	}()
+
+	// Handler finalizer
+	wfr := originWfr.DeepCopy()
+	if err := h.finalize(wfr); err != nil {
+		return nil
+	}
+
+	wfr.ObjectMeta.Finalizers = slice.RemoveString(wfr.ObjectMeta.Finalizers, finalizerWorkflowRun)
+	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
+	return err
 }
 
 // sendNotification sends notifications for workflowruns when:

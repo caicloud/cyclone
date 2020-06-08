@@ -14,7 +14,6 @@ import (
 
 // NewExecutionClusterController ...
 func NewExecutionClusterController(client clientset.Interface) *Controller {
-	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -45,17 +44,15 @@ func NewExecutionClusterController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			drCollection.Add(key, obj)
 			queue.Add(key)
 		},
 	})
 
 	return &Controller{
-		name:         "Execution Cluster Controller",
-		clientSet:    client,
-		informer:     informer,
-		queue:        queue,
-		drCollection: drCollection,
+		name:      "Execution Cluster Controller",
+		clientSet: client,
+		informer:  informer,
+		queue:     queue,
 		eventHandler: &executioncluster.Handler{
 			Client: client,
 		},

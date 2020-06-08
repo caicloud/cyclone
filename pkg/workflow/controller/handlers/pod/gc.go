@@ -24,6 +24,20 @@ func IsGCPod(pod *corev1.Pod) bool {
 	return true
 }
 
+// IsWorkloadPod judges whether a pod is a workload pod by check whether it has
+// annotation "workload.cyclone.dev".
+func IsWorkloadPod(pod *corev1.Pod) bool {
+	if pod == nil || pod.Labels == nil {
+		return false
+	}
+
+	if kind := pod.Labels[meta.LabelPodKind]; kind != meta.PodKindWorkload.String() {
+		return false
+	}
+
+	return true
+}
+
 // GCPodUpdated handles GC pod update. If GC pod is terminated, it will be deleted.
 func GCPodUpdated(client kubernetes.Interface, pod *corev1.Pod) {
 	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {

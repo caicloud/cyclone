@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	finalizer "github.com/caicloud/cyclone/pkg/workflow/controller/finalizers"
+	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -16,20 +16,21 @@ import (
 type Handler struct {
 	ClusterClient kubernetes.Interface
 	Client        clientset.Interface
-	Finalizers    finalizer.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
 var _ handlers.Interface = (*Handler)(nil)
+
+const (
+	// finalizerPod is the cyclone related finalizer key for kubernetes pod.
+	finalizerPod string = "pod.cyclone.dev/finalizer"
+)
 
 // NewHandler ...
 func NewHandler(client clientset.Interface, clusterClient kubernetes.Interface) *Handler {
 	return &Handler{
 		Client:        client,
 		ClusterClient: clusterClient,
-		Finalizers: finalizer.NewFinalizer(nil, clusterClient, updateFinalizer, appendFinalizer, removeFinalizer, map[string]finalizer.Handler{
-			finalizerSetStageStatus: handleFinalizerSetStageStatus,
-		}),
 	}
 }
 
@@ -47,45 +48,7 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	}
 
 	pod := originPod.DeepCopy()
-
-	// Process deleting
-	if !h.Finalizers.IsBeingDeleted(pod) {
-		if err := h.Finalizers.AddFinalizersIfNotExist(pod); err != nil {
-			return err
-		}
-	} else {
-		if err := h.Finalizers.DoFinalize(pod); err != nil {
-			return err
-		}
-	}
 	return h.onUpdate(pod)
-}
-
-// ObjectDeleted ...
-func (h *Handler) ObjectDeleted(obj interface{}) error {
-	// pod, ok := obj.(*corev1.Pod)
-	// if !ok {
-	// 	log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
-	// 	return fmt.Errorf("unknown resource type")
-	// }
-	// log.WithField("name", pod.Name).Debug("Observed pod deleted")
-
-	// // Check whether it's GC pod.
-	// if IsGCPod(pod) {
-	// 	return nil
-	// }
-
-	// operator, err := NewOperator(h.ClusterClient, h.Client, pod)
-	// if err != nil {
-	// 	log.Error("Create operator error: ", err)
-	// 	return err
-	// }
-
-	// if err := operator.OnDelete(); err != nil {
-	// 	log.WithField("pod", pod.Name).Error("process deleted pod error: ", err)
-	// 	return err
-	// }
-	return nil
 }
 
 func (h *Handler) onUpdate(pod *corev1.Pod) error {
@@ -109,4 +72,73 @@ func (h *Handler) onUpdate(pod *corev1.Pod) error {
 		return err
 	}
 	return nil
+}
+
+// finalize ...
+func (h *Handler) finalize(pod *corev1.Pod) error {
+	operator, err := NewOperator(h.ClusterClient, h.Client, pod)
+	if err != nil {
+		log.Error("Create operator error: ", err)
+		return err
+	}
+
+	if err := operator.OnDelete(); err != nil {
+		log.WithField("pod", pod.Name).Error("process deleted pod error: ", err)
+		return err
+	}
+	return nil
+}
+
+// AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
+func (h *Handler) AddFinalizer(obj interface{}) error {
+	originPod, ok := obj.(*corev1.Pod)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	// Check whether it's workload pod.
+	if !IsWorkloadPod(originPod) {
+		return nil
+	}
+
+	if slice.ContainsString(originPod.Finalizers, finalizerPod) {
+		return nil
+	}
+	log.WithField("name", originPod.Name).Debug("Start to add finalizer for pod")
+
+	pod := originPod.DeepCopy()
+	pod.ObjectMeta.Finalizers = append(pod.ObjectMeta.Finalizers, finalizerPod)
+	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(pod)
+	return err
+}
+
+// HandleFinalizer does the finalizer key representing things.
+func (h *Handler) HandleFinalizer(obj interface{}) error {
+	originPod, ok := obj.(*corev1.Pod)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	// Check whether it's workload pod.
+	if !IsWorkloadPod(originPod) {
+		return nil
+	}
+
+	if !slice.ContainsString(originPod.Finalizers, finalizerPod) {
+		return nil
+	}
+
+	log.WithField("name", originPod.Name).Debug("Start to process finalizer for pod")
+
+	// Handler finalizer
+	pod := originPod.DeepCopy()
+	if err := h.finalize(pod); err != nil {
+		return nil
+	}
+
+	pod.ObjectMeta.Finalizers = slice.RemoveString(pod.ObjectMeta.Finalizers, finalizerPod)
+	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(pod)
+	return err
 }

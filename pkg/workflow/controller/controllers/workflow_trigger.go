@@ -17,7 +17,6 @@ import (
 
 // NewWorkflowTriggerController ...
 func NewWorkflowTriggerController(client clientset.Interface) *Controller {
-	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -54,7 +53,6 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 				return
 			}
 			log.WithField("name", key).Debug("deleting WorkflowTrigger")
-			drCollection.Add(key, obj)
 			queue.Add(key)
 		},
 	})
@@ -64,7 +62,6 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 		clientSet:    client,
 		informer:     informer,
 		queue:        queue,
-		drCollection: drCollection,
 		eventHandler: workflowtrigger.NewHandler(client),
 	}
 }
