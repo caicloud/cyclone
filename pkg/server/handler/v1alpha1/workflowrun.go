@@ -124,7 +124,7 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 		return nil, err
 	}
 
-	items := workflowruns.Items
+	items := mutateTerminatingWorkflowRuns(workflowruns.Items)
 	var results []v1alpha1.WorkflowRun
 	if query.Filter == "" {
 		results = items
@@ -150,6 +150,18 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 	}
 
 	return types.NewListResponse(int(size), results[query.Start:end]), nil
+}
+
+// mutateTerminatingWorkflowRuns change status of workflowRun, which is under deleting, to Terminating.
+func mutateTerminatingWorkflowRuns(wfrs []v1alpha1.WorkflowRun) []v1alpha1.WorkflowRun {
+	results := make([]v1alpha1.WorkflowRun, len(wfrs))
+	for _, wfr := range wfrs {
+		if !wfr.DeletionTimestamp.IsZero() {
+			wfr.Status.Overall.Phase = api.StatusTerminating
+		}
+		results = append(results, wfr)
+	}
+	return results
 }
 
 func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.WorkflowRun, error) {
@@ -216,6 +228,9 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 func GetWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
 	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
 
+	if !wfr.DeletionTimestamp.IsZero() {
+		wfr.Status.Overall.Phase = api.StatusTerminating
+	}
 	return wfr, cerr.ConvertK8sError(err)
 }
 

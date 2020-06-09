@@ -99,7 +99,6 @@ func ListWorkflows(ctx context.Context, tenant, project string, query *types.Que
 // GetWorkflow ...
 func GetWorkflow(ctx context.Context, tenant, project, workflow string) (*v1alpha1.Workflow, error) {
 	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
-
 	return wf, cerr.ConvertK8sError(err)
 }
 
