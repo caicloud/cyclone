@@ -153,7 +153,7 @@ func (h *Handler) finalize(wfr *v1alpha1.WorkflowRun) error {
 		return fmt.Errorf("Execution cluster client not found")
 	}
 
-	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr, wfr.Namespace)
+	operator, err := workflowrun.NewOperator(clusterClient, h.Client, wfr.Name, wfr.Namespace)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to create workflowrun operator: ", err)
 		return err
