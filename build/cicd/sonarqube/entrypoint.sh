@@ -122,7 +122,21 @@ echo "Scan task completed~"
 # Write result to output file, which will be collected by Cyclone
 echo "Collect result to result file /__result__ ..."
 echo "detailURL:${SERVER}/dashboard?id=${PROJECT_KEY}" >> /__result__;
+# Can reference measures result in 'result.example.json' file in current directory
 measures=$(curl -XPOST -u ${TOKEN}: "${SERVER}/api/measures/component?additionalFields=periods&component=${PROJECT_KEY}&metricKeys=reliability_rating,sqale_rating,security_rating,coverage,duplicated_lines_density,quality_gate_details" 2>/dev/null)
 selected=$(echo $measures | jq -c .component.measures)
 echo $selected | jq
 echo "measures:${selected}" >> /__result__;
+
+# Determine success or failure
+qualityGateValue=$(echo $selected | jq '.[] | select(.metric=="quality_gate_details") | .value')
+qualityGateValueWithoutQuote=$(echo $qualityGateValue | sed -e 's/\\//g' -e 's/^"//' -e 's/"$//')
+qualityGateLevel=$(echo $qualityGateValueWithoutQuote | jq .level | sed -e 's/^"//' -e 's/"$//')
+echo "quality gate level: ${qualityGateLevel}"
+
+# qualityGateLevel: OK, ERROR, WARN, NONE
+if [[ $qualityGateLevel = "ERROR" || $qualityGateLevel = "NONE" ]]; then
+    exit 1;
+else
+    exit 0;
+fi
