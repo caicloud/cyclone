@@ -5,10 +5,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -102,9 +102,10 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	if slice.ContainsString(originPod.Finalizers, finalizerPod) {
+	if sets.NewString(originPod.Finalizers...).Has(finalizerPod) {
 		return nil
 	}
+
 	log.WithField("name", originPod.Name).Debug("Start to add finalizer for pod")
 
 	pod := originPod.DeepCopy()
@@ -126,7 +127,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	if !slice.ContainsString(originPod.Finalizers, finalizerPod) {
+	if !sets.NewString(originPod.Finalizers...).Has(finalizerPod) {
 		return nil
 	}
 
@@ -138,7 +139,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	pod.ObjectMeta.Finalizers = slice.RemoveString(pod.ObjectMeta.Finalizers, finalizerPod)
+	pod.ObjectMeta.Finalizers = sets.NewString(pod.ObjectMeta.Finalizers...).Delete(finalizerPod).UnsortedList()
 	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(pod)
 	return err
 }

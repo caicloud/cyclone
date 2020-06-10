@@ -9,6 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/retry"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
-	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
@@ -174,7 +174,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if slice.ContainsString(originWfr.Finalizers, finalizerWorkflowRun) {
+	if sets.NewString(originWfr.Finalizers...).Has(finalizerWorkflowRun) {
 		return nil
 	}
 
@@ -194,7 +194,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if !slice.ContainsString(originWfr.Finalizers, finalizerWorkflowRun) {
+	if !sets.NewString(originWfr.Finalizers...).Has(finalizerWorkflowRun) {
 		return nil
 	}
 
@@ -211,7 +211,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	wfr.ObjectMeta.Finalizers = slice.RemoveString(wfr.ObjectMeta.Finalizers, finalizerWorkflowRun)
+	wfr.ObjectMeta.Finalizers = sets.NewString(wfr.ObjectMeta.Finalizers...).Delete(finalizerWorkflowRun).UnsortedList()
 	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
 	return err
 }

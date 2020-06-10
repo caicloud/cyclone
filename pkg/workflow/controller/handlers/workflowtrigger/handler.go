@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -65,9 +65,10 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if slice.ContainsString(originWft.Finalizers, finalizerWorkflowTrigger) {
+	if sets.NewString(originWft.Finalizers...).Has(finalizerWorkflowTrigger) {
 		return nil
 	}
+
 	log.WithField("name", originWft.Name).Debug("Start to add finalizer for workflowTrigger")
 
 	wft := originWft.DeepCopy()
@@ -84,7 +85,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if !slice.ContainsString(originWft.Finalizers, finalizerWorkflowTrigger) {
+	if !sets.NewString(originWft.Finalizers...).Has(finalizerWorkflowTrigger) {
 		return nil
 	}
 
@@ -96,7 +97,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	wft.ObjectMeta.Finalizers = slice.RemoveString(wft.ObjectMeta.Finalizers, finalizerWorkflowTrigger)
+	wft.ObjectMeta.Finalizers = sets.NewString(wft.ObjectMeta.Finalizers...).Delete(finalizerWorkflowTrigger).UnsortedList()
 	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(wft)
 	return err
 }

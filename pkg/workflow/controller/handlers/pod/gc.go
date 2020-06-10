@@ -11,7 +11,7 @@ import (
 )
 
 // IsGCPod judges whether a pod is a GC pod by check whether it has
-// annotation "gc.cyclone.dev".
+// label "gc.cyclone.dev".
 func IsGCPod(pod *corev1.Pod) bool {
 	if pod == nil || pod.Labels == nil {
 		return false
@@ -25,7 +25,7 @@ func IsGCPod(pod *corev1.Pod) bool {
 }
 
 // IsWorkloadPod judges whether a pod is a workload pod by check whether it has
-// annotation "workload.cyclone.dev".
+// label "workload.cyclone.dev".
 func IsWorkloadPod(pod *corev1.Pod) bool {
 	if pod == nil || pod.Labels == nil {
 		return false

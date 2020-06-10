@@ -118,7 +118,8 @@ func (c *Controller) doWork(key string) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if c.isBeingDeleted(object) {
+	// The object deletion timestamp is not zero value that indicates the resource is being deleted
+	if !object.GetDeletionTimestamp().IsZero() {
 		return c.eventHandler.HandleFinalizer(object)
 	}
 
@@ -128,9 +129,4 @@ func (c *Controller) doWork(key string) error {
 	}
 
 	return c.eventHandler.Reconcile(obj)
-}
-
-// isBeingDeleted indicates whether the resource is being deleted
-func (c *Controller) isBeingDeleted(obj metav1.Object) bool {
-	return !obj.GetDeletionTimestamp().IsZero()
 }

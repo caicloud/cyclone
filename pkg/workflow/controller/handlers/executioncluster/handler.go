@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/util/slice"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
@@ -67,9 +67,10 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if slice.ContainsString(originCluster.Finalizers, finalizerExecutioncluster) {
+	if sets.NewString(originCluster.Finalizers...).Has(finalizerExecutioncluster) {
 		return nil
 	}
+
 	log.WithField("name", originCluster.Name).Debug("Start to add finalizer for executionCluster")
 
 	ec := originCluster.DeepCopy()
@@ -86,7 +87,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return fmt.Errorf("unknown resource type")
 	}
 
-	if !slice.ContainsString(originCluster.Finalizers, finalizerExecutioncluster) {
+	if !sets.NewString(originCluster.Finalizers...).Has(finalizerExecutioncluster) {
 		return nil
 	}
 
@@ -98,7 +99,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 		return nil
 	}
 
-	ec.ObjectMeta.Finalizers = slice.RemoveString(ec.ObjectMeta.Finalizers, finalizerExecutioncluster)
+	ec.ObjectMeta.Finalizers = sets.NewString(ec.ObjectMeta.Finalizers...).Delete(finalizerExecutioncluster).UnsortedList()
 	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(ec)
 	return err
 }

@@ -155,11 +155,11 @@ func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, que
 // mutateTerminatingWorkflowRuns change status of workflowRun, which is under deleting, to Terminating.
 func mutateTerminatingWorkflowRuns(wfrs []v1alpha1.WorkflowRun) []v1alpha1.WorkflowRun {
 	results := make([]v1alpha1.WorkflowRun, len(wfrs))
-	for _, wfr := range wfrs {
+	for i, wfr := range wfrs {
 		if !wfr.DeletionTimestamp.IsZero() {
 			wfr.Status.Overall.Phase = api.StatusTerminating
 		}
-		results = append(results, wfr)
+		results[i] = wfr
 	}
 	return results
 }
