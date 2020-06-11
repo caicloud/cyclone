@@ -44,6 +44,9 @@ if [ -z ${PROJECT_KEY} ]; then echo "PROJECT_KEY is unset"; exit 1; fi
 if [ -z ${ENCODING} ]; then echo "ENCODING is unset, set it to UTF-8"; ENCODING=UTF-8; fi
 if [ -z ${SOURCE_PATH} ]; then echo "SOURCE_PATH is unset, set it to ./"; SOURCE_PATH=./ ; fi
 
+# Trim suffix "/" for the server
+SERVER=$(echo ${SERVER} | sed -e 's/\/$//')
+
 # Create project if not exist
 status=$(curl -I -u ${TOKEN}: ${SERVER}/api/components/show?component=${PROJECT_KEY} 2>/dev/null | head -n 1 | cut -d$' ' -f2)
 if [[ $status == "404" ]]; then
