@@ -66,6 +66,15 @@ type operator struct {
 var _ Operator = (*operator)(nil)
 
 // NewOperator create a new operator.
+//
+// wfr can be passed as a workflowRun's name or a workflowRun object.
+// if a name is passed, this func will not get the related workflow
+// and use it to initialize the Operator; but if a object is passed,
+// will do that.
+//
+// And operator returned by passing a workflowRun name can not invoke
+// the operator's some methods as follows: InitStagesStatus, Update,
+// OverallStatus and Reconcile.
 func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface, wfr interface{}, namespace string) (Operator, error) {
 	if w, ok := wfr.(string); ok {
 		return newFromName(clusterClient, client, w, namespace)
@@ -186,7 +195,7 @@ func (o *operator) Update() error {
 			combined.Status.Stages[stage].Trivial = status.Trivial
 		}
 
-		// Update golbal variables to resolved values
+		// Update global variables to resolved values
 		combined.Spec.GlobalVariables = o.wfr.Spec.GlobalVariables
 
 		if !reflect.DeepEqual(staticStatus(&latest.Status), staticStatus(&combined.Status)) ||

@@ -11,12 +11,10 @@ import (
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	handlers "github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowrun"
-	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
 )
 
 // NewWorkflowRunController ...
 func NewWorkflowRunController(client clientset.Interface) *Controller {
-	drCollection := newDeletedResourceCollection()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
@@ -47,7 +45,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			if err != nil {
 				return
 			}
-			drCollection.Add(key, obj)
 			queue.Add(key)
 		},
 	})
@@ -57,13 +54,6 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 		clientSet:    client,
 		informer:     informer,
 		queue:        queue,
-		drCollection: drCollection,
-		eventHandler: &handlers.Handler{
-			Client:                client,
-			TimeoutProcessor:      workflowrun.NewTimeoutProcessor(client),
-			GCProcessor:           workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
-			LimitedQueues:         workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
-			ParallelismController: workflowrun.NewParallelismController(controller.Config.Parallelism),
-		},
+		eventHandler: handlers.NewHandler(client, controller.Config.GC.Enabled, controller.Config.Limits.MaxWorkflowRuns, controller.Config.Parallelism),
 	}
 }

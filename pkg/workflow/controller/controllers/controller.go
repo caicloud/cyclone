@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -22,7 +23,6 @@ type Controller struct {
 	clusterClient kubernetes.Interface
 	clientSet     clientset.Interface
 	queue         workqueue.RateLimitingInterface
-	drCollection  deletedResourceCollectionInterface
 	informer      cache.SharedIndexInformer
 	eventHandler  handlers.Interface
 }
@@ -107,17 +107,26 @@ func (c *Controller) doWork(key string) error {
 		return fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
 	}
 
-	if !exists {
-		deleteObj, err := c.drCollection.Get(key)
-		if err != nil {
-			log.WithField("key", key).Error("Deleted object lost")
-			return nil
-		}
-		if err := c.eventHandler.ObjectDeleted(deleteObj); err != nil {
-			return err
-		}
-		c.drCollection.Remove(key)
+	if obj == nil || !exists {
+		log.WithField("obj", obj).WithField("exist", exists).Warning("Object is nil or not exist")
 		return nil
 	}
+
+	object, ok := obj.(metav1.Object)
+	if !ok {
+		log.WithField("obj", obj).Warning("Expect it is a Kubernetes resource object, got unknown type resource")
+		return fmt.Errorf("unknown resource type")
+	}
+
+	// The object deletion timestamp is not zero value that indicates the resource is being deleted
+	if !object.GetDeletionTimestamp().IsZero() {
+		return c.eventHandler.HandleFinalizer(object)
+	}
+
+	// Add finalizer if needed
+	if err := c.eventHandler.AddFinalizer(object); err != nil {
+		return err
+	}
+
 	return c.eventHandler.Reconcile(obj)
 }

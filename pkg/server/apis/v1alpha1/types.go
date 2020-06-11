@@ -356,3 +356,12 @@ type StageArtifact struct {
 	File              string    `json:"file"`
 	CreationTimestamp time.Time `json:"creationTimestamp"`
 }
+
+const (
+	// StatusTerminating indicates the resource is being deleted, resources's
+	// deletionTimestamp is not empty in this status.
+	//
+	// Note this is not a real status recorded in the resource, it just indicates
+	// resources under deleting to make it easy to use.
+	StatusTerminating v1alpha1.StatusPhase = "Terminating"
+)
