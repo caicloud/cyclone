@@ -32,6 +32,7 @@ require (
 	k8s.io/api v0.17.5
 	k8s.io/apiextensions-apiserver v0.17.5
 	k8s.io/apimachinery v0.17.5
+	k8s.io/apiserver v0.17.5
 	k8s.io/client-go v0.17.5
 	k8s.io/gengo v0.0.0-20200114144118-36b2048a9120
 	k8s.io/kubernetes v1.17.5

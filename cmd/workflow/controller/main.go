@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,14 +12,18 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/signals"
+	"github.com/caicloud/cyclone/pkg/leaderelection"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/controllers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
 
-var kubeConfigPath = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-var configMap = flag.String("configmap", "workflow-controller-config", "ConfigMap that configures workflow controller")
+var (
+	kubeConfigPath  = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+	configMap       = flag.String("configmap", "workflow-controller-config", "ConfigMap that configures workflow controller")
+	healthCheckPort = flag.Int("health-check-port", 8080, "Workflow controller health check port")
+)
 
 func main() {
 	flag.Parse()
@@ -55,30 +60,45 @@ func main() {
 		log.Fatal("Init control cluster error: ", err)
 	}
 
-	// Watch configure changes in ConfigMap.
-	cmController := controllers.NewConfigMapController(client, systemNamespace, *configMap)
-	go cmController.Run(1, ctx.Done())
+	runController := func(ctx context.Context) {
+		// Watch configure changes in ConfigMap.
+		cmController := controllers.NewConfigMapController(client, systemNamespace, *configMap)
+		go cmController.Run(1, ctx.Done())
 
-	// Watch workflowTrigger who will start workflowRun on schedule
-	wftController := controllers.NewWorkflowTriggerController(client)
-	go wftController.Run(controller.Config.WorkersNumber.WorkflowTrigger, ctx.Done())
+		// Watch workflowTrigger who will start workflowRun on schedule
+		wftController := controllers.NewWorkflowTriggerController(client)
+		go wftController.Run(controller.Config.WorkersNumber.WorkflowTrigger, ctx.Done())
 
-	// Create and start WorkflowRun controller.
-	wfrController := controllers.NewWorkflowRunController(client)
-	go wfrController.Run(controller.Config.WorkersNumber.WorkflowRun, ctx.Done())
+		// Create and start WorkflowRun controller.
+		wfrController := controllers.NewWorkflowRunController(client)
+		go wfrController.Run(controller.Config.WorkersNumber.WorkflowRun, ctx.Done())
 
-	// Create and start execution cluster controller.
-	clusterController := controllers.NewExecutionClusterController(client)
-	go clusterController.Run(controller.Config.WorkersNumber.ExecutionCluster, ctx.Done())
+		// Create and start execution cluster controller.
+		clusterController := controllers.NewExecutionClusterController(client)
+		go clusterController.Run(controller.Config.WorkersNumber.ExecutionCluster, ctx.Done())
 
-	// Watch for execution cluster, start pod controller for it.
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case cluster := <-store.NewClusterChan:
-			podController := controllers.NewPodController(cluster.Client, client)
-			go podController.Run(controller.Config.WorkersNumber.Pod, cluster.StopCh)
+		// Watch for execution cluster, start pod controller for it.
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case cluster := <-store.NewClusterChan:
+				podController := controllers.NewPodController(cluster.Client, client)
+				go podController.Run(controller.Config.WorkersNumber.Pod, cluster.StopCh)
+			}
 		}
 	}
+
+	leaseLockNamespace := os.Getenv("POD_NAMESPACE")
+	if leaseLockNamespace == "" {
+		leaseLockNamespace = "default"
+	}
+	leaderelection.RunOrDie(leaderelection.Option{
+		LeaseLockName:      "cyclone-workflow-controller",
+		LeaseLockNamespace: leaseLockNamespace,
+		KubeClient:         client,
+		Run:                runController,
+		Port:               *healthCheckPort,
+		StopCh:             ctx.Done(),
+	})
 }

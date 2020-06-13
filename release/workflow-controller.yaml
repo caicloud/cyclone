@@ -13,6 +13,19 @@ _config:
       - /workspace/controller
       image: '[[ registry_release ]]/cyclone-workflow-controller:[[ imageTagFromGitTag ]]'
       imagePullPolicy: Always
+      probe:
+        liveness:
+          handler:
+            type: HTTP
+            method:
+              path: /healthz
+              port: 8080
+          delay: 10
+          period: 10
+          threshold:
+            failure: 3
+            success: 1
+          timeout: 1
       env:
       - name: DEVELOP_MODE
         value: "false"
