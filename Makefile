@@ -26,7 +26,8 @@ ROOT := github.com/caicloud/cyclone
 
 # Target binaries. You can build multiple binaries for a single project.
 TARGETS := server workflow/controller workflow/coordinator cicd/cd toolbox/fstream
-IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image watcher cicd/cd cicd/sonarqube toolbox web
+IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/svn resolver/image watcher cicd/cd cicd/sonarqube toolbox
+BASE_IMAGES := base/alpine base/openjdk
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
@@ -35,12 +36,17 @@ IMAGES := server workflow/controller workflow/coordinator resolver/git resolver/
 IMAGE_PREFIX ?= $(strip cyclone-)
 IMAGE_SUFFIX ?= $(strip )
 
-# REGISTRY ?= docker.io/library
 # Container registry for target images.
-REGISTRY ?= docker.io/library
+REGISTRY ?= docker.io/caicloud
 
-# Container registry for base images.
+# Container registry for images used to complile, like building golang binaries and building webs, e.g. docker.io/library/golang.
 BASE_REGISTRY ?= docker.io/library
+
+# Container registry for cyclone target base images.
+CYCLONE_BASE_REGISTRY ?= docker.io/caicloud
+
+# Version of the cyclone base images.
+CYCLONE_BASE_VERSION ?= v1.0.0
 
 # Example scene
 SCENE ?= cicd
@@ -52,6 +58,7 @@ ARCH ?= amd64
 ifeq ($(ARCH),arm64)
 DOCKERFILE ?= Dockerfile.arm64
 REGISTRY ?= cargo.dev.caicloud.xyz/arm64v8
+CYCLONE_BASE_VERSION := $(CYCLONE_BASE_VERSION)-arm64v8
 else
 DOCKERFILE ?= Dockerfile
 REGISTRY ?= cargo.dev.caicloud.xyz/release
@@ -180,6 +187,13 @@ container-local: build-local
 	@for image in $(IMAGES); do                                                        \
 	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                          \
 	  docker build -t ${REGISTRY}/$${imageName}:$(VERSION)                             \
+	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                     \
+	done
+
+container-base:
+	@for image in $(BASE_IMAGES); do                                                   \
+	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                          \
+	  docker build -t ${CYCLONE_BASE_REGISTRY}/$${imageName}:${CYCLONE_BASE_VERSION}   \
 	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                     \
 	done
 

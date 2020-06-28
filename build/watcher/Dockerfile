@@ -1,11 +1,8 @@
-FROM alpine:3.8
+FROM caicloud/cyclone-base-alpine:v1.0.0
 
 LABEL maintainer="zhujian@caicloud.io"
 
 WORKDIR /workspace
-
-RUN apk update && \
-    apk add --no-cache ca-certificates bash
 
 COPY ./build/watcher/pvc-watcher.sh /workspace/pvc-watcher.sh
 
