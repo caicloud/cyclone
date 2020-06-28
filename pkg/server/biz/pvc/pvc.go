@@ -22,7 +22,7 @@ import (
 )
 
 // CreatePVC creates pvc for tenant
-func CreatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
+func CreatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset, isMaster bool) error {
 	// parse quantity
 	resources := make(map[core_v1.ResourceName]resource.Quantity)
 	quantity, err := resource.ParseQuantity(size)
@@ -66,7 +66,7 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 	err = usage.LaunchPVCUsageWatcher(client, tenantName, v1alpha1.ExecutionContext{
 		Namespace: nsname,
 		PVC:       pvcName,
-	})
+	}, isMaster)
 	if err != nil {
 		log.Errorf("Launch PVC usage watcher for %s/%s error: %v", nsname, pvcName, err)
 		return err
@@ -127,7 +127,7 @@ func ConfirmPVCDeleted(tenantName, namespace string, client *kubernetes.Clientse
 }
 
 // UpdatePVC delete the old pvc and recreate another one, so the data of the pvc will lost.
-func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
+func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset, isMaster bool) error {
 	// Can not update pvc when there are workflows running.
 	pods, err := client.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s!=%s", usage.PVCWatcherLabelName, usage.PVCWatcherLabelValue),
@@ -175,7 +175,7 @@ func UpdatePVC(tenantName, storageClass, size string, namespace string, client *
 
 	// Create a new PVC
 	err = retry.OnError(backoff, func() error {
-		return CreatePVC(tenantName, storageClass, size, namespace, client)
+		return CreatePVC(tenantName, storageClass, size, namespace, client, isMaster)
 	})
 	if err != nil {
 		return err

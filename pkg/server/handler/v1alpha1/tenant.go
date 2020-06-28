@@ -151,7 +151,7 @@ func UpdateTenant(ctx context.Context, name string, newTenant *api.Tenant) (*api
 			log.Infof("old PersistentVolumeClaim: %+v ", t.Spec.PersistentVolumeClaim)
 			log.Infof("new PersistentVolumeClaim: %+v ", newTenant.Spec.PersistentVolumeClaim)
 			newPVC := newTenant.Spec.PersistentVolumeClaim
-			err = pvc.UpdatePVC(t.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client)
+			err = pvc.UpdatePVC(t.Name, newPVC.StorageClass, newPVC.Size, cluster.Namespace, client, cluster.IsControlCluster)
 			if err != nil {
 				log.Errorf("update pvc for tenant %s error %v", name, err)
 				return nil, err

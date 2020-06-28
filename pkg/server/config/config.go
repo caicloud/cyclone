@@ -87,6 +87,9 @@ type StorageUsageWatcher struct {
 	Image string `json:"image"`
 	// ReportURL is url where to report the usage
 	ReportURL string `json:"report_url"`
+	// ReportURLEIP similar to ReportURL , when not in master cluster and use eip, use this
+	// url to report pvc usage status
+	ReportURLEIP string `json:"report_url_eip"`
 	// IntervalSeconds is intervals to report storage usage
 	IntervalSeconds string `json:"interval_seconds"`
 	// ResourceRequirements specifies resource requirements of the watcher container.

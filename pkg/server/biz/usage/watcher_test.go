@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -32,7 +32,7 @@ func (suite *WatcherSuite) TestLaunchPVCUsageWatcher() {
 		PVC:       "test-pvc",
 	}
 
-	err := LaunchPVCUsageWatcher(suite.client, suite.tenant, context)
+	err := LaunchPVCUsageWatcher(suite.client, suite.tenant, context, true)
 	assert.Nil(suite.T(), err)
 
 	_, err = suite.client.ExtensionsV1beta1().Deployments(context.Namespace).Get(PVCWatcherName, metav1.GetOptions{})
