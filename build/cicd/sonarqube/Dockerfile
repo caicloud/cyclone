@@ -1,6 +1,6 @@
 FROM newtmitch/sonar-scanner:3.3.0-alpine
 
-LABEL maintainer="chende@caicloud.io"
+LABEL maintainer="zhujian@caicloud.io"
 
 ENV WORKDIR /workspace
 WORKDIR $WORKDIR
