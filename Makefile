@@ -45,6 +45,18 @@ BASE_REGISTRY ?= docker.io/library
 # Example scene
 SCENE ?= cicd
 
+# Go build GOARCH, you can choose to build amd64 or arm64
+ARCH ?= amd64
+
+# Change Dockerfile name and registry project name for arm64
+ifeq ($(ARCH),arm64)
+DOCKERFILE ?= Dockerfile.arm64
+REGISTRY ?= cargo.dev.caicloud.xyz/arm64v8
+else
+DOCKERFILE ?= Dockerfile
+REGISTRY ?= cargo.dev.caicloud.xyz/release
+endif
+
 #
 # These variables should not need tweaking.
 #
@@ -108,7 +120,7 @@ test:
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
-	  CGO_ENABLED=0   GOOS=linux   GOARCH=amd64                                        \
+	  CGO_ENABLED=0   GOOS=linux   GOARCH=$(ARCH)                                      \
 	  go build -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)                            \
 	    -ldflags "-s -w -X $(ROOT)/pkg/server/version.VERSION=$(VERSION)               \
 	              -X $(ROOT)/pkg/server/version.COMMIT=$(COMMIT)                       \
@@ -121,7 +133,7 @@ build-linux:
 	  -v $(PWD):/go/src/$(ROOT)                                                        \
 	  -w /go/src/$(ROOT)                                                               \
 	  -e GOOS=linux                                                                    \
-	  -e GOARCH=amd64                                                                  \
+	  -e GOARCH=$(ARCH)                                                                \
 	  -e GOPATH=/go                                                                    \
 	  -e CGO_ENABLED=0                                                                 \
 	  -e GOFLAGS=$(GOFLAGS)                                                            \
@@ -154,25 +166,25 @@ build-web-local:
 container-web: build-web
 	imageName=$(IMAGE_PREFIX)web$(IMAGE_SUFFIX);                                       \
 	docker build -t ${REGISTRY}/$${imageName}:$(VERSION)                               \
-	  -f $(BUILD_DIR)/web/Dockerfile.local .
+	  -f $(BUILD_DIR)/web/$(DOCKERFILE).local .
 
 container-web-local: build-web-local
 	imageName=$(IMAGE_PREFIX)web$(IMAGE_SUFFIX);                                       \
 	docker build -t ${REGISTRY}/$${imageName}:$(VERSION)                               \
-	  -f $(BUILD_DIR)/web/Dockerfile.local .
+	  -f $(BUILD_DIR)/web/$(DOCKERFILE).local .
 
 container: build-linux
 	@for image in $(IMAGES); do                                                        \
 	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                          \
 	  docker build -t ${REGISTRY}/$${imageName}:$(VERSION)                             \
-	    -f $(BUILD_DIR)/$${image}/Dockerfile .;                                        \
+	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                     \
 	done
 
 container-local: build-local
 	@for image in $(IMAGES); do                                                        \
 	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                          \
 	  docker build -t ${REGISTRY}/$${imageName}:$(VERSION)                             \
-	    -f $(BUILD_DIR)/$${image}/Dockerfile .;                                        \
+	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                     \
 	done
 
 push:
@@ -192,7 +204,7 @@ swagger:
 	  -v $(PWD):/go/src/$(ROOT)                                                       \
 	  -w /go/src/$(ROOT)                                                              \
 	  -e GOOS=linux                                                                   \
-	  -e GOARCH=amd64                                                                 \
+	  -e GOARCH=$(ARCH)                                                               \
 	  -e GOPATH=/go                                                                   \
 	  -e CGO_ENABLED=0                                                                \
 	  -e GOFLAGS=$(GOFLAGS)                                                           \
