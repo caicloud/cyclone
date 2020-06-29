@@ -136,7 +136,7 @@ build-local:
 	done
 
 build-linux:
-	@docker run --rm -t                                                                \
+	@docker run --rm -it                                                               \
 	  -v $(PWD):/go/src/$(ROOT)                                                        \
 	  -w /go/src/$(ROOT)                                                               \
 	  -e GOOS=linux                                                                    \
@@ -155,7 +155,7 @@ build-linux:
 	    done'
 
 build-web:
-	docker run --rm                                                                    \
+	docker run --rm -it                                                                \
 	  -v $(PWD)/web/:/app                                                              \
 	  -w /app                                                                          \
 	  -e SHELLOPTS=$(SHELLOPTS)                                                        \
@@ -214,7 +214,7 @@ swagger-local:
 	nirvana api --output web/public pkg/server/apis
 
 swagger:
-	docker run --rm                                                                   \
+	docker run --rm -it                                                               \
 	  -v $(PWD):/go/src/$(ROOT)                                                       \
 	  -w /go/src/$(ROOT)                                                              \
 	  -e GOOS=linux                                                                   \
