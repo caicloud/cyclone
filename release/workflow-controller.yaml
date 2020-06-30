@@ -31,8 +31,8 @@ _config:
         value: "false"
       resources:
         limits:
-          cpu: "200m"
-          memory: "200Mi"
+          cpu: "150m"
+          memory: "300Mi"
         requests:
           cpu: "50m"
           memory: "100Mi"
