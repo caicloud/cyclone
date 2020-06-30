@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM caicloud/cyclone-base-alpine:v1.0.0
 
 LABEL maintainer="zhujian@caicloud.io"
 
