@@ -421,10 +421,16 @@ func (m *Builder) ResolveInputResources() error {
 			})
 		}
 
+		// judge weather is master cluster , if not , use EIP
+		cycloneServeAddr := controller.Config.CycloneServerAddr
+		if ! common.IsMaster(m.wfr) {
+			cycloneServeAddr = controller.Config.CycloneServerAddrEIP
+		}
+
 		envs = append(envs, corev1.EnvVar{
 			Name: common.EnvLogCollectorURL,
 			Value: fmt.Sprintf("%s/apis/v1alpha1/workflowruns/%s/streamlogs?namespace=%s&stage=%s&container=%s",
-				controller.Config.CycloneServerAddr, m.wfr.Name, m.wfr.Namespace, m.stg.Name, InputContainerName(index+1)),
+				cycloneServeAddr, m.wfr.Name, m.wfr.Namespace, m.stg.Name, InputContainerName(index+1)),
 		})
 
 		// Get resource resolver for the given resource type. If the resource has resolver set, use it directly,
@@ -780,6 +786,11 @@ func (m *Builder) AddCoordinator() error {
 		return err
 	}
 
+	cycloneServeAddr := controller.Config.CycloneServerAddr
+	if !common.IsMaster(m.wfr) {
+		cycloneServeAddr = controller.Config.CycloneServerAddrEIP
+	}
+
 	coordinator := corev1.Container{
 		Name:  common.CoordinatorSidecarName,
 		Image: controller.Config.Images[controller.CoordinatorImage],
@@ -798,7 +809,7 @@ func (m *Builder) AddCoordinator() error {
 			},
 			{
 				Name:  common.EnvCycloneServerAddr,
-				Value: controller.Config.CycloneServerAddr,
+				Value: cycloneServeAddr,
 			},
 			{
 				Name:  common.EnvStageInfo,

@@ -88,5 +88,6 @@ _config:
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "[[ kube_apiserver_endpoint_ip ]]:6008",
+            "cyclone_server_addr_eip": "[[ kube_apiserver_endpoint_eip ]]:6008",
             "notification_url": "http://[[ kube_apiserver_endpoint_ip ]]:6008/apis/v1alpha1/notifications"
           }
