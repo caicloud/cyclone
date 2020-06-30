@@ -423,7 +423,7 @@ func (m *Builder) ResolveInputResources() error {
 
 		// judge weather is master cluster , if not , use EIP
 		cycloneServeAddr := controller.Config.CycloneServerAddr
-		if ! common.IsMaster(m.wfr) {
+		if !common.IsMaster(m.wfr) {
 			cycloneServeAddr = controller.Config.CycloneServerAddrEIP
 		}
 
