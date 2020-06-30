@@ -83,7 +83,7 @@ func SendStream(server string, reader io.Reader, close <-chan struct{}) error {
 // Send sends stream from reader by websocket
 func Send(ws *websocket.Conn, reader io.Reader, close <-chan struct{}) error {
 	buf := bufio.NewReader(reader)
-	err := Write(ws, buf, close)
+	err := Write(ws, buf, close, 1)
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
@@ -98,7 +98,7 @@ type ReadBytes interface {
 }
 
 // Write writes message from reader to websocket
-func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}) error {
+func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}, stopDelaySeconds time.Duration) error {
 	go func() {
 		// Handle ping message send by peer, since the ping Handler function will be
 		// called from the NextReader, ReadMessage and message reader Read methods.
@@ -179,6 +179,8 @@ func Write(ws *websocket.Conn, reader ReadBytes, stop <-chan struct{}) error {
 			}
 		case <-stop:
 			log.Info("receive stop signal")
+			// Sleep "stopDelaySeconds" to wait sending things
+			time.Sleep(time.Duration(stopDelaySeconds * time.Second))
 			if err := ws.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 				log.Warning("set write deadline error:", err)
 			}
