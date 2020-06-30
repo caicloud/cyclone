@@ -20,7 +20,12 @@ func GetExecutionClusterClient(wfr *v1alpha1.WorkflowRun) kubernetes.Interface {
 
 // IsMaster judge weather this wkf in master cluster or not
 func IsMaster(wfr *v1alpha1.WorkflowRun) bool {
-	name := wfr.Spec.ExecutionContext.Cluster
 
-	return name == "" || name == common.ControlClusterName
+	if wfr.Spec.ExecutionContext != nil {
+		name := wfr.Spec.ExecutionContext.Cluster
+
+		return name == "" || name == common.ControlClusterName
+	}
+
+	return false
 }
