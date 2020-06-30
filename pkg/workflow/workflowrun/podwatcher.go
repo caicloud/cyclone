@@ -53,7 +53,7 @@ func (p *podEventWatcher) Work(stage, namespace, podName string) {
 
 func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-chan struct{}) {
 	w, err := p.clusterClient.CoreV1().Events(namespace).Watch(metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("involvedObject.kind=Pod,involvedObject.name=%s", podName),
+		FieldSelector: fmt.Sprintf("involvedObject.kind=Pod,involvedObject.name=%s,type!=%s", podName, corev1.EventTypeNormal),
 	})
 	if err != nil {
 		log.WithField("namespace", namespace).
@@ -65,15 +65,16 @@ func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-ch
 
 	for {
 		select {
-		case e := <-w.ResultChan():
-			event, ok := e.Object.(*corev1.Event)
+		case e, ok := <-w.ResultChan():
 			if !ok {
-				log.WithField("event type", e.Type).WithField("event object", e.Object).Warn("Not an event")
-				continue
+				log.WithField("namespace", namespace).WithField("pod name", podName).Error("Watch event result chan error")
+				return
 			}
 
-			// Skip Normal event
-			if event.Type != corev1.EventTypeWarning {
+			event, ook := e.Object.(*corev1.Event)
+			if !ook {
+				log.WithField("namespace", namespace).WithField("pod name", podName).WithField("event type", e.Type).
+					WithField("event object", e.Object).Debug("Not an event")
 				continue
 			}
 
@@ -87,6 +88,7 @@ func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-ch
 
 			p.update(stage, false)
 		case <-c:
+			log.WithField("namespace", namespace).WithField("pod name", podName).Debug("No need to watch the pod event anymore")
 			p.update(stage, true)
 			return
 		}
@@ -111,19 +113,27 @@ func (p *podEventWatcher) watchPod(namespace, podName string, c chan<- struct{})
 	defer w.Stop()
 
 	for {
-		for e := range w.ResultChan() {
-			// Pod deleted, stop watching.
-			if e.Type == k8swatch.Deleted {
-				return
-			}
+		e, ok := <-w.ResultChan()
+		if !ok {
+			log.WithField("namespace", namespace).WithField("pod name", podName).Error("Watch pod result chan error")
+			return
+		}
 
-			pod, ok := e.Object.(*corev1.Pod)
-			if !ok {
-				log.WithField("event type", e.Type).WithField("event object", e.Object).Warn("Not a pod")
-			}
-			if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
-				return
-			}
+		// Pod deleted, stop watching.
+		if e.Type == k8swatch.Deleted {
+			log.WithField("namespace", namespace).WithField("pod name", podName).Debug("Pod has been deleted")
+			return
+		}
+
+		pod, ook := e.Object.(*corev1.Pod)
+		if !ook {
+			log.WithField("namespace", namespace).WithField("pod name", podName).WithField("event type", e.Type).
+				WithField("event object", e.Object).Debug("Not a pod")
+			continue
+		}
+		if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodUnknown {
+			log.WithField("namespace", namespace).WithField("pod name", podName).WithField("pod phase", pod.Status.Phase).Debug("Pod completed")
+			return
 		}
 	}
 }

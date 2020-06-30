@@ -113,28 +113,6 @@ func (suite *PodWatcherSuite) SetupTest() {
 				Type: watch.Added,
 				Object: &corev1.Event{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod-e-1",
-						Namespace: workloadNs,
-					},
-					InvolvedObject: corev1.ObjectReference{
-						Kind:      "pods",
-						Namespace: workloadNs,
-						Name:      podName,
-					},
-					Type:          "Normal",
-					Reason:        "Test",
-					Message:       "OK",
-					LastTimestamp: timeBefore,
-					Count:         1,
-				},
-			}
-
-			cc <- e
-			time.Sleep(10 * time.Millisecond)
-			e = watch.Event{
-				Type: watch.Added,
-				Object: &corev1.Event{
-					ObjectMeta: metav1.ObjectMeta{
 						Name:      "pod-e-2",
 						Namespace: workloadNs,
 					},
