@@ -39,9 +39,9 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 	}
 
 	watcherConfig := config.Config.StorageUsageWatcher
-	reportUrl := watcherConfig.ReportURL
+	reportURL := watcherConfig.ReportURL
 	if !isMaster {
-		reportUrl = watcherConfig.ReportURLEIP
+		reportURL = watcherConfig.ReportURLEIP
 	}
 	_, err := client.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -70,7 +70,7 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 							Env: []corev1.EnvVar{
 								{
 									Name:  ReportURLEnvName,
-									Value: reportUrl,
+									Value: reportURL,
 								},
 								{
 									Name:  HeartbeatIntervalEnvName,
