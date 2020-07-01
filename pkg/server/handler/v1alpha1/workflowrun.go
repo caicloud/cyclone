@@ -425,7 +425,7 @@ func getContainerLogStream(tenant, project, workflow, workflowrun, stage string,
 
 	go watchStageTermination(common.TenantNamespace(tenant), workflowrun, stage, cancel)
 
-	err = websocketutil.Write(ws, folderReader, ctx.Done())
+	err = websocketutil.Write(ws, folderReader, ctx.Done(), 60)
 	if err != nil {
 		log.Error("websocket writer error:", err)
 	}
