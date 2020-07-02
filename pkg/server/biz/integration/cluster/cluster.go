@@ -92,7 +92,8 @@ func Open(client clientset.Interface, in *api.Integration, tenantName string) (e
 		}
 
 		err = pvc.CreatePVC(tenant.Name, tenant.Spec.PersistentVolumeClaim.StorageClass,
-			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, clusterClient, cluster.IsControlCluster)
+			tenant.Spec.PersistentVolumeClaim.Size, cluster.Namespace, clusterClient,
+			common.InControlClusterVPC(cluster.ClusterName))
 		if err != nil {
 			if !errors.IsAlreadyExists(err) {
 				log.Errorf("create pvc for tenant %s error %v", tenantName, err)
@@ -217,7 +218,7 @@ func StartPVCWatcher(in *api.Integration, tenant string) (err error) {
 	err = usage.LaunchPVCUsageWatcher(clusterClient, tenant, v1alpha1.ExecutionContext{
 		Namespace: cluster.Namespace,
 		PVC:       cluster.PVC,
-	}, cluster.IsControlCluster)
+	}, common.InControlClusterVPC(cluster.ClusterName))
 	if err != nil {
 		log.Warningf("Launch PVC usage watcher for %s/%s error: %v", cluster.Namespace, cluster.PVC, err)
 		return err

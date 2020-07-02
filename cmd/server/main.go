@@ -74,6 +74,8 @@ func initialize(opts *Options) {
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
+	// Save this client to common client
+	common.MainKubeClient = client
 
 	// Load configuration from ConfigMap.
 	cm, err := client.CoreV1().ConfigMaps(common.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})
@@ -126,7 +128,7 @@ func main() {
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
 	loggerOption := logger.NewDefaultOption()   // Logger plugin.
 	reqlogOption := reqlog.NewDefaultOption()   // Request log plugin.
-	versionOption := pversion.NewOption(        // Version plugin.
+	versionOption := pversion.NewOption( // Version plugin.
 		"server",
 		version.Version,
 		version.Commit,
