@@ -423,7 +423,7 @@ func (m *Builder) ResolveInputResources() error {
 
 		// judge weather is master cluster , if not , use EIP
 		cycloneServeAddr := controller.Config.CycloneServerAddr
-		if !common.IsMaster(m.wfr) {
+		if m.wfr != nil && m.wfr.Spec.ExecutionContext != nil && !ccommon.InControlClusterVPC(m.wfr.Spec.ExecutionContext.Cluster) {
 			cycloneServeAddr = controller.Config.CycloneServerAddrEIP
 		}
 
@@ -787,7 +787,7 @@ func (m *Builder) AddCoordinator() error {
 	}
 
 	cycloneServeAddr := controller.Config.CycloneServerAddr
-	if !common.IsMaster(m.wfr) {
+	if m.wfr != nil && m.wfr.Spec.ExecutionContext != nil && !ccommon.InControlClusterVPC(m.wfr.Spec.ExecutionContext.Cluster) {
 		cycloneServeAddr = controller.Config.CycloneServerAddrEIP
 	}
 

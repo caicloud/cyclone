@@ -27,7 +27,6 @@ var (
 	AddToScheme   = SchemeBuilder.AddToScheme
 )
 
-
 // GroupResource ...
 func GroupResource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
