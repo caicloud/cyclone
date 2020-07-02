@@ -74,6 +74,8 @@ func initialize(opts *Options) {
 	if err != nil {
 		log.Fatalf("Create k8s client error: %v", err)
 	}
+	// Save this client to common client
+	common.MainKubeClient = client
 
 	// Load configuration from ConfigMap.
 	cm, err := client.CoreV1().ConfigMaps(common.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})

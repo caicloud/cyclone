@@ -31,6 +31,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Create k8s clientset error: ", err)
 	}
+	// Save this client to common
+	common.MainKubeClient = client
 	ctx, cancel := context.WithCancel(context.Background())
 	signals.GracefulShutdown(cancel)
 

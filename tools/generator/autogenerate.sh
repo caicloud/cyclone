@@ -6,7 +6,7 @@ ORIGIN=$(pwd)
 cd $(dirname ${BASH_SOURCE[0]})
 
 # Add your packages here
-PKGS=(cyclone/v1alpha1)
+PKGS="cyclone/v1alpha1 resource/v1beta1"
 
 echo $PKGS
 

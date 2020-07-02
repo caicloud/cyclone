@@ -33,12 +33,17 @@ const (
 const PVCWatcherName = "pvc-watchdog"
 
 // LaunchPVCUsageWatcher launches a pod in a given namespace to report PVC usage regularly.
-func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v1alpha1.ExecutionContext) error {
+func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v1alpha1.ExecutionContext, inCtrVPC bool) error {
 	if len(context.PVC) == 0 {
 		return fmt.Errorf("no pvc in execution namespace %s", context.Namespace)
 	}
 
 	watcherConfig := config.Config.StorageUsageWatcher
+	reportURL := watcherConfig.ReportURL
+	// if not in control VPC, the pod pod-watchdog should use EIP to report pvc usage
+	if !inCtrVPC {
+		reportURL = watcherConfig.ReportURLEIP
+	}
 	_, err := client.ExtensionsV1beta1().Deployments(context.Namespace).Create(&v1beta1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      PVCWatcherName,
@@ -66,7 +71,7 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 							Env: []corev1.EnvVar{
 								{
 									Name:  ReportURLEnvName,
-									Value: watcherConfig.ReportURL,
+									Value: reportURL,
 								},
 								{
 									Name:  HeartbeatIntervalEnvName,

@@ -47,6 +47,9 @@ type WorkflowControllerConfig struct {
 	ExecutionContext ExecutionContext `json:"execution_context"`
 	// CycloneServerAddr is address of the Cyclone Server
 	CycloneServerAddr string `json:"cyclone_server_addr"`
+	// CycloneServerAddrEIP is the address of the Cyclone Server . when not in master cluster,
+	// and the net solution is EIP , use this Addr  rather than CycloneServerAddr
+	CycloneServerAddrEIP string `json:"cyclone_server_addr_eip"`
 	// NotificationURL represents the config to send notifications after workflowruns finish.
 	// It can be configured as Cyclone server notification URL to take advantage of its scenarized functions.
 	NotificationURL string `json:"notification_url"`

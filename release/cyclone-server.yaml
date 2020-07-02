@@ -95,6 +95,7 @@ _config:
             "storage_usage_watcher": {
               "image": "[[ registry_release ]]/cyclone-watcher:[[ imageTagFromGitTag ]]",
               "report_url": "http://[[ kube_apiserver_endpoint_ip ]]:6008/apis/v1alpha1/storage/usages",
+              "report_url_eip": "http://[[ kube_apiserver_endpoint_eip ]]:6008/apis/v1alpha1/storage/usages",
               "interval_seconds": "180",
               "resource_requirements": {
                 "limits.cpu": "100m",
