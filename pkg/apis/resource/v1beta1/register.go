@@ -7,12 +7,14 @@ import (
 )
 
 const (
+	// DefaultCrdResourceGroup is the group name use in this package
 	DefaultCrdResourceGroup = "resource.caicloud.io"
-	DefaultApiVersion       = "v1beta1"
+	// DefaultAPIVersion is default api version of this package
+	DefaultAPIVersion = "v1beta1"
 )
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: DefaultCrdResourceGroup, Version: DefaultApiVersion}
+var SchemeGroupVersion = schema.GroupVersion{Group: DefaultCrdResourceGroup, Version: DefaultAPIVersion}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func Resource(resource string) schema.GroupResource {
@@ -20,11 +22,12 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
-	// We only register manually written functions here. The registration of the
-	// generated functions takes place in the generated files. The separation
-	// makes the code compile even when the generated files are missing.
+	// SchemeBuilder is builder of scheme ,We only register manually written functions here.
+	// The registration of the generated functions takes place in the generated files. The
+	// separation makes the code compile even when the generated files are missing.
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme ...
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
 // GroupResource ...
