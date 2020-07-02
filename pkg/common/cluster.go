@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 var MainKubeClient clientset.Interface
@@ -20,7 +21,15 @@ func InControlClusterVPC(name string) bool {
 		fmt.Println("Get cluster err is:", err)
 		return false
 	}
-	return cluster.Spec.MastersEIP == cluster.Spec.MastersVIP
+	// when EIP = VIP , there is a special case , when cluster running on physical machine and not in
+	// cluster VPC, this cluster will use same eip and vip. so judge weather this ip is 10.XXX.XXX.XXX
+	// , if so , this is vip
+	if cluster.Spec.MastersEIP == cluster.Spec.MastersVIP {
+		if strings.HasPrefix(cluster.Spec.MastersEIP, "10.") {
+			return false
+		}
+		return true
+	}
 
 	return false
 }

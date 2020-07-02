@@ -17,5 +17,3 @@ func GetExecutionClusterClient(wfr *v1alpha1.WorkflowRun) kubernetes.Interface {
 
 	return store.GetClusterClient(cluster)
 }
-
-
