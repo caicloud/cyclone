@@ -106,7 +106,7 @@ func (p *GCProcessor) process() {
 			continue
 		}
 
-		operator, err := NewOperator(clusterClient, p.client, wfr, i.namespace)
+		operator, err := NewOperator(clusterClient, p.client, wfr.Name, i.namespace)
 		if err != nil {
 			log.WithField("wfr", i.name).Warn("Create operator for gc error: ", err)
 			continue
