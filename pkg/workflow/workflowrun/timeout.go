@@ -131,11 +131,9 @@ func (m *TimeoutProcessor) process() {
 		}
 
 		if wfr.Status.Overall.Phase != v1alpha1.StatusFailed && wfr.Status.Overall.Phase != v1alpha1.StatusSucceeded {
-			wfr.Status.Overall = v1alpha1.Status{
-				Phase:              v1alpha1.StatusFailed,
-				Reason:             "Timeout",
-				LastTransitionTime: metav1.Time{Time: time.Now()},
-			}
+			wfr.Status.Overall.Phase = v1alpha1.StatusFailed
+			wfr.Status.Overall.Reason = "Timeout"
+			wfr.Status.Overall.LastTransitionTime = metav1.Time{Time: time.Now()}
 
 			operator := operator{
 				clusterClient: clusterClient,
