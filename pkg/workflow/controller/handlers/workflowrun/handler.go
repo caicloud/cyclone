@@ -115,6 +115,7 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	err := h.TimeoutProcessor.AddIfNotExist(originWfr)
 	if err != nil {
 		log.WithField("wfr", originWfr.Name).Warn("add wfr to timeout processor failed: ", err)
+		return err
 	}
 
 	// If the WorkflowRun is waiting for external events, skip it.

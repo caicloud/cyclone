@@ -67,6 +67,12 @@ func (p *Operator) OnDelete() error {
 		return nil
 	}
 
+	// WorkflowRun is under deleting, no need to update status.
+	if !origin.DeletionTimestamp.IsZero() {
+		log.WithField("wfr", p.workflowRun).Debug("WorkflowRun is under deleting, no need to update status")
+		return nil
+	}
+
 	wfr := origin.DeepCopy()
 	operator, err := workflowrun.NewOperator(p.clusterClient, p.client, wfr, origin.Namespace)
 	if err != nil {

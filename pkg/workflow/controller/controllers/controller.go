@@ -51,7 +51,7 @@ type Event struct {
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer c.queue.ShutDown()
 
-	log.WithField("name", c.name).Info("Start controller.")
+	log.WithField("name", c.name).WithField("threadiness", threadiness).Info("Start controller.")
 
 	go c.informer.Run(stopCh)
 
@@ -108,7 +108,7 @@ func (c *Controller) doWork(key string) error {
 	}
 
 	if obj == nil || !exists {
-		log.WithField("obj", obj).WithField("exist", exists).Warning("Object is nil or not exist")
+		log.WithField("obj", obj).WithField("exist", exists).Debug("Object is nil or not exist")
 		return nil
 	}
 
