@@ -14,6 +14,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
@@ -104,9 +105,7 @@ func (p *Operator) OnUpdated() error {
 	}
 
 	// If the WorkflowRun has already been in terminated state, skip it.
-	if origin.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-		origin.Status.Overall.Phase == v1alpha1.StatusFailed ||
-		origin.Status.Overall.Phase == v1alpha1.StatusCancelled {
+	if util.IsWorkflowRunTerminated(origin) {
 		return nil
 	}
 

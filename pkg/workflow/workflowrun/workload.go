@@ -12,6 +12,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util"
 	"github.com/caicloud/cyclone/pkg/util/retry"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
@@ -153,9 +154,7 @@ func (p *WorkloadProcessor) processDelegation() error {
 	}
 	// The task maybe has been processed by the delegation task and status not needed to be set to Waiting
 	if stg, ok := latestWfr.Status.Stages[p.stg.Name]; ok {
-		if stg.Status.Phase == v1alpha1.StatusSucceeded ||
-			stg.Status.Phase == v1alpha1.StatusFailed ||
-			stg.Status.Phase == v1alpha1.StatusCancelled {
+		if util.IsPhaseTerminated(stg.Status.Phase) {
 			return nil
 		}
 	}
