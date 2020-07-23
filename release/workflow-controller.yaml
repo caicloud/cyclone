@@ -67,7 +67,7 @@ _config:
               "dind": "[[ registry_release ]]/docker:18.03.1-ce-dind-certs.2"
             },
             "logging": {
-              "level": "debug"
+              "level": "info"
             },
             "gc": {
               "enabled": true,

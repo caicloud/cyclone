@@ -23,7 +23,7 @@ data:
         "dind": "{{ .Values.imageRegistry.registry }}/{{ .Values.imageRegistry.libraryProject }}/{{ .Values.engine.images.dind }}"
       },
       "logging": {
-        "level": "debug"
+        "level": "info"
       },
       "gc": {
         "enabled": {{ .Values.engine.gc.enabled }},
