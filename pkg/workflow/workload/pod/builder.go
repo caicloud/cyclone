@@ -869,6 +869,36 @@ func (m *Builder) InjectEnvs() error {
 	return nil
 }
 
+// InjectGlobalVariablesAsEnvs injects global variables as environment variables
+// to containers if it not exist.
+func (m *Builder) InjectGlobalVariablesAsEnvs() {
+	envs := make([]corev1.EnvVar, 0)
+	for _, v := range m.wfr.Spec.GlobalVariables {
+		envs = append(envs, corev1.EnvVar{
+			Name:  v.Name,
+			Value: v.Value,
+		})
+	}
+	var containers []corev1.Container
+	for _, c := range m.pod.Spec.Containers {
+		existEvn := make(map[string]struct{})
+		for _, e := range c.Env {
+			existEvn[e.Name] = struct{}{}
+		}
+
+		appendEnv := make([]corev1.EnvVar, 0)
+		for _, v := range envs {
+			if _, ok := existEvn[v.Name]; !ok {
+				appendEnv = append(appendEnv, v)
+			}
+		}
+
+		c.Env = append(c.Env, appendEnv...)
+		containers = append(containers, c)
+	}
+	m.pod.Spec.Containers = containers
+}
+
 // divideResourceRequirements divides resources requirements by n
 func divideResourceRequirements(resources corev1.ResourceRequirements, n int) (*corev1.ResourceRequirements, error) {
 	if n <= 0 {
@@ -1090,6 +1120,8 @@ func (m *Builder) Build() (*corev1.Pod, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	m.InjectGlobalVariablesAsEnvs()
 
 	err = m.ApplyResourceRequirements()
 	if err != nil {
