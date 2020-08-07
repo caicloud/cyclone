@@ -12,6 +12,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util"
 	"github.com/caicloud/cyclone/pkg/util/retry"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
@@ -144,6 +145,20 @@ func (p *WorkloadProcessor) processDelegation() error {
 	}
 
 	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "DelegationSucceed", "Delegate stage %s to %s succeeded", p.stg.Name, p.stg.Spec.Delegation.URL)
+
+	// If the task has already been processed by the above RESTful API task, we should not update the status of the task to Waiting
+	latestWfr, err := p.client.CycloneV1alpha1().WorkflowRuns(p.wfr.Namespace).Get(p.wfr.Name, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("wfr", p.wfr.Name).Error("Get latest wfr failed")
+		return err
+	}
+	// The task maybe has been processed by the delegation task and status not needed to be set to Waiting
+	if stg, ok := latestWfr.Status.Stages[p.stg.Name]; ok {
+		if util.IsPhaseTerminated(stg.Status.Phase) {
+			return nil
+		}
+	}
+
 	p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 		Phase:              v1alpha1.StatusWaiting,
 		LastTransitionTime: metav1.Time{Time: time.Now()},

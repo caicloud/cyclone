@@ -16,6 +16,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
@@ -99,7 +100,7 @@ func (h *Handler) Reconcile(obj interface{}) error {
 
 	// If the WorkflowRun has already been terminated(Completed, Failed, Cancelled), send notifications if necessary,
 	// otherwise directly skip it.
-	if workflowrun.IsWorkflowRunTerminated(originWfr) {
+	if util.IsWorkflowRunTerminated(originWfr) {
 		// If the WorkflowRun already terminated, mark it in the ParallelismController.
 		h.ParallelismController.MarkFinished(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name)
 

@@ -30,6 +30,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1/sorter"
 	"github.com/caicloud/cyclone/pkg/server/types"
+	"github.com/caicloud/cyclone/pkg/util"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 	contextutil "github.com/caicloud/cyclone/pkg/util/context"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
@@ -279,9 +280,7 @@ func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant
 	}
 
 	// If wfr already in terminated state, skip it
-	if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-		wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
-		wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+	if util.IsWorkflowRunTerminated(wfr) {
 		return wfr, nil
 	}
 
@@ -513,17 +512,13 @@ func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallb
 			return
 		}
 
-		if wfr.Status.Overall.Phase == v1alpha1.StatusSucceeded ||
-			wfr.Status.Overall.Phase == v1alpha1.StatusFailed ||
-			wfr.Status.Overall.Phase == v1alpha1.StatusCancelled {
+		if util.IsWorkflowRunTerminated(wfr) {
 			onTerminatedCallback()
 			return
 		}
 
 		for stage, status := range wfr.Status.Stages {
-			if stage == stgName && (status.Status.Phase == v1alpha1.StatusSucceeded ||
-				status.Status.Phase == v1alpha1.StatusFailed ||
-				status.Status.Phase == v1alpha1.StatusCancelled) {
+			if stage == stgName && util.IsPhaseTerminated(status.Status.Phase) {
 				onTerminatedCallback()
 				return
 			}
