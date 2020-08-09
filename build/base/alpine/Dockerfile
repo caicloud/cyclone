@@ -1,6 +1,7 @@
-FROM alpine:3.8
+FROM alpine:3.12
 LABEL maintainer="zhujian@caicloud.io"
 
+# git version: 2.26.2
 RUN apk update && \
     apk add --no-cache ca-certificates bash coreutils git subversion curl jq
 
