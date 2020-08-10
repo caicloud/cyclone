@@ -62,7 +62,7 @@ else
 {
   "auths": {
     "${IMAGE%/*}": {
-        "auth": "$(echo -n $USER:${PASSWORD:-} | base64)"
+        "auth": "$(echo -n $USER:${PASSWORD:-} | base64 -w 0)"
     }
   }
 }
