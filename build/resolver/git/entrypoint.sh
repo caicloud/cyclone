@@ -51,11 +51,11 @@ fi
 COMMAND=$1
 
 # Check whether environment variables are set.
-if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
-if [ -z ${SCM_URL} ]; then echo "SCM_URL is unset"; exit 1; fi
-if [ -z ${SCM_REVISION} ]; then echo "SCM_REVISION is unset"; exit 1; fi
-if [ -z ${SCM_AUTH} ]; then echo "WARN: SCM_AUTH is unset"; fi
-if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z ${SCM_USER} ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
+if [ -z "${WORKDIR}" ]; then echo "WORKDIR is unset"; exit 1; fi
+if [ -z "${SCM_URL}" ]; then echo "SCM_URL is unset"; exit 1; fi
+if [ -z "${SCM_REVISION}" ]; then echo "SCM_REVISION is unset"; exit 1; fi
+if [ -z "${SCM_AUTH}" ]; then echo "WARN: SCM_AUTH is unset"; fi
+if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z "${SCM_USER}" ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
 
 # Git clone with "--depth" option will fail when the server is Bitbucket which version less than 
 # v0.6.4(This version is not guaranteed to be accurate, I tested v0.6.4 support "--depth", but v0.5.4.9 not support)
@@ -65,7 +65,7 @@ if [ "${SCM_TYPE}" != "Bitbucket" ]; then
 fi
 
 # If SCM_REPO is provided, embed it to SCM_URL
-if [ ! -z ${SCM_REPO} ]; then
+if [ ! -z "${SCM_REPO}" ]; then
     SCM_URL=${SCM_URL%/}/${SCM_REPO}.git
 fi
 
@@ -176,7 +176,7 @@ parseRevision
 pull() {
     git config --global http.sslVerify false
     git config --global http.postBuffer 500M
-
+    NO_AUTH_SCM_URL=${SCM_URL}
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
     if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
         cd $WORKDIR/data
@@ -223,7 +223,11 @@ pull() {
         fi
     fi
 
-    cd $WORKDIR/data
+    # filter sensitive information, otherwise users executing commands like 'git remote get-url origin'
+    # in their workload pods will get the auth information of the SCM.
+    git remote set-url origin "${NO_AUTH_SCM_URL}"
+
+    cd "${WORKDIR}"/data
     ls -al
 }
 
