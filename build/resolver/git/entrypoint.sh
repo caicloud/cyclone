@@ -57,12 +57,8 @@ if [ -z "${SCM_REVISION}" ]; then echo "SCM_REVISION is unset"; exit 1; fi
 if [ -z "${SCM_AUTH}" ]; then echo "WARN: SCM_AUTH is unset"; fi
 if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z "${SCM_USER}" ]; then echo "WARN: SCM_USER is required when SCM_TYPE is Bitbucket"; fi
 
-# Git clone with "--depth" option will fail when the server is Bitbucket which version less than 
-# v0.6.4(This version is not guaranteed to be accurate, I tested v0.6.4 support "--depth", but v0.5.4.9 not support)
-if [ "${SCM_TYPE}" != "Bitbucket" ]; then
-    GIT_DEPTH_OPTION="--depth=1"
-    GIT_DEPTH_OPTION_DEEPER="--depth=30"
-fi
+GIT_DEPTH_OPTION="--depth=1"
+GIT_DEPTH_OPTION_DEEPER="--depth=30"
 
 # If SCM_REPO is provided, embed it to SCM_URL
 if [ ! -z "${SCM_REPO}" ]; then
@@ -128,6 +124,8 @@ modifyURL() {
 }
 
 wrapPull() {
+    local count
+    local res=0
     # If there is already data, we should just wait for the data to be ready.
     if [ -e $WORKDIR/data ]; then
         echo "Found data, wait it to be ready..."
@@ -144,7 +142,13 @@ wrapPull() {
         failed=$(mkdir $PULLING_LOCK > /dev/null 2>&1 || echo fail)
         if [[ $failed != "fail" ]]; then
             echo "Got the lock, start to pulling..."
-            pull
+            pull || res=$?
+            if [ $res -eq 99 ] && [ "${SCM_TYPE}" == "Bitbucket" ]; then
+                echo "Fail to pull with depth flag, retry without depth flag..."
+                unset GIT_DEPTH_OPTION
+                unset GIT_DEPTH_OPTION_DEEPER
+                pull
+            fi
         else
             echo "Failed to get the lock, wait others to finish pulling..."
             while [ -d $PULLING_LOCK ]
@@ -157,7 +161,7 @@ wrapPull() {
     # Write commit id to output file, which will be collected by Cyclone
     cd $WORKDIR/data
     echo "Collect commit id to result file /__result__ ..."
-    echo "LastCommitID:`git log -n 1 --pretty=format:"%H"`" >> /__result__;
+    echo "LastCommitID:`git log -n 1 --pretty=format:"%H"`" > /__result__;
     cat /__result__;
 }
 
@@ -173,7 +177,25 @@ parseRevision() {
 }
 parseRevision
 
+parseCloneRes() {
+    local clone_log=$1
+    local clone_res=$2
+    cat $clone_log
+    if [ $clone_res -ne 0 ]; then
+        if grep "The requested URL returned error: 500" $clone_log > /dev/null 2>&1; then
+            # use code 99 for git clone --depth fail
+            rm -f $clone_log
+            return 99
+        else
+            exit $clone_res
+        fi
+    fi
+    return 0
+}
+
 pull() {
+    local parse_res
+    local clone_res
     git config --global http.sslVerify false
     git config --global http.postBuffer 500M
     NO_AUTH_SCM_URL=${SCM_URL}
@@ -200,18 +222,26 @@ pull() {
         # encode each part of it and get '<encoded_user>:<encoded_password>'. If SCM_AUTH is in format '<token>',
         # give it a 'oauth2:' prefix to get 'oauth2:<encoded_token>'.
         if [ ! -z ${SCM_AUTH+x} ]; then
-            SCM_URL=$( modifyURL $SCM_URL $SCM_AUTH )
+            SCM_URL_MODIFIED=$( modifyURL $SCM_URL $SCM_AUTH )
         fi
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
+            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
+            parseCloneRes clone_result.log $clone_res; parse_res=$?
+            if [ $parse_res -ne 0 ]; then
+                return $parse_res
+            fi
             cd data
             git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL} data
+            git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
+            parseCloneRes clone_result.log $clone_res; parse_res=$?
+            if [ $parse_res -ne 0 ]; then
+                return $parse_res
+            fi
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
