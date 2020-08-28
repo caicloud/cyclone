@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"strings"
+
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -144,35 +146,40 @@ func Close(in *api.Integration, tenant string) (err error) {
 		return
 	}
 
-	// delete namespace which is created by cyclone
-	if cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-		// if is a user cluster and namespace are created by cyclone, delete the namespace directly
-		if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-			err = clusterClient.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
-					return
-				}
+	// if is a user cluster and namespace are created by cyclone, delete the namespace directly
+	if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
+		err = clusterClient.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
+		if err != nil {
+			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
+				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+				err = nil
+			} else if errors.IsNotFound(err) {
 				log.Warningf("namespace %s not found", cluster.Namespace)
 				err = nil
+			} else {
+				log.Errorf("delete namespace %s error %v", cluster.Namespace, err)
+				return
 			}
-
-			// if namespace is deleted, will exit, no need delete others resources.
-			return
 		}
+
+		// if namespace is deleted, will exit, no need delete others resources.
+		return
 	}
 
 	// delete resource quota
 	quotaName := svrcommon.TenantResourceQuota(tenant)
 	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
+			log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+			err = nil
+		} else if errors.IsNotFound(err) {
+			log.Warningf("resource quota %s not found", quotaName)
+			err = nil
+		} else {
 			log.Errorf("delete resource quota %s error %v", quotaName, err)
 			return
 		}
-		log.Warningf("resource quota %s not found", quotaName)
-		err = nil
 	}
 
 	// Delete the PVC watcher deployment.
@@ -185,12 +192,16 @@ func Close(in *api.Integration, tenant string) (err error) {
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
 		err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
-			if !errors.IsNotFound(err) {
+			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
+				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+				err = nil
+			} else if errors.IsNotFound(err) {
+				log.Warningf("pvc %s not found", cluster.PVC)
+				err = nil
+			} else {
 				log.Errorf("delete pvc %s error %v", cluster.PVC, err)
 				return
 			}
-			log.Warningf("pvc %s not found", cluster.PVC)
-			err = nil
 		}
 		return
 	}
