@@ -68,6 +68,21 @@ type CycloneServerConfig struct {
 	// ClientSet holds the common attributes that can be passed to a Kubernetes client on cyclone server handlers
 	// initialization.
 	ClientSet ClientSetConfig `json:"client_set"`
+
+	// Webhook contains configurations for webhook auto trigger.
+	Webhook WebhookConfig `json:"webhook"`
+}
+
+// WebhookConfig describes configuration for webhook auto trigger.
+type WebhookConfig struct {
+	// BitBucket webhook config
+	BitBucket WebhookBitBucketConfig `json:"bitbucket"`
+}
+
+// WebhookBitBucketConfig describes configuration for webhook to trigger bitbucket type workflows.
+type WebhookBitBucketConfig struct {
+	// MatchSpecificTenantForHooks defines whether to match workflows for all tenants or for a specific tenant.
+	MatchSpecificTenantForHooks bool `json:"matchSpecificTenantForHooks"`
 }
 
 // ClientSetConfig defines rate limit config for a Kubernetes client

@@ -21,6 +21,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/gitlab"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
@@ -45,6 +46,11 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	}
 	request := service.HTTPContextFrom(ctx).Request()
 
+	type EventDataWithIntegration struct {
+		*scm.EventData
+		Integration string
+	}
+	var allData = make(map[string][]*EventDataWithIntegration)
 	var data *scm.EventData
 
 	if request.Header.Get(github.EventTypeHeader) != "" {
@@ -60,34 +66,91 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	}
 
 	if request.Header.Get(bitbucket.EventTypeHeader) != "" {
-		in, err := getIntegration(common.TenantNamespace(tenant), integration)
-		if err != nil {
-			return newWebhookResponse(err.Error()), err
+		hookEvent := request.Header.Get(bitbucket.HookEventHeader)
+		tenants := make([]string, 0)
+		var terr error
+		if hookEvent == "true" {
+			serverAddress := strings.Trim(request.Header.Get(bitbucket.ServerAddressHeader), "/")
+			hookData := bitbucket.ParseHookEvent(request)
+
+			// Trigger workflows for all tenants
+			if !config.Config.Webhook.BitBucket.MatchSpecificTenantForHooks {
+				tenants, terr = getAllTenantsName()
+				if terr != nil {
+					log.Info("Get all tenants error: %v", terr)
+					return newWebhookResponse(terr.Error()), nil
+				}
+			} else {
+				tenants = append(tenants, tenant)
+			}
+
+			for _, tenant := range tenants {
+				integrations, err := listSCMIntegration(common.TenantNamespace(tenant))
+				if err != nil {
+					log.Infof("List integrations for tenant %s error: %v", tenant, err)
+					continue
+				}
+
+				tenantData := make([]*EventDataWithIntegration, 0)
+				for _, in := range integrations {
+					if in.Spec.SCM == nil {
+						continue
+					}
+					if serverAddress != strings.Trim(in.Spec.SCM.Server, "/") {
+						continue
+					}
+
+					tenantData = append(tenantData, &EventDataWithIntegration{
+						EventData:   hookData,
+						Integration: in.Name,
+					})
+				}
+
+				allData[tenant] = tenantData
+			}
+		} else {
+			in, err := getIntegration(common.TenantNamespace(tenant), integration)
+			if err != nil {
+				return newWebhookResponse(err.Error()), err
+			}
+			data = bitbucket.ParseEvent(in.Spec.SCM, request)
 		}
-		data = bitbucket.ParseEvent(in.Spec.SCM, request)
+
 	}
 
 	if request.Header.Get(svn.EventTypeHeader) != "" {
 		data = svn.ParseEvent(request)
 	}
 
-	if data == nil {
-		return newWebhookResponse(ignoredMsg), nil
-	}
-
-	wfts, err := hook.ListSCMWfts(tenant, data.Repo, integration)
-	if err != nil {
-		return newWebhookResponse(err.Error()), err
+	if data != nil {
+		allData[tenant] = []*EventDataWithIntegration{
+			{
+				EventData:   data,
+				Integration: integration,
+			},
+		}
 	}
 
 	triggeredWfts := make([]string, 0)
-	for _, wft := range wfts.Items {
-		log.Infof("Trigger workflow trigger %s", wft.Name)
-		triggeredWfts = append(triggeredWfts, wft.Name)
-		if err = createWorkflowRun(tenant, wft, data); err != nil {
-			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
+	for tenant, tenantData := range allData {
+		for _, datum := range tenantData {
+			wfts, err := hook.ListSCMWfts(tenant, datum.Repo, datum.Integration)
+			if err != nil {
+				log.Infof("List workflow triggers for tenant %s integration repo %s error: %v", tenant, datum.Integration, datum.Repo)
+				continue
+			}
+
+			for _, wft := range wfts.Items {
+				log.Infof("Trigger tenant %s workflow trigger %s", tenant, wft.Name)
+				triggeredWfts = append(triggeredWfts, fmt.Sprintf("%s_%s", tenant, wft.Name))
+				if err = createWorkflowRun(tenant, wft, datum.EventData); err != nil {
+					log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
+				}
+			}
 		}
 	}
+
+	log.Infof("triggeredWfts: %v", triggeredWfts)
 	if len(triggeredWfts) > 0 {
 		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, triggeredWfts)), nil
 	}

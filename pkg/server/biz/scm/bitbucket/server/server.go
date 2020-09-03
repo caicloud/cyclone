@@ -26,6 +26,10 @@ const SupportAccessTokenVersion = "5.5.0"
 // that support event key named pr:modified.
 const SupportPrModifiedEvent = "5.10.0"
 
+// SupportWebhookLowestVersion represents the lowest version that support webhooks.
+// Detail: https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-4-release-notes-935388966.html
+const SupportWebhookLowestVersion = "5.4.0"
+
 // Property represents BitBucket Server property.
 type Property struct {
 	Version string `json:"version"`
@@ -314,6 +318,11 @@ func (b *BitbucketServer) GetPullRequestSHA(repoURL string, number int) (string,
 
 // CreateWebhook creates webhook for specified repo.
 func (b *BitbucketServer) CreateWebhook(repo string, webhook *scm.Webhook) error {
+	if sw, err := SupportWebhook(b.v1Client.client, b.v1Client.baseURL); err != nil || !sw {
+		log.Info("Bitbucket %s version is smaller than 5.4, skip creating webhook")
+		return nil
+	}
+
 	if webhook == nil || len(webhook.URL) == 0 || len(webhook.Events) == 0 {
 		return fmt.Errorf("The webhook %v is not correct", webhook)
 	}
@@ -379,6 +388,11 @@ func (b *BitbucketServer) CreateWebhook(repo string, webhook *scm.Webhook) error
 
 // DeleteWebhook deletes webhook from specified repo.
 func (b *BitbucketServer) DeleteWebhook(repo string, webhookURL string) error {
+	if sw, err := SupportWebhook(b.v1Client.client, b.v1Client.baseURL); err != nil || !sw {
+		log.Info("Bitbucket %s version is smaller than 5.4, skip deleting webhook")
+		return nil
+	}
+
 	project, name := scm.ParseRepo(repo)
 
 	webhook, err := b.GetWebhook(repo, webhookURL)
@@ -487,6 +501,21 @@ func IsHigherVersion(version string, refVersion string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+// SupportWebhook checks whether the bitbucket server supporting webhook
+func SupportWebhook(client *http.Client, baseURL *url.URL) (bool, error) {
+	version, err := GetBitbucketVersion(client, baseURL)
+	if err != nil {
+		return false, err
+	}
+
+	supportWebhook, err := IsHigherVersion(version, SupportWebhookLowestVersion)
+	if err != nil {
+		return false, err
+	}
+
+	return supportWebhook, nil
 }
 
 func convertBitBucketError(err error, resp *http.Response) error {

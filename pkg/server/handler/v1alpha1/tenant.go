@@ -294,3 +294,22 @@ func createTenant(t *api.Tenant) error {
 
 	return nil
 }
+
+// getAllTenantsName get all tenants name
+func getAllTenantsName() ([]string, error) {
+	tenants := make([]string, 0)
+	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
+		LabelSelector: meta.LabelTenantName,
+	})
+	if err != nil {
+		return tenants, cerr.ConvertK8sError(err)
+	}
+
+	for _, namespace := range namespaces.Items {
+		if namespace.Labels == nil {
+			continue
+		}
+		tenants = append(tenants, namespace.Labels[meta.LabelTenantName])
+	}
+	return tenants, nil
+}
