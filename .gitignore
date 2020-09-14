@@ -25,3 +25,4 @@ bin
 node_modules/
 
 .history/*
+.idea/*

@@ -310,3 +310,18 @@ const (
 	// open the related cluster integration firstly.
 	ExecutionContextClosed ExecutionContextPhase = "Closed"
 )
+
+type Vulnerability struct {
+	VulnerabilityID  string `json:"vulnerabilityId" bson:"vulnerability_id"`
+	PkgName          string `json:"pkgName" bson:"pkg_name"`
+	InstalledVersion string `json:"installedVersion" bson:"installed_version"`
+	FixedVersion     string `json:"fixedVersion" bson:"fixed_version"`
+	Description      string `json:"description" bson:"description"`
+	Severity         string `json:"severity" bson:"severity"`
+	References       string `json:"references" bson:"references"`
+}
+
+type ImageScanRecord struct {
+	WorkflowRun     string          `json:"workflow_run" bson:"workflow_run"`
+	Vulnerabilities []Vulnerability `json:"vulnerabilities" bson:"vulnerabilities"`
+}

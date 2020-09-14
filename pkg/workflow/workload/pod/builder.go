@@ -859,6 +859,10 @@ func (m *Builder) InjectEnvs() error {
 			Name:  common.EnvStageName,
 			Value: m.stage,
 		},
+		{
+			Name:  common.EnvCycloneServerAddr,
+			Value: controller.Config.CycloneServerAddr,
+		},
 	}
 	var containers []corev1.Container
 	for _, c := range m.pod.Spec.Containers {
