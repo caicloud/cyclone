@@ -49,6 +49,8 @@ func NewAccelerator(tenant, project string, wfr *api.WorkflowRun) *Accelerator {
 // - '/root/.m2'  maven dependency path
 // - '/root/.gradle'  gradle dependency path
 // - '/root/.npm'  npm dependency path
+// - '/root/.ivy2' sbt default dependency cache path
+// - '/root/.cache' coursier is a dependency resolver, this is coursier default dependency path
 func (a *Accelerator) Accelerate() {
 	if !a.allowed() {
 		return
@@ -70,6 +72,16 @@ func (a *Accelerator) Accelerate() {
 				Type:      v1alpha1.PresetVolumeTypePVC,
 				Path:      fmt.Sprintf("%s/%s/npm", common.CachePrefixPath, a.project),
 				MountPath: "/root/.npm",
+			},
+			{
+				Type:      v1alpha1.PresetVolumeTypePVC,
+				Path:      fmt.Sprintf("%s/%s/sbt/cache", common.CachePrefixPath, a.project),
+				MountPath: "/root/.cache",
+			},
+			{
+				Type:      v1alpha1.PresetVolumeTypePVC,
+				Path:      fmt.Sprintf("%s/%s/sbt/ivy2", common.CachePrefixPath, a.project),
+				MountPath: "/root/.ivy2",
 			},
 		}...)
 	}
