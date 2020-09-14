@@ -47,6 +47,16 @@ func TestAccelerate(t *testing.T) {
 							Path:      fmt.Sprintf("%s/%s/npm", common.CachePrefixPath, project),
 							MountPath: "/root/.npm",
 						},
+						{
+							Type:      v1alpha1.PresetVolumeTypePVC,
+							Path:      fmt.Sprintf("%s/%s/sbt/cache", common.CachePrefixPath, project),
+							MountPath: "/root/.cache",
+						},
+						{
+							Type:      v1alpha1.PresetVolumeTypePVC,
+							Path:      fmt.Sprintf("%s/%s/sbt/ivy2", common.CachePrefixPath, project),
+							MountPath: "/root/.ivy2",
+						},
 					},
 				},
 			},
