@@ -46,7 +46,7 @@ BASE_REGISTRY ?= docker.io/library
 CYCLONE_BASE_REGISTRY ?= docker.io/caicloud
 
 # Version of the cyclone base images.
-CYCLONE_BASE_VERSION ?= v1.0.0
+CYCLONE_BASE_VERSION ?= v1.1.0
 
 # Example scene
 SCENE ?= cicd
