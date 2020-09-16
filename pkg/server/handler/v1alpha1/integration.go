@@ -531,3 +531,23 @@ func validateIntegration(in *api.Integration) (bool, error) {
 
 	return true, nil
 }
+
+func listSCMIntegration(namespace string) ([]*api.Integration, error) {
+	integrations := make([]*api.Integration, 0)
+	secrets, err := handler.K8sClient.CoreV1().Secrets(namespace).List(meta_v1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", meta.LabelIntegrationType, api.SCM),
+	})
+	if err != nil {
+		return integrations, cerr.ConvertK8sError(err)
+	}
+
+	for _, secret := range secrets.Items {
+		integration, err := integration.FromSecret(&secret)
+		if err != nil {
+			log.Infof("Convert secret %s to integration error: %v", secret.Name, err)
+			continue
+		}
+		integrations = append(integrations, integration)
+	}
+	return integrations, nil
+}

@@ -25,6 +25,12 @@ const (
 
 	// EventTypeHeader represents the header key for event type of Bitbucket.
 	EventTypeHeader = "X-Event-Key"
+
+	// HookEventHeader represent the header key to decide whether it is a bitbucket hook event
+	// value could be true or false
+	HookEventHeader = "X-BitBucket-Hook-Event"
+	// ServerAddressHeader represent the header key of bitbucket server address
+	ServerAddressHeader = "X-Server-Address"
 )
 
 func init() {
@@ -133,4 +139,9 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 		log.Errorln(err)
 		return nil
 	}
+}
+
+// ParseHookEvent parses data from Bitbucket events.
+func ParseHookEvent(request *http.Request) *scm.EventData {
+	return server.ParseEvent(request)
 }

@@ -66,13 +66,14 @@ func ParseEvent(request *http.Request) *scm.EventData {
 	}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		log.Errorln(err)
+		log.Errorf("read request body error: %v", err)
 		return nil
 	}
+	log.Errorf("Test read body: %s", string(body))
 	var payload EventPayload
 	err = json.Unmarshal(body, &payload)
 	if err != nil {
-		log.Errorln(err)
+		log.Errorf("Unmarshal body error: %v", err)
 		return nil
 	}
 	switch eventKey {
