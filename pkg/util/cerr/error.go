@@ -116,7 +116,7 @@ var (
 
 	// ErrorExternalAuthorizationFailed defines error that authorization failed for external system, Unauthorized 401.
 	ErrorExternalAuthorizationFailed = nerror.InternalServerError.Build(ReasonAuthorizationFailed,
-		"authentication failed: ${error}")
+		"authorization failed: ${error}")
 
 	// ErrorExternalAuthenticationFailed defines error that authentication failed for external system, Forbidden 403.
 	ErrorExternalAuthenticationFailed = nerror.InternalServerError.Build(ReasonAuthenticationFailed,
