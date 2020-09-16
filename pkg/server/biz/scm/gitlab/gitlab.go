@@ -40,9 +40,6 @@ import (
 const (
 	apiPathForGitlabVersion = "%s/api/v4/version"
 
-	// gitLabServer represents the server address for public Gitlab.
-	gitLabServer = "https://gitlab.com"
-
 	v3APIVersion = "v3"
 
 	v4APIVersion = "v4"
@@ -258,10 +255,9 @@ func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 		return "", fmt.Errorf("fail to new request body for token as %s", err.Error())
 	}
 
-	// If use the public Gitlab, must use the HTTPS protocol.
-	if strings.Contains(scm.Server, "gitlab.com") && strings.HasPrefix(scm.Server, "http://") {
-		log.Infof("Convert SCM server from %s to %s to use HTTPS protocol for public Gitlab", scm.Server, gitLabServer)
-		scm.Server = gitLabServer
+	// If use the public Gitlab with HTTP protocol, record it.
+	if strings.Trim(scm.Server, "/") == "http://gitlab.com" {
+		log.Infof("SCM server %s uses HTTP protocol for public Gitlab", scm.Server)
 	}
 
 	tokenURL := fmt.Sprintf("%s%s", scm.Server, "/oauth/token")
