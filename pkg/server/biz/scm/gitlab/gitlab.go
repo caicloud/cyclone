@@ -237,7 +237,7 @@ func detectAPIVersion(scmCfg *v1alpha1.SCMSource) (string, error) {
 
 func getOauthToken(scm *v1alpha1.SCMSource) (string, error) {
 	if len(scm.User) == 0 || len(scm.Password) == 0 {
-		return "", fmt.Errorf("GitHub username or password is missing")
+		return "", fmt.Errorf("GitLab username or password is missing")
 	}
 
 	bodyData := struct {
