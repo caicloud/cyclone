@@ -130,15 +130,20 @@ func GenerateSCMToken(config *v1alpha1.SCMSource) error {
 
 	if generatedToken != "" && config.AuthType == v1alpha1.AuthTypePassword {
 		config.Token = generatedToken
-	} else {
-		err := provider.CheckToken()
-		if err != nil {
-			return err
-		}
 	}
 
 	// Cleanup the password for security.
 	config.Password = ""
+
+	// recreate the scm provider and check auth
+	provider, err = GetSCMProvider(config)
+	if err != nil {
+		return err
+	}
+	err = provider.CheckToken()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
