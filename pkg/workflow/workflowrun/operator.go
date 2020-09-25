@@ -512,6 +512,8 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				Name:      GCPodName(o.wfr.Name),
 				Namespace: executionContext.Namespace,
 				Labels: map[string]string{
+					meta.LabelProjectName:     common.ResolveProjectName(*o.wfr),
+					meta.LabelWorkflowName:    common.ResolveWorkflowName(*o.wfr),
 					meta.LabelWorkflowRunName: o.wfr.Name,
 					meta.LabelPodKind:         meta.PodKindGC.String(),
 					meta.LabelPodCreatedBy:    meta.CycloneCreator,
