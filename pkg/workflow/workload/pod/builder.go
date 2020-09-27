@@ -81,6 +81,8 @@ func (m *Builder) Prepare() error {
 		Name:      Name(m.wf.Name, m.stage),
 		Namespace: m.executionContext.Namespace,
 		Labels: map[string]string{
+			meta.LabelProjectName:     common.ResolveProjectName(*m.wfr),
+			meta.LabelWorkflowName:    common.ResolveWorkflowName(*m.wfr),
 			meta.LabelWorkflowRunName: m.wfr.Name,
 			meta.LabelPodCreatedBy:    meta.CycloneCreator,
 			meta.LabelPodKind:         meta.PodKindWorkload.String(),
@@ -841,6 +843,14 @@ func (m *Builder) AddCoordinator() error {
 // stage name, namespace.
 func (m *Builder) InjectEnvs() error {
 	envs := []corev1.EnvVar{
+		{
+			Name:  common.EnvProjectName,
+			Value: common.ResolveProjectName(*m.wfr),
+		},
+		{
+			Name:  common.EnvWorkflowName,
+			Value: common.ResolveWorkflowName(*m.wfr),
+		},
 		{
 			Name:  common.EnvWorkflowrunName,
 			Value: m.wfr.Name,
