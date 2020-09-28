@@ -22,6 +22,8 @@ const (
 	EnvOutputResourcesInfo = "OUTPUT_RESOURCES_INFO"
 	// EnvMetadataNamespace is an environment which represents namespace of workflows/workflowRuns/stages.
 	EnvMetadataNamespace = "METADATA_NAMESPACE"
+	// EnvProjectName is an environment which represents project name.
+	EnvProjectName = "PROJECT_NAME"
 	// EnvWorkflowName is an environment which represents workflow name.
 	EnvWorkflowName = "WORKFLOW_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
