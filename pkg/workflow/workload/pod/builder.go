@@ -485,6 +485,16 @@ func (m *Builder) ResolveInputResources() error {
 
 // ResolveOutputResources add resource resolvers to pod spec.
 func (m *Builder) ResolveOutputResources() error {
+	var dockerSockMountName string
+	var dockerSockMountPath string
+	if controller.Config.DindSettings.Disable {
+		dockerSockMountName = common.HostDockerSockVolumeName
+		dockerSockMountPath = common.DockerSockFilePath
+	} else {
+		dockerSockMountName = common.DockerInDockerSockVolume
+		dockerSockMountPath = common.DockerSockPath
+	}
+
 	// Indicate whether there is image type resource to output, if so, we need a docker-in-docker
 	// side-car.
 	var withImageOutput bool
@@ -569,62 +579,61 @@ func (m *Builder) ResolveOutputResources() error {
 			withImageOutput = true
 
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-				Name:      common.DockerInDockerSockVolume,
-				MountPath: common.DockerSockPath,
+				Name:      dockerSockMountName,
+				MountPath: dockerSockMountPath,
 			})
 		}
 
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
 	}
 
-	// Add a volume for docker socket file sharing if there are image type resource to output.
 	if withImageOutput {
-		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: common.DockerInDockerSockVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		})
-	}
-
-	// Add a docker-in-docker sidecar when there are image type resource to output.
-	args := []string{"dockerd"}
-	if len(controller.Config.DindSettings.Bip) > 0 {
-		args = append(args, "--bip", controller.Config.DindSettings.Bip)
-	}
-	for _, r := range controller.Config.DindSettings.InsecureRegistries {
-		args = append(args, "--insecure-registry", r)
-	}
-
-	if withImageOutput {
-		var previleged = true
-		dind := corev1.Container{
-			Image: controller.Config.Images[controller.DindImage],
-			Name:  common.DockerInDockerSidecarName,
-			Args:  args,
-			SecurityContext: &corev1.SecurityContext{
-				Privileged: &previleged,
-			},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
+		if !controller.Config.DindSettings.Disable {
+			// Add a volume for docker socket file sharing if there are image type resource to output.
+			m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+				Name: common.DockerInDockerSockVolume,
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
 				},
-			},
-		}
-		m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
-	}
+			})
 
-	// Mount docker socket file to workload container if there are image type resource to output.
-	if withImageOutput {
+			// Add a docker-in-docker sidecar when there are image type resource to output.
+			args := []string{"dockerd"}
+			if len(controller.Config.DindSettings.Bip) > 0 {
+				args = append(args, "--bip", controller.Config.DindSettings.Bip)
+			}
+			for _, r := range controller.Config.DindSettings.InsecureRegistries {
+				args = append(args, "--insecure-registry", r)
+			}
+
+			var previleged = true
+			dind := corev1.Container{
+				Image: controller.Config.Images[controller.DindImage],
+				Name:  common.DockerInDockerSidecarName,
+				Args:  args,
+				SecurityContext: &corev1.SecurityContext{
+					Privileged: &previleged,
+				},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      common.DockerInDockerSockVolume,
+						MountPath: common.DockerSockPath,
+					},
+				},
+			}
+			m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
+		}
+
+		// Mount docker socket file to workload container if there are image type resource to output.
 		for i, c := range m.pod.Spec.Containers {
 			if common.OnlyCustomContainer(c.Name) {
 				m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
+					Name:      dockerSockMountName,
+					MountPath: dockerSockMountPath,
 				})
 			}
 		}
+
 	}
 
 	return nil

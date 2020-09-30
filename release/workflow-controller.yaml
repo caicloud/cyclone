@@ -84,7 +84,8 @@ _config:
               }
             },
             "dind": {
-              "bip": "172.18.0.1/16"
+              "bip": "172.18.0.1/16",
+              "disable": true
             },
             "pvc": "cyclone-server-server-v1-0-cyclone-data",
             "cyclone_server_addr": "[[ kube_apiserver_endpoint_ip ]]:6008",
