@@ -631,8 +631,8 @@ func (suite *PodBuilderSuite) TestInjectEnvs() {
 	assert.NotNil(suite.T(), builder.pod.Spec.Containers[0].Env)
 	for _, kv := range builder.pod.Spec.Containers[0].Env {
 		switch kv.Name {
-		case common.EnvProjectName:
-			assert.Equal(suite.T(), "p1", kv.Value)
+		// case common.EnvProjectName:
+		// 	assert.Equal(suite.T(), "p1", kv.Value)
 		case common.EnvWorkflowName:
 			assert.Equal(suite.T(), "wf", kv.Value)
 		case common.EnvWorkflowrunName:

@@ -843,10 +843,10 @@ func (m *Builder) AddCoordinator() error {
 // stage name, namespace.
 func (m *Builder) InjectEnvs() error {
 	envs := []corev1.EnvVar{
-		{
-			Name:  common.EnvProjectName,
-			Value: common.ResolveProjectName(*m.wfr),
-		},
+		// {
+		// 	Name:  common.EnvProjectName,
+		// 	Value: common.ResolveProjectName(*m.wfr),
+		// },
 		{
 			Name:  common.EnvWorkflowName,
 			Value: common.ResolveWorkflowName(*m.wfr),
