@@ -638,8 +638,8 @@ func (suite *PodBuilderSuite) TestInjectEnvs() {
 		switch kv.Name {
 		case common.EnvMetadataNamespace:
 			assert.Equal(suite.T(), "", kv.Value)
-		case common.EnvProjectName:
-			assert.Equal(suite.T(), "p1", kv.Value)
+		// case common.EnvProjectName:
+		// 	assert.Equal(suite.T(), "p1", kv.Value)
 		case common.EnvWorkflowName:
 			assert.Equal(suite.T(), "wf", kv.Value)
 		case common.EnvWorkflowrunName:
