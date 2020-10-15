@@ -20,8 +20,10 @@ const (
 	EnvWorkflowRunInfo = "WORKFLOWRUN_INFO"
 	// EnvOutputResourcesInfo is an environment which represents output resources information.
 	EnvOutputResourcesInfo = "OUTPUT_RESOURCES_INFO"
-	// EnvProjectName is an environment which represents project name.
-	EnvProjectName = "PROJECT_NAME"
+
+	// // EnvProjectName is an environment which represents project name.
+	// EnvProjectName = "PROJECT_NAME"
+
 	// EnvWorkflowName is an environment which represents workflow name.
 	EnvWorkflowName = "WORKFLOW_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
