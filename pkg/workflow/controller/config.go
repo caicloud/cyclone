@@ -116,6 +116,8 @@ type DindSettings struct {
 	InsecureRegistries []string `json:"insecure_registries"`
 	// Bip specifies IP subnet used for docker0 bridge
 	Bip string `json:"bip"`
+	// Disable specifies using dood instead of dind
+	Disable bool `json:"disable"`
 }
 
 // Config is Workflow Controller config instance
