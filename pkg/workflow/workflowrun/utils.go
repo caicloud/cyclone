@@ -3,12 +3,13 @@ package workflowrun
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // resolveStatus determines the final status from two given status, one is latest status, and
@@ -49,8 +50,10 @@ func NextStages(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun) []string {
 		safeToRun := true
 		for _, d := range stage.Depends {
 			status, ok := wfr.Status.Stages[d]
-			if !(ok && (status.Status.Phase == v1alpha1.StatusSucceeded || (status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)) ||
-				(status.Status.Phase == v1alpha1.StatusCancelled && IsTrivial(wf, d)))) {
+			if !(ok &&
+				(status.Status.Phase == v1alpha1.StatusSucceeded ||
+					(status.Status.Phase == v1alpha1.StatusFailed && IsTrivial(wf, d)) ||
+					(status.Status.Phase == v1alpha1.StatusCancelled && IsTrivial(wf, d)))) {
 				safeToRun = false
 				break
 			}
@@ -149,4 +152,8 @@ func IsWorkflowRunTerminated(wfr *v1alpha1.WorkflowRun) bool {
 // GCPodName generates a pod name for GC pod
 func GCPodName(wfr string) string {
 	return fmt.Sprintf("wfrgc--%s", wfr)
+}
+
+func isExceedResourceQuotaError(err error) bool {
+	return err != nil && k8serrors.IsForbidden(err) && strings.Contains(err.Error(), "exceeded quota")
 }

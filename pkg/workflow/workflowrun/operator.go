@@ -400,6 +400,12 @@ func (o *operator) Reconcile() error {
 
 		err = NewWorkloadProcessor(o.clusterClient, o.client, o.wf, o.wfr, stg, o).Process()
 		if err != nil {
+			if isExceedResourceQuotaError(err) {
+				// workloadProcessor process failed because of the resource quota exceeded
+				// send relevant info about this stage to a channel which being listened by BlockingStageProcessor
+				// processor will process it after a while when resource sufficient
+				blockingChan <- NewBlockingStage(o.wf, o.wfr, stg)
+			}
 			log.WithField("stg", stage).Error("Process workload error: ", err)
 			continue
 		}

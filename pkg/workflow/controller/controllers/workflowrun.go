@@ -75,6 +75,7 @@ func NewWorkflowRunController(client clientset.Interface) *Controller {
 			GCProcessor:           workflowrun.NewGCProcessor(client, controller.Config.GC.Enabled),
 			LimitedQueues:         workflowrun.NewLimitedQueues(client, controller.Config.Limits.MaxWorkflowRuns),
 			ParallelismController: workflowrun.NewParallelismController(controller.Config.Parallelism),
+			BlockingStageHandler:  workflowrun.NewBlockingStageProcessor(client),
 		},
 	}
 }

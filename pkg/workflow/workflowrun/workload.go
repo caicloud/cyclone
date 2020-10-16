@@ -93,14 +93,7 @@ func (p *WorkloadProcessor) processPod() error {
 		return err
 	})
 	if err != nil {
-		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
-		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
-		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusFailed,
-			Reason:             "CreatePodError",
-			LastTransitionTime: metav1.Time{Time: time.Now()},
-			Message:            fmt.Sprintf("Failed to create pod: %v", err),
-		})
+		p.handlePodCreationError(err)
 		return err
 	}
 
@@ -146,4 +139,32 @@ func (p *WorkloadProcessor) processDelegation() error {
 	})
 
 	return nil
+}
+
+func (p *WorkloadProcessor) handlePodCreationError(err error) {
+	if isExceedResourceQuotaError(err) {
+		log.WithField("wfr", p.wfr.Name).
+			WithField("stg", p.stg.Name).
+			Infof("create pod exceedResourceQuota error: %s", err)
+		p.wfrOper.GetRecorder().
+			Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage %q exceedResourceQuota error: %v", p.stg.Name, err)
+		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
+			Phase:              v1alpha1.StatusBlocking,
+			Reason:             "exceedResourceQuota",
+			LastTransitionTime: metav1.Time{Time: time.Now()},
+			Message:            fmt.Sprintf("create pod exceedResourceQuota %v", err),
+		})
+	} else {
+		log.WithField("wfr", p.wfr.Name).
+			WithField("stg", p.stg.Name).
+			Error("Create pod for stage error: ", err)
+		p.wfrOper.GetRecorder().
+			Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
+		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
+			Phase:              v1alpha1.StatusFailed,
+			Reason:             "CreatePodError",
+			LastTransitionTime: metav1.Time{Time: time.Now()},
+			Message:            fmt.Sprintf("Failed to create pod: %v", err),
+		})
+	}
 }
