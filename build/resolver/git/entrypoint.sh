@@ -142,7 +142,7 @@ wrapPull() {
         failed=$(mkdir $PULLING_LOCK > /dev/null 2>&1 || echo fail)
         if [[ $failed != "fail" ]]; then
             echo "Got the lock, start to pulling..."
-            pull || res=$?
+            pull; res=$?
             if [ $res -eq 99 ] && [ "${SCM_TYPE}" == "Bitbucket" ]; then
                 echo "Fail to pull with depth flag, retry without depth flag..."
                 unset GIT_DEPTH_OPTION
@@ -227,21 +227,25 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
+            set +e
             git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
             parseCloneRes clone_result.log $clone_res; parse_res=$?
             if [ $parse_res -ne 0 ]; then
                 return $parse_res
             fi
+            set -e
             cd data
             git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
             git checkout -qf FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
+            set +e
             git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
             parseCloneRes clone_result.log $clone_res; parse_res=$?
             if [ $parse_res -ne 0 ]; then
                 return $parse_res
             fi
+            set -e
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
