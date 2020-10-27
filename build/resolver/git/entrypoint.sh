@@ -227,14 +227,13 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
-            parseCloneRes clone_result.log $clone_res; parse_res=$?
-            if [ $parse_res -ne 0 ]; then
-                return $parse_res
-            fi
-            cd data
-            git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
-            git checkout -qf FETCH_HEAD
+            # We don't want to use `git clone` here, as $SOURCE_BRANCH could be something like "refs/heads/master",
+            # but `git clone` only supports branch name or tag name.
+            mkdir data && cd data
+            git init
+            git remote add origin "${SCM_URL_MODIFIED}"
+            git fetch ${GIT_DEPTH_OPTION:-} origin "$SOURCE_BRANCH"
+            git checkout -q FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
             git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
