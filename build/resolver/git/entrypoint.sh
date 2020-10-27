@@ -169,10 +169,12 @@ parseRevision() {
 }
 parseRevision
 
+# Bitbucket might return 500 if we run `git clone/fetch --depth <depth>`
 retryGitOpWithoutDepthFlagIfFromBitbucket() {
   local op="$1"
-  shift
-  if (! git "$op" ${GIT_DEPTH_OPTION:-} "$@") && [[ ${SCM_TYPE} == 'Bitbucket' ]]; then
+  local depth_flag="$2"
+  shift 2
+  if (! git "$op" "$depth_flag" "$@") && [[ ${SCM_TYPE} == 'Bitbucket' ]]; then
     echo "Fail to pull with depth flag, retry without depth flag..."
     git "$op" "$@"
   fi
@@ -192,7 +194,7 @@ pull() {
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        retryGitOpWithoutDepthFlagIfFromBitbucket fetch -v origin "$SCM_REVISION"
+        retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION:-}" -v origin "$SCM_REVISION"
         git checkout FETCH_HEAD
     else
         if [ -e "$WORKDIR/data" ]; then
@@ -215,18 +217,18 @@ pull() {
             mkdir data && cd data
             git init
             git remote add origin "${SCM_URL_MODIFIED}"
-            retryGitOpWithoutDepthFlagIfFromBitbucket fetch origin "$SOURCE_BRANCH"
+            retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION:-}" origin "$SOURCE_BRANCH"
             git checkout -q FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            retryGitOpWithoutDepthFlagIfFromBitbucket clone -v -b "$TARGET_BRANCH" --single-branch --recursive "${SCM_URL_MODIFIED}" data
+            retryGitOpWithoutDepthFlagIfFromBitbucket clone "${GIT_DEPTH_OPTION:-}" -v -b "$TARGET_BRANCH" --single-branch --recursive "${SCM_URL_MODIFIED}" data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
             # If the fetch depth is too small, the merge command will fail with:
             #    'fatal: refusing to merge unrelated histories'
             # And we assume 30 is enough.
-            git fetch ${GIT_DEPTH_OPTION_DEEPER:-} origin $SOURCE_BRANCH
+            retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION_DEEPER:-}" origin "$SOURCE_BRANCH"
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi
