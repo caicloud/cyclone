@@ -124,8 +124,6 @@ modifyURL() {
 }
 
 wrapPull() {
-    local count
-    local res=0
     # If there is already data, we should just wait for the data to be ready.
     if [ -e $WORKDIR/data ]; then
         echo "Found data, wait it to be ready..."
@@ -142,13 +140,7 @@ wrapPull() {
         failed=$(mkdir $PULLING_LOCK > /dev/null 2>&1 || echo fail)
         if [[ $failed != "fail" ]]; then
             echo "Got the lock, start to pulling..."
-            pull || res=$?
-            if [ $res -eq 99 ] && [ "${SCM_TYPE}" == "Bitbucket" ]; then
-                echo "Fail to pull with depth flag, retry without depth flag..."
-                unset GIT_DEPTH_OPTION
-                unset GIT_DEPTH_OPTION_DEEPER
-                pull
-            fi
+            pull
         else
             echo "Failed to get the lock, wait others to finish pulling..."
             while [ -d $PULLING_LOCK ]
@@ -177,46 +169,39 @@ parseRevision() {
 }
 parseRevision
 
-parseCloneRes() {
-    local clone_log=$1
-    local clone_res=$2
-    cat $clone_log
-    if [ $clone_res -ne 0 ]; then
-        if grep "The requested URL returned error: 500" $clone_log > /dev/null 2>&1; then
-            # use code 99 for git clone --depth fail
-            rm -f $clone_log
-            return 99
-        else
-            exit $clone_res
-        fi
-    fi
-    return 0
+# Bitbucket might return 500 if we run `git clone/fetch --depth <depth>`
+retryGitOpWithoutDepthFlagIfFromBitbucket() {
+  local op="$1"
+  local depth_flag="$2"
+  shift 2
+  if (! git "$op" "$depth_flag" "$@") && [[ ${SCM_TYPE} == 'Bitbucket' ]]; then
+    echo "Fail to pull with depth flag, retry without depth flag..."
+    git "$op" "$@"
+  fi
 }
 
 pull() {
-    local parse_res
-    local clone_res
     git config --global http.sslVerify false
     git config --global http.postBuffer 500M
     NO_AUTH_SCM_URL=${SCM_URL}
     # If data existed and pull policy is IfNotPresent, perform incremental pull.
-    if [ -e $WORKDIR/data ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
-        cd $WORKDIR/data
+    if [ -e "$WORKDIR/data" ] && [ ${PULL_POLICY:=Always} == "IfNotPresent" ]; then
+        cd "$WORKDIR/data"
         # Ensure existed data come from the git repo
-        git remote -v | grep ${SCM_URL##*//} || {
+        git remote -v | grep "${SCM_URL##*//}" || {
             echo "Existed data not a valid git repo for ${SCM_URL##*//}"
             exit 1
         }
 
         echo "Fetch $SCM_REVISION from origin"
-        git fetch -v ${GIT_DEPTH_OPTION:-} origin $SCM_REVISION
+        retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION:-}" -v origin "$SCM_REVISION"
         git checkout FETCH_HEAD
     else
-        if [ -e $WORKDIR/data ]; then
+        if [ -e "$WORKDIR/data" ]; then
             echo "Clean old data ($WORKDIR/data) when pull policy is Always"
-            rm -rf $WORKDIR/data
+            rm -rf "$WORKDIR/data"
         fi
-        cd $WORKDIR
+        cd "$WORKDIR"
 
         # Add auth to url if provided and clone git repo. If SCM_AUTH is in format '<user>:<password>', then url
         # encode each part of it and get '<encoded_user>:<encoded_password>'. If SCM_AUTH is in format '<token>',
@@ -227,28 +212,23 @@ pull() {
 
         if [[ "${SOURCE_BRANCH}" == "${TARGET_BRANCH}" ]]; then
             echo "Clone $SOURCE_BRANCH..."
-            git clone -v -b master ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
-            parseCloneRes clone_result.log $clone_res; parse_res=$?
-            if [ $parse_res -ne 0 ]; then
-                return $parse_res
-            fi
-            cd data
-            git fetch ${GIT_DEPTH_OPTION:-} origin $SOURCE_BRANCH
-            git checkout -qf FETCH_HEAD
+            # We don't want to use `git clone` here, as $SOURCE_BRANCH could be something like "refs/heads/master",
+            # but `git clone` only supports branch name or tag name.
+            mkdir data && cd data
+            git init
+            git remote add origin "${SCM_URL_MODIFIED}"
+            retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION:-}" origin "$SOURCE_BRANCH"
+            git checkout -q FETCH_HEAD
         else
             echo "Merge $SOURCE_BRANCH to $TARGET_BRANCH..."
-            git clone -v -b $TARGET_BRANCH ${GIT_DEPTH_OPTION:-} --single-branch --recursive ${SCM_URL_MODIFIED} data > clone_result.log 2>&1; clone_res=$?
-            parseCloneRes clone_result.log $clone_res; parse_res=$?
-            if [ $parse_res -ne 0 ]; then
-                return $parse_res
-            fi
+            retryGitOpWithoutDepthFlagIfFromBitbucket clone "${GIT_DEPTH_OPTION:-}" -v -b "$TARGET_BRANCH" --single-branch --recursive "${SCM_URL_MODIFIED}" data
             cd data
             git config user.email "cicd@cyclone.dev"
             git config user.name "cicd"
             # If the fetch depth is too small, the merge command will fail with:
             #    'fatal: refusing to merge unrelated histories'
             # And we assume 30 is enough.
-            git fetch ${GIT_DEPTH_OPTION_DEEPER:-} origin $SOURCE_BRANCH
+            retryGitOpWithoutDepthFlagIfFromBitbucket fetch "${GIT_DEPTH_OPTION_DEEPER:-}" origin "$SOURCE_BRANCH"
             git merge FETCH_HEAD --no-ff --no-commit
         fi
     fi
