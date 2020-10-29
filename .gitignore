@@ -13,8 +13,9 @@ bin
 # Dirty file in OS X
 .DS_Store
 
-# Config when used with VS Code
+# Config when used with some IDEs
 .vscode/
+.idea/
 
 # Coverage file
 *.coverprofile
