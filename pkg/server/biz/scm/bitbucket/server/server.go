@@ -18,13 +18,19 @@ import (
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
-// SupportAccessTokenVersion represents the lowest version
-// that support personal access token.
-const SupportAccessTokenVersion = "5.5.0"
+const (
+	// SupportAccessTokenVersion represents the lowest version
+	// that support personal access token.
+	SupportAccessTokenVersion = "5.5.0"
 
-// SupportPrModifiedEvent represents the lowest version
-// that support event key named pr:modified.
-const SupportPrModifiedEvent = "5.10.0"
+	// SupportPrModifiedEvent represents the lowest version
+	// that support event key named pr:modified.
+	SupportPrModifiedEvent = "5.10.0"
+
+	// SupportPrFromRefUpdatedEvent represents the lowest version
+	// that support pr:from_ref_updated event.
+	SupportPrFromRefUpdatedEvent = "7.0.0"
+)
 
 // Property represents BitBucket Server property.
 type Property struct {
@@ -334,18 +340,26 @@ func (b *BitbucketServer) CreateWebhook(repo string, webhook *scm.Webhook) error
 		for _, e := range webhook.Events {
 			switch e {
 			case scm.PullRequestEventType:
+				webhookReq.Events = append(webhookReq.Events, PrOpened)
+
 				version, err := GetBitbucketVersion(b.v1Client.client, b.v1Client.baseURL)
 				if err != nil {
 					return err
 				}
+				isSupportPrFromRefUpdated, err := IsHigherVersion(version, SupportPrFromRefUpdatedEvent)
+				if err != nil {
+					return err
+				}
+				if isSupportPrFromRefUpdated {
+					webhookReq.Events = append(webhookReq.Events, PrFromRefUpdated)
+				}
+
 				isSupportPrModified, err := IsHigherVersion(version, SupportPrModifiedEvent)
 				if err != nil {
 					return err
 				}
 				if isSupportPrModified {
-					webhookReq.Events = append(webhookReq.Events, PrOpened, PrModified)
-				} else {
-					webhookReq.Events = append(webhookReq.Events, PrOpened)
+					webhookReq.Events = append(webhookReq.Events, PrModified)
 				}
 			case scm.PullRequestCommentEventType:
 				webhookReq.Events = append(webhookReq.Events, PrCommentAdded)

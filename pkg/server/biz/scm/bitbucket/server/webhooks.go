@@ -24,10 +24,11 @@ const (
 )
 
 var supportEventMap = map[string]bool{
-	RefsChanged:    true,
-	PrOpened:       true,
-	PrModified:     true,
-	PrCommentAdded: true,
+	RefsChanged:      true,
+	PrOpened:         true,
+	PrModified:       true,
+	PrFromRefUpdated: true,
+	PrCommentAdded:   true,
 }
 
 // EventPayload represents the event information.
@@ -107,7 +108,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			CommitSHA: payload.PullRequest.FromRef.LatestCommit,
 			Branch:    payload.PullRequest.ToRef.DisplayID,
 		}
-	case PrModified:
+	case PrFromRefUpdated, PrModified:
 		return &scm.EventData{
 			Type:      scm.PullRequestEventType,
 			Repo:      fmt.Sprintf("%s/%s", strings.ToLower(payload.PullRequest.ToRef.Repository.Project.Key), payload.PullRequest.ToRef.Repository.Slug),
