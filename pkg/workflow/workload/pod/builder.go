@@ -1013,7 +1013,11 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 				if common.OnlyCustomContainer(c.Name) {
 					c.Resources.Limits[k] = v
 				} else {
-					c.Resources.Limits[k] = zeroQuantity
+					if k == corev1.ResourceCPU {
+						c.Resources.Limits[k] = v
+					} else {
+						c.Resources.Limits[k] = zeroQuantity
+					}
 				}
 			}
 		}

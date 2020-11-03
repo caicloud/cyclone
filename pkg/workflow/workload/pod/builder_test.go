@@ -655,7 +655,7 @@ func Test_applyResourceRequirements_cpu_format(t *testing.T) {
 	}
 	updated := applyResourceRequirements(containers, requirements, true, 50)
 	got, err := json.Marshal(updated)
-	const expected = `[{"name":"w1","resources":{"limits":{"cpu":"100m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"128Mi"}}},{"name":"csc-c1","resources":{"limits":{"cpu":"0","memory":"0"},"requests":{"cpu":"50m","memory":"0"}}}]`
+	const expected = `[{"name":"w1","resources":{"limits":{"cpu":"100m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"128Mi"}}},{"name":"csc-c1","resources":{"limits":{"cpu":"100m","memory":"0"},"requests":{"cpu":"50m","memory":"0"}}}]`
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -773,7 +773,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 						},
 						Limits: corev1.ResourceList{
 							corev1.ResourceMemory: resource.MustParse("0"),
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("200m"),
 						},
 					},
 				},
@@ -808,7 +808,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 						},
 						Limits: corev1.ResourceList{
 							corev1.ResourceMemory: resource.MustParse("0"),
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("200m"),
 						},
 					},
 				},
@@ -889,7 +889,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("500m"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -942,7 +942,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("1"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -955,7 +955,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("1"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -1021,7 +1021,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("500m"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -1077,7 +1077,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("1"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -1090,7 +1090,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("1"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
@@ -1103,7 +1103,7 @@ func TestApplyResourceRequirements(t *testing.T) {
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0"),
+							corev1.ResourceCPU:    resource.MustParse("1"),
 							corev1.ResourceMemory: resource.MustParse("0"),
 						},
 					},
