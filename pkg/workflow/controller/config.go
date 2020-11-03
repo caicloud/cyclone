@@ -54,6 +54,9 @@ type WorkflowControllerConfig struct {
 	DindSettings DindSettings `json:"dind"`
 	// WorkersNumber defines workers number for various controller
 	WorkersNumber WorkersNumber `json:"workers_number"`
+	// CustomContainerCPUWeight represents the proportion of cpu resource that custom containers would consume(1-100).
+	// If this field is equal to 0, its value is changed to 100.
+	CustomContainerCPUWeight int `json:"custom_container_cpu_weight"`
 }
 
 // LoggingConfig configures logging
@@ -143,12 +146,13 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return err
 	}
 
+	defaultValues(&Config)
 	if !validate(&Config) {
 		return fmt.Errorf("validate config failed")
 	}
 
-	defaultValues(&Config)
 	InitLogger(&Config.Logging)
+	log.Infof("workflow-controller config: %v", Config)
 	return nil
 }
 
@@ -156,6 +160,10 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 func validate(config *WorkflowControllerConfig) bool {
 	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
+	}
+	if config.CustomContainerCPUWeight <= 0 || config.CustomContainerCPUWeight > 100 {
+		log.Errorf("CustomContainerCPUWeight must be 1 to 100, got %d", config.CustomContainerCPUWeight)
+		return false
 	}
 
 	return true
@@ -178,6 +186,10 @@ func defaultValues(config *WorkflowControllerConfig) {
 	if config.WorkersNumber.WorkflowRun == 0 {
 		config.WorkersNumber.WorkflowRun = 1
 		log.Info("WorkersNumber.WorkflowRun not configured, will use default value '1'")
+	}
+	if config.CustomContainerCPUWeight == 0 {
+		config.CustomContainerCPUWeight = 100
+		log.Info("CustomContainerCPUWeight not configured, will use default value '100'")
 	}
 }
 

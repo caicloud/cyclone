@@ -929,21 +929,54 @@ func divideQuantity(quantity resource.Quantity, n int) (resource.Quantity, error
 //   consume negligible resources.
 // - the other containers(workload containers or custom containers, there is only one at most of the time)
 //   will average the pod resource requirements
-func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, averageToContainers bool) []corev1.Container {
-	var results []corev1.Container
+func applyResourceRequirements(containers []corev1.Container, requirements *corev1.ResourceRequirements, averageToContainers bool, customCPUWeight int) []corev1.Container {
+	if customCPUWeight <= 0 || customCPUWeight > 100 {
+		customCPUWeight = 100 // fallback to original behavior
+	}
+
+	var (
+		customCount, cscCount int
+	)
+	for _, c := range containers {
+		if common.OnlyCustomContainer(c.Name) {
+			customCount++
+		} else {
+			cscCount++
+		}
+	}
+
+	// NOTE: If `averageToContainers` is set to false and there are multiple custom containers, it means we are modifying initContainers.
+
+	var (
+		totalCPURequest  resource.Quantity
+		customCPURequest resource.Quantity
+		cscCPURequest    resource.Quantity
+	)
+	if requirements.Requests.Cpu() != nil {
+		totalCPURequest.SetMilli(requirements.Requests.Cpu().MilliValue())
+	} else {
+		totalCPURequest.SetMilli(0)
+	}
 
 	newRequirements := requirements.DeepCopy()
 	if averageToContainers {
-		containerCount := 0
-		for _, c := range containers {
-			if common.OnlyCustomContainer(c.Name) {
-				containerCount++
-			}
-		}
-
-		newRequirements, _ = divideResourceRequirements(*requirements, containerCount)
+		newRequirements, _ = divideResourceRequirements(*requirements, customCount)
+		totalVal := float64(totalCPURequest.MilliValue())
+		scaled := totalVal * float64(customCPUWeight) / float64(100)
+		customCPURequest.SetMilli(int64(
+			scaled / float64(customCount),
+		))
+		cscCPURequest.SetMilli(int64(
+			(totalVal - scaled) / float64(cscCount),
+		))
+	} else {
+		customCPURequest = totalCPURequest
+		cscCPURequest.SetMilli(0)
 	}
+	cscCPURequest.Format = resource.DecimalSI
+	customCPURequest.Format = resource.DecimalSI
 
+	var results []corev1.Container
 	for _, c := range containers {
 		// Set resource requests if not set in the container yet.
 		for k, v := range newRequirements.Requests {
@@ -952,13 +985,22 @@ func applyResourceRequirements(containers []corev1.Container, requirements *core
 			}
 
 			if _, ok := c.Resources.Requests[k]; !ok {
+				var request resource.Quantity
 				if common.OnlyCustomContainer(c.Name) {
-					c.Resources.Requests[k] = v
+					if k == corev1.ResourceCPU {
+						request = customCPURequest
+					} else {
+						request = v
+					}
 				} else {
-					c.Resources.Requests[k] = zeroQuantity
+					if k == corev1.ResourceCPU {
+						request = cscCPURequest
+					} else {
+						request = zeroQuantity
+					}
 				}
+				c.Resources.Requests[k] = request
 			}
-
 		}
 
 		// Set resource limits if not set in the container yet.
@@ -994,8 +1036,8 @@ func (m *Builder) ApplyResourceRequirements() error {
 		requirements = m.wf.Spec.Resources
 	}
 
-	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, requirements, false)
-	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, requirements, true)
+	m.pod.Spec.InitContainers = applyResourceRequirements(m.pod.Spec.InitContainers, requirements, false, 100)
+	m.pod.Spec.Containers = applyResourceRequirements(m.pod.Spec.Containers, requirements, true, controller.Config.CustomContainerCPUWeight)
 
 	return nil
 }
