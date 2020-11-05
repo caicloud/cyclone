@@ -11,7 +11,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 // LimitedQueues manages WorkflowRun queue for each Workflow. Queue for each Workflow is limited to
@@ -102,7 +102,7 @@ func scanQueue(q *LimitedSortedQueue) {
 		// If the node's refresh time is old enough compared to the resync time
 		// (5 minutes by default) of WorkflowRun Controller, it means the WorkflowRun
 		// is actually removed from etcd somehow, so we will remove it also here.
-		if h.next.refresh.Add(common.ResyncPeriod * 2).Before(time.Now()) {
+		if h.next.refresh.Add(controller.Config.ResyncPeriodSeconds * time.Second * 2).Before(time.Now()) {
 			log.WithField("wfr", h.next.wfr).Info("remove wfr with outdated refresh time from queue")
 			h.next = h.next.next
 			q.size--

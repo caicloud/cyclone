@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"reflect"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +12,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/k8s/informers"
 	"github.com/caicloud/cyclone/pkg/meta"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/workflowtrigger"
 )
 
@@ -20,7 +21,7 @@ func NewWorkflowTriggerController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		common.ResyncPeriod,
+		controller.Config.ResyncPeriodSeconds*time.Second,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = meta.WorkflowTriggerSelector()
 		}),
