@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"reflect"
+	"time"
 
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/k8s/informers"
-	"github.com/caicloud/cyclone/pkg/workflow/common"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers/executioncluster"
 )
 
@@ -17,7 +18,7 @@ func NewExecutionClusterController(client clientset.Interface) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		common.ResyncPeriod,
+		controller.Config.ResyncPeriodSeconds*time.Second,
 	)
 
 	informer := factory.Cyclone().V1alpha1().ExecutionClusters().Informer()
