@@ -67,7 +67,7 @@ func (h *Handler) ObjectCreated(obj interface{}) {
 	if originWfr.Status.Overall.Phase == "" {
 		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
 		case workflowrun.AttemptActionQueued:
-			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
+			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %d seconds", controller.Config.ResyncPeriodSeconds)
 			return
 		case workflowrun.AttemptActionFailed:
 			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
@@ -129,7 +129,7 @@ func (h *Handler) ObjectUpdated(old, new interface{}) {
 		log.WithField("wfr", originWfr.Name).Info("Attempt to run WorkflowRun")
 		switch h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name) {
 		case workflowrun.AttemptActionQueued:
-			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
+			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %d seconds", controller.Config.ResyncPeriodSeconds)
 			return
 		case workflowrun.AttemptActionFailed:
 			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{

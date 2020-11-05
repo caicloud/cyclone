@@ -52,6 +52,8 @@ type WorkflowControllerConfig struct {
 	NotificationURL string `json:"notification_url"`
 	// DindSettings is settings for Docker in Docker
 	DindSettings DindSettings `json:"dind"`
+	// ResyncPeriodSeconds defines resync period in seconds for controllers
+	ResyncPeriodSeconds time.Duration `json:"resync_period_seconds"`
 }
 
 // LoggingConfig configures logging
@@ -133,11 +135,13 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return err
 	}
 
+	defaultValues(&Config)
 	if !validate(&Config) {
 		return fmt.Errorf("validate config failed")
 	}
 
 	InitLogger(&Config.Logging)
+	log.Info("ResyncPeriod is %s", Config.ResyncPeriodSeconds*time.Second)
 	return nil
 }
 
@@ -146,8 +150,20 @@ func validate(config *WorkflowControllerConfig) bool {
 	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
 	}
+	if config.ResyncPeriodSeconds < 0 {
+		log.Errorf("Invalid ResyncPeriodSeconds: %d", config.ResyncPeriodSeconds)
+		return false
+	}
 
 	return true
+}
+
+// defaultValues give the config some default value if they are not set.
+func defaultValues(config *WorkflowControllerConfig) {
+	if config.ResyncPeriodSeconds == 0 {
+		config.ResyncPeriodSeconds = 180
+		log.Info("ResyncPeriodSeconds not configured, will use default value '180'")
+	}
 }
 
 // ImagePullPolicy determines image pull policy based on environment variable DEVELOP_MODE
