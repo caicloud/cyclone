@@ -2,16 +2,12 @@ package common
 
 import (
 	"fmt"
-	"time"
 )
 
 // ContainerState represents container state.
 type ContainerState string
 
 const (
-	// ResyncPeriod defines resync period for controllers
-	ResyncPeriod = time.Minute * 5
-
 	// EnvStagePodName is an environment which represents pod name.
 	EnvStagePodName = "POD_NAME"
 	// EnvStageInfo is an environment which represents stage information.

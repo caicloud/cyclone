@@ -50,6 +50,8 @@ type WorkflowControllerConfig struct {
 	NotificationURL string `json:"notification_url"`
 	// DindSettings is settings for Docker in Docker
 	DindSettings DindSettings `json:"dind"`
+	// ResyncPeriodSeconds defines resync period in seconds for controllers
+	ResyncPeriodSeconds time.Duration `json:"resync_period_seconds"`
 }
 
 // LoggingConfig configures logging
@@ -113,16 +115,24 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 		return err
 	}
 
+	if Config.ResyncPeriodSeconds == 0 {
+		Config.ResyncPeriodSeconds = 180 // 3min
+	}
 	if !validate(&Config) {
 		return fmt.Errorf("validate config failed")
 	}
 
 	InitLogger(&Config.Logging)
+	log.Infof("ResyncPeriod is %s", Config.ResyncPeriodSeconds*time.Second)
 	return nil
 }
 
 // validate validates some required configurations.
 func validate(config *WorkflowControllerConfig) bool {
+	if config.ResyncPeriodSeconds < 0 {
+		log.Errorf("Invalid ResyncPeriodSeconds: %d", config.ResyncPeriodSeconds)
+		return false
+	}
 	if config.ExecutionContext.PVC == "" {
 		log.Warn("PVC not configured, resources won't be shared among stages and artifacts unsupported.")
 	}
