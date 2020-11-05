@@ -81,7 +81,7 @@ func (h *Handler) Reconcile(obj interface{}) error {
 		attemptAction := h.ParallelismController.AttemptNew(originWfr.Namespace, originWfr.Spec.WorkflowRef.Name, originWfr.Name)
 		switch attemptAction {
 		case workflowrun.AttemptActionQueued:
-			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %s", common.ResyncPeriod.String())
+			log.WithField("wfr", originWfr.Name).Infof("Too many WorkflowRun are running, stay pending in queue, will retry in %d seconds", controller.Config.ResyncPeriodSeconds)
 			return fmt.Errorf("too many WorkflowRun are running")
 		case workflowrun.AttemptActionFailed:
 			if err := h.SetStatus(originWfr.Namespace, originWfr.Name, &v1alpha1.Status{
