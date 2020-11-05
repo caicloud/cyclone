@@ -57,6 +57,10 @@ var tmp2 = "v1"
 var wfr = &v1alpha1.WorkflowRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "wfr",
+		Labels: map[string]string{
+			meta.LabelProjectName:  "p1",
+			meta.LabelWorkflowName: "wf",
+		},
 	},
 	Spec: v1alpha1.WorkflowRunSpec{
 		Stages: []v1alpha1.ParameterConfig{
@@ -618,6 +622,31 @@ func (suite *PodBuilderSuite) TestAddCommonVolumes() {
 			MountPath: "/tmp",
 			ReadOnly:  true,
 		})
+	}
+}
+
+func (suite *PodBuilderSuite) TestInjectEnvs() {
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "simple"))
+	err := builder.Prepare()
+	assert.Nil(suite.T(), err)
+	err = builder.ResolveArguments()
+	assert.Nil(suite.T(), err)
+	err = builder.InjectEnvs()
+	assert.Nil(suite.T(), err)
+	assert.NotNil(suite.T(), builder.pod.Spec.Containers[0].Env)
+	for _, kv := range builder.pod.Spec.Containers[0].Env {
+		switch kv.Name {
+		case common.EnvMetadataNamespace:
+			assert.Equal(suite.T(), "", kv.Value)
+		// case common.EnvProjectName:
+		// 	assert.Equal(suite.T(), "p1", kv.Value)
+		case common.EnvWorkflowName:
+			assert.Equal(suite.T(), "wf", kv.Value)
+		case common.EnvWorkflowrunName:
+			assert.Equal(suite.T(), "wfr", kv.Value)
+		case common.EnvStageName:
+			assert.Equal(suite.T(), "simple", kv.Value)
+		}
 	}
 }
 
