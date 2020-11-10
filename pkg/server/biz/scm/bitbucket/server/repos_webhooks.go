@@ -12,9 +12,11 @@ const (
 	RefsChanged = "repo:refs_changed"
 	// PrOpened is the event key about pull request opened.
 	PrOpened = "pr:opened"
-	// PrModified is the event key about pull request modified.
+	// PrModified means a pull request's description, title, or target branch is changed.
 	// It be supported after the version is 5.10. Ref to: https://confluence.atlassian.com/bitbucketserver/bitbucket-server-5-10-release-notes-948214779.html
 	PrModified = "pr:modified"
+	// PrFromRefUpdated means a pull request's source branch has been updated.
+	PrFromRefUpdated = "pr:from_ref_updated"
 	// PrCommentAdded is the event key about a comment added on the pull request.
 	PrCommentAdded = "pr:comment:added"
 )
