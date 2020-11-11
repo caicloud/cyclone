@@ -227,6 +227,16 @@ func (m *Builder) CreateVolumes() error {
 		},
 	})
 
+	// Add host volume for host trivy db cache for image scan
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.HostTrivyCacheVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: common.HostTrivyCachePath,
+			},
+		},
+	})
+
 	// Add PVC volume to pod if configured.
 	if m.executionContext.PVC != "" {
 		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, m.executionContext.PVC); n != common.DefaultPvVolumeName {
@@ -701,11 +711,17 @@ func (m *Builder) AddVolumeMounts() error {
 	if m.executionContext.PVC != "" {
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
-			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-				Name:      common.DefaultPvVolumeName,
-				MountPath: common.StageMountPath,
-				SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
-			})
+			c.VolumeMounts = append(c.VolumeMounts,
+				corev1.VolumeMount{
+					Name:      common.DefaultPvVolumeName,
+					MountPath: common.StageMountPath,
+					SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
+				},
+				corev1.VolumeMount{
+					Name:      common.HostTrivyCacheVolumeName,
+					MountPath: common.HostTrivyCachePath,
+				},
+			)
 			containers = append(containers, c)
 		}
 		m.pod.Spec.Containers = containers

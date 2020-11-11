@@ -106,6 +106,9 @@ const (
 	// DockerSockPath is path of docker socket file in container
 	DockerSockPath = "/var/run"
 
+	HostTrivyCacheVolumeName = "trivy"
+	HostTrivyCachePath       = "/var/trivy"
+
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"
 	// ContainerStateInitialized represents container is Running or Stopped, not Init or Creating.

@@ -20,11 +20,11 @@ var (
 	errClosed      = errors.New("blockingStage queue close")
 	errNotFound    = errors.New("stage not found")
 	errRemoved     = errors.New("blockingStage was removed")
-	blockingChan   chan *BlockingStage
+	stageChan      chan *BlockingStage
 )
 
 func init() {
-	blockingChan = make(chan *BlockingStage)
+	stageChan = make(chan *BlockingStage)
 }
 
 type BlockingStage struct {
@@ -268,15 +268,6 @@ type BlockingStageProcessor struct {
 	sync.WaitGroup
 }
 
-// List all workflowRuns in InQueue Status from apiServer (in case of the process tear down)
-// traverse the workflowRun's all stages, find out the Stage which lead to the workflowRun become InQueue status
-// call AddStage add the InQueue status Stage to priority queue according it's creationTime
-// when a workflowRun's Stage create pod failed due to resource exceeded quota, we also add the stage to the priority queue
-// go start a background goroutine loop doing below works:
-// query resource quotas in ns
-// if the resources sufficient, get the front Stage from priority queue, create pod for it
-// if success, remove the Stage in priorityQueue, update Stage and WorkflowRun's Status from InQueue status to Running Status
-// else do nothing
 func NewBlockingStageProcessor(client clientset.Interface) *BlockingStageProcessor {
 	pq := NewPriorityQueue()
 	processor := &BlockingStageProcessor{
@@ -293,7 +284,7 @@ func (h *BlockingStageProcessor) Run() {
 	go func() {
 		for {
 			select {
-			case stg := <-blockingChan:
+			case stg := <-stageChan:
 				log.WithField("blocking stage", stg.stage.Name).
 					WithField("wf", stg.workflow.Name).
 					WithField("wfr", stg.workflowRun.Name).
@@ -322,19 +313,7 @@ func (h *BlockingStageProcessor) Run() {
 			continue
 		}
 		h.Add(1)
-		/*
-			go func() {
-				defer h.Done()
-				log.WithField("blocking stage", blkStg.stage.Name).
-					WithField("wf", blkStg.workflow.Name).
-					WithField("wfr", blkStg.workflowRun.Name).
-					Info("start process")
-				err := h.process(blkStg)
-				log.WithField("blocking stage", blkStg.stage.Name).
-					Errorf("process block stage failed %v\n", err)
-			}()
-		*/
-		_ = h.process(blkStg)
+		h.process(blkStg)
 	}
 }
 
@@ -344,7 +323,7 @@ func (h *BlockingStageProcessor) Stop() {
 	h.stagePriorityQueue.Close()
 }
 
-func (h *BlockingStageProcessor) process(stg *BlockingStage) error {
+func (h *BlockingStageProcessor) process(stg *BlockingStage) {
 	defer h.Done()
 	clusterClient := common.GetExecutionClusterClient(stg.workflowRun)
 	operator, err := NewOperator(clusterClient, h.client, stg.workflowRun, stg.workflowRun.Namespace)
@@ -352,7 +331,6 @@ func (h *BlockingStageProcessor) process(stg *BlockingStage) error {
 		log.WithField("blocking stage", stg.stage.Name).
 			Errorf("failed to create workflowRun operator %v\n", err)
 		h.stagePriorityQueue.Delete(stg)
-		return err
 	}
 	err = NewWorkloadProcessor(clusterClient, h.client, stg.workflow, stg.workflowRun, stg.stage, operator).
 		Process()
@@ -369,20 +347,18 @@ func (h *BlockingStageProcessor) process(stg *BlockingStage) error {
 		if stg.blockTime.After(time.Now()) {
 			stg.blockTime = time.Now()
 		}
-		_ = h.stagePriorityQueue.Update(stg) // TODO
+		_ = h.stagePriorityQueue.Update(stg) // TODO error process
 		err = nil
 	}
 	if err != nil {
 		log.WithField("blocking stage", stg.stage.Name).
 			Errorf("workload processor failed process %v\n", err)
 		h.stagePriorityQueue.Delete(stg)
-		return err
 	}
+	// update wfr final status
 	err = operator.Update()
 	if err != nil {
 		log.WithField("blocking stage", stg.stage.Name).
 			Errorf("operator update status failed %v\n", err)
 	}
-
-	return err
 }

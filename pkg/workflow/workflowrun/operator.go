@@ -404,7 +404,7 @@ func (o *operator) Reconcile() error {
 				// workloadProcessor process failed because of the resource quota exceeded
 				// send relevant info about this stage to a channel which being listened by BlockingStageProcessor
 				// processor will process it after a while when resource sufficient
-				blockingChan <- NewBlockingStage(o.wf, o.wfr, stg)
+				stageChan <- NewBlockingStage(o.wf, o.wfr, stg)
 			}
 			log.WithField("stg", stage).Error("Process workload error: ", err)
 			continue
