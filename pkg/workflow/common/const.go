@@ -113,9 +113,9 @@ const (
 	// ContainerStateInitialized represents container is Running or Stopped, not Init or Creating.
 	ContainerStateInitialized ContainerState = "Initialized"
 
-	// ResultFilePath is file to hold execution result of a container that need to be synced to
+	// ResultFileDir contains the file `__result__` to hold execution result of a container that need to be synced to
 	// WorkflowRun status. Each line of the result should be in format: <key>:<value>
-	ResultFilePath = "/__result__"
+	ResultFileDir = "/cyclone/results"
 
 	// DefaultServiceAccountName is service account name used by stage pod
 	DefaultServiceAccountName = "cyclone"

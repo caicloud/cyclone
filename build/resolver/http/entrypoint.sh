@@ -77,7 +77,7 @@ wrapPush() {
     mkdir -p ${WORKDIR}/__output_resources;
 
     echo "Start to find and copy files: find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
-    eval "find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
+    eval "find ${FIND_OPTIONS} -exec cp -v --parents {} ${WORKDIR}/__output_resources \;"
 
     if [ -z "$(ls -A "${WORKDIR}/__output_resources")" ]; then
        echo "No files should be sent, exit."
