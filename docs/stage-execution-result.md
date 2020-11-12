@@ -22,7 +22,7 @@ status:
 
 ## How It Works
 
-Execution result is collected from result file `/__result__` in workload container. So it you want some results to be saved to WorkflowRun status, you should write them to the result file `/__result__`.
+Execution result is collected from result file `/cyclone/results/__result__` in workload container. So it you want some results to be saved to WorkflowRun status, you should write them to the result file `/cyclone/results/__result__`.
 
 The result file is a plain text file with line format `<key>:<value>`. Here is a simple example stage with execution results generated:
 
@@ -40,7 +40,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - echo "overall:Passed" >> /__result__
+        - echo "overall:Passed" >> /cyclone/results/__result__
 ```
 
 
