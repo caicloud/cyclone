@@ -90,7 +90,7 @@ func main() {
 	}
 
 	// Collect execution result from the workload container, results are key-value pairs in a
-	// specified file, /__result__
+	// specified file, /workspace/results/*/__result__
 	if err = c.CollectExecutionResults(); err != nil {
 		message = fmt.Sprintf("Collect execution results error: %v", err)
 		return
@@ -103,13 +103,6 @@ func main() {
 		return
 	}
 
-	// Collect all resources
-	log.Info("Start to collect resources.")
-	if err = c.CollectResources(); err != nil {
-		message = fmt.Sprintf("Stage %s failed to collect output resource, error: %v.", c.Stage.Name, err)
-		return
-	}
-
 	// Notify output resolver to start working.
 	log.Info("Start to notify resolvers.")
 	if err = c.NotifyResolvers(); err != nil {
@@ -118,6 +111,7 @@ func main() {
 	}
 
 	// Collect all artifacts
+	// TODO: remove this stage
 	log.Info("Start to collect artifacts.")
 	if err = c.CollectArtifacts(); err != nil {
 		message = fmt.Sprintf("Stage %s failed to collect artifacts, error: %v", c.Stage.Name, err)

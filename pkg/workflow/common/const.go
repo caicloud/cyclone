@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"path/filepath"
 )
 
 // ContainerState represents container state.
@@ -83,6 +84,8 @@ const (
 	CoordinatorResolverNotifyOkPath = "/workspace/resolvers/notify/ok"
 	// CoordinatorArtifactsPath ...
 	CoordinatorArtifactsPath = "/workspace/artifacts"
+	// CoordinatorResultsPath is the directory that contains __result__ files written by other containers
+	CoordinatorResultsPath = "/workspace/results"
 
 	// ToolboxPath is path of cyclone tools in containers
 	ToolboxPath = "/usr/bin/cyclone-toolbox"
@@ -141,4 +144,8 @@ func OutputResourceVolumeName(name string) string {
 // PresetVolumeName ...
 func PresetVolumeName(index int) string {
 	return fmt.Sprintf("preset-%d", index)
+}
+
+func ResultSubPath(containerName string) string {
+	return filepath.Join("__results__", containerName)
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -251,57 +252,6 @@ func (co *Coordinator) CollectArtifacts() error {
 	return nil
 }
 
-// CollectResources collects workload resources.
-func (co *Coordinator) CollectResources() error {
-	if co.Stage.Spec.Pod == nil {
-		return fmt.Errorf("get stage output resources failed, stage pod nil")
-	}
-
-	resources := co.Stage.Spec.Pod.Outputs.Resources
-	if len(resources) == 0 {
-		log.Info("output resources empty, no need to collect.")
-		return nil
-	}
-
-	log.WithField("resources", resources).Info("start to collect.")
-
-	// Create the resources directory if not exist.
-	fileutil.CreateDirectory(common.CoordinatorResourcesPath)
-
-	for _, resource := range resources {
-		for _, r := range co.OutputResources {
-			if r.Name == resource.Name {
-				// If the resource is persisted in PVC, no need to copy here, Cyclone
-				// will mount it to resolver container directly.
-				if r.Spec.Persistent != nil {
-					continue
-				}
-			}
-		}
-
-		if len(resource.Path) == 0 {
-			continue
-		}
-
-		dst := path.Join(common.CoordinatorResourcesPath, resource.Name)
-		fileutil.CreateDirectory(dst)
-
-		id, err := co.getContainerID(co.workloadContainer)
-		if err != nil {
-			log.Errorf("get container %s's id failed: %v", co.workloadContainer, err)
-			return err
-		}
-
-		err = co.runtimeExec.CopyFromContainer(id, resource.Path, dst)
-		if err != nil {
-			log.Errorf("Copy container %s resources %s failed: %v", co.workloadContainer, resource.Name, err)
-			return err
-		}
-	}
-
-	return nil
-}
-
 // NotifyResolvers create a file to notify output resolvers to start working.
 func (co *Coordinator) NotifyResolvers() error {
 	if co.Stage.Spec.Pod == nil {
@@ -365,29 +315,24 @@ func (co *Coordinator) getContainerID(name string) (string, error) {
 
 // CollectExecutionResults collects execution results (key-values) and store them in pod's annotation
 func (co *Coordinator) CollectExecutionResults() error {
-	pod, err := co.runtimeExec.GetPod()
+	var keyValues []v1alpha1.KeyValue
+	err := filepath.Walk(common.CoordinatorResultsPath, func(fp string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Name() != "__result__" {
+			return nil
+		}
+
+		kvs, err := readKeyValuesFromFile(fp)
+		if err != nil {
+			return err
+		}
+		keyValues = append(keyValues, kvs...)
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-
-	var keyValues []v1alpha1.KeyValue
-
-	for _, c := range pod.Spec.Containers {
-		kv, err := co.extractExecutionResults(c.Name)
-		if err != nil {
-			continue
-		}
-
-		keyValues = append(keyValues, kv...)
-	}
-
-	for _, c := range pod.Spec.InitContainers {
-		kv, err := co.extractExecutionResults(c.Name)
-		if err != nil {
-			continue
-		}
-
-		keyValues = append(keyValues, kv...)
 	}
 
 	if len(keyValues) > 0 {
@@ -400,30 +345,8 @@ func (co *Coordinator) CollectExecutionResults() error {
 	return nil
 }
 
-func isFileNotExist(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	return strings.Contains(err.Error(), "No such container:path")
-}
-
-func (co *Coordinator) extractExecutionResults(containerName string) ([]v1alpha1.KeyValue, error) {
+func readKeyValuesFromFile(dst string) ([]v1alpha1.KeyValue, error) {
 	var keyValues []v1alpha1.KeyValue
-	dst := fmt.Sprintf("/tmp/__result__%s", containerName)
-	containerID, err := co.getContainerID(containerName)
-	if err != nil {
-		log.WithField("c", containerID).Error("Get container ID error: ", err)
-		return keyValues, err
-	}
-	err = co.runtimeExec.CopyFromContainer(containerID, common.ResultFilePath, dst)
-	if isFileNotExist(err) {
-		return keyValues, err
-	}
-
-	if err != nil {
-		return keyValues, err
-	}
 
 	b, err := ioutil.ReadFile(dst)
 	if err != nil {
