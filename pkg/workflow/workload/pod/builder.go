@@ -94,6 +94,9 @@ func (m *Builder) Prepare() error {
 			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
 		},
 	}
+	if m.wf.Annotations != nil {
+		m.pod.ObjectMeta.Annotations[meta.AnnotationIPVLANConfig] = m.wf.Annotations[meta.LabelCIDRName]
+	}
 
 	// If controller instance name is set, add label to the pod created.
 	if instance := os.Getenv(ccommon.ControllerInstanceEnvName); len(instance) != 0 {

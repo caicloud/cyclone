@@ -72,6 +72,9 @@ const (
 
 	// CycloneCreator is the label value used to represent the resources created by Cyclone.
 	CycloneCreator = "cyclone"
+
+	// LabelCIDRName is the label from workflow, cni allocate ip according this
+	LabelCIDRName = "cidr.devops.caicloud.io/name"
 )
 
 // PodKind represents the type of pods created by Cyclone.
