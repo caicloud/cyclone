@@ -151,6 +151,7 @@ func PresetVolumeName(index int) string {
 	return fmt.Sprintf("preset-%d", index)
 }
 
+// ResultSubPath returns the subPath in the volume according to the containerName.
 func ResultSubPath(containerName string) string {
 	return filepath.Join("__results__", containerName)
 }
