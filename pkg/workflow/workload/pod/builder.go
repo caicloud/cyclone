@@ -462,6 +462,7 @@ func (m *Builder) ResolveInputResources() error {
 					MountPath: common.ToolboxPath,
 				},
 				{
+					// input container might write the __result__ file.
 					Name:      common.CoordinatorSidecarVolumeName,
 					MountPath: common.ResultFileDir,
 					SubPath:   common.ResultSubPath(containerName),
@@ -849,7 +850,7 @@ func (m *Builder) AddCoordinator() error {
 			{
 				Name:      common.CoordinatorSidecarVolumeName,
 				MountPath: filepath.Join(common.CoordinatorWorkspacePath, "results"),
-				SubPath:   "__results__",
+				SubPath:   common.ResultDirSubPath,
 			},
 		},
 		ImagePullPolicy: controller.ImagePullPolicy(),
