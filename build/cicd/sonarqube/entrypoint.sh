@@ -47,6 +47,8 @@ if [ -z ${SOURCE_PATH} ]; then echo "SOURCE_PATH is unset, set it to ./"; SOURCE
 # Trim suffix "/" for the server
 SERVER=$(echo ${SERVER} | sed -e 's/\/$//')
 
+RESULT_PATH='/cyclone/results/__result__'
+
 # Create project if not exist
 status=$(curl -I -u ${TOKEN}: ${SERVER}/api/components/show?component=${PROJECT_KEY} 2>/dev/null | head -n 1 | cut -d$' ' -f2)
 if [[ $status == "404" ]]; then
@@ -120,13 +122,13 @@ done;
 echo "Scan task completed~"
 
 # Write result to output file, which will be collected by Cyclone
-echo "Collect result to result file /__result__ ..."
-echo "detailURL:${SERVER}/dashboard?id=${PROJECT_KEY}" >> /__result__;
+echo "Collect result to result file $RESULT_PATH ..."
+echo "detailURL:${SERVER}/dashboard?id=${PROJECT_KEY}" >> "$RESULT_PATH";
 # Can reference measures result in 'result.example.json' file in current directory
 measures=$(curl -XPOST -u ${TOKEN}: "${SERVER}/api/measures/component?additionalFields=periods&component=${PROJECT_KEY}&metricKeys=reliability_rating,sqale_rating,security_rating,coverage,duplicated_lines_density,quality_gate_details" 2>/dev/null)
 selected=$(echo $measures | jq -c .component.measures)
 echo $selected | jq
-echo "measures:${selected}" >> /__result__;
+echo "measures:${selected}" >> "$RESULT_PATH"
 
 # Determine success or failure
 qualityGateValue=$(echo $selected | jq '.[] | select(.metric=="quality_gate_details") | .value')

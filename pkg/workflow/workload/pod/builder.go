@@ -217,6 +217,14 @@ func (m *Builder) CreateVolumes() error {
 		},
 	})
 
+	// Add an emptyDir volume that is shared between workload container and output resolvers.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.OutputResourcesVolume,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
 	// Add host volume for host docker socket file for coordinator container.
 	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
 		Name: common.HostDockerSockVolumeName,
@@ -436,8 +444,9 @@ func (m *Builder) ResolveInputResources() error {
 			return fmt.Errorf("get resource resolver for resource type '%s' error: %v", resource.Spec.Type, err)
 		}
 
+		containerName := InputContainerName(index + 1)
 		container := corev1.Container{
-			Name:    InputContainerName(index + 1),
+			Name:    containerName,
 			Image:   resolver,
 			Command: []string{fmt.Sprintf("%s/resolver-runner.sh", common.ToolboxPath)},
 			Args:    []string{common.ResourcePullCommand},
@@ -452,6 +461,12 @@ func (m *Builder) ResolveInputResources() error {
 					Name:      common.ToolsVolume,
 					MountPath: common.ToolboxPath,
 				},
+				{
+					// input container might write the __result__ file.
+					Name:      common.CoordinatorSidecarVolumeName,
+					MountPath: common.ResultFileDir,
+					SubPath:   common.ResultSubPath(containerName),
+				},
 			},
 			ImagePullPolicy: controller.ImagePullPolicy(),
 		}
@@ -464,7 +479,7 @@ func (m *Builder) ResolveInputResources() error {
 			if tmpSubPath == "" {
 				tmpSubPath = "data"
 			} else {
-				tmpSubPath = tmpSubPath + string(os.PathSeparator) + "data"
+				tmpSubPath = filepath.Join(tmpSubPath, "data")
 			}
 
 			// We only mount resource to workload containers, sidecars are excluded.
@@ -560,9 +575,8 @@ func (m *Builder) ResolveOutputResources() error {
 			})
 		} else {
 			container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-				Name:      common.CoordinatorSidecarVolumeName,
+				Name:      common.OutputResourcesVolume,
 				MountPath: common.ResolverDefaultDataPath,
-				SubPath:   fmt.Sprintf("resources/%s", resource.Name),
 			})
 		}
 
@@ -576,6 +590,18 @@ func (m *Builder) ResolveOutputResources() error {
 		}
 
 		m.pod.Spec.Containers = append(m.pod.Spec.Containers, container)
+	}
+
+	// modify the workload container in-place
+	for i := range m.pod.Spec.Containers {
+		c := &m.pod.Spec.Containers[i]
+		if !common.OnlyWorkload(c.Name) {
+			continue
+		}
+		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+			Name:      common.OutputResourcesVolume,
+			MountPath: common.OutputResourcesDir,
+		})
 	}
 
 	// Add a volume for docker socket file sharing if there are image type resource to output.
@@ -822,8 +848,9 @@ func (m *Builder) AddCoordinator() error {
 				MountPath: common.CoordinatorResolverPath,
 			},
 			{
-				Name:      common.HostDockerSockVolumeName,
-				MountPath: common.DockerSockFilePath,
+				Name:      common.CoordinatorSidecarVolumeName,
+				MountPath: filepath.Join(common.CoordinatorWorkspacePath, common.ResultDirSubPath),
+				SubPath:   common.ResultDirSubPath,
 			},
 		},
 		ImagePullPolicy: controller.ImagePullPolicy(),
@@ -835,6 +862,17 @@ func (m *Builder) AddCoordinator() error {
 			SubPath:   common.ArtifactsPath(m.wfr.Name, m.stage),
 		})
 	}
+
+	// modify the containers in-place
+	for i := range m.pod.Spec.Containers {
+		c := &m.pod.Spec.Containers[i]
+		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+			Name:      common.CoordinatorSidecarVolumeName,
+			MountPath: common.ResultFileDir,
+			SubPath:   common.ResultSubPath(c.Name),
+		})
+	}
+
 	m.pod.Spec.Containers = append(m.pod.Spec.Containers, coordinator)
 
 	return nil
@@ -848,10 +886,6 @@ func (m *Builder) InjectEnvs() error {
 			Name:  common.EnvMetadataNamespace,
 			Value: m.wfr.Namespace,
 		},
-		// {
-		// 	Name:  common.EnvProjectName,
-		// 	Value: common.ResolveProjectName(*m.wfr),
-		// },
 		{
 			Name:  common.EnvWorkflowName,
 			Value: common.ResolveWorkflowName(*m.wfr),

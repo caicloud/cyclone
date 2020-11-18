@@ -58,9 +58,9 @@ fi
 COMMAND=$1
 
 # Check whether environment variables are set.
-if [ -z ${WORKDIR} ]; then echo "WORKDIR is unset"; exit 1; fi
-if [ -z ${URL} ]; then echo "URL is unset"; exit 1; fi
-if [ -z ${METHOD} ]; then echo "METHOD is unset"; exit 1; fi
+if [ -z "${WORKDIR}" ]; then echo "WORKDIR is unset"; exit 1; fi
+if [ -z "${URL}" ]; then echo "URL is unset"; exit 1; fi
+if [ -z "${METHOD}" ]; then echo "METHOD is unset"; exit 1; fi
 
 # replease string '${METADATA_NAMESPACE}' '${WORKFLOW_NAME}' '${STAGE_NAME}' '${WORKFLOWRUN_NAME}' in URL with corresponding real value
 URL=${URL//'${METADATA_NAMESPACE}'/${METADATA_NAMESPACE}}
@@ -69,15 +69,15 @@ URL=${URL//'${STAGE_NAME}'/${STAGE_NAME}}
 URL=${URL//'${WORKFLOWRUN_NAME}'/${WORKFLOWRUN_NAME}}
 
 wrapPush() {
-    if [ -z ${COMPRESS_FILE_NAME} ]; then COMPRESS_FILE_NAME="artifact.tar"; fi
-    if [ -z ${FORM_FILE_KEY} ]; then FORM_FILE_KEY="file"; fi
-    if [ -z ${FIND_OPTIONS} ]; then FIND_OPTIONS=". -name '*'"; fi
+    if [ -z "${COMPRESS_FILE_NAME}" ]; then COMPRESS_FILE_NAME="artifact.tar"; fi
+    if [ -z "${FORM_FILE_KEY}" ]; then FORM_FILE_KEY="file"; fi
+    if [ -z "${FIND_OPTIONS}" ]; then FIND_OPTIONS=". -name '*'"; fi
 
-    cd ${WORKDIR}/data/${DATA_SUBDIR}
-    mkdir -p ${WORKDIR}/__output_resources;
+    cd "${WORKDIR}/data/${DATA_SUBDIR}"
+    mkdir -p "${WORKDIR}/__output_resources"
 
     echo "Start to find and copy files: find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
-    eval "find ${FIND_OPTIONS} -exec cp --parents {} ${WORKDIR}/__output_resources \;"
+    eval "find ${FIND_OPTIONS} -exec cp -v --parents {} ${WORKDIR}/__output_resources \;"
 
     if [ -z "$(ls -A "${WORKDIR}/__output_resources")" ]; then
        echo "No files should be sent, exit."
@@ -85,9 +85,9 @@ wrapPush() {
     fi
 
     echo "Start to compress files under ${WORKDIR}/__output_resources into file ${COMPRESS_FILE_NAME}"
-    cd ${WORKDIR}/__output_resources
-    tar -cvf ${WORKDIR}/${COMPRESS_FILE_NAME} ./*
-    cd ${WORKDIR}
+    cd "${WORKDIR}/__output_resources"
+    tar -cvf "${WORKDIR}/${COMPRESS_FILE_NAME}" ./*
+    cd "${WORKDIR}"
 
     for header in ${HEADERS}; do
         headerString="-H ${header} ${headerString}"

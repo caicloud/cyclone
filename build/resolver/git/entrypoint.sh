@@ -59,6 +59,7 @@ if [ "${SCM_TYPE}" = "Bitbucket" ] && [ -z "${SCM_USER}" ]; then echo "WARN: SCM
 
 GIT_DEPTH_OPTION="--depth=1"
 GIT_DEPTH_OPTION_DEEPER="--depth=30"
+RESULT_PATH='/cyclone/results/__result__'
 
 # If SCM_REPO is provided, embed it to SCM_URL
 if [ ! -z "${SCM_REPO}" ]; then
@@ -151,10 +152,10 @@ wrapPull() {
     fi
 
     # Write commit id to output file, which will be collected by Cyclone
-    cd $WORKDIR/data
-    echo "Collect commit id to result file /__result__ ..."
-    echo "LastCommitID:`git log -n 1 --pretty=format:"%H"`" > /__result__;
-    cat /__result__;
+    cd "$WORKDIR/data"
+    echo "Collect commit id to result file $RESULT_PATH ..."
+    echo "LastCommitID:$(git log -n 1 --pretty=format:"%H")" > "$RESULT_PATH"
+    cat "$RESULT_PATH"
 }
 
 # Revision can be in two different format:

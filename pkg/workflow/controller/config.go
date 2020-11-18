@@ -151,7 +151,7 @@ func LoadConfig(cm *corev1.ConfigMap) error {
 	}
 
 	InitLogger(&Config.Logging)
-	log.Info("ResyncPeriod is %s", Config.ResyncPeriodSeconds*time.Second)
+	log.Infof("ResyncPeriod is %s", Config.ResyncPeriodSeconds*time.Second)
 	return nil
 }
 
