@@ -849,7 +849,7 @@ func (m *Builder) AddCoordinator() error {
 			},
 			{
 				Name:      common.CoordinatorSidecarVolumeName,
-				MountPath: filepath.Join(common.CoordinatorWorkspacePath, "results"),
+				MountPath: filepath.Join(common.CoordinatorWorkspacePath, common.ResultDirSubPath),
 				SubPath:   common.ResultDirSubPath,
 			},
 		},
