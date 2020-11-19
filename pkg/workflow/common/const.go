@@ -20,9 +20,6 @@ const (
 	// EnvMetadataNamespace is an environment which represents namespace of workflows/workflowRuns/stages.
 	EnvMetadataNamespace = "METADATA_NAMESPACE"
 
-	// // EnvProjectName is an environment which represents project name.
-	// EnvProjectName = "PROJECT_NAME"
-
 	// EnvWorkflowName is an environment which represents workflow name.
 	EnvWorkflowName = "WORKFLOW_NAME"
 	// EnvWorkflowrunName is an environment which represents workflowrun name.
@@ -76,8 +73,6 @@ const (
 
 	// CoordinatorResolverPath ...
 	CoordinatorResolverPath = "/workspace/resolvers"
-	// CoordinatorResourcesPath ...
-	CoordinatorResourcesPath = "/workspace/resolvers/resources"
 	// CoordinatorResolverNotifyPath ...
 	CoordinatorResolverNotifyPath = "/workspace/resolvers/notify"
 	// CoordinatorResolverNotifyOkPath ...
@@ -102,10 +97,6 @@ const (
 	// sidecar containers, e.g. image resolvers. Coordinator would notify resolvers that workload
 	// containers have finished their work, so that resource resolvers can push resources.
 	CoordinatorSidecarVolumeName = "coordinator-sidecar-volume"
-	// HostDockerSockVolumeName is volume for the host docker socket file, coordinator will mount it.
-	HostDockerSockVolumeName = "host-docker-sock"
-	// DockerSockFilePath is path of docker socket file
-	DockerSockFilePath = "/var/run/docker.sock"
 	// DockerInDockerSockVolume is volume used for docker-in-docker to share it's sock file with other containers.
 	DockerInDockerSockVolume = "docker-dind-sock"
 	// DockerConfigJSONVolume is volume for config.json in secret.
