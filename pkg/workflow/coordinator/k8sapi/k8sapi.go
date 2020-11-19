@@ -154,16 +154,19 @@ func (k *Executor) SetResults(values []v1alpha1.KeyValue) error {
 			return err
 		}
 
-		if pod.Annotations == nil {
-			pod.Annotations = make(map[string]string)
-		}
-
 		b, err := json.Marshal(values)
 		if err != nil {
 			return err
 		}
 
-		pod.Annotations[meta.AnnotationStageResult] = string(b)
+		annotations := make(map[string]string, len(pod.Annotations))
+		for k, v := range pod.Annotations {
+			if !strings.HasPrefix(k, meta.AnnotationSeccompContainerPrefix) {
+				annotations[k] = v
+			}
+		}
+		annotations[meta.AnnotationStageResult] = string(b)
+		pod.Annotations = annotations
 		_, err = k.client.CoreV1().Pods(k.namespace).Update(pod)
 		return err
 	})

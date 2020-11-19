@@ -42,4 +42,7 @@ const (
 
 	// AnnotationCacheCleanupStatus is the annotation key used to describe cache cleanup status.
 	AnnotationCacheCleanupStatus = "project.cyclone.dev/cache-cleanup-status"
+
+	// AnnotationSeccompContainerPrefix  represents the key of a seccomp profile applied to one container of a pod.
+	AnnotationSeccompContainerPrefix = "container.seccomp.security.alpha.kubernetes.io/"
 )
