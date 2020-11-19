@@ -36,6 +36,19 @@ type PodWorkload struct {
 	Outputs Outputs `json:"outputs,omitempty"`
 	// Stage workload specification
 	Spec corev1.PodSpec `json:"spec"`
+	// Stage workload metadata
+	Meta *PodWorkloadMeta `json:"metadata,omitempty"`
+}
+
+// PodWorkloadMeta describes extra labels or annotations that should be added to the PodWorkload.
+type PodWorkloadMeta struct {
+	// Labels is a map of string keys and values that can be used to organize and categorize
+	// (scope and select) objects.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Annotations is an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // DelegationWorkload describes workload delegated to external services.

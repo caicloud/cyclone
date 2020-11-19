@@ -77,22 +77,33 @@ func (m *Builder) Prepare() error {
 		return fmt.Errorf("only one workload containers supported, others should be sidecars, stage: %s", m.stage)
 	}
 
+	labels := map[string]string{
+		meta.LabelProjectName:     common.ResolveProjectName(*m.wfr),
+		meta.LabelWorkflowName:    common.ResolveWorkflowName(*m.wfr),
+		meta.LabelWorkflowRunName: m.wfr.Name,
+		meta.LabelPodCreatedBy:    meta.CycloneCreator,
+		meta.LabelPodKind:         meta.PodKindWorkload.String(),
+	}
+	annotations := map[string]string{
+		meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
+		meta.AnnotationWorkflowRunName: m.wfr.Name,
+		meta.AnnotationStageName:       m.stage,
+		meta.AnnotationMetaNamespace:   m.wfr.Namespace,
+	}
+	if m.stg.Spec.Pod.Meta != nil {
+		podMeta := m.stg.Spec.Pod.Meta
+		for k, v := range podMeta.Labels {
+			labels[k] = v
+		}
+		for k, v := range podMeta.Annotations {
+			annotations[k] = v
+		}
+	}
 	m.pod.ObjectMeta = metav1.ObjectMeta{
-		Name:      Name(m.wf.Name, m.stage),
-		Namespace: m.executionContext.Namespace,
-		Labels: map[string]string{
-			meta.LabelProjectName:     common.ResolveProjectName(*m.wfr),
-			meta.LabelWorkflowName:    common.ResolveWorkflowName(*m.wfr),
-			meta.LabelWorkflowRunName: m.wfr.Name,
-			meta.LabelPodCreatedBy:    meta.CycloneCreator,
-			meta.LabelPodKind:         meta.PodKindWorkload.String(),
-		},
-		Annotations: map[string]string{
-			meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
-			meta.AnnotationWorkflowRunName: m.wfr.Name,
-			meta.AnnotationStageName:       m.stage,
-			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
-		},
+		Name:        Name(m.wf.Name, m.stage),
+		Namespace:   m.executionContext.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}
 
 	// If controller instance name is set, add label to the pod created.
