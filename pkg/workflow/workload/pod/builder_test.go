@@ -233,6 +233,21 @@ func (suite *PodBuilderSuite) SetupTest() {
 						},
 					},
 				}, nil
+			case "simple-with-pod-meta":
+				return true, &v1alpha1.Stage{
+					ObjectMeta: metav1.ObjectMeta{Name: name},
+					Spec: v1alpha1.StageSpec{
+						Pod: &v1alpha1.PodWorkload{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{{Name: "c1"}},
+							},
+							Meta: &v1alpha1.PodWorkloadMeta{
+								Labels:      map[string]string{"l1": "v1"},
+								Annotations: map[string]string{"a1": "v1"},
+							},
+						},
+					},
+				}, nil
 			case "unresolvable-argument":
 				return true, &v1alpha1.Stage{
 					ObjectMeta: metav1.ObjectMeta{
@@ -648,6 +663,26 @@ func (suite *PodBuilderSuite) TestInjectEnvs() {
 			assert.Equal(suite.T(), "simple", kv.Value)
 		}
 	}
+}
+
+func checkSubMap(t *testing.T, parent, child map[string]string) {
+	t.Helper()
+	for k, got := range child {
+		expect, ok := parent[k]
+		if !ok {
+			t.Errorf("%s not exist in parent map", k)
+			continue
+		}
+		assert.Equal(t, expect, got)
+	}
+}
+
+func (suite *PodBuilderSuite) TestAdditionalPodMetadata() {
+	builder := NewBuilder(suite.client, wf, wfr, getStage(suite.client, "simple-with-pod-meta"))
+	err := builder.Prepare()
+	assert.NoError(suite.T(), err)
+	checkSubMap(suite.T(), builder.pod.Labels, map[string]string{"l1": "v1"})
+	checkSubMap(suite.T(), builder.pod.Annotations, map[string]string{"a1": "v1"})
 }
 
 func TestPodBuilderSuite(t *testing.T) {

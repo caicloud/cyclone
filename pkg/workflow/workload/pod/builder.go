@@ -77,22 +77,33 @@ func (m *Builder) Prepare() error {
 		return fmt.Errorf("only one workload containers supported, others should be sidecars, stage: %s", m.stage)
 	}
 
+	labels := map[string]string{
+		meta.LabelProjectName:     common.ResolveProjectName(*m.wfr),
+		meta.LabelWorkflowName:    common.ResolveWorkflowName(*m.wfr),
+		meta.LabelWorkflowRunName: m.wfr.Name,
+		meta.LabelPodCreatedBy:    meta.CycloneCreator,
+		meta.LabelPodKind:         meta.PodKindWorkload.String(),
+	}
+	annotations := map[string]string{
+		meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
+		meta.AnnotationWorkflowRunName: m.wfr.Name,
+		meta.AnnotationStageName:       m.stage,
+		meta.AnnotationMetaNamespace:   m.wfr.Namespace,
+	}
+	if m.stg.Spec.Pod.Meta != nil {
+		podMeta := m.stg.Spec.Pod.Meta
+		for k, v := range podMeta.Labels {
+			labels[k] = v
+		}
+		for k, v := range podMeta.Annotations {
+			annotations[k] = v
+		}
+	}
 	m.pod.ObjectMeta = metav1.ObjectMeta{
-		Name:      Name(m.wf.Name, m.stage),
-		Namespace: m.executionContext.Namespace,
-		Labels: map[string]string{
-			meta.LabelProjectName:     common.ResolveProjectName(*m.wfr),
-			meta.LabelWorkflowName:    common.ResolveWorkflowName(*m.wfr),
-			meta.LabelWorkflowRunName: m.wfr.Name,
-			meta.LabelPodCreatedBy:    meta.CycloneCreator,
-			meta.LabelPodKind:         meta.PodKindWorkload.String(),
-		},
-		Annotations: map[string]string{
-			meta.AnnotationIstioInject:     meta.AnnotationValueFalse,
-			meta.AnnotationWorkflowRunName: m.wfr.Name,
-			meta.AnnotationStageName:       m.stage,
-			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
-		},
+		Name:        Name(m.wf.Name, m.stage),
+		Namespace:   m.executionContext.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}
 
 	// If controller instance name is set, add label to the pod created.
@@ -604,15 +615,17 @@ func (m *Builder) ResolveOutputResources() error {
 		})
 	}
 
-	// Add a volume for docker socket file sharing if there are image type resource to output.
-	if withImageOutput {
-		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: common.DockerInDockerSockVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		})
+	if !withImageOutput {
+		return nil
 	}
+
+	// Add a volume for docker socket file sharing if there are image type resource to output.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.DockerInDockerSockVolume,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
 
 	// Add a docker-in-docker sidecar when there are image type resource to output.
 	args := []string{"dockerd"}
@@ -622,35 +635,30 @@ func (m *Builder) ResolveOutputResources() error {
 	for _, r := range controller.Config.DindSettings.InsecureRegistries {
 		args = append(args, "--insecure-registry", r)
 	}
-
-	if withImageOutput {
-		var previleged = true
-		dind := corev1.Container{
-			Image: controller.Config.Images[controller.DindImage],
-			Name:  common.DockerInDockerSidecarName,
-			Args:  args,
-			SecurityContext: &corev1.SecurityContext{
-				Privileged: &previleged,
+	var previleged = true
+	dind := corev1.Container{
+		Image: controller.Config.Images[controller.DindImage],
+		Name:  common.DockerInDockerSidecarName,
+		Args:  args,
+		SecurityContext: &corev1.SecurityContext{
+			Privileged: &previleged,
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      common.DockerInDockerSockVolume,
+				MountPath: common.DockerSockPath,
 			},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
-				},
-			},
-		}
-		m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
+		},
 	}
+	m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
 
 	// Mount docker socket file to workload container if there are image type resource to output.
-	if withImageOutput {
-		for i, c := range m.pod.Spec.Containers {
-			if common.OnlyCustomContainer(c.Name) {
-				m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
-				})
-			}
+	for i, c := range m.pod.Spec.Containers {
+		if common.OnlyCustomContainer(c.Name) {
+			m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
+				Name:      common.DockerInDockerSockVolume,
+				MountPath: common.DockerSockPath,
+			})
 		}
 	}
 
