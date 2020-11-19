@@ -615,15 +615,17 @@ func (m *Builder) ResolveOutputResources() error {
 		})
 	}
 
-	// Add a volume for docker socket file sharing if there are image type resource to output.
-	if withImageOutput {
-		m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-			Name: common.DockerInDockerSockVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		})
+	if !withImageOutput {
+		return nil
 	}
+
+	// Add a volume for docker socket file sharing if there are image type resource to output.
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.DockerInDockerSockVolume,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
 
 	// Add a docker-in-docker sidecar when there are image type resource to output.
 	args := []string{"dockerd"}
@@ -633,35 +635,30 @@ func (m *Builder) ResolveOutputResources() error {
 	for _, r := range controller.Config.DindSettings.InsecureRegistries {
 		args = append(args, "--insecure-registry", r)
 	}
-
-	if withImageOutput {
-		var previleged = true
-		dind := corev1.Container{
-			Image: controller.Config.Images[controller.DindImage],
-			Name:  common.DockerInDockerSidecarName,
-			Args:  args,
-			SecurityContext: &corev1.SecurityContext{
-				Privileged: &previleged,
+	var previleged = true
+	dind := corev1.Container{
+		Image: controller.Config.Images[controller.DindImage],
+		Name:  common.DockerInDockerSidecarName,
+		Args:  args,
+		SecurityContext: &corev1.SecurityContext{
+			Privileged: &previleged,
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      common.DockerInDockerSockVolume,
+				MountPath: common.DockerSockPath,
 			},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
-				},
-			},
-		}
-		m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
+		},
 	}
+	m.pod.Spec.Containers = append(m.pod.Spec.Containers, dind)
 
 	// Mount docker socket file to workload container if there are image type resource to output.
-	if withImageOutput {
-		for i, c := range m.pod.Spec.Containers {
-			if common.OnlyCustomContainer(c.Name) {
-				m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-					Name:      common.DockerInDockerSockVolume,
-					MountPath: common.DockerSockPath,
-				})
-			}
+	for i, c := range m.pod.Spec.Containers {
+		if common.OnlyCustomContainer(c.Name) {
+			m.pod.Spec.Containers[i].VolumeMounts = append(m.pod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
+				Name:      common.DockerInDockerSockVolume,
+				MountPath: common.DockerSockPath,
+			})
 		}
 	}
 
