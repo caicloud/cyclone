@@ -161,6 +161,8 @@ func (k *Executor) SetResults(values []v1alpha1.KeyValue) error {
 
 		annotations := make(map[string]string, len(pod.Annotations))
 		for k, v := range pod.Annotations {
+			// If the pod has the annotation `container.seccomp.security.alpha.kubernetes.io/<name>`,
+			// we might fail to update the annotations.
 			if !strings.HasPrefix(k, meta.AnnotationSeccompContainerPrefix) {
 				annotations[k] = v
 			}
