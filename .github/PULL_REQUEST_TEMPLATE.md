@@ -1,8 +1,40 @@
 <!--  Thanks for sending a pull request! See below for tips! -->
 
-**What this PR does / why we need it**:
+**What type of PR is this?**
 
-Add your description
+<!--
+Add one or more of the following kinds:
+/kind api-change
+/kind bug
+/kind cleanup
+/kind deprecation
+/kind documentation
+/kind test
+/kind feature
+/kind regression
+/kind upgrade
+/kind denpendency
+
+Also with one of following areas:
+/area auth
+/area resource
+/area apps
+/area cicd
+/area cargo
+/area insight
+/area loadbalancer
+/area network
+/area cli
+/area data
+/area serving
+/area workflow
+/area tutorial
+/area solution
+/area training
+/area model
+-->
+
+**What this PR does / why we need it**:
 
 **Which issue(s) this PR is related to** *(optional, link to 3rd issue(s))*:
 
@@ -24,14 +56,16 @@ Reference to #
 4. Is there anyway we can skip this to not affect the overall process?
 -->
 
-**Release note**:
-<!--  Write your release note:
-1. Enter your extended release note in the below block. If the PR requires additional action from users switching to the new release, include the string "action required".
-2. If no release note is required, just write "NONE".
--->
+**Does this PR introduce a user-facing change?**:
+<!--
+If no, just write "NONE" in the release-note block below.
+If yes, a release note is required:
+Enter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string "action required".
 
+For more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md
+-->
 ```release-note
-NONE
+
 ```
 
 <!--  Thanks for sending a pull request! Here are some tips:
