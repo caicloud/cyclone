@@ -236,16 +236,6 @@ func (m *Builder) CreateVolumes() error {
 		},
 	})
 
-	// Add host volume for host docker socket file for coordinator container.
-	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
-		Name: common.HostDockerSockVolumeName,
-		VolumeSource: corev1.VolumeSource{
-			HostPath: &corev1.HostPathVolumeSource{
-				Path: common.DockerSockFilePath,
-			},
-		},
-	})
-
 	// Add PVC volume to pod if configured.
 	if m.executionContext.PVC != "" {
 		if n := m.CreatePVCVolume(common.DefaultPvVolumeName, m.executionContext.PVC); n != common.DefaultPvVolumeName {
