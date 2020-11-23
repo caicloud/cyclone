@@ -117,7 +117,7 @@ func (m *Builder) Prepare() error {
 // ResolveArguments ...
 func (m *Builder) ResolveArguments() error {
 	parameters := make(map[string]string)
-	for _, s := range m.wfr.Spec.Stages {
+	for _, s := range m.wfr.Spec.StageParams {
 		if s.Name == m.stage {
 			for _, p := range s.Parameters {
 				if p.Value != nil {
@@ -411,7 +411,7 @@ func (m *Builder) ResolveInputResources() error {
 			}
 		}
 
-		for _, p := range m.wfr.Spec.Resources {
+		for _, p := range m.wfr.Spec.ResourceParams {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
 					if c.Value != nil {
@@ -524,7 +524,7 @@ func (m *Builder) ResolveOutputResources() error {
 				envsMap[p.Name] = *p.Value
 			}
 		}
-		for _, p := range m.wfr.Spec.Resources {
+		for _, p := range m.wfr.Spec.ResourceParams {
 			if p.Name == r.Name {
 				for _, c := range p.Parameters {
 					if c.Value != nil {

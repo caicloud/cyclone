@@ -63,7 +63,7 @@ var wfr = &v1alpha1.WorkflowRun{
 		},
 	},
 	Spec: v1alpha1.WorkflowRunSpec{
-		Stages: []v1alpha1.ParameterConfig{
+		StageParams: []v1alpha1.ParameterConfig{
 			{
 				Name: "stage1",
 				Parameters: []v1alpha1.ParameterItem{

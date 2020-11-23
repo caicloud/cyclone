@@ -214,7 +214,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	}
 
 	// Set "Tag" and "SCM_REVISION" for all resource configs.
-	for _, r := range wft.Spec.WorkflowRunSpec.Resources {
+	for _, r := range wft.Spec.WorkflowRunSpec.ResourceParams {
 		for i, p := range r.Parameters {
 			if p.Name == "TAG" && tag != "" {
 				r.Parameters[i].Value = &tag
@@ -227,7 +227,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	}
 
 	// Set "Tag" for all stage configs.
-	for _, s := range wft.Spec.WorkflowRunSpec.Stages {
+	for _, s := range wft.Spec.WorkflowRunSpec.StageParams {
 		for i, p := range s.Parameters {
 			if p.Name == "tag" && tag != "" {
 				s.Parameters[i].Value = &tag
