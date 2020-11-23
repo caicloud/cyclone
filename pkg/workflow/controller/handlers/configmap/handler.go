@@ -19,8 +19,8 @@ var _ handlers.Interface = (*Handler)(nil)
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-func (h *Handler) Reconcile(obj interface{}) error {
-	return h.process(obj)
+func (h *Handler) Reconcile(obj interface{}) (res controller.Result, err error) {
+	return res, h.process(obj)
 }
 
 // ObjectDeleted ...

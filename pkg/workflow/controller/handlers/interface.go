@@ -1,10 +1,14 @@
 package handlers
 
+import (
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
+)
+
 // Interface ...
 type Interface interface {
 	// Reconcile compares the actual state with the desired, and attempts to
 	// converge the two.
-	Reconcile(obj interface{}) error
+	Reconcile(obj interface{}) (controller.Result, error)
 
 	// AddFinalizer adds a finalizer to the object if it not exists,
 	// If a finalizer added, this func needs to update the object to the Kubernetes.

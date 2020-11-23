@@ -8,6 +8,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )
@@ -34,19 +35,19 @@ func NewHandler(client clientset.Interface) *Handler {
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-func (h *Handler) Reconcile(obj interface{}) error {
+func (h *Handler) Reconcile(obj interface{}) (res controller.Result, err error) {
 	cluster, ok := obj.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect ExecutionCluster, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return res, fmt.Errorf("unknown resource type")
 	}
 	log.WithField("name", cluster.Name).Debug("Observed execution cluster")
 
 	if err := store.RegisterClusterController(cluster); err != nil {
 		log.WithField("name", cluster.Name).Error("Register execution cluster controller error: ", err)
-		return err
+		return res, err
 	}
-	return nil
+	return res, nil
 }
 
 // finalize ...
