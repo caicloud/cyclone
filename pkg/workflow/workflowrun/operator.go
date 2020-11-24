@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -359,6 +360,10 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 	}, nil
 }
 
+func isExceededQuotaError(err error) bool {
+	return errors.IsForbidden(err) && strings.Contains(err.Error(), "exceeded quota:")
+}
+
 // Reconcile finds next stages in the workflow to run and resolve WorkflowRun's overall status.
 func (o *operator) Reconcile() (controller.Result, error) {
 	var res controller.Result
@@ -375,14 +380,6 @@ func (o *operator) Reconcile() (controller.Result, error) {
 		log.WithField("stg", nextStages).Info("Next stages to run")
 	}
 
-	for _, stage := range nextStages {
-		o.UpdateStageStatus(stage, &v1alpha1.Status{
-			Phase:              v1alpha1.StatusRunning,
-			Reason:             "StageInitialized",
-			LastTransitionTime: metav1.Time{Time: time.Now()},
-			StartTime:          metav1.Time{Time: time.Now()},
-		})
-	}
 	overall, err := o.OverallStatus()
 	if err != nil {
 		return res, fmt.Errorf("resolve overall status error: %v", err)
@@ -399,6 +396,7 @@ func (o *operator) Reconcile() (controller.Result, error) {
 		return res, nil
 	}
 
+	var retryStageNames []string
 	// Create pod to run stages.
 	for _, stage := range nextStages {
 		log.WithField("stg", stage).Info("Start to run stage")
@@ -411,9 +409,30 @@ func (o *operator) Reconcile() (controller.Result, error) {
 
 		err = NewWorkloadProcessor(o.clusterClient, o.client, o.wf, o.wfr, stg, o).Process()
 		if err != nil {
+			if isExceededQuotaError(err) {
+				retryStageNames = append(retryStageNames, stage)
+			}
 			log.WithField("stg", stage).Error("Process workload error: ", err)
 			continue
 		}
+	}
+	if len(retryStageNames) > 0 {
+		var requeue bool
+		if HasTimedOut(o.wfr) {
+			// timed-out. Update stage status and do not requeue
+			for _, stageName := range retryStageNames {
+				o.UpdateStageStatus(stageName, &v1alpha1.Status{
+					Phase:              v1alpha1.StatusFailed,
+					Reason:             "RetryOnExceededQuotaTimeout",
+					LastTransitionTime: metav1.Time{Time: time.Now()},
+					StartTime:          metav1.Time{Time: time.Now()},
+				})
+			}
+			requeue = false
+		} else {
+			requeue = true
+		}
+		res.Requeue = &requeue
 	}
 
 	overall, err = o.OverallStatus()

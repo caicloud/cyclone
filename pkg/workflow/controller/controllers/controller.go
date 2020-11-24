@@ -67,16 +67,31 @@ func (c *Controller) nextWork() bool {
 	}
 
 	defer c.queue.Done(key)
-	_, err := c.doWork(key.(string))
-	if err == nil {
-		c.queue.Forget(key)
-	} else if c.queue.NumRequeues(key) < 3 {
-		log.Errorf("process %s failed (will retry): %v", key, err)
-		c.queue.AddRateLimited(key)
+	res, err := c.doWork(key.(string))
+	if res.Requeue != nil {
+		requeue := *res.Requeue
+		if !requeue {
+			log.Warningf("process %s failed (requeue=false, gave up)", key)
+			c.queue.Forget(key)
+		} else if res.RequeueAfter > 0 {
+			log.Warningf("process %s failed (requeue=true, will retry after %s)", key, res.RequeueAfter)
+			c.queue.Forget(key)
+			c.queue.AddAfter(key, res.RequeueAfter)
+		} else {
+			log.Warningf("process %s failed (requeue=true, will retry)", key)
+			c.queue.AddRateLimited(key)
+		}
+	} else if err != nil {
+		if c.queue.NumRequeues(key) < 3 {
+			log.Errorf("process %s failed (will retry): %v", key, err)
+			c.queue.AddRateLimited(key)
+		} else {
+			log.Errorf("process %s failed (gave up): %v", key, err)
+			c.queue.Forget(key)
+			utilruntime.HandleError(err)
+		}
 	} else {
-		log.Errorf("process %s failed (gave up): %v", key, err)
 		c.queue.Forget(key)
-		utilruntime.HandleError(err)
 	}
 
 	return true

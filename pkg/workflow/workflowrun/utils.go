@@ -139,3 +139,9 @@ func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha
 func GCPodName(wfr string) string {
 	return fmt.Sprintf("wfrgc--%s", wfr)
 }
+
+// HasTimedOut checks whether the WorkflowRun has timed out
+func HasTimedOut(wfr *v1alpha1.WorkflowRun) bool {
+	timeout, _ := ParseTime(wfr.Spec.Timeout)
+	return wfr.CreationTimestamp.UTC().Add(timeout).Before(time.Now().UTC())
+}
