@@ -8,6 +8,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -37,16 +38,16 @@ func NewHandler(client clientset.Interface) *Handler {
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-func (h *Handler) Reconcile(obj interface{}) error {
+func (h *Handler) Reconcile(obj interface{}) (res controller.Result, err error) {
 	wft, err := ToWorkflowTrigger(obj)
 	if err != nil {
 		log.Warn("Convert to WorkflowTrigger error: ", err)
-		return err
+		return res, err
 	}
 	if wft.Spec.Type == v1alpha1.TriggerTypeCron {
 		h.cronManager.UpdateCron(wft)
 	}
-	return nil
+	return res, nil
 }
 
 // finalize ...

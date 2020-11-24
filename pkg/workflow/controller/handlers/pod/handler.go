@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -36,7 +37,7 @@ func NewHandler(client clientset.Interface, clusterClient kubernetes.Interface) 
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-func (h *Handler) Reconcile(obj interface{}) error {
+func (h *Handler) Reconcile(obj interface{}) (res controller.Result, err error) {
 	// If Workflow Controller got restarted, previous started pods would be
 	// observed by controller with create event. We need to handle update in
 	// this case as well. Otherwise WorkflowRun may stuck in running state.
@@ -44,11 +45,11 @@ func (h *Handler) Reconcile(obj interface{}) error {
 	originPod, ok := obj.(*corev1.Pod)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return res, fmt.Errorf("unknown resource type")
 	}
 
 	pod := originPod.DeepCopy()
-	return h.onUpdate(pod)
+	return res, h.onUpdate(pod)
 }
 
 func (h *Handler) onUpdate(pod *corev1.Pod) error {

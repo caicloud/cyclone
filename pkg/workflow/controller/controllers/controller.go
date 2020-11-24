@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
 
@@ -25,26 +26,6 @@ type Controller struct {
 	queue         workqueue.RateLimitingInterface
 	informer      cache.SharedIndexInformer
 	eventHandler  handlers.Interface
-}
-
-// EventType ...
-type EventType int
-
-const (
-	// CREATE indicates creation event
-	CREATE EventType = iota
-	// UPDATE indicates updating event
-	UPDATE
-	// DELETE indicates deletion event
-	DELETE
-)
-
-// Event ...
-type Event struct {
-	Key       string
-	EventType EventType
-	Object    interface{}
-	OldObject interface{}
 }
 
 // Run ...
@@ -86,7 +67,7 @@ func (c *Controller) nextWork() bool {
 	}
 
 	defer c.queue.Done(key)
-	err := c.doWork(key.(string))
+	_, err := c.doWork(key.(string))
 	if err == nil {
 		c.queue.Forget(key)
 	} else if c.queue.NumRequeues(key) < 3 {
@@ -101,31 +82,31 @@ func (c *Controller) nextWork() bool {
 	return true
 }
 
-func (c *Controller) doWork(key string) error {
+func (c *Controller) doWork(key string) (res controller.Result, err error) {
 	obj, exists, err := c.informer.GetIndexer().GetByKey(key)
 	if err != nil {
-		return fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
+		return res, fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
 	}
 
 	if obj == nil || !exists {
 		log.WithField("obj", obj).WithField("exist", exists).Debug("Object is nil or not exist")
-		return nil
+		return res, nil
 	}
 
 	object, ok := obj.(metav1.Object)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect it is a Kubernetes resource object, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return res, fmt.Errorf("unknown resource type")
 	}
 
 	// The object deletion timestamp is not zero value that indicates the resource is being deleted
 	if !object.GetDeletionTimestamp().IsZero() {
-		return c.eventHandler.HandleFinalizer(object)
+		return res, c.eventHandler.HandleFinalizer(object)
 	}
 
 	// Add finalizer if needed
 	if err := c.eventHandler.AddFinalizer(object); err != nil {
-		return err
+		return res, err
 	}
 
 	return c.eventHandler.Reconcile(obj)

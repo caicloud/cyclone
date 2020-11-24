@@ -49,7 +49,7 @@ type Operator interface {
 	// - 'wfrDeletion' indicates whether the GC is performed because of WorkflowRun deleted.
 	GC(lastTry, wfrDeletion bool) error
 	// Run next stages in the Workflow and resolve overall status.
-	Reconcile() error
+	Reconcile() (controller.Result, error)
 	// ResolveGlobalVariables resolves global variables from workflow.
 	ResolveGlobalVariables()
 }
@@ -360,7 +360,9 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 }
 
 // Reconcile finds next stages in the workflow to run and resolve WorkflowRun's overall status.
-func (o *operator) Reconcile() error {
+func (o *operator) Reconcile() (controller.Result, error) {
+	var res controller.Result
+
 	if o.wfr.Status.Stages == nil {
 		o.InitStagesStatus()
 	}
@@ -383,18 +385,18 @@ func (o *operator) Reconcile() error {
 	}
 	overall, err := o.OverallStatus()
 	if err != nil {
-		return fmt.Errorf("resolve overall status error: %v", err)
+		return res, fmt.Errorf("resolve overall status error: %v", err)
 	}
 	o.wfr.Status.Overall = *overall
 	err = o.Update()
 	if err != nil {
 		log.WithField("wfr", o.wfr.Name).Error("Update status error: ", err)
-		return err
+		return res, err
 	}
 
 	// Return if no stages need to run.
 	if len(nextStages) == 0 {
-		return nil
+		return res, nil
 	}
 
 	// Create pod to run stages.
@@ -416,16 +418,16 @@ func (o *operator) Reconcile() error {
 
 	overall, err = o.OverallStatus()
 	if err != nil {
-		return fmt.Errorf("resolve overall status error: %v", err)
+		return res, fmt.Errorf("resolve overall status error: %v", err)
 	}
 	o.wfr.Status.Overall = *overall
 	err = o.Update()
 	if err != nil {
 		log.WithField("wfr", o.wfr.Name).Error("Update status error: ", err)
-		return err
+		return res, err
 	}
 
-	return nil
+	return res, nil
 }
 
 // Garbage collection of WorkflowRun. When it's terminated, we will cleanup the pods created by it.

@@ -33,10 +33,10 @@ type WorkflowRunSpec struct {
 	Timeout string `json:"timeout"`
 	// ServiceAccount used in the workflow execution
 	ServiceAccount string `json:"serviceAccount"`
-	// Resource parameters
-	Resources []ParameterConfig `json:"resources"`
-	// Stage parameters
-	Stages []ParameterConfig `json:"stages"`
+	// ResourceParams represents parameters for resources
+	ResourceParams []ParameterConfig `json:"resources"`
+	// StageParams represents parameters for stages
+	StageParams []ParameterConfig `json:"stages"`
 	// Execution context which specifies namespace and PVC used
 	ExecutionContext *ExecutionContext `json:"executionContext"`
 	// PresetVolumes volumes are preset volumes that will be mounted to all stage pods. For the moment, two kinds

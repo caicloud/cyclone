@@ -180,7 +180,7 @@ func getSCMSourceFromWorkflowRun(wfr *v1alpha1.WorkflowRun) (*s_v1alpha1.SCMSour
 	// Parse "SCM_AUTH" from resource parameters. ONLY support one SCM git resource.
 	var gitToken string
 	found := false
-	for _, r := range wfr.Spec.Resources {
+	for _, r := range wfr.Spec.ResourceParams {
 		for i, p := range r.Parameters {
 			if p.Name == "SCM_AUTH" {
 				if r.Parameters[i].Value != nil {
