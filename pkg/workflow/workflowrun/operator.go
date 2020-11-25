@@ -411,8 +411,10 @@ func (o *operator) Reconcile() (controller.Result, error) {
 		if err != nil {
 			if isExceededQuotaError(err) {
 				retryStageNames = append(retryStageNames, stage)
+				log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Warning("Process workload error: ", err)
+			} else {
+				log.WithField("wfr", o.wfr.Name).WithField("stg", stage).Error("Process workload error: ", err)
 			}
-			log.WithField("stg", stage).Error("Process workload error: ", err)
 			continue
 		}
 	}

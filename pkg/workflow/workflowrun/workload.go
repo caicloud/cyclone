@@ -66,7 +66,6 @@ func (p *WorkloadProcessor) processPod() error {
 	// Generate pod for this stage.
 	po, err := pod.NewBuilder(p.client, p.wf, p.wfr, p.stg).Build()
 	if err != nil {
-		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod manifest for stage error: ", err)
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "GeneratePodSpecError", "Generate pod for stage '%s' error: %v", p.stg.Name, err)
 		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 			Phase:              v1alpha1.StatusFailed,
@@ -74,13 +73,12 @@ func (p *WorkloadProcessor) processPod() error {
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Message:            fmt.Sprintf("Failed to generate pod: %v", err),
 		})
-		return err
+		return fmt.Errorf("create pod manifest: %w", err)
 	}
 	log.WithField("stg", p.stg.Name).Debug("Pod manifest created")
 
 	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
 	if err != nil {
-		log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Error("Create pod for stage error: ", err)
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
 		var phase v1alpha1.StatusPhase
 		if isExceededQuotaError(err) {
@@ -94,7 +92,7 @@ func (p *WorkloadProcessor) processPod() error {
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Message:            fmt.Sprintf("Failed to create pod: %v", err),
 		})
-		return err
+		return fmt.Errorf("create pod: %w", err)
 	}
 
 	log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Debug("Create pod for stage succeeded")
