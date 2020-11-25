@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	stderr "errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -361,7 +362,11 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 }
 
 func isExceededQuotaError(err error) bool {
-	return errors.IsForbidden(err) && strings.Contains(err.Error(), "exceeded quota:")
+	if status := errors.APIStatus(nil); stderr.As(err, &status) {
+		s := status.Status()
+		return s.Reason == metav1.StatusReasonForbidden && strings.Contains(s.Message, "exceeded quota:")
+	}
+	return false
 }
 
 // Reconcile finds next stages in the workflow to run and resolve WorkflowRun's overall status.
