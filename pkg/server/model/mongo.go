@@ -15,10 +15,12 @@ const (
 	syncTimeout    = time.Second * 5
 	tickerDuration = time.Second * 5
 
-	// Read preference modes are specific to mgo:
-	Eventual  int = 0 // Same as Nearest, but may change servers between reads.
-	Monotonic int = 1 // Same as SecondaryPreferred before first write. Same as Primary after first write.
-	Strong    int = 2 // Same as Primary.
+	// Eventual mongo Eventual mode same as Nearest, but may change servers between reads.
+	Eventual int = 0
+	// Monotonic mongo Monotonic mode same as SecondaryPreferred before first write. Same as Primary after first write.
+	Monotonic int = 1
+	// Strong mongo Strong mode same as Primary
+	Strong int = 2
 )
 
 var session *mgo.Session
@@ -47,6 +49,7 @@ func initMongo(mongoConf config.MongoConfig, closing chan struct{}) (*mgo.Databa
 	return session.DB(mongoConf.DB), closed, nil
 }
 
+// InitMongo init mongo db connection
 func InitMongo(mongoConf config.MongoConfig, closing chan struct{}) (chan struct{}, error) {
 	db, closed, err := initMongo(mongoConf, closing)
 	if err != nil {

@@ -105,9 +105,10 @@ const (
 	DockerConfigJSONVolume = "cyclone-docker-secret-volume"
 	// DockerSockPath is path of docker socket file in container
 	DockerSockPath = "/var/run"
-
+	// HostTrivyCacheVolumeName the volume for trivy db cache
 	HostTrivyCacheVolumeName = "trivy"
-	HostTrivyCachePath       = "/var/trivy"
+	// HostTrivyCachePath is the path for trivy db cache
+	HostTrivyCachePath = "/var/trivy"
 
 	// ContainerStateTerminated represents container is stopped.
 	ContainerStateTerminated ContainerState = "Terminated"

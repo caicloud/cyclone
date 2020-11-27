@@ -217,7 +217,7 @@ func GetRecordWebURLTemplate() string {
 	return Config.RecordWebURLTemplate
 }
 
-// Mongo Safe struct in mgo.v2
+// Safe mongo struct in mgo.v2
 type Safe struct {
 	W        int    `json:"w"`        // Min # of servers to ack before success
 	WMode    string `json:"wmode"`    // Write mode for MongoDB 2.0+ (e.g. "majority")
@@ -226,6 +226,7 @@ type Safe struct {
 	J        bool   `json:"j"`        // Sync via the journal if present
 }
 
+// MongoConfig represent the mongo config
 type MongoConfig struct {
 	Addrs string `json:"addrs"`
 	DB    string `json:"db"`

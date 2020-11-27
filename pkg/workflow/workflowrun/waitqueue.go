@@ -27,6 +27,7 @@ func init() {
 	stageChan = make(chan *BlockingStage)
 }
 
+// BlockingStage represent s blocked stage information
 type BlockingStage struct {
 	workflow    *v1alpha1.Workflow
 	workflowRun *v1alpha1.WorkflowRun
@@ -36,6 +37,7 @@ type BlockingStage struct {
 	retry       int
 }
 
+// NewBlockingStage create a blocking
 func NewBlockingStage(wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stg *v1alpha1.Stage) *BlockingStage {
 	timeout, err := ParseTime(wfr.Spec.Timeout)
 	if err != nil {
@@ -65,6 +67,7 @@ var (
 	_ = heap.Interface(&heapData{})
 )
 
+// Less ...
 func (h *heapData) Less(i, j int) bool {
 	if i > len(h.queue) || j > len(h.queue) {
 		return false
@@ -81,8 +84,10 @@ func (h *heapData) Less(i, j int) bool {
 	return itemi.obj.blockTime.Before(itemj.obj.blockTime)
 }
 
+// Len ...
 func (h *heapData) Len() int { return len(h.queue) }
 
+// Swap ...
 func (h *heapData) Swap(i, j int) {
 	h.queue[i], h.queue[j] = h.queue[j], h.queue[i]
 	item := h.items[h.queue[i]]
@@ -91,6 +96,7 @@ func (h *heapData) Swap(i, j int) {
 	item.index = j
 }
 
+// Push ...
 func (h *heapData) Push(elem interface{}) {
 	blkStg := elem.(*BlockingStage)
 	n := len(h.queue)
@@ -101,6 +107,7 @@ func (h *heapData) Push(elem interface{}) {
 	h.queue = append(h.queue, blkStg.stage.Name)
 }
 
+// Pop ...
 func (h *heapData) Pop() interface{} {
 	key := h.queue[len(h.queue)-1]
 	h.queue = h.queue[0 : len(h.queue)-1]
@@ -112,6 +119,7 @@ func (h *heapData) Pop() interface{} {
 	return item.obj
 }
 
+// PriorityQueue priority queue
 type PriorityQueue struct {
 	lock   sync.RWMutex
 	cond   sync.Cond
@@ -119,6 +127,7 @@ type PriorityQueue struct {
 	closed bool
 }
 
+// Close close queue
 func (h *PriorityQueue) Close() {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -126,6 +135,7 @@ func (h *PriorityQueue) Close() {
 	h.cond.Broadcast()
 }
 
+// Add add blocking stage
 func (h *PriorityQueue) Add(stg *BlockingStage) error {
 	key := stg.stage.Name
 	h.lock.Lock()
@@ -143,6 +153,7 @@ func (h *PriorityQueue) Add(stg *BlockingStage) error {
 	return nil
 }
 
+// BulkAdd add blocking stage
 func (h *PriorityQueue) BulkAdd(list []*BlockingStage) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -162,6 +173,7 @@ func (h *PriorityQueue) BulkAdd(list []*BlockingStage) error {
 	return nil
 }
 
+// AddIfNotPresent if not present add
 func (h *PriorityQueue) AddIfNotPresent(obj *BlockingStage) error {
 	key := obj.stage.Name
 	h.lock.Lock()
@@ -181,10 +193,12 @@ func (h *PriorityQueue) addIfNotPresentLocked(key string, obj *BlockingStage) {
 	heap.Push(h.data, obj)
 }
 
+// Update update queue by add blocking stage
 func (h *PriorityQueue) Update(obj *BlockingStage) error {
 	return h.Add(obj)
 }
 
+// Delete delete blocking stage from queue
 func (h *PriorityQueue) Delete(obj *BlockingStage) {
 	key := obj.stage.Name
 	h.lock.Lock()
@@ -194,6 +208,7 @@ func (h *PriorityQueue) Delete(obj *BlockingStage) {
 	}
 }
 
+// Pop pop blocking stage from queue
 func (h *PriorityQueue) Pop() (*BlockingStage, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -206,11 +221,12 @@ func (h *PriorityQueue) Pop() (*BlockingStage, error) {
 	obj := heap.Pop(h.data)
 	if obj != nil {
 		return obj.(*BlockingStage), nil
-	} else {
-		return nil, errRemoved
 	}
+
+	return nil, errRemoved
 }
 
+// List list blocking stage in queue
 func (h *PriorityQueue) List() []*BlockingStage {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
@@ -221,6 +237,7 @@ func (h *PriorityQueue) List() []*BlockingStage {
 	return list
 }
 
+// ListKeys list keys in queue
 func (h *PriorityQueue) ListKeys() []string {
 	h.lock.RLock()
 	defer h.lock.RLock()
@@ -231,6 +248,7 @@ func (h *PriorityQueue) ListKeys() []string {
 	return list
 }
 
+// GetByKey get blocking stage by key from queue
 func (h *PriorityQueue) GetByKey(key string) (*BlockingStage, error) {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
@@ -241,15 +259,14 @@ func (h *PriorityQueue) GetByKey(key string) (*BlockingStage, error) {
 	return item.obj, nil
 }
 
+// IsClosed ...
 func (h *PriorityQueue) IsClosed() bool {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
-	if h.closed {
-		return true
-	}
-	return false
+	return h.closed
 }
 
+// NewPriorityQueue ...
 func NewPriorityQueue() *PriorityQueue {
 	h := &PriorityQueue{
 		data: &heapData{
@@ -261,6 +278,7 @@ func NewPriorityQueue() *PriorityQueue {
 	return h
 }
 
+// BlockingStageProcessor processor to process blocking stage
 type BlockingStageProcessor struct {
 	client             clientset.Interface
 	stagePriorityQueue *PriorityQueue
@@ -268,6 +286,7 @@ type BlockingStageProcessor struct {
 	sync.WaitGroup
 }
 
+// NewBlockingStageProcessor ...
 func NewBlockingStageProcessor(client clientset.Interface) *BlockingStageProcessor {
 	pq := NewPriorityQueue()
 	processor := &BlockingStageProcessor{
@@ -280,6 +299,7 @@ func NewBlockingStageProcessor(client clientset.Interface) *BlockingStageProcess
 	return processor
 }
 
+// Run ...
 func (h *BlockingStageProcessor) Run() {
 	go func() {
 		for {
@@ -289,7 +309,7 @@ func (h *BlockingStageProcessor) Run() {
 					WithField("wf", stg.workflow.Name).
 					WithField("wfr", stg.workflowRun.Name).
 					Info("add to the queue")
-				h.stagePriorityQueue.Add(stg)
+				_ = h.stagePriorityQueue.Add(stg) // TODO error process
 			case <-h.stopChan:
 				return
 			}
@@ -317,6 +337,7 @@ func (h *BlockingStageProcessor) Run() {
 	}
 }
 
+// Stop ...
 func (h *BlockingStageProcessor) Stop() {
 	h.Wait()
 	close(h.stopChan)

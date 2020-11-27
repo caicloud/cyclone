@@ -311,6 +311,7 @@ const (
 	ExecutionContextClosed ExecutionContextPhase = "Closed"
 )
 
+// Vulnerability represent an image CVE record
 type Vulnerability struct {
 	VulnerabilityID  string `json:"vulnerabilityId" bson:"vulnerability_id"`
 	PkgName          string `json:"pkgName" bson:"pkg_name"`
@@ -321,6 +322,7 @@ type Vulnerability struct {
 	References       string `json:"references" bson:"references"`
 }
 
+// ImageScanRecord represent image scan record
 type ImageScanRecord struct {
 	WorkflowRun     string          `json:"workflow_run" bson:"workflow_run"`
 	Vulnerabilities []Vulnerability `json:"vulnerabilities" bson:"vulnerabilities"`
