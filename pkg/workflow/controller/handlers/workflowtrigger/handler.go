@@ -1,9 +1,11 @@
 package workflowtrigger
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -74,7 +76,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 
 	wft := originWft.DeepCopy()
 	wft.ObjectMeta.Finalizers = append(wft.ObjectMeta.Finalizers, finalizerWorkflowTrigger)
-	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(wft)
+	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(context.TODO(), wft, metav1.UpdateOptions{})
 	return err
 }
 
@@ -99,6 +101,6 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 	}
 
 	wft.ObjectMeta.Finalizers = sets.NewString(wft.ObjectMeta.Finalizers...).Delete(finalizerWorkflowTrigger).UnsortedList()
-	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(wft)
+	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(context.TODO(), wft, metav1.UpdateOptions{})
 	return err
 }

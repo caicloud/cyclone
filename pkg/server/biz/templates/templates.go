@@ -1,10 +1,12 @@
 package templates
 
 import (
+	"context"
 	"os"
 
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 )
@@ -24,7 +26,7 @@ func InitStageTemplates(client clientset.Interface, systemNamespace, scene strin
 
 	// Create all stage templates
 	for _, stg := range stages {
-		_, err := client.CycloneV1alpha1().Stages(systemNamespace).Create(stg)
+		_, err := client.CycloneV1alpha1().Stages(systemNamespace).Create(context.TODO(), stg, metav1.CreateOptions{})
 		if err != nil {
 			if errors.IsAlreadyExists(err) {
 				log.Infof("Stage template '%s' already exist, skip it.", stg.Name)

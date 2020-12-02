@@ -41,7 +41,7 @@ func main() {
 
 	// Load configuration from ConfigMap.
 	systemNamespace := common.GetSystemNamespace()
-	cm, err := client.CoreV1().ConfigMaps(systemNamespace).Get(*configMap, metav1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(systemNamespace).Get(context.TODO(), *configMap, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("configmap", *configMap).Fatal("Get ConfigMap error: ", err)
 	}

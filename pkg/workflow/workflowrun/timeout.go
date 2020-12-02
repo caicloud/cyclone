@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 )
 
@@ -63,13 +64,13 @@ func newWorkflowRunItem(wfr *v1alpha1.WorkflowRun) *workflowRunItem {
 
 // TimeoutProcessor manages timeout of WorkflowRun.
 type TimeoutProcessor struct {
-	client   clientset.Interface
+	client   k8s.Interface
 	recorder record.EventRecorder
 	items    map[string]*workflowRunItem
 }
 
 // NewTimeoutProcessor creates a timeout manager and run it.
-func NewTimeoutProcessor(client clientset.Interface) *TimeoutProcessor {
+func NewTimeoutProcessor(client k8s.Interface) *TimeoutProcessor {
 	manager := &TimeoutProcessor{
 		client:   client,
 		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
@@ -115,7 +116,7 @@ func (m *TimeoutProcessor) process() {
 
 	for _, i := range expired {
 		log.WithField("wfr", i.name).WithField("namespace", i.namespace).Info("Start to process expired WorkflowRun")
-		wfr, err := m.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
+		wfr, err := m.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(context.TODO(), i.name, metav1.GetOptions{})
 		if err != nil {
 			if errors.IsNotFound(err) {
 				delete(m.items, i.String())
@@ -158,7 +159,7 @@ func (m *TimeoutProcessor) process() {
 				WithField("pod", status.Pod.Name).
 				WithField("stg", stage).
 				Info("To delete pod for expired WorkflowRun")
-			err = clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+			err = clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(context.TODO(), status.Pod.Name, metav1.DeleteOptions{})
 			if err != nil {
 				log.Error("Delete pod error: ", err)
 			}

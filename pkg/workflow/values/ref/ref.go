@@ -2,7 +2,7 @@ package ref
 
 import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 // Processor processes ref value to a string
@@ -26,7 +26,7 @@ func NewProcessor(wfr *v1alpha1.WorkflowRun) *Processor {
 // - '${secrets.<ns>:<secret>/<jsonpath>/...}' to refer value in a secret
 // - '${stages.<stage>.outputs.<key>}' to refer value from a stage output
 // - '${variables.<key>}' to refer value from a global variable defined in wfr
-func (p *Processor) ResolveRefStringValue(ref string, client clientset.Interface) (string, error) {
+func (p *Processor) ResolveRefStringValue(ref string, client k8s.Interface) (string, error) {
 	var value string
 	var err error
 

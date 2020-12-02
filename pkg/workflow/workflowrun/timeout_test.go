@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 func TestParseTime(t *testing.T) {

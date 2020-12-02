@@ -2,6 +2,7 @@ package workflowrun
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,10 +15,10 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/util"
 	utilhttp "github.com/caicloud/cyclone/pkg/util/http"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
@@ -26,7 +27,7 @@ import (
 
 // Handler handles changes of WorkflowRun CR.
 type Handler struct {
-	Client                clientset.Interface
+	Client                k8s.Interface
 	TimeoutProcessor      *workflowrun.TimeoutProcessor
 	GCProcessor           *workflowrun.GCProcessor
 	LimitedQueues         *workflowrun.LimitedQueues
@@ -43,7 +44,7 @@ const (
 )
 
 // NewHandler ...
-func NewHandler(client clientset.Interface, gcEnable bool, maxWorkflowRuns int, parallelism *controller.ParallelismConfig) *Handler {
+func NewHandler(client k8s.Interface, gcEnable bool, maxWorkflowRuns int, parallelism *controller.ParallelismConfig) *Handler {
 	return &Handler{
 		Client:                client,
 		TimeoutProcessor:      workflowrun.NewTimeoutProcessor(client),
@@ -185,7 +186,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 
 	wfr := originWfr.DeepCopy()
 	wfr.ObjectMeta.Finalizers = append(wfr.ObjectMeta.Finalizers, finalizerWorkflowRun)
-	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
+	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(context.TODO(), wfr, metav1.UpdateOptions{})
 	return err
 }
 
@@ -215,7 +216,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 	}
 
 	wfr.ObjectMeta.Finalizers = sets.NewString(wfr.ObjectMeta.Finalizers...).Delete(finalizerWorkflowRun).UnsortedList()
-	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(wfr)
+	_, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(context.TODO(), wfr, metav1.UpdateOptions{})
 	return err
 }
 
@@ -224,7 +225,7 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 // * without notification sent label
 func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
 	// Get latest WorkflowRun.
-	latestWfr, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+	latestWfr, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(context.TODO(), wfr.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -237,13 +238,13 @@ func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
 		// Update WorkflowRun notification status with retry.
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			// Get latest WorkflowRun.
-			latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+			latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(context.TODO(), wfr.Name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
 
 			latest.Labels = meta.AddNotificationSentLabel(latest.Labels, sent)
-			_, err = h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
+			_, err = h.Client.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(context.TODO(), latest, metav1.UpdateOptions{})
 			return err
 		})
 
@@ -286,7 +287,7 @@ func (h *Handler) sendNotification(wfr *v1alpha1.WorkflowRun) error {
 // SetStatus sets workflowRun status
 func (h *Handler) SetStatus(ns, wfr string, status *v1alpha1.Status) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(ns).Get(wfr, metav1.GetOptions{})
+		latest, err := h.Client.CycloneV1alpha1().WorkflowRuns(ns).Get(context.TODO(), wfr, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -297,7 +298,7 @@ func (h *Handler) SetStatus(ns, wfr string, status *v1alpha1.Status) error {
 
 		toUpdate := latest.DeepCopy()
 		toUpdate.Status.Overall = *status
-		_, err = h.Client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(toUpdate)
+		_, err = h.Client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(context.TODO(), toUpdate, metav1.UpdateOptions{})
 		if err == nil {
 			log.WithField("wfr", toUpdate.Name).
 				WithField("status", status.Phase).

@@ -14,8 +14,8 @@ import (
 	core_v1 "k8s.io/api/core/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	fileutil "github.com/caicloud/cyclone/pkg/util/file"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/k8sapi"
 )
@@ -54,7 +54,7 @@ type RuntimeExecutor interface {
 }
 
 // NewCoordinator create a coordinator instance.
-func NewCoordinator(ctx context.Context, client clientset.Interface) (*Coordinator, error) {
+func NewCoordinator(ctx context.Context, client k8s.Interface) (*Coordinator, error) {
 	// Get stage from Env
 	var stage *v1alpha1.Stage
 	stageInfo := os.Getenv(common.EnvStageInfo)

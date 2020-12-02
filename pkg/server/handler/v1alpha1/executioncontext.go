@@ -97,7 +97,7 @@ func getPVCStatus(tenant, pvcName string, cluster *api.ClusterSource) (*corev1.P
 		return nil, err
 	}
 
-	pvc, err := client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(pvcName, metav1.GetOptions{})
+	pvc, err := client.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

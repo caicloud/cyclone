@@ -1,6 +1,7 @@
 package k8sapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -14,15 +15,15 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	cyclone_common "github.com/caicloud/cyclone/pkg/common"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/coordinator/cycloneserver"
 )
 
 // Executor ...
 type Executor struct {
-	client        clientset.Interface
+	client        k8s.Interface
 	metaNamespace string
 	namespace     string
 	podName       string
@@ -30,7 +31,7 @@ type Executor struct {
 }
 
 // NewK8sapiExecutor ...
-func NewK8sapiExecutor(client clientset.Interface, metaNamespace, namespace, pod string, cycloneServer string) *Executor {
+func NewK8sapiExecutor(client k8s.Interface, metaNamespace, namespace, pod string, cycloneServer string) *Executor {
 	return &Executor{
 		metaNamespace: metaNamespace,
 		namespace:     namespace,
@@ -47,7 +48,7 @@ func (k *Executor) WaitContainers(expectState common.ContainerState, selectors .
 
 	log.Infof("Starting to wait for containers of pod %s to be %s ...", k.podName, expectState)
 	for range ticker.C {
-		pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+		pod, err := k.client.CoreV1().Pods(k.namespace).Get(context.TODO(), k.podName, meta_v1.GetOptions{})
 		if err != nil {
 			log.WithField("ns", k.namespace).WithField("pod", k.podName).Error("get pod failed")
 			return err
@@ -95,7 +96,7 @@ func (k *Executor) WaitContainers(expectState common.ContainerState, selectors .
 
 // GetPod get the stage pod.
 func (k *Executor) GetPod() (*core_v1.Pod, error) {
-	return k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+	return k.client.CoreV1().Pods(k.namespace).Get(context.TODO(), k.podName, meta_v1.GetOptions{})
 }
 
 // CollectLog collects container logs.
@@ -104,7 +105,7 @@ func (k *Executor) CollectLog(container, workflowrun, stage string, close <-chan
 	stream, err := k.client.CoreV1().Pods(k.namespace).GetLogs(k.podName, &core_v1.PodLogOptions{
 		Container: container,
 		Follow:    true,
-	}).Stream()
+	}).Stream(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -149,7 +150,7 @@ func (k *Executor) CopyFromContainer(container, path, dst string) error {
 // SetResults sets execution results (key-values) to the pod, workflow controller will sync this result to WorkflowRun status.
 func (k *Executor) SetResults(values []v1alpha1.KeyValue) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		pod, err := k.client.CoreV1().Pods(k.namespace).Get(k.podName, meta_v1.GetOptions{})
+		pod, err := k.client.CoreV1().Pods(k.namespace).Get(context.TODO(), k.podName, meta_v1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -169,7 +170,7 @@ func (k *Executor) SetResults(values []v1alpha1.KeyValue) error {
 		}
 		annotations[meta.AnnotationStageResult] = string(b)
 		pod.Annotations = annotations
-		_, err = k.client.CoreV1().Pods(k.namespace).Update(pod)
+		_, err = k.client.CoreV1().Pods(k.namespace).Update(context.TODO(), pod, meta_v1.UpdateOptions{})
 		return err
 	})
 }

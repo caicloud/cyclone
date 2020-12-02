@@ -1,6 +1,7 @@
 package ref
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -11,7 +12,7 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 var (
@@ -126,7 +127,7 @@ func (r *SecretRefValue) parseOld(ref string) error {
 }
 
 // Resolve resolves the secret ref and get the real value.
-func (r *SecretRefValue) Resolve(client clientset.Interface) (string, error) {
+func (r *SecretRefValue) Resolve(client k8s.Interface) (string, error) {
 	if len(r.Secret) == 0 || len(r.Jsonpaths) == 0 {
 		return "", errors.New("empty secret name or jsonpath")
 	}
@@ -135,7 +136,7 @@ func (r *SecretRefValue) Resolve(client clientset.Interface) (string, error) {
 		r.Namespace = "default"
 	}
 
-	s, err := client.CoreV1().Secrets(r.Namespace).Get(r.Secret, metav1.GetOptions{})
+	s, err := client.CoreV1().Secrets(r.Namespace).Get(context.TODO(), r.Secret, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("get secret %s:%s error: %v", r.Namespace, r.Secret, err)
 	}

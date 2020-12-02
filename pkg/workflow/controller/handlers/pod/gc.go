@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"context"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -41,7 +42,7 @@ func IsWorkloadPod(pod *corev1.Pod) bool {
 // GCPodUpdated handles GC pod update. If GC pod is terminated, it will be deleted.
 func GCPodUpdated(client kubernetes.Interface, pod *corev1.Pod) {
 	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
-		if err := client.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		if err := client.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 			if errors.IsNotFound(err) {
 				return
 			}

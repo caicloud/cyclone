@@ -1,6 +1,7 @@
 package tenant
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/caicloud/nirvana/log"
@@ -9,17 +10,17 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/utils"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 // Get ...
-func Get(client clientset.Interface, name string) (*api.Tenant, error) {
-	namespace, err := client.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
+func Get(client k8s.Interface, name string) (*api.Tenant, error) {
+	namespace, err := client.CoreV1().Namespaces().Get(context.TODO(), common.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		log.Errorf("Get namespace for tenant %s error %v", name, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -48,7 +49,7 @@ func FromNamespace(namespace *core_v1.Namespace) (*api.Tenant, error) {
 }
 
 // CreateNamespace ...
-func CreateNamespace(client clientset.Interface, tenant *api.Tenant) error {
+func CreateNamespace(client k8s.Interface, tenant *api.Tenant) error {
 	objectMeta := tenant.ObjectMeta
 
 	// build namespace name
@@ -71,9 +72,9 @@ func CreateNamespace(client clientset.Interface, tenant *api.Tenant) error {
 	}
 	objectMeta.Labels[meta.LabelTenantName] = tenant.Name
 
-	_, err = client.CoreV1().Namespaces().Create(&core_v1.Namespace{
+	_, err = client.CoreV1().Namespaces().Create(context.TODO(), &core_v1.Namespace{
 		ObjectMeta: objectMeta,
-	})
+	}, meta_v1.CreateOptions{})
 	if err != nil {
 		log.Warningf("Create namespace for tenant %s error %v", tenant.Name, err)
 		if errors.IsAlreadyExists(err) {
@@ -87,7 +88,7 @@ func CreateNamespace(client clientset.Interface, tenant *api.Tenant) error {
 }
 
 // UpdateNamespace ...
-func UpdateNamespace(client clientset.Interface, tenant *api.Tenant) error {
+func UpdateNamespace(client k8s.Interface, tenant *api.Tenant) error {
 	t, err := json.Marshal(tenant.Spec)
 	if err != nil {
 		log.Warningf("Marshal tenant %s error %v", tenant.Name, err)
@@ -96,7 +97,7 @@ func UpdateNamespace(client clientset.Interface, tenant *api.Tenant) error {
 
 	// update namespace annotation with retry
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := client.CoreV1().Namespaces().Get(common.TenantNamespace(tenant.Name), meta_v1.GetOptions{})
+		origin, err := client.CoreV1().Namespaces().Get(context.TODO(), common.TenantNamespace(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace for tenant %s error %v", tenant.Name, err)
 			return cerr.ConvertK8sError(err)
@@ -107,7 +108,7 @@ func UpdateNamespace(client clientset.Interface, tenant *api.Tenant) error {
 		newNs.Labels = utils.MergeMap(tenant.Labels, newNs.Labels)
 		newNs.Annotations[meta.AnnotationTenantInfo] = string(t)
 
-		_, err = client.CoreV1().Namespaces().Update(newNs)
+		_, err = client.CoreV1().Namespaces().Update(context.TODO(), newNs, meta_v1.UpdateOptions{})
 		if err != nil {
 			log.Errorf("Update namespace for tenant %s error %v", tenant.Name, err)
 			return cerr.ConvertK8sError(err)

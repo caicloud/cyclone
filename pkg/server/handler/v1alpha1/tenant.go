@@ -37,7 +37,7 @@ func CreateTenant(ctx context.Context, tenant *api.Tenant) (*api.Tenant, error) 
 
 // ListTenants list all tenants' information
 func ListTenants(ctx context.Context, query *types.QueryParams) (*types.ListResponse, error) {
-	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(meta_v1.ListOptions{
+	namespaces, err := handler.K8sClient.CoreV1().Namespaces().List(context.TODO(), meta_v1.ListOptions{
 		LabelSelector: meta.LabelExistsSelector(meta.LabelTenantName),
 	})
 	if err != nil {
@@ -195,7 +195,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 		return err
 	}
 
-	err = handler.K8sClient.CoreV1().Namespaces().Delete(svrcommon.TenantNamespace(name), &meta_v1.DeleteOptions{})
+	err = handler.K8sClient.CoreV1().Namespaces().Delete(context.TODO(), svrcommon.TenantNamespace(name), meta_v1.DeleteOptions{})
 	if err != nil {
 		log.Errorf("Delete namespace for tenant %s error %v", name, err)
 		return cerr.ConvertK8sError(err)
@@ -209,7 +209,7 @@ func DeleteTenant(ctx context.Context, name string) error {
 // - Create PVC
 func CreateDefaultTenant() error {
 	ns := svrcommon.TenantNamespace(svrcommon.DefaultTenant)
-	oldNs, err := handler.K8sClient.CoreV1().Namespaces().Get(ns, meta_v1.GetOptions{})
+	oldNs, err := handler.K8sClient.CoreV1().Namespaces().Get(context.TODO(), ns, meta_v1.GetOptions{})
 	if err == nil && oldNs.Labels != nil {
 		if _, ok := oldNs.Labels[meta.LabelTenantName]; ok {
 			log.Infof("Default namespace %s already exists, default tenant %s exists.", ns, svrcommon.DefaultTenant)

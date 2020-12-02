@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -47,7 +49,7 @@ func EnsureCRDCreated(masterURL, kubeConfigPath string) {
 
 func createCRD(singular, plural, kind string, shortNames []string, scope v1beta1.ResourceScope, client apiextensionsclient.Interface) {
 	crdName := plural + "." + GroupName
-	_, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
+	_, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.TODO(), crdName, metav1.GetOptions{})
 	if err == nil {
 		log.WithField("name", crdName).Info("crd already exist")
 		return
@@ -60,7 +62,7 @@ func createCRD(singular, plural, kind string, shortNames []string, scope v1beta1
 
 	// create crd
 	log.WithField("name", crdName).Info("create crd")
-	_, err = client.ApiextensionsV1beta1().CustomResourceDefinitions().Create(&v1beta1.CustomResourceDefinition{
+	_, err = client.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.TODO(), &v1beta1.CustomResourceDefinition{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "CustomResourceDefinition",
 			APIVersion: "apiextensions.k8s.io/v1beta1",
@@ -80,7 +82,7 @@ func createCRD(singular, plural, kind string, shortNames []string, scope v1beta1
 				ShortNames: shortNames,
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		log.WithField("name", crdName).WithField("error", err).Fatal("create crd error")
 		return

@@ -1,6 +1,8 @@
 package common
 
 import (
+	"context"
+
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -17,7 +19,7 @@ import (
 func CreateNamespace(tenant string, client *kubernetes.Clientset) error {
 	namespace := buildNamespace(tenant)
 
-	_, err := client.CoreV1().Namespaces().Create(namespace)
+	_, err := client.CoreV1().Namespaces().Create(context.TODO(), namespace, meta_v1.CreateOptions{})
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Infof("namespace %s already exists", namespace.Name)
@@ -56,7 +58,7 @@ func CreateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 		return err
 	}
 
-	_, err = client.CoreV1().ResourceQuotas(nsname).Create(quota)
+	_, err = client.CoreV1().ResourceQuotas(nsname).Create(context.TODO(), quota, meta_v1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Create ResourceQuota for tenant %s error %v", tenant.Name, err)
 		return err
@@ -102,14 +104,14 @@ func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		quota, err := client.CoreV1().ResourceQuotas(nsname).Get(
-			TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
+			context.TODO(), TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err
 		}
 
 		quota.Spec.Hard = rl
-		_, err = client.CoreV1().ResourceQuotas(nsname).Update(quota)
+		_, err = client.CoreV1().ResourceQuotas(nsname).Update(context.TODO(), quota, meta_v1.UpdateOptions{})
 		if err != nil {
 			log.Errorf("Update ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err

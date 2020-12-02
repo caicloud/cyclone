@@ -1,6 +1,7 @@
 package hook
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -59,7 +60,7 @@ func (*SCMManager) Register(tenant string, wft v1alpha1.WorkflowTrigger) error {
 	}
 
 	log.Infof("start to create scm webhook %s/%s for wft %s", secretName, repo, wftName)
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(secretName, metav1.GetOptions{})
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
@@ -132,7 +133,7 @@ func (o *SCMManager) Unregister(tenant string, wft v1alpha1.WorkflowTrigger) err
 	}
 
 	log.Infof("start to delete scm webhook %s/%s for wft %s", secretName, repo, wftName)
-	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(
+	secret, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(context.TODO(),
 		secretName, metav1.GetOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
@@ -185,7 +186,7 @@ func ListSCMWfts(tenant, repo, integration string) (*v1alpha1.WorkflowTriggerLis
 		LabelSelector: labels.Set(labelMap).String(),
 	}
 
-	originWfts, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(listOption)
+	originWfts, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(context.TODO(), listOption)
 	if err != nil {
 		return nil, err
 	}

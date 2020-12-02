@@ -31,7 +31,7 @@ import (
 // - query Query params includes start, limit and filter.
 func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
-	projects, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{})
+	projects, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		log.Errorf("Get project from k8s with tenant %s error: %v", tenant, err)
 		return nil, err
@@ -65,7 +65,7 @@ func ListProjects(ctx context.Context, tenant string, query *types.QueryParams) 
 	items = results[query.Start:end]
 	if query.Detail {
 		for i := range items {
-			workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{
+			workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows(svrcommon.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 				LabelSelector: meta.ProjectSelector(items[i].Name),
 			})
 			if err != nil {
@@ -124,12 +124,12 @@ func CreateProject(ctx context.Context, tenant string, project *v1alpha1.Project
 		}
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Create(project)
+	return handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Create(context.TODO(), project, metav1.CreateOptions{})
 }
 
 // GetProject gets a project with the given project name under given tenant.
 func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, error) {
-	project, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(name, metav1.GetOptions{})
+	project, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		log.Infof("get project %v of tenant %v error %v", name, tenant, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -141,7 +141,7 @@ func GetProject(ctx context.Context, tenant, name string) (*v1alpha1.Project, er
 // the updated project.
 func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.Project) (*v1alpha1.Project, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(pName, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Get(context.TODO(), pName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -149,7 +149,7 @@ func UpdateProject(ctx context.Context, tenant, pName string, project *v1alpha1.
 		newProject.Spec = project.Spec
 		newProject.Annotations = utils.MergeMap(project.Annotations, newProject.Annotations)
 		newProject.Labels = utils.MergeMap(project.Labels, newProject.Labels)
-		_, err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Update(newProject)
+		_, err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Update(context.TODO(), newProject, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -167,13 +167,13 @@ func DeleteProject(ctx context.Context, tenant, project string) error {
 		return err
 	}
 
-	err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Delete(project, &metav1.DeleteOptions{})
+	err = handler.K8sClient.CycloneV1alpha1().Projects(svrcommon.TenantNamespace(tenant)).Delete(context.TODO(), project, metav1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 
 // GetProjectStatistics handles the request to get a project's statistics.
 func GetProjectStatistics(ctx context.Context, tenant, project, start, end string) (*api.Statistic, error) {
-	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(svrcommon.TenantNamespace(tenant)).List(metav1.ListOptions{
+	wfrs, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(svrcommon.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {

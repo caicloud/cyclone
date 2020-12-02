@@ -1,6 +1,7 @@
 package usage
 
 import (
+	context2 "context"
 	"fmt"
 
 	"github.com/caicloud/nirvana/log"
@@ -41,7 +42,7 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 
 	watcherConfig := config.Config.StorageUsageWatcher
 
-	_, err := client.AppsV1().Deployments(context.Namespace).Create(&appsv1.Deployment{
+	_, err := client.AppsV1().Deployments(context.Namespace).Create(context2.TODO(), &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      PVCWatcherName,
 			Namespace: context.Namespace,
@@ -114,7 +115,7 @@ func LaunchPVCUsageWatcher(client kubernetes.Interface, tenant string, context v
 				},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 
 	return err
 }
@@ -132,7 +133,7 @@ func getOrDefault(watcherConfig *config.StorageUsageWatcher, key corev1.Resource
 // DeletePVCUsageWatcher delete the pvc usage watcher deployment
 func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error {
 	foreground := metav1.DeletePropagationForeground
-	err := client.AppsV1().Deployments(namespace).Delete(PVCWatcherName, &metav1.DeleteOptions{
+	err := client.AppsV1().Deployments(namespace).Delete(context2.TODO(), PVCWatcherName, metav1.DeleteOptions{
 		PropagationPolicy: &foreground,
 	})
 
@@ -141,7 +142,7 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 	}
 
 	// Try to delete pvc watcher pod immediately to accelerate the related pvc deletion.
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := client.CoreV1().Pods(namespace).List(context2.TODO(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", PVCWatcherLabelName, PVCWatcherLabelValue),
 	})
 	if err != nil {
@@ -151,7 +152,7 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 
 	var zero int64
 	for _, pod := range pods.Items {
-		err = client.CoreV1().Pods(namespace).Delete(pod.Name, &metav1.DeleteOptions{
+		err = client.CoreV1().Pods(namespace).Delete(context2.TODO(), pod.Name, metav1.DeleteOptions{
 			PropagationPolicy:  &foreground,
 			GracePeriodSeconds: &zero,
 		})
@@ -165,5 +166,5 @@ func DeletePVCUsageWatcher(client kubernetes.Interface, namespace string) error 
 
 // GetPVCUsageWatcher gets the pvc watch dog deployment.
 func GetPVCUsageWatcher(client kubernetes.Interface, namespace string) (*appsv1.Deployment, error) {
-	return client.AppsV1().Deployments(namespace).Get(PVCWatcherName, metav1.GetOptions{})
+	return client.AppsV1().Deployments(namespace).Get(context2.TODO(), PVCWatcherName, metav1.GetOptions{})
 }

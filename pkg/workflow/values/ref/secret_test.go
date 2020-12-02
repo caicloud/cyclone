@@ -10,13 +10,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 type SecretSuite struct {
 	suite.Suite
-	client clientset.Interface
+	client k8s.Interface
 }
 
 func (suite *SecretSuite) SetupSuite() {

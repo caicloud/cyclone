@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -8,21 +9,21 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
 
 // GCProcessor processes garbage collection for WorkflowRun objects.
 type GCProcessor struct {
-	client   clientset.Interface
+	client   k8s.Interface
 	recorder record.EventRecorder
 	items    map[string]*workflowRunItem
 	enabled  bool
 }
 
 // NewGCProcessor create new GC processor.
-func NewGCProcessor(client clientset.Interface, enabled bool) *GCProcessor {
+func NewGCProcessor(client k8s.Interface, enabled bool) *GCProcessor {
 	processor := &GCProcessor{
 		client:   client,
 		recorder: common.GetEventRecorder(client, common.EventSourceWfrController),
@@ -94,7 +95,7 @@ func (p *GCProcessor) process() {
 		}
 
 		log.WithField("wfr", i.name).Info("Start GC")
-		wfr, err := p.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(i.name, metav1.GetOptions{})
+		wfr, err := p.client.CycloneV1alpha1().WorkflowRuns(i.namespace).Get(context.TODO(), i.name, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("wfr", i.name).Error("Get wfr error: ", err)
 			continue

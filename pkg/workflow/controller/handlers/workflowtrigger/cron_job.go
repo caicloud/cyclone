@@ -1,6 +1,7 @@
 package workflowtrigger
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -96,7 +97,7 @@ func (t *CronTrigger) Run() {
 	for {
 		t.WorkflowRun.Name = fmt.Sprintf("%s-%s", t.WorkflowTriggerName, rand.String(5))
 		t.WorkflowRun.Annotations[meta.AnnotationAlias] = t.WorkflowRun.Name
-		_, err := t.Manage.Client.CycloneV1alpha1().WorkflowRuns(t.Namespace).Create(t.WorkflowRun)
+		_, err := t.Manage.Client.CycloneV1alpha1().WorkflowRuns(t.Namespace).Create(context.TODO(), t.WorkflowRun, meta_v1.CreateOptions{})
 		if err != nil {
 			if errors2.IsAlreadyExists(err) {
 				continue

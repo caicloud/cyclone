@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -12,9 +13,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	"github.com/caicloud/cyclone/pkg/util"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/workflowrun"
@@ -22,7 +23,7 @@ import (
 
 // Operator ...
 type Operator struct {
-	client        clientset.Interface
+	client        k8s.Interface
 	clusterClient kubernetes.Interface
 	workflowRun   string
 	stage         string
@@ -31,7 +32,7 @@ type Operator struct {
 }
 
 // NewOperator ...
-func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface, pod *corev1.Pod) (*Operator, error) {
+func NewOperator(clusterClient kubernetes.Interface, client k8s.Interface, pod *corev1.Pod) (*Operator, error) {
 	annotations := pod.Annotations
 	wfr, ok := annotations[meta.AnnotationWorkflowRunName]
 	if !ok {
@@ -59,7 +60,7 @@ func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface,
 // OnDelete handles the situation when a stage pod gotten delete. It updates
 // corresponding WorkflowRun's status.
 func (p *Operator) OnDelete() error {
-	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(p.workflowRun, metav1.GetOptions{})
+	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(context.TODO(), p.workflowRun, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.WithField("name", p.workflowRun).Error("Get WorkflowRun error: ", err)
@@ -93,13 +94,13 @@ func (p *Operator) OnDelete() error {
 
 // OnUpdated ...
 func (p *Operator) OnUpdated() error {
-	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(p.workflowRun, metav1.GetOptions{})
+	origin, err := p.client.CycloneV1alpha1().WorkflowRuns(p.metaNamespace).Get(context.TODO(), p.workflowRun, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.WithField("wfr", p.workflowRun).WithField("ns", p.metaNamespace).Warn("wfr not found")
 			// Delete the pod if WorkflowRun not exists any more, there is possible that the pod been deleted elsewhere on WorkflowRun deletion,
 			// so if we delete pod failed here due to not found, just ignore it.
-			if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+			if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(context.TODO(), p.pod.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete orphan pod error: ", err)
 			} else {
 				log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Orphan pod deleted")
@@ -223,7 +224,7 @@ func (p *Operator) DetermineStatus(wfrOperator workflowrun.Operator) {
 	// The workload and coordinator containers have all been finished, but maybe some others are still Running,
 	// Delete the pod and release cpu/memory resources if gc delay seconds is 0.
 	if controller.Config.GC.DelaySeconds == 0 {
-		if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(p.pod.Name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+		if err := p.clusterClient.CoreV1().Pods(p.pod.Namespace).Delete(context.TODO(), p.pod.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Warn("Delete pod error: ", err)
 		} else {
 			log.WithField("ns", p.pod.Namespace).WithField("pod", p.pod.Name).Info("Pod deleted")

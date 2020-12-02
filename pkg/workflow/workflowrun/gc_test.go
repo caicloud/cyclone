@@ -11,7 +11,7 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/store"
 )

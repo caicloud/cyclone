@@ -4,18 +4,19 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 var (
 	// K8sClient is used to operate k8s resources
-	K8sClient clientset.Interface
+	K8sClient k8s.Interface
 )
 
 // Init initializes the server resources handlers.
-func Init(c clientset.Interface) {
+func Init(c k8s.Interface) {
 	K8sClient = c
 }
 

@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	stderr "errors"
 	"fmt"
 	"os"
@@ -20,8 +21,8 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	ccommon "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/values"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -58,7 +59,7 @@ type Operator interface {
 
 type operator struct {
 	clusterClient kubernetes.Interface
-	client        clientset.Interface
+	client        k8s.Interface
 	recorder      record.EventRecorder
 	wf            *v1alpha1.Workflow
 	wfr           *v1alpha1.WorkflowRun
@@ -77,7 +78,7 @@ var _ Operator = (*operator)(nil)
 // And operator returned by passing a workflowRun name can not invoke
 // the operator's some methods as follows: InitStagesStatus, Update,
 // OverallStatus and Reconcile.
-func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface, wfr interface{}, namespace string) (Operator, error) {
+func NewOperator(clusterClient kubernetes.Interface, client k8s.Interface, wfr interface{}, namespace string) (Operator, error) {
 	if w, ok := wfr.(string); ok {
 		return newFromName(clusterClient, client, w, namespace)
 	}
@@ -91,8 +92,8 @@ func NewOperator(clusterClient kubernetes.Interface, client clientset.Interface,
 
 // When create Operator from WorkflowRun name, we only get WorkflowRun value, but not for
 // Workflow.
-func newFromName(clusterClient kubernetes.Interface, client clientset.Interface, wfr, namespace string) (Operator, error) {
-	w, err := client.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfr, metav1.GetOptions{})
+func newFromName(clusterClient kubernetes.Interface, client k8s.Interface, wfr, namespace string) (Operator, error) {
+	w, err := client.CycloneV1alpha1().WorkflowRuns(namespace).Get(context.TODO(), wfr, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +107,8 @@ func newFromName(clusterClient kubernetes.Interface, client clientset.Interface,
 }
 
 // When create Operator from WorkflowRun value, we will also get Workflow value.
-func newFromValue(clusterClient kubernetes.Interface, client clientset.Interface, wfr *v1alpha1.WorkflowRun, namespace string) (Operator, error) {
-	f, err := client.CycloneV1alpha1().Workflows(namespace).Get(wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
+func newFromValue(clusterClient kubernetes.Interface, client k8s.Interface, wfr *v1alpha1.WorkflowRun, namespace string) (Operator, error) {
+	f, err := client.CycloneV1alpha1().Workflows(namespace).Get(context.TODO(), wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (o *operator) Update() error {
 	// Update WorkflowRun status with retry.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Get latest WorkflowRun.
-		latest, err := o.client.CycloneV1alpha1().WorkflowRuns(o.wfr.Namespace).Get(o.wfr.Name, metav1.GetOptions{})
+		latest, err := o.client.CycloneV1alpha1().WorkflowRuns(o.wfr.Namespace).Get(context.TODO(), o.wfr.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -206,7 +207,7 @@ func (o *operator) Update() error {
 			// If status has any change, the overall last transition time need to update
 			combined.Status.Overall.LastTransitionTime = metav1.Time{Time: time.Now()}
 
-			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(combined)
+			_, err = o.client.CycloneV1alpha1().WorkflowRuns(latest.Namespace).Update(context.TODO(), combined, metav1.UpdateOptions{})
 			if err == nil {
 				log.WithField("wfr", latest.Name).
 					WithField("status", combined.Status.Overall.Phase).
@@ -406,7 +407,7 @@ func (o *operator) Reconcile() (controller.Result, error) {
 	for _, stage := range nextStages {
 		log.WithField("stg", stage).Info("Start to run stage")
 
-		stg, err := o.client.CycloneV1alpha1().Stages(o.wfr.Namespace).Get(stage, metav1.GetOptions{})
+		stg, err := o.client.CycloneV1alpha1().Stages(o.wfr.Namespace).Get(context.TODO(), stage, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("stg", stage).Error("Get stage error: ", err)
 			continue
@@ -483,7 +484,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 				Warn("Pod information is missing, can't clean the pod.")
 			continue
 		}
-		err := o.clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(status.Pod.Name, &metav1.DeleteOptions{})
+		err := o.clusterClient.CoreV1().Pods(status.Pod.Namespace).Delete(context.TODO(), status.Pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			// If the pod not exist, just skip it without complain.
 			if errors.IsNotFound(err) {
@@ -514,7 +515,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 						log.WithField("ns", namespace).WithField("pod", podName).Warn("Pod deletion timeout")
 						return
 					case <-ticker.C:
-						_, err := o.clusterClient.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+						_, err := o.clusterClient.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 						if err != nil && errors.IsNotFound(err) {
 							log.WithField("ns", namespace).WithField("pod", podName).Info("Pod deleted")
 							return
@@ -595,7 +596,7 @@ func (o *operator) GC(lastTry, wfrDeletion bool) error {
 			gcPod.ObjectMeta.Labels[meta.LabelControllerInstance] = instance
 		}
 
-		_, err := o.clusterClient.CoreV1().Pods(executionContext.Namespace).Create(gcPod)
+		_, err := o.clusterClient.CoreV1().Pods(executionContext.Namespace).Create(context.TODO(), gcPod, metav1.CreateOptions{})
 		if err != nil {
 			log.WithField("wfr", o.wfr.Name).Warn("Create GC pod error: ", err)
 			if !lastTry {

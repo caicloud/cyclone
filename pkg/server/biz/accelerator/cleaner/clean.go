@@ -1,6 +1,7 @@
 package cleaner
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 // Cleaner cleans acceleration caches of a project
@@ -94,7 +96,7 @@ func (c *Cleaner) Clean(pvcNamespace, pvcName string) (*v1alpha1.AccelerationCac
 		},
 	}
 
-	pod, err := c.clusterClient.CoreV1().Pods(pvcNamespace).Create(cacheCleanPod)
+	pod, err := c.clusterClient.CoreV1().Pods(pvcNamespace).Create(context.TODO(), cacheCleanPod, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +129,7 @@ func (c *Cleaner) watch(namespace, podName string) {
 		}
 	}(namespace, podName)
 
-	w, err := c.clusterClient.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
+	w, err := c.clusterClient.CoreV1().Pods(namespace).Watch(context.TODO(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", podName),
 	})
 	if err != nil {
@@ -204,7 +206,7 @@ func (c *Cleaner) writeDownResult(status *v1alpha1.AccelerationCacheCleanupStatu
 	}
 	// Update Project status event with retry.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		latest, err := c.client.CycloneV1alpha1().Projects(c.projectNamespace).Get(c.projectName, metav1.GetOptions{})
+		latest, err := c.client.CycloneV1alpha1().Projects(c.projectNamespace).Get(context.TODO(), c.projectName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -235,7 +237,7 @@ func (c *Cleaner) writeDownResult(status *v1alpha1.AccelerationCacheCleanupStatu
 		project.Annotations[meta.AnnotationCacheCleanupStatus] = string(ss)
 
 		// update project
-		_, err = c.client.CycloneV1alpha1().Projects(c.projectNamespace).Update(project)
+		_, err = c.client.CycloneV1alpha1().Projects(c.projectNamespace).Update(context.TODO(), project, metav1.UpdateOptions{})
 		return err
 	})
 }
@@ -244,7 +246,7 @@ func (c *Cleaner) writeDownResult(status *v1alpha1.AccelerationCacheCleanupStatu
 func stopClean(client kubernetes.Interface, namespace, name string) error {
 	foreground := metav1.DeletePropagationForeground
 	var zero int64
-	return client.CoreV1().Pods(namespace).Delete(name, &metav1.DeleteOptions{
+	return client.CoreV1().Pods(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy:  &foreground,
 		GracePeriodSeconds: &zero,
 	})
@@ -266,8 +268,8 @@ func getOrDefault(config *config.CacheCleaner, key corev1.ResourceName, defaultV
 
 // InitCacheCleanupStatus should only be invoked when cyclone server startup, it will update all Running status
 // of Cleanup to Failed
-func InitCacheCleanupStatus(client clientset.Interface) error {
-	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{
+func InitCacheCleanupStatus(client k8s.Interface) error {
+	namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.LabelExistsSelector(meta.LabelTenantName),
 	})
 	if err != nil {
@@ -275,7 +277,7 @@ func InitCacheCleanupStatus(client clientset.Interface) error {
 	}
 
 	for _, namespace := range namespaces.Items {
-		projects, err := client.CycloneV1alpha1().Projects(namespace.Name).List(metav1.ListOptions{})
+		projects, err := client.CycloneV1alpha1().Projects(namespace.Name).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -316,7 +318,7 @@ func InitCacheCleanupStatus(client clientset.Interface) error {
 			project.Annotations[meta.AnnotationCacheCleanupStatus] = string(ss)
 
 			// update project
-			_, err = client.CycloneV1alpha1().Projects(namespace.Name).Update(project)
+			_, err = client.CycloneV1alpha1().Projects(namespace.Name).Update(context.TODO(), project, metav1.UpdateOptions{})
 			return err
 		}
 	}
@@ -337,7 +339,7 @@ const (
 // Scenarios no need may including:
 //   - The pvc is deleted by other components
 func StopReasonNoNeed(client kubernetes.Interface, namespace, reason string) error {
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.AccelerationGCPodSelector(),
 	})
 	if err != nil {
@@ -353,7 +355,7 @@ func StopReasonNoNeed(client kubernetes.Interface, namespace, reason string) err
 		// Add the NoNeedReason label before deleting will notify the related pod watcher to
 		// record the caches cleanup result as Succeeded instead of Failed.
 		pod.Labels[LabelCleanupPodNoNeedReason] = reason
-		_, err = client.CoreV1().Pods(namespace).Update(pod)
+		_, err = client.CoreV1().Pods(namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if err != nil {
 			log.Warningf("Update caches cleanup pod %s error: %v", pod.Name, err)
 		}

@@ -106,14 +106,14 @@ func sendNotifications(wfr *v1alpha1.WorkflowRun) error {
 	// Update WorkflowRun notification status with retry.
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Get latest WorkflowRun.
-		latest, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(wfr.Name, metav1.GetOptions{})
+		latest, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Get(context.TODO(), wfr.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		if latest.Status.Notifications == nil {
 			latest.Status.Notifications = status
-			_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(latest)
+			_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(wfr.Namespace).Update(context.TODO(), latest, metav1.UpdateOptions{})
 			return err
 		}
 

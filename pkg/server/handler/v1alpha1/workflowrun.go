@@ -63,11 +63,11 @@ func CreateWorkflowRun(ctx context.Context, project, workflow, tenant string, wf
 	}
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
-	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(wfr)
+	return handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Create(context.TODO(), wfr, metav1.CreateOptions{})
 }
 
 func workflowRunCreationDryRun(project, workflow, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
-	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
+	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(context.TODO(), workflow, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func workflowRunCreationDryRun(project, workflow, tenant string, wfr *v1alpha1.W
 	go artifactManager.CleanPeriodically(config.Config.Artifact.RetentionSeconds * time.Second)
 
 	for _, stage := range wf.Spec.Stages {
-		stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage.Name, metav1.GetOptions{})
+		stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), stage.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func workflowReference(tenant, workflow string) *core_v1.ObjectReference {
 
 // ListWorkflowRuns ...
 func ListWorkflowRuns(ctx context.Context, project, workflow, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
-	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project) + "," + meta.WorkflowSelector(workflow),
 	})
 	if err != nil {
@@ -227,7 +227,7 @@ func filterWorkflowRuns(wfrs []v1alpha1.WorkflowRun, filter string) ([]v1alpha1.
 
 // GetWorkflowRun ...
 func GetWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(context.TODO(), workflowrun, metav1.GetOptions{})
 
 	if !wfr.DeletionTimestamp.IsZero() {
 		wfr.Status.Overall.Phase = api.StatusTerminating
@@ -238,7 +238,7 @@ func GetWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant 
 // UpdateWorkflowRun ...
 func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(context.TODO(), workflowrun, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func UpdateWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 			newWfr.Spec.WorkflowRef = workflowReference(tenant, workflow)
 		}
 
-		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(newWfr)
+		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Update(context.TODO(), newWfr, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -268,13 +268,13 @@ func DeleteWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		return err
 	}
 
-	err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(workflowrun, nil)
+	err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Delete(context.TODO(), workflowrun, metav1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 
 // StopWorkflowRun stops a WorkflowRun.
 func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(workflowrun, metav1.GetOptions{})
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(context.TODO(), workflowrun, metav1.GetOptions{})
 	if err != nil {
 		return nil, cerr.ConvertK8sError(err)
 	}
@@ -290,7 +290,7 @@ func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant
 		return nil, err
 	}
 
-	wfr, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(context.TODO(), workflowrun, k8s_types.JSONPatchType, data, metav1.PatchOptions{})
 
 	return wfr, cerr.ConvertK8sError(err)
 }
@@ -303,7 +303,7 @@ func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenan
 		return nil, err
 	}
 
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(context.TODO(), workflowrun, k8s_types.JSONPatchType, data, metav1.PatchOptions{})
 
 	return wfr, cerr.ConvertK8sError(err)
 }
@@ -316,7 +316,7 @@ func ResumeWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 		return nil, err
 	}
 
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(workflowrun, k8s_types.JSONPatchType, data)
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Patch(context.TODO(), workflowrun, k8s_types.JSONPatchType, data, metav1.PatchOptions{})
 
 	return wfr, cerr.ConvertK8sError(err)
 }
@@ -324,7 +324,7 @@ func ResumeWorkflowRun(ctx context.Context, project, workflow, workflowrun, tena
 // ReceiveContainerLogStream receives real-time log of container within workflowrun stage.
 func ReceiveContainerLogStream(ctx context.Context, workflowrun, namespace, stage, container string) error {
 	// get workflowrun
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(context.TODO(), workflowrun, metav1.GetOptions{})
 	if err != nil {
 		log.Errorf("get wfr %s/%s error %s", namespace, workflowrun, err)
 		return err
@@ -505,7 +505,7 @@ func watchStageTermination(namespace, wfrName, stgName string, onTerminatedCallb
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
 	for range ticker.C {
-		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(wfrName, metav1.GetOptions{})
+		wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(context.TODO(), wfrName, metav1.GetOptions{})
 		if err != nil {
 			log.Warningf("Get workflowRun %s error: %v", wfrName, err)
 			onTerminatedCallback()
@@ -559,7 +559,7 @@ func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string)
 	}
 
 	// get workflowrun
-	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(workflowrun, metav1.GetOptions{})
+	wfr, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(namespace).Get(context.TODO(), workflowrun, metav1.GetOptions{})
 	if err != nil {
 		log.Errorf("get wfr %s/%s error %s", namespace, workflowrun, err)
 		return err
@@ -622,7 +622,7 @@ func ReceiveArtifacts(ctx context.Context, workflowrun, namespace, stage string)
 func ListArtifacts(ctx context.Context, project, workflow, workflowrun, tenant string) (*types.ListResponse, error) {
 	var artifacts []api.StageArtifact
 
-	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(workflow, metav1.GetOptions{})
+	wf, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(context.TODO(), workflow, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,8 +13,8 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 var (
@@ -29,7 +30,7 @@ var (
 
 type PodWatcherSuite struct {
 	suite.Suite
-	client clientset.Interface
+	client k8s.Interface
 }
 
 // podWatcher implements watch.Interface
@@ -59,7 +60,7 @@ func (p *podWatcher) ResultChan() <-chan watch.Event {
 
 func (suite *PodWatcherSuite) SetupTest() {
 	client := fake.NewSimpleClientset()
-	_, err := client.CycloneV1alpha1().WorkflowRuns(metaNs).Create(&v1alpha1.WorkflowRun{
+	_, err := client.CycloneV1alpha1().WorkflowRuns(metaNs).Create(context.TODO(), &v1alpha1.WorkflowRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      wfrName,
 			Namespace: metaNs,
@@ -69,7 +70,7 @@ func (suite *PodWatcherSuite) SetupTest() {
 				stgName: {},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
 	client.PrependWatchReactor("pods", func(action k8stesting.Action) (handled bool, ret watch.Interface, err error) {
@@ -181,7 +182,7 @@ func (suite *PodWatcherSuite) TestPodEventWatch() {
 	go newPodEventWatcher(suite.client, suite.client, metaNs, wfrName).Work(stgName, workloadNs, podName)
 	// wait to work
 	time.Sleep(1 * time.Second)
-	wfr, err := suite.client.CycloneV1alpha1().WorkflowRuns(metaNs).Get(wfrName, metav1.GetOptions{})
+	wfr, err := suite.client.CycloneV1alpha1().WorkflowRuns(metaNs).Get(context.TODO(), wfrName, metav1.GetOptions{})
 	assert.Nil(suite.T(), err)
 	events := wfr.Status.Stages[stgName].Events
 	assert.NotEmpty(suite.T(), events)

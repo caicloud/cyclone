@@ -34,7 +34,7 @@ func ListWorkingPods(ctx context.Context, tenant string, query *types.QueryParam
 		return nil, fmt.Errorf("create cluster client error: %v", err)
 	}
 
-	pods, err := client.CoreV1().Pods(cluster.Namespace).List(metav1.ListOptions{
+	pods, err := client.CoreV1().Pods(cluster.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.LabelExistsSelector(meta.LabelWorkflowRunName),
 	})
 	if err != nil {

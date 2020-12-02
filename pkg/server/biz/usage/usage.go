@@ -1,16 +1,17 @@
 package usage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 // PVCUsage represents PVC usages in a tenant, values are in human readable format, for example, '8K', '1.2G'.
@@ -71,7 +72,7 @@ type pvcReporter struct {
 }
 
 // NewPVCReporter creates a PVC usage reporter.
-func NewPVCReporter(client clientset.Interface, tenant string) (PVCReporter, error) {
+func NewPVCReporter(client k8s.Interface, tenant string) (PVCReporter, error) {
 	if client == nil {
 		return nil, fmt.Errorf("k8s client is nil, tenant: %s", tenant)
 	}
@@ -121,9 +122,9 @@ func (p *pvcReporter) UsedPercentage(folder string) (float64, error) {
 	return value / p.usage.Total, nil
 }
 
-func getUsage(client clientset.Interface, tenant string) (*PVCUsage, error) {
+func getUsage(client k8s.Interface, tenant string) (*PVCUsage, error) {
 	name := common.TenantNamespace(tenant)
-	ns, err := client.CoreV1().Namespaces().Get(common.TenantNamespace(tenant), metav1.GetOptions{})
+	ns, err := client.CoreV1().Namespaces().Get(context.TODO(), common.TenantNamespace(tenant), metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("get namespace %s for tenant %s error: %v", name, tenant, err)
 	}
