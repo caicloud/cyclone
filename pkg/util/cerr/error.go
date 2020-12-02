@@ -40,6 +40,8 @@ const (
 )
 
 var (
+	// ErrorAuthBody defines username or password params not correct
+	ErrorAuthBody = nerror.BadRequest.Build(ReasonRequest, "please check username or password is correct or not")
 	// ErrorParamTypeError defines param type error
 	ErrorParamTypeError = nerror.BadRequest.Build(ReasonRequest, "parameter ${parameter} should be ${expect}, but got ${real}")
 	// ErrorParamNotFound defines request param error

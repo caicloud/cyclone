@@ -3,14 +3,14 @@ package gogs
 import (
 	"fmt"
 
-	"github.com/caicloud/nirvana/errors"
 	gogs "github.com/gogs/go-gogs-client"
+
+	"github.com/caicloud/nirvana/log"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
-	"github.com/caicloud/nirvana/log"
 )
 
 func init() {
@@ -28,8 +28,6 @@ type Gogs struct {
 	client *gogs.Client
 }
 
-const checkPassword = ", please try again later or check your username and password"
-
 // NewGogs create new Gogs client
 func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
 	var client *gogs.Client // just create a nil gogs client
@@ -37,7 +35,7 @@ func NewGogs(scmCfg *v1alpha1.SCMSource) (provider scm.Provider, err error) {
 		client = gogs.NewClient(scmCfg.Server, scmCfg.Token)
 	} else {
 		if scmCfg.User == "" || scmCfg.Password == "" {
-			err = errors.BadRequest.Error("fail to new Gogs client%s", checkPassword)
+			err = cerr.ErrorAuthBody.Error()
 			return
 		}
 		var token string
@@ -63,17 +61,17 @@ func (g *Gogs) GetToken() (token string, err error) {
 // genTokenByBasicAuth generate token by username and password
 func genTokenByBasicAuth(server, user, password string) (token string, err error) {
 	if len(server) == 0 {
-		err = errors.BadRequest.Error("Gogs server is missing")
+		err = cerr.ErrorParamNotFound.Error("server")
 		return
 	}
 	if len(user) == 0 || len(password) == 0 {
-		return "", errors.BadRequest.Error("Gogs username or password is missing")
+		return "", cerr.ErrorAuthBody.Error()
 	}
 
 	var client = gogs.NewClient(server, "")
 	var accessTokens []*gogs.AccessToken
 	if accessTokens, err = client.ListAccessTokens(user, password); err != nil {
-		err = errors.BadRequest.Error("Gogs got an error: %v%s", err, checkPassword)
+		err = cerr.ErrorAuthorizationFailed.Error()
 		return
 	}
 
@@ -86,11 +84,11 @@ func genTokenByBasicAuth(server, user, password string) (token string, err error
 		var opt = gogs.CreateAccessTokenOption{Name: TokenName}
 		var accessToken *gogs.AccessToken
 		if accessToken, err = client.CreateAccessToken(user, password, opt); err != nil {
-			err = errors.BadRequest.Error("Gogs got an error: %v%s", err, checkPassword)
+			err = cerr.ErrorAuthorizationFailed.Error()
 			return
 		}
 		if accessToken == nil || accessToken.Sha1 == "" {
-			err = errors.BadRequest.Error("Gogs generate token with an error%s", checkPassword)
+			err = cerr.ErrorAuthorizationFailed.Error()
 			return
 		}
 		token = accessToken.Sha1 // got a new valid token
