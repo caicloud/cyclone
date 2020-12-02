@@ -7,6 +7,9 @@ Copyright 2020 caicloud authors. All rights reserved.
 package v1alpha1
 
 import (
+	"context"
+	"time"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	scheme "github.com/caicloud/cyclone/pkg/k8s/clientset/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,15 +26,15 @@ type WorkflowRunsGetter interface {
 
 // WorkflowRunInterface has methods to work with WorkflowRun resources.
 type WorkflowRunInterface interface {
-	Create(*v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error)
-	Update(*v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error)
-	UpdateStatus(*v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.WorkflowRun, error)
-	List(opts v1.ListOptions) (*v1alpha1.WorkflowRunList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.WorkflowRun, err error)
+	Create(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.CreateOptions) (*v1alpha1.WorkflowRun, error)
+	Update(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (*v1alpha1.WorkflowRun, error)
+	UpdateStatus(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (*v1alpha1.WorkflowRun, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.WorkflowRun, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.WorkflowRunList, error)
+	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.WorkflowRun, err error)
 	WorkflowRunExpansion
 }
 
@@ -50,113 +53,131 @@ func newWorkflowRuns(c *CycloneV1alpha1Client, namespace string) *workflowRuns {
 }
 
 // Get takes name of the workflowRun, and returns the corresponding workflowRun object, and an error if there is any.
-func (c *workflowRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {
+func (c *workflowRuns) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {
 	result = &v1alpha1.WorkflowRun{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of WorkflowRuns that match those selectors.
-func (c *workflowRuns) List(opts v1.ListOptions) (result *v1alpha1.WorkflowRunList, err error) {
+func (c *workflowRuns) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.WorkflowRunList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1alpha1.WorkflowRunList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Do().
+		Timeout(timeout).
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested workflowRuns.
-func (c *workflowRuns) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *workflowRuns) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Watch()
+		Timeout(timeout).
+		Watch(ctx)
 }
 
 // Create takes the representation of a workflowRun and creates it.  Returns the server's representation of the workflowRun, and an error, if there is any.
-func (c *workflowRuns) Create(workflowRun *v1alpha1.WorkflowRun) (result *v1alpha1.WorkflowRun, err error) {
+func (c *workflowRuns) Create(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.CreateOptions) (result *v1alpha1.WorkflowRun, err error) {
 	result = &v1alpha1.WorkflowRun{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("workflowruns").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(workflowRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a workflowRun and updates it. Returns the server's representation of the workflowRun, and an error, if there is any.
-func (c *workflowRuns) Update(workflowRun *v1alpha1.WorkflowRun) (result *v1alpha1.WorkflowRun, err error) {
+func (c *workflowRuns) Update(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (result *v1alpha1.WorkflowRun, err error) {
 	result = &v1alpha1.WorkflowRun{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		Name(workflowRun.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(workflowRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *workflowRuns) UpdateStatus(workflowRun *v1alpha1.WorkflowRun) (result *v1alpha1.WorkflowRun, err error) {
+func (c *workflowRuns) UpdateStatus(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (result *v1alpha1.WorkflowRun, err error) {
 	result = &v1alpha1.WorkflowRun{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		Name(workflowRun.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(workflowRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the workflowRun and deletes it. Returns an error if one occurs.
-func (c *workflowRuns) Delete(name string, options *v1.DeleteOptions) error {
+func (c *workflowRuns) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("workflowruns").
 		Name(name).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *workflowRuns) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *workflowRuns) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	var timeout time.Duration
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("workflowruns").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
-		Body(options).
-		Do().
+		VersionedParams(&listOpts, scheme.ParameterCodec).
+		Timeout(timeout).
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched workflowRun.
-func (c *workflowRuns) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.WorkflowRun, err error) {
+func (c *workflowRuns) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.WorkflowRun, err error) {
 	result = &v1alpha1.WorkflowRun{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("workflowruns").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

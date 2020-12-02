@@ -14,8 +14,10 @@ import (
 )
 
 // WorkflowRunLister helps list WorkflowRuns.
+// All objects returned here must be treated as read-only.
 type WorkflowRunLister interface {
 	// List lists all WorkflowRuns in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.WorkflowRun, err error)
 	// WorkflowRuns returns an object that can list and get WorkflowRuns.
 	WorkflowRuns(namespace string) WorkflowRunNamespaceLister
@@ -46,10 +48,13 @@ func (s *workflowRunLister) WorkflowRuns(namespace string) WorkflowRunNamespaceL
 }
 
 // WorkflowRunNamespaceLister helps list and get WorkflowRuns.
+// All objects returned here must be treated as read-only.
 type WorkflowRunNamespaceLister interface {
 	// List lists all WorkflowRuns in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.WorkflowRun, err error)
 	// Get retrieves the WorkflowRun from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.WorkflowRun, error)
 	WorkflowRunNamespaceListerExpansion
 }

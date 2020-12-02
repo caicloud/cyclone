@@ -7,7 +7,7 @@ Copyright 2020 caicloud authors. All rights reserved.
 package v1alpha1
 
 import (
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
+	internalinterfaces "github.com/caicloud/cyclone/pkg/k8s/informers/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

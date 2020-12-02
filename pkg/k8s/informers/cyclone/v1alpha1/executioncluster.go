@@ -7,16 +7,16 @@ Copyright 2020 caicloud authors. All rights reserved.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	cyclonev1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	clientset "github.com/caicloud/cyclone/pkg/k8s/clientset"
+	internalinterfaces "github.com/caicloud/cyclone/pkg/k8s/informers/internalinterfaces"
 	v1alpha1 "github.com/caicloud/cyclone/pkg/k8s/listers/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
-	kubernetes "k8s.io/client-go/kubernetes"
 	cache "k8s.io/client-go/tools/cache"
 )
 
@@ -49,13 +49,13 @@ func NewFilteredExecutionClusterInformer(client clientset.Interface, resyncPerio
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CycloneV1alpha1().ExecutionClusters().List(options)
+				return client.CycloneV1alpha1().ExecutionClusters().List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CycloneV1alpha1().ExecutionClusters().Watch(options)
+				return client.CycloneV1alpha1().ExecutionClusters().Watch(context.TODO(), options)
 			},
 		},
 		&cyclonev1alpha1.ExecutionCluster{},
@@ -64,8 +64,8 @@ func NewFilteredExecutionClusterInformer(client clientset.Interface, resyncPerio
 	)
 }
 
-func (f *executionClusterInformer) defaultInformer(client kubernetes.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredExecutionClusterInformer(client.(clientset.Interface), resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *executionClusterInformer) defaultInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredExecutionClusterInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *executionClusterInformer) Informer() cache.SharedIndexInformer {

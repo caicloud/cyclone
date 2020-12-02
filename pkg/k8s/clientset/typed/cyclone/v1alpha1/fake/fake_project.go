@@ -7,6 +7,8 @@ Copyright 2020 caicloud authors. All rights reserved.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -27,7 +29,7 @@ var projectsResource = schema.GroupVersionResource{Group: "cyclone.dev", Version
 var projectsKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "Project"}
 
 // Get takes name of the project, and returns the corresponding project object, and an error if there is any.
-func (c *FakeProjects) Get(name string, options v1.GetOptions) (result *v1alpha1.Project, err error) {
+func (c *FakeProjects) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Project, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(projectsResource, c.ns, name), &v1alpha1.Project{})
 
@@ -38,7 +40,7 @@ func (c *FakeProjects) Get(name string, options v1.GetOptions) (result *v1alpha1
 }
 
 // List takes label and field selectors, and returns the list of Projects that match those selectors.
-func (c *FakeProjects) List(opts v1.ListOptions) (result *v1alpha1.ProjectList, err error) {
+func (c *FakeProjects) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ProjectList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(projectsResource, projectsKind, c.ns, opts), &v1alpha1.ProjectList{})
 
@@ -50,7 +52,7 @@ func (c *FakeProjects) List(opts v1.ListOptions) (result *v1alpha1.ProjectList, 
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.ProjectList{}
+	list := &v1alpha1.ProjectList{ListMeta: obj.(*v1alpha1.ProjectList).ListMeta}
 	for _, item := range obj.(*v1alpha1.ProjectList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -60,14 +62,14 @@ func (c *FakeProjects) List(opts v1.ListOptions) (result *v1alpha1.ProjectList, 
 }
 
 // Watch returns a watch.Interface that watches the requested projects.
-func (c *FakeProjects) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeProjects) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(projectsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a project and creates it.  Returns the server's representation of the project, and an error, if there is any.
-func (c *FakeProjects) Create(project *v1alpha1.Project) (result *v1alpha1.Project, err error) {
+func (c *FakeProjects) Create(ctx context.Context, project *v1alpha1.Project, opts v1.CreateOptions) (result *v1alpha1.Project, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(projectsResource, c.ns, project), &v1alpha1.Project{})
 
@@ -78,7 +80,7 @@ func (c *FakeProjects) Create(project *v1alpha1.Project) (result *v1alpha1.Proje
 }
 
 // Update takes the representation of a project and updates it. Returns the server's representation of the project, and an error, if there is any.
-func (c *FakeProjects) Update(project *v1alpha1.Project) (result *v1alpha1.Project, err error) {
+func (c *FakeProjects) Update(ctx context.Context, project *v1alpha1.Project, opts v1.UpdateOptions) (result *v1alpha1.Project, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(projectsResource, c.ns, project), &v1alpha1.Project{})
 
@@ -89,7 +91,7 @@ func (c *FakeProjects) Update(project *v1alpha1.Project) (result *v1alpha1.Proje
 }
 
 // Delete takes name of the project and deletes it. Returns an error if one occurs.
-func (c *FakeProjects) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeProjects) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(projectsResource, c.ns, name), &v1alpha1.Project{})
 
@@ -97,15 +99,15 @@ func (c *FakeProjects) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeProjects) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(projectsResource, c.ns, listOptions)
+func (c *FakeProjects) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(projectsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ProjectList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched project.
-func (c *FakeProjects) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Project, err error) {
+func (c *FakeProjects) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Project, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(projectsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Project{})
 

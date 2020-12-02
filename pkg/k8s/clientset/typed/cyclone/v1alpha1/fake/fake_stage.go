@@ -7,6 +7,8 @@ Copyright 2020 caicloud authors. All rights reserved.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -27,7 +29,7 @@ var stagesResource = schema.GroupVersionResource{Group: "cyclone.dev", Version: 
 var stagesKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "Stage"}
 
 // Get takes name of the stage, and returns the corresponding stage object, and an error if there is any.
-func (c *FakeStages) Get(name string, options v1.GetOptions) (result *v1alpha1.Stage, err error) {
+func (c *FakeStages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Stage, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(stagesResource, c.ns, name), &v1alpha1.Stage{})
 
@@ -38,7 +40,7 @@ func (c *FakeStages) Get(name string, options v1.GetOptions) (result *v1alpha1.S
 }
 
 // List takes label and field selectors, and returns the list of Stages that match those selectors.
-func (c *FakeStages) List(opts v1.ListOptions) (result *v1alpha1.StageList, err error) {
+func (c *FakeStages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.StageList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(stagesResource, stagesKind, c.ns, opts), &v1alpha1.StageList{})
 
@@ -50,7 +52,7 @@ func (c *FakeStages) List(opts v1.ListOptions) (result *v1alpha1.StageList, err 
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.StageList{}
+	list := &v1alpha1.StageList{ListMeta: obj.(*v1alpha1.StageList).ListMeta}
 	for _, item := range obj.(*v1alpha1.StageList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -60,14 +62,14 @@ func (c *FakeStages) List(opts v1.ListOptions) (result *v1alpha1.StageList, err 
 }
 
 // Watch returns a watch.Interface that watches the requested stages.
-func (c *FakeStages) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeStages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(stagesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a stage and creates it.  Returns the server's representation of the stage, and an error, if there is any.
-func (c *FakeStages) Create(stage *v1alpha1.Stage) (result *v1alpha1.Stage, err error) {
+func (c *FakeStages) Create(ctx context.Context, stage *v1alpha1.Stage, opts v1.CreateOptions) (result *v1alpha1.Stage, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(stagesResource, c.ns, stage), &v1alpha1.Stage{})
 
@@ -78,7 +80,7 @@ func (c *FakeStages) Create(stage *v1alpha1.Stage) (result *v1alpha1.Stage, err 
 }
 
 // Update takes the representation of a stage and updates it. Returns the server's representation of the stage, and an error, if there is any.
-func (c *FakeStages) Update(stage *v1alpha1.Stage) (result *v1alpha1.Stage, err error) {
+func (c *FakeStages) Update(ctx context.Context, stage *v1alpha1.Stage, opts v1.UpdateOptions) (result *v1alpha1.Stage, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(stagesResource, c.ns, stage), &v1alpha1.Stage{})
 
@@ -89,7 +91,7 @@ func (c *FakeStages) Update(stage *v1alpha1.Stage) (result *v1alpha1.Stage, err 
 }
 
 // Delete takes name of the stage and deletes it. Returns an error if one occurs.
-func (c *FakeStages) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeStages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(stagesResource, c.ns, name), &v1alpha1.Stage{})
 
@@ -97,15 +99,15 @@ func (c *FakeStages) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeStages) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(stagesResource, c.ns, listOptions)
+func (c *FakeStages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(stagesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.StageList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched stage.
-func (c *FakeStages) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Stage, err error) {
+func (c *FakeStages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Stage, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(stagesResource, c.ns, name, pt, data, subresources...), &v1alpha1.Stage{})
 
