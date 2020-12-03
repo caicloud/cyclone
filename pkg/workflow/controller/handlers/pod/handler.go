@@ -1,14 +1,16 @@
 package pod
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/controller/handlers"
 )
@@ -16,7 +18,7 @@ import (
 // Handler ...
 type Handler struct {
 	ClusterClient kubernetes.Interface
-	Client        clientset.Interface
+	Client        k8s.Interface
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.
@@ -28,7 +30,7 @@ const (
 )
 
 // NewHandler ...
-func NewHandler(client clientset.Interface, clusterClient kubernetes.Interface) *Handler {
+func NewHandler(client k8s.Interface, clusterClient kubernetes.Interface) *Handler {
 	return &Handler{
 		Client:        client,
 		ClusterClient: clusterClient,
@@ -111,7 +113,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 
 	pod := originPod.DeepCopy()
 	pod.ObjectMeta.Finalizers = append(pod.ObjectMeta.Finalizers, finalizerPod)
-	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(pod)
+	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 	return err
 }
 
@@ -141,6 +143,6 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 	}
 
 	pod.ObjectMeta.Finalizers = sets.NewString(pod.ObjectMeta.Finalizers...).Delete(finalizerPod).UnsortedList()
-	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(pod)
+	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 	return err
 }

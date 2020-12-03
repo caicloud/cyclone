@@ -14,8 +14,10 @@ import (
 )
 
 // StageLister helps list Stages.
+// All objects returned here must be treated as read-only.
 type StageLister interface {
 	// List lists all Stages in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Stage, err error)
 	// Stages returns an object that can list and get Stages.
 	Stages(namespace string) StageNamespaceLister
@@ -46,10 +48,13 @@ func (s *stageLister) Stages(namespace string) StageNamespaceLister {
 }
 
 // StageNamespaceLister helps list and get Stages.
+// All objects returned here must be treated as read-only.
 type StageNamespaceLister interface {
 	// List lists all Stages in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Stage, err error)
 	// Get retrieves the Stage from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.Stage, error)
 	StageNamespaceListerExpansion
 }

@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -117,7 +118,7 @@ func ensureOwner(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha
 
 	// Get Workflow if not available.
 	if wf == nil {
-		f, err := client.CycloneV1alpha1().Workflows(wfr.Namespace).Get(wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
+		f, err := client.CycloneV1alpha1().Workflows(wfr.Namespace).Get(context.TODO(), wfr.Spec.WorkflowRef.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}

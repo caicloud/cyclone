@@ -11,14 +11,14 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 type RefSuite struct {
 	suite.Suite
 	wfr    *v1alpha1.WorkflowRun
-	client clientset.Interface
+	client k8s.Interface
 }
 
 func (suite *RefSuite) SetupSuite() {

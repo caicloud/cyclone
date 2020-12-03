@@ -7,11 +7,19 @@ Copyright 2020 caicloud authors. All rights reserved.
 package informers
 
 import (
+	"fmt"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	informers "k8s.io/client-go/informers"
 	cache "k8s.io/client-go/tools/cache"
 )
+
+// GenericInformer is type of SharedIndexInformer which will locate and delegate to other
+// sharedInformers based on type
+type GenericInformer interface {
+	Informer() cache.SharedIndexInformer
+	Lister() cache.GenericLister
+}
 
 type genericInformer struct {
 	informer cache.SharedIndexInformer
@@ -30,7 +38,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 
 // ForResource gives generic access to a shared informer of the matching type
 // TODO extend this to unknown resources with a client pool
-func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error) {
+func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=cyclone.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("executionclusters"):
@@ -50,5 +58,5 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 
 	}
 
-	return f.SharedInformerFactory.ForResource(resource)
+	return nil, fmt.Errorf("no informer found for %v", resource)
 }

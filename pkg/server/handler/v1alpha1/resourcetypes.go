@@ -57,7 +57,7 @@ func GetResourceType(ctx context.Context, tenant, resourceType string) (*v1alpha
 
 // CreateResourceType ...
 func CreateResourceType(ctx context.Context, tenant string, resource *v1alpha1.Resource) (*v1alpha1.Resource, error) {
-	rsc, err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Create(resource)
+	rsc, err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Create(context.TODO(), resource, metav1.CreateOptions{})
 	return rsc, cerr.ConvertK8sError(err)
 }
 
@@ -73,13 +73,13 @@ func UpdateResourceType(ctx context.Context, tenant string, resourceType string,
 		}
 
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			origin, err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Get(t.Name, metav1.GetOptions{})
+			origin, err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Get(context.TODO(), t.Name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
 
 			origin.Spec = resource.Spec
-			_, err = handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Update(origin)
+			_, err = handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Update(context.TODO(), origin, metav1.UpdateOptions{})
 			return err
 		})
 		return resource, err
@@ -100,7 +100,7 @@ func DeleteResourceType(ctx context.Context, tenant string, resourceType string)
 			continue
 		}
 
-		err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Delete(t.Name, &metav1.DeleteOptions{})
+		err := handler.K8sClient.CycloneV1alpha1().Resources(svrcommon.TenantNamespace(tenant)).Delete(context.TODO(), t.Name, metav1.DeleteOptions{})
 		return cerr.ConvertK8sError(err)
 	}
 

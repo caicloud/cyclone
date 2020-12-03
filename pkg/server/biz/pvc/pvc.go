@@ -1,6 +1,7 @@
 package pvc
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -57,7 +58,7 @@ func CreatePVC(tenantName, storageClass, size string, namespace string, client *
 		volume.Spec.StorageClassName = &storageClass
 	}
 
-	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Create(volume)
+	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Create(context.TODO(), volume, meta_v1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Create persistent volume claim %s error %v", pvcName, err)
 		return err
@@ -96,7 +97,7 @@ func DeletePVC(tenantName, namespace string, client *kubernetes.Clientset) error
 		return err
 	}
 
-	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(pvcName, &meta_v1.DeleteOptions{})
+	err = client.CoreV1().PersistentVolumeClaims(nsname).Delete(context.TODO(), pvcName, meta_v1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		log.Errorf("delete persistent volume claim %s error %v", pvcName, err)
 		return err
@@ -122,7 +123,7 @@ func ConfirmPVCDeleted(tenantName, namespace string, client *kubernetes.Clientse
 		return err
 	}
 
-	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Get(pvcName, meta_v1.GetOptions{})
+	_, err = client.CoreV1().PersistentVolumeClaims(nsname).Get(context.TODO(), pvcName, meta_v1.GetOptions{})
 	if err == nil {
 		return fmt.Errorf("PVC for tenant %s has not been deleted", tenantName)
 	}
@@ -136,7 +137,7 @@ func ConfirmPVCDeleted(tenantName, namespace string, client *kubernetes.Clientse
 // UpdatePVC delete the old pvc and recreate another one, so the data of the pvc will lost.
 func UpdatePVC(tenantName, storageClass, size string, namespace string, client *kubernetes.Clientset) error {
 	// Can not update pvc when there are workflows running.
-	pods, err := client.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), meta_v1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s in (%s, %s)", meta.LabelPodKind, meta.PodKindWorkload, meta.PodKindGC),
 	})
 	if err != nil {

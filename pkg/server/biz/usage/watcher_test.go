@@ -1,6 +1,7 @@
 package usage
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -10,13 +11,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 type WatcherSuite struct {
 	suite.Suite
-	client clientset.Interface
+	client k8s.Interface
 	tenant string
 }
 
@@ -26,26 +27,26 @@ func (suite *WatcherSuite) SetupTest() {
 }
 
 func (suite *WatcherSuite) TestLaunchPVCUsageWatcher() {
-	context := v1alpha1.ExecutionContext{
+	execCtx := v1alpha1.ExecutionContext{
 		Cluster:   "",
 		Namespace: "test-namespace",
 		PVC:       "test-pvc",
 	}
 
-	err := LaunchPVCUsageWatcher(suite.client, suite.tenant, context)
+	err := LaunchPVCUsageWatcher(suite.client, suite.tenant, execCtx)
 	assert.Nil(suite.T(), err)
 
-	_, err = suite.client.AppsV1().Deployments(context.Namespace).Get(PVCWatcherName, metav1.GetOptions{})
+	_, err = suite.client.AppsV1().Deployments(execCtx.Namespace).Get(context.TODO(), PVCWatcherName, metav1.GetOptions{})
 	assert.Nil(suite.T(), err)
 }
 
 func (suite *WatcherSuite) TestDeletePVCUsageWatcher() {
 	testNamespace := "test-namespace"
-	_, err := suite.client.AppsV1().Deployments(testNamespace).Create(&appsv1.Deployment{
+	_, err := suite.client.AppsV1().Deployments(testNamespace).Create(context.TODO(), &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: PVCWatcherName,
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -53,7 +54,7 @@ func (suite *WatcherSuite) TestDeletePVCUsageWatcher() {
 	err = DeletePVCUsageWatcher(suite.client, testNamespace)
 	assert.Nil(suite.T(), err)
 
-	_, err = suite.client.AppsV1().Deployments(testNamespace).Get(PVCWatcherName, metav1.GetOptions{})
+	_, err = suite.client.AppsV1().Deployments(testNamespace).Get(context.TODO(), PVCWatcherName, metav1.GetOptions{})
 	assert.NotNil(suite.T(), err)
 	assert.Contains(suite.T(), err.Error(), "not found")
 

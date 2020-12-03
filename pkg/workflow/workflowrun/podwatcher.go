@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -52,7 +53,7 @@ func (p *podEventWatcher) Work(stage, namespace, podName string) {
 }
 
 func (p *podEventWatcher) watchPodEvent(stage, namespace, podName string, c <-chan struct{}) {
-	w, err := p.clusterClient.CoreV1().Events(namespace).Watch(metav1.ListOptions{
+	w, err := p.clusterClient.CoreV1().Events(namespace).Watch(context.TODO(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("involvedObject.kind=Pod,involvedObject.name=%s,type!=%s", podName, corev1.EventTypeNormal),
 	})
 	if err != nil {
@@ -101,7 +102,7 @@ func (p *podEventWatcher) watchPod(namespace, podName string, c chan<- struct{})
 		c <- struct{}{}
 	}()
 
-	w, err := p.clusterClient.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
+	w, err := p.clusterClient.CoreV1().Pods(namespace).Watch(context.TODO(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", podName),
 	})
 	if err != nil {
@@ -185,7 +186,7 @@ func (e *eventUpdater) UpdateEvents(stage string, events []v1alpha1.StageEvent) 
 	// Update WorkflowRun status event with retry.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// get latest wfr
-		latest, err := e.client.CycloneV1alpha1().WorkflowRuns(e.wfrNamespace).Get(e.wfrName, metav1.GetOptions{})
+		latest, err := e.client.CycloneV1alpha1().WorkflowRuns(e.wfrNamespace).Get(context.TODO(), e.wfrName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -206,7 +207,7 @@ func (e *eventUpdater) UpdateEvents(stage string, events []v1alpha1.StageEvent) 
 
 		// update wfr
 		wfr.Status.Stages[stage].Events = combined
-		_, err = e.client.CycloneV1alpha1().WorkflowRuns(e.wfrNamespace).Update(wfr)
+		_, err = e.client.CycloneV1alpha1().WorkflowRuns(e.wfrNamespace).Update(context.TODO(), wfr, metav1.UpdateOptions{})
 		return err
 	})
 }

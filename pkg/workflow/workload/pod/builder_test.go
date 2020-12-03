@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,8 +15,9 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 )
@@ -95,7 +97,7 @@ var wfr = &v1alpha1.WorkflowRun{
 
 type PodBuilderSuite struct {
 	suite.Suite
-	client clientset.Interface
+	client k8s.Interface
 }
 
 func (suite *PodBuilderSuite) SetupTest() {
@@ -386,7 +388,7 @@ func (suite *PodBuilderSuite) SetupTest() {
 }
 
 func getStage(client clientset.Interface, stage string) *v1alpha1.Stage {
-	stg, _ := client.CycloneV1alpha1().Stages("").Get(stage, metav1.GetOptions{})
+	stg, _ := client.CycloneV1alpha1().Stages("").Get(context.TODO(), stage, metav1.GetOptions{})
 	return stg
 }
 

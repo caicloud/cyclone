@@ -1,6 +1,7 @@
 package cleaner
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -14,11 +15,11 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset/fake"
 	"github.com/caicloud/cyclone/pkg/meta"
 	serverv1alpha1 "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/common"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
+	"github.com/caicloud/cyclone/pkg/util/k8s/fake"
 )
 
 var (
@@ -33,7 +34,7 @@ var (
 
 type CleanerSuite struct {
 	suite.Suite
-	client clientset.Interface
+	client k8s.Interface
 }
 
 // podWatcher implements watch.Interface
@@ -115,12 +116,12 @@ func (suite *CleanerSuite) SetupTest() {
 
 func (suite *CleanerSuite) TestClean() {
 	client := suite.client
-	_, err := client.CycloneV1alpha1().Projects(metaNs).Create(&v1alpha1.Project{
+	_, err := client.CycloneV1alpha1().Projects(metaNs).Create(context.TODO(), &v1alpha1.Project{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      pName,
 			Namespace: metaNs,
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
 	cleaner := NewCleaner(suite.client, suite.client, metaNs, pName)
@@ -131,7 +132,7 @@ func (suite *CleanerSuite) TestClean() {
 
 	// wait to work
 	time.Sleep(1 * time.Second)
-	p, err := suite.client.CycloneV1alpha1().Projects(metaNs).Get(pName, metav1.GetOptions{})
+	p, err := suite.client.CycloneV1alpha1().Projects(metaNs).Get(context.TODO(), pName, metav1.GetOptions{})
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), p.Annotations)
 	assert.NotEmpty(suite.T(), p.Annotations[meta.AnnotationCacheCleanupStatus])
@@ -158,7 +159,7 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 	ss, err := json.Marshal(runningCleanupStatus)
 	assert.Nil(suite.T(), err)
 
-	_, err = client.CycloneV1alpha1().Projects(metaNs).Create(&v1alpha1.Project{
+	_, err = client.CycloneV1alpha1().Projects(metaNs).Create(context.TODO(), &v1alpha1.Project{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      pName,
 			Namespace: metaNs,
@@ -166,11 +167,11 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 				meta.AnnotationCacheCleanupStatus: string(ss),
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
 	podName := generatePodName(pName)
-	_, err = client.CoreV1().Pods(metaNs).Create(&corev1.Pod{
+	_, err = client.CoreV1().Pods(metaNs).Create(context.TODO(), &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: metaNs,
@@ -182,22 +183,22 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 				meta.AnnotationIstioInject: meta.AnnotationValueFalse,
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
-	_, err = client.CoreV1().Namespaces().Create(&corev1.Namespace{
+	_, err = client.CoreV1().Namespaces().Create(context.TODO(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: metaNs,
 			Labels: map[string]string{
 				meta.LabelTenantName: "t1",
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
 	err = InitCacheCleanupStatus(suite.client)
 	assert.Nil(suite.T(), err)
-	p, err := suite.client.CycloneV1alpha1().Projects(metaNs).Get(pName, metav1.GetOptions{})
+	p, err := suite.client.CycloneV1alpha1().Projects(metaNs).Get(context.TODO(), pName, metav1.GetOptions{})
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), p.Annotations)
 	initStatusString, ok := p.Annotations[meta.AnnotationCacheCleanupStatus]
@@ -208,7 +209,7 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 	assert.Nil(suite.T(), err)
 	assert.EqualValues(suite.T(), serverv1alpha1.CacheCleanupFailed, initStatus.Acceleration.LatestStatus.Phase)
 
-	_, err = suite.client.CoreV1().Pods(metaNs).Get(podName, metav1.GetOptions{})
+	_, err = suite.client.CoreV1().Pods(metaNs).Get(context.TODO(), podName, metav1.GetOptions{})
 	assert.NotNil(suite.T(), err)
 	assert.True(suite.T(), k8serr.IsNotFound(err))
 }
@@ -216,20 +217,20 @@ func (suite *CleanerSuite) TestInitCacheCleanupStatus() {
 func (suite *CleanerSuite) TestStopReasonNoNeed() {
 	client := suite.client
 	podName := "pod1"
-	_, err := client.CoreV1().Pods(metaNs).Create(&corev1.Pod{
+	_, err := client.CoreV1().Pods(metaNs).Create(context.TODO(), &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: podName,
 			Labels: map[string]string{
 				meta.LabelPodKind: meta.PodKindAccelerationGC.String(),
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(suite.T(), err)
 
 	err = StopReasonNoNeed(client, metaNs, NoNeedReasonPVCDeleted)
 	assert.Nil(suite.T(), err)
 
-	_, err = client.CoreV1().Pods(metaNs).Get(podName, metav1.GetOptions{})
+	_, err = client.CoreV1().Pods(metaNs).Get(context.TODO(), podName, metav1.GetOptions{})
 	assert.NotNil(suite.T(), err)
 	assert.True(suite.T(), k8serr.IsNotFound(err))
 }

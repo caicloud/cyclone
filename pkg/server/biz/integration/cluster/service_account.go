@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"context"
+
 	"github.com/caicloud/nirvana/log"
 	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/api/policy/v1beta1"
@@ -15,12 +17,12 @@ import (
 // EnsureServiceAccount ensures default service account for stage pod created. Coordinator container in stage pod
 // needs certain permission to pods and pods/log.
 func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string) error {
-	if _, err := clusterClient.CoreV1().ServiceAccounts(namespace).Create(&core_v1.ServiceAccount{
+	if _, err := clusterClient.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), &core_v1.ServiceAccount{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      common.DefaultServiceAccountName,
 			Namespace: namespace,
 		},
-	}); err != nil {
+	}, meta_v1.CreateOptions{}); err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Infof("Service account %s already exist, skip it", common.DefaultServiceAccountName)
 		} else {
@@ -32,7 +34,7 @@ func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string)
 	// Create PodSecurityPolicy for the service account. Here we create the least restricted policy, it equivalents to
 	// not using the pod security policy admission controller.
 	var trueValue = true
-	if _, err := clusterClient.PolicyV1beta1().PodSecurityPolicies().Create(&v1beta1.PodSecurityPolicy{
+	if _, err := clusterClient.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), &v1beta1.PodSecurityPolicy{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      common.DefaultServiceAccountName,
 			Namespace: namespace,
@@ -51,11 +53,11 @@ func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string)
 			SupplementalGroups:       v1beta1.SupplementalGroupsStrategyOptions{Rule: v1beta1.SupplementalGroupsStrategyRunAsAny},
 			FSGroup:                  v1beta1.FSGroupStrategyOptions{Rule: v1beta1.FSGroupStrategyRunAsAny},
 		},
-	}); err != nil {
+	}, meta_v1.CreateOptions{}); err != nil {
 		log.Warningf("Create PodSecurityPolicy error: %s, if cluster has pod security policy admission controller enabled, stage pod may fail", err)
 	}
 
-	if _, err := clusterClient.RbacV1().ClusterRoles().Create(&rbac_v1.ClusterRole{
+	if _, err := clusterClient.RbacV1().ClusterRoles().Create(context.TODO(), &rbac_v1.ClusterRole{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: common.DefaultServiceAccountName,
 		},
@@ -77,7 +79,7 @@ func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string)
 				ResourceNames: []string{common.DefaultServiceAccountName},
 			},
 		},
-	}); err != nil {
+	}, meta_v1.CreateOptions{}); err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Infof("ClusterRole %s already exist, skip it", common.DefaultServiceAccountName)
 		} else {
@@ -86,7 +88,7 @@ func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string)
 		}
 	}
 
-	if _, err := clusterClient.RbacV1().RoleBindings(namespace).Create(&rbac_v1.RoleBinding{
+	if _, err := clusterClient.RbacV1().RoleBindings(namespace).Create(context.TODO(), &rbac_v1.RoleBinding{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      common.DefaultServiceAccountName,
 			Namespace: namespace,
@@ -103,7 +105,7 @@ func EnsureServiceAccount(clusterClient *kubernetes.Clientset, namespace string)
 			Name:     common.DefaultServiceAccountName,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
-	}); err != nil {
+	}, meta_v1.CreateOptions{}); err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Infof("RoleBingding %s already exist, skip it", common.DefaultServiceAccountName)
 		} else {

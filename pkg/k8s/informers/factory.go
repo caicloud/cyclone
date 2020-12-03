@@ -7,22 +7,44 @@ Copyright 2020 caicloud authors. All rights reserved.
 package informers
 
 import (
+	reflect "reflect"
+	sync "sync"
 	time "time"
 
 	clientset "github.com/caicloud/cyclone/pkg/k8s/clientset"
 	cyclone "github.com/caicloud/cyclone/pkg/k8s/informers/cyclone"
-	v1 "k8s.io/api/core/v1"
-	informers "k8s.io/client-go/informers"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
+	internalinterfaces "github.com/caicloud/cyclone/pkg/k8s/informers/internalinterfaces"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
 type SharedInformerOption func(*sharedInformerFactory) *sharedInformerFactory
 
 type sharedInformerFactory struct {
-	informers.SharedInformerFactory
+	client           clientset.Interface
 	namespace        string
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
+	lock             sync.Mutex
+	defaultResync    time.Duration
+	customResync     map[reflect.Type]time.Duration
+
+	informers map[reflect.Type]cache.SharedIndexInformer
+	// startedInformers is used for tracking which informers have been started.
+	// This allows Start() to be called multiple times safely.
+	startedInformers map[reflect.Type]bool
+}
+
+// WithCustomResyncConfig sets a custom resync period for the specified informer types.
+func WithCustomResyncConfig(resyncConfig map[v1.Object]time.Duration) SharedInformerOption {
+	return func(factory *sharedInformerFactory) *sharedInformerFactory {
+		for k, v := range resyncConfig {
+			factory.customResync[reflect.TypeOf(k)] = v
+		}
+		return factory
+	}
 }
 
 // WithTweakListOptions sets a custom filter on all listers of the configured SharedInformerFactory.
@@ -57,7 +79,12 @@ func NewFilteredSharedInformerFactory(client clientset.Interface, defaultResync 
 // NewSharedInformerFactoryWithOptions constructs a new instance of a SharedInformerFactory with additional options.
 func NewSharedInformerFactoryWithOptions(client clientset.Interface, defaultResync time.Duration, options ...SharedInformerOption) SharedInformerFactory {
 	factory := &sharedInformerFactory{
-		namespace: v1.NamespaceAll,
+		client:           client,
+		namespace:        v1.NamespaceAll,
+		defaultResync:    defaultResync,
+		informers:        make(map[reflect.Type]cache.SharedIndexInformer),
+		startedInformers: make(map[reflect.Type]bool),
+		customResync:     make(map[reflect.Type]time.Duration),
 	}
 
 	// Apply all options
@@ -65,14 +92,73 @@ func NewSharedInformerFactoryWithOptions(client clientset.Interface, defaultResy
 		factory = opt(factory)
 	}
 
-	factory.SharedInformerFactory = informers.NewFilteredSharedInformerFactory(client, defaultResync, factory.namespace, factory.tweakListOptions)
 	return factory
+}
+
+// Start initializes all requested informers.
+func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	for informerType, informer := range f.informers {
+		if !f.startedInformers[informerType] {
+			go informer.Run(stopCh)
+			f.startedInformers[informerType] = true
+		}
+	}
+}
+
+// WaitForCacheSync waits for all started informers' cache were synced.
+func (f *sharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool {
+	informers := func() map[reflect.Type]cache.SharedIndexInformer {
+		f.lock.Lock()
+		defer f.lock.Unlock()
+
+		informers := map[reflect.Type]cache.SharedIndexInformer{}
+		for informerType, informer := range f.informers {
+			if f.startedInformers[informerType] {
+				informers[informerType] = informer
+			}
+		}
+		return informers
+	}()
+
+	res := map[reflect.Type]bool{}
+	for informType, informer := range informers {
+		res[informType] = cache.WaitForCacheSync(stopCh, informer.HasSynced)
+	}
+	return res
+}
+
+// InternalInformerFor returns the SharedIndexInformer for obj using an internal
+// client.
+func (f *sharedInformerFactory) InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	informerType := reflect.TypeOf(obj)
+	informer, exists := f.informers[informerType]
+	if exists {
+		return informer
+	}
+
+	resyncPeriod, exists := f.customResync[informerType]
+	if !exists {
+		resyncPeriod = f.defaultResync
+	}
+
+	informer = newFunc(f.client, resyncPeriod)
+	f.informers[informerType] = informer
+
+	return informer
 }
 
 // SharedInformerFactory provides shared informers for resources in all known
 // API group versions.
 type SharedInformerFactory interface {
-	informers.SharedInformerFactory
+	internalinterfaces.SharedInformerFactory
+	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
+	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Cyclone() cyclone.Interface
 }

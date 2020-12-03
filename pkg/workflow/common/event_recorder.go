@@ -9,7 +9,7 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 const (
@@ -25,7 +25,7 @@ var eventRecorder record.EventRecorder
 var once sync.Once
 
 // GetEventRecorder get the event recorder object. Create it of not exists yet.
-func GetEventRecorder(client clientset.Interface, component string) record.EventRecorder {
+func GetEventRecorder(client k8s.Interface, component string) record.EventRecorder {
 	once.Do(func() {
 		log.Info("Creating event recorder")
 		broadcaster := record.NewBroadcaster()

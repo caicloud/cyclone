@@ -51,12 +51,12 @@ func CreateWorkflowTrigger(ctx context.Context, tenant, project, workflow string
 	}
 
 	hook.LabelSCMTrigger(wft)
-	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Create(wft)
+	return handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Create(context.TODO(), wft, metav1.CreateOptions{})
 }
 
 // ListWorkflowTriggers ...
 func ListWorkflowTriggers(ctx context.Context, tenant, project, workflow string, query *types.QueryParams) (*types.ListResponse, error) {
-	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project) + "," + meta.WorkflowSelector(workflow),
 	})
 	if err != nil {
@@ -85,7 +85,7 @@ func ListWorkflowTriggers(ctx context.Context, tenant, project, workflow string,
 
 // GetWorkflowTrigger ...
 func GetWorkflowTrigger(ctx context.Context, tenant, project, workflow, workflowtrigger string) (*v1alpha1.WorkflowTrigger, error) {
-	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
+	wft, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(context.TODO(), workflowtrigger, metav1.GetOptions{})
 	return wft, cerr.ConvertK8sError(err)
 }
 
@@ -100,7 +100,7 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 	}
 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(workflowtrigger, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(context.TODO(), workflowtrigger, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func UpdateWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 		}
 
 		hook.LabelSCMTrigger(newWft)
-		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
+		_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(context.TODO(), newWft, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -181,7 +181,7 @@ func DeleteWorkflowTrigger(ctx context.Context, tenant, project, workflow, workf
 			return err
 		}
 
-		err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(workflowtrigger, nil)
+		err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Delete(context.TODO(), workflowtrigger, metav1.DeleteOptions{})
 	}
 
 	return cerr.ConvertK8sError(err)

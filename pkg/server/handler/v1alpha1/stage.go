@@ -28,12 +28,12 @@ func CreateStage(ctx context.Context, project, tenant string, stg *v1alpha1.Stag
 		}
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stg)
+	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(context.TODO(), stg, metav1.CreateOptions{})
 }
 
 // ListStages ...
 func ListStages(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
-	stages, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	stages, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.ProjectSelector(project),
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func ListStages(ctx context.Context, project, tenant string, query *types.QueryP
 
 // GetStage ...
 func GetStage(ctx context.Context, project, stage, tenant string) (*v1alpha1.Stage, error) {
-	stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
+	stg, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), stage, metav1.GetOptions{})
 
 	return stg, cerr.ConvertK8sError(err)
 }
@@ -69,7 +69,7 @@ func GetStage(ctx context.Context, project, stage, tenant string) (*v1alpha1.Sta
 // UpdateStage ...
 func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(stage, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), stage, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 		newStg.Spec = stg.Spec
 		newStg.Annotations = utils.MergeMap(stg.Annotations, newStg.Annotations)
 		newStg.Labels = utils.MergeMap(stg.Labels, newStg.Labels)
-		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStg)
+		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(context.TODO(), newStg, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -90,6 +90,6 @@ func UpdateStage(ctx context.Context, project, stage, tenant string, stg *v1alph
 
 // DeleteStage ...
 func DeleteStage(ctx context.Context, project, stage, tenant string) error {
-	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(stage, nil)
+	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(context.TODO(), stage, metav1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }

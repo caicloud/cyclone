@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"time"
 
@@ -77,7 +78,7 @@ func initialize(opts *Options) {
 	}
 
 	// Load configuration from ConfigMap.
-	cm, err := client.CoreV1().ConfigMaps(common.GetSystemNamespace()).Get(opts.ConfigMap, meta_v1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(common.GetSystemNamespace()).Get(context.TODO(), opts.ConfigMap, meta_v1.GetOptions{})
 	if err != nil {
 		log.Fatalf("Get ConfigMap %s error: %s", opts.ConfigMap, err)
 	}

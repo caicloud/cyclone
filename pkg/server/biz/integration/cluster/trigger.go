@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -33,7 +34,7 @@ func ReconcileTriggerExecutionContext(tenant string) error {
 	}
 
 	// List all WorkflowTriggers of the tenant
-	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(metav1.ListOptions{})
+	workflowTriggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		log.Errorf("List workflowtriggers from k8s for tenant %s with error: %v", tenant, err)
 		return err
@@ -66,7 +67,7 @@ func ReconcileTriggerExecutionContext(tenant string) error {
 
 			newWft := wft.DeepCopy()
 			newWft.Spec.WorkflowRunSpec.ExecutionContext = executionContext
-			_, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
+			_, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(context.TODO(), newWft, metav1.UpdateOptions{})
 			if err == nil {
 				// Update wft succeeded, return directly.
 				return
@@ -74,13 +75,13 @@ func ReconcileTriggerExecutionContext(tenant string) error {
 
 			// Update workflowTrigger failed, start to retry.
 			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(wft.Name, metav1.GetOptions{})
+				origin, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(context.TODO(), wft.Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}
 				newWft := origin.DeepCopy()
 				newWft.Spec.WorkflowRunSpec.ExecutionContext = executionContext
-				_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(newWft)
+				_, err = handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Update(context.TODO(), newWft, metav1.UpdateOptions{})
 				return err
 			})
 			if err != nil {

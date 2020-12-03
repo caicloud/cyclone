@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -18,7 +19,7 @@ import (
 func GetResourceTypes(client clientset.Interface, namespaces []string, operation string) ([]v1alpha1.Resource, error) {
 	var results []v1alpha1.Resource
 	for _, ns := range namespaces {
-		resources, err := client.CycloneV1alpha1().Resources(ns).List(metav1.ListOptions{
+		resources, err := client.CycloneV1alpha1().Resources(ns).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: meta.ResourceTypeSelector(),
 		})
 		if err != nil {

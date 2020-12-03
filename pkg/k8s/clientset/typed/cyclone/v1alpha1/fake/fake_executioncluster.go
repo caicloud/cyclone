@@ -7,6 +7,8 @@ Copyright 2020 caicloud authors. All rights reserved.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -26,7 +28,7 @@ var executionclustersResource = schema.GroupVersionResource{Group: "cyclone.dev"
 var executionclustersKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "ExecutionCluster"}
 
 // Get takes name of the executionCluster, and returns the corresponding executionCluster object, and an error if there is any.
-func (c *FakeExecutionClusters) Get(name string, options v1.GetOptions) (result *v1alpha1.ExecutionCluster, err error) {
+func (c *FakeExecutionClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ExecutionCluster, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootGetAction(executionclustersResource, name), &v1alpha1.ExecutionCluster{})
 	if obj == nil {
@@ -36,7 +38,7 @@ func (c *FakeExecutionClusters) Get(name string, options v1.GetOptions) (result 
 }
 
 // List takes label and field selectors, and returns the list of ExecutionClusters that match those selectors.
-func (c *FakeExecutionClusters) List(opts v1.ListOptions) (result *v1alpha1.ExecutionClusterList, err error) {
+func (c *FakeExecutionClusters) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ExecutionClusterList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootListAction(executionclustersResource, executionclustersKind, opts), &v1alpha1.ExecutionClusterList{})
 	if obj == nil {
@@ -47,7 +49,7 @@ func (c *FakeExecutionClusters) List(opts v1.ListOptions) (result *v1alpha1.Exec
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.ExecutionClusterList{}
+	list := &v1alpha1.ExecutionClusterList{ListMeta: obj.(*v1alpha1.ExecutionClusterList).ListMeta}
 	for _, item := range obj.(*v1alpha1.ExecutionClusterList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -57,13 +59,13 @@ func (c *FakeExecutionClusters) List(opts v1.ListOptions) (result *v1alpha1.Exec
 }
 
 // Watch returns a watch.Interface that watches the requested executionClusters.
-func (c *FakeExecutionClusters) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeExecutionClusters) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewRootWatchAction(executionclustersResource, opts))
 }
 
 // Create takes the representation of a executionCluster and creates it.  Returns the server's representation of the executionCluster, and an error, if there is any.
-func (c *FakeExecutionClusters) Create(executionCluster *v1alpha1.ExecutionCluster) (result *v1alpha1.ExecutionCluster, err error) {
+func (c *FakeExecutionClusters) Create(ctx context.Context, executionCluster *v1alpha1.ExecutionCluster, opts v1.CreateOptions) (result *v1alpha1.ExecutionCluster, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootCreateAction(executionclustersResource, executionCluster), &v1alpha1.ExecutionCluster{})
 	if obj == nil {
@@ -73,7 +75,7 @@ func (c *FakeExecutionClusters) Create(executionCluster *v1alpha1.ExecutionClust
 }
 
 // Update takes the representation of a executionCluster and updates it. Returns the server's representation of the executionCluster, and an error, if there is any.
-func (c *FakeExecutionClusters) Update(executionCluster *v1alpha1.ExecutionCluster) (result *v1alpha1.ExecutionCluster, err error) {
+func (c *FakeExecutionClusters) Update(ctx context.Context, executionCluster *v1alpha1.ExecutionCluster, opts v1.UpdateOptions) (result *v1alpha1.ExecutionCluster, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootUpdateAction(executionclustersResource, executionCluster), &v1alpha1.ExecutionCluster{})
 	if obj == nil {
@@ -83,22 +85,22 @@ func (c *FakeExecutionClusters) Update(executionCluster *v1alpha1.ExecutionClust
 }
 
 // Delete takes name of the executionCluster and deletes it. Returns an error if one occurs.
-func (c *FakeExecutionClusters) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeExecutionClusters) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewRootDeleteAction(executionclustersResource, name), &v1alpha1.ExecutionCluster{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeExecutionClusters) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(executionclustersResource, listOptions)
+func (c *FakeExecutionClusters) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewRootDeleteCollectionAction(executionclustersResource, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ExecutionClusterList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched executionCluster.
-func (c *FakeExecutionClusters) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.ExecutionCluster, err error) {
+func (c *FakeExecutionClusters) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ExecutionCluster, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootPatchSubresourceAction(executionclustersResource, name, pt, data, subresources...), &v1alpha1.ExecutionCluster{})
 	if obj == nil {

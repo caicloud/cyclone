@@ -7,16 +7,16 @@ Copyright 2020 caicloud authors. All rights reserved.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	cyclonev1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	clientset "github.com/caicloud/cyclone/pkg/k8s/clientset"
+	internalinterfaces "github.com/caicloud/cyclone/pkg/k8s/informers/internalinterfaces"
 	v1alpha1 "github.com/caicloud/cyclone/pkg/k8s/listers/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
-	kubernetes "k8s.io/client-go/kubernetes"
 	cache "k8s.io/client-go/tools/cache"
 )
 
@@ -50,13 +50,13 @@ func NewFilteredWorkflowRunInformer(client clientset.Interface, namespace string
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CycloneV1alpha1().WorkflowRuns(namespace).List(options)
+				return client.CycloneV1alpha1().WorkflowRuns(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CycloneV1alpha1().WorkflowRuns(namespace).Watch(options)
+				return client.CycloneV1alpha1().WorkflowRuns(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&cyclonev1alpha1.WorkflowRun{},
@@ -65,8 +65,8 @@ func NewFilteredWorkflowRunInformer(client clientset.Interface, namespace string
 	)
 }
 
-func (f *workflowRunInformer) defaultInformer(client kubernetes.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredWorkflowRunInformer(client.(clientset.Interface), f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *workflowRunInformer) defaultInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredWorkflowRunInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *workflowRunInformer) Informer() cache.SharedIndexInformer {

@@ -7,6 +7,8 @@ Copyright 2020 caicloud authors. All rights reserved.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -27,7 +29,7 @@ var workflowtriggersResource = schema.GroupVersionResource{Group: "cyclone.dev",
 var workflowtriggersKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "WorkflowTrigger"}
 
 // Get takes name of the workflowTrigger, and returns the corresponding workflowTrigger object, and an error if there is any.
-func (c *FakeWorkflowTriggers) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowTrigger, err error) {
+func (c *FakeWorkflowTriggers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.WorkflowTrigger, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(workflowtriggersResource, c.ns, name), &v1alpha1.WorkflowTrigger{})
 
@@ -38,7 +40,7 @@ func (c *FakeWorkflowTriggers) Get(name string, options v1.GetOptions) (result *
 }
 
 // List takes label and field selectors, and returns the list of WorkflowTriggers that match those selectors.
-func (c *FakeWorkflowTriggers) List(opts v1.ListOptions) (result *v1alpha1.WorkflowTriggerList, err error) {
+func (c *FakeWorkflowTriggers) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.WorkflowTriggerList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(workflowtriggersResource, workflowtriggersKind, c.ns, opts), &v1alpha1.WorkflowTriggerList{})
 
@@ -50,7 +52,7 @@ func (c *FakeWorkflowTriggers) List(opts v1.ListOptions) (result *v1alpha1.Workf
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.WorkflowTriggerList{}
+	list := &v1alpha1.WorkflowTriggerList{ListMeta: obj.(*v1alpha1.WorkflowTriggerList).ListMeta}
 	for _, item := range obj.(*v1alpha1.WorkflowTriggerList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -60,14 +62,14 @@ func (c *FakeWorkflowTriggers) List(opts v1.ListOptions) (result *v1alpha1.Workf
 }
 
 // Watch returns a watch.Interface that watches the requested workflowTriggers.
-func (c *FakeWorkflowTriggers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeWorkflowTriggers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(workflowtriggersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a workflowTrigger and creates it.  Returns the server's representation of the workflowTrigger, and an error, if there is any.
-func (c *FakeWorkflowTriggers) Create(workflowTrigger *v1alpha1.WorkflowTrigger) (result *v1alpha1.WorkflowTrigger, err error) {
+func (c *FakeWorkflowTriggers) Create(ctx context.Context, workflowTrigger *v1alpha1.WorkflowTrigger, opts v1.CreateOptions) (result *v1alpha1.WorkflowTrigger, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(workflowtriggersResource, c.ns, workflowTrigger), &v1alpha1.WorkflowTrigger{})
 
@@ -78,7 +80,7 @@ func (c *FakeWorkflowTriggers) Create(workflowTrigger *v1alpha1.WorkflowTrigger)
 }
 
 // Update takes the representation of a workflowTrigger and updates it. Returns the server's representation of the workflowTrigger, and an error, if there is any.
-func (c *FakeWorkflowTriggers) Update(workflowTrigger *v1alpha1.WorkflowTrigger) (result *v1alpha1.WorkflowTrigger, err error) {
+func (c *FakeWorkflowTriggers) Update(ctx context.Context, workflowTrigger *v1alpha1.WorkflowTrigger, opts v1.UpdateOptions) (result *v1alpha1.WorkflowTrigger, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(workflowtriggersResource, c.ns, workflowTrigger), &v1alpha1.WorkflowTrigger{})
 
@@ -90,7 +92,7 @@ func (c *FakeWorkflowTriggers) Update(workflowTrigger *v1alpha1.WorkflowTrigger)
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeWorkflowTriggers) UpdateStatus(workflowTrigger *v1alpha1.WorkflowTrigger) (*v1alpha1.WorkflowTrigger, error) {
+func (c *FakeWorkflowTriggers) UpdateStatus(ctx context.Context, workflowTrigger *v1alpha1.WorkflowTrigger, opts v1.UpdateOptions) (*v1alpha1.WorkflowTrigger, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(workflowtriggersResource, "status", c.ns, workflowTrigger), &v1alpha1.WorkflowTrigger{})
 
@@ -101,7 +103,7 @@ func (c *FakeWorkflowTriggers) UpdateStatus(workflowTrigger *v1alpha1.WorkflowTr
 }
 
 // Delete takes name of the workflowTrigger and deletes it. Returns an error if one occurs.
-func (c *FakeWorkflowTriggers) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeWorkflowTriggers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(workflowtriggersResource, c.ns, name), &v1alpha1.WorkflowTrigger{})
 
@@ -109,15 +111,15 @@ func (c *FakeWorkflowTriggers) Delete(name string, options *v1.DeleteOptions) er
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeWorkflowTriggers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(workflowtriggersResource, c.ns, listOptions)
+func (c *FakeWorkflowTriggers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(workflowtriggersResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.WorkflowTriggerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched workflowTrigger.
-func (c *FakeWorkflowTriggers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.WorkflowTrigger, err error) {
+func (c *FakeWorkflowTriggers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.WorkflowTrigger, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(workflowtriggersResource, c.ns, name, pt, data, subresources...), &v1alpha1.WorkflowTrigger{})
 

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -97,7 +98,7 @@ func getCollectionFolder(tenant string, subpaths ...string) string {
 type GetMetadata func(string, string) (meta_v1.ObjectMeta, error)
 
 func getResourceMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -105,7 +106,7 @@ func getResourceMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getStageMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -113,7 +114,7 @@ func getStageMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getWfMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().Workflows(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -121,7 +122,7 @@ func getWfMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getWfrMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -129,7 +130,7 @@ func getWfrMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getWftMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -137,7 +138,7 @@ func getWftMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getIntegrationMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(integration.GetSecretName(name), meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CoreV1().Secrets(common.TenantNamespace(tenant)).Get(context.TODO(), integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -145,7 +146,7 @@ func getIntegrationMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getProjectMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(name, meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CycloneV1alpha1().Projects(common.TenantNamespace(tenant)).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}
@@ -153,7 +154,7 @@ func getProjectMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
 }
 
 func getTenantMetadata(tenant, name string) (meta_v1.ObjectMeta, error) {
-	resource, err := handler.K8sClient.CoreV1().Namespaces().Get(common.TenantNamespace(name), meta_v1.GetOptions{})
+	resource, err := handler.K8sClient.CoreV1().Namespaces().Get(context.TODO(), common.TenantNamespace(name), meta_v1.GetOptions{})
 	if err != nil {
 		return meta_v1.ObjectMeta{}, err
 	}

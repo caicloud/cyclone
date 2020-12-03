@@ -15,7 +15,7 @@ import (
 
 // AllWorkflows lists all workflows matched the provided label from all projects and tenants.
 func AllWorkflows(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
-	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows("").List(metav1.ListOptions{
+	workflows, err := handler.K8sClient.CycloneV1alpha1().Workflows("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {
@@ -39,7 +39,7 @@ func AllWorkflows(ctx context.Context, label string, query *types.QueryParams) (
 
 // AllStages lists all stages matched the provided label from all projects and tenants.
 func AllStages(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
-	stages, err := handler.K8sClient.CycloneV1alpha1().Stages("").List(metav1.ListOptions{
+	stages, err := handler.K8sClient.CycloneV1alpha1().Stages("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {
@@ -63,7 +63,7 @@ func AllStages(ctx context.Context, label string, query *types.QueryParams) (*ty
 
 // AllResources lists all resources matched the provided label from all projects and tenants.
 func AllResources(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
-	resources, err := handler.K8sClient.CycloneV1alpha1().Resources("").List(metav1.ListOptions{
+	resources, err := handler.K8sClient.CycloneV1alpha1().Resources("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {
@@ -87,7 +87,7 @@ func AllResources(ctx context.Context, label string, query *types.QueryParams) (
 
 // AllWorkflowRuns lists all workflowruns matched the provided label from all projects and tenants.
 func AllWorkflowRuns(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
-	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns("").List(metav1.ListOptions{
+	workflowruns, err := handler.K8sClient.CycloneV1alpha1().WorkflowRuns("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {
@@ -112,7 +112,7 @@ func AllWorkflowRuns(ctx context.Context, label string, query *types.QueryParams
 
 // AllWorkflowTriggers lists all workflow triggers matched the provided label from all projects and tenants.
 func AllWorkflowTriggers(ctx context.Context, label string, query *types.QueryParams) (*types.ListResponse, error) {
-	triggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers("").List(metav1.ListOptions{
+	triggers, err := handler.K8sClient.CycloneV1alpha1().WorkflowTriggers("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {

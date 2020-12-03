@@ -14,8 +14,10 @@ import (
 )
 
 // ResourceLister helps list Resources.
+// All objects returned here must be treated as read-only.
 type ResourceLister interface {
 	// List lists all Resources in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Resource, err error)
 	// Resources returns an object that can list and get Resources.
 	Resources(namespace string) ResourceNamespaceLister
@@ -46,10 +48,13 @@ func (s *resourceLister) Resources(namespace string) ResourceNamespaceLister {
 }
 
 // ResourceNamespaceLister helps list and get Resources.
+// All objects returned here must be treated as read-only.
 type ResourceNamespaceLister interface {
 	// List lists all Resources in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Resource, err error)
 	// Get retrieves the Resource from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.Resource, error)
 	ResourceNamespaceListerExpansion
 }

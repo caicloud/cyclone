@@ -14,8 +14,10 @@ import (
 )
 
 // ProjectLister helps list Projects.
+// All objects returned here must be treated as read-only.
 type ProjectLister interface {
 	// List lists all Projects in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Project, err error)
 	// Projects returns an object that can list and get Projects.
 	Projects(namespace string) ProjectNamespaceLister
@@ -46,10 +48,13 @@ func (s *projectLister) Projects(namespace string) ProjectNamespaceLister {
 }
 
 // ProjectNamespaceLister helps list and get Projects.
+// All objects returned here must be treated as read-only.
 type ProjectNamespaceLister interface {
 	// List lists all Projects in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Project, err error)
 	// Get retrieves the Project from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.Project, error)
 	ProjectNamespaceListerExpansion
 }

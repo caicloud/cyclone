@@ -28,12 +28,12 @@ func CreateResource(ctx context.Context, project, tenant string, rsc *v1alpha1.R
 		}
 	}
 
-	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Create(rsc)
+	return handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Create(context.TODO(), rsc, metav1.CreateOptions{})
 }
 
 // ListResources ...
 func ListResources(ctx context.Context, project, tenant string, query *types.QueryParams) (*types.ListResponse, error) {
-	resources, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	resources, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.ResourceSelector(project),
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func ListResources(ctx context.Context, project, tenant string, query *types.Que
 
 // GetResource ...
 func GetResource(ctx context.Context, project, resource, tenant string) (*v1alpha1.Resource, error) {
-	rsc, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(resource, metav1.GetOptions{})
+	rsc, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(context.TODO(), resource, metav1.GetOptions{})
 
 	return rsc, cerr.ConvertK8sError(err)
 }
@@ -69,7 +69,7 @@ func GetResource(ctx context.Context, project, resource, tenant string) (*v1alph
 // UpdateResource ...
 func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *v1alpha1.Resource) (*v1alpha1.Resource, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(resource, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Get(context.TODO(), resource, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 		newRsc.Spec = rsc.Spec
 		newRsc.Annotations = utils.MergeMap(rsc.Annotations, newRsc.Annotations)
 		newRsc.Labels = utils.MergeMap(rsc.Labels, newRsc.Labels)
-		_, err = handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Update(newRsc)
+		_, err = handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Update(context.TODO(), newRsc, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -90,7 +90,7 @@ func UpdateResource(ctx context.Context, project, resource, tenant string, rsc *
 
 // DeleteResource ...
 func DeleteResource(ctx context.Context, project, resource, tenant string) error {
-	err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Delete(resource, nil)
+	err := handler.K8sClient.CycloneV1alpha1().Resources(common.TenantNamespace(tenant)).Delete(context.TODO(), resource, metav1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
 }

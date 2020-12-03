@@ -30,7 +30,7 @@ import (
 // ListIntegrations get integrations for the given tenant.
 func ListIntegrations(ctx context.Context, tenant string, includePublic bool, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO: Need a more efficient way to get paged items.
-	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
+	secrets, err := handler.K8sClient.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(context.TODO(), meta_v1.ListOptions{
 		LabelSelector: meta.LabelIntegrationType,
 	})
 	if err != nil {
@@ -42,7 +42,7 @@ func ListIntegrations(ctx context.Context, tenant string, includePublic bool, qu
 
 	if includePublic && tenant != svrcommon.DefaultTenant {
 		systemNamespace := common.GetSystemNamespace()
-		publicSecrets, err := handler.K8sClient.CoreV1().Secrets(systemNamespace).List(meta_v1.ListOptions{
+		publicSecrets, err := handler.K8sClient.CoreV1().Secrets(systemNamespace).List(context.TODO(), meta_v1.ListOptions{
 			LabelSelector: meta.LabelIntegrationType,
 		})
 		if err != nil {
@@ -167,7 +167,7 @@ func createIntegration(tenant string, isPublic bool, in *api.Integration, dryRun
 	if isPublic {
 		ns = common.GetSystemNamespace()
 	}
-	_, err = handler.K8sClient.CoreV1().Secrets(ns).Create(secret)
+	_, err = handler.K8sClient.CoreV1().Secrets(ns).Create(context.TODO(), secret, meta_v1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Create secret %v for tenant %s error %v", secret.ObjectMeta.Name, tenant, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -187,7 +187,7 @@ func GetIntegration(ctx context.Context, tenant, name string, isPublic bool) (*a
 }
 
 func getIntegration(namespace, name string) (*api.Integration, error) {
-	secret, err := handler.K8sClient.CoreV1().Secrets(namespace).Get(
+	secret, err := handler.K8sClient.CoreV1().Secrets(namespace).Get(context.TODO(),
 		integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return nil, cerr.ConvertK8sError(err)
@@ -230,7 +230,7 @@ func UpdateIntegration(ctx context.Context, tenant, name string, isPublic bool, 
 
 func updateSecret(namespace, secretName string, inteType api.IntegrationType, secret *core_v1.Secret) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CoreV1().Secrets(namespace).Get(
+		origin, err := handler.K8sClient.CoreV1().Secrets(namespace).Get(context.TODO(),
 			secretName, meta_v1.GetOptions{})
 		if err != nil {
 			return err
@@ -246,7 +246,7 @@ func updateSecret(namespace, secretName string, inteType api.IntegrationType, se
 			newSecret.Data[key] = value
 		}
 
-		_, err = handler.K8sClient.CoreV1().Secrets(namespace).Update(newSecret)
+		_, err = handler.K8sClient.CoreV1().Secrets(namespace).Update(context.TODO(), newSecret, meta_v1.UpdateOptions{})
 		return err
 	})
 
@@ -273,7 +273,7 @@ func DeleteIntegration(ctx context.Context, tenant, name string, isPublic bool) 
 		return cerr.ErrorClusterNotClosed.Error(in.Name)
 	}
 
-	err = handler.K8sClient.CoreV1().Secrets(ns).Delete(integration.GetSecretName(name), &meta_v1.DeleteOptions{})
+	err = handler.K8sClient.CoreV1().Secrets(ns).Delete(context.TODO(), integration.GetSecretName(name), meta_v1.DeleteOptions{})
 	return cerr.ConvertK8sError(err)
 }
 

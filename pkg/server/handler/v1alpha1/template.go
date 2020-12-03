@@ -37,7 +37,7 @@ const (
 // - query Query params includes start, limit and filter.
 func ListTemplates(ctx context.Context, tenant string, includePublic bool, query *types.QueryParams) (*types.ListResponse, error) {
 	// TODO(ChenDe): Need a more efficient way to get paged items.
-	templates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(metav1.ListOptions{
+	templates, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: meta.StageTemplateSelector(),
 	})
 	if err != nil {
@@ -48,7 +48,7 @@ func ListTemplates(ctx context.Context, tenant string, includePublic bool, query
 	items := templates.Items
 	if includePublic && tenant != common.DefaultTenant {
 		systemNamespace := c_common.GetSystemNamespace()
-		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).List(metav1.ListOptions{
+		publicTemplates, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: meta.StageTemplateSelector() + "," + meta.BuiltinLabelSelector(),
 		})
 		if err != nil {
@@ -162,7 +162,7 @@ func CreateTemplate(ctx context.Context, tenant string, stage *v1alpha1.Stage) (
 	}
 
 	stage.Labels = meta.AddStageTemplateLabel(stage.Labels)
-	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(stage)
+	return handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Create(context.TODO(), stage, metav1.CreateOptions{})
 }
 
 // GetTemplate gets a stage template with the given template name under given tenant.
@@ -172,7 +172,7 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 		err = cerr.ConvertK8sError(err)
 	}()
 
-	stage, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
+	stage, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), template, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return nil, err
@@ -180,7 +180,7 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 
 		if includePublic {
 			systemNamespace := c_common.GetSystemNamespace()
-			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).Get(template, metav1.GetOptions{})
+			publicTemplate, err := handler.K8sClient.CycloneV1alpha1().Stages(systemNamespace).Get(context.TODO(), template, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("Get templates from system namespace %s error: %v", systemNamespace, err)
 				return nil, err
@@ -198,7 +198,7 @@ func GetTemplate(ctx context.Context, tenant, template string, includePublic boo
 // the updated template.
 func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha1.Stage) (*v1alpha1.Stage, error) {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(template, metav1.GetOptions{})
+		origin, err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Get(context.TODO(), template, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 		newStage.Spec = stage.Spec
 		newStage.Annotations = utils.MergeMap(stage.Annotations, newStage.Annotations)
 		newStage.Labels = utils.MergeMap(stage.Labels, newStage.Labels)
-		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(newStage)
+		_, err = handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Update(context.TODO(), newStage, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -219,7 +219,7 @@ func UpdateTemplate(ctx context.Context, tenant, template string, stage *v1alpha
 
 // DeleteTemplate deletes a stage template with the given tenant and template name.
 func DeleteTemplate(ctx context.Context, tenant, template string) error {
-	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(template, &metav1.DeleteOptions{})
+	err := handler.K8sClient.CycloneV1alpha1().Stages(common.TenantNamespace(tenant)).Delete(context.TODO(), template, metav1.DeleteOptions{})
 
 	return cerr.ConvertK8sError(err)
 }

@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -18,8 +19,8 @@ import (
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	ccommon "github.com/caicloud/cyclone/pkg/common"
 	"github.com/caicloud/cyclone/pkg/common/values"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/common"
 	"github.com/caicloud/cyclone/pkg/workflow/controller"
 	"github.com/caicloud/cyclone/pkg/workflow/values/ref"
@@ -27,7 +28,7 @@ import (
 
 // Builder is builder used to build pod for stage
 type Builder struct {
-	client           clientset.Interface
+	client           k8s.Interface
 	wf               *v1alpha1.Workflow
 	wfr              *v1alpha1.WorkflowRun
 	stg              *v1alpha1.Stage
@@ -41,7 +42,7 @@ type Builder struct {
 }
 
 // NewBuilder creates a new pod builder.
-func NewBuilder(client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stg *v1alpha1.Stage) *Builder {
+func NewBuilder(client k8s.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stg *v1alpha1.Stage) *Builder {
 	return &Builder{
 		client:           client,
 		wf:               wf,
@@ -373,7 +374,7 @@ func (m *Builder) ResolveInputResources() error {
 
 	for index, r := range m.stg.Spec.Pod.Inputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve input resource")
-		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
+		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(context.TODO(), r.Name, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("resource", r.Name).Error("Get resource error: ", err)
 			return err
@@ -507,7 +508,7 @@ func (m *Builder) ResolveOutputResources() error {
 
 	for index, r := range m.stg.Spec.Pod.Outputs.Resources {
 		log.WithField("stg", m.stage).WithField("resource", r.Name).Debug("Start resolve output resource")
-		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(r.Name, metav1.GetOptions{})
+		resource, err := m.client.CycloneV1alpha1().Resources(m.wfr.Namespace).Get(context.TODO(), r.Name, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("resource", r.Name).Error("Get resource error: ", err)
 			return err
@@ -1056,7 +1057,7 @@ func (m *Builder) ApplyServiceAccount() error {
 
 // ArtifactFileName gets artifact file name from artifacts path.
 func (m *Builder) ArtifactFileName(stageName, artifactName string) (string, error) {
-	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(stageName, metav1.GetOptions{})
+	stage, err := m.client.CycloneV1alpha1().Stages(m.wfr.Namespace).Get(context.TODO(), stageName, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("stg", stageName).Error("Get stage error: ", err)
 		return "", err

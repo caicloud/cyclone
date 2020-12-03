@@ -1,6 +1,7 @@
 package cd
 
 import (
+	"context"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -16,7 +17,7 @@ func UpdateDeployment(client kubernetes.Interface, config *Config) error {
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		deploy, err := client.AppsV1().Deployments(config.Deployment.Namespace).Get(config.Deployment.Name, metav1.GetOptions{})
+		deploy, err := client.AppsV1().Deployments(config.Deployment.Namespace).Get(context.TODO(), config.Deployment.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -33,7 +34,7 @@ func UpdateDeployment(client kubernetes.Interface, config *Config) error {
 		}
 
 		deploy.Spec.Template.Spec.Containers = containers
-		_, err = client.AppsV1().Deployments(config.Deployment.Namespace).Update(deploy)
+		_, err = client.AppsV1().Deployments(config.Deployment.Namespace).Update(context.TODO(), deploy, metav1.UpdateOptions{})
 		return err
 	})
 }

@@ -208,7 +208,8 @@ push:
 	done
 
 gen: clean-generated
-	bash tools/generator/autogenerate.sh
+	@./hack/update-codegen.sh
+	sed -i 's|v1alpha1.Resource(|v1alpha1.GroupResource(|' ./pkg/k8s/listers/cyclone/v1alpha1/*.go
 
 swagger-local:
 	nirvana api --output web/public pkg/server/apis

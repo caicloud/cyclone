@@ -8,7 +8,7 @@ package cyclone
 
 import (
 	v1alpha1 "github.com/caicloud/cyclone/pkg/k8s/informers/cyclone/v1alpha1"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
+	internalinterfaces "github.com/caicloud/cyclone/pkg/k8s/informers/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

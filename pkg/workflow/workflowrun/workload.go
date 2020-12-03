@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/util"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/delegation"
 	"github.com/caicloud/cyclone/pkg/workflow/workload/pod"
 )
@@ -21,7 +22,7 @@ import (
 // a POST request to the given URL in the workload spec.
 type WorkloadProcessor struct {
 	clusterClient   kubernetes.Interface
-	client          clientset.Interface
+	client          k8s.Interface
 	wf              *v1alpha1.Workflow
 	wfr             *v1alpha1.WorkflowRun
 	stg             *v1alpha1.Stage
@@ -30,7 +31,7 @@ type WorkloadProcessor struct {
 }
 
 // NewWorkloadProcessor ...
-func NewWorkloadProcessor(clusterClient kubernetes.Interface, client clientset.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage *v1alpha1.Stage, wfrOperator Operator) *WorkloadProcessor {
+func NewWorkloadProcessor(clusterClient kubernetes.Interface, client k8s.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stage *v1alpha1.Stage, wfrOperator Operator) *WorkloadProcessor {
 	return &WorkloadProcessor{
 		client:          client,
 		clusterClient:   clusterClient,
@@ -77,7 +78,7 @@ func (p *WorkloadProcessor) processPod() error {
 	}
 	log.WithField("stg", p.stg.Name).Debug("Pod manifest created")
 
-	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(po)
+	po, err = p.clusterClient.CoreV1().Pods(pod.GetExecutionContext(p.wfr).Namespace).Create(context.TODO(), po, metav1.CreateOptions{})
 	if err != nil {
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
 		var phase v1alpha1.StatusPhase
@@ -135,7 +136,7 @@ func (p *WorkloadProcessor) processDelegation() error {
 	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "DelegationSucceed", "Delegate stage %s to %s succeeded", p.stg.Name, p.stg.Spec.Delegation.URL)
 
 	// If the task has already been processed by the above RESTful API task, we should not update the status of the task to Waiting
-	latestWfr, err := p.client.CycloneV1alpha1().WorkflowRuns(p.wfr.Namespace).Get(p.wfr.Name, metav1.GetOptions{})
+	latestWfr, err := p.client.CycloneV1alpha1().WorkflowRuns(p.wfr.Namespace).Get(context.TODO(), p.wfr.Name, metav1.GetOptions{})
 	if err != nil {
 		log.WithField("wfr", p.wfr.Name).Error("Get latest wfr failed")
 		return err

@@ -236,7 +236,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	}
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
-	_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(ns).Create(wfr)
+	_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(ns).Create(context.TODO(), wfr, metav1.CreateOptions{})
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}

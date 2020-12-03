@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -43,11 +44,11 @@ func InitControlCluster(client clientset.Interface) error {
 	// Create ExecutionCluster instance for control cluster. This makes it possible to
 	// use only workflow engine to run workflow in control cluster.
 	// Create ExecutionCluster resource for Workflow Engine to use
-	_, err := client.CycloneV1alpha1().ExecutionClusters().Create(&v1alpha1.ExecutionCluster{
+	_, err := client.CycloneV1alpha1().ExecutionClusters().Create(context.TODO(), &v1alpha1.ExecutionCluster{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: common.ControlClusterName,
 		},
-	})
+	}, meta_v1.CreateOptions{})
 
 	// If the CR already exists, just ignore it.
 	if err != nil && errors.IsAlreadyExists(err) {

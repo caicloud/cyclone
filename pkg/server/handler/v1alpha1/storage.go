@@ -32,7 +32,7 @@ const (
 
 // GetStorageUsage gets storage usage of the tenant
 func GetStorageUsage(ctx context.Context, tenant string) (*v1alpha1.StorageUsage, error) {
-	ns, err := handler.K8sClient.CoreV1().Namespaces().Get(svrcommon.TenantNamespace(tenant), metav1.GetOptions{})
+	ns, err := handler.K8sClient.CoreV1().Namespaces().Get(context.TODO(), svrcommon.TenantNamespace(tenant), metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("get namespace for tenant '%s' error: %v", tenant, err)
 	}
@@ -61,7 +61,7 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		ns, err := handler.K8sClient.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+		ns, err := handler.K8sClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace '%s' error: %v", namespace, err)
 			return err
@@ -73,7 +73,7 @@ func ReportStorageUsage(ctx context.Context, namespace string, request v1alpha1.
 
 		ns.Annotations[meta.AnnotationTenantStorageUsage] = string(b)
 
-		_, err = handler.K8sClient.CoreV1().Namespaces().Update(ns)
+		_, err = handler.K8sClient.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
 		if err != nil {
 			log.Warningf("Update namespace '%s' error: %v", namespace, err)
 		}
@@ -152,7 +152,7 @@ func Cleanup(ctx context.Context, tenant string, request v1alpha1.StorageCleanup
 		return fmt.Errorf("create cluster client error: %v", err)
 	}
 
-	_, err = client.CoreV1().Pods(cluster.Namespace).Create(gcPod)
+	_, err = client.CoreV1().Pods(cluster.Namespace).Create(context.TODO(), gcPod, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("create gc pod error: %v", err)
 	}

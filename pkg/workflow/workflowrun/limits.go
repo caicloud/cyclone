@@ -1,6 +1,7 @@
 package workflowrun
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -70,7 +71,7 @@ func (w *LimitedQueues) AddOrRefresh(wfr *v1alpha1.WorkflowRun) {
 	for q.size > w.MaxQueueSize {
 		log.WithField("max", w.MaxQueueSize).Debug("Max WorkflowRun exceeded, delete the oldest one")
 		old := q.Pop()
-		err := w.Client.CycloneV1alpha1().WorkflowRuns(old.namespace).Delete(old.wfr, &metav1.DeleteOptions{})
+		err := w.Client.CycloneV1alpha1().WorkflowRuns(old.namespace).Delete(context.TODO(), old.wfr, metav1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			log.WithField("wfr", old.wfr).Error("Delete old WorkflowRun error: ", err)
 		} else {

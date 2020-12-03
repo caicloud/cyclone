@@ -7,6 +7,8 @@ Copyright 2020 caicloud authors. All rights reserved.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -27,7 +29,7 @@ var workflowrunsResource = schema.GroupVersionResource{Group: "cyclone.dev", Ver
 var workflowrunsKind = schema.GroupVersionKind{Group: "cyclone.dev", Version: "v1alpha1", Kind: "WorkflowRun"}
 
 // Get takes name of the workflowRun, and returns the corresponding workflowRun object, and an error if there is any.
-func (c *FakeWorkflowRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {
+func (c *FakeWorkflowRuns) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.WorkflowRun, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(workflowrunsResource, c.ns, name), &v1alpha1.WorkflowRun{})
 
@@ -38,7 +40,7 @@ func (c *FakeWorkflowRuns) Get(name string, options v1.GetOptions) (result *v1al
 }
 
 // List takes label and field selectors, and returns the list of WorkflowRuns that match those selectors.
-func (c *FakeWorkflowRuns) List(opts v1.ListOptions) (result *v1alpha1.WorkflowRunList, err error) {
+func (c *FakeWorkflowRuns) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.WorkflowRunList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(workflowrunsResource, workflowrunsKind, c.ns, opts), &v1alpha1.WorkflowRunList{})
 
@@ -50,7 +52,7 @@ func (c *FakeWorkflowRuns) List(opts v1.ListOptions) (result *v1alpha1.WorkflowR
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.WorkflowRunList{}
+	list := &v1alpha1.WorkflowRunList{ListMeta: obj.(*v1alpha1.WorkflowRunList).ListMeta}
 	for _, item := range obj.(*v1alpha1.WorkflowRunList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -60,14 +62,14 @@ func (c *FakeWorkflowRuns) List(opts v1.ListOptions) (result *v1alpha1.WorkflowR
 }
 
 // Watch returns a watch.Interface that watches the requested workflowRuns.
-func (c *FakeWorkflowRuns) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeWorkflowRuns) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(workflowrunsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a workflowRun and creates it.  Returns the server's representation of the workflowRun, and an error, if there is any.
-func (c *FakeWorkflowRuns) Create(workflowRun *v1alpha1.WorkflowRun) (result *v1alpha1.WorkflowRun, err error) {
+func (c *FakeWorkflowRuns) Create(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.CreateOptions) (result *v1alpha1.WorkflowRun, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(workflowrunsResource, c.ns, workflowRun), &v1alpha1.WorkflowRun{})
 
@@ -78,7 +80,7 @@ func (c *FakeWorkflowRuns) Create(workflowRun *v1alpha1.WorkflowRun) (result *v1
 }
 
 // Update takes the representation of a workflowRun and updates it. Returns the server's representation of the workflowRun, and an error, if there is any.
-func (c *FakeWorkflowRuns) Update(workflowRun *v1alpha1.WorkflowRun) (result *v1alpha1.WorkflowRun, err error) {
+func (c *FakeWorkflowRuns) Update(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (result *v1alpha1.WorkflowRun, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(workflowrunsResource, c.ns, workflowRun), &v1alpha1.WorkflowRun{})
 
@@ -90,7 +92,7 @@ func (c *FakeWorkflowRuns) Update(workflowRun *v1alpha1.WorkflowRun) (result *v1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeWorkflowRuns) UpdateStatus(workflowRun *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
+func (c *FakeWorkflowRuns) UpdateStatus(ctx context.Context, workflowRun *v1alpha1.WorkflowRun, opts v1.UpdateOptions) (*v1alpha1.WorkflowRun, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(workflowrunsResource, "status", c.ns, workflowRun), &v1alpha1.WorkflowRun{})
 
@@ -101,7 +103,7 @@ func (c *FakeWorkflowRuns) UpdateStatus(workflowRun *v1alpha1.WorkflowRun) (*v1a
 }
 
 // Delete takes name of the workflowRun and deletes it. Returns an error if one occurs.
-func (c *FakeWorkflowRuns) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeWorkflowRuns) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(workflowrunsResource, c.ns, name), &v1alpha1.WorkflowRun{})
 
@@ -109,15 +111,15 @@ func (c *FakeWorkflowRuns) Delete(name string, options *v1.DeleteOptions) error 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeWorkflowRuns) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(workflowrunsResource, c.ns, listOptions)
+func (c *FakeWorkflowRuns) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(workflowrunsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.WorkflowRunList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched workflowRun.
-func (c *FakeWorkflowRuns) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.WorkflowRun, err error) {
+func (c *FakeWorkflowRuns) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.WorkflowRun, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(workflowrunsResource, c.ns, name, pt, data, subresources...), &v1alpha1.WorkflowRun{})
 

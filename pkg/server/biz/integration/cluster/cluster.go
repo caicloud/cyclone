@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"strings"
 
 	"github.com/caicloud/nirvana/log"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/common"
-	"github.com/caicloud/cyclone/pkg/k8s/clientset"
 	"github.com/caicloud/cyclone/pkg/meta"
 	api "github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/integration"
@@ -19,10 +19,11 @@ import (
 	svrcommon "github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
 
 // Open opens cluster to run workload.
-func Open(client clientset.Interface, in *api.Integration, tenantName string) (err error) {
+func Open(client k8s.Interface, in *api.Integration, tenantName string) (err error) {
 	// Convert the returned error if it is a k8s error.
 	defer func() {
 		err = cerr.ConvertK8sError(err)
@@ -44,7 +45,7 @@ func Open(client clientset.Interface, in *api.Integration, tenantName string) (e
 	// Create namespace if not exist.
 	if cluster.Namespace != "" && cluster.Namespace != svrcommon.TenantNamespace(tenant.Name) {
 		// Check if namespace exist, if not found or failed to get, return error
-		_, err = clusterClient.CoreV1().Namespaces().Get(cluster.Namespace, meta_v1.GetOptions{})
+		_, err = clusterClient.CoreV1().Namespaces().Get(context.TODO(), cluster.Namespace, meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get namespace %s error %v", cluster.Namespace, err)
 			return
@@ -80,7 +81,7 @@ func Open(client clientset.Interface, in *api.Integration, tenantName string) (e
 
 	// If a PVC has been configured, check existence of it.
 	if cluster.PVC != "" && cluster.PVC != svrcommon.TenantPVC(tenant.Name) {
-		_, err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(cluster.PVC, meta_v1.GetOptions{})
+		_, err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Get(context.TODO(), cluster.PVC, meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get pvc %s error %v", cluster.PVC, err)
 			return
@@ -112,14 +113,14 @@ func Open(client clientset.Interface, in *api.Integration, tenantName string) (e
 	}
 
 	// Create ExecutionCluster resource for Workflow Engine to use
-	_, err = client.CycloneV1alpha1().ExecutionClusters().Create(&v1alpha1.ExecutionCluster{
+	_, err = client.CycloneV1alpha1().ExecutionClusters().Create(context.TODO(), &v1alpha1.ExecutionCluster{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: clusterName,
 		},
 		Spec: v1alpha1.ExecutionClusterSpec{
 			Credential: cluster.Credential,
 		},
-	})
+	}, meta_v1.CreateOptions{})
 
 	// Execution cluster is system level, so different tenants may try to create ExecutionCluster CR for the same
 	// cluster, so if the CR already exists, just ignore it.
@@ -148,7 +149,7 @@ func Close(in *api.Integration, tenant string) (err error) {
 
 	// if is a user cluster and namespace are created by cyclone, delete the namespace directly
 	if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
-		err = clusterClient.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
+		err = clusterClient.CoreV1().Namespaces().Delete(context.TODO(), cluster.Namespace, meta_v1.DeleteOptions{})
 		if err != nil {
 			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
 				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
@@ -168,7 +169,7 @@ func Close(in *api.Integration, tenant string) (err error) {
 
 	// delete resource quota
 	quotaName := svrcommon.TenantResourceQuota(tenant)
-	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
+	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(context.TODO(), quotaName, meta_v1.DeleteOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
 			log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
@@ -190,7 +191,7 @@ func Close(in *api.Integration, tenant string) (err error) {
 
 	// delete pvc which is created by cyclone
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
-		err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
+		err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(context.TODO(), cluster.PVC, meta_v1.DeleteOptions{})
 		if err != nil {
 			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
 				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
@@ -263,8 +264,8 @@ func StopPVCWatcher(in *api.Integration, tenant string) (err error) {
 }
 
 // UpdateClusterIntegration ...
-func UpdateClusterIntegration(client clientset.Interface, tenant, name string, in *api.Integration) error {
-	secret, err := client.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(integration.GetSecretName(name), meta_v1.GetOptions{})
+func UpdateClusterIntegration(client k8s.Interface, tenant, name string, in *api.Integration) error {
+	secret, err := client.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).Get(context.TODO(), integration.GetSecretName(name), meta_v1.GetOptions{})
 	if err != nil {
 		return nil
 	}
@@ -315,8 +316,8 @@ func UpdateClusterIntegration(client clientset.Interface, tenant, name string, i
 }
 
 // GetSchedulableClusters gets all clusters which are used to perform workload for this tenant.
-func GetSchedulableClusters(client clientset.Interface, tenant string) ([]api.Integration, error) {
-	secrets, err := client.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(meta_v1.ListOptions{
+func GetSchedulableClusters(client k8s.Interface, tenant string) ([]api.Integration, error) {
+	secrets, err := client.CoreV1().Secrets(svrcommon.TenantNamespace(tenant)).List(context.TODO(), meta_v1.ListOptions{
 		LabelSelector: meta.SchedulableClusterSelector(),
 	})
 	if err != nil {

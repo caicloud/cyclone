@@ -1,9 +1,11 @@
 package executioncluster
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
@@ -76,7 +78,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 
 	ec := originCluster.DeepCopy()
 	ec.ObjectMeta.Finalizers = append(ec.ObjectMeta.Finalizers, finalizerExecutioncluster)
-	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(ec)
+	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(context.TODO(), ec, metav1.UpdateOptions{})
 	return err
 }
 
@@ -101,6 +103,6 @@ func (h *Handler) HandleFinalizer(obj interface{}) error {
 	}
 
 	ec.ObjectMeta.Finalizers = sets.NewString(ec.ObjectMeta.Finalizers...).Delete(finalizerExecutioncluster).UnsortedList()
-	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(ec)
+	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(context.TODO(), ec, metav1.UpdateOptions{})
 	return err
 }
