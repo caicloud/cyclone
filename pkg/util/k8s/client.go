@@ -9,22 +9,26 @@ import (
 	cyclonev1alpha1 "github.com/caicloud/cyclone/pkg/k8s/clientset/typed/cyclone/v1alpha1"
 )
 
+// Interface consists of kubernetes and cyclone interfaces
 type Interface interface {
 	kubernetes.Interface
 	CycloneV1alpha1() cyclonev1alpha1.CycloneV1alpha1Interface
 }
 
+// Clientset contains the cyclone Clientset and kubernetes Clientset
 type Clientset struct {
 	*kubernetes.Clientset
 	cycloneClient *clientset.Clientset
 }
 
+// CycloneV1alpha1 retrieves the CycloneV1alpha1Client
 func (c *Clientset) CycloneV1alpha1() cyclonev1alpha1.CycloneV1alpha1Interface {
 	return c.cycloneClient.CycloneV1alpha1()
 }
 
 var _ Interface = (*Clientset)(nil)
 
+// NewForConfig creates a new Clientset for the given config.
 func NewForConfig(c *rest.Config) (*Clientset, error) {
 	cycloneClient, err := clientset.NewForConfig(c)
 	if err != nil {

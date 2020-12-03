@@ -56,10 +56,12 @@ type Clientset struct {
 
 var _ k8s.Interface = (*Clientset)(nil)
 
+// Discovery retrieves the DiscoveryClient
 func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 	return c.discovery
 }
 
+// Tracker retrieves the ObjectTracker
 func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
