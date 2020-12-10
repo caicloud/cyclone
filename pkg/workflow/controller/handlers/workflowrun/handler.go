@@ -28,6 +28,7 @@ type Handler struct {
 	GCProcessor           *workflowrun.GCProcessor
 	LimitedQueues         *workflowrun.LimitedQueues
 	ParallelismController workflowrun.ParallelismController
+	BlockingStageHandler  *workflowrun.BlockingStageProcessor
 }
 
 // Ensure *Handler has implemented handlers.Interface interface.

@@ -162,6 +162,8 @@ const (
 	StatusFailed StatusPhase = "Failed"
 	// StatusCancelled indicates WorkflowRun have been cancelled.
 	StatusCancelled StatusPhase = "Cancelled"
+	// StatusBlocking indicates Stage is out of resource quota, blocking in queue
+	StatusBlocking StatusPhase = "Blocking"
 )
 
 // PodInfo describes the pod a stage created.

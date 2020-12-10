@@ -590,6 +590,20 @@
   version = "v0.9.0"
 
 [[projects]]
+  branch = "v2"
+  digest = "1:4af24de1cba937fb5ef082e8860a47fd46282e6863c01930359368ee121e3114"
+  name = "gopkg.in/mgo.v2"
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram",
+  ]
+  pruneopts = "UT"
+  revision = "a6b53ec6cb22a3699387a57a161566f9402ee85b"
+
+[[projects]]
   digest = "1:33f31f1c13617634ff0da960c79293c604b6c22b32c9a95bcea5f6007666042d"
   name = "gopkg.in/xanzy/go-gitlab.v0"
   packages = ["."]
@@ -997,6 +1011,7 @@
     "github.com/stretchr/testify/suite",
     "github.com/xanzy/go-gitlab",
     "golang.org/x/oauth2",
+    "gopkg.in/mgo.v2",
     "gopkg.in/xanzy/go-gitlab.v0",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",

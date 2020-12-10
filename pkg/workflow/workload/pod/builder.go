@@ -94,6 +94,9 @@ func (m *Builder) Prepare() error {
 			meta.AnnotationMetaNamespace:   m.wfr.Namespace,
 		},
 	}
+	if m.wf.Annotations != nil {
+		m.pod.ObjectMeta.Annotations[meta.AnnotationIPVLANConfig] = m.wf.Annotations[meta.LabelCIDRName]
+	}
 
 	// If controller instance name is set, add label to the pod created.
 	if instance := os.Getenv(ccommon.ControllerInstanceEnvName); len(instance) != 0 {
@@ -223,6 +226,16 @@ func (m *Builder) CreateVolumes() error {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: common.DockerSockFilePath,
+			},
+		},
+	})
+
+	// Add host volume for host trivy db cache for image scan
+	m.pod.Spec.Volumes = append(m.pod.Spec.Volumes, corev1.Volume{
+		Name: common.HostTrivyCacheVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: common.HostTrivyCachePath,
 			},
 		},
 	})
@@ -701,11 +714,17 @@ func (m *Builder) AddVolumeMounts() error {
 	if m.executionContext.PVC != "" {
 		var containers []corev1.Container
 		for _, c := range m.pod.Spec.Containers {
-			c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-				Name:      common.DefaultPvVolumeName,
-				MountPath: common.StageMountPath,
-				SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
-			})
+			c.VolumeMounts = append(c.VolumeMounts,
+				corev1.VolumeMount{
+					Name:      common.DefaultPvVolumeName,
+					MountPath: common.StageMountPath,
+					SubPath:   common.StagePath(m.wfr.Name, m.stg.Name),
+				},
+				corev1.VolumeMount{
+					Name:      common.HostTrivyCacheVolumeName,
+					MountPath: common.HostTrivyCachePath,
+				},
+			)
 			containers = append(containers, c)
 		}
 		m.pod.Spec.Containers = containers
@@ -858,6 +877,10 @@ func (m *Builder) InjectEnvs() error {
 		{
 			Name:  common.EnvStageName,
 			Value: m.stage,
+		},
+		{
+			Name:  common.EnvCycloneServerAddr,
+			Value: controller.Config.CycloneServerAddr,
 		},
 	}
 	var containers []corev1.Container

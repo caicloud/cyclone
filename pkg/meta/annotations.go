@@ -39,4 +39,7 @@ const (
 
 	// AnnotationIstioInject is annotation to decide whether to inject istio sidecar
 	AnnotationIstioInject = "sidecar.istio.io/inject"
+
+	// AnnotationIPVLANConfig is the label to stage pod, cni allocate ip according this
+	AnnotationIPVLANConfig = "ipvlan.networking.compass.io/names"
 )

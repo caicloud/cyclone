@@ -17,6 +17,9 @@ package main
 
 import (
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/caicloud/nirvana"
 	nconfig "github.com/caicloud/nirvana/config"
@@ -39,6 +42,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/config"
 	"github.com/caicloud/cyclone/pkg/server/handler"
 	"github.com/caicloud/cyclone/pkg/server/handler/v1alpha1"
+	"github.com/caicloud/cyclone/pkg/server/model"
 	"github.com/caicloud/cyclone/pkg/server/version"
 	utilk8s "github.com/caicloud/cyclone/pkg/util/k8s"
 )
@@ -65,7 +69,7 @@ func (opts *Options) AddFlags() {
 	flag.Parse()
 }
 
-func initialize(opts *Options) {
+func initialize(opts *Options, closing chan struct{}) []chan struct{} {
 	// Init k8s client
 	log.Info("kube config:", opts.KubeConfig)
 	client, err := utilk8s.GetClient(opts.KubeConfig)
@@ -104,16 +108,21 @@ func initialize(opts *Options) {
 	} else {
 		log.Info("create_builtin_templates is false, skip create built-in stage templates")
 	}
+	closed, err := model.InitMongo(config.Config.MongoConfig, closing)
+	if err != nil {
+		log.Fatalf("init mongodb failed, err: %v\n", err)
+	}
+
+	return []chan struct{}{closed}
 }
 
 func main() {
 	// Print Cyclone ascii art logo
 	log.Infoln(common.CycloneLogo)
-
 	opts := NewOptions()
 	opts.AddFlags()
-
-	initialize(opts)
+	closing := make(chan struct{})
+	closed := initialize(opts, closing)
 
 	// Create nirvana command.
 	cmd := nconfig.NewNamedNirvanaCommand("cyclone-server", &nconfig.Option{
@@ -129,13 +138,7 @@ func main() {
 	metricsOption := metrics.NewDefaultOption() // Metrics plugin.
 	loggerOption := logger.NewDefaultOption()   // Logger plugin.
 	reqlogOption := reqlog.NewDefaultOption()   // Request log plugin.
-	versionOption := pversion.NewOption(        // Version plugin.
-		"server",
-		version.Version,
-		version.Commit,
-		version.Package,
-	)
-
+	versionOption := pversion.NewOption("server", version.Version, version.Commit, version.Package)
 	// Enable plugins.
 	cmd.EnablePlugin(metricsOption, loggerOption, reqlogOption, versionOption)
 
@@ -159,12 +162,30 @@ func main() {
 		},
 	})
 
-	log.Infof("Cyclone service listening on %s:%d", config.Config.CycloneServerHost, config.Config.CycloneServerPort)
+	go runServer(cmd, serverConfig)
+	go gracefulShutdown(closing)
+	waitCleanup(closed)
+}
 
+func runServer(cmd nconfig.NirvanaCommand, cfg *nirvana.Config) {
+	log.Infof("Cyclone service listening on %s:%d", config.Config.CycloneServerHost, config.Config.CycloneServerPort)
 	// Start with server config.
-	if err := cmd.ExecuteWithConfig(serverConfig); err != nil {
-		serverConfig.Logger().Fatal(err)
+	if err := cmd.ExecuteWithConfig(cfg); err != nil {
+		cfg.Logger().Fatal(err)
 	}
 
 	log.Info("Cyclone server stopped")
+}
+
+func gracefulShutdown(closing chan struct{}) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	log.Infof("capture system signal %s, to close \"closing\" channel", <-signals)
+	close(closing)
+}
+
+func waitCleanup(closed []chan struct{}) {
+	for _, c := range closed {
+		<-c
+	}
 }
