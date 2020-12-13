@@ -184,25 +184,13 @@ func AutoAnalyse(err error) error {
 
 // TCPConnectionError check whether the err belongs to tcp connection problem.
 func TCPConnectionError(err error) bool {
-	if err == nil {
+	e := err.Error()
+	if !strings.Contains(e, "dial tcp") {
 		return false
 	}
 
-	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
-		return true
-	}
-
-	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "no such host") {
-		return true
-	}
-
-	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "i/o timeout") {
-		return true
-	}
-
-	if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection timed out") {
-		return true
-	}
-
-	return false
+	return strings.Contains(e, "connect: connection refused") ||
+		strings.Contains(e, "no such host") ||
+		strings.Contains(e, "i/o timeout") ||
+		strings.Contains(e, "connect: connection timed out")
 }
