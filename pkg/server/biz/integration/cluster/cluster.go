@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"strings"
-
 	"github.com/caicloud/nirvana/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -150,8 +148,8 @@ func Close(in *api.Integration, tenant string) (err error) {
 	if !cluster.IsControlCluster && cluster.Namespace == svrcommon.TenantNamespace(tenant) {
 		err = clusterClient.CoreV1().Namespaces().Delete(cluster.Namespace, &meta_v1.DeleteOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
-				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+			if cerr.TCPConnectionError(err) {
+				log.Warningf("connect to cluster %s failed, maybe cluster has been deleted", cluster.ClusterName)
 				err = nil
 			} else if errors.IsNotFound(err) {
 				log.Warningf("namespace %s not found", cluster.Namespace)
@@ -170,8 +168,8 @@ func Close(in *api.Integration, tenant string) (err error) {
 	quotaName := svrcommon.TenantResourceQuota(tenant)
 	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(quotaName, &meta_v1.DeleteOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
-			log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+		if cerr.TCPConnectionError(err) {
+			log.Warningf("connect to cluster %s failed, maybe cluster has been deleted", cluster.ClusterName)
 			err = nil
 		} else if errors.IsNotFound(err) {
 			log.Warningf("resource quota %s not found", quotaName)
@@ -192,8 +190,8 @@ func Close(in *api.Integration, tenant string) (err error) {
 	if cluster.PVC == svrcommon.TenantPVC(tenant) {
 		err = clusterClient.CoreV1().PersistentVolumeClaims(cluster.Namespace).Delete(cluster.PVC, &meta_v1.DeleteOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
-				log.Warningf("connect to cluster %s resused, maybe cluster has been deleted", cluster.ClusterName)
+			if cerr.TCPConnectionError(err) {
+				log.Warningf("connect to cluster %s failed, maybe cluster has been deleted", cluster.ClusterName)
 				err = nil
 			} else if errors.IsNotFound(err) {
 				log.Warningf("pvc %s not found", cluster.PVC)
