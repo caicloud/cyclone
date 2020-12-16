@@ -6,7 +6,7 @@ WORKDIR /root
 
 # Copy cyclone server and stage templates
 COPY bin/server /cyclone-server
-COPY manifests/templates /root/templates
+COPY templates /root/templates
 
 EXPOSE 7099
 
