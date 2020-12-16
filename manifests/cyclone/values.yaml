@@ -1,0 +1,103 @@
+platformConfig:
+  imageRegistry: cargo.dev.caicloud.xyz
+  imageRepositoryRelease: release
+  imageRepositoryLibrary: library
+  controlClusterVIP: 172.19.45.200
+
+serviceAccount: default
+
+# Cyclone workflow engine variables
+engine:
+  images:
+    gc: alpine:3.7
+  gc:
+    # Whether enable GC, if set to true, pods would be cleaned after execution finished
+    enabled: true
+    # The time to wait before cleanup pods when an execution finished
+    delaySeconds: 0
+    # How many times to retry (include the initial one)
+    retry: 1
+    # ResourceRequirement for the pod to execute GC
+    resourceRequirement:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  limits:
+    # Maximum number of execution records to keep for each workflow.
+    maxWorkflowRuns: 50
+  # Parallelism constraints for WorkflowRun execution, value 0 or negative indicate
+  # no constraint on the corresponding item.
+  parallelism:
+    overall:
+      # How many WorkflowRuns are allowed to run in parallel
+      maxParallel: 20
+      # How many WorkflowRuns are allowed to wait for executing, when this limit
+      # exceeded, new WorkflowRuns will fail directly.
+      maxQueueSize: 100
+    singleWorkflow:
+      # How many WorkflowRuns are allowed to run in parallel for a single Workflow
+      maxParallel: 3
+      # How many WorkflowRuns are allowed to wait for executing, when this limit
+      # exceeded, new WorkflowRuns will fail directly.
+      maxQueueSize: 10
+  resourceRequirement:
+    default:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  developMode: "false"
+
+# Cyclone server variables
+server:
+  listenAddress: 0.0.0.0
+  listenPort: 7099
+  # nodePort: 30011
+  webhookUrlPrefix: http://{{ .Values.serverAddress }}/apis/v1alpha1
+  recordWebURLPath: /devops/pipeline/workspaces/{{.ProjectName}}/pipelines/{{.WorkflowName}}/records/{{.WorkflowRunName}}/log?tenant={{.Tenant}}
+  init:
+    templates: false
+    defaultTenant: false
+  openControlCluster: false
+  pvc:
+    # Default storageClass which Cyclone will use to create PVC.
+    storageClass: "heketi-storageclass"
+    size: 10Gi
+  resourceRequirement:
+    namespace:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+  storageWatcher:
+    reportUrl: http://{{ .Values.serverAddress }}/apis/v1alpha1/storage/usages
+    intervalSeconds: 180
+    resourceRequirements:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+  cacheCleaner:
+    image: alpine:3.7
+    resourceRequirements:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+  clientSet:
+    qps: 50.0
+    burst: 100
+  artifact:
+    retentionSeconds: 604800
+    retentionDiskProtectionThreshold: 0.1

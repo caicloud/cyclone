@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  workflow-controller.json: |
+    {
+      "images": {
+        "git-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
+        "svn-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
+        "image-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
+        "http-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
+        "coordinator": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
+        "toolbox": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
+        "gc": "{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
+      },
+      "logging": {
+        "level": "info"
+      },
+      "gc": {
+        "enabled": {{ .Values.engine.gc.enabled }},
+        "delay_seconds": {{ .Values.engine.gc.delaySeconds }},
+        "retry": {{ .Values.engine.gc.retry }},
+        "resource_quota": {
+          "limits": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.limits.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.limits.memory }}"
+          },
+          "requests": {
+            "cpu": "{{ .Values.engine.gc.resourceRequirement.requests.cpu }}",
+            "memory": "{{ .Values.engine.gc.resourceRequirement.requests.memory }}"
+          }
+        }
+      },
+      "limits": {
+        "max_workflowruns": {{ .Values.engine.limits.maxWorkflowRuns }}
+      },
+      "default_resource_quota": {
+        "limits": {
+          "cpu": "{{ .Values.engine.resourceRequirement.default.limits.cpu }}",
+          "memory": "{{ .Values.engine.resourceRequirement.default.limits.memory }}"
+        },
+        "requests": {
+          "cpu": "{{ .Values.engine.resourceRequirement.default.requests.cpu }}",
+          "memory": "{{ .Values.engine.resourceRequirement.default.requests.memory }}"
+        }
+      },
+      "workers_number": {
+        "execution_cluster": 1,
+        "workflow_trigger": 1,
+        "workflow_run": 1,
+        "pod": 1
+      },
+      "pvc": "cyclone-server-cyclone-data",
+      "cyclone_server_addr": "{{ .Values.platformConfig.controlClusterVIP }}:6041",
+      "notification_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:6041/apis/v1alpha1/notifications"
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-workflow-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    app.kubernetes.io/component: workflow-controller
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cyclone.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cyclone-workflow-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cyclone.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cyclone-workflow-controller
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount }}
+      containers:
+      - name: controller
+        command:
+        - /workspace/controller
+        image: "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-controller:{{ .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        env:
+        - name: DEVELOP_MODE
+          value: {{ .Values.engine.developMode | quote }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        livenessProbe:
+          httpGet:
+            port: 8080
+            path: /healthz
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          limits:
+            cpu: 150m
+            memory: 300Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
+        volumeMounts:
+        - mountPath: /etc/localtime
+          mountPropagation: HostToContainer
+          name: timezone
+      volumes:
+      - name: timezone
+        hostPath:
+          path: /etc/localtime
+          type: File
