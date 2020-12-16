@@ -41,16 +41,7 @@ data:
       "limits": {
         "max_workflowruns": {{ .Values.engine.limits.maxWorkflowRuns }}
       },
-      "default_resource_quota": {
-        "limits": {
-          "cpu": "{{ .Values.engine.resourceRequirement.default.limits.cpu }}",
-          "memory": "{{ .Values.engine.resourceRequirement.default.limits.memory }}"
-        },
-        "requests": {
-          "cpu": "{{ .Values.engine.resourceRequirement.default.requests.cpu }}",
-          "memory": "{{ .Values.engine.resourceRequirement.default.requests.memory }}"
-        }
-      },
+      "default_resource_quota": {{ toJson .Values.engine.defaultResourceQuota }},
       "workers_number": {
         "execution_cluster": 1,
         "workflow_trigger": 1,
@@ -122,13 +113,7 @@ spec:
           timeoutSeconds: 1
           failureThreshold: 3
           successThreshold: 1
-        resources:
-          limits:
-            cpu: 150m
-            memory: 300Mi
-          requests:
-            cpu: 50m
-            memory: 100Mi
+        resources: {{- toYaml .Values.engine.resourceRequirement | nindent 10 }}
         volumeMounts:
         - mountPath: /etc/localtime
           mountPropagation: HostToContainer

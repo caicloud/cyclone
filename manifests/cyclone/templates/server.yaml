@@ -22,12 +22,7 @@ data:
         "size": "{{ .Values.server.pvc.size }}",
         "storage_class": "{{ .Values.server.pvc.storageClass }}"
       },
-      "worker_namespace_quota": {
-        "limits.cpu": "{{ .Values.server.resourceRequirement.namespace.limits.cpu }}",
-        "limits.memory": "{{ .Values.server.resourceRequirement.namespace.limits.memory }}",
-        "requests.cpu": "{{ .Values.server.resourceRequirement.namespace.requests.cpu }}",
-        "requests.memory": "{{ .Values.server.resourceRequirement.namespace.requests.memory }}"
-      },
+      "worker_namespace_quota": {{ toJson .Values.server.workerNamespaceQuota }},
       "create_builtin_templates": {{ .Values.server.init.templates }},
       "init_default_tenant": {{ .Values.server.init.defaultTenant }},
       "open_control_cluster": {{ .Values.server.openControlCluster }},
@@ -123,13 +118,7 @@ spec:
           value: "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2"
         ports:
         - containerPort: {{ .Values.server.listenPort }}
-        resources:
-          limits:
-            cpu: 150m
-            memory: 300Mi
-          requests:
-            cpu: 50m
-            memory: 100Mi
+        resources: {{- toYaml .Values.server.resourceRequirement | nindent 10 }}
         livenessProbe:
           httpGet:
             port: {{ .Values.server.listenPort }}
