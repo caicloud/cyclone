@@ -1,0 +1,197 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cyclone-server-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  cyclone-server.json: |
+    {
+      "logging": {
+        "level": "debug"
+      },
+      "cyclone_server_host": "{{ .Values.server.listenAddress }}",
+      "cyclone_server_port": {{ .Values.server.listenPort }},
+      "webhook_url_prefix": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2",
+      "record_web_url_template": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060{{ .Values.server.recordWebURLPath }}",
+      "default_pvc_config": {
+        "size": "{{ .Values.server.pvc.size }}",
+        "storage_class": "{{ .Values.server.pvc.storageClass }}"
+      },
+      "worker_namespace_quota": {{ toJson .Values.server.workerNamespaceQuota }},
+      "create_builtin_templates": {{ .Values.server.init.templates }},
+      "init_default_tenant": {{ .Values.server.init.defaultTenant }},
+      "open_control_cluster": {{ .Values.server.openControlCluster }},
+      "storage_usage_watcher": {
+        "image": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-watcher:{{ .Chart.AppVersion }}",
+        "report_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:6041/apis/v1alpha1/storage/usages",
+        "interval_seconds": "{{ .Values.server.storageWatcher.intervalSeconds }}",
+        "resource_requirements": {
+          "limits.cpu": "{{ .Values.server.storageWatcher.resourceRequirements.limits.cpu }}",
+          "limits.memory": "{{ .Values.server.storageWatcher.resourceRequirements.limits.memory }}",
+          "requests.cpu": "{{ .Values.server.storageWatcher.resourceRequirements.requests.cpu }}",
+          "requests.memory": "{{ .Values.server.storageWatcher.resourceRequirements.requests.memory }}"
+        }
+      },
+      "cache_cleaner": {
+        "image": "{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.server.cacheCleaner.image }}",
+        "resource_requirements": {
+          "limits.cpu": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.cpu }}",
+          "limits.memory": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.memory }}",
+          "requests.cpu": "{{ .Values.server.cacheCleaner.resourceRequirements.requests.cpu }}",
+          "requests.memory": "{{ .Values.server.cacheCleaner.resourceRequirements.requests.memory }}"
+        }
+      },
+      "images": {
+        "gc": "{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
+      },
+      "notifications": [
+        {
+          "name": "devops",
+          "url": "http://{{ .Release.Name }}-pipeline.{{ .Release.Namespace }}.svc.cluster.local:7088/api/v2/pipeline/notifications"
+        }
+      ],
+      "client_set": {
+        "qps": {{ .Values.server.clientSet.qps }},
+        "burst": {{ .Values.server.clientSet.burst }}
+      },
+      "artifact": {
+        "retention_seconds": {{ .Values.server.artifact.retentionSeconds }},
+        "retention_disk_protection_threshold": {{ .Values.server.artifact.retentionDiskProtectionThreshold }}
+      }
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    app.kubernetes.io/component: cyclone-server
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cyclone.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cyclone-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cyclone.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cyclone-server
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount }}
+      containers:
+      - name: server
+        image: "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-server:{{ .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        command:
+        - /cyclone-server
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: WEBHOOK_URL_PREFIX
+          value: "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2"
+        ports:
+        - containerPort: {{ .Values.server.listenPort }}
+        resources: {{- toYaml .Values.server.resourceRequirement | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.server.listenPort }}
+            path: /healthz?type=liveness
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.server.listenPort }}
+            path: /healthz?type=readiness
+          initialDelaySeconds: 10
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: timezone
+          mountPropagation: HostToContainer
+        - mountPath: /var/lib/cyclone
+          name: cyclone-data
+      volumes:
+      - name: timezone
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: cyclone-data
+        persistentVolumeClaim:
+          claimName: cyclone-server-cyclone-data
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-server
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  selector:
+    app.kubernetes.io/component: cyclone-server
+  ports:
+  - protocol: TCP
+    port: {{ .Values.server.listenPort }}
+    {{- if (not (empty .Values.server.nodePort)) }}
+    nodePort: {{ .Values.server.nodePort }}
+    {{- end }}
+    targetPort: {{ .Values.server.listenPort }}
+  {{- if (not (empty .Values.server.nodePort)) }}
+  type: NodePort
+  {{- else }}
+  type: ClusterIP
+  {{- end }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "cyclone.name" . }}
+    helm.sh/chart: {{ include "cyclone.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  name: cyclone-server-cyclone-data
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    limits:
+      storage: 10Gi
+    requests:
+      storage: 10Gi
+  storageClassName: heketi-storageclass
+  volumeMode: Filesystem

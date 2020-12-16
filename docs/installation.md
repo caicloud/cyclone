@@ -31,7 +31,7 @@ If you want to use your own private registry, you can configure it as:
 $ helm install --name cyclone --namespace cyclone-system --set imageRegistry.registry=cargo.caicloud.xyz,imageRegistry.project=release ./helm/cyclone
 ```
 
-For more detailed configuration, please use values file, [default values file](../helm/cyclone/values.yaml) is a good reference on how to write it.
+For more detailed configuration, please use values file, [default values file](../manifests/cyclone-public/values.yaml) is a good reference on how to write it.
 
 ```bash
 $ helm install --name cyclone --namespace cyclone-system -f <path-to-your-values-file> ./helm/cyclone

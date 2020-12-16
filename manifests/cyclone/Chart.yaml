@@ -1,8 +1,8 @@
-apiVersion: v1
-AppVersion: v1.0.0
+apiVersion: v2
 description: A Helm chart for Cyclone
 name: cyclone
-version: 0.1.2
+version: v1.2.0-alpha.2
+appVersion: v1.2.0-alpha.2
 keywords:
   - cicd
   - workflow

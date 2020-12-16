@@ -40,7 +40,7 @@ With Cyclone, users end up with the flexibility of workflow orchestration and th
 Make sure [Helm](https://helm.sh/) with a version higher than **2.10** is installed ([install guide](https://helm.sh/docs/using_helm/#install-helm)), then install Cyclone with:
 
 ```bash
-$ helm install --name cyclone --namespace cyclone-system ./helm/cyclone
+$ helm install --name cyclone --namespace cyclone-system ./manifests/cyclone-public
 ```
 
 If you want to configure the installation or want to install from source code, please refer to [Cyclone Install Guide](docs/installation.md).
