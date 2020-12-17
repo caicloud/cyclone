@@ -122,13 +122,13 @@ $(GOLANGCI_LINT):
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(BIN_DIR) v1.20.1
 
 test:
-	@go test -p $(CPUS) $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
+	@go test -race -p $(CPUS) $$(go list ./... | grep -v /vendor | grep -v /test) -coverprofile=coverage.out
 	@go tool cover -func coverage.out | tail -n 1 | awk '{ print "Total coverage: " $$3 }'
 
 build-local:
 	@for target in $(TARGETS); do                                                      \
 	  CGO_ENABLED=0   GOOS=linux   GOARCH=$(ARCH)                                      \
-	  go build -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)                            \
+	  go build -trimpath -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)                  \
 	    -ldflags "-s -w -X $(ROOT)/pkg/server/version.VERSION=$(VERSION)               \
 	              -X $(ROOT)/pkg/server/version.COMMIT=$(COMMIT)                       \
 	              -X $(ROOT)/pkg/server/version.REPOROOT=$(ROOT)"                      \
@@ -147,7 +147,7 @@ build-linux:
 	  -e SHELLOPTS=$(SHELLOPTS)                                                        \
 	  $(BASE_REGISTRY)/golang:1.13.9-stretch                                           \
 	    /bin/bash -c 'for target in $(TARGETS); do                                     \
-	      go build -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)                        \
+	      go build -trimpath -i -v -o $(OUTPUT_DIR)/$${target} -p $(CPUS)              \
 	        -ldflags "-s -w -X $(ROOT)/pkg/server/version.VERSION=$(VERSION)           \
 	          -X $(ROOT)/pkg/server/version.COMMIT=$(COMMIT)                           \
 	          -X $(ROOT)/pkg/server/version.REPOROOT=$(ROOT)"                          \
