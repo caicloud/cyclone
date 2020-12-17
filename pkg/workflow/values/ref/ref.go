@@ -1,23 +1,30 @@
 package ref
 
 import (
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
-	"github.com/caicloud/cyclone/pkg/util/k8s"
 )
+
+// SecretGetter is used to get a secret from the cluster.
+// The reason we use SecretGetter here is to decouple from the kubernetes clientset.
+type SecretGetter = func(namespace, name string) (*corev1.Secret, error)
 
 // Processor processes ref value to a string
 type Processor struct {
 	wfr              *v1alpha1.WorkflowRun
 	secretRefValue   *SecretRefValue
 	variableRefValue *VariableRefValue
+	secretGetter     SecretGetter
 }
 
 // NewProcessor creates a processor object
-func NewProcessor(wfr *v1alpha1.WorkflowRun) *Processor {
+func NewProcessor(wfr *v1alpha1.WorkflowRun, getter SecretGetter) *Processor {
 	return &Processor{
 		wfr:              wfr,
 		secretRefValue:   NewSecretRefValue(),
 		variableRefValue: NewVariableRefValue(wfr),
+		secretGetter:     getter,
 	}
 }
 
@@ -26,12 +33,12 @@ func NewProcessor(wfr *v1alpha1.WorkflowRun) *Processor {
 // - '${secrets.<ns>:<secret>/<jsonpath>/...}' to refer value in a secret
 // - '${stages.<stage>.outputs.<key>}' to refer value from a stage output
 // - '${variables.<key>}' to refer value from a global variable defined in wfr
-func (p *Processor) ResolveRefStringValue(ref string, client k8s.Interface) (string, error) {
+func (p *Processor) ResolveRefStringValue(ref string) (string, error) {
 	var value string
 	var err error
 
 	if err = p.secretRefValue.Parse(ref); err == nil {
-		value, err = p.secretRefValue.Resolve(client)
+		value, err = p.secretRefValue.Resolve(p.secretGetter)
 		if err != nil {
 			return ref, err
 		}

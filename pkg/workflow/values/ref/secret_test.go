@@ -1,6 +1,7 @@
 package ref
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,24 +66,27 @@ func (suite *SecretSuite) TestResolveOld() {
 	assert := assert.New(suite.T())
 	secretRefValue := NewSecretRefValue()
 	assert.Nil(secretRefValue.Parse("$.ns.secret/a.b"))
-	v, err := secretRefValue.Resolve(suite.client)
+	secretGetter := func(ns, name string) (*corev1.Secret, error) {
+		return suite.client.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	}
+	v, err := secretRefValue.Resolve(secretGetter)
 	assert.Empty(v)
 	assert.Error(err)
 
 	assert.Nil(secretRefValue.Parse("$.ns.secret/data.key"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("key1", v)
 
 	assert.Nil(secretRefValue.Parse("$.ns.secret/data.json/user.languages[1]"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("go", v)
 
 	assert.Nil(secretRefValue.Parse("$.ns.secret/data.json/user.name"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("cyclone", v)
@@ -92,24 +96,27 @@ func (suite *SecretSuite) TestResolve() {
 	assert := assert.New(suite.T())
 	secretRefValue := NewSecretRefValue()
 	assert.Nil(secretRefValue.Parse("${secrets.ns:secret/a.b}"))
-	v, err := secretRefValue.Resolve(suite.client)
+	secretGetter := func(ns, name string) (*corev1.Secret, error) {
+		return suite.client.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	}
+	v, err := secretRefValue.Resolve(secretGetter)
 	assert.Empty(v)
 	assert.Error(err)
 
 	assert.Nil(secretRefValue.Parse("${secrets.ns:secret/data.key}"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("key1", v)
 
 	assert.Nil(secretRefValue.Parse("${secrets.ns:secret/data.json/user.languages[1]}"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("go", v)
 
 	assert.Nil(secretRefValue.Parse("${secrets.ns:secret/data.json/user.name}"))
-	v, err = secretRefValue.Resolve(suite.client)
+	v, err = secretRefValue.Resolve(secretGetter)
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("cyclone", v)
