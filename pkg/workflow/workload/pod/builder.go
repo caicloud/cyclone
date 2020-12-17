@@ -43,6 +43,9 @@ type Builder struct {
 
 // NewBuilder creates a new pod builder.
 func NewBuilder(client k8s.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.WorkflowRun, stg *v1alpha1.Stage) *Builder {
+	secretGetter := func(ns, name string) (*corev1.Secret, error) {
+		return client.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	}
 	return &Builder{
 		client:           client,
 		wf:               wf,
@@ -52,7 +55,7 @@ func NewBuilder(client k8s.Interface, wf *v1alpha1.Workflow, wfr *v1alpha1.Workf
 		pod:              &corev1.Pod{},
 		pvcVolumes:       make(map[string]string),
 		executionContext: GetExecutionContext(wfr),
-		refProcessor:     ref.NewProcessor(wfr),
+		refProcessor:     ref.NewProcessor(wfr, secretGetter),
 	}
 }
 
@@ -141,7 +144,7 @@ func (m *Builder) ResolveArguments() error {
 
 	for k, v := range parameters {
 		v = values.GenerateValue(v)
-		resolved, err := m.refProcessor.ResolveRefStringValue(v, m.client)
+		resolved, err := m.refProcessor.ResolveRefStringValue(v)
 		if err != nil {
 			log.WithField("key", k).WithField("value", v).Error("resolve ref failed:", err)
 			return err
@@ -423,7 +426,7 @@ func (m *Builder) ResolveInputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
-			resolved, err := m.refProcessor.ResolveRefStringValue(value, m.client)
+			resolved, err := m.refProcessor.ResolveRefStringValue(value)
 			if err != nil {
 				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
 			}
@@ -536,7 +539,7 @@ func (m *Builder) ResolveOutputResources() error {
 		}
 		var envs []corev1.EnvVar
 		for key, value := range envsMap {
-			resolved, err := m.refProcessor.ResolveRefStringValue(value, m.client)
+			resolved, err := m.refProcessor.ResolveRefStringValue(value)
 			if err != nil {
 				return fmt.Errorf("resolve ref value '%s' error: %v", value, err)
 			}

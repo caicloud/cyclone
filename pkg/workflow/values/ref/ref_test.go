@@ -1,6 +1,7 @@
 package ref
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,46 +59,50 @@ func (suite *RefSuite) SetupSuite() {
 
 func (suite *RefSuite) TestResolveRefStringValue() {
 	assert := assert.New(suite.T())
-	processor := NewProcessor(suite.wfr)
 
-	v, err := processor.ResolveRefStringValue("", suite.client)
+	secretGetter := func(ns, name string) (*corev1.Secret, error) {
+		return suite.client.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	}
+	processor := NewProcessor(suite.wfr, secretGetter)
+
+	v, err := processor.ResolveRefStringValue("")
 	assert.Nil(err)
 	assert.Equal("", v)
 
-	v, err = processor.ResolveRefStringValue("test1", suite.client)
+	v, err = processor.ResolveRefStringValue("test1")
 	assert.Nil(err)
 	assert.Equal("test1", v)
 
-	v, err = processor.ResolveRefStringValue("${variables.Registry}", suite.client)
+	v, err = processor.ResolveRefStringValue("${variables.Registry}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("docker.io", v)
 
-	v, err = processor.ResolveRefStringValue("${variables.IMAGE}", suite.client)
+	v, err = processor.ResolveRefStringValue("${variables.IMAGE}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("cyclone", v)
 
-	v, err = processor.ResolveRefStringValue("${variables.Registry}", suite.client)
+	v, err = processor.ResolveRefStringValue("${variables.Registry}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("docker.io", v)
 
-	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/a.b}", suite.client)
+	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/a.b}")
 	assert.NotNil(v)
 	assert.Error(err)
 
-	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.key}", suite.client)
+	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.key}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("key1", v)
 
-	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.json/user.languages[1]}", suite.client)
+	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.json/user.languages[1]}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("go", v)
 
-	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.json/user.name}", suite.client)
+	v, err = processor.ResolveRefStringValue("${secrets.ns:secret/data.json/user.name}")
 	assert.NotNil(v)
 	assert.Nil(err)
 	assert.Equal("cyclone", v)
