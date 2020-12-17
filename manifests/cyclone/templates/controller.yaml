@@ -12,13 +12,13 @@ data:
   workflow-controller.json: |
     {
       "images": {
-        "git-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
-        "svn-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
-        "image-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
-        "http-resolver": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
-        "coordinator": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
-        "toolbox": "{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
-        "gc": "{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
+        "git-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
+        "svn-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
+        "image-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
+        "http-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
+        "coordinator": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
+        "toolbox": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
+        "gc": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
       },
       "logging": {
         "level": "info"
