@@ -145,8 +145,9 @@ spec:
           path: /etc/localtime
           type: File
       - name: cyclone-data
-        persistentVolumeClaim:
-          claimName: cyclone-server-cyclone-data
+        emptyDir: {}
+        #persistentVolumeClaim:
+        #  claimName: cyclone-server-cyclone-data
 
 ---
 kind: Service
