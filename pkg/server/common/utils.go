@@ -20,7 +20,8 @@ func TenantPVC(tenant string) string {
 	return TenantPVCPrefix + tenant
 }
 
-// TenantResourceQuota returns resource quota name related the tenant
-func TenantResourceQuota(tenant string) string {
-	return tenant
+// ResourceQuotaName returns resource quota name according to the namespace.
+// Currently the name of resource quota is the same as namespace.
+func ResourceQuotaName(namespace string) string {
+	return namespace
 }

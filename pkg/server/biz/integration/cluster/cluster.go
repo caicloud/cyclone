@@ -168,7 +168,7 @@ func Close(in *api.Integration, tenant string) (err error) {
 	}
 
 	// delete resource quota
-	quotaName := svrcommon.TenantResourceQuota(tenant)
+	quotaName := svrcommon.ResourceQuotaName(cluster.Namespace)
 	err = clusterClient.CoreV1().ResourceQuotas(cluster.Namespace).Delete(context.TODO(), quotaName, meta_v1.DeleteOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "dial tcp") && strings.Contains(err.Error(), "connect: connection refused") {
