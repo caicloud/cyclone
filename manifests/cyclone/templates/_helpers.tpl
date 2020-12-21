@@ -30,3 +30,11 @@ Create chart name and version as used by the chart label.
 {{- define "cyclone.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "cyclone.registry.release" -}}
+{{- printf "%s/%s" .Values.platformConfig.imageRegistry .Values.platformConfig.imageRepositoryRelease -}}
+{{- end -}}
+
+{{- define "cyclone.registry.library" -}}
+{{- printf "%s/%s" .Values.platformConfig.imageRegistry .Values.platformConfig.imageRepositoryLibrary -}}
+{{- end -}}
