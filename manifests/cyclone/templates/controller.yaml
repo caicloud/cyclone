@@ -12,13 +12,13 @@ data:
   workflow-controller.json: |
     {
       "images": {
-        "git-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
-        "svn-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
-        "image-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
-        "http-resolver": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
-        "coordinator": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
-        "toolbox": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
-        "gc": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
+        "git-resolver": "{{ include "cyclone.registry.release" . }}/cyclone-resolver-git:{{ .Chart.AppVersion }}",
+        "svn-resolver": "{{ include "cyclone.registry.release" . }}/cyclone-resolver-svn:{{ .Chart.AppVersion }}",
+        "image-resolver": "{{ include "cyclone.registry.release" . }}/cyclone-resolver-image:{{ .Chart.AppVersion }}",
+        "http-resolver": "{{ include "cyclone.registry.release" . }}/cyclone-resolver-http:{{ .Chart.AppVersion }}",
+        "coordinator": "{{ include "cyclone.registry.release" . }}/cyclone-workflow-coordinator:{{ .Chart.AppVersion }}",
+        "toolbox": "{{ include "cyclone.registry.release" . }}/cyclone-toolbox:{{ .Chart.AppVersion }}",
+        "gc": "{{ include "cyclone.registry.library" . }}/{{ .Values.engine.images.gc }}"
       },
       "logging": {
         "level": "info"
@@ -87,7 +87,7 @@ spec:
       - name: controller
         command:
         - /workspace/controller
-        image: "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-workflow-controller:{{ .Chart.AppVersion }}"
+        image: "{{ include "cyclone.registry.release" . }}/cyclone-workflow-controller:{{ .Chart.AppVersion }}"
         imagePullPolicy: Always
         env:
         - name: DEVELOP_MODE

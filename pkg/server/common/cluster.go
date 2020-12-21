@@ -52,7 +52,7 @@ func CreateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 		nsname = namespace
 	}
 
-	quota, err := buildResourceQuota(tenant)
+	quota, err := buildResourceQuota(tenant, nsname)
 	if err != nil {
 		log.Warningf("Build resource quota for tenant %s error %v", tenant.Name, err)
 		return err
@@ -67,7 +67,7 @@ func CreateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 	return nil
 }
 
-func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
+func buildResourceQuota(tenant *api.Tenant, namespace string) (*core_v1.ResourceQuota, error) {
 	// parse resource list
 	rl, err := ParseResourceList(tenant.Spec.ResourceQuota)
 	if err != nil {
@@ -75,7 +75,7 @@ func buildResourceQuota(tenant *api.Tenant) (*core_v1.ResourceQuota, error) {
 		return nil, err
 	}
 
-	quotaName := TenantResourceQuota(tenant.Name)
+	quotaName := ResourceQuotaName(namespace)
 	quota := &core_v1.ResourceQuota{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: quotaName,
@@ -104,7 +104,7 @@ func UpdateResourceQuota(tenant *api.Tenant, namespace string, client *kubernete
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		quota, err := client.CoreV1().ResourceQuotas(nsname).Get(
-			context.TODO(), TenantResourceQuota(tenant.Name), meta_v1.GetOptions{})
+			context.TODO(), ResourceQuotaName(nsname), meta_v1.GetOptions{})
 		if err != nil {
 			log.Errorf("Get ResourceQuota for tenant %s error %v", tenant.Name, err)
 			return err

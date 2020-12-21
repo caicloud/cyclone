@@ -27,7 +27,7 @@ data:
       "init_default_tenant": {{ .Values.server.init.defaultTenant }},
       "open_control_cluster": {{ .Values.server.openControlCluster }},
       "storage_usage_watcher": {
-        "image": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-watcher:{{ .Chart.AppVersion }}",
+        "image": "{{ include "cyclone.registry.release" . }}/cyclone-watcher:{{ .Chart.AppVersion }}",
         "report_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:6041/apis/v1alpha1/storage/usages",
         "interval_seconds": "{{ .Values.server.storageWatcher.intervalSeconds }}",
         "resource_requirements": {
@@ -38,7 +38,7 @@ data:
         }
       },
       "cache_cleaner": {
-        "image": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.server.cacheCleaner.image }}",
+        "image": "{{ include "cyclone.registry.library" . }}/{{ .Values.server.cacheCleaner.image }}",
         "resource_requirements": {
           "limits.cpu": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.cpu }}",
           "limits.memory": "{{ .Values.server.cacheCleaner.resourceRequirements.limits.memory }}",
@@ -47,7 +47,7 @@ data:
         }
       },
       "images": {
-        "gc": "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryLibrary }}/{{ .Values.engine.images.gc }}"
+        "gc": "{{ include "cyclone.registry.library" . }}/{{ .Values.engine.images.gc }}"
       },
       "notifications": [
         {
@@ -97,7 +97,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount }}
       containers:
       - name: server
-        image: "{{ .Values.platformConfig.imageRegistry }}/{{ .Values.platformConfig.imageRepositoryRelease }}/cyclone-server:{{ .Chart.AppVersion }}"
+        image: "{{ include "cyclone.registry.release" . }}/cyclone-server:{{ .Chart.AppVersion }}"
         imagePullPolicy: Always
         command:
         - /cyclone-server
@@ -145,8 +145,9 @@ spec:
           path: /etc/localtime
           type: File
       - name: cyclone-data
-        persistentVolumeClaim:
-          claimName: cyclone-server-cyclone-data
+        emptyDir: {}
+        #persistentVolumeClaim:
+        #  claimName: cyclone-server-cyclone-data
 
 ---
 kind: Service
