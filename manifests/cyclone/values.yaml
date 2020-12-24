@@ -1,8 +1,8 @@
 platformConfig:
-  imageRegistry: cargo.dev.caicloud.xyz
+  imageRegistry: registry.domain
   imageRepositoryRelease: release
   imageRepositoryLibrary: library
-  controlClusterVIP: 172.19.45.200
+  controlClusterVIP: 1.2.3.4
 
 serviceAccount: default
 
