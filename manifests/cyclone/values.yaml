@@ -47,6 +47,8 @@ engine:
 # Cyclone server variables
 server:
   listenAddress: 0.0.0.0
+  # pods in user cluster could access cyclone via `clusterPort`
+  clusterPort: 6043
   listenPort: 7099
   # nodePort: 30011
   webhookUrlPrefix: http://{{ .Values.serverAddress }}/apis/v1alpha1
