@@ -49,8 +49,8 @@ data:
         "pod": 1
       },
       "pvc": "cyclone-server-cyclone-data",
-      "cyclone_server_addr": "{{ .Values.platformConfig.controlClusterVIP }}:6041",
-      "notification_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:6041/apis/v1alpha1/notifications"
+      "cyclone_server_addr": "{{ .Values.platformConfig.controlClusterVIP }}:{{ .Values.server.clusterPort }}",
+      "notification_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:{{ .Values.server.clusterPort }}/apis/v1alpha1/notifications"
     }
 
 ---

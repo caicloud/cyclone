@@ -28,7 +28,7 @@ data:
       "open_control_cluster": {{ .Values.server.openControlCluster }},
       "storage_usage_watcher": {
         "image": "{{ include "cyclone.registry.release" . }}/cyclone-watcher:{{ .Chart.AppVersion }}",
-        "report_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:6041/apis/v1alpha1/storage/usages",
+        "report_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:{{ .Values.server.clusterPort }}/apis/v1alpha1/storage/usages",
         "interval_seconds": "{{ .Values.server.storageWatcher.intervalSeconds }}",
         "resource_requirements": {
           "limits.cpu": "{{ .Values.server.storageWatcher.resourceRequirements.limits.cpu }}",
