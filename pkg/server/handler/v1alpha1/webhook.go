@@ -276,7 +276,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 				item.Name == name {
 				continue
 			}
-			_, err := stopWorkflowRun(ctx, &item)
+			_, err := stopWorkflowRun(ctx, &item, "AutoCancelPreviousBuild")
 			if err != nil {
 				log.Warningf("Stop previous WorkflowRun: %v. project=%s, workflow=%s, trigger=%s, name=%s", err,
 					project, wfName, data.Type, item.Name)

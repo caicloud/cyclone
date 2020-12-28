@@ -279,7 +279,7 @@ func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant
 		return nil, cerr.ConvertK8sError(err)
 	}
 
-	wfr, err = stopWorkflowRun(ctx, wfr)
+	wfr, err = stopWorkflowRun(ctx, wfr, "ManuallyStop")
 	if err != nil {
 		log.Errorf("Stop WorkflowRun %s error %s", workflowrun, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -287,12 +287,12 @@ func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant
 	return wfr, nil
 }
 
-func stopWorkflowRun(ctx context.Context, wfr *v1alpha1.WorkflowRun) (*v1alpha1.WorkflowRun, error) {
+func stopWorkflowRun(ctx context.Context, wfr *v1alpha1.WorkflowRun, reason string) (*v1alpha1.WorkflowRun, error) {
 	// If wfr already in terminated state, skip it
 	if util.IsWorkflowRunTerminated(wfr) {
 		return wfr, nil
 	}
-	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusCancelled)
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusCancelled, reason)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func stopWorkflowRun(ctx context.Context, wfr *v1alpha1.WorkflowRun) (*v1alpha1.
 
 // PauseWorkflowRun updates the workflowrun overall status to Waiting.
 func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting)
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting, "ManuallyPause")
 	if err != nil {
 		log.Errorf("pause workflowrun %s error %s", workflowrun, err)
 		return nil, err
@@ -316,7 +316,7 @@ func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenan
 
 // ResumeWorkflowRun updates the workflowrun overall status to Running.
 func ResumeWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning)
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning, "ManuallyResume")
 	if err != nil {
 		log.Errorf("continue workflowrun %s error %s", workflowrun, err)
 		return nil, err
