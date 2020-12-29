@@ -207,6 +207,12 @@ push:
 	  docker push ${REGISTRY}/$${imageName}:$(VERSION);                                \
 	done
 
+push-local: container-local
+	@for image in $(IMAGES); do \
+	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX); \
+	  docker push ${REGISTRY}/$${imageName}:$(VERSION); \
+	done
+
 gen: clean-generated
 	@./hack/update-codegen.sh
 	sed -i 's|v1alpha1.Resource(|v1alpha1.GroupResource(|' ./pkg/k8s/listers/cyclone/v1alpha1/*.go

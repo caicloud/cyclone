@@ -53,12 +53,15 @@ type JSONPatch struct {
 }
 
 // BuildWfrStatusPatch builds patch for updating status of workflowrun
-func BuildWfrStatusPatch(statusPhase v1alpha1.StatusPhase) ([]byte, error) {
+func BuildWfrStatusPatch(statusPhase v1alpha1.StatusPhase, reason string) ([]byte, error) {
 	now := metav1.Time{Time: time.Now()}
 
 	p := map[string]string{
 		"/status/overall/phase":              string(statusPhase),
 		"/status/overall/lastTransitionTime": now.UTC().Format(time.RFC3339),
+	}
+	if len(reason) > 0 {
+		p["/status/overall/reason"] = reason
 	}
 	return BuildPatch(p)
 }
