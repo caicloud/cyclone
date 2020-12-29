@@ -1,13 +1,24 @@
 package k8s
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	cyscheme "github.com/caicloud/cyclone/pkg/k8s/clientset/scheme"
 	cyclonev1alpha1 "github.com/caicloud/cyclone/pkg/k8s/clientset/typed/cyclone/v1alpha1"
 )
+
+// Scheme consists of kubernetes and cyclone scheme.
+var Scheme = runtime.NewScheme()
+
+func init() {
+	_ = cyscheme.AddToScheme(Scheme)
+	_ = scheme.AddToScheme(Scheme)
+}
 
 // Interface consists of kubernetes and cyclone interfaces
 type Interface interface {
