@@ -26,15 +26,17 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	c_v1alpha1 "github.com/caicloud/cyclone/pkg/apis/cyclone/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/retry"
 )
 
 const (
@@ -61,6 +63,13 @@ var (
 	statusURLRegexpStr = `^https://[\S]+/repos/[\S]+/[\S]+/statuses/([\w]+)$`
 	statusURLRegexp    = regexp.MustCompile(statusURLRegexpStr)
 )
+
+var defaultRetry = wait.Backoff{
+	Steps:    5,
+	Duration: 10 * time.Millisecond,
+	Factor:   3.0,
+	Jitter:   0.1,
+}
 
 func init() {
 	if err := scm.RegisterProvider(v1alpha1.GitHub, NewGithub); err != nil {
@@ -263,6 +272,13 @@ func (g *Github) ListTags(repo string) ([]string, error) {
 	return tags, nil
 }
 
+func stringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 // ListPullRequests lists the pull requests for specified repo.
 func (g *Github) ListPullRequests(repo, state string) ([]scm.PullRequest, error) {
 	// GitLab pr state: open, closed, all
@@ -310,9 +326,9 @@ func (g *Github) ListPullRequests(repo, state string) ([]scm.PullRequest, error)
 	for i, pr := range allPRs {
 		prs[i] = scm.PullRequest{
 			ID:          *pr.Number,
-			Title:       *pr.Title,
-			Description: *pr.Body,
-			State:       *pr.State,
+			Title:       stringValue(pr.Title),
+			Description: stringValue(pr.Body),
+			State:       stringValue(pr.State),
 		}
 	}
 
@@ -388,11 +404,6 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		return err
 	}
 
-	client, err := newClientByToken(g.scmCfg.Server, g.scmCfg.Token)
-	if err != nil {
-		return err
-	}
-
 	owner, repo := scm.ParseRepo(repoURL)
 	email := "cyclone@caicloud.dev"
 	name := "cyclone"
@@ -408,8 +419,13 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		Context:     &context,
 		Creator:     &creator,
 	}
-	_, _, err = client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
-	return err
+	return retry.OnError(defaultRetry, func() error {
+		_, _, err := g.client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
+		if err != nil {
+			log.V(log.LevelDebug).Infof("Failed to create github status: %v. Will retry. owner=%s, repo=%s, commit=%s", err, owner, repo, commitSHA)
+		}
+		return err
+	})
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
@@ -442,35 +458,6 @@ func newClientByBasicAuth(server, username, password string) (*github.Client, er
 		transport.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
-		client, err := github.NewEnterpriseClient(server, server, httpClient)
-		if err != nil {
-			log.Error("Fail to new client for enterprise Github as %v", err)
-			return nil, err
-		}
-
-		return client, nil
-	}
-
-	return github.NewClient(httpClient), nil
-}
-
-// newClientByToken news Github client by token.
-func newClientByToken(server, token string) (*github.Client, error) {
-	// Use token to new Github client.
-	tokenSource := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	c := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-	ctx := context.WithValue(context.TODO(), oauth2.HTTPClient, c)
-	httpClient := oauth2.NewClient(ctx, tokenSource)
-
-	if !isPublic(server) {
 		client, err := github.NewEnterpriseClient(server, server, httpClient)
 		if err != nil {
 			log.Error("Fail to new client for enterprise Github as %v", err)
