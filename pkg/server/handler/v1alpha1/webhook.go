@@ -97,6 +97,7 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 
 func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
 	ns := wft.Namespace
+	cancelPrevious := false
 	var err error
 	var project string
 	if wft.Labels != nil {
@@ -144,12 +145,14 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		// Always trigger if Branches are not specified
 		if len(st.PullRequest.Branches) == 0 {
 			trigger = true
+			cancelPrevious = true
 			break
 		}
 
 		for _, branch := range st.PullRequest.Branches {
 			if branch == data.Branch {
 				trigger = true
+				cancelPrevious = true
 				break
 			}
 		}
@@ -157,6 +160,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		for _, comment := range st.PullRequestComment.Comments {
 			if comment == data.Comment {
 				trigger = true
+				cancelPrevious = true
 				break
 			}
 		}
@@ -236,7 +240,8 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	}
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
-	_, err = handler.K8sClient.CycloneV1alpha1().WorkflowRuns(ns).Create(wfr)
+	cycloneClient := handler.K8sClient.CycloneV1alpha1()
+	_, err = cycloneClient.WorkflowRuns(ns).Create(wfr)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
@@ -247,6 +252,37 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	err = updatePullRequestStatus(wfrCopy)
 	if err != nil {
 		log.Warningf("Init pull request status for %s error: %v", wfr.Name, err)
+	}
+
+	if !cancelPrevious {
+		return nil
+	}
+	wfrs, err := cycloneClient.WorkflowRuns(ns).List(metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s,%s=%s",
+			meta.LabelProjectName, project,
+			meta.LabelWorkflowName, wfName),
+	})
+	if err == nil {
+		log.Infof("Trying to cancel %d previous builds", len(wfrs.Items))
+		for _, item := range wfrs.Items {
+			if item.Annotations == nil {
+				continue
+			}
+			evtType := scm.EventType(item.Annotations[meta.AnnotationWorkflowRunTrigger])
+			if (evtType != scm.PullRequestEventType && evtType != scm.PullRequestCommentEventType) ||
+				// skip the WorkflowRun created above
+				item.Name == name {
+				continue
+			}
+			_, err := stopWorkflowRun(context.TODO(), &item, "AutoCancelPreviousBuild")
+			if err != nil {
+				log.Warningf("Stop previous WorkflowRun: %v. project=%s, workflow=%s, trigger=%s, name=%s", err,
+					project, wfName, data.Type, item.Name)
+			}
+		}
+	} else {
+		log.Warningf("Fail to list previous WorkflowRuns: %v. project=%s, workflow=%s, trigger=%s", err,
+			project, wfName, data.Type)
 	}
 	return nil
 }
