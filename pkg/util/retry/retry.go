@@ -2,10 +2,19 @@ package retry
 
 import (
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
+
+// DefaultRetry is used to retry github operations now.
+var DefaultRetry = wait.Backoff{
+	Steps:    5,
+	Duration: 10 * time.Millisecond,
+	Factor:   3.0,
+	Jitter:   0.1,
+}
 
 // OnError executes the provided function repeatedly, retrying if the server returns an error.
 func OnError(backoff wait.Backoff, fn func() error) error {
