@@ -35,6 +35,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/apis/v1alpha1"
 	"github.com/caicloud/cyclone/pkg/server/biz/scm"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
+	"github.com/caicloud/cyclone/pkg/util/retry"
 )
 
 const (
@@ -408,8 +409,13 @@ func (g *Github) CreateStatus(status c_v1alpha1.StatusPhase, targetURL, repoURL,
 		Context:     &context,
 		Creator:     &creator,
 	}
-	_, _, err = client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
-	return err
+	return retry.OnError(retry.DefaultRetry, func() error {
+		_, _, err := client.Repositories.CreateStatus(g.ctx, owner, repo, commitSHA, repoStatus)
+		if err != nil {
+			log.V(log.LevelDebug).Infof("Failed to create github status: %v. Will retry. owner=%s, repo=%s, commit=%s", err, owner, repo, commitSHA)
+		}
+		return err
+	})
 }
 
 // GetPullRequestSHA gets latest commit SHA of pull request.
