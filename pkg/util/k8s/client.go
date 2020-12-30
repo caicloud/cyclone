@@ -1,11 +1,22 @@
 package k8s
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/caicloud/cyclone/pkg/k8s/clientset"
+	cyscheme "github.com/caicloud/cyclone/pkg/k8s/clientset/scheme"
 )
+
+// Scheme consists of kubernetes and cyclone scheme.
+var Scheme = runtime.NewScheme()
+
+func init() {
+	cyscheme.AddToScheme(Scheme)
+	_ = scheme.AddToScheme(Scheme)
+}
 
 // GetClient creates a client for k8s cluster
 func GetClient(kubeConfigPath string) (clientset.Interface, error) {
