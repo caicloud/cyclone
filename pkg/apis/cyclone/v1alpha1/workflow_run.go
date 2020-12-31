@@ -187,6 +187,17 @@ type PodInfo struct {
 	Namespace string `json:"namespace"`
 }
 
+const (
+	// ReasonAutoCancelPreviousBuild means this WorkflowRun is terminated because there is new WorkflowRun for the same PR.
+	ReasonAutoCancelPreviousBuild = "AutoCancelPreviousBuild"
+	// ReasonManuallyStop means this WorkflowRun is stopped manually.
+	ReasonManuallyStop = "ManuallyStop"
+	// ReasonManuallyPause means this WorkflowRun is paused manually.
+	ReasonManuallyPause = "ManuallyPause"
+	// ReasonManuallyResume means this WorkflowRun is resumed manually.
+	ReasonManuallyResume = "ManuallyResume"
+)
+
 // Status of a Stage in a WorkflowRun or the whole WorkflowRun.
 // +k8s:deepcopy-gen=true
 type Status struct {
