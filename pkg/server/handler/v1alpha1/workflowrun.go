@@ -211,7 +211,7 @@ func StopWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant
 		return nil, cerr.ConvertK8sError(err)
 	}
 
-	wfr, err = stopWorkflowRun(ctx, wfr, "ManuallyStop")
+	wfr, err = stopWorkflowRun(ctx, wfr, v1alpha1.ReasonManuallyStop)
 	if err != nil {
 		log.Errorf("Stop WorkflowRun %s error %s", workflowrun, err)
 		return nil, cerr.ConvertK8sError(err)
@@ -236,7 +236,7 @@ func stopWorkflowRun(ctx context.Context, wfr *v1alpha1.WorkflowRun, reason stri
 
 // PauseWorkflowRun updates the workflowrun overall status to Waiting.
 func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting, "ManuallyPause")
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusWaiting, v1alpha1.ReasonManuallyPause)
 	if err != nil {
 		log.Errorf("pause workflowrun %s error %s", workflowrun, err)
 		return nil, err
@@ -249,7 +249,7 @@ func PauseWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenan
 
 // ResumeWorkflowRun updates the workflowrun overall status to Running.
 func ResumeWorkflowRun(ctx context.Context, project, workflow, workflowrun, tenant string) (*v1alpha1.WorkflowRun, error) {
-	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning, "ManuallyResume")
+	data, err := handler.BuildWfrStatusPatch(v1alpha1.StatusRunning, v1alpha1.ReasonManuallyResume)
 	if err != nil {
 		log.Errorf("continue workflowrun %s error %s", workflowrun, err)
 		return nil, err
