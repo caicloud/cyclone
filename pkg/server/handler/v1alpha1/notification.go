@@ -25,12 +25,16 @@ import (
 
 // HandleWorkflowRunNotification handles workflowrun finished notification from workflow engine.
 func HandleWorkflowRunNotification(ctx context.Context, wfr *v1alpha1.WorkflowRun) (interface{}, error) {
-	err := updatePullRequestStatus(wfr)
-	if err != nil {
-		log.WithField("wfr", wfr.Name).Error("Failed to update SCM status: ", err)
+	if wfr.Status.Overall.Reason != v1alpha1.ReasonAutoCancelPreviousBuild {
+		err := updatePullRequestStatus(wfr)
+		if err != nil {
+			log.WithField("wfr", wfr.Name).Error("Failed to update SCM status: ", err)
+		}
+	} else {
+		log.WithField("wfr", wfr.Name).WithField("namespace", wfr.Namespace).Infof("Skip auto-canceled workflowRun")
 	}
 
-	err = sendNotifications(wfr)
+	err := sendNotifications(wfr)
 	if err != nil {
 		log.WithField("wfr", wfr.Name).Error("Failed to send notifications: ", err)
 	}

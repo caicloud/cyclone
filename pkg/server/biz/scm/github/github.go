@@ -424,6 +424,7 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 	pr, _, err := g.client.PullRequests.Get(g.ctx, owner, repo, number)
 	if err != nil {
 		log.Error(err)
+		return "", err
 	}
 
 	return *pr.Head.SHA, nil
