@@ -2,6 +2,7 @@
 
 **What type of PR is this?**
 
+/area cicd
 <!--
 Add one or more of the following kinds:
 /kind api-change
@@ -14,24 +15,6 @@ Add one or more of the following kinds:
 /kind regression
 /kind upgrade
 /kind denpendency
-
-Also with one of following areas:
-/area auth
-/area resource
-/area apps
-/area cicd
-/area cargo
-/area insight
-/area loadbalancer
-/area network
-/area cli
-/area data
-/area serving
-/area workflow
-/area tutorial
-/area solution
-/area training
-/area model
 -->
 
 **What this PR does / why we need it**:
