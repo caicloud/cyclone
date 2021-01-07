@@ -623,6 +623,7 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 			Ref:       fmt.Sprintf(pullRefTemplate, *event.PullRequest.Number),
 			CommitSHA: commitSHA,
 			Branch:    *event.PullRequest.Base.Ref,
+			CreatedAt: event.GetPullRequest().GetUpdatedAt(),
 		}
 	case *github.IssueCommentEvent:
 		if event.Issue.PullRequestLinks == nil {
@@ -654,6 +655,7 @@ func ParseEvent(scmCfg *v1alpha1.SCMSource, request *http.Request) *scm.EventDat
 			Ref:       fmt.Sprintf(pullRefTemplate, issueNumber),
 			Comment:   *event.Comment.Body,
 			CommitSHA: commitSHA,
+			CreatedAt: event.GetComment().GetCreatedAt(),
 		}
 	case *github.PushEvent:
 		if event.After != nil && *event.After == "0000000000000000000000000000000000000000" {

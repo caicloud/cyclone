@@ -26,6 +26,9 @@ const (
 	// LabelWorkflowRunName is the label key used to indicate the workflowrun which the resources belongs to
 	LabelWorkflowRunName = "workflowrun.cyclone.dev/name"
 
+	// LabelWorkflowRunPRRef is the label key used to indicate the ref of PR that workflowrun belongs to
+	LabelWorkflowRunPRRef = "workflowrun.cyclone.dev/scm-pr-ref"
+
 	// LabelWorkflowRunAcceleration is the label key used to indicate a workflowrun turned on acceleration
 	LabelWorkflowRunAcceleration = "workflowrun.cyclone.dev/acceleration"
 

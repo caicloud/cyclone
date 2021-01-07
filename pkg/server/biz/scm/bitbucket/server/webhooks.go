@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 
@@ -106,6 +107,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Ref:       fmt.Sprintf(pullRefTemplate, payload.PullRequest.ID),
 			CommitSHA: payload.PullRequest.FromRef.LatestCommit,
 			Branch:    payload.PullRequest.ToRef.DisplayID,
+			CreatedAt: time.Unix(payload.PullRequest.CreatedDate/1000, 0),
 		}
 	case PrModified:
 		return &scm.EventData{
@@ -113,6 +115,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Repo:      fmt.Sprintf("%s/%s", strings.ToLower(payload.PullRequest.ToRef.Repository.Project.Key), payload.PullRequest.ToRef.Repository.Slug),
 			Ref:       fmt.Sprintf(pullRefTemplate, payload.PullRequest.ID),
 			CommitSHA: payload.PullRequest.FromRef.LatestCommit,
+			CreatedAt: time.Unix(payload.PullRequest.UpdatedDate/1000, 0),
 		}
 	case PrCommentAdded:
 		return &scm.EventData{
@@ -121,6 +124,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Ref:       fmt.Sprintf(pullRefTemplate, payload.PullRequest.ID),
 			Comment:   payload.Comment.Text,
 			CommitSHA: payload.PullRequest.FromRef.LatestCommit,
+			CreatedAt: time.Unix(payload.PullRequest.CreatedDate/1000, 0),
 		}
 	default:
 		log.Warningln("Skip unsupported Bitbucket Server event")
