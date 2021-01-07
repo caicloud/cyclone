@@ -10,9 +10,6 @@ const (
 	// AnnotationDescription is the annotation key used to describe resources
 	AnnotationDescription = "cyclone.dev/description"
 
-	// AnnotationOwner is the annotation key used to indicate the owner of resources.
-	AnnotationOwner = "cyclone.dev/owner"
-
 	// AnnotationStageName is annotation applied to pod to indicate which stage it related to
 	AnnotationStageName = "stage.cyclone.dev/name"
 
@@ -24,6 +21,9 @@ const (
 
 	// AnnotationWorkflowRunSCMEvent is the annotation key used to indicate the SCM event data to trigger workflowruns.
 	AnnotationWorkflowRunSCMEvent = "workflowrun.cyclone.dev/scm-event"
+
+	// AnnotationWorkflowRunPRUpdatedAt is the annotation key used to indicate the time that SCM event gets triggered.
+	AnnotationWorkflowRunPRUpdatedAt = "workflowrun.cyclone.dev/scm-pr-updated-at"
 
 	// AnnotationTenantInfo is the annotation key used for namespace to relate tenant information
 	AnnotationTenantInfo = "tenant.cyclone.dev/info"

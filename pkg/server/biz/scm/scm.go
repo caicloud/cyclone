@@ -19,6 +19,7 @@ package scm
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 
@@ -172,12 +173,14 @@ const (
 
 // EventData represents the data parsed from SCM events.
 type EventData struct {
-	Type         EventType
-	Repo         string
-	Ref          string
-	Branch       string
-	Comment      string
-	CommitSHA    string
+	Type      EventType
+	Repo      string
+	Ref       string
+	Branch    string
+	Comment   string
+	CommitSHA string
+	// CreatedAt is the time this event gets triggered at.
+	CreatedAt    time.Time
 	ChangedFiles []string
 }
 
