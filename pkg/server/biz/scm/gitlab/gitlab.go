@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/xanzy/go-gitlab"
@@ -459,6 +460,16 @@ func parseWebhook(r *http.Request) (payload interface{}, err error) {
 	return payload, nil
 }
 
+const timeLayout = "2006-01-02 15:04:05 MST"
+
+func parseTime(s string) time.Time {
+	t, err := time.Parse(timeLayout, s)
+	if err != nil {
+		log.Warningf("Failed to parse time(%s): %v", s, err)
+	}
+	return t
+}
+
 // ParseEvent parses data from Gitlab events.
 func ParseEvent(request *http.Request) *scm.EventData {
 	event, err := parseWebhook(request)
@@ -491,6 +502,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Ref:       fmt.Sprintf(mergeRefTemplate, objectAttributes.Iid, objectAttributes.TargetBranch),
 			CommitSHA: objectAttributes.LastCommit.ID,
 			Branch:    objectAttributes.TargetBranch,
+			CreatedAt: parseTime(objectAttributes.UpdatedAt),
 		}
 	case *MergeCommentEvent:
 		if event.MergeRequest == nil {
@@ -503,6 +515,7 @@ func ParseEvent(request *http.Request) *scm.EventData {
 			Ref:       fmt.Sprintf(mergeRefTemplate, event.MergeRequest.IID, event.MergeRequest.TargetBranch),
 			Comment:   event.ObjectAttributes.Note,
 			CommitSHA: event.MergeRequest.LastCommit.ID,
+			CreatedAt: parseTime(event.ObjectAttributes.CreatedAt),
 		}
 	case *v3.PushEvent:
 		if event.After == "0000000000000000000000000000000000000000" {
