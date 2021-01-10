@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/caicloud/nirvana/service"
@@ -22,6 +23,7 @@ import (
 	"github.com/caicloud/cyclone/pkg/server/biz/scm/svn"
 	"github.com/caicloud/cyclone/pkg/server/common"
 	"github.com/caicloud/cyclone/pkg/server/handler"
+	"github.com/caicloud/cyclone/pkg/util"
 	"github.com/caicloud/cyclone/pkg/util/cerr"
 )
 
@@ -30,6 +32,27 @@ const (
 
 	ignoredMsg = "Is ignored"
 )
+
+type task struct {
+	Tenant    string
+	Trigger   v1alpha1.WorkflowTrigger
+	EventData *scm.EventData
+}
+
+var taskQueue = make(chan task, 10)
+
+func init() {
+	go webhookWorker(taskQueue)
+}
+
+func webhookWorker(tasks <-chan task) {
+	for t := range tasks {
+		err := createWorkflowRun(t.Tenant, t.Trigger, t.EventData)
+		if err != nil {
+			log.Errorf("wft %s create workflow run error:%v", t.Trigger.Name, err)
+		}
+	}
+}
 
 func newWebhookResponse(msg string) api.WebhookResponse {
 	return api.WebhookResponse{
@@ -74,6 +97,8 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	if data == nil {
 		return newWebhookResponse(ignoredMsg), nil
 	}
+	// convert the time to UTC timezone
+	data.CreatedAt = data.CreatedAt.UTC()
 
 	wfts, err := hook.ListSCMWfts(tenant, data.Repo, integration)
 	if err != nil {
@@ -83,16 +108,33 @@ func HandleWebhook(ctx context.Context, tenant, eventType, integration string) (
 	triggeredWfts := make([]string, 0)
 	for _, wft := range wfts.Items {
 		log.Infof("Trigger workflow trigger %s", wft.Name)
-		triggeredWfts = append(triggeredWfts, wft.Name)
-		if err = createWorkflowRun(tenant, wft, data); err != nil {
-			log.Errorf("wft %s create workflow run error:%v", wft.Name, err)
+		taskQueue <- task{
+			Tenant:    tenant,
+			Trigger:   wft,
+			EventData: data,
 		}
+		triggeredWfts = append(triggeredWfts, wft.Name)
 	}
 	if len(triggeredWfts) > 0 {
 		return newWebhookResponse(fmt.Sprintf("%s: %s", succeededMsg, triggeredWfts)), nil
 	}
 
 	return newWebhookResponse(ignoredMsg), nil
+}
+
+func sanitizeRef(ref string) string {
+	ret := make([]rune, 0, len(ref))
+	for _, ch := range ref {
+		switch {
+		case ch >= 'a' && ch <= 'z':
+		case ch >= 'A' && ch <= 'Z':
+		case ch >= '0' && ch <= '9':
+		default:
+			ch = '_'
+		}
+		ret = append(ret, ch)
+	}
+	return string(ret)
 }
 
 func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
@@ -191,6 +233,62 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		return nil
 	}
 
+	cycloneClient := handler.K8sClient.CycloneV1alpha1()
+	ctx := context.TODO()
+	skipCurrent := false
+	ref := sanitizeRef(data.Ref)
+
+	var currentWfrs []v1alpha1.WorkflowRun
+
+	if cancelPrevious {
+		wfrs, err := cycloneClient.WorkflowRuns(ns).List(metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s,%s=%s,%s=%s",
+				meta.LabelProjectName, project,
+				meta.LabelWorkflowName, wfName,
+				meta.LabelWorkflowRunPRRef, ref),
+		})
+		if err != nil {
+			log.Warningf("Fail to list previous WorkflowRuns: %v. project=%s, workflow=%s, ref=%s, trigger=%s", err,
+				project, wfName, ref, data.Type)
+		} else if !data.CreatedAt.IsZero() {
+			for _, item := range wfrs.Items {
+				if len(item.Annotations) == 0 {
+					continue
+				}
+				evtType := scm.EventType(item.Annotations[meta.AnnotationWorkflowRunTrigger])
+				if util.IsWorkflowRunTerminated(&item) ||
+					(evtType != scm.PullRequestEventType && evtType != scm.PullRequestCommentEventType) {
+					continue
+				}
+
+				currentWfrs = append(currentWfrs, item)
+
+				updatedAtStr := item.Annotations[meta.AnnotationWorkflowRunPRUpdatedAt]
+				if len(updatedAtStr) == 0 {
+					continue
+				}
+				updatedAt, err := time.Parse(time.RFC3339, updatedAtStr)
+				if err != nil {
+					log.Warningf("Fail to parse pr-updated-at: %s: %v. ns=%s, wfr=%s", updatedAtStr, err,
+						item.Namespace, item.Name)
+					continue
+				}
+				if updatedAt.After(data.CreatedAt) {
+					skipCurrent = true
+					log.Infof("There is already running workflowRun for PR %s. Ignore this event. Existing wfr is %s/%s", data.Ref, item.Namespace, item.Name)
+					break
+				}
+			}
+		} else {
+			log.Infof("The update time of PR %s/%s is unknown. Turn off canceling previous builds.", data.Repo, data.Ref)
+			cancelPrevious = false
+		}
+	}
+
+	if skipCurrent {
+		return nil
+	}
+
 	log.Infof("Trigger wft %s with event data: %v", wft.Name, data)
 
 	name := fmt.Sprintf("%s-%s", wfName, rand.String(5))
@@ -200,13 +298,15 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Annotations: map[string]string{
-				meta.AnnotationWorkflowRunTrigger: string(data.Type),
-				meta.AnnotationAlias:              name,
+				meta.AnnotationWorkflowRunPRUpdatedAt: data.CreatedAt.Format(time.RFC3339),
+				meta.AnnotationWorkflowRunTrigger:     string(data.Type),
+				meta.AnnotationAlias:                  name,
 			},
 			Labels: map[string]string{
 				meta.LabelProjectName:             project,
 				meta.LabelWorkflowName:            wfName,
 				meta.LabelWorkflowRunAcceleration: wft.Labels[meta.LabelWorkflowRunAcceleration],
+				meta.LabelWorkflowRunPRRef:        ref,
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
@@ -240,49 +340,32 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 	}
 
 	accelerator.NewAccelerator(tenant, project, wfr).Accelerate()
-	cycloneClient := handler.K8sClient.CycloneV1alpha1()
 	_, err = cycloneClient.WorkflowRuns(ns).Create(wfr)
 	if err != nil {
 		return cerr.ConvertK8sError(err)
 	}
 
-	// Init pull-request status to pending
-	wfrCopy := wfr.DeepCopy()
-	wfrCopy.Status.Overall.Phase = v1alpha1.StatusRunning
-	err = updatePullRequestStatus(wfrCopy)
-	if err != nil {
-		log.Warningf("Init pull request status for %s error: %v", wfr.Name, err)
-	}
+	go func(wfrCopy *v1alpha1.WorkflowRun) {
+		// Init pull-request status to pending
+		wfrCopy.Status.Overall.Phase = v1alpha1.StatusRunning
+		err = updatePullRequestStatus(wfrCopy)
+		if err != nil {
+			log.Warningf("Init pull request status for %s error: %v", wfr.Name, err)
+		}
+	}(wfr.DeepCopy())
 
 	if !cancelPrevious {
 		return nil
 	}
-	wfrs, err := cycloneClient.WorkflowRuns(ns).List(metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s,%s=%s",
-			meta.LabelProjectName, project,
-			meta.LabelWorkflowName, wfName),
-	})
-	if err == nil {
-		log.Infof("Trying to cancel %d previous builds", len(wfrs.Items))
-		for _, item := range wfrs.Items {
-			if item.Annotations == nil {
-				continue
-			}
-			evtType := scm.EventType(item.Annotations[meta.AnnotationWorkflowRunTrigger])
-			if (evtType != scm.PullRequestEventType && evtType != scm.PullRequestCommentEventType) ||
-				// skip the WorkflowRun created above
-				item.Name == name {
-				continue
-			}
-			_, err := stopWorkflowRun(context.TODO(), &item, "AutoCancelPreviousBuild")
-			if err != nil {
-				log.Warningf("Stop previous WorkflowRun: %v. project=%s, workflow=%s, trigger=%s, name=%s", err,
-					project, wfName, data.Type, item.Name)
-			}
+
+	log.Infof("Trying to cancel %d previous builds for PR %s. repo=%s", len(currentWfrs), data.Ref, data.Repo)
+	for _, item := range currentWfrs {
+		_, err := stopWorkflowRun(ctx, &item, "AutoCancelPreviousBuild")
+		if err != nil {
+			log.Warningf("Fail to stop previous WorkflowRun %s/%s: %v. trigger=%s", err,
+				item.Namespace, item.Name, data.Type)
 		}
-	} else {
-		log.Warningf("Fail to list previous WorkflowRuns: %v. project=%s, workflow=%s, trigger=%s", err,
-			project, wfName, data.Type)
 	}
+
 	return nil
 }
