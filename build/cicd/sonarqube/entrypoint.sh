@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 USAGE=$(cat <<-END
@@ -65,41 +65,49 @@ curl -XPOST -u ${TOKEN}: "${SERVER}/api/qualitygates/select?gateId=${QUALITY_GAT
     exit 1
 }
 
-params="-Dsonar.sourceEncoding=${ENCODING} \
-    -Dsonar.projectName=${PROJECT_NAME} \
-    -Dsonar.projectKey=${PROJECT_KEY} \
-    -Dsonar.sources=${SOURCE_PATH} \
-    -Dsonar.projectBaseDir=${SOURCE_PATH} \
-    -Dsonar.host.url=${SERVER} \
-    -Dsonar.login=${TOKEN}"
+declare -A paramsMap=(
+  ['sonar.sourceEncoding']="$ENCODING"
+  ['sonar.projectName']="$PROJECT_NAME"
+  ['sonar.projectKey']="$PROJECT_KEY"
+  ['sonar.sources']="$SOURCE_PATH"
+  ['sonar.projectBaseDir']="$SOURCE_PATH"
+  ['sonar.host.url']="$SERVER"
+  ['sonar.login']="$TOKEN"
+)
+
+if [[ $LANGUAGE = Java ]]; then
+    paramsMap['sonar.sources']='./src/main'
+    paramsMap['sonar.java.binaries']='./target/classes'
+    paramsMap['sonar.junit.reportPaths']='./target/surefire-reports'
+fi
+
+if [[ -f ./sonar-project.properties ]]; then
+    while read -r line; do
+        # ignore the line starts with '#'
+        if [[ $line = \#* ]] || [[ -z $line ]]; then
+            continue
+        fi
+        IFS='=' read -r arg _rest <<< "$line"
+        unset paramsMap["$arg"]
+    done < ./sonar-project.properties
+fi
 
 case ${LANGUAGE} in
     Go)
-        echo "Start to find go test reports."
-        testReportFile=$(find . -name "coverage.out" | tr '\n' ',')
-        if [[ -n ${testReportFile} ]]; then
-            params="$params -Dsonar.go.coverage.reportPaths=$testReportFile"
+        if [[ -z ${paramsMap['sonar.go.coverage.reportPaths']} ]]; then
+            echo "Start to find go test reports."
+            testReportFile=$(find . -name "coverage.out" | tr '\n' ',')
+            if [[ -n ${testReportFile} ]]; then
+                paramsMap['sonar.go.coverage.reportPaths']="$testReportFile"
+            fi
         fi
-        ;;
-    Java)
-        echo "Start to find java bin files."
-        binFiles=$({ find . -name "*.jar"; find . -name "*.war"; } | tr '\n' ',')
-        if [[ -n ${binFiles} ]]; then
-            params="$params -Dsonar.java.binaries=$binFiles"
-        fi
-
-        xmlFiles=$(find . -name "*.xml")
-        if [[ ${#xmlFiles[@]} -ne 0 ]]; then
-            reportXMLs=$(grep -l "<testsuite" ${xmlFiles} | tr '\n' ',')
-        fi
-
-        if [[ -n ${reportXMLs} ]]; then
-            params="$params -Dsonar.junit.reportPaths=$reportXMLs"
-        fi
-        ;;
-    *)
         ;;
 esac
+
+params=''
+for key in "${!paramsMap[@]}"; do
+    params+=" -D${key}=${paramsMap[$key]}"
+done
 
 # Set sonar-scanner extension parameters
 if [[ -n ${EXTENSION_PARAMETERS} ]]; then echo "EXTENSION_PARAMETERS: ${EXTENSION_PARAMETERS}"; params="$params $EXTENSION_PARAMETERS"; fi
