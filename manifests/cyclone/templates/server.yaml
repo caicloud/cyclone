@@ -154,6 +154,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: {{ .Release.Name }}-server
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "cyclone.name" . }}
     helm.sh/chart: {{ include "cyclone.chart" . }}
