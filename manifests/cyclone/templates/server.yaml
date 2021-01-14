@@ -16,7 +16,7 @@ data:
       },
       "cyclone_server_host": "{{ .Values.server.listenAddress }}",
       "cyclone_server_port": {{ .Values.server.listenPort }},
-      "webhook_url_prefix": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2",
+      "webhook_url_template": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060{{ .Values.server.webhookURLPath }}",
       "record_web_url_template": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060{{ .Values.server.recordWebURLPath }}",
       "default_pvc_config": {
         "size": "{{ .Values.server.pvc.size }}",

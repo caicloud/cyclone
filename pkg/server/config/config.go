@@ -41,9 +41,8 @@ type CycloneServerConfig struct {
 	// eg map[core_v1.ResourceName]string{"cpu": "2", "memory": "4Gi"}
 	WorkerNamespaceQuota map[core_v1.ResourceName]string `json:"worker_namespace_quota"`
 
-	// WebhookURLPrefix represents the Cyclone server path to receive webhook requests.
-	// If Cyclone server can be accessed by external systems, it would like be `https://{cyclone-server}/apis/v1alpha1`.
-	WebhookURLPrefix string `json:"webhook_url_prefix"`
+	// WebhookURLTemplate represents the template of webhook url.
+	WebhookURLTemplate string `json:"webhook_url_template"`
 
 	// StorageUsageWatcher configures PVC storage usage watchers.
 	StorageUsageWatcher StorageUsageWatcher `json:"storage_usage_watcher"`
@@ -227,17 +226,6 @@ func modifier(config *CycloneServerConfig) {
 		log.Warning("artifact RetentionDiskProtectionThreshold not configured, will use default value '0.2'")
 		config.Artifact.RetentionDiskProtectionThreshold = 0.2
 	}
-}
-
-// GetWebhookURLPrefix returns webhook callback url prefix. It tries to get the url from "WEBHOOK_URL_PREFIX"
-// environment variable, if the value is empty, then get it from configmap.
-func GetWebhookURLPrefix() string {
-	urlPrefix := os.Getenv(EnvWebhookURLPrefix)
-	if urlPrefix != "" {
-		return urlPrefix
-	}
-
-	return Config.WebhookURLPrefix
 }
 
 // GetRecordWebURLTemplate returns record web URL template. It tries to get the url from "RECORD_WEB_URL_TEMPLATE"

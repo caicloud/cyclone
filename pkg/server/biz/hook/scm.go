@@ -1,10 +1,11 @@
 package hook
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/caicloud/nirvana/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,8 +89,12 @@ func createSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) err
 		return err
 	}
 
+	webhookURL, err := generateWebhookURL(tenant, secret)
+	if err != nil {
+		return cerr.ErrorUnknownInternal.Error(err)
+	}
 	webhook := &scm.Webhook{
-		URL: generateWebhookURL(tenant, secret),
+		URL: webhookURL,
 		Events: []scm.EventType{
 			scm.PushEventType,
 			scm.TagReleaseEventType,
@@ -108,10 +113,26 @@ func createSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) err
 	return err
 }
 
-func generateWebhookURL(tenant, secret string) string {
-	urlPrefix := strings.TrimPrefix(config.GetWebhookURLPrefix(), "/")
-	// Construct webhook URL, refer to cyclone/pkg/server/apis/v1alpha1/descriptors/webhook.go
-	return fmt.Sprintf("%s/tenants/%s/webhook?sourceType=SCM&integration=%s", urlPrefix, tenant, secret)
+func generateWebhookURL(tenant, secret string) (string, error) {
+	type urlData struct {
+		Tenant      string `json:"Tenant"`
+		SourceType  string `json:"SourceType"`
+		Integration string `json:"Integration"`
+	}
+	tmpl, err := template.New("webhookURL").Parse(config.Config.WebhookURLTemplate)
+	if err != nil {
+		return "", fmt.Errorf("parse template: %w", err)
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, urlData{
+		Tenant:      tenant,
+		SourceType:  "SCM",
+		Integration: secret,
+	})
+	if err != nil {
+		return "", fmt.Errorf("execute template: %w", err)
+	}
+	return buf.String(), nil
 }
 
 // Unregister unregisters SCM webhook if if has no other wft using.
@@ -162,7 +183,12 @@ func deleteSCMWebhook(scmSource *api.SCMSource, tenant, secret, repo string) err
 		return err
 	}
 
-	return sp.DeleteWebhook(repo, generateWebhookURL(tenant, secret))
+	webhookURL, err := generateWebhookURL(tenant, secret)
+	if err != nil {
+		log.Error("Error generating webhook URL: %v", err)
+		return fmt.Errorf("generate webhook URL: %w", err)
+	}
+	return sp.DeleteWebhook(repo, webhookURL)
 }
 
 // LabelSCMTrigger add labels about scm trigger
