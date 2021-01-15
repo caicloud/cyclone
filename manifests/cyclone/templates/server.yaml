@@ -114,8 +114,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: WEBHOOK_URL_PREFIX
-          value: "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2"
         ports:
         - containerPort: {{ .Values.server.listenPort }}
         resources: {{- toYaml .Values.server.resourceRequirement | nindent 10 }}

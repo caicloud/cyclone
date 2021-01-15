@@ -51,7 +51,6 @@ server:
   clusterPort: 6043
   listenPort: 7099
   # nodePort: 30011
-  webhookUrlPrefix: http://{{ .Values.serverAddress }}/apis/v1alpha1
   recordWebURLPath: /devops/pipeline/workspaces/{{.ProjectName}}/pipelines/{{.WorkflowName}}/records/{{.WorkflowRunName}}/log?tenant={{.Tenant}}
   webhookURLPath: /hodor/?Action=HandleTenantWebhook&Version=2020-10-10&Tenant={{.Tenant}}&SourceType={{.SourceType}}&Integration={{.Integration}}
   init:
