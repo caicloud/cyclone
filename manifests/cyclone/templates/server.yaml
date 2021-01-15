@@ -16,7 +16,7 @@ data:
       },
       "cyclone_server_host": "{{ .Values.server.listenAddress }}",
       "cyclone_server_port": {{ .Values.server.listenPort }},
-      "webhook_url_prefix": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2",
+      "webhook_url_template": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060{{ .Values.server.webhookURLPath }}",
       "record_web_url_template": "http://{{ .Values.platformConfig.controlClusterVIP }}:6060{{ .Values.server.recordWebURLPath }}",
       "default_pvc_config": {
         "size": "{{ .Values.server.pvc.size }}",
@@ -52,7 +52,7 @@ data:
       "notifications": [
         {
           "name": "devops",
-          "url": "http://{{ .Release.Name }}-pipeline.{{ .Release.Namespace }}.svc.cluster.local:7088/api/v2/pipeline/notifications"
+          "url": "http://pipeline.{{ .Release.Namespace }}.svc.cluster.local:7088/?Action=ReceiveNotifications&Version=2020-10-10"
         }
       ],
       "client_set": {
@@ -114,8 +114,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: WEBHOOK_URL_PREFIX
-          value: "http://{{ .Values.platformConfig.controlClusterVIP }}:6060/hodor/apis/admin.devops.caicloud.io/v2"
         ports:
         - containerPort: {{ .Values.server.listenPort }}
         resources: {{- toYaml .Values.server.resourceRequirement | nindent 10 }}
