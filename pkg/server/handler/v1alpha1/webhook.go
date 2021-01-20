@@ -139,7 +139,6 @@ func sanitizeRef(ref string) string {
 
 func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.EventData) error {
 	ns := wft.Namespace
-	cancelPrevious := false
 	var err error
 	var project string
 	if wft.Labels != nil {
@@ -154,6 +153,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		return fmt.Errorf("workflow reference of workflowtrigger is empty")
 	}
 
+	triggeredByPR := false
 	trigger := false
 	var tag string
 	st := wft.Spec.SCM
@@ -187,14 +187,14 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		// Always trigger if Branches are not specified
 		if len(st.PullRequest.Branches) == 0 {
 			trigger = true
-			cancelPrevious = true
+			triggeredByPR = true
 			break
 		}
 
 		for _, branch := range st.PullRequest.Branches {
 			if branch == data.Branch {
 				trigger = true
-				cancelPrevious = true
+				triggeredByPR = true
 				break
 			}
 		}
@@ -202,7 +202,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		for _, comment := range st.PullRequestComment.Comments {
 			if comment == data.Comment {
 				trigger = true
-				cancelPrevious = true
+				triggeredByPR = true
 				break
 			}
 		}
@@ -240,7 +240,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 
 	var currentWfrs []v1alpha1.WorkflowRun
 
-	if cancelPrevious {
+	if triggeredByPR {
 		wfrs, err := cycloneClient.WorkflowRuns(ns).List(ctx, metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=%s,%s=%s,%s=%s",
 				meta.LabelProjectName, project,
@@ -281,7 +281,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 			}
 		} else {
 			log.Infof("The update time of PR %s/%s is unknown. Turn off canceling previous builds.", data.Repo, data.Ref)
-			cancelPrevious = false
+			triggeredByPR = false
 		}
 	}
 
@@ -306,10 +306,12 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 				meta.LabelProjectName:             project,
 				meta.LabelWorkflowName:            wfName,
 				meta.LabelWorkflowRunAcceleration: wft.Labels[meta.LabelWorkflowRunAcceleration],
-				meta.LabelWorkflowRunPRRef:        ref,
 			},
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
+	}
+	if triggeredByPR {
+		wfr.ObjectMeta.Labels[meta.LabelWorkflowRunPRRef] = ref
 	}
 
 	wfr.Annotations, err = setSCMEventData(wfr.Annotations, data)
@@ -354,7 +356,7 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		}
 	}(wfr.DeepCopy())
 
-	if !cancelPrevious {
+	if !triggeredByPR {
 		return nil
 	}
 
