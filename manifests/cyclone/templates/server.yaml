@@ -52,7 +52,7 @@ data:
       "notifications": [
         {
           "name": "devops",
-          "url": "http://pipeline.{{ .Release.Namespace }}.svc.cluster.local:7088/?Action=ReceiveNotifications&Version=2020-10-10"
+          "url": "http://pipeline-server.{{ .Release.Namespace }}.svc.cluster.local:7088/?Action=ReceiveNotifications&Version=2020-10-10"
         }
       ],
       "client_set": {
