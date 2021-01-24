@@ -120,7 +120,8 @@ func (c *Controller) doWork(key string) (res controller.Result, err error) {
 	}
 
 	// Add finalizer if needed
-	if err := c.eventHandler.AddFinalizer(object); err != nil {
+	added, err := c.eventHandler.AddFinalizer(object)
+	if err != nil || added {
 		return res, err
 	}
 

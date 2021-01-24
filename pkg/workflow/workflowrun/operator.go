@@ -391,14 +391,14 @@ func (o *operator) Reconcile() (controller.Result, error) {
 		return res, fmt.Errorf("resolve overall status error: %v", err)
 	}
 	o.wfr.Status.Overall = *overall
-	err = o.Update()
-	if err != nil {
-		log.WithField("wfr", o.wfr.Name).Error("Update status error: ", err)
-		return res, err
-	}
 
 	// Return if no stages need to run.
 	if len(nextStages) == 0 {
+		err = o.Update()
+		if err != nil {
+			log.WithField("wfr", o.wfr.Name).Error("Update status error: ", err)
+			return res, err
+		}
 		return res, nil
 	}
 

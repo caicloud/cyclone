@@ -12,7 +12,7 @@ type Interface interface {
 
 	// AddFinalizer adds a finalizer to the object if it not exists,
 	// If a finalizer added, this func needs to update the object to the Kubernetes.
-	AddFinalizer(obj interface{}) error
+	AddFinalizer(obj interface{}) (added bool, err error)
 
 	// HandleFinalizer needs to do things:
 	// - execute the finalizer, like deleting any external resources associated with the obj

@@ -96,7 +96,7 @@ func (p *WorkloadProcessor) processPod() error {
 		return fmt.Errorf("create pod: %w", err)
 	}
 
-	log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).Debug("Create pod for stage succeeded")
+	log.WithField("wfr", p.wfr.Name).WithField("stg", p.stg.Name).WithField("pod", po.Name).Debug("Create pod for stage succeeded")
 	p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeNormal, "StagePodCreated", "Create pod for stage '%s' succeeded", p.stg.Name)
 
 	go p.podEventWatcher.Work(p.stg.Name, po.Namespace, po.Name)
