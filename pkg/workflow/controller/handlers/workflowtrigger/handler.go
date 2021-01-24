@@ -61,15 +61,15 @@ func (h *Handler) finalize(wft *v1alpha1.WorkflowTrigger) error {
 }
 
 // AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
-func (h *Handler) AddFinalizer(obj interface{}) error {
+func (h *Handler) AddFinalizer(obj interface{}) (bool, error) {
 	originWft, ok := obj.(*v1alpha1.WorkflowTrigger)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect WorkflowTrigger, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return false, fmt.Errorf("unknown resource type")
 	}
 
 	if sets.NewString(originWft.Finalizers...).Has(finalizerWorkflowTrigger) {
-		return nil
+		return false, nil
 	}
 
 	log.WithField("name", originWft.Name).Debug("Start to add finalizer for workflowTrigger")
@@ -77,7 +77,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 	wft := originWft.DeepCopy()
 	wft.ObjectMeta.Finalizers = append(wft.ObjectMeta.Finalizers, finalizerWorkflowTrigger)
 	_, err := h.client.CycloneV1alpha1().WorkflowTriggers(wft.Namespace).Update(context.TODO(), wft, metav1.UpdateOptions{})
-	return err
+	return true, err
 }
 
 // HandleFinalizer does the finalizer key representing things.

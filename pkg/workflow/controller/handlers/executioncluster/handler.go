@@ -63,15 +63,15 @@ func (h *Handler) finalize(ec *v1alpha1.ExecutionCluster) error {
 }
 
 // AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
-func (h *Handler) AddFinalizer(obj interface{}) error {
+func (h *Handler) AddFinalizer(obj interface{}) (bool, error) {
 	originCluster, ok := obj.(*v1alpha1.ExecutionCluster)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect ExecutionCluster, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return false, fmt.Errorf("unknown resource type")
 	}
 
 	if sets.NewString(originCluster.Finalizers...).Has(finalizerExecutioncluster) {
-		return nil
+		return false, nil
 	}
 
 	log.WithField("name", originCluster.Name).Debug("Start to add finalizer for executionCluster")
@@ -79,7 +79,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 	ec := originCluster.DeepCopy()
 	ec.ObjectMeta.Finalizers = append(ec.ObjectMeta.Finalizers, finalizerExecutioncluster)
 	_, err := h.Client.CycloneV1alpha1().ExecutionClusters().Update(context.TODO(), ec, metav1.UpdateOptions{})
-	return err
+	return true, err
 }
 
 // HandleFinalizer does the finalizer key representing things.

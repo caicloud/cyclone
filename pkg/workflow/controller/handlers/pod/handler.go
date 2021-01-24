@@ -93,20 +93,20 @@ func (h *Handler) finalize(pod *corev1.Pod) error {
 }
 
 // AddFinalizer adds a finalizer to the object and update the object to the Kubernetes.
-func (h *Handler) AddFinalizer(obj interface{}) error {
+func (h *Handler) AddFinalizer(obj interface{}) (bool, error) {
 	originPod, ok := obj.(*corev1.Pod)
 	if !ok {
 		log.WithField("obj", obj).Warning("Expect Pod, got unknown type resource")
-		return fmt.Errorf("unknown resource type")
+		return false, fmt.Errorf("unknown resource type")
 	}
 
 	// Check whether it's workload pod.
 	if !IsWorkloadPod(originPod) {
-		return nil
+		return false, nil
 	}
 
 	if sets.NewString(originPod.Finalizers...).Has(finalizerPod) {
-		return nil
+		return false, nil
 	}
 
 	log.WithField("name", originPod.Name).Debug("Start to add finalizer for pod")
@@ -114,7 +114,7 @@ func (h *Handler) AddFinalizer(obj interface{}) error {
 	pod := originPod.DeepCopy()
 	pod.ObjectMeta.Finalizers = append(pod.ObjectMeta.Finalizers, finalizerPod)
 	_, err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
-	return err
+	return true, err
 }
 
 // HandleFinalizer does the finalizer key representing things.

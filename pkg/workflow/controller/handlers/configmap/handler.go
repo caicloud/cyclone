@@ -47,8 +47,8 @@ func (h *Handler) process(obj interface{}) error {
 }
 
 // AddFinalizer adds finalizers to the object and update the object to the Kubernetes.
-func (h *Handler) AddFinalizer(obj interface{}) error {
-	return nil
+func (h *Handler) AddFinalizer(obj interface{}) (bool, error) {
+	return false, nil
 }
 
 // HandleFinalizer does the finalizer key representing things.
