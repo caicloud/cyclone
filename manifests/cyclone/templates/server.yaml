@@ -193,5 +193,5 @@ spec:
       storage: 10Gi
     requests:
       storage: 10Gi
-  storageClassName: heketi-storageclass
+  storageClassName: platform-storageclass
   volumeMode: Filesystem
