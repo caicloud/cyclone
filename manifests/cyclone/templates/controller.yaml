@@ -48,7 +48,7 @@ data:
         "workflow_run": 1,
         "pod": 1
       },
-      "pvc": "cyclone-server-cyclone-data",
+      "pvc": {{ .Values.pvcName | quote }},
       "cyclone_server_addr": "{{ .Values.platformConfig.controlClusterVIP }}:{{ .Values.server.clusterPort }}",
       "notification_url": "http://{{ .Values.platformConfig.controlClusterVIP }}:{{ .Values.server.clusterPort }}/apis/v1alpha1/notifications"
     }

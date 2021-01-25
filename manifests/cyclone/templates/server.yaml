@@ -143,9 +143,8 @@ spec:
           path: /etc/localtime
           type: File
       - name: cyclone-data
-        emptyDir: {}
-        #persistentVolumeClaim:
-        #  claimName: cyclone-server-cyclone-data
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvcName }}
 
 ---
 kind: Service
@@ -183,7 +182,7 @@ metadata:
     helm.sh/chart: {{ include "cyclone.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-  name: cyclone-server-cyclone-data
+  name: {{ .Values.pvcName }}
   namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
@@ -193,5 +192,5 @@ spec:
       storage: 10Gi
     requests:
       storage: 10Gi
-  storageClassName: platform-storageclass
+  storageClassName: {{ .Values.server.pvc.storageClass }}
   volumeMode: Filesystem
