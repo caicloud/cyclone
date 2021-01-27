@@ -5,6 +5,7 @@ platformConfig:
   controlClusterVIP: 1.2.3.4
 
 serviceAccount: default
+pvcName: cyclone-server-data
 
 # Cyclone workflow engine variables
 engine:
@@ -59,7 +60,7 @@ server:
   openControlCluster: false
   pvc:
     # Default storageClass which Cyclone will use to create PVC.
-    storageClass: "heketi-storageclass"
+    storageClass: "platform-storageclass"
     size: 10Gi
   workerNamespaceQuota:
     requests.cpu: "1"
