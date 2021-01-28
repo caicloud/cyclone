@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -444,22 +443,19 @@ func (g *Github) GetPullRequestSHA(repoURL string, number int) (string, error) {
 // with OAuth token.
 // Refer to https://developer.github.com/v3/auth/#basic-authentication
 func newClientByBasicAuth(server, username, password string) (*github.Client, error) {
-	transport := &http.Transport{
-		Proxy: func(req *http.Request) (*url.URL, error) {
-			req.SetBasicAuth(username, password)
-			return nil, nil
-		},
-	}
-
-	httpClient := &http.Client{
-		Transport: transport,
-	}
-
 	if !isPublic(server) {
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
 		}
-		client, err := github.NewEnterpriseClient(server, server, httpClient)
+		client, err := github.NewEnterpriseClient(server, server, &http.Client{
+			Transport: &github.BasicAuthTransport{
+				Username:  username,
+				Password:  password,
+				Transport: transport,
+			},
+		})
 		if err != nil {
 			log.Error("Fail to new client for enterprise Github as %v", err)
 			return nil, err
@@ -468,7 +464,12 @@ func newClientByBasicAuth(server, username, password string) (*github.Client, er
 		return client, nil
 	}
 
-	return github.NewClient(httpClient), nil
+	return github.NewClient(&http.Client{
+		Transport: &github.BasicAuthTransport{
+			Username: username,
+			Password: password,
+		},
+	}), nil
 }
 
 // GetWebhook gets webhook from specified repo.
