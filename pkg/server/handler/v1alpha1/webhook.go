@@ -207,6 +207,9 @@ func createWorkflowRun(tenant string, wft v1alpha1.WorkflowTrigger, data *scm.Ev
 		},
 		Spec: wft.Spec.WorkflowRunSpec,
 	}
+	if cancelPrevious {
+		wfr.ObjectMeta.Labels[meta.LabelWorkflowRunPRRef] = ref
+	}
 
 	wfr.Annotations, err = setSCMEventData(wfr.Annotations, data)
 	if err != nil {
