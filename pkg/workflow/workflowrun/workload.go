@@ -97,7 +97,7 @@ func (p *WorkloadProcessor) processPod() error {
 		p.wfrOper.GetRecorder().Eventf(p.wfr, corev1.EventTypeWarning, "StagePodCreated", "Create pod for stage '%s' error: %v", p.stg.Name, err)
 		p.wfrOper.UpdateStageStatus(p.stg.Name, &v1alpha1.Status{
 			Phase:              v1alpha1.StatusFailed,
-			Reason:             "CreatePodError",
+			Reason:             v1alpha1.ReasonCreatePodError,
 			LastTransitionTime: metav1.Time{Time: time.Now()},
 			Message:            fmt.Sprintf("Failed to create pod: %v", err),
 		})

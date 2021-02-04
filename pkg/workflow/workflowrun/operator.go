@@ -290,7 +290,8 @@ func (o *operator) OverallStatus() (*v1alpha1.Status, error) {
 		case v1alpha1.StatusWaiting:
 			waiting = true
 		case v1alpha1.StatusFailed:
-			err = err || !IsTrivial(o.wf, stage)
+			trivial := status.Status.Reason != v1alpha1.ReasonCreatePodError && IsTrivial(o.wf, stage)
+			err = err || !trivial
 		case v1alpha1.StatusPending:
 			pending = true
 		case v1alpha1.StatusSucceeded:

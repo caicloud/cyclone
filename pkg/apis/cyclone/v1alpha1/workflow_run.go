@@ -170,6 +170,11 @@ type PodInfo struct {
 	Namespace string `json:"namespace"`
 }
 
+const (
+	// ReasonCreatePodError indicates WorkflowRun fails because it fails to create Pod.
+	ReasonCreatePodError = "CreatePodError"
+)
+
 // Status of a Stage in a WorkflowRun or the whole WorkflowRun.
 // +k8s:deepcopy-gen=true
 type Status struct {
