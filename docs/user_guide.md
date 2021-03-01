@@ -111,4 +111,4 @@ Please replace `{cyclone-server-address}` and `{tenant}` with correct value.
 
 ### Create SCM type workflowtriggers
 
-Note that the `workflowtrigger.spc.scm.postCommit.workflowURL` field *MUST* be specified while creating workflowTrigger, WorkflowURL represents repository url of the workflow that the wrokflowTrigger related to, Cyclone will checkout code from this URL while executing WorkflowRun(e.g: http://192.168.21.97/svn/caicloud/cyclone).
+Note that the `workflowtrigger.spc.scm.postCommit.workflowURL` field *MUST* be specified while creating workflowTrigger, WorkflowURL represents repository url of the workflow that the workflowTrigger related to, Cyclone will checkout code from this URL while executing WorkflowRun(e.g: http://192.168.21.97/svn/caicloud/cyclone).
