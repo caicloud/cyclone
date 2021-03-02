@@ -35,7 +35,7 @@
 - Make qps and brust configurable for k8s client (#1356)
 
 **Docs:**
-- Explain Kubernets resources used in Cyclone (#1337)
+- Explain Kubernetes resources used in Cyclone (#1337)
 
 ## v1.0.0-beta.6
 
@@ -50,7 +50,7 @@
 **Bug Fix:**
 - Deleting pod stuck on Terminating status (#1321)
 - Update workflow display form is incorrect (#1309)
-- Delete branch should not tirgger workflowrRun (#1336)
+- Delete branch should not trigger workflowRun (#1336)
 - Update pvc failed as old pvc watchdog have not been deleting completed (#1338)
 
 **Feature:**
@@ -65,7 +65,7 @@
 - Reduce cpu usage caused by go ticker incorrect use (#1318)
 
 **Feature:**
-- Rrecord workflow topology to workflow run (#1312)
+- Record workflow topology to workflow run (#1312)
 
 **Others:**
 - Upgrade golang to 1.12.12 & golangci-lint to 1.20.1

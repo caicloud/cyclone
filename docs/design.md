@@ -48,7 +48,7 @@ Each type of resource needs a resource resolver to handle their resources. Now C
 * SVN: Code resources in SVN, only supports pulling source code.
 * General: General type allows users to implement handlers by themselves for other types of resources.
 
-### Workflow Executation
+### Workflow Execution
 
 Workflow is an executable DAG graph composed of stages which can run
 either serially or in parallel according to the graph structure.  If
