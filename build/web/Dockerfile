@@ -2,7 +2,7 @@ FROM node:11.5-alpine as build-deps
 WORKDIR /usr/src/app
 COPY web/package.json ./
 RUN npm set unsafe-perm true && \
-    npm config set registry https://registry.npm.taobao.org && \
+    npm config set registry https://registry.npmmirror.com && \
     npm install
 COPY ./web/ ./
 RUN npm run build
