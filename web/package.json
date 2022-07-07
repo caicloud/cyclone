@@ -114,7 +114,7 @@
     "less-loader": "^4.1.0",
     "lint-staged": "^8.1.0",
     "mini-css-extract-plugin": "0.5.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "3.0.0",
     "prettier": "^1.15.3",
