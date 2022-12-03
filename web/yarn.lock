@@ -2962,8 +2962,9 @@ decko@^1.2.0:
   resolved "http://registry.npm.taobao.org/decko/download/decko-1.2.0.tgz#fd43c735e967b8013306884a56fbe665996b6817"
 
 decode-uri-component@^0.2.0:
-  version "0.2.0"
-  resolved "http://registry.npm.taobao.org/decode-uri-component/download/decode-uri-component-0.2.0.tgz#eb3913333458775cb84cd1a1fae062106bb87545"
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.2.tgz#e69dbe25d37941171dd540e024c444cd5188e1e9"
+  integrity sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==
 
 dedent@^0.7.0:
   version "0.7.0"
