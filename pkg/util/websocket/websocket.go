@@ -11,7 +11,6 @@ import (
 
 	"github.com/caicloud/nirvana/log"
 	"github.com/gorilla/websocket"
-	socket "github.com/gorilla/websocket"
 )
 
 const (
@@ -26,7 +25,7 @@ const (
 )
 
 // Upgrader ...
-var Upgrader = socket.Upgrader{
+var Upgrader = websocket.Upgrader{
 	//disable origin check
 	CheckOrigin:     func(r *http.Request) bool { return true },
 	ReadBufferSize:  1024,
